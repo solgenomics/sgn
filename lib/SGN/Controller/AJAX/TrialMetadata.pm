@@ -336,7 +336,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
 
     my $start_date = $c->req()->param('start_date') || '1960-01-01';
     my $end_date = $c->req()->param('end_date') || '2030-01-01';
-    my $include_dateless_items = $c->req->param('include_timeless_items');
+    my $include_dateless_items = $c->req->param('include_dateless_items');
 
 #    my $start_date = shift;
 #    my $end_date = shift;
