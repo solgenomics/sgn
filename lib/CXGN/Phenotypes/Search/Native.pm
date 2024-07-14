@@ -227,7 +227,7 @@ sub search {
     #For performance reasons the number of joins to stock can be reduced if a trial is given. If trial(s) given, use the cached layout from TrialLayout instead.
 
 
-    print STDERR "START DATE HERE: ".$self->start_date()." AND END DATE HERE: ".$self->end_date()."\n";
+    #print STDERR "START DATE HERE: ".$self->start_date()." AND END DATE HERE: ".$self->end_date()."\n";
     
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
 
@@ -415,11 +415,11 @@ sub search {
     }
 
 
-    print STDERR "START DATE: $start_date. END DATE: $end_date\n";
+    #print STDERR "START DATE: $start_date. END DATE: $end_date\n";
     
     if ($start_date && $end_date) {
-	print STDERR "INCLUDING THE DATE QUERY...\n";
-		push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date <= '$end_date'::date ) ) ";
+	#print STDERR "INCLUDING THE DATE QUERY...\n";
+	push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date <= '$end_date'::date ) ) ";
 	#push @where_clause, " ( $datelessq ( phenotype.collect_date >= $start_date and phenotype.collect_date <= $end_date ) ) ";
 
     }
@@ -468,7 +468,7 @@ sub search {
 
     my  $q = $select_clause . $from_clause . $where_clause . $group_by . $order_clause . $limit_clause . $offset_clause;
 
-    print STDERR "QUERY: $q\n\n";
+    #print STDERR "QUERY: $q\n\n";
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;
@@ -591,7 +591,7 @@ sub search {
 
     }
 
-    print STDERR "RESULT: ".Dumper(\@result)."\n";
+    #print STDERR "RESULT: ".Dumper(\@result)."\n";
     print STDERR "Search End:".localtime."\n";
     return \@result;
 }
