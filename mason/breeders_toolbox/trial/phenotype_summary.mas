@@ -158,7 +158,7 @@ $trial_stock_type => undef
 var d3 = d3v4;
     var draw_histogram = stackedObservationPhenotypeHistogram.draw;
     
-jQuery(document).ready(function () {
+    jQuery(document).ready(function () {
     var type = "<% $trial_stock_type %>";
 
     jQuery("#summary_start_date").change( function() {
@@ -312,7 +312,7 @@ function trait_summary_hist_display_change(value) {
                 jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
 
                 jQuery.ajax( {
-                    url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&inlcude_dateless_items=1',
+                    url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
                     type: 'POST',
                     success: function(response){
                         jQuery("#working_modal").modal("hide");
