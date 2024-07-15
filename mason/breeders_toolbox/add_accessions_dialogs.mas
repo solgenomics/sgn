@@ -2,13 +2,14 @@
 $preferred_species => ""
 $editable_stock_props
 $editable_stock_props_definitions
-$email_address => ""
 </%args>
 
 <%perl>
     my $user_role = '';
+    my $email_address = '';
     if ($c->user) {
         $user_role = $c->user->get_object()->get_user_type();
+        $email_address = $c->user->get_object()->get_private_email();
     }
 </%perl>
 
