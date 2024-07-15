@@ -336,12 +336,15 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $cross_uniquename = $c->req->param("seedlot_cross_uniquename");
     my $plot_uniquename = $c->req->param("seedlot_plot_uniquename");
     my $origin_seedlot_uniquename = $c->req->param("origin_seedlot_uniquename");
+    my $seedlot_source = $c->req->param("seedlot_source");
     my $seedlot_quality = $c->req->param("seedlot_quality");
     my $description = $c->req->param("seedlot_description");
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $no_refresh = $c->req->param("no_refresh");
 
     my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename }); #type_id=>$seedlot_cvterm_id});
@@ -369,6 +372,10 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     if ($plot_uniquename){
         $plot_id = $schema->resultset('Stock::Stock')->find({uniquename=>$plot_uniquename, type_id=>$plot_cvterm_id})->stock_id();
     }
+    my $source_id;
+    if ($seedlot_source) {
+        $source_id = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_source, type_id => { -in => [ $seedlot_cvterm_id, $plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id ] }})->stock_id();
+    }
     my $origin_seedlot_id;
     if ($origin_seedlot_uniquename){
         $origin_seedlot_id = $schema->resultset('Stock::Stock')->find({uniquename=>$origin_seedlot_uniquename, type_id=>$seedlot_cvterm_id})->stock_id();
@@ -385,6 +392,10 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $c->stash->{rest} = {error=>'The given plot name is not in the database! Seedlots can only use existing plots.'};
         $c->detach();
     }
+    if ($seedlot_source && !$source_id) {
+        $c->stash->{rest} = {error=>'The given seedlot source name is not in the database! Seedlot sources must be an existing seedlot, plot, subplot, or plant name.'};
+        $c->detach();
+    }
     if ($origin_seedlot_uniquename && !$origin_seedlot_id){
         $c->stash->{rest} = {error=>'The given origin seedlot name is not in the database! Seedlots can only use existing Seedlots for the initial transaction.'};
         $c->detach();
@@ -398,8 +409,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $c->detach();
     }
 
-    my $from_stock_id = $origin_seedlot_id ? $origin_seedlot_id : $plot_id ? $plot_id : $accession_id ? $accession_id : $cross_id;
-    my $from_stock_uniquename = $origin_seedlot_uniquename ? $origin_seedlot_uniquename : $plot_uniquename ? $plot_uniquename : $accession_uniquename ? $accession_uniquename : $cross_uniquename;
+    my $from_stock_id = $origin_seedlot_id ? $origin_seedlot_id : $plot_id ? $plot_id : $source_id ? $source_id : $accession_id ? $accession_id : $cross_id;
+    my $from_stock_uniquename = $origin_seedlot_uniquename ? $origin_seedlot_uniquename : $plot_uniquename ? $plot_uniquename : $seedlot_source ? $seedlot_source : $accession_uniquename ? $accession_uniquename : $cross_uniquename;
     my $population_name = $c->req->param("seedlot_population_name");
     my $organization = $c->req->param("seedlot_organization");
     my $amount = $c->req->param("seedlot_amount");
