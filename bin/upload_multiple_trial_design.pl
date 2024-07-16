@@ -60,9 +60,7 @@ Srikanth (sk2783@cornell.edu)
 
 use strict;
 use Getopt::Long;
-use CXGN::Tools::File::Spreadsheet;
-use Spreadsheet::ParseXLSX;
-use Spreadsheet::ParseExcel;
+use CXGN::File::Parse;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Carp qw /croak/ ;
@@ -81,9 +79,7 @@ use CXGN::Trial; # add project metadata
 #use CXGN::BreedersToolbox::Projects; # associating a breeding program
 use CXGN::Trial::TrialCreate;
 use CXGN::Tools::Run;
-use Email::MIME;
-use Email::Sender::Simple;
-use Email::Sender::Simple qw /sendmail/;
+use CXGN::Contact;
 use CXGN::Trial::ParseUpload;
 use CXGN::TrialStatus;
 use CXGN::Calendar;
@@ -195,69 +191,30 @@ die "Need to have a user pre-loaded in the database! " if !$sp_person_id;
 #Column headers for trial design/s
 #plot_name	accession_name	plot_number	block_number	trial_name	trial_description	trial_location	year	trial_type	is_a_control	rep_number	range_number	row_number	col_number entry_numbers
 
-#Parse the trials + designs first, then upload the phenotypes 
+#parse file using the generic file parser
+my $parser = CXGN::File::Parse->new(
+    file => $infile,
+    required_columns => ['trial_name', 'accession_name', 'plot_number', 'block_number', 'location', 'year'],
+);
 
-#new spreadsheet for design + phenotyping data ###
-my $spreadsheet = CXGN::Tools::File::Spreadsheet->new($infile);
+#parse the file
+my $parsed = $parser->parse();
 
-#Determine the type of file and setup workbook and worksheet
-my ($xlsx_parser, $xls_parser, $workbook, $worksheet);
-if ($infile =~ /\.xlsx$/i) {
-    $xlsx_parser = Spreadsheet::ParseXLSX->new;
-    $workbook = $xlsx_parser->parse($infile);
-} elsif ($infile =~ /\.xls$/i) {
-    $xls_parser = Spreadsheet::ParseExcel->new;
-    $workbook = $xls_parser->parse($infile);
+if (scalar(@{$parsed->{errors}}) > 0) {
+    die "Error parsing file:  ".join(',', @{$parsed->{errors}});
 }
 
-die "Could not parse file: $infile" if not defined $workbook;
-$worksheet = $workbook->worksheet(0);
-
-# Determine the last row with data to avoid processing empty rows
-my $row_min = 1;
-my $row_max = 0;
-
-for my $row ($row_min .. $worksheet->row_range) {
-    for my $col (0 .. $worksheet->col_range) {
-        my $cell = $worksheet->get_cell($row, $col);
-        if ($cell && $cell->value() =~ /\S/) {
-            $row_max = $row;
-        }
-    }
-}
-# Populate trial rows and trial columns arrays based on the actual data-filled rows
-my (@trial_rows, @trial_columns);
-@trial_rows = map { my $cell = $worksheet->get_cell($_, 0); $cell ? $cell->value : '' } ($row_min .. $row_max);
-@trial_columns = map { my $cell = $worksheet->get_cell(0, $_); $cell ? $cell->value : ''} (0 .. $worksheet->col_range);
-
-# Map trial columns to parameters
-
-my %trial_params = map { $_ => 1 } @trial_columns;
+my @traits;
 my %multi_trial_data;
+my %metadata_fields = map { $_ => 1 } qw(trial_name accession_name plot_number block_number location year design_type trial_description);
 
-for my $row ($row_min .. $row_max) {
-    my $trial_name = $trial_rows[$row];
+foreach my $row (@{$parsed->{data}}) {
+    my $trial_name = $row->{trial_name};
     next unless $trial_name;  # Skip rows with empty trial names
 
-    my $trial_design    = first { $trial_columns[$_] eq 'design_type' } 0..@trial_columns;
-    my $trial_year      = first { $trial_columns[$_] eq 'year' } 0..@trial_columns;
-    my $location        = first { $trial_columns[$_] eq 'location' } 0..@trial_columns;
-    my $accession_name  = first { $trial_columns[$_] eq 'accession_name' } 0..@trial_columns;
-    my $plot_name       = first { $trial_columns[$_] eq 'plot_name' } 0..@trial_columns;
-    my $plot_number     = first { $trial_columns[$_] eq 'plot_number' } 0..@trial_columns;
-
-    my ($design_type, $year, $trial_location, $accessions, $plot_names, $plot_numbers);
-    $design_type = $worksheet->get_cell($row, $trial_design) ? $worksheet->get_cell($row, $trial_design)->value : 'RCBD';
-    $year = $worksheet->get_cell($row, $trial_year) ? $worksheet->get_cell($row, $trial_year)->value : undef;
-    $trial_location = $worksheet->get_cell($row, $location) ? $worksheet->get_cell($row, $location)->value : undef;
-    $accessions     = $worksheet->get_cell($row,$accession_name) ? $worksheet->get_cell($row, $accession_name)->value : undef;
-    $plot_names     = $worksheet->get_cell($row, $plot_name) ? $worksheet->get_cell($row, $plot_name)->value : undef;
-    $plot_numbers   = $worksheet->get_cell($row, $plot_number) ? $worksheet->get_cell($row, $plot_number)->value : undef;
-
-    # print STDERR "Trial Name: $trial_name, Location: $trial_location, Design Type: $design_type, Year: $year\n";
-
     # Check if the location exists in the database
-    my $location_rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search({
+    my $trial_location = $row->{trial_location};
+    my $location_rs    = $schema->resultset("NaturalDiversity::NdGeolocation")->search({
         description => { ilike => '%' . $trial_location . '%' },
     });
     if (scalar($location_rs) == 0) {
@@ -266,24 +223,21 @@ for my $row ($row_min .. $row_max) {
     my $location_id = $location_rs->first->nd_geolocation_id;
     ######################################################
 
-    #### optional params ######
-    my ($planting_date, $fertilizer_date, $harvest_date, $sown_plants, $harvested_plants, $trial_type, $plot_width, $plot_length, $field_size, $entry_numbers);
-    my $trial_description = $trial_name;
-    # my %properties_hash;
-    my $properties_hash;
+    # # Store all data for the current trial
+    $multi_trial_data{$trial_name} = {
+        trial_location    => $trial_location,
+        trial_year        => $row->{year},
+        design_type       => $row->{design_type},
+        trial_description => $row->{trial_description},
+        program           => $breeding_program->name,
+        plot_name         => $row->{plot_name},
+        accession_name    => $row->{accession_name},
+        plots            => [],
+    };
 
-    if (exists($trial_params{trial_description})) {
-        $trial_description = $worksheet->get_cell($row, first { $trial_columns[$_] eq 'trial_description' } 0..$#trial_columns)->value;
+    foreach my $col (@{$parsed->{columns}}) {
+        next if exists $metadata_fields{$col};
     }
-
-    # Store all data for the current trial
-    $multi_trial_data{$trial_name}->{design_type}       = $design_type;
-    $multi_trial_data{$trial_name}->{program}           = $breeding_program->name;
-    $multi_trial_data{$trial_name}->{trial_year}        = $year;
-    $multi_trial_data{$trial_name}->{trial_description} = $trial_description;
-    $multi_trial_data{$trial_name}->{trial_location}    = $trial_location;
-    $multi_trial_data{$trial_name}->{plot_name}         = $plot_names;
-    $multi_trial_data{$trial_name}->{accession_name}    = $accessions;
 }
 
 print STDERR "unique trial names:\n";
@@ -292,86 +246,46 @@ foreach my $name(keys %multi_trial_data) {
 }
 
 print STDERR "Reading phenotyping file:\n";
-my %phen_params = map { if ($_ =~ m/^\w+\|(\w+:\d{7})$/ ) { $_ => $1 } } @trial_columns;
+my %phen_params = map { if ($_ =~ m/^\w+\|(\w+:\d{7})$/ ) { $_ => $1 } } @traits;
 delete $phen_params{''};
 
-my @traits = keys %phen_params;
+# my @traits = keys %phen_params;
 print STDERR "Found traits: " . Dumper(\%phen_params) . "\n";
+
+
+foreach my $trial_name (keys %multi_trial_data) {
+    $multi_trial_data{$trial_name}->{design} = $multi_trial_data{$trial_name};
+
+}
 
 my %trial_design_hash;
 my %phen_data_by_trial;
 
-foreach my $plot_name (1 .. @trial_rows) {
-    my ($trial_type, $plot_width, $plot_length, $field_size, $planting_date, $harvest_date, $entry_numbers, $is_a_control, $rep_number, $range_number, $row_number, $col_number, $seedlot_name, $num_seed_per_plot, $weight_gram_seed_per_plot, $plot_number, $trial_name);
+foreach my $row (@{$parsed->{data}}) {
+    my $trial_name = $row->{trial_name};
+    next unless $trial_name;
 
-    # Check if the corresponding cell values exist, and assign them if they do
-    # $trial_type         = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'trial_type' } 0..@trial_columns)->value if exists $trial_params{'trial_type'}; #[1]
-    # $plot_number        = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'plot_number' } 0..@trial_columns)->value if exists $trial_params{'plot_number'}; #[1]
-    # $trial_name         = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'trial_name' } 0..@trial_columns)->value if exists $trial_params{'trial_name'}; #[1]
-    # $plot_width         = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'plot_width' } 0..@trial_columns)->value if exists $trial_params{'plot_width'}; #[1]
-    # $plot_length        = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'plot_length' } 0..@trial_columns)->value if exists $trial_params{'plot_length'}; #[1]
-    # $field_size         = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'field_size' } 0..@trial_columns)->value if exists $trial_params{'field_size'}; #[1]
-    # $planting_date      = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'planting_date' } 0..@trial_columns)->value if exists $trial_params{'planting_date'}; #[1]
-    # $harvest_date       = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'harvest_date' } 0..@trial_columns)->value if exists $trial_params{'harvest_date'}; #[1]
-    # $is_a_control       = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'is_a_control' } 0..@trial_columns)->value if exists $trial_params{'is_a_control'}; #[1]
-    # $rep_number         = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'rep_number' } 0..@trial_columns)->value if exists $trial_params{'rep_number'}; #[1]
-    # $range_number       = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'range_number' } 0..@trial_columns)->value if exists $trial_params{'range_number'}; #[1]
-    # $row_number         = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'row_number' } 0..@trial_columns)->value if exists $trial_params{'row_number'}; #[1]
-    # $col_number         = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'col_number' } 0..@trial_columns)->value if exists $trial_params{'col_number'}; #[1]
-
-    $trial_type         = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'trial_type' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'trial_type' } 0..@trial_columns)->value : undef if exists $trial_params{'trial_type'};
-    $plot_number        = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'plot_number' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'plot_number' } 0..@trial_columns)->value : undef if exists $trial_params{'plot_number'};
-    $trial_name         = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'trial_name' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'trial_name' } 0..@trial_columns)->value : undef if exists $trial_params{'trial_name'};
-    $plot_width         = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'plot_width' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'plot_width' } 0..@trial_columns)->value : undef if exists $trial_params{'plot_width'};
-    $plot_length        = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'plot_length' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'plot_length' } 0..@trial_columns)->value : undef if exists $trial_params{'plot_length'};
-    $field_size         = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'field_size' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'field_size' } 0..@trial_columns)->value : undef if exists $trial_params{'field_size'};
-    $planting_date      = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'planting_date' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'planting_date' } 0..@trial_columns)->value : undef if exists $trial_params{'planting_date'};
-    $harvest_date       = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'harvest_date' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'harvest_date' } 0..@trial_columns)->value : undef if exists $trial_params{'harvest_date'};
-    $entry_numbers      = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'entry_numbers' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'entry_numbers' } 0..@trial_columns)->value : undef if exists $trial_params{'entry_numbers'};
-    $is_a_control       = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'is_a_control' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'is_a_control' } 0..@trial_columns)->value : undef if exists $trial_params{'is_a_control'};
-    $rep_number         = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'rep_number' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'rep_number' } 0..@trial_columns)->value : undef if exists $trial_params{'rep_number'};
-    $range_number       = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'range_number' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'range_number' } 0..@trial_columns)->value : undef if exists $trial_params{'range_number'};
-    $row_number         = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'row_number' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'row_number' } 0..@trial_columns)->value : undef if exists $trial_params{'row_number'};
-    $col_number         = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'col_number' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'col_number' } 0..@trial_columns)->value : undef if exists $trial_params{'col_number'};
-    $seedlot_name       = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'seedlot_name' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'seedlot_name' } 0..@trial_columns)->value : undef if exists $trial_params{'seedlot_name'};
-    $num_seed_per_plot  = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'num_seed_per_plot' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'num_seed_per_plot' } 0..@trial_columns)->value : undef if exists $trial_params{'num_seed_per_plot'};
-    $weight_gram_seed_per_plot = defined $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'weight_gram_seed_per_plot' } 0..@trial_columns) ? $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq 'weight_gram_seed_per_plot' } 0..@trial_columns)->value : undef if exists $trial_params{'weight_gram_seed_per_plot'};
-
-    # $plot_name # Check if plot_number is defined, if not, assign a default value
-    if (!$plot_number) {
-        $plot_number = 1;
-        my @keys =(keys %{ $trial_design_hash{$trial_name}});
-        my $max = max( @keys );
-        if ( $max ) {
-            $max++;
-            $plot_number = $max;
-        }
-    }
-
+    my $plot_number = $row->{plot_number};
+    my $plot_name = $row->{plot_name};
     $trial_design_hash{$trial_name}{$plot_number} = {
-        trial_name      => $trial_name,
-        trial_type      => $trial_type,
-        planting_date   => $planting_date,
-        harvest_date    => $harvest_date,
-        entry_numbers   => $entry_numbers,
-        is_a_control    => $is_a_control,
-        rep_number      => $rep_number,
-        range_number    => $range_number,
-        row_number      => $row_number,
-        col_number      => $col_number,
-        seedlot_name    => $seedlot_name,
-        num_seed_per_plot => $num_seed_per_plot,
-        weight_gram_seed_per_plot => $weight_gram_seed_per_plot,
+        trial_name                => $trial_name,
+        trial_type                => $row->{trial_type},
+        planting_date             => $row->{planting_date},
+        harvest_date              => $row->{harvest_date},
+        entry_numbers             => $row->{entry_numbers},
+        is_a_control              => $row->{is_a_control},
+        rep_number                => $row->{rep_number},
+        range_number              => $row->{range_number},
+        row_number                => $row->{row_number},
+        col_number                => $row->{col_number},
+        seedlot_name              => $row->{seedlot_name},
+        num_seed_per_plot         => $row->{num_seed_per_plot},
+        weight_gram_seed_per_plot => $row->{weight_gram_seed_per_plot},
     };
 
-    ### Add the plot name into the multi trial data hashref of hashes ###
-    push( @{ $multi_trial_data{$trial_name}->{plots} } , $plot_name );
-
-    #parse the phenotype data
-    my $timestamp;# timestamp value if storing those ##
     foreach my $trait_string (keys %phen_params) {
-        my $phen_value = $worksheet->get_cell($plot_name, first { $trial_columns[$_] eq $trait_string } 0..@trial_columns);
-        $phen_data_by_trial{$trial_name}{$plot_name}{$trait_string} = [$phen_value, $timestamp];
+       my $phen_value = $row->{$trait_string};
+       $phen_data_by_trial{$trial_name}{$plot_name}{$trait_string} = [$phen_value, DateTime->now->datetime];
     }
 }
 
@@ -381,7 +295,7 @@ print STDERR "Processed trials: " . scalar(keys %trial_design_hash) . "\n";
 print STDERR "Phen data by trial: " . Dumper(\%phen_data_by_trial) . "\n";
 
 #####create the design hash#####
-print Dumper(\%trial_design_hash);
+print Dumper(keys %trial_design_hash);
 foreach my $trial_name (keys %trial_design_hash) {
    $multi_trial_data{$trial_name}->{design} = $trial_design_hash{$trial_name} ;
 }
@@ -395,12 +309,12 @@ my $ignore_warnings;
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
 
-####required phenotypeprops###
-my %phenotype_metadata ;
-$phenotype_metadata{'archived_file'} = $infile;
-$phenotype_metadata{'archived_file_type'} = "spreadsheet phenotype file";
-$phenotype_metadata{'operator'} = $username;
-$phenotype_metadata{'date'} = $date;
+my %phenotype_metadata = {
+    'archived_file'      => $infile,
+    'archived_file_type' => 'spreadsheet phenotype file',
+    'operator'           => $username,
+    'date'               => $date,
+};
 
 #parse uploaded file with appropriate plugin
 $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $infile);
@@ -423,7 +337,6 @@ if ($parser->has_parse_warnings()) {
         print "Warnings: " . join("\n", @{$warnings->{'warning_messages'}}) . "\n";
     }
 }
-# print STDERR "please check errors from here \n";
 
 
 my %all_desings = %{$parsed_data};
@@ -497,37 +410,39 @@ my $coderef= sub  {
 
         # save entry numbers, if provided
         my $entry_numbers;
-        if ( $entry_numbers && scalar(keys %$entry_numbers) > 0 && $current_save->{'trial_id'} ) {
-            my %entry_numbers_prop;
-            my @stock_names = keys %$entry_numbers;
+        if ($entry_numbers = $trial_design_info->{'entry_numbers'}) {
+            if (scalar(keys %$entry_numbers) > 0 && $current_save->{'trial_id'} ) {
+                my %entry_numbers_prop;
+                my @stock_names = keys %$entry_numbers;
 
-            # Convert stock names from parsed trial template to stock ids for data storage
-            my $stocks = $schema->resultset('Stock::Stock')->search({ uniquename=>{-in=>\@stock_names} });
-            while (my $s = $stocks->next()) {
-                $entry_numbers_prop{$s->stock_id} = $entry_numbers->{$s->uniquename};
-            }
-
-            # Lookup synonyms of accession names
-            my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
-            my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
-                'me.is_obsolete' => { '!=' => 't' },
-                'stockprops.value' => { -in => \@stock_names},
-                'stockprops.type_id' => $synonym_cvterm_id
-            },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
-            while (my $r=$acc_synonym_rs->next) {
-                if ( exists($entry_numbers->{$r->get_column('synonym')}) ) {
-                    $entry_numbers_prop{$r->stock_id} = $entry_numbers->{$r->get_column('synonym')};
+                # Convert stock names from parsed trial template to stock ids for data storage
+                my $stocks = $schema->resultset('Stock::Stock')->search({ uniquename=>{-in=>\@stock_names} });
+                while (my $s = $stocks->next()) {
+                    $entry_numbers_prop{$s->stock_id} = $entry_numbers->{$s->uniquename};
                 }
-            }
 
-            # store entry numbers
-            my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $current_save->{'trial_id'} });
-            $trial->set_entry_numbers(\%entry_numbers_prop);
+                # Lookup synonyms of accession names
+                my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+                my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+                    'me.is_obsolete' => { '!=' => 't' },
+                    'stockprops.value' => { -in => \@stock_names},
+                    'stockprops.type_id' => $synonym_cvterm_id
+                },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+                while (my $r=$acc_synonym_rs->next) {
+                    if ( exists($entry_numbers->{$r->get_column('synonym')}) ) {
+                        $entry_numbers_prop{$r->stock_id} = $entry_numbers->{$r->get_column('synonym')};
+                    }
+                }
+
+                # store entry numbers
+                my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $current_save->{'trial_id'} });
+                $trial->set_entry_numbers(\%entry_numbers_prop);
+            }
         }
 
         print STDERR "TrialCreate object created for trial: $trial_name\n";
 
-        my @plots = @{ $multi_trial_data{$trial_name}->{plots} };
+        my @plots = @{$multi_trial_data{$trial_name}->{plots} // []};
         print STDERR "Trial Name = $trial_name\n";
 
         my %parsed_data = $phen_data_by_trial{$trial_name};
@@ -585,47 +500,20 @@ try {
         $email_subject = "Multiple Trial Designs upload status";
         $email_body    = "Dear $logged_in_name,\n\nCongratulations, all the multiple trial designs have been successfully uploaded into the database\n\nThank you\nHave a nice day\n\n";
 
-        my $email = Email::MIME->create(
-            header_str => [
-                From    => 'noreply@breedbase.org',
-                To      => $email_address,
-                Subject => $email_subject,
-            ],
-            attributes => {
-                charset  => 'UTF-8',
-                encoding => 'quoted-printable',  
-            },
-            body_str => $email_body,
-        );
-
-        my $email_string = $email->as_string; 
-        sendmail($email_string);   
+        CXGN::Contact::send_email($email_subject, $email_body, $email_address);
     }
 } catch {
     # Transaction failed
-    my $error_message = "An error occurred! Rolling back! $_\n";
+    if ($email_address) {
+        my $error_message = "An error occurred! Rolling back! $_\n";
 
-    $email_subject = 'Error in Trial Upload';
-    $email_body    = "Dear $logged_in_name,\n\n$error_message\nPlease correct these errors and upload again\n\nThank You\nHave a nice day\n";
+        $email_subject = 'Error in Trial Upload';
+        $email_body    = "Dear $logged_in_name,\n\n$error_message\nPlease correct these errors and upload again\n\nThank You\nHave a nice day\n";
 
-    print STDERR $error_message;
+        print STDERR $error_message;
 
-    my $error_email = Email::MIME->create(
-        header_str => [
-            From    => 'noreply@breedbase.org',
-            To      => $email_address,
-            Subject => $email_subject,
-        ],
-        attributes => {
-            charset  => 'UTF-8',
-            encoding => 'quoted-printable',
-        },
-        body_str => $email_body,
-    );
-
-    my $error_email_string = $error_email->as_string;  
-    sendmail($error_email_string);
-
+        CXGN::Contact::send_email($email_subject, $email_body, $email_address);
+    }
 };
 
 1;

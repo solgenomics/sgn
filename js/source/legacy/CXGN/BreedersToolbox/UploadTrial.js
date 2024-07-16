@@ -129,12 +129,12 @@ jQuery(document).ready(function ($) {
     }
 
     function upload_multiple_trial_designs_file() {
-      jQuery("#upload_multiple_trials_warning_messages").html('');
-      jQuery("#upload_multiple_trials_error_messages").html('');
-      jQuery("#upload_multiple_trials_success_messages").html('');
-      jQuery('#upload_multiple_trial_designs_form').attr("action", "/ajax/trial/upload_multiple_trial_designs_file");
-      jQuery("#upload_multiple_trial_designs_form").submit();
-  }
+        jQuery("#upload_multiple_trials_warning_messages").html('');
+        jQuery("#upload_multiple_trials_error_messages").html('');
+        jQuery("#upload_multiple_trials_success_messages").html('');
+        jQuery('#upload_multiple_trial_designs_form').attr("action", "/ajax/trial/upload_multiple_trial_designs_file");
+        jQuery("#upload_multiple_trial_designs_form").submit();
+    }
 
 
     function open_upload_trial_dialog() {
@@ -163,17 +163,17 @@ jQuery(document).ready(function ($) {
                 },
                 success: function(response) {
                     console.log(response);
-                    if (response.error) {
-                    alert(response.error);
+                        if (response.error) {
+                        alert(response.error);
                     }
                     else {
-                    jQuery('#add_plants_dialog').modal("hide");
+                        jQuery('#add_plants_dialog').modal("hide");
                     }
                 },
                 error: function(response) {
                     alert(response);
                 },
-                });
+            });
         }
     }
 
@@ -297,16 +297,70 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    function toggleEmailField() {
+        var checkbox = jQuery('#email_option_to_recieve_trial_upload_status');
+        var emailField = jQuery('#email_field');
+        var emailLabel = jQuery('#email_label_upload');
+        if (checkbox.prop('checked')) {
+            emailField.show();
+            emailLabel.show();
+        } else {
+            emailField.hide();
+            emailLabel.hide();
+        }
+    }
+
+    jQuery('#email_option_to_recieve_trial_upload_status').on('change', toggleEmailField);
+    // Call the function initially in case the checkbox is already checked
+    toggleEmailField();
+
     jQuery('#upload_multiple_trial_designs_form').iframePostForm({
         json: true,
         post: function () {
             var uploadedTrialLayoutFile = jQuery("#multiple_trial_designs_upload_file").val();
-            jQuery('#working_modal').modal("show");
+            // jQuery('#working_modal').modal("show");
+            var emailAddress = jQuery('#email_address_upload').val();
+            var email_option_enabled = jQuery('#email_option_to_recieve_trial_upload_status').is(':checked') ? 1 : 0;
+            console.log("Email option enabled: ", email_option_enabled);
+            console.log('check email address:', emailAddress);
+
+            // Clear existing messages
+            jQuery("#upload_multiple_trials_warning_messages").html('');
+            jQuery("#upload_multiple_trials_error_messages").html('');
+            jQuery("#upload_multiple_trials_success_messages").html('');
+
             if (uploadedTrialLayoutFile === '') {
                 jQuery('#working_modal').modal("hide");
                 alert("No file selected");
                 return;
             }
+
+            if (email_option_enabled) {
+                alert('You will receive an email when the process is complete.');
+                var formData = jQuery('#upload_multiple_trial_designs_form').serializeArray();
+                formData.push({ name: 'email_address', value: emailAddress });
+                formData.push({ name: 'email_option_enabled', value: email_option_enabled ? 1 : 0 });
+
+                jQuery.ajax({
+                    type: 'POST',
+                    url: '/ajax/trial/upload_multiple_trial_designs_file',
+                    dataType: "json",
+                    data: formData,
+                    success: function(response) {
+                        if (response.error) {
+                            alert(response.error);
+                        } else {
+                            console.log("Upload successful:", response);
+                        }
+                    },
+                    error: function(response) {
+                        jQuery("#upload_multiple_trials_error_messages").hide();
+                        jQuery("#upload_multiple_trials_error_messages").html('<b>An error occurred:</b> ' + response.responseText);
+                    }
+                });
+                return;
+            }
+            jQuery('#working_modal').modal("show");
         },
         complete: function(response) {
             console.log(response);

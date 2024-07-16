@@ -50,9 +50,11 @@ use YAML;
 use CXGN::TrialStatus;
 use CXGN::Calendar;
 use CXGN::BreedersToolbox::SoilData;
-use Email::Sender::Simple qw /sendmail/;
-use Email::Simple;
-use Email::Simple::Creator;
+use CXGN::Contact;
+use CXGN::File::Parse;
+# use Email::Sender::Simple qw /sendmail/;
+# use Email::Simple;
+# use Email::Simple::Creator;
 use CXGN::Tools::Run;
 use CXGN::People::Person;
 
@@ -1188,6 +1190,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $email_address;
     my $breeding_program_name;
     my $user_email;
+    my $email_option_enabled;
 
     # print STDERR "Check 2: ".localtime()."\n";
     print STDERR "Ignore warnings is $ignore_warnings\n";
@@ -1209,7 +1212,10 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
     $user_id    = $c->user()->get_object()->get_sp_person_id();
     $username  = $c->user()->get_object()->get_username();
-    $user_email = $c->user()->get_object()->get_private_email();
+    $email_address = $c->user()->get_object()->get_contact_email();
+    # $user_email = $c->user()->get_object()->get_private_email();
+    $email_option_enabled = $c->req->param('email_option_enabled');
+    my $email_test = $c->req->param('email_address');
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({

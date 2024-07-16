@@ -88,14 +88,14 @@ $full_name => ""
                                             </form>
                                                 <div class="form-group" style="margin-bottom: 50px;">
                                                     <div class="col-sm-3"></div>
-                                                    <label class="col-sm-2 control-label">Email Report: </label>
+                                                    <label class="col-sm-2 control-label">Email Alert: </label>
                                                     <div class="col-sm-2" style="margin-left: -5px;">
                                                         <input id="email_option_to_recieve_trial_upload_status" name="email_option_to_recieve_trial_upload_status" type="checkbox" data-toggle="toggle">
                                                     </div>
                                                     <div id="email_field" style = "display: none;">
-                                                        <label class="col-sm-1 control-label">Email: </label>
+                                                        <label id="email_label_upload" class="col-sm-1 control-label">Email: </label>
                                                         <div class="col-sm-2">
-                                                            <input id="email_address" name="email_address" type="email" value="<% $email_address %>">
+                                                            <input id="email_address_upload" name="email_address_upload" type="email" value="<% $email_address %>">
                                                         </div>
                                                     </div>
                                                     <div class="col-sm-2"></div>
@@ -834,22 +834,6 @@ jQuery(document).ready(function(){
       if (this.checked) {
         jQuery('#upload_multiple_trials_warning_messages').hide();
       }
-    });
-
-    jQuery(document).ready(function() {
-        function toggleEmailField() {
-            var checkbox = jQuery('#email_option_to_recieve_trial_upload_status');
-            var emailField = jQuery('#email_field');
-            if (checkbox.prop('checked')) {
-                emailField.show();
-            } else {
-                emailField.hide();
-            }
-        }
-
-        jQuery('#email_option_to_recieve_trial_upload_status').on('change', toggleEmailField);
-        // Call the function initially in case the checkbox is already checked
-        toggleEmailField();
     });
 });
 </script>
