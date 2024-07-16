@@ -9,9 +9,17 @@
 $breeding_programs
 $locations
 $design_types => ()
-$email_address => ""
 $full_name => ""
 </%args>
+
+<%perl>
+    my $user_role = '';
+    my $email_address = '';
+    if ($c->user) {
+        $user_role = $c->user->get_object()->get_user_type();
+        $email_address = $c->user->get_object()->get_private_email();
+    }
+</%perl>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 

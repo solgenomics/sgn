@@ -112,7 +112,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{locations} = $locations;
 
     $c->stash->{breeding_programs} = \@breeding_programs;
-    $c->stash->{email_address} = $c->user->get_object->get_contact_email();
+    # $c->stash->{email_address} = $c->user->get_object->get_contact_email();
     $c->stash->{full_name} = $c->user->get_object->get_first_name . " " . $c->user->get_object->get_last_name;
 
     $c->stash->{template} = '/breeders_toolbox/manage_projects.mas';
