@@ -32,6 +32,12 @@ The "Navigator" section on the trial detail page allows easy access to all aspec
 knitr::include_graphics('assets/images/trial_detail_page_navigator.png')
 ```
 
+The "transplanting date" field feature will only be shown if it has a value. To add a transplanting date after creating a trial, change the show_transplanting_date parameter from 0 to 1 in the SGN config file. As a result, you will be able to add a date under the transplanting date field by clicking the "Edit Trial Details" on the trial detail page.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_transplanting_date.png')
+```
+
 ## Adding Trials
 
 Only users with the account status of "submitter" may create trials. To learn how to change your account status from "user" to "submitter" visit the \@ref(managing-your-account) page.
@@ -246,6 +252,15 @@ To add multi-location trials, simply select the multiple locations while using t
 This will create a separate trial for each selected location, but they will share the same design and will be grouped in a single folder.
 
 By default each trial design will have a fresh randomization, but if desired you may check the "Use same randomization for all locations" option.
+
+
+### Email alert for multiple trial design upload
+
+When uploading multiple trials through a file, you can opt for email notifications by clicking the "Email Alert" checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/multiple_trial_upload_with_email.png')
+```
 
 ### Viewing Plot Layout and Trait HeatMap
 
