@@ -8,7 +8,6 @@ $editable_stock_props_definitions => {}
 $timestamp
 $management_factor_types => ()
 $design_types => ()
-$email_address => ""
 $full_name => ""
 </%args>
 
@@ -25,7 +24,7 @@ $full_name => ""
 
 <& /breeders_toolbox/trial/download_trials_phenotypes_dialog.mas &>
 
-<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs, design_types => $design_types, email_address => $email_address, full_name => $full_name &>
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs, design_types => $design_types, full_name => $full_name &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>

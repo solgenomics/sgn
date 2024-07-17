@@ -300,13 +300,13 @@ jQuery(document).ready(function ($) {
     function toggleEmailField() {
         var checkbox = jQuery('#email_option_to_recieve_trial_upload_status');
         var emailField = jQuery('#email_field');
-        var emailLabel = jQuery('#email_label_upload');
+        // var emailLabel = jQuery('#email_label_upload');
         if (checkbox.prop('checked')) {
             emailField.show();
-            emailLabel.show();
+            // emailLabel.show();
         } else {
             emailField.hide();
-            emailLabel.hide();
+            // emailLabel.hide();/
         }
     }
 
