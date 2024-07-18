@@ -358,6 +358,7 @@ jQuery(document).ready(function ($) {
                         jQuery("#upload_multiple_trials_error_messages").html('<b>An error occurred:</b> ' + response.responseText);
                     }
                 });
+                jQuery("#upload_trial_dialog").modal('hide');
                 return;
             }
             jQuery('#working_modal').modal("show");
