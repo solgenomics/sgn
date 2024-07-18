@@ -108,29 +108,37 @@ sub genotyping_data_search_GET : Args(0) {
             if ($counter >= $start_index && $counter < $end_index) {
                 my %source_info = ();
                 my @all_sources = ();
+                my $source_link;
                 my $sources = $identifier_hash{$stock_id}{sources};
                 %source_info = %$sources;
-                foreach my $source_id (keys %source_info) {
-                    my $name = $source_info{$source_id}{germplasmName};
-                    my $stock_type_id = $bcs_schema->resultset("Stock::Stock")->find({stock_id => $source_id})->type_id();
-                    my $source_link;
-                    if ($stock_type_id == $accession_cvterm_id) {
-                        $source_link = 'accession'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
-                    } elsif ($stock_type_id == $plot_cvterm_id) {
-                        $source_link = 'plot'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
-                    } elsif ($stock_type_id == $plant_cvterm_id) {
-                        $source_link = 'plant'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
-                    } elsif ($stock_type_id == $tissue_sample_cvterm_id) {
-                        $source_link = 'tissue sample'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
+                my @ids = keys %source_info;
+                my $number_of_sources = scalar @ids;
+
+                if ($number_of_sources == 1) {
+                    $source_link =  qq{<a href="/stock/$ids[0]/view\">$source_info{$ids[0]}{germplasmName}</a>}
+                } else {
+                    foreach my $source_id (sort @ids) {
+                        my $name = $source_info{$source_id}{germplasmName};
+                        my $stock_type_id = $bcs_schema->resultset("Stock::Stock")->find({stock_id => $source_id})->type_id();
+                        my $link;
+                        if ($stock_type_id == $accession_cvterm_id) {
+                            $link = 'accession'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
+                        } elsif ($stock_type_id == $plot_cvterm_id) {
+                            $link = 'plot'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
+                        } elsif ($stock_type_id == $plant_cvterm_id) {
+                            $link = 'plant'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
+                        } elsif ($stock_type_id == $tissue_sample_cvterm_id) {
+                            $link = 'tissue sample'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
+                        }
+                        push @all_sources, $link;
                     }
-                    push @all_sources, $source_link;
+                    $source_link = join("<br>", @all_sources);
                 }
-                my $sources_string = join("<br>", @all_sources);
                 push @result, [
                     "<a href=\"/breeders_toolbox/protocol/$identifier_hash{$stock_id}{protocol_id}\">$identifier_hash{$stock_id}{protocol_name}</a>",
                     "<a href=\"/stock/$stock_id/view\">$identifier_hash{$stock_id}{stock_name}</a>",
                     $identifier_hash{$stock_id}{stock_type_name},
-                    $sources_string,
+                    $source_link,
                     $identifier_hash{$stock_id}{synonym_string},
                     $identifier_hash{$stock_id}{description},
                     $identifier_hash{$stock_id}{result_count},
