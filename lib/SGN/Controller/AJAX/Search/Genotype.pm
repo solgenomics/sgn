@@ -27,6 +27,7 @@ use File::Spec::Functions;
 use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use DateTime;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -77,27 +78,83 @@ sub genotyping_data_search_GET : Args(0) {
         my $end_index = $offset + $limit;
         # print STDERR Dumper [$start_index, $end_index];
 
+        my %identifier_hash = ();
         while (my $gt_line = <$fh>) {
+            my $g = decode_json $gt_line;
+            my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
+            my $stock_id = $g->{stock_id};
+            my $source_id = $g->{germplasmDbId};
+            $identifier_hash{$stock_id}{sources}{$source_id}{germplasmDbId}= $g->{germplasmDbId};
+            $identifier_hash{$stock_id}{sources}{$source_id}{germplasmName}= $g->{germplasmName};
+            $identifier_hash{$stock_id}{stock_id} = $stock_id;
+            $identifier_hash{$stock_id}{stock_name} = $g->{stock_name};
+            $identifier_hash{$stock_id}{protocol_id} = $g->{analysisMethodDbId};
+            $identifier_hash{$stock_id}{protocol_name} = $g->{analysisMethod};
+            $identifier_hash{$stock_id}{stock_type_name} = $g->{stock_type_name};
+            $identifier_hash{$stock_id}{synonym_string} = $synonym_string;
+            $identifier_hash{$stock_id}{description} = $g->{genotypeDescription};
+            $identifier_hash{$stock_id}{result_count} = $g->{resultCount};
+            $identifier_hash{$stock_id}{igd_number} = $g->{igd_number};
+            $identifier_hash{$stock_id}{genotype_id} = $g->{markerProfileDbId};
+        }
+
+        print STDERR "IDENTIFIER HASH =".Dumper(\%identifier_hash)."\n";
+        my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'accession', 'stock_type')->cvterm_id();
+        my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+        my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'plot', 'stock_type')->cvterm_id();
+        my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'plant', 'stock_type')->cvterm_id();
+
+
+        foreach my $stock_id (keys %identifier_hash) {
             if ($counter >= $start_index && $counter < $end_index) {
-                my $g = decode_json $gt_line;
-#                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
-                my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
+                my %source_info = ();
+                my @all_sources = ();
+                my $sources = $identifier_hash{$stock_id}{sources};
+                %source_info = %$sources;
+                foreach my $source_id (keys %source_info) {
+                #            my $stock_type_id = $bcs_schema->resultset("Stock::Stock")->find({stock_id => $source_id})->type_id();
+                    my $name = $source_info{$source_id}{germplasmName};
+                    my $source_link = qq{<a href="/stock/$source_id/view\">$name</a>};
+                    push @all_sources, $source_link;
+                }
+                my $sources_string = join("<br>", @all_sources);
                 push @result, [
-                    "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
-                    "<a href=\"/stock/$g->{stock_id}/view\">$g->{stock_name}</a>",
-                    $g->{stock_type_name},
-                    "<a href=\"/stock/$g->{germplasmDbId}/view\">$g->{germplasmName}</a>",
-                    $synonym_string,
-                    $g->{genotypeDescription},
-                    $g->{resultCount},
-                    $g->{igd_number},
-                    "<a href=\"/stock/$g->{stock_id}/genotypes?genotype_id=$g->{markerProfileDbId}\">Download</a>"
-                ];
+                    "<a href=\"/breeders_toolbox/protocol/$identifier_hash{$stock_id}{protocol_id}\">$identifier_hash{$stock_id}{protocol_name}</a>",
+                    "<a href=\"/stock/$stock_id/view\">$identifier_hash{$stock_id}{stock_name}</a>",
+                    $identifier_hash{$stock_id}{stock_type_name},
+                    $sources_string,
+                    $identifier_hash{$stock_id}{synonym_string},
+                    $identifier_hash{$stock_id}{description},
+                    $identifier_hash{$stock_id}{result_count},
+                    $identifier_hash{$stock_id}{igd_number},
+                    "<a href=\"/stock/$stock_id/genotypes?genotype_id=$identifier_hash{$stock_id}{genotype_id}\">Download</a>"
+                ]
             }
             $counter++;
         }
     }
-    #print STDERR Dumper \@result;
+
+#        while (my $gt_line = <$fh>) {
+#            if ($counter >= $start_index && $counter < $end_index) {
+#                my $g = decode_json $gt_line;
+#                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
+#                my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
+#                push @result, [
+#                    "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
+#                    "<a href=\"/stock/$g->{stock_id}/view\">$g->{stock_name}</a>",
+#                    $g->{stock_type_name},
+#                    "<a href=\"/stock/$g->{germplasmDbId}/view\">$g->{germplasmName}</a>",
+#                    $synonym_string,
+#                    $g->{genotypeDescription},
+#                    $g->{resultCount},
+#                    $g->{igd_number},
+#                    "<a href=\"/stock/$g->{stock_id}/genotypes?genotype_id=$g->{markerProfileDbId}\">Download</a>"
+#                ];
+#            }
+#            $counter++;
+#        }
+
+    print STDERR "RESULT =".Dumper(\@result)."\n";
 
     my $draw = $c->req->param('draw');
     if ($draw){
