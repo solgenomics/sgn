@@ -104,7 +104,6 @@ sub genotyping_data_search_GET : Args(0) {
         my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'plot', 'stock_type')->cvterm_id();
         my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'plant', 'stock_type')->cvterm_id();
 
-
         foreach my $stock_id (keys %identifier_hash) {
             if ($counter >= $start_index && $counter < $end_index) {
                 my %source_info = ();
@@ -112,9 +111,18 @@ sub genotyping_data_search_GET : Args(0) {
                 my $sources = $identifier_hash{$stock_id}{sources};
                 %source_info = %$sources;
                 foreach my $source_id (keys %source_info) {
-                #            my $stock_type_id = $bcs_schema->resultset("Stock::Stock")->find({stock_id => $source_id})->type_id();
                     my $name = $source_info{$source_id}{germplasmName};
-                    my $source_link = qq{<a href="/stock/$source_id/view\">$name</a>};
+                    my $stock_type_id = $bcs_schema->resultset("Stock::Stock")->find({stock_id => $source_id})->type_id();
+                    my $source_link;
+                    if ($stock_type_id == $accession_cvterm_id) {
+                        $source_link = 'accession'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
+                    } elsif ($stock_type_id == $plot_cvterm_id) {
+                        $source_link = 'plot'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
+                    } elsif ($stock_type_id == $plant_cvterm_id) {
+                        $source_link = 'plant'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
+                    } elsif ($stock_type_id == $tissue_sample_cvterm_id) {
+                        $source_link = 'tissue sample'.":". qq{<a href="/stock/$source_id/view\">$name</a>};
+                    }
                     push @all_sources, $source_link;
                 }
                 my $sources_string = join("<br>", @all_sources);
