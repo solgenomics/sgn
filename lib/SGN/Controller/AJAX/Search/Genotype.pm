@@ -98,13 +98,12 @@ sub genotyping_data_search_GET : Args(0) {
             $identifier_hash{$stock_id}{genotype_id} = $g->{markerProfileDbId};
         }
 
-        print STDERR "IDENTIFIER HASH =".Dumper(\%identifier_hash)."\n";
         my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'accession', 'stock_type')->cvterm_id();
         my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
         my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'plot', 'stock_type')->cvterm_id();
         my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'plant', 'stock_type')->cvterm_id();
 
-        foreach my $stock_id (keys %identifier_hash) {
+        foreach my $stock_id (sort keys %identifier_hash) {
             if ($counter >= $start_index && $counter < $end_index) {
                 my %source_info = ();
                 my @all_sources = ();
@@ -169,8 +168,6 @@ sub genotyping_data_search_GET : Args(0) {
 #            }
 #            $counter++;
 #        }
-
-    print STDERR "RESULT =".Dumper(\@result)."\n";
 
     my $draw = $c->req->param('draw');
     if ($draw){
