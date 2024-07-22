@@ -138,26 +138,20 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict GEBVs', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(10);
-    # $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'list sl pop')->click();
-    # sleep(10);
-    # $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
-    # sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
     sleep(5);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('clones list sel pred');
+    $d->find_element_ok('analysis_name', 'id', 'job queueing name')->send_keys('clones list sel pred');
     sleep(2);
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
-    # $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sl pop')->click();
-    # sleep(10);
-    # $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
-    # sleep(5);
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
+    sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'click list sel pred')->click();
     sleep(10);
 
@@ -167,44 +161,34 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
-    # $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'dataset')->click();
-    # sleep(10);
-    # $d->find_element_ok('//input[@value="View"]', 'xpath', 'select dataset sel pop')->click();
-    # sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions dataset sel pred')->click();
     sleep(5);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('dataset clones sel pred');
+    $d->find_element_ok('analysis_name', 'id', 'job queueing name')->send_keys('dataset  accessions sel pred');
     sleep(2);
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
 
-    my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
+    my $sel_pred = $d->find_element('Predict GEBVs', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
-    # $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
-    # sleep(10);
-    # $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
     sleep(5);
-    $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'click list sel pred')->click();
+    $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'dataset accessions sel pred result')->click();
     sleep(10);
 
-    # $d->get('/solgs/population/' . $plots_list_id, 'plots list tr pop page');
-    # sleep(3);
-
     $d->driver->go_back();
-    sleep(3);
+    sleep(5);
 
     $d->driver->execute_script( "window.scrollTo(0, 50)");
     sleep(5);
     $d->find_element_ok('plots list', 'partial_link_text', 'get training pop page')->click();
     sleep(5);
-
 
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
     sleep(2);
@@ -249,12 +233,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->driver->go_back();
-    sleep(6);
+    sleep(5);
 
-    # $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'list sl pop')->click();
-    # sleep(5);
-    # $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
-    # sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel multi traits pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -267,20 +247,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
-    # $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'list sl page')->click();
-    # sleep(5);
-    # $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
-    # sleep(5);
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
+    sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'Go to FRW selection prediction page')->click();
     sleep(5);
 
     $d->driver->go_back();
     sleep(5);
 
-    # $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dt sl pop')->click();
-    # sleep(5);
-    # $d->find_element_ok('//input[@value="View"]', 'xpath', 'select dataset sel pop')->click();
-    # sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions dataset sel multi traits pred')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -297,11 +271,9 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
-    # $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'dataset')->click();
-    # sleep(10);
-    # $d->find_element_ok('//input[@value="View"]', 'xpath', 'dataset sel pop')->click();
-    # sleep(5);
-    $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'accessions dataset dmcp-frw pred')->click();
+    $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
+    sleep(5);
+    $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'accessions dataset dmcp-frw pred')->click();
     sleep(10);
 
 
@@ -312,7 +284,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(4);
 
 
-    $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'run pca')->click(); 
+    $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'trials list sel pred')->click(); 
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
@@ -325,7 +297,8 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(10);
-    $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'run pca')->click();
+
+    $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'trials list sel pred')->click();
     sleep(10);
 
 
@@ -380,11 +353,11 @@ $d->while_logged_in_as("submitter", sub {
     # $d->driver->go_back();
     # sleep(5);
 
-    `rm -r $cache_dir`;
-    sleep(5);
+    # `rm -r $cache_dir`;
+    # sleep(5);
 
-    $d->driver->refresh();
-    sleep(5);
+    # $d->driver->refresh();
+    # sleep(5);
 
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'create trials dataset tr pop')->click();
     sleep(3);
