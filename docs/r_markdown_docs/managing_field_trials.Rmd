@@ -256,7 +256,7 @@ By default each trial design will have a fresh randomization, but if desired you
 
 ### Email alert for multiple trial design upload
 
-When uploading multiple trials through a file, you can opt for email notifications by clicking the "Email Alert" checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results.
+When uploading multiple trials from a file, you have the option to receive email notifications by clicking the "Email Alert" checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/multiple_trial_upload_with_email.png')
