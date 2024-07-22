@@ -77,7 +77,7 @@ $field_trial_is_planned_to_cross
                       </div>
                     </div>
                 </div>
-% if($show_transplanting_date){
+% if($show_transplanting_date == 1){
     <div class="form-group">
         <label class="col-sm-3 control-label" for="edit_trial_transplanting_date">Transplanting Date: </label>
         <div class="col-sm-8">
