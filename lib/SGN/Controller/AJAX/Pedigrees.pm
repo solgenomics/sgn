@@ -47,19 +47,11 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $user_name = $c->user()->get_object()->get_username();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'pedigree_upload';
-
     my $upload = $c->req->upload('pedigrees_uploaded_file');
     my $upload_tempfile  = $upload->tempname;
-
     my $upload_original_name  = $upload->filename();
 
-    # check file type by file name extension
-    #
-    if ($upload_original_name =~ /\.xls$|\.xlsx/) {
-	$c->stash->{rest} = { error => "Pedigree upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
-	return;
-    }
-
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $md5;
 
     my @user_roles = $c->user()->roles();
@@ -88,6 +80,14 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
 
+    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('PedigreesGeneric');
+    my $parsed_data = $parser->parse();
+
+
+
+
+=pod
     # check if all accessions exist
     #
     open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
@@ -187,6 +187,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     } else {
         $c->stash->{rest} = {archived_file_name => $archived_filename_with_path};
     }
+=cut
+
 }
 
 sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
@@ -323,7 +325,7 @@ sub _get_pedigrees_from_file {
         }
 
 	print STDERR "PEDIGREE NOW: ".Dumper($opts);
-	
+
         my $p = Bio::GeneticRelationships::Pedigree->new($opts);
         push @pedigrees, $p;
         $line_num++;
