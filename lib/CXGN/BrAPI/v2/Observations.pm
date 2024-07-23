@@ -315,8 +315,8 @@ sub _search {
 		my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
 	    
 	    
-		if ( $start_date && DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) { next; } #skip observations before date range
-		if ( $end_date && DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) { next; } #skip observations after date range
+		if ( $start_date && (DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) ) { next; } #skip observations before date range
+		if ( $end_date && (DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) ) { next; } #skip observations after date range
 	    }
 
             if ($counter >= $start_index && $counter <= $end_index) {
