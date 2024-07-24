@@ -50,6 +50,10 @@ use YAML;
 use CXGN::TrialStatus;
 use CXGN::Calendar;
 use CXGN::BreedersToolbox::SoilData;
+use CXGN::Contact;
+use CXGN::File::Parse;
+use CXGN::People::Person;
+use CXGN::Tools::Run;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1148,29 +1152,41 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     # print STDERR "Check 1: ".localtime()."\n";
 
     # print STDERR Dumper $c->req->params();
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('multiple_trial_designs_upload_file');
-    my $ignore_warnings = $c->req->param('upload_multiple_trials_ignore_warnings');
+    my $chado_schema               = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema            = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema             = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh                        = $c->dbc->dbh;
+    my $upload                     = $c->req->upload('multiple_trial_designs_upload_file');
+    my $ignore_warnings            = $c->req->param('upload_multiple_trials_ignore_warnings');
+    my $dir                        = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $dbhost                     = $c->config->{dbhost};
+    my $dbname                     = $c->config->{dbname};
+    my $dbpass                     = $c->config->{dbpass};
+    my $basepath                   = $c->config->{basepath};
+    my $dbuser                     = $c->config->{dbuser};
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+    my $time                       = DateTime->now();
+    my $timestamp                  = $time->ymd()."_".$time->hms();
+    my $upload_original_name       = $upload->filename();
+    my $upload_tempfile            = $upload->tempname;
+    my $subdirectory               = "trial_upload";
+    my $archive_filename           = $timestamp . "_" . $upload_original_name;
+    my $archived_filename_with_path;
     my $parser;
     my $parsed_data;
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "trial_upload";
-    my $archived_filename_with_path;
     my $md5;
     my $validate_file;
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
     my %upload_metadata;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
     my $user_id;
-    my $user_name;
+    my $username;
     my $error;
+    my $email_address ;
+    my $email_option_enabled;
+    my $breeding_program_name;
+
 
     # print STDERR "Check 2: ".localtime()."\n";
     print STDERR "Ignore warnings is $ignore_warnings\n";
@@ -1190,8 +1206,13 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         return;
     }
 
-    $user_id = $c->user()->get_object()->get_sp_person_id();
-    $user_name = $c->user()->get_object()->get_username();
+    $user_id              = $c->user()->get_object()->get_sp_person_id();
+    $username             = $c->user()->get_object()->get_username();
+    $email_address        = $c->req->param('email_address');
+    $email_option_enabled = $c->req->param('email_option_enabled');
+
+    print STDERR "email option enabled : $email_option_enabled\n";
+    print STDERR "recieved  address: $email_address\n";
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
@@ -1206,23 +1227,24 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {errors => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
         return;
     }
     unlink $upload_tempfile;
 
+    my $infile = $archived_filename_with_path;
     # print STDERR "Check 3: ".localtime()."\n";
     $upload_metadata{'archived_file'} = $archived_filename_with_path;
     $upload_metadata{'archived_file_type'}="trial upload file";
     $upload_metadata{'user_id'}=$user_id;
     $upload_metadata{'date'}="$timestamp";
 
-
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin('MultipleTrialDesignExcelFormat');
     $parsed_data = $parser->parse();
 
+    # print STDERR "check the parsed data : \n" . Dumper($parsed_data); 
     if (!$parsed_data) {
         my $return_error = '';
 
@@ -1247,115 +1269,137 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         }
     }
 
-    # print STDERR "Check 4: ".localtime()."\n";
+    print STDERR "Check 4: ".localtime()."\n";
+    # extract the breeding_program_name from the trial
+
+    for my $trial (values%$parsed_data) {
+        if (exists $trial->{'breeding_program'}) {
+            $breeding_program_name = $trial->{'breeding_program'};
+        }
+    }
+    unless ($breeding_program_name) {
+        $c->stash->{rest} = {errors => "Breeding program not found in the uploaded file."};
+        return;
+    }
+    print STDERR "Breeding program name: $breeding_program_name\n";
+
+    # my $projects = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema });
+    # my $breeding_program = $projects->get_breeding_program_by_name($breeding_program_name);
+
     my %all_designs = %{$parsed_data};
     my %save;
     $save{'errors'} = [];
 
-    my $coderef = sub {
+    # print STDERR "breeding_program_name:  $breeding_program_name \n";
+    # print STDERR "infile:  $infile \n";
 
-      for my $trial_name ( keys %all_designs ) {
-        my $trial_design = $all_designs{$trial_name};
-        # print STDERR "\nSaving trial $trial_name:\n";
-        my %trial_info_hash = (
-            chado_schema => $chado_schema,
-            dbh => $dbh,
-            owner_id => $user_id,
-            trial_year => $trial_design->{'year'},
-            trial_description => $trial_design->{'description'},
-            trial_location => $trial_design->{'location'},
-            trial_name => $trial_name,
-            design_type => $trial_design->{'design_type'},
-            design => $trial_design->{'design_details'},
-            program => $trial_design->{'breeding_program'},
-            upload_trial_file => $upload,
-            operator => $user_name,
-            owner_id => $user_id
-        );
-        my $entry_numbers = $trial_design->{'entry_numbers'};
+    my $async_upload = CXGN::Tools::Run->new();
+    $async_upload->run_async("perl $basepath/bin/upload_multiple_trial_design.pl -H $dbhost -D $dbname -P $dbpass -w $basepath -U $dbuser -b $breeding_program_name -i $infile -un $username -e $email_address -eo $email_option_enabled -r $temp_file_nd_experiment_id");
 
-        if ($trial_design->{'trial_type'}){
-            $trial_info_hash{trial_type} = $trial_design->{'trial_type'};
-        }
-        if ($trial_design->{'plot_width'}){
-            $trial_info_hash{plot_width} = $trial_design->{'plot_width'};
-        }
-        if ($trial_design->{'plot_length'}){
-            $trial_info_hash{plot_length} = $trial_design->{'plot_length'};
-        }
-        if ($trial_design->{'field_size'}){
-            $trial_info_hash{field_size} = $trial_design->{'field_size'};
-        }
-        if ($trial_design->{'planting_date'}){
-            $trial_info_hash{planting_date} = $trial_design->{'planting_date'};
-        }
-        if ($trial_design->{'harvest_date'}){
-            $trial_info_hash{harvest_date} = $trial_design->{'harvest_date'};
-        }
-        if ($trial_design->{'transplanting_date'}){
-            $trial_info_hash{transplanting_date} = $trial_design->{'transplanting_date'};
-        }
-        my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
-        my $current_save = $trial_create->save_trial();
+    # my $coderef = sub {
 
-        if ($current_save->{error}){
-            $chado_schema->txn_rollback();
-            push @{$save{'errors'}}, $current_save->{'error'};
-        } elsif ($current_save->{'trial_id'}) {
-            my $trial_id = $current_save->{'trial_id'};
-            my $timestamp = $time->ymd();
-            my $calendar_funcs = CXGN::Calendar->new({});
-            my $formatted_date = $calendar_funcs->check_value_format($timestamp);
-            my $upload_date = $calendar_funcs->display_start_date($formatted_date);
+    #   for my $trial_name ( keys %all_designs ) {
+    #     my $trial_design = $all_designs{$trial_name};
+    #     # print STDERR "\nSaving trial $trial_name:\n";
+    #     my %trial_info_hash = (
+    #         chado_schema => $chado_schema,
+    #         dbh => $dbh,
+    #         owner_id => $user_id,
+    #         trial_year => $trial_design->{'year'},
+    #         trial_description => $trial_design->{'description'},
+    #         trial_location => $trial_design->{'location'},
+    #         trial_name => $trial_name,
+    #         design_type => $trial_design->{'design_type'},
+    #         design => $trial_design->{'design_details'},
+    #         program => $trial_design->{'breeding_program'},
+    #         upload_trial_file => $upload,
+    #         operator => $user_name,
+    #         owner_id => $user_id
+    #     );
+    #     my $entry_numbers = $trial_design->{'entry_numbers'};
 
-            my %trial_activity;
-            $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
-            $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+    #     if ($trial_design->{'trial_type'}){
+    #         $trial_info_hash{trial_type} = $trial_design->{'trial_type'};
+    #     }
+    #     if ($trial_design->{'plot_width'}){
+    #         $trial_info_hash{plot_width} = $trial_design->{'plot_width'};
+    #     }
+    #     if ($trial_design->{'plot_length'}){
+    #         $trial_info_hash{plot_length} = $trial_design->{'plot_length'};
+    #     }
+    #     if ($trial_design->{'field_size'}){
+    #         $trial_info_hash{field_size} = $trial_design->{'field_size'};
+    #     }
+    #     if ($trial_design->{'planting_date'}){
+    #         $trial_info_hash{planting_date} = $trial_design->{'planting_date'};
+    #     }
+    #     if ($trial_design->{'harvest_date'}){
+    #         $trial_info_hash{harvest_date} = $trial_design->{'harvest_date'};
+    #     }
+    #     if ($trial_design->{'transplanting_date'}){
+    #         $trial_info_hash{transplanting_date} = $trial_design->{'transplanting_date'};
+    #     }
+    #     my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
+    #     my $current_save = $trial_create->save_trial();
 
-            my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
-            $trial_activity_obj->trial_activities(\%trial_activity);
-            $trial_activity_obj->parent_id($trial_id);
-            my $activity_prop_id = $trial_activity_obj->store();
-        }
+    #     if ($current_save->{error}){
+    #         $chado_schema->txn_rollback();
+    #         push @{$save{'errors'}}, $current_save->{'error'};
+    #     } elsif ($current_save->{'trial_id'}) {
+    #         my $trial_id = $current_save->{'trial_id'};
+    #         my $timestamp = $time->ymd();
+    #         my $calendar_funcs = CXGN::Calendar->new({});
+    #         my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+    #         my $upload_date = $calendar_funcs->display_start_date($formatted_date);
 
-        # save entry numbers, if provided
-        if ( $entry_numbers && scalar(keys %$entry_numbers) > 0 && $current_save->{'trial_id'} ) {
-            my %entry_numbers_prop;
-            my @stock_names = keys %$entry_numbers;
+    #         my %trial_activity;
+    #         $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
+    #         $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
 
-            # Convert stock names from parsed trial template to stock ids for data storage
-            my $stocks = $chado_schema->resultset('Stock::Stock')->search({ uniquename=>{-in=>\@stock_names} });
-            while (my $s = $stocks->next()) {
-                $entry_numbers_prop{$s->stock_id} = $entry_numbers->{$s->uniquename};
-            }
+    #         my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
+    #         $trial_activity_obj->trial_activities(\%trial_activity);
+    #         $trial_activity_obj->parent_id($trial_id);
+    #         my $activity_prop_id = $trial_activity_obj->store();
+    #     }
 
-            # Lookup synonyms of accession names
-            my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_synonym', 'stock_property')->cvterm_id();
-            my $acc_synonym_rs = $chado_schema->resultset("Stock::Stock")->search({
-                'me.is_obsolete' => { '!=' => 't' },
-                'stockprops.value' => { -in => \@stock_names},
-                'stockprops.type_id' => $synonym_cvterm_id
-            },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
-            while (my $r=$acc_synonym_rs->next) {
-                if ( exists($entry_numbers->{$r->get_column('synonym')}) ) {
-                    $entry_numbers_prop{$r->stock_id} = $entry_numbers->{$r->get_column('synonym')};
-                }
-            }
+    #     # save entry numbers, if provided
+    #     if ( $entry_numbers && scalar(keys %$entry_numbers) > 0 && $current_save->{'trial_id'} ) {
+    #         my %entry_numbers_prop;
+    #         my @stock_names = keys %$entry_numbers;
 
-            # store entry numbers
-            my $trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $current_save->{'trial_id'} });
-            $trial->set_entry_numbers(\%entry_numbers_prop);
-        }
-      }
+    #         # Convert stock names from parsed trial template to stock ids for data storage
+    #         my $stocks = $chado_schema->resultset('Stock::Stock')->search({ uniquename=>{-in=>\@stock_names} });
+    #         while (my $s = $stocks->next()) {
+    #             $entry_numbers_prop{$s->stock_id} = $entry_numbers->{$s->uniquename};
+    #         }
 
-    };
+    #         # Lookup synonyms of accession names
+    #         my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    #         my $acc_synonym_rs = $chado_schema->resultset("Stock::Stock")->search({
+    #             'me.is_obsolete' => { '!=' => 't' },
+    #             'stockprops.value' => { -in => \@stock_names},
+    #             'stockprops.type_id' => $synonym_cvterm_id
+    #         },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+    #         while (my $r=$acc_synonym_rs->next) {
+    #             if ( exists($entry_numbers->{$r->get_column('synonym')}) ) {
+    #                 $entry_numbers_prop{$r->stock_id} = $entry_numbers->{$r->get_column('synonym')};
+    #             }
+    #         }
 
-    try {
-        $chado_schema->txn_do($coderef);
-    } catch {
-        print STDERR "Transaction Error: $_\n";
-        push @{$save{'errors'}}, $_;
-    };
+    #         # store entry numbers
+    #         my $trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $current_save->{'trial_id'} });
+    #         $trial->set_entry_numbers(\%entry_numbers_prop);
+    #     }
+    #   }
+
+    # };
+
+    # try {
+    #     $chado_schema->txn_do($coderef);
+    # } catch {
+    #     print STDERR "Transaction Error: $_\n";
+    #     push @{$save{'errors'}}, $_;
+    # };
 
     #print STDERR "Check 5: ".localtime()."\n";
     if (scalar @{$save{'errors'}} > 0) {
