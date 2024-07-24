@@ -103,44 +103,65 @@ sub _validate_with_plugin {
         if (($female && !$male) && ($cross_type ne 'open')) {
             push @error_messages, "For $progeny on line number $line_number no male parent specified and cross_type is not open...";
         }
-
-        if (($cross_type eq "self") || ($cross_type eq "reselected") || ($cross_type eq "dihaploid_induction") || ($cross_type eq "doubled_haploid") ) {
-            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-        }
-        elsif ($cross_type eq 'biparental') {
+        if ($cross_type eq 'biparental') {
             if (!$male){
                 push @error_messages, "For $progeny Cross Type is biparental, but no male parent given";
-            } else {
-                $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-                $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
             }
         }
-        elsif($cross_type eq 'backcross') {
+        if($cross_type eq 'backcross') {
             if (!$male){
                 push @error_messages, "For $progeny Cross Type is backcross, but no male parent given";
-            } else {
-                $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-                $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
             }
         }
         elsif($cross_type eq "sib") {
             if (!$male){
                 push @error_messages, "For $progeny Cross Type is sib, but no male parent given";
-            } else {
-                $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-                $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
             }
         }
         elsif($cross_type eq "polycross") {
             if (!$male){
                 push @error_messages, "For $progeny Cross Type is polycross, but no male parent given";
-            } else {
-                $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-                $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
             }
         }
-        elsif($cross_type eq "open") {
+    }
+
+    if (scalar(@error_messages) >= 1) {
+        $errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%errors);
+        return;
+    }
+
+    $self->_set_parsed_data($parsed);
+    return 1;
+
+}
+
+
+sub _parse_with_plugin {
+    my $self = shift;
+    my $schema = $self->get_chado_schema();
+    my $parsed = $self->_parsed_data();
+    my $parsed_data = $parsed->{data};
+
+
+    my @pedigrees;
+    foreach my $row (@$parsed_data) {
+        my $female_parent;
+        my $male_parent;
+
+        my $progeny = $row->{'progeny name'};
+        $progeny =~ s/^\s+|\s+$//g;
+        my $female = $row->{'female parent accession'};
+        $female =~ s/^\s+|\s+$//g;
+        my $male = $row->{'male parent accession'};
+        $female =~ s/^\s+|\s+$//g;
+        my $cross_type = $row->{'type'};
+        $cross_type =~ s/^\s+|\s+$//g;
+
+        if ($cross_type ne "open") {
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+        } elsif($cross_type eq "open") {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
             $male_parent = undef;
             if ($male){
@@ -160,13 +181,6 @@ sub _validate_with_plugin {
 
         my $p = Bio::GeneticRelationships::Pedigree->new($opts);
         push @pedigrees, $p;
-
-    }
-
-    if (scalar(@error_messages) >= 1) {
-        $errors{'error_messages'} = \@error_messages;
-        $self->_set_parse_errors(\%errors);
-        return;
     }
 
     my $add = CXGN::Pedigree::AddPedigrees->new({ schema => $schema, pedigrees => \@pedigrees });
@@ -174,37 +188,18 @@ sub _validate_with_plugin {
 
     my $pedigree_check = $add->validate_pedigrees();
 
-    #print STDERR Dumper $pedigree_check;
+    my %return;
     if (!$pedigree_check){
-        $errors{'error_messages'} = "There was a problem validating pedigrees. Pedigrees were not stored.";
-        $self->_set_parse_errors(\%errors);
-        return;
-    } else {
-        my %return;
-        $return{'pedigree_check'} = $pedigree_check->{error};
-        $return{'pedigrees'} = \@pedigrees;
+        $return{'error_messages'} = "There was a problem validating pedigrees. Pedigrees were not stored.";
         $self->_set_parse_errors(\%return);
         return;
+    } else {
+        $return{'pedigree_check'} = $pedigree_check->{error};
+        $return{'pedigree_data'} = $parsed_data;
     }
 
-    $self->_set_parsed_data(\@pedigrees);
+    $self->_set_parsed_data(\%return);
     return 1;
-
-}
-
-
-sub _parse_with_plugin {
-  my $self = shift;
- my $schema = $self->get_chado_schema();
-
-  my $parsed = $self->_parsed_data();
-  my $parsed_data = $parsed->{data};
-  my $parsed_values = $parsed->{values};
-  my $parsed_columns = $parsed->{columns};
-  my %return_data;
-
-  $self->_set_parsed_data(\%return_data);
-  return 1;
 }
 
 

@@ -11,6 +11,7 @@ use CXGN::Pedigree::AddPedigrees;
 use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use utf8;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -83,34 +84,43 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('PedigreesGeneric');
     my $parsed_data = $parser->parse();
-#    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
-    if (!$parser->has_parse_errors() ){
-        $c->stash->{rest} = {error_string => "Could not get parsing info"};
-        $c->detach();
-    } else {
-        my $return_info = '';
-        my $parse_errors = $parser->get_parse_errors();
-        print STDERR "PARSE ERROR =".Dumper($parse_errors)."\n";
-        my $error_messages = $parse_errors->{'error_messages'};
-        my $pedigree_check =  $parse_errors->{'pedigree_check'};
-        my $pedigrees = $parse_errors->{'pedigrees'};
-        if ($error_messages) {
-            foreach my $error_string (@$error_messages){
-                $return_info .= $error_string."<br>";
-            }
-            $c->stash->{rest} = { error_string => $return_info};
-            return;
-        } elsif ($pedigree_check) {
-            foreach my $pedigree (@$pedigree_check){
-                $return_info .= $pedigree."<br>";
-            }
-            $c->stash->{rest} = { error => $return_info, archived_file_name => $archived_filename_with_path };
-            return;
+    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
         } else {
-            $c->stash->{rest} = { archived_file_name => $archived_filename_with_path };
+            $parse_errors = $parser->get_parse_errors();
+            my $error_messages = $parse_errors->{'error_messages'};
+            foreach my $error_string (@$error_messages){
+                $return_error .= $error_string."<br>";
+            }
         }
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
     }
 
+    my $pedigree_check = $parsed_data->{'pedigree_check'};
+    print STDERR "PEDIGREE CHECK =".Dumper($pedigree_check)."\n";
+    my $pedigree_data = $parsed_data->{'pedigree_data'};
+    print STDERR "PEDIGREE DATA =".Dumper($pedigree_data)."\n";
+
+    my $pedigrees_hash = {};
+    $pedigrees_hash->{'pedigree_data'} = $pedigree_data;
+
+    my $pedigree_string = encode_json $pedigrees_hash;
+    my $pedigree_info = '';
+    if ($pedigree_check) {
+        foreach my $pedigree (@$pedigree_check){
+            $pedigree_info .= $pedigree."<br>";
+        }
+        $c->stash->{rest} = {error => $pedigree_info, archived_file_name => $pedigree_string };
+    } else {
+        $c->stash->{rest} = {archived_file_name => $pedigree_string};
+    }
 
 =pod
     # check if all accessions exist
@@ -220,7 +230,7 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $self = shift;
     my $c = shift;
     my $archived_file_name = $c->req->param('archived_file_name');
-    print STDERR "FILE NAME =".Dumper($archived_file_name)."\n";
+    print STDERR "PEDIGREE DATA =".Dumper($archived_file_name)."\n";
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
