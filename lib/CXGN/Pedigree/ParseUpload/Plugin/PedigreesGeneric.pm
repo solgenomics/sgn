@@ -163,7 +163,6 @@ sub _validate_with_plugin {
 
     }
 
-    print STDERR "ERRORS =".Dumper(scalar @error_messages)."\n";
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -177,17 +176,18 @@ sub _validate_with_plugin {
 
     #print STDERR Dumper $pedigree_check;
     if (!$pedigree_check){
-        $error = "There was a problem validating pedigrees. Pedigrees were not stored.";
+        $errors{'error_messages'} = "There was a problem validating pedigrees. Pedigrees were not stored.";
+        $self->_set_parse_errors(\%errors);
+        return;
+    } else {
+        my %return;
+        $return{'pedigree_check'} = $pedigree_check->{error};
+        $return{'pedigrees'} = \@pedigrees;
+        $self->_set_parse_errors(\%return);
+        return;
     }
-#    if ($pedigree_check->{error}){
-#        $c->stash->{rest} = {error => $pedigree_check->{error}, archived_file_name => $file_name};
-#    } else {
-#        $c->stash->{rest} = {archived_file_name => $file_name};
-#    }
 
-    $self->_set_parsed_data($parsed);
-    print STDERR "PARSED =".Dumper($parsed)."\n";
-
+    $self->_set_parsed_data(\@pedigrees);
     return 1;
 
 }
@@ -195,7 +195,7 @@ sub _validate_with_plugin {
 
 sub _parse_with_plugin {
   my $self = shift;
-  my $schema = $self->get_chado_schema();
+ my $schema = $self->get_chado_schema();
 
   my $parsed = $self->_parsed_data();
   my $parsed_data = $parsed->{data};
