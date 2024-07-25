@@ -19,7 +19,8 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'progeny name', 'female parent accession', 'male parent accession', 'type' ],
+        required_columns => [ 'progeny name', 'female parent accession', 'type' ],
+        optional_columns => [ 'male parent accession' ],
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
