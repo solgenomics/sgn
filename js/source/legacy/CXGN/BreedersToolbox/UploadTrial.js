@@ -339,7 +339,15 @@ jQuery(document).ready(function ($) {
             // console.log("FormData prepared with email_address: ", email_address);
             // console.log("FormData prepared with email_option_enabled:", email_option_enabled);
 
-            jQuery('#working_modal').modal("show");
+            if (email_option_enabled === 1) {
+                if (confirm('You will receive an email once the process is complete. Do you want to continue?')) {
+                    jQuery("#upload_trial_dialog").modal('hide');
+                }else {
+                    return;
+                }
+            } else {
+                jQuery('#working_modal').modal("hide");
+            }
 
             jQuery.ajax({
                 type: 'POST',
@@ -350,27 +358,10 @@ jQuery(document).ready(function ($) {
                 contentType: false,
                 success: function(response) {
                     jQuery('#working_modal').modal("hide");
-
-                    if (response.error) {
-                        alert(response.error);
-                        jQuery("#upload_multiple_trials_error_messages").html('<b>An error occurred:</b> ' + response.error);
-                    } else if (response.warnings) {
-                        var warnings = response.warnings;
-                        var warning_html = "<li>" + warnings.join("</li><li>") + "</li>";
-                        jQuery("#upload_multiple_trials_warning_messages").show();
-                        jQuery("#upload_multiple_trials_warning_messages").html('<b>Warnings. Fix or ignore the following warnings and try again.</b><br><br>' + warning_html);
-                    } else if (response.success) {
-                        refreshTrailJsTree(0);
-                        jQuery("#upload_multiple_trials_success_messages").show();
-                        jQuery("#upload_multiple_trials_success_messages").html("Success! All trials successfully loaded.");
-                        jQuery("#multiple_trial_designs_upload_submit").hide();
-                        jQuery("#upload_multiple_trials_success_button").show();
-
-                        if (email_option_enabled === 1) {
-                            if (confirm('You will receive an email once the process is complete. Do you want to continue?')) {
-                                jQuery("#upload_trial_dialog").modal('hide');
-                            }
-                        }
+                    if (response.error){
+                        alert(responde.error);
+                    } else {
+                        console.log("upload successful: ", response);
                     }
                 },
                 error: function(response) {
