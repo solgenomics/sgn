@@ -45,6 +45,9 @@ $timestamp => localtime()
                                 </div>
                             </div>
                             <br /><br /><br /><br />
+                            <div class="alert alert-danger" id="trial_error_message_container" style="display: none">
+                                <p id="trial_error_message"></p>
+                            </div>
                             <br/><br/>
                             <center>
                                 <button id="create_seedlots_trial_complete_select_trial" class="btn btn-primary">Go to Next Step</button>
@@ -500,6 +503,7 @@ $timestamp => localtime()
      * - Get details of selected trial
      */
     function completeSelectTrial() {
+        let trial_error;
 
         // Make sure trial name was entered
         let trial_name = jQuery("#create_seedlots_trial_name").val();
@@ -511,6 +515,7 @@ $timestamp => localtime()
         // Display working modal and disable button
         jQuery('#working_modal').modal("show");
         jQuery("#create_seedlots_trial_complete_select_trial").attr("disabled", true);
+        jQuery("#trial_error_message_container").hide();
 
         // Get Trial ID
         getTrialID(trial_name, function(trial_id) {
@@ -518,8 +523,12 @@ $timestamp => localtime()
                 TRIAL_ID = trial_id;
 
                 // Get the trial details
-                getTrialDetails(trial_id, function(breeding_program_id, accessions, plots, subplots, plants, traits) {
-                    if ( breeding_program_id && accessions && plots ) {
+                getTrialDetails(trial_id, function(error, breeding_program_id, accessions, plots, subplots, plants, traits) {
+                    if ( error ) {
+                        trial_error = error;
+                        _finish();
+                    }
+                    else if ( breeding_program_id && accessions && plots ) {
                         BREEDING_PROGRAM_ID = breeding_program_id;
                         ACCESSIONS = accessions;
                         PLOTS = plots;
@@ -552,6 +561,13 @@ $timestamp => localtime()
          */
         function _finish(complete) {
             jQuery('#working_modal').modal("hide");
+            if ( trial_error ) {
+                jQuery("#trial_error_message").html(trial_error);
+                jQuery("#trial_error_message_container").show();
+            }
+            else {
+                jQuery("#trial_error_message_container").hide();
+            }
             jQuery("#create_seedlots_trial_complete_select_trial").attr("disabled", false);
             jQuery("#create_seedlots_trial_accession_count").html(ACCESSIONS ? ACCESSIONS.length : '');
             jQuery("#create_seedlots_trial_plot_count").html(PLOTS ? PLOTS.length : '');
@@ -753,7 +769,7 @@ $timestamp => localtime()
 
             html += "<tr>";
             if ( stock_type === 'accessions' ) html += "<td>" + trial_name + "</td>";
-            html += "<td>" + SEEDLOTS[i].accession.name + " (" + SEEDLOTS[i].accession.type + ")</td>";
+            html += "<td>" + SEEDLOTS[i].accession.name + "</td>";
             if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += "<td>" + SEEDLOTS[i].plot.number + "</td>";
             if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += "<td>" + SEEDLOTS[i].plot.rep + "</td>";
             if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += "<td>" + SEEDLOTS[i].plot.block + "</td>";
@@ -956,7 +972,7 @@ $timestamp => localtime()
             html += "<tr>";
             html += "<td>" + SEEDLOTS[i].name + "</td>";
             html += "<td>" + SEEDLOTS[i].metadata.breeding_program.name + "</td>";
-            html += "<td>" + SEEDLOTS[i].accession.name + " (" + SEEDLOTS[i].accession.type + ")</td>";
+            html += "<td>" + SEEDLOTS[i].accession.name + "</td>";
             if ( stock_type === 'plots' ) html += "<td>" + SEEDLOTS[i].plot.name + "</td>";
             if ( stock_type === 'subplots' ) html += "<td>" + SEEDLOTS[i].subplot.name + "</td>";
             if ( stock_type === 'plants' ) html += "<td>" + SEEDLOTS[i].plant.name + "</td>";
@@ -1045,8 +1061,7 @@ $timestamp => localtime()
                 'seedlot_name': seedlot.name,
                 'seedlot_location': seedlot.metadata.location,
                 'seedlot_box_name': seedlot.metadata.box_name,
-                'seedlot_accession_uniquename': seedlot.accession.type === 'accession' ? seedlot.accession.name : undefined,
-                'seedlot_cross_uniquename': seedlot.accession.type === 'cross' ? seedlot.accession.name : undefined,
+                'seedlot_accession_uniquename': seedlot.accession.name,
                 'seedlot_organization': seedlot.metadata.organization,
                 'seedlot_timestamp': seedlot.metadata.timestamp,
                 'seedlot_description': seedlot.metadata.description,
@@ -1212,25 +1227,29 @@ $timestamp => localtime()
 
     /**
      * Get required metadata for the Trial:
+     * - Error message
      * - Breeding Program ID
      * - Accessions
      * - Plots
+     * - Subplots
+     * - Plants
      * - Traits
      * @param {int} trial_id Trial ID
-     * @param {function} callback Callback function(breeding_program_id, accessions, plots, traits)
+     * @param {function} callback Callback function(error, breeding_program_id, accessions, plots, subplots, plants, traits)
      */
     function getTrialDetails(trial_id, callback) {
         let count = 0;
         let total = 4;
 
         let breeding_program_id, accessions, plots, subplots, plants, traits;
+        let error;
 
         _getBreedingProgram();
         _getAccessions();
         _getPlots();
         _getTraits();
 
-        function _getBreedingProgram(callback) {
+        function _getBreedingProgram() {
             jQuery.ajax({
                 type: "GET",
                 url: '/breeders/programs_by_trial/' + trial_id,
@@ -1254,7 +1273,7 @@ $timestamp => localtime()
             });
         }
 
-        function _getAccessions(callback) {
+        function _getAccessions() {
             jQuery.ajax({
                 type: "GET",
                 url: '/ajax/breeders/trial/' + trial_id + '/accessions',
@@ -1265,10 +1284,12 @@ $timestamp => localtime()
                     else if ( response.accessions ) {
                         accessions = [];
                         for ( let i = 0; i < response.accessions[0].length; i++ ) {
+                            if ( response.accessions[0][i].stock_type !== 'accession' ) {
+                                error = `This tool only supports trials with plots that contain accessions.  This trial has one or more plots that contain a ${response.accessions[0][i].stock_type}.`;
+                            }
                             accessions.push({
                                 id: response.accessions[0][i].stock_id, 
-                                name: response.accessions[0][i].accession_name,
-                                type: response.accessions[0][i].stock_type || 'accession'
+                                name: response.accessions[0][i].accession_name
                             });
                         }
                     }
@@ -1285,7 +1306,7 @@ $timestamp => localtime()
             });
         }
 
-        function _getPlots(callback) {
+        function _getPlots() {
             jQuery.ajax({
                 type: "GET",
                 url: '/ajax/breeders/trial/' + trial_id + '/layout',
@@ -1308,7 +1329,6 @@ $timestamp => localtime()
                                 },
                                 accession: {
                                     name: info.accession_name,
-                                    type: info.accession_type || 'accession',
                                     id: info.accession_id
                                 }
                             });
@@ -1329,7 +1349,6 @@ $timestamp => localtime()
                                         },
                                         accession: {
                                             name: info.accession_name,
-                                            type: info.accession_type || 'accession',
                                             id: info.accession_id
                                         }
                                     });
@@ -1352,7 +1371,6 @@ $timestamp => localtime()
                                         },
                                         accession: {
                                             name: info.accession_name,
-                                            type: info.accession_type || 'accession',
                                             id: info.accession_id
                                         }
                                     });
@@ -1373,7 +1391,7 @@ $timestamp => localtime()
             });
         }
 
-        function _getTraits(callback) {
+        function _getTraits() {
             jQuery.ajax({
                 type: "GET",
                 url: '/ajax/breeders/trial/' + trial_id + '/traits_assayed?stock_type=plot',
@@ -1414,7 +1432,7 @@ $timestamp => localtime()
         function _finish() {
             count++;
             if ( count >= total ) {
-                return callback(breeding_program_id, accessions, plots, subplots, plants, traits);
+                return callback(error, breeding_program_id, accessions, plots, subplots, plants, traits);
             }
         }
     }

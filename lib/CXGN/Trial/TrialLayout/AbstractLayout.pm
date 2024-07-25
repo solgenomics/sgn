@@ -505,7 +505,6 @@ sub retrieve_plot_info {
 
     my $accession_name = $accession->uniquename;
     my $accession_id = $accession->stock_id;
-    my $accession_type = $accession->type->name;
 
     $design_info{"plot_name"}=$plot_name;
     $design_info{"plot_id"}=$plot_id;
@@ -582,7 +581,6 @@ sub retrieve_plot_info {
     }
     if ($accession_name) {
         $design_info{"accession_name"}=$accession_name;
-        $design_info{"accession_type"}=$accession_type || "accession";
     }
     if ($accession_id) {
 	$design_info{"accession_id"}=$accession_id;
