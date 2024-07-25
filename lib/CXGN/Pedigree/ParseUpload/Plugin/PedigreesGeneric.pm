@@ -1,13 +1,11 @@
 package CXGN::Pedigree::ParseUpload::Plugin::PedigreesGeneric;
 
-
 use Moose::Role;
 use CXGN::File::Parse;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
-use Bio::GeneticRelationships::Individual;
 use CXGN::Pedigree::AddPedigrees;
 
 sub _validate_with_plugin {
@@ -28,9 +26,6 @@ sub _validate_with_plugin {
     my $parsed_columns = $parsed->{columns};
     my $parsed_data = $parsed->{data};
     my $parsed_values = $parsed->{values};
-    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
-    print STDERR "PARSED VALUES =".Dumper($parsed_values)."\n";
-    print STDERR "PARSED ERRORS =".Dumper($parsed_errors)."\n";
 
     # return if parsing error
     if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
@@ -48,8 +43,6 @@ sub _validate_with_plugin {
     push @all_stocks, @$seen_progenies;
     push @all_stocks, @$seen_female_parents;
     push @all_stocks, @$seen_male_parents;
-    print STDERR "ALL STOCKS =".Dumper(\@all_stocks)."\n";
-
 
     foreach my $type (@$seen_cross_types) {
         if (!exists $supported_cross_types{$type}) {
@@ -136,56 +129,18 @@ sub _validate_with_plugin {
 
 }
 
-
 sub _parse_with_plugin {
     my $self = shift;
     my $schema = $self->get_chado_schema();
     my $parsed = $self->_parsed_data();
     my $parsed_data = $parsed->{data};
 
-    my @pedigrees;
-    foreach my $row (@$parsed_data) {
-        my $female_parent;
-        my $male_parent;
+    my $pedigrees = CXGN::Pedigree::AddPedigrees->new({ schema => $schema });
+    my $generated_pedigrees = $pedigrees->generate_pedigrees($parsed_data);
 
-        my $progeny = $row->{'progeny name'};
-        $progeny =~ s/^\s+|\s+$//g;
-        my $female = $row->{'female parent accession'};
-        $female =~ s/^\s+|\s+$//g;
-        my $male = $row->{'male parent accession'};
-        $female =~ s/^\s+|\s+$//g;
-        my $cross_type = $row->{'type'};
-        $cross_type =~ s/^\s+|\s+$//g;
-
-        if ($cross_type ne "open") {
-            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-        } elsif($cross_type eq "open") {
-            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-            $male_parent = undef;
-            if ($male){
-                $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
-            }
-        }
-
-        my $opts = {
-            cross_type => $cross_type,
-            female_parent => $female_parent,
-            name => $progeny
-        };
-
-        if ($male_parent) {
-            $opts->{male_parent} = $male_parent;
-        }
-
-        my $p = Bio::GeneticRelationships::Pedigree->new($opts);
-        push @pedigrees, $p;
-    }
-
-    my $add = CXGN::Pedigree::AddPedigrees->new({ schema => $schema, pedigrees => \@pedigrees });
+    my $validate = CXGN::Pedigree::AddPedigrees->new({ schema => $schema, pedigrees => $generated_pedigrees });
     my $error;
-
-    my $pedigree_check = $add->validate_pedigrees();
+    my $pedigree_check = $validate->validate_pedigrees();
 
     my %return;
     if (!$pedigree_check){

@@ -230,59 +230,22 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $self = shift;
     my $c = shift;
     my $pedigree_data = $c->req->param('pedigree_data');
-    print STDERR "PEDIGREE DATA =".Dumper($pedigree_data)."\n";
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $pedigree_hash = decode_json $pedigree_data;
     my $file_pedigree_info = $pedigree_hash->{'pedigree_data'};
-    print STDERR "PEDIGREE INFO =".Dumper($file_pedigree_info)."\n";
 
-    my @pedigrees;
-    foreach my $row (@$file_pedigree_info) {
-        my $female_parent;
-        my $male_parent;
+    my $pedigrees = CXGN::Pedigree::AddPedigrees->new({ schema => $schema });
 
-        my $progeny = $row->{'progeny name'};
-        $progeny =~ s/^\s+|\s+$//g;
-        my $female = $row->{'female parent accession'};
-        $female =~ s/^\s+|\s+$//g;
-        my $male = $row->{'male parent accession'};
-        $female =~ s/^\s+|\s+$//g;
-        my $cross_type = $row->{'type'};
-        $cross_type =~ s/^\s+|\s+$//g;
+    my $generated_pedigrees = $pedigrees->generate_pedigrees($file_pedigree_info);
 
-        if ($cross_type ne "open") {
-            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-        } elsif($cross_type eq "open") {
-            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-            $male_parent = undef;
-            if ($male){
-                $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
-            }
-        }
-
-        my $opts = {
-            cross_type => $cross_type,
-            female_parent => $female_parent,
-            name => $progeny
-        };
-
-        if ($male_parent) {
-            $opts->{male_parent} = $male_parent;
-        }
-
-        my $p = Bio::GeneticRelationships::Pedigree->new($opts);
-        push @pedigrees, $p;
-    }
-
-    my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>\@pedigrees });
+    my $add = CXGN::Pedigree::AddPedigrees->new({ schema => $schema, pedigrees => $generated_pedigrees });
     my $error;
 
     my $return = $add->add_pedigrees($overwrite_pedigrees);
-    #print STDERR Dumper $return;
+
     if (!$return){
         $error = "The pedigrees were not stored";
     }
