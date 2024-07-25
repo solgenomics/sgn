@@ -36,7 +36,7 @@ jQuery(document).ready(function ($) {
         $("#pedigrees_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
-    var archived_file_name;
+    var pedigree_data;
     $('#upload_pedigrees_form').iframePostForm({
         json: false,
         post: function () {
@@ -57,7 +57,7 @@ jQuery(document).ready(function ($) {
             $('#working_modal').modal("hide");
 
             var html;
-            archived_file_name = response.archived_file_name;
+            pedigree_data = response.pedigree_data;
             if (response.error) {
                 html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
             }
@@ -87,7 +87,7 @@ jQuery(document).ready(function ($) {
         jQuery.ajax( {
             url: '/ajax/pedigrees/upload_store',
             data: {
-                'archived_file_name':archived_file_name,
+                'pedigree_data':pedigree_data,
                 'overwrite_pedigrees':jQuery('#pedigree_upload_overwrite_pedigrees').is(":checked")
             },
             beforeSend: function(){

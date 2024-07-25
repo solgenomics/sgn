@@ -84,7 +84,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('PedigreesGeneric');
     my $parsed_data = $parser->parse();
-    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
+#    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -104,9 +104,9 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     }
 
     my $pedigree_check = $parsed_data->{'pedigree_check'};
-    print STDERR "PEDIGREE CHECK =".Dumper($pedigree_check)."\n";
+#    print STDERR "PEDIGREE CHECK =".Dumper($pedigree_check)."\n";
     my $pedigree_data = $parsed_data->{'pedigree_data'};
-    print STDERR "PEDIGREE DATA =".Dumper($pedigree_data)."\n";
+#    print STDERR "PEDIGREE DATA =".Dumper($pedigree_data)."\n";
 
     my $pedigrees_hash = {};
     $pedigrees_hash->{'pedigree_data'} = $pedigree_data;
@@ -117,9 +117,9 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         foreach my $pedigree (@$pedigree_check){
             $pedigree_info .= $pedigree."<br>";
         }
-        $c->stash->{rest} = {error => $pedigree_info, archived_file_name => $pedigree_string };
+        $c->stash->{rest} = {error => $pedigree_info, pedigree_data => $pedigree_string };
     } else {
-        $c->stash->{rest} = {archived_file_name => $pedigree_string};
+        $c->stash->{rest} = {pedigree_data => $pedigree_string};
     }
 
 =pod
@@ -229,15 +229,56 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $self = shift;
     my $c = shift;
-    my $archived_file_name = $c->req->param('archived_file_name');
-    print STDERR "PEDIGREE DATA =".Dumper($archived_file_name)."\n";
+    my $pedigree_data = $c->req->param('pedigree_data');
+    print STDERR "PEDIGREE DATA =".Dumper($pedigree_data)."\n";
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
-    my $pedigrees = _get_pedigrees_from_file($c, $archived_file_name);
+    my $pedigree_hash = decode_json $pedigree_data;
+    my $file_pedigree_info = $pedigree_hash->{'pedigree_data'};
+    print STDERR "PEDIGREE INFO =".Dumper($file_pedigree_info)."\n";
 
-    my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
+    my @pedigrees;
+    foreach my $row (@$file_pedigree_info) {
+        my $female_parent;
+        my $male_parent;
+
+        my $progeny = $row->{'progeny name'};
+        $progeny =~ s/^\s+|\s+$//g;
+        my $female = $row->{'female parent accession'};
+        $female =~ s/^\s+|\s+$//g;
+        my $male = $row->{'male parent accession'};
+        $female =~ s/^\s+|\s+$//g;
+        my $cross_type = $row->{'type'};
+        $cross_type =~ s/^\s+|\s+$//g;
+
+        if ($cross_type ne "open") {
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+        } elsif($cross_type eq "open") {
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = undef;
+            if ($male){
+                $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+            }
+        }
+
+        my $opts = {
+            cross_type => $cross_type,
+            female_parent => $female_parent,
+            name => $progeny
+        };
+
+        if ($male_parent) {
+            $opts->{male_parent} = $male_parent;
+        }
+
+        my $p = Bio::GeneticRelationships::Pedigree->new($opts);
+        push @pedigrees, $p;
+    }
+
+    my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>\@pedigrees });
     my $error;
 
     my $return = $add->add_pedigrees($overwrite_pedigrees);

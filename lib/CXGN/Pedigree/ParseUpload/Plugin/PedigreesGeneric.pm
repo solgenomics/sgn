@@ -143,7 +143,6 @@ sub _parse_with_plugin {
     my $parsed = $self->_parsed_data();
     my $parsed_data = $parsed->{data};
 
-
     my @pedigrees;
     foreach my $row (@$parsed_data) {
         my $female_parent;
