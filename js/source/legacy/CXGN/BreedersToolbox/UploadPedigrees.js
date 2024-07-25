@@ -60,12 +60,17 @@ jQuery(document).ready(function ($) {
             pedigree_data = response.pedigree_data;
             if (response.error) {
                 html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
-            }
-            else {
+                $("#upload_pedigrees_validate_display tbody").html(html);
+                $("#upload_pedigrees_validate_display").modal('show');
+            } else if (response.error_string) {
+                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error_string+'</p>';
+                $("#upload_pedigrees_error_display tbody").html(html);
+                $("#upload_pedigrees_error_display").modal('show');
+            } else {
                 html = '<h3>There Were No Issues Identified</h3>';
+                $("#upload_pedigrees_validate_display tbody").html(html);
+                $("#upload_pedigrees_validate_display").modal('show');
             }
-            $("#upload_pedigrees_validate_display tbody").html(html);
-            $("#upload_pedigrees_validate_display").modal('show');
         }
     });
 

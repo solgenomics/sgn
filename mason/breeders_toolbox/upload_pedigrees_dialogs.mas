@@ -24,6 +24,24 @@
   </div>
 </div>
 
+<div class="modal fade" id="upload_pedigrees_error_display" name="upload_pedigrees_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesErrorDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadPedigreesErrorDialog">Results From Validation</h4>
+      </div>
+      <div class="modal-body">
+        <table class="table table-hover">
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal fade" id="pedigrees_upload_success_dialog_message" name="pedigrees_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesSuccessDialog">
   <div class="modal-dialog" role="document">
