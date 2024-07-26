@@ -249,7 +249,13 @@ solGS.dataset = {
     var protocolId = args.genotyping_protocol_id;
 
     var hostName = window.location.protocol + "//" + window.location.host;
-    var page = hostName + "/solgs/selection/" + selectionPopId + "/model/" + modelId + "/trait/" + traitId + "/gp/" + protocolId;
+    var page;
+
+    if (document.URL.match(/combined/)) {
+      page = `${hostName}/solgs/combined/model/${modelId}/selection/${selectionPopId}/trait/${traitId}/gp/${protocolId}`;
+    } else {
+      page = `${hostName}/solgs/selection/${selectionPopId}/model/${modelId}/trait/${traitId}/gp/${protocolId}`;
+    }
 
     solGS.waitPage(page, args);
   },
