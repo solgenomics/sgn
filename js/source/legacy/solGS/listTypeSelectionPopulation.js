@@ -140,7 +140,7 @@ solGS.listTypeSelectionPopulation = {
       'processing': true,
       'paging': true,
       'info': false,
-      'pageLength': 5,
+      'pageLength': 15,
       'rowId': function (a) {
         return a[4]
       }
@@ -184,8 +184,13 @@ solGS.listTypeSelectionPopulation = {
     var traitId = args.training_traits_ids;
 
     var hostName = window.location.protocol + "//" + window.location.host;
-    var page =
-      hostName + "/solgs/selection/" + selectionPopId + "/model/" + modelId + "/trait/" +traitId + "/gp/" + protocolId;
+    var page;
+
+    if (document.URL.match(/combined/)) {
+      page = `${hostName}/solgs/combined/model/${modelId}/selection/${selectionPopId}/trait/${traitId}/gp/${protocolId}`;
+    } else {
+     page = `${hostName}/solgs/selection/${selectionPopId}/model/${modelId}/trait/${traitId}/gp/${protocolId}`;
+    }
 
     solGS.waitPage(page, args);
   },
