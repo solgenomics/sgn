@@ -481,6 +481,40 @@ sub add_accession_list_POST : Args(0) {
             $email_body.= "Congratulations, all your accessions have been successfully uploaded to the database.\n\n";
             $email_body.= "Upload details:\n";
             $email_body.= "Total accessions added: " . scalar(@added_stocks) . "\n";
+
+            print STDERR "Added fullinfo stocks: " . Dumper \@added_fullinfo_stocks;
+
+            my @sorted_added_fullinfo_stocks = sort {
+                my ($a_num) = $a->[1] =~ /(\d+)/;
+                my ($b_num) = $b->[1] =~ /(\d+)/;
+                if (defined $a_num && defined $b_num) {
+                    $a_num <=> $b_num;
+                } elsif (defined $a_num) {
+                    -1;
+                } elsif (defined $b_num) {
+                    1;
+                } else {
+                    $a->[1] cmp $b->[1];
+                }
+            } @added_fullinfo_stocks;
+
+            # Add details of each accession
+            $email_body .= "Accessions added:\n";
+            $email_body .= "Accession_ID\tAccession_Name\n";  # Adding headers
+            foreach my $stock (@sorted_added_fullinfo_stocks) {
+                $email_body .= "$stock->[0]\t$stock->[1]\n";
+            }
+
+            #It will add URL's to each accession uploaded
+            if (scalar(@added_stocks) > 1000) {
+                $email_body .= "\n\nAccess each accession from individual URLs:\n\n";
+                my $base_url = "http://localhost:8080/stock/";
+
+                foreach my $stock (@sorted_added_fullinfo_stocks) {
+                    my ($stock_id, $stock_name) = @$stock;
+                    $email_body .= "$stock_name: $base_url$stock_id/view\n";
+                }
+            }
             $email_body.= "\nThank you.\nHave a nice day\n";
 
             CXGN::Contact::send_email($email_subject, $email_body, $email_address);

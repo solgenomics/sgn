@@ -275,7 +275,7 @@ jQuery(document).ready(function ($) {
         if (!email_option_enabled) {
             disable_ui();
         } else {
-            alert('You will receive an email when the process is complete.');
+            confirm('You will receive an email when the process is complete. Do you want to continue ?');
         }
         $.ajax({
             type: 'POST',
