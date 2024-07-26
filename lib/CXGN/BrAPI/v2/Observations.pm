@@ -47,7 +47,7 @@ sub detail {
     $params->{observationDbId} = [$params->{observationDbId}];
 
     my $data;
-	my $counter=0;
+    my $counter=0;
     ($data,$counter) = _search($self,$params);
 
     if ($data > 0){
@@ -309,16 +309,17 @@ sub _search {
 		my ($obs_year, $obs_month, $obs_day) = split /\-/, $obs_timestamp;
 		my ($start_year, $start_month, $start_day) = split /\-/, $start_date;
 		my ($end_year, $end_month, $end_day) = split /\-/, $end_date;
-		
-		my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });
-		my $start_date_obj = DateTime->new({ year => $start_year, month => $start_month, day => $start_day });
-		my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
-	    
-	    
-		if ( $start_date && (DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) ) { next; } #skip observations before date range
-		if ( $end_date && (DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) ) { next; } #skip observations after date range
-	    }
 
+		if ($obs_year && $obs_month && $obs_day && $start_year && $start_month && $start_day && $end_year && $end_month && $end_day) { 
+		    my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });
+		    my $start_date_obj = DateTime->new({ year => $start_year, month => $start_month, day => $start_day });
+		    my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
+		    
+		    
+		    if ( $start_date && (DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) ) { next; } #skip observations before date range
+		    if ( $end_date && (DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) ) { next; } #skip observations after date range
+		}
+	    }
             if ($counter >= $start_index && $counter <= $end_index) {
                 push @data_window, {
                     additionalInfo => $_->{phenotype_additional_info} ? decode_json($_->{phenotype_additional_info}) : undef,
