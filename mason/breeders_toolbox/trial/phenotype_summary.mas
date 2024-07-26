@@ -155,14 +155,23 @@ $trial_stock_type => undef
 <script>
 // wrap code in an immediately invoked function, so we can use d3v4 as d3;
 (function(){
-var d3 = d3v4;
+    var d3 = d3v4;
     var draw_histogram = stackedObservationPhenotypeHistogram.draw;
     
     jQuery(document).ready(function () {
-    var type = "<% $trial_stock_type %>";
-
-    jQuery("#summary_start_date").change( function() {
-	//datatables_display_phenosummary(type);
+	var type = "<% $trial_stock_type %>";
+	
+	jQuery.ajax( {
+     	    url: '/ajax/trial/collect_date_range?trial_id=<% $trial_id %>'
+	}).done( function(r) { 
+     	    alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
+     	    jQuery('#summary_start_date').val(r.start_date);
+     	    jQuery('#summary_end_date').val(r.end_date);
+	}).fail( function(r) { alert('An error occurred!') });
+	    
+    
+	jQuery("#summary_start_date").change( function() {
+	    //datatables_display_phenosummary(type);
 
         var html = setup_tables();
         jQuery('#pheno_summary_table_div').empty().html(html);
@@ -173,7 +182,7 @@ var d3 = d3v4;
     
     jQuery('#summary_end_date').change( function() {
 	//datatables_display_phenosummary(type);
-	        var html = setup_tables();
+	var html = setup_tables();
         jQuery('#pheno_summary_table_div').empty().html(html);
         datatables_display_phenosummary(type);
 
@@ -347,14 +356,18 @@ function trait_summary_hist_display_change(value) {
 function init_summary_table(type) {
 
     datatables_display_phenosummary(type);
-
+    
+    // get the earliest and last measurement date in the trial
+	
     jQuery(document).on('change', '#display_trial_phenosummary', function() {
         var html = setup_tables();
         jQuery('#pheno_summary_table_div').empty().html(html);
         datatables_display_phenosummary(type);
     });
+    // }).
+    //catch( function(r) { alert('An error occurred :-( '); });
 }
-
+    
 function setup_tables() {
     var html = '';
     var display = jQuery('#display_trial_phenosummary').val();
@@ -414,8 +427,8 @@ function trait_summary_hist_change(value) {
 	    "autoUpdateInput": true,
 	    "startDate": "1960-01-01",
 	    "yearSelect" : true,
-	    "minDate": "1960-01-01",
-	    "maxDate": "2030-12-31",
+	    "minDate": jQuery('#summary_start_date').val(),
+	    "maxDate": jQuery('#summary_end_date').val(),
 	    locale: { 
 		format: 'YYYY-MM-DD'
 	    }
@@ -427,8 +440,8 @@ function trait_summary_hist_change(value) {
 	{
 	    "singleDatePicker": true,
 	    "autoUpdateInput": true,
-	    "minDate": "1960-01-01",
-	    "maxYear" : "2030-12-31", 
+	     "minDate": jQuery('#summary_start_date').val(),
+	    "maxDate": jQuery('#summary_end_date').val(),
 	    "yearSelect" : true,
 	    locale: { 
 		format: 'YYYY-MM-DD'
