@@ -149,26 +149,6 @@ sub genotyping_data_search_GET : Args(0) {
         }
     }
 
-#        while (my $gt_line = <$fh>) {
-#            if ($counter >= $start_index && $counter < $end_index) {
-#                my $g = decode_json $gt_line;
-#                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
-#                my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
-#                push @result, [
-#                    "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
-#                    "<a href=\"/stock/$g->{stock_id}/view\">$g->{stock_name}</a>",
-#                    $g->{stock_type_name},
-#                    "<a href=\"/stock/$g->{germplasmDbId}/view\">$g->{germplasmName}</a>",
-#                    $synonym_string,
-#                    $g->{genotypeDescription},
-#                    $g->{resultCount},
-#                    $g->{igd_number},
-#                    "<a href=\"/stock/$g->{stock_id}/genotypes?genotype_id=$g->{markerProfileDbId}\">Download</a>"
-#                ];
-#            }
-#            $counter++;
-#        }
-
     my $draw = $c->req->param('draw');
     if ($draw){
         $draw =~ s/\D//g; # cast to int
