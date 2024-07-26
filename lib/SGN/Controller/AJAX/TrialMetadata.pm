@@ -475,11 +475,15 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 	$datelessq = " ( collect_date IS NULL) ";
     }
     if ($start_date && $end_date) {
+	$start_date =~ s/(.*)[ T]+.*$/$1/g;
+	$end_date =~ s/(.*)[ T]+.*$/$1/g;
+
+	print STDERR "START DATE $start_date  END DATE: $end_date\n";
 	if ($datelessq) {
-	    $date_params = " AND ( $datelessq OR ( collect_date::date > ? and collect_date::date < ?)) ";
+	    $date_params = " AND ( $datelessq OR ( collect_date::date >= ? and collect_date::date <= ?)) ";
 	}
 	else { 
-	    $date_params = " AND ( collect_date::date > ? and collect_date::date < ?) ";
+	    $date_params = " AND ( collect_date::date >= ? and collect_date::date <= ?) ";
 	}
 	@date_placeholders = ($start_date, $end_date);
     }
@@ -5511,6 +5515,42 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     }
 
     $c->stash->{rest} = { success => 1 };
+}
+
+sub trial_collect_date_range :Chained('trial') :PathPart('collect_date_range') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param('trial_id');
+    my $cvterm_id = $c->req->param('cvterm_id');
+
+    my $cvterm_clause = "";
+    
+    if ($cvterm_id) {
+	$cvterm_clause = " and cvterm_id = ?";	
+    }
+    
+    my $q = "select min(collect_date), max(collect_date), project_id from nd_experiment_project join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) join cvterm on(cvalue_id=cvterm_id) where nd_experiment_project.project_id=?  $cvterm_clause group by nd_experiment_project.project_id"; 
+    my $dbh =  $c->dbc->dbh;
+    my $h = $dbh->prepare($q);
+    if ($cvterm_id) { 
+	$h->execute($trial_id, $cvterm_id);
+    }
+    else {
+	$h->execute($trial_id);
+    }
+
+    my ($start_date, $end_date, $project_id) = $h->fetchrow_array();
+
+    if (! $project_id) {
+	$c->stash->{rest} = { error => "Trial with id $trial_id does not exist" };
+	return;
+    }
+
+    print STDERR "collect_date_range: START DATE $start_date, END DATE $end_date\n";
+    $c->stash->{rest} = { trial_id => $trial_id,
+	     start_date => $start_date,
+	     end_date => $end_date,
+    };
 }
 
 
