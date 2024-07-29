@@ -123,7 +123,7 @@ sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list
             my $num = sprintf '%0'.$num_digits.'d', $current_number;
             my $next_identifier = $prefix.$num;
             my $history_button = '<button class="btn btn-primary" name="identifier_generation_history" data-list_id="'.$_->[0].'">View</button>';
-            my $button = '<div class="form-group"><label class="col-sm-6 control-label">Next Count: </label><div class="col-sm-6"> <input type="number" class="form-control" id="identifier_generation_next_numbers_'.$_->[0].'" placeholder="EG: 100" /></div></div><button class="btn btn-primary" name="identifier_generation_download" data-list_id="'.$_->[0].'">Download Next</button>';
+            my $button = '<div class="form-group"><label class="col-sm-4 control-label">Next Count: </label><div class="col-sm-8"> <input type="number" class="form-control" id="identifier_generation_next_numbers_'.$_->[0].'" placeholder="EG: 100" /></div></div><button class="btn btn-primary" name="identifier_generation_download" data-list_id="'.$_->[0].'">Download Next</button>';
             push @data, [$_->[1], $_->[2], $prefix, $num_digits, $current_number, $next_identifier, $history_button, $button];
         }
     }
