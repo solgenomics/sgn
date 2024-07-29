@@ -853,7 +853,7 @@ jQuery(document).ready(function () {
   var url = location.pathname;
 
   if (url.match(/cluster\/analysis/)) {
-    solGS.cluster.populateClusterPopsMenu();
+    solGS.cluster.populateClusterMenu();
     var canvas = solGS.cluster.canvas;
     var clusterMsgDiv = solGS.cluster.clusterMsgDiv;
 
