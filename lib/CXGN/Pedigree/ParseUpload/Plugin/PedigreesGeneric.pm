@@ -47,7 +47,7 @@ sub _validate_with_plugin {
 
     foreach my $type (@$seen_cross_types) {
         if (!exists $supported_cross_types{$type}) {
-            push @error_messages, "Cross type not supported: $type. Cross type should be biparental, self, open, sib, backcross, reselected or polycross";
+            push @error_messages, "Cross type not supported: $type. Cross type should be biparental, self, open, sib, backcross, reselected, polycross, doubled_haploid or dihaploid_induction";
         }
     }
 
@@ -65,33 +65,14 @@ sub _validate_with_plugin {
         my $male_parent;
 
         my $progeny = $row->{'progeny name'};
-        $progeny =~ s/^\s+|\s+$//g;
         my $female = $row->{'female parent accession'};
-        $female =~ s/^\s+|\s+$//g;
         my $male = $row->{'male parent accession'};
-        $female =~ s/^\s+|\s+$//g;
         my $cross_type = $row->{'type'};
-        $cross_type =~ s/^\s+|\s+$//g;
         my $line_number = $row->{'_row'};
 
-        if (!$female && !$male) {
-            push @error_messages, "No male parent and no female parent on line $line_number!";
-        }
-        if (!$progeny) {
-            push @error_messages, "No progeny specified on line $line_number!";
-        }
-        if (!$female) {
-            push @error_messages, "No female on line $line_number for $progeny!";
-        }
-        if (!$cross_type){
-            push @error_messages, "No cross type on line $line_number! Must be one of these: biparental, open, self, sib, backcross, reselected, polycross.";
-        }
-        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction') {
-            push @error_messages, "Invalid cross type on line $line_number! Must be one of these: biparental, open, self, backcross, sib, reselected, polycross.";
-        }
         if ($female eq $male) {
             if ($cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'reselected' && $cross_type ne 'doubled_haploid' && $cross_type ne 'dihaploid_induction'){
-                push @error_messages, "Female parent and male parent are the same on line $line_number, but cross type is not self, sib or reselected.";
+                push @error_messages, "Female parent and male parent are the same on line $line_number, but cross type is not self, sib, reselected, doubled_haploid or dihaploid_induction.";
             }
         }
         if (($female && !$male) && ($cross_type ne 'open')) {
