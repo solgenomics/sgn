@@ -440,7 +440,7 @@ function trait_summary_hist_change(value) {
 	{
 	    "singleDatePicker": true,
 	    "autoUpdateInput": true,
-	     "minDate": jQuery('#summary_start_date').val(),
+            "minDate": jQuery('#summary_start_date').val(),
 	    "maxDate": jQuery('#summary_end_date').val(),
 	    "yearSelect" : true,
 	    locale: { 
