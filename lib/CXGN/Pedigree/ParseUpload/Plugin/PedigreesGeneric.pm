@@ -21,6 +21,12 @@ sub _validate_with_plugin {
         file => $filename,
         required_columns => [ 'progeny name', 'female parent accession', 'type' ],
         optional_columns => [ 'male parent accession' ],
+        column_aliases => {
+            'progeny name' => ['progeny_name', 'progeny'],
+            'female parent accession' => ['female_parent_accession', 'female_parent', 'female parent'],
+            'type' => ['cross_type', 'cross type'],
+            'male parent accession' => ['male_parent_accession', 'male_parent', 'male parent']
+        }
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
