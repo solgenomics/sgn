@@ -320,8 +320,6 @@ my $parsed_data;
 my $ignore_warnings;
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
-my $infile_basename = $infile;
-my $filename = basename($infile_basename);
 
 my %phenotype_metadata = {
     'archived_file'      => $infile,
@@ -338,24 +336,12 @@ $parsed_data = $parser->parse();
 
 if (!$parsed_data) {
     my $return_error = '';
-    my $email_subject = "Error in trial upload\n";
-    my $email_body = "Dear $username, \n\nErrors found. Please fix the following errors and try re-uploading again: $filename\n\n";
 
     if (! $parser->has_parse_errors() ){
-        # die "could not get parsing errors\n";
-        $return_error = "could not get parsing errors\n";
-        $email_body .= $return_error;
+        die "could not get parsing errors\n";
     }else {
         $parse_errors = $parser->get_parse_errors();
-        # die $parse_errors->{'error_messages'};
-        $return_error = join("\n", @{$parse_errors->{'error_messages'}});
-        $email_body .= $return_error;
-    }
-
-    $email_body .= "\n\nThank You\nHave a nice day\n";
-    
-    if ($email_option_enabled == 1 && $email_address) {
-        CXGN::Contact::send_email($email_subject, $email_body, $email_address);
+        die $parse_errors->{'error_messages'};
     }
 
     die $return_error;
