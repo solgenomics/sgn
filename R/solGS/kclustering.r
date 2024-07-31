@@ -37,6 +37,7 @@ kmeansPlotFile <- grep("k-means_plot", outputFiles, value = TRUE)
 kResultFile <- grep("result", outputFiles, value = TRUE)
 elbowPlotFile <- grep("elbow_plot", outputFiles, value = TRUE)
 clusterMeansFile <- grep("k-means_means", outputFiles, value = TRUE)
+clusterPcScoresFile <- grep("k-means_pc_scores", outputFiles, value = TRUE)
 variancesFile <- grep("k-means_variances", outputFiles, value = TRUE)
 reportFile <- grep("report", outputFiles, value = TRUE)
 errorFile <- grep("error", outputFiles, value = TRUE)
@@ -254,6 +255,23 @@ if (!grepl('genotype', kResultFile)) {
 
 }
 
+pca    <- prcomp(clusterData, scale=TRUE, retx=TRUE)
+pca    <- summary(pca)
+scores   <- data.frame(pca$x)
+scores   <- scores[, 1:2]
+scores   <- round(scores, 3)
+
+clusterPcScoresGroups <- c()
+if (length(clusterPcScoresFile)) {
+    message('adding cluster groups to pc scores...')
+    scores <- rownames_to_column(scores)
+    names(scores)[1] <- c("germplasmName")
+
+    clusterPcScoresGroups <- inner_join(scores, kClusters, by = "germplasmName")
+    clusterPcScoresGroups <- clusterPcScoresGroups %>% 
+        arrange(Cluster)
+}
+
 cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
 
 variances <- paste0("Variances output: ")
@@ -283,6 +301,11 @@ if (length(kResultFile)) {
 
 if (length(clusterMeansFile) && !is.null(clusterMeans)) {
     fwrite(clusterMeans, file = clusterMeansFile, sep = "\t", row.names = FALSE,
+        quote = FALSE, )
+}
+
+if (length(clusterPcScoresFile) && !is.null(clusterPcScoresGroups)) {
+    fwrite(clusterPcScoresGroups, file = clusterPcScoresFile, sep = "\t", row.names = FALSE,
         quote = FALSE, )
 }
 
