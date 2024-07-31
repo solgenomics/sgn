@@ -323,7 +323,7 @@ sub generate_pedigrees {
 
         if ($cross_type ne "open") {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
         } elsif($cross_type eq "open") {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
             $male_parent = undef;
