@@ -545,7 +545,7 @@ sub upload_seedlots_POST : Args(0) {
     my $parser_type;
     if ($upload_from_accessions){
         $upload = $upload_from_accessions;
-        $parser_type = 'SeedlotXLS';
+        $parser_type = 'SeedlotFromAccessionGeneric';
     }
     if ($upload_harvested_from_crosses){
         $upload = $upload_harvested_from_crosses;
