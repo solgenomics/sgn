@@ -267,6 +267,76 @@ sub set_datasets_public :Path('/ajax/dataset/set_public') Args(1) {
     }
 }
 
+sub set_datasets_private :Path('/ajax/dataset/set_private') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $user = $c->user();
+    if (!$user) {
+        $c->stash->{rest} = { error => "No logged in user error." };
+        return;
+    }
+
+    my $logged_in_user = $c->user()->get_object()->get_sp_person_id();
+
+    my $dataset = CXGN::Dataset->new(
+        {
+            schema => $c->dbic_schema("Bio::Chado::Schema", undef, $logged_in_user),
+            people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $logged_in_user),
+            sp_dataset_id=> $dataset_id,
+        });
+    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
+    if ($dataset->sp_person_id() != $logged_in_user) {
+        $c->stash->{rest} = { error => "Only the owner can change a dataset" };
+        return;
+    }
+    print STDERR "set private dataset_id $dataset_id\n";
+    my $error = $dataset->set_dataset_private();
+
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+    } else {
+        $c->stash->{rest} = { success => 1 };
+    }
+}
+
+sub update_description :Path('/ajax/dataset/update_description') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $dataset_description = $c->req->param("description");
+
+    my $user = $c->user();
+    if (!$user) {
+        $c->stash->{rest} = { error => "No logged in user error." };
+        return;
+    }
+
+    my $logged_in_user = $c->user()->get_object()->get_sp_person_id();
+
+    my $dataset = CXGN::Dataset->new(
+        {
+            schema => $c->dbic_schema("Bio::Chado::Schema", undef, $logged_in_user),
+            people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $logged_in_user),
+            sp_dataset_id=> $dataset_id,
+        });
+    $dataset->description($dataset_description);
+    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
+    if ($dataset->sp_person_id() != $logged_in_user) {
+        $c->stash->{rest} = { error => "Only the owner can change a dataset" };
+        return;
+    }
+    my $error = $dataset->update_description($dataset_description);
+
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+    } else {
+        $c->stash->{rest} = { success => 1 };
+    }
+}
+
 sub get_dataset :Path('/ajax/dataset/get') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -354,4 +424,4 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
     }
 }
 
-1;
+1

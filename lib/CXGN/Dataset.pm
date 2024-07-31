@@ -1251,20 +1251,37 @@ sub delete {
 
     if (! $row) {
 	return "The specified dataset does not exist";
-    }
-
-    else {
+    } else {
 	eval {
 	    $row->delete();
 	};
 	if ($@) {
 	    return "An error occurred, $@";
-	}
-
-	else {
+        } else {
 	    return undef;
 	}
 
+    }
+}
+
+sub update_description {
+    my $self = shift;
+    my $description = shift;
+    my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+    if (! $row) {
+        return "The specified dataset does not exist";
+    } else {
+        eval {
+            $row->sp_person_id($self->sp_person_id());
+            $row->sp_dataset_id($self->sp_dataset_id());
+            $row->description($description);
+            $row->update();
+        };
+        if ($@) {
+            return "An error occurred, $@";
+        } else {
+            return undef;
+        }
     }
 }
 

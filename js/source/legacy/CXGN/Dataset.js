@@ -128,6 +128,31 @@ CXGN.Dataset.prototype = {
         });
     },
 
+    updateDescription: function(id) {
+	var dataset;
+	var description = document.getElementById('description').value
+        jQuery.ajax( {
+            'url' : '/ajax/dataset/update_description/'+id,
+            'async': false,
+	    'dataType': "json",
+            'data': {
+                'description': description
+             },
+
+            'success': function(response) {
+                if (response.error) {
+                    alert('An error occurred during action. '+response.error);
+                } else {
+                    alert('The dataset description has been updated.');
+                }
+            },
+            'error': function(response) {
+                alert('An error occurred. The dataset description could not be updated. Please try again.'+JSON.stringify(response));
+
+            }
+        });
+    },
+
     datasetSelect: function(div_name, empty_element, refresh) {
 
   var datasets = new Array();
