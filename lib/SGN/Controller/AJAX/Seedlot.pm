@@ -458,7 +458,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     }
 
     my $from_stock_id = $source_id ? $source_id : $accession_id ? $accession_id : $cross_id;
-    my $from_stock_uniquename = $seedlot_source ? $seedlot_source : $accession_uniquename ? $accession_uniquename : $cross_uniquename;\
+    my $from_stock_uniquename = $seedlot_source ? $seedlot_source : $accession_uniquename ? $accession_uniquename : $cross_uniquename;
     my $population_name = $c->req->param("seedlot_population_name");
     my $organization = $c->req->param("seedlot_organization");
     my $amount = $c->req->param("seedlot_amount");
