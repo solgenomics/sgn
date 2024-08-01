@@ -22,6 +22,25 @@ $trial_stock_type => undef
   shape-rendering: crispEdges;
 }
 
+.form-group {
+  display: flex;
+  align-items: center;
+}
+
+.form-group label {
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+.form-group input,
+.form-group select {
+  flex-grow: 1;
+}
+
+input[type="text"] {
+  width: 100px;
+}
+
 </style>
 
 
@@ -29,44 +48,34 @@ $trial_stock_type => undef
     <center><h4>Raw Data Statistics</h4>
     <br/>
 
-    
-    <table>
-      <tr><th>start date</th><th></th><th>end date</th></tr> 
-      <tr>
-	<td><input type="text" id="summary_start_date" title="summary_start_date" /></td>
-	<td>&nbsp;</td>
-	<td>		
-	  <input type="text" id="summary_end_date" title="summary_end_date" />
-	  <br />
-	  <br />
-	</td>
-
-	<td>
-
-	  <form class="form-horizontal" role="form" >
-            <div class="form-group form-group-sm">
-              <label class="col-sm-3 control-label">Display: </label>
-              <div class="col-sm-9" >
-                <select class="form-control" id="display_trial_phenosummary">
-		  %  if ($trial_stock_type eq 'analysis_instance') {
-                  <option value="analysis_instance">Values for Analysis</option>
-		  %  } else {
-                  <option value="plots">Trait Values for Plots in this Trial</option>
-                  <option value="plants">Trait Values for Plants in this Trial</option>
-                  <option value="subplots">Trait Values for Subplots in this Trial</option>
-                  <option value="tissue_samples">Trait Values for Tissue Samples in this Trial</option>
-                  <option id = "plots_stock_option" value="plots_accession"></option>
-                  <option id = "plants_stock_option" value="plants_accession"></option>
-                  <option id = "tissue_samples_stock_option" value="tissue_samples_accession"></option>
-		  %  }
-                </select>
-              </div>
+    <form class="form-horizontal" role="form">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+            <div>
+                <label for="summary_start_date">Start Date: </label>
+	            <input type="text" id="summary_start_date" title="summary_start_date" />
             </div>
-	  </form>
-	</td>
-      </tr>
-    </table>
-    
+            <div>
+                <label for="summary_end_date">End Date: </label>
+	            <input type="text" id="summary_end_date" title="summary_end_date" />
+            </div>
+            <div style="display: flex; align-items: center;">
+                <label for="display_trial_phenosummary" style="margin-right: 10px;">Display: </label>
+                <select class="form-control" id="display_trial_phenosummary">
+%  if ($trial_stock_type eq 'analysis_instance') {
+        <option value="analysis_instance">Values for Analysis</option>
+%  } else {
+                <option value="plots">Trait Values for Plots in this Trial</option>
+                <option value="plants">Trait Values for Plants in this Trial</option>
+                <option value="subplots">Trait Values for Subplots in this Trial</option>
+                <option value="tissue_samples">Trait Values for Tissue Samples in this Trial</option>
+                <option id = "plots_stock_option" value="plots_accession"></option>
+                <option id = "plants_stock_option" value="plants_accession"></option>
+                <option id = "tissue_samples_stock_option" value="tissue_samples_accession"></option>
+%  }
+                </select>
+            </div>
+        </div>
+	</form>
     <hr>
 
     <div id="pheno_summary_table_div">
@@ -159,47 +168,47 @@ $trial_stock_type => undef
     var draw_histogram = stackedObservationPhenotypeHistogram.draw;
     
     jQuery(document).ready(function () {
-	var type = "<% $trial_stock_type %>";
+	    var type = "<% $trial_stock_type %>";
 	
-	jQuery.ajax( {
-     	    url: '/ajax/trial/collect_date_range?trial_id=<% $trial_id %>'
-	}).done( function(r) { 
-     	    alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
-     	    jQuery('#summary_start_date').val(r.start_date);
-     	    jQuery('#summary_end_date').val(r.end_date);
-	}).fail( function(r) { alert('An error occurred!') });
+	    jQuery.ajax( {
+            url: '/ajax/trial/collect_date_range?trial_id=<% $trial_id %>'
+	    }).done( function(r) {
+            alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
+            jQuery('#summary_start_date').val(r.start_date);
+            jQuery('#summary_end_date').val(r.end_date);
+	    }).fail( function(r) { alert('An error occurred!') });
 	    
     
-	jQuery("#summary_start_date").change( function() {
-	    //datatables_display_phenosummary(type);
+	    jQuery("#summary_start_date").change( function() {
+	        //datatables_display_phenosummary(type);
+            var html = setup_tables();
+            jQuery('#pheno_summary_table_div').empty().html(html);
+            datatables_display_phenosummary(type);
 
-        var html = setup_tables();
-        jQuery('#pheno_summary_table_div').empty().html(html);
-        datatables_display_phenosummary(type);
 
-	
-    });
+        });
     
-    jQuery('#summary_end_date').change( function() {
-	//datatables_display_phenosummary(type);
-	var html = setup_tables();
-        jQuery('#pheno_summary_table_div').empty().html(html);
-        datatables_display_phenosummary(type);
+        jQuery('#summary_end_date').change( function() {
+	        //datatables_display_phenosummary(type);
+	        var html = setup_tables();
+            jQuery('#pheno_summary_table_div').empty().html(html);
+            datatables_display_phenosummary(type);
 
-    });
-    
-    jQuery("#display_trial_phenosummary_hist").change(function(){
-	trait_summary_hist_display_change(this.value);
-    });
 
-    jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
-	init_summary_table(type);   
-    });  
-%       if ($trial_stock_type eq 'analysis_instance') {
-            trait_summary_hist_display_change('analysis_instance');
-%       } else {
-            trait_summary_hist_display_change('plot');
-%       }
+        });
+
+        jQuery("#display_trial_phenosummary_hist").change(function(){
+	        trait_summary_hist_display_change(this.value);
+        });
+
+        jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
+	        init_summary_table(type);
+        });
+%           if ($trial_stock_type eq 'analysis_instance') {
+                trait_summary_hist_display_change('analysis_instance');
+%           } else {
+               trait_summary_hist_display_change('plot');
+%           }
 
   
 
@@ -344,7 +353,6 @@ function trait_summary_hist_display_change(value) {
                 jQuery("#working_modal").modal("hide");
                 jQuery("#trial_summary_hist").html("<center><h4>There is no data to plot.</h4></center>");
             }
-
         },
         error: function(response){
             alert('Error retrieving traits assayed in this trial');
@@ -364,8 +372,7 @@ function init_summary_table(type) {
         jQuery('#pheno_summary_table_div').empty().html(html);
         datatables_display_phenosummary(type);
     });
-    // }).
-    //catch( function(r) { alert('An error occurred :-( '); });
+    //catch( function(r) { alert('An error occurred :-( '); )});
 }
     
 function setup_tables() {
@@ -429,8 +436,8 @@ function trait_summary_hist_change(value) {
 	    "yearSelect" : true,
 	    "minDate": jQuery('#summary_start_date').val(),
 	    "maxDate": jQuery('#summary_end_date').val(),
-	    locale: { 
-		format: 'YYYY-MM-DD'
+	    locale: {
+		    format: 'YYYY-MM-DD'
 	    }
 	},
 	
@@ -439,14 +446,14 @@ function trait_summary_hist_change(value) {
     jQuery('input[title="summary_end_date"]').daterangepicker(
 	{
 	    "singleDatePicker": true,
+         "showDropdowns": true,
 	    "autoUpdateInput": true,
-            "minDate": jQuery('#summary_start_date').val(),
+        "minDate": jQuery('#summary_start_date').val(),
 	    "maxDate": jQuery('#summary_end_date').val(),
 	    "yearSelect" : true,
 	    locale: { 
-		format: 'YYYY-MM-DD'
+		    format: 'YYYY-MM-DD'
 	    },
-	    "showDropdowns": true,
 	},
 	
     );
