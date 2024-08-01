@@ -16,10 +16,10 @@ $trial_id
     <td width="30"></td>
     <td>
       <select id="raw_data_observation_level">
-	<option>plots</option>
-	<option>plants</option>
-	<option>subplots</option>
-	<option>tissue_samples</option>
+		<option>plots</option>
+		<option>plants</option>
+		<option>subplots</option>
+		<option>tissue_samples</option>
       </select>
     </td>
   </tr>
@@ -85,7 +85,7 @@ jQuery(window).ready( function() {
 	    "minDate": "1960-01-01",
 	    "maxDate": "2030-12-31",
 	    locale: { 
-		format: 'YYYY-MM-DD'
+			format: 'YYYY-MM-DD'
 	    }
 	},
 	
@@ -96,10 +96,10 @@ jQuery(window).ready( function() {
 	    "singleDatePicker": true,
 	    "autoUpdateInput": true,
 	    "minDate": "1960-01-01",
-	    "maxYear" : "2030-12-31", 
+	    "maxDate" : "2030-12-31",
 	    "yearSelect" : true,
-	    locale: { 
-		format: 'YYYY-MM-DD'
+	    locale: {
+			format: 'YYYY-MM-DD'
 	    },
 	    "showDropdowns": true,
 	},
