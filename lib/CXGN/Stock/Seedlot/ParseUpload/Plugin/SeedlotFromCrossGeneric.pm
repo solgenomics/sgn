@@ -1,4 +1,4 @@
-package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotFromAccessionGeneric;
+package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotFromCrossGeneric;
 
 use Moose::Role;
 use CXGN::File::Parse;
@@ -19,11 +19,11 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'seedlot_name', 'accession_name', 'operator_name', 'box_name' ],
-        optional_columns => ['description', 'quality', 'source', 'amount', 'weight(g)'],
+        required_columns => [ 'seedlot_name', 'cross_unique_id', 'operator_name', 'box_name' ],
+        optional_columns => ['description', 'quality', 'amount', 'weight(g)'],
         column_aliases => {
             'seedlot_name' => ['seedlot name'],
-            'accession_name' => ['accession name', 'accession'],
+            'cross_unique_id' => ['cross unique id', 'cross name'],
             'operator_name' => ['operator name', 'operator'],
             'box_name' => ['box name'],
         },
@@ -72,23 +72,13 @@ sub _validate_with_plugin {
     }
 
     my $seen_seedlot_names = $parsed_value->{'seedlot_name'};
-    my $seen_accession_names = $parsed_value->{'accession_name'};
-    my $seed_source_names = $parsed_value->{'source'};
+    my $seen_cross_names = $parsed_value->{'cross_unique_id'};
 
-    my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',$seen_accession_names)->{'missing'}};
+    my $cross_validator = CXGN::List::Validate->new();
+    my @crosses_missing = @{$cross_validator->validate($schema,'crosses',$seen_cross_names)->{'missing'}};
 
-    if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
-    }
-
-    if ($seen_source_names) {
-        my $source_validator = CXGN::List::Validate->new();
-        my @source_missing = @{$source_validator->validate($schema,'seedlots_or_plots_or_crosses_or_accessions',$seen_source_names)->{'missing'}};
-
-        if (scalar(@source_missing) > 0) {
-            push @error_messages, "The following source are not in the database: ".join(',',@source_missing);
-        }
+    if (scalar(@crosses_missing) > 0) {
+        push @error_messages, "The following cross unique ids are not in the database as uniquenames: ".join(',',@crosses_missing);
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
@@ -120,105 +110,69 @@ sub _parse_with_plugin {
     my $parsed_data = $parsed->{data};
     my $parsed_values = $parsed->{values};
 
-    my $accession_names = $parsed_values->{'accession_name'};
+    my $cross_names = $parsed_values->{'cross_unique_id'};
     my $seedlot_names = $parsed_values->{'seedlot_name'};
 
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
-    my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 
-    my $rs = $schema->resultset("Stock::Stock")->search({
+    my $cross_rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => $accession_names },
-        'type_id' => $accession_cvterm_id,
+        'uniquename' => { -in => $cross_names },
+        'type_id' => $cross_cvterm_id
     });
-    my %accession_lookup;
-    while (my $r = $rs->next) {
-        $accession_lookup{$r->uniquename} = $r->stock_id;
-    }
-    my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
-        'me.is_obsolete' => { '!=' => 't' },
-        'stockprops.value' => { -in => $accession_names},
-        'me.type_id' => $accession_cvterm_id,
-        'stockprops.type_id' => $synonym_cvterm_id
-    }, {join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
 
-    my %acc_synonyms_lookup;
-    while (my $r=$acc_synonym_rs->next){
-        $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+    my %cross_lookup;
+    while (my $r = $cross_rs->next){
+        $cross_lookup{$r->uniquename} = $r->stock_id;
     }
 
     my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => \@seedlots },
+        'uniquename' => { -in => $seedlot_names },
         'type_id' => $seedlot_cvterm_id
     });
 
     my %seedlot_lookup;
-    while (my $r = $seedlot_rs->next) {
+    while (my $r = $seedlot_rs->next){
         $seedlot_lookup{$r->uniquename} = $r->stock_id;
     }
 
     for my $row ( @$parsed_data ) {
         my $row_num;
         my $seedlot_name;
-        my $accession_name;
+        my $cross_name;
         my $operator_name;
         my $amount = 'NA';
         my $weight = 'NA';
         my $description;
         my $box_name;
         my $quality;
-        my $source;
 
         $row_num = $row->{_row};
         $seedlot_name = $row->{'seedlot_name'};
-        $accession_name = $row->{'accession_name'};
+        $cross_name = $row->{'cross_unique_id'};
         $operator_name = $row->{'operator_name'};
         $amount = $row->{'amount'};
         $weight = $row->{'weight(g)'};
         $description = $row->{'description'};
         $box_name = $row->{'box_name'};
         $quality = $row->{'quality'};
-        $source = $row->{'source'};
-
-        my $accession_stock_id;
-        if ($acc_synonyms_lookup{$accession_name}){
-            my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
-            if (scalar(@accession_names)>1){
-                print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
-            }
-            $accession_stock_id = $acc_synonyms_lookup{$accession_name}->{$accession_names[0]};
-            $accession_name = $accession_names[0];
-        } else {
-            $accession_stock_id = $accession_lookup{$accession_name};
-        }
-
-        my $source_id;
-        if ($source) {
-            my $source_row = $self->get_chado_schema->resultset("Stock::Stock")->find( { uniquename => $source });
-            if ($source_row) {
-                $source_id = $source_row->stock_id();
-            }
-        }
 
         $parsed_seedlots{$seedlot_name} = {
             seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
-            accession => $accession_name,
-            accession_stock_id => $accession_stock_id,
-            cross_name => undef,
-            cross_stock_id => undef,
+            accession => undef,
+            accession_stock_id => undef,
+            cross_name => $cross_name,
+            cross_stock_id => $cross_lookup{$cross_name},
             amount => $amount,
             weight_gram => $weight,
             description => $description,
             box_name => $box_name,
-            operator_name => $operator_name,
-            quality => $quality,
-            source => $source,
-            source_id => $source_id,
+            operator_name => $operator_name
         };
-
     }
+
     #print STDERR Dumper \%parsed_seedlots;
 
     $self->_set_parsed_data(\%parsed_seedlots);
