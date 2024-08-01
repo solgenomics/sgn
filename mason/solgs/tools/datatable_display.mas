@@ -28,9 +28,8 @@ $wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
  
 <div>
     <!-- The container for the list of populations selected for analysis -->
-    <div class="sub_infosectioncontent" id="<% $analysis_abbr %>_pops_data_div" style="display:none"></div>
+    <div class="sub_infosectioncontent" id="<% $analysis_abbr %>_pops_data_div" style="display:none; margin-top:25px"></div>
     <br>
-
 </div>
 
 <div id="add_new_pops" class="pull-right margin-bottom-lg">
