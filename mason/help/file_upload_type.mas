@@ -1,18 +1,21 @@
 <%args>
   $type => 'Data'
+  $optional_column => undef
 </%args>
 
 <div class="file_upload_type">
   <span class="file_icon glyphicon glyphicon-file"></span>
   <div>
     <p>
-      <% $type %> may be uploaded using any of the supported file types: MS Excel (<strong>.xls or .xlsx</strong>), 
-      comma-separated file (<strong>.csv</strong>), tab-delimited file (<strong>.txt or .tsv</strong>), 
+      <% $type %> may be uploaded using any of the supported file types: MS Excel (<strong>.xls or .xlsx</strong>),
+      comma-separated file (<strong>.csv</strong>), tab-delimited file (<strong>.txt or .tsv</strong>),
       or semicolon-separated file (<strong>.ssv</strong>).
     </p>
+% if ($optional_column) {
     <p>
       Optional columns may be left out, if not used in your data.
     </p>
+% }
   </div>
 </div>
 

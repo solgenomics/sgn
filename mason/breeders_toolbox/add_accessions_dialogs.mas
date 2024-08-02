@@ -47,7 +47,7 @@ $editable_stock_props_definitions
                             <div class="col-sm-8">
 % if ( $user_role eq 'curator' ) {
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked></input>
-% } else { 
+% } else {
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
 % }
                                 <br/>
@@ -96,7 +96,7 @@ $editable_stock_props_definitions
                         </div>
                     </form>
 
-                    <& /help/file_upload_type.mas, type => "Accessions" &>
+                    <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
 
                 </div>
 
@@ -170,7 +170,7 @@ $editable_stock_props_definitions
 %  }
                     </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "Accessions" &>
+                <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>

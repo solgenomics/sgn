@@ -984,7 +984,7 @@ sub get_data {
                 my $male_parent_name;
                 my $male_parent_id;
 
-                if (!$info->[0]->[13] || $$info->[0]->[13] eq ''){
+                if (!$info->[0]->[13] || $info->[0]->[13] eq ''){
                     $cross_combination = 'No cross combination available';
                 } else {
                     $cross_combination = $info->[0]->[13];
