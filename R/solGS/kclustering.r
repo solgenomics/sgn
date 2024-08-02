@@ -116,36 +116,7 @@ clusterDataNotScaled <- c()
 
 if (grepl("genotype", dataType, ignore.case = TRUE)) {
     clusterData <- extractGenotype(inputFiles)
-
-    pca <- prcomp(clusterData, retx = TRUE)
-    pca <- summary(pca)
-
-    variances <- data.frame(pca$importance)
-
-    varProp <- variances[3, ]
-    varProp <- data.frame(t(varProp))
-    names(varProp) <- c("cumVar")
-
-    selectPcs <- varProp %>%
-        filter(cumVar <= 0.9)
-    pcsCnt <- nrow(selectPcs)
-
-    reportNotes <- paste0("Before clustering this dataset, principal component analysis (PCA) was perforemd on it to reduce the number of variables (dimensions). ")
-    reportNotes <- paste0(reportNotes, "Based on the PCA, ", pcsCnt, " PCs were used to do the clustering. ")
-    reportNotes <- paste0(reportNotes, "\n\nThe ", pcsCnt, " PCs explain 90% of the variance in the original dataset.",
-        "\n")
-
-    scores <- data.frame(pca$x)
-    scores <- scores[, 1:pcsCnt]
-    scores <- round(scores, 3)
-
-    variances <- variances[2, 1:pcsCnt]
-    variances <- round(variances, 4) * 100
-    variances <- data.frame(t(variances))
-
-    clusterData <- scores
 } else {
-
     if (grepl("gebv", dataType, ignore.case = TRUE)) {
         gebvsFile <- grep("combined_gebvs", inputFiles, value = TRUE)
         gebvsData <- data.frame(fread(gebvsFile, header = TRUE))
@@ -267,7 +238,7 @@ if (length(clusterPcScoresFile)) {
     scores <- rownames_to_column(scores)
     names(scores)[1] <- c("germplasmName")
 
-    clusterPcScoresGroups <- inner_join(scores, kClusters, by = "germplasmName")
+    clusterPcScoresGroups <- inner_join(kClusters, scores, by = "germplasmName")
     clusterPcScoresGroups <- clusterPcScoresGroups %>% 
         arrange(Cluster)
 }
