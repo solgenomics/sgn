@@ -212,7 +212,7 @@ solGS.geneticGain = {
     });
   },
 
-  ggSelectionPopulations: function () {
+  populateGeneticGainMenu: function (newPop) {
     var ggArgs = this.getGeneticGainArgs();
 
     var ggPops = [];
@@ -223,22 +223,14 @@ solGS.geneticGain = {
       }
     }
 
-    var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
-    if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
-      if (listTypeSelPops) {
-        ggPops.push(listTypeSelPops);
-      }
+    var menu = new SelectMenu(this.ggPopsDiv, this.ggPopsSelectMenuId);
+    
+    if (newPop){
+        menu.updateOptions(newPop);   
+    } else {
+      menu.populateMenu(ggPops);
     }
 
-    var menuId = this.ggPopsSelectMenuId;
-    var menu = new SelectMenu(menuId);
-    ggPops = ggPops.flat();
-
-    var menuElem = menu.addOptions(ggPops);
-    var ggPopsDiv = this.ggPopsDiv;
-
-    jQuery(ggPopsDiv).empty().append(menuElem).show();
   },
 
   getSelPopPredictedTraits: function (ggArgs) {
@@ -444,7 +436,7 @@ jQuery(document).ready(function () {
 
   if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//) != null) {
     setTimeout(function () {
-      solGS.geneticGain.ggSelectionPopulations();
+      solGS.geneticGain.populateGeneticGainMenu();
     }, 5000);
   }
 });

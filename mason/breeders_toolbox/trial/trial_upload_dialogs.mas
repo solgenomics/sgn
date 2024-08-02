@@ -1,9 +1,24 @@
+<style>
+    control-label {
+    width: 150px;
+    text-align: right;
+  }
+</style>
 
 <%args>
 $breeding_programs
 $locations
 $design_types => ()
 </%args>
+
+<%perl>
+    my $user_role = '';
+    my $email_address = '';
+    if ($c->user) {
+        $user_role = $c->user->get_object()->get_user_type();
+        $email_address = $c->user->get_object()->get_private_email();
+    }
+</%perl>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
@@ -77,8 +92,21 @@ $design_types => ()
                                                   </div>
                                                   <div class="col-sm-4"></div>
                                               </div>
+                                              <div class="form-group" style="margin-bottom: 50px;">
+                                                <div class="col-sm-4"></div>
+                                                <label class="col-sm-2 control-label" style="margin-left: 0px;">Email Alert: </label>
+                                                <div class="col-sm-2" style="margin-left: 0;">
+                                                    <input id="email_option_to_recieve_trial_upload_status" name="email_option_to_recieve_trial_upload_status" type="checkbox" data-toggle="toggle">
+                                                </div>
+                                                <div id="email_field" style = "display: inline-block; vertical-align: middle;">
+                                                    <label id="email_label_upload" class="control-label" style="display: inline-block; margin-left: 0px; vertical-align: middle;">Email: </label>
+                                                    <div style="display: inline-block; width: 150px; vertical-align: middle;">
+                                                        <input id="email_address_upload" name="email_address_upload" type="email" value="<% $email_address %>">
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-2"></div>
+                                            </div>
                                             </form>
-
                                             <div style="display:none" id="upload_multiple_trials_warning_messages" class="alert-warning" role="alert">
                                             </div>
                                             <div style="display:none" id="upload_multiple_trials_error_messages" class="alert-danger" role="alert">
@@ -309,7 +337,7 @@ $design_types => ()
 %        $method = 'RCBD';
 %    } elsif ($type eq 'Resolvable Row-Column'){
 %        $method = 'RRC';
-%    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
+%    } elsif ($type eq 'DRRC'){
 %        $method = 'DRRC';
 %    } elsif ($type eq 'Augmented Row-Column'){
 %        $method = 'ARC';

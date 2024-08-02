@@ -473,20 +473,20 @@ __PACKAGE__->config(
 
             # Sort the label design elements by trial, plot order, plot number
             # (if the trial does not have a layout, it will default to sorting by plot number)
-            @sorted_keys = sort { 
-                    ncmp($design->{$a}{trial_name}, $design->{$b}{trial_name}) || 
+            @sorted_keys = sort {
+                    ncmp($design->{$a}{trial_name}, $design->{$b}{trial_name}) ||
                     ncmp($design->{$a}{_plot_order}, $design->{$b}{_plot_order}) ||
-                    ncmp($design->{$a}{plot_number}, $design->{$b}{plot_numer}) || 
+                    ncmp($design->{$a}{plot_number}, $design->{$b}{plot_numer}) ||
                     ncmp($a, $b)
             } keys %design;
        }
 
        # Sort by designated data property(s)
        else {
-            @sorted_keys = sort { 
-                    ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) || 
+            @sorted_keys = sort {
+                    ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) ||
                     ncmp($design->{$a}{$sort_order_2}, $design->{$b}{$sort_order_2}) ||
-                    ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3}) || 
+                    ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3}) ||
                     ncmp($a, $b)
             } keys %design;
        }
@@ -934,58 +934,88 @@ sub get_data {
         }
     }
     elsif ($data_level eq "crosses") {
-        my $project;
-        my $cross_list_ids;
-        my %all_design;
+        my %cross_info;
         if ($data_type =~ m/Crossing Experiments/) {
-            $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+            my $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+            my $result = $project->get_crosses_and_details_in_crossingtrial();
+            my @cross_data = @$result;
+            foreach my $cross (@cross_data){
+                my $cross_combination;
+                my $male_parent_name;
+                my $male_parent_id;
+
+                if (!$cross->[2] || $cross->[2] eq ''){
+                    $cross_combination = 'No cross combination available';
+                } else {
+                    $cross_combination = $cross->[2];
+                }
+
+                if (!$cross->[8] || $cross->[8] eq ''){
+                    $male_parent_name = 'No male parent available';
+                } else {
+                    $male_parent_name = $cross->[8];
+                }
+
+                if (!$cross->[7] || $cross->[7] eq ''){
+                    $male_parent_id = 'No male parent available';
+                } else {
+                    $male_parent_id = $cross->[7];
+                }
+
+                $cross_info{$cross->[0]} = {
+                    'cross_name' => $cross->[1],
+                    'cross_id' => $cross->[0],
+                    'cross_combination' => $cross_combination,
+                    'cross_type' => $cross->[3],
+                    'female_parent_name' => $cross->[5],
+                    'female_parent_id' => $cross->[4],
+                    'male_parent_name' => $male_parent_name,
+                    'male_parent_id' => $male_parent_id
+                };
+            }
+
         } elsif ($data_type =~ m/List/) {
-            $cross_list_ids = convert_stock_list($c, $schema, $id);
-            my ($crossing_experiment_id, $num_trials) = get_trial_from_stock_list($c, $schema, $cross_list_ids);
-            $project = CXGN::Cross->new({ schema => $schema, trial_id => $crossing_experiment_id});
+            my $cross_list_ids = convert_stock_list($c, $schema, $id);
+            foreach my $cross_id (@$cross_list_ids) {
+                my $cross = CXGN::Cross->new({ schema => $schema, cross_stock_id => $cross_id});
+                my $info = $cross->cross_parents();
+#                print STDERR "INFO =".Dumper($info)."\n";
+                my $cross_combination;
+                my $male_parent_name;
+                my $male_parent_id;
+
+                if (!$info->[0]->[13] || $info->[0]->[13] eq ''){
+                    $cross_combination = 'No cross combination available';
+                } else {
+                    $cross_combination = $info->[0]->[13];
+                }
+
+                if (!$info->[0]->[7] || $info->[0]->[7] eq ''){
+                    $male_parent_name = 'No male parent available';
+                } else {
+                    $male_parent_name = $info->[0]->[7];
+                }
+
+                if (!$info->[0]->[6] || $info->[0]->[6] eq ''){
+                    $male_parent_id = 'No male parent available';
+                } else {
+                    $male_parent_id = $info->[0]->[6];
+                }
+
+                $cross_info{$cross->cross_stock_id()} = {
+                    'cross_name' => $cross->cross_name(),
+                    'cross_id' => $cross->cross_stock_id(),
+                    'cross_combination' => $cross_combination,
+                    'cross_type' => $info->[0]->[12],
+                    'female_parent_name' => $info->[0]->[1],
+                    'female_parent_id' => $info->[0]->[0],
+                    'male_parent_name' => $male_parent_name,
+                    'male_parent_id' => $male_parent_id
+                };
+            }
         }
 
-        my $result = $project->get_crosses_and_details_in_crossingtrial();
-        my @cross_data = @$result;
-        foreach my $cross (@cross_data){
-            my $cross_combination;
-            my $male_parent_name;
-            my $male_parent_id;
-
-            if ($cross->[2] eq ''){
-                $cross_combination = 'No cross combination available';
-            } else {
-                $cross_combination = $cross->[2];
-            }
-
-            if ($cross->[8] eq ''){
-                $male_parent_name = 'No male parent available';
-            } else {
-                $male_parent_name = $cross->[8];
-            }
-
-            if ($cross->[7] eq ''){
-                $male_parent_id = 'No male parent available';
-            } else {
-                $male_parent_id = $cross->[7];
-            }
-
-            $all_design{$cross->[0]} = {'cross_name' => $cross->[1],
-                                      'cross_id' => $cross->[0],
-                                      'cross_combination' => $cross_combination,
-                                      'cross_type' => $cross->[3],
-                                      'female_parent_name' => $cross->[5],
-                                      'female_parent_id' => $cross->[4],
-                                      'male_parent_name' => $male_parent_name,
-                                      'male_parent_id' => $male_parent_id};
-        }
-
-        if ($data_type =~ m/List/) {
-            my %filtered_hash = map { $_ => $all_design{$_} } @$cross_list_ids;
-            $design = \%filtered_hash;
-        } else {
-            $design = \%all_design;
-        }
+        $design = \%cross_info;
     }
 
 #    print STDERR "Design is ".Dumper($design)."\n";

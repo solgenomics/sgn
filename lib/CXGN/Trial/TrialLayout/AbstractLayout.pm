@@ -580,7 +580,7 @@ sub retrieve_plot_info {
 	$unique_accessions{$accession_name}=$accession_id;
     }
     if ($accession_name) {
-	$design_info{"accession_name"}=$accession_name;
+        $design_info{"accession_name"}=$accession_name;
     }
     if ($accession_id) {
 	$design_info{"accession_id"}=$accession_id;

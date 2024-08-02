@@ -874,10 +874,21 @@ solGS.getModelArgs = function () {
   if (trainingTraitsIds.length == 1) {
     args["trait_id"] = trainingTraitsIds[0];
   }
+
   return args;
 };
 
-solGS.getSelectionPredictionArgs = function () {
+solGS.selectMenuModelArgs = function() {
+    var modelArgs = this.getModelArgs();
+
+    return {
+      id: modelArgs.training_pop_id,
+      name: modelArgs.training_pop_name,
+      pop_type: "training",
+    };
+};
+
+solGS.getSelectionPopArgs = function () {
   var args = this.getModelArgs();
   var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
   var selPopGenoProtocolId = protocols.selection_pop_genotyping_protocol_id;

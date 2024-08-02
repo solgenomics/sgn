@@ -96,7 +96,7 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
     my $c = shift;
     my $params = $c->req->params() || {};
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $round = Math::Round::Var->new(0.01);
     my $dbh = $c->dbc->dbh();

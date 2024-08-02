@@ -12,24 +12,19 @@ my $f = SGN::Test::Fixture->new();
 
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
-print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};
 my $accessions_list_id = 'list_' . $accessions_list->{list_id};
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 
-print STDERR "\nadding trials list  \n";
 my $trials_list =  $solgs_data->load_trials_list();
 my $trials_list_name = $trials_list->{list_name};
 my $trials_list_id = 'list_' . $trials_list->{list_id};
 
-print STDERR "\nadding trials dataset\n";
 my $trials_dt = $solgs_data->load_trials_dataset();
 my $trials_dt_name = $trials_dt->{dataset_name};
 my $trials_dt_id = 'dataset_' . $trials_dt->{dataset_id};
 
-print STDERR "\nadding accessions dataset\n";
 my $accessions_dt = $solgs_data->load_accessions_dataset();
 my $accessions_dt_name = $accessions_dt->{dataset_name};
 my $accessions_dt_id = 'dataset_' . $accessions_dt->{dataset_id};

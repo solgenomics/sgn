@@ -202,7 +202,7 @@
                     </b>
                     <ul>
                         <li><b>cross_unique_id:</b> Must exist in the database, must not have duplicate cross unique id in the same upload file.
-                        <li><b>At least one of the following columns:</b> You can upload different types of parent info by selecting corresponding column headers. All of parent info of the same cross unique id must be in a single row.</li>
+                        <li><b>At least one of the following columns:</b> You can upload different types of parent info by selecting corresponding column headers. All of parent info of the same cross unique id must be in a single row. Each field can have several values by using comma-delimited list (e.g. trait_1,trait_2)</li>
                         <br>
 % my $cross_additional_info_string = $c->config->{cross_additional_info};
 % my @additional_info_headers = split ',',$cross_additional_info_string;
