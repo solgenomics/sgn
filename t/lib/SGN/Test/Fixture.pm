@@ -21,6 +21,10 @@ my $sample_class = CXGN::SampleClass->new( { dbh => $dbh });
 
 is ($sample_class->foo(), 42, "foo test");
 
+# check if an email was received:
+
+$f->check_email($subject_header); # returns 1 if received, 0 if not
+
 # etc...
 
 =head1 AUTHOR
@@ -33,6 +37,7 @@ Lukas Mueller <lam87@cornell.edu>
 package SGN::Test::Fixture;
 
 use Moose;
+use Test::More;
 use DBI;
 use DBIx::Class;
 use Config::Any;
@@ -436,9 +441,6 @@ sub delete_table_entries {
     print STDERR "\n";
 }
 
-
-
-
 sub DEMOLISH {
     my $self = shift;
 
@@ -458,5 +460,26 @@ sub DEMOLISH {
     print STDERR "# MODIFIED AUDIT TABLES BEFORE TEST: " .Dumper($self->auditstats_start())."\n";
     print STDERR "# MODIFIED AUDIT TABLES AFTER TEST: " .Dumper($self->auditstats_end())."\n";
 }
+
+sub check_email_ok {
+    my $self = shift;
+    my $message_subject_line = shift;
+
+    my @messages = `mail -p`;
+
+    my $message_found = 0;
+    
+    foreach my $line (@messages) {
+	chomp($line);
+	print STDERR "Comparin $line to Subject: $message_subject_line\n";
+	if ($line eq "Subject: ".$message_subject_line) {
+	    $message_found = 1;
+	}
+    }
+
+    ok($message_found, "Email check for $message_subject_line");
+}
+
+
 
 1;
