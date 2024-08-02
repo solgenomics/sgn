@@ -156,6 +156,7 @@ sub prepare_response {
     $ret->{cluster_pop_id}       = $c->stash->{cluster_pop_id};
     $ret->{combo_pops_id}        = $c->stash->{combo_pops_id};
     $ret->{list_id}              = $c->stash->{list_id};
+    $ret->{list_name}            = $c->stash->{list_name};
     $ret->{cluster_type}         = $c->stash->{cluster_type};
     $ret->{dataset_id}           = $c->stash->{dataset_id};
     $ret->{trials_names}         = $c->stash->{trials_names};
