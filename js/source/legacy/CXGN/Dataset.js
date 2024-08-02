@@ -118,7 +118,7 @@ CXGN.Dataset.prototype = {
                 if (response.error) {
                     alert('An error occurred during action. '+response.error);
                 } else {
-                    alert('The dataset is now public.');
+                    alert('The dataset is now private.');
                 }
             },
             'error': function(response) {
