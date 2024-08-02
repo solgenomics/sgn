@@ -272,10 +272,12 @@ jQuery(document).ready(function ($) {
         console.log("check email address:", email_address);
         console.log(full_info);
 
-        if (!email_option_enabled) {
-            disable_ui();
-        } else {
-            confirm('You will receive an email when the process is complete. Do you want to continue ?');
+        if (email_option_enabled) {
+            var user_response = confirm('You will receive an email when the process is complete. Do you want to continue ?');
+            if (!user_response) {
+                console.log("no accessions saved + no email sent");
+                return;
+            }
         }
         $.ajax({
             type: 'POST',
