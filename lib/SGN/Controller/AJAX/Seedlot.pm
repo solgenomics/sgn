@@ -608,7 +608,7 @@ sub upload_seedlots_POST : Args(0) {
     }
     if ($upload_harvested_from_crosses){
         $upload = $upload_harvested_from_crosses;
-        $parser_type = 'SeedlotHarvestedXLS';
+        $parser_type = 'SeedlotFromCrossGeneric';
     }
 
     my $subdirectory = "seedlot_upload";

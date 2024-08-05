@@ -859,6 +859,92 @@ sub verify_all_seedlots_compatibility {
 }
 
 
+=head2 Class method: verify_accession_content_source_compatibility()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_accession_content_source_compatibility($schema, [[$accession_name, $source_name]]);
+ Desc:         Class method that verifies if accession of a seedlot source is the same as accession content.
+ Ret:          success or error
+ Args:         $schema, $accession_name, $source_name
+ Side Effects: accesses the database
+
+=cut
+
+sub verify_accession_content_source_compatibility {
+    my $class = shift;
+    my $schema = shift;
+    my $pairs = shift;
+    my $error = '';
+    my %return;
+
+    if (!$pairs){
+        $error .= "No pair array passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my @pairs = @$pairs;
+    if (scalar(@pairs)<1){
+        $error .= "Your pairs list is empty!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "subplot", "stock_type")->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plant", "stock_type")->cvterm_id();
+
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "subplot_of", "stock_relationship")->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plant_of", "stock_relationship")->cvterm_id();
+
+    foreach my $each_pair (@pairs){
+        my $accession_source_relationship_type;
+        my $accession_name = $each_pair->[0];
+        my $source_name = $each_pair->[1];
+
+        my $accession_rs = $schema->resultset("Stock::Stock")->find({'uniquename' => $accession_name,'type_id' => $accession_cvterm_id});
+        my $accession_id = $accession_rs->stock_id();
+        print STDERR "TYPE OF ACCESSION ID =".Dumper(ref($accession_id))."\n";
+
+        my $source_rs = $schema->resultset("Stock::Stock")->find({'uniquename' => $source_name});
+        my $source_id = $source_rs->stock_id();
+        my $source_type_id = $source_rs->type_id();
+        print STDERR "TYPE OF SOURCE TYPE ID =".Dumper(ref($source_type_id))."\n";
+
+        if ($source_type_id eq $plot_cvterm_id) {
+            $accession_source_relationship_type = $plot_of_cvterm_id;
+        } elsif ($source_type_id eq $subplot_cvterm_id) {
+            $accession_source_relationship_type = $subplot_of_cvterm_id;
+        } elsif ($source_type_id eq $plant_cvterm_id) {
+            $accession_source_relationship_type = $plant_of_cvterm_id;
+        } else {
+            $error .= "The source name: $source_name is not a plot, subplot or plant stock type.";
+        }
+        print STDERR "ACCESSION SOURCE RELATIONSHIP TYPE ID =".Dumper($accession_source_relationship_type)."\n";
+        my $accession_source_relationship_rs = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $source_id, type_id => $accession_source_relationship_type});
+        my $source_accession_id = $accession_source_relationship_rs->object_id();
+        print STDERR "TYPE OF SOURCE ACCESSION ID =".Dumper(ref($source_accession_id))."\n";
+
+        if ($accession_id ne $source_accession_id){
+            $error .= "The source name: $source_name is not linked to the same accession as the access content: $accession_name. ";
+        }
+
+    }
+
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
+}
+
+
 =head2 Class method: get_content_id()
 
 =cut

@@ -52,11 +52,14 @@ sub _validate_with_plugin {
     }
 
     my %duplicated_seedlot_names;
+    my @accession_source_pairs;
     for my $row ( @$parsed_data ) {
         my $row_num = $row->{_row};
         my $seedlot_name = $row->{'seedlot_name'};
+        my $accession_name = $row->{'accession_name'};
         my $amount = $row->{'amount'};
         my $weight = $row->{'weight(g)'};
+        my $seedlot_source = $row->{'source'};
 
         if ($seedlot_name =~ /\s/ || $seedlot_name =~ /\// || $seedlot_name =~ /\\/ ) {
             push @error_messages, "Cell A$row_nam: seedlot_name must not contain spaces or slashes.";
@@ -68,6 +71,10 @@ sub _validate_with_plugin {
 
         if (!$amount && !$weight) {
             push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
+        }
+
+        if ($seedlot_source) {
+            push @accession_source_pairs, [$accession_name, $seedlot_source];
         }
     }
 
@@ -84,7 +91,7 @@ sub _validate_with_plugin {
 
     if ($seen_source_names) {
         my $source_validator = CXGN::List::Validate->new();
-        my @source_missing = @{$source_validator->validate($schema,'seedlots_or_plots_or_crosses_or_accessions',$seen_source_names)->{'missing'}};
+        my @source_missing = @{$source_validator->validate($schema,'seedlots_or_plots_or_subplots_or_plants_or_crosses_or_accessions',$seen_source_names)->{'missing'}};
 
         if (scalar(@source_missing) > 0) {
             push @error_messages, "The following source are not in the database: ".join(',',@source_missing);
@@ -98,6 +105,15 @@ sub _validate_with_plugin {
     while (my $r = $rs->next) {
         if ( $r->type->name ne 'seedlot' ) {
             push @error_messages, "Seedlot name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
+        }
+    }
+
+    if (scalar(@accession_source_pairs) >=1) {
+        foreach my $pair (@accession_source_pairs) {
+            my $pairs_error = CXGN::Stock::Seedlot->verify_accession_content_source_compatibility($schema, \@accession_source_pairs);
+            if (exists($pairs_error->{error})){
+                push @error_messages, $pairs_error->{error};
+            }
         }
     }
 
