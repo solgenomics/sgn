@@ -118,11 +118,36 @@ CXGN.Dataset.prototype = {
                 if (response.error) {
                     alert('An error occurred during action. '+response.error);
                 } else {
-                    alert('The dataset is now public.');
+                    alert('The dataset is now private.');
                 }
             },
             'error': function(response) {
                 alert('An error occurred. The specified dataset may not exist. Please try again.'+JSON.stringify(response));
+
+            }
+        });
+    },
+
+    updateDescription: function(id) {
+	var dataset;
+	var description = document.getElementById('description').value
+        jQuery.ajax( {
+            'url' : '/ajax/dataset/update_description/'+id,
+            'async': false,
+	    'dataType': "json",
+            'data': {
+                'description': description
+             },
+
+            'success': function(response) {
+                if (response.error) {
+                    alert('An error occurred during action. '+response.error);
+                } else {
+                    alert('The dataset description has been updated.');
+                }
+            },
+            'error': function(response) {
+                alert('An error occurred. The dataset description could not be updated. Please try again.'+JSON.stringify(response));
 
             }
         });

@@ -275,7 +275,7 @@ solGS.kinship = {
     if (selectedPopDiv) {
       var selectedPopData = selectedPopDiv.dataset;
 
-      var kinshipArgs = JSON.parse(selectedPopData.selectedPop);
+      kinshipArgs = JSON.parse(selectedPopData.selectedPop);
       var kinshipPopId = kinshipArgs.data_str + "_" + kinshipArgs.id;
 
       var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("kinship_div");
