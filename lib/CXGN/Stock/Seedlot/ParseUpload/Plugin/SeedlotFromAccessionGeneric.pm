@@ -20,7 +20,7 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'seedlot_name', 'accession_name', 'operator_name', 'box_name' ],
-        optional_columns => ['description', 'quality', 'source', 'amount', 'weight(g)'],
+        optional_columns => ['description', 'quality', 'source', 'amount', 'weight_gram'],
         column_aliases => {
             'seedlot_name' => ['seedlot name'],
             'accession_name' => ['accession name', 'accession'],
@@ -62,7 +62,7 @@ sub _validate_with_plugin {
         my $seedlot_source = $row->{'source'};
 
         if ($seedlot_name =~ /\s/ || $seedlot_name =~ /\// || $seedlot_name =~ /\\/ ) {
-            push @error_messages, "Cell A$row_nam: seedlot_name must not contain spaces or slashes.";
+            push @error_messages, "Cell A$row_num: seedlot_name must not contain spaces or slashes.";
         }
 
         if ($duplicated_seedlot_names{$seedlot_name}) {
@@ -78,9 +78,9 @@ sub _validate_with_plugin {
         }
     }
 
-    my $seen_seedlot_names = $parsed_value->{'seedlot_name'};
-    my $seen_accession_names = $parsed_value->{'accession_name'};
-    my $seed_source_names = $parsed_value->{'source'};
+    my $seen_seedlot_names = $parsed_values->{'seedlot_name'};
+    my $seen_accession_names = $parsed_values->{'accession_name'};
+    my $seen_source_names = $parsed_values->{'source'};
 
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions',$seen_accession_names)->{'missing'}};
@@ -109,11 +109,9 @@ sub _validate_with_plugin {
     }
 
     if (scalar(@accession_source_pairs) >=1) {
-        foreach my $pair (@accession_source_pairs) {
-            my $pairs_error = CXGN::Stock::Seedlot->verify_accession_content_source_compatibility($schema, \@accession_source_pairs);
-            if (exists($pairs_error->{error})){
-                push @error_messages, $pairs_error->{error};
-            }
+        my $pairs_error = CXGN::Stock::Seedlot->verify_accession_content_source_compatibility($schema, \@accession_source_pairs);
+        if (exists($pairs_error->{error})){
+            push @error_messages, $pairs_error->{error};
         }
     }
 
@@ -164,79 +162,7 @@ sub _parse_with_plugin {
         $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
     }
 
-    my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => \@seedlots },
-        'type_id' => $seedlot_cvterm_id
-    });
-
-    my %seedlot_lookup;
-    while (my $r = $seedlot_rs->next) {
-        $seedlot_lookup{$r->uniquename} = $r->stock_id;
-    }
-
-    for my $row ( @$parsed_data ) {
-        my $row_num;
-        my $seedlot_name;
-        my $accession_name;
-        my $operator_name;
-        my $amount = 'NA';
-        my $weight = 'NA';
-        my $description;
-        my $box_name;
-        my $quality;
-        my $source;
-
-        $row_num = $row->{_row};
-        $seedlot_name = $row->{'seedlot_name'};
-        $accession_name = $row->{'accession_name'};
-        $operator_name = $row->{'operator_name'};
-        $amount = $row->{'amount'};
-        $weight = $row->{'weight(g)'};
-        $description = $row->{'description'};
-        $box_name = $row->{'box_name'};
-        $quality = $row->{'quality'};
-        $source = $row->{'source'};
-
-        my $accession_stock_id;
-        if ($acc_synonyms_lookup{$accession_name}){
-            my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
-            if (scalar(@accession_names)>1){
-                print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
-            }
-            $accession_stock_id = $acc_synonyms_lookup{$accession_name}->{$accession_names[0]};
-            $accession_name = $accession_names[0];
-        } else {
-            $accession_stock_id = $accession_lookup{$accession_name};
-        }
-
-        my $source_id;
-        if ($source) {
-            my $source_row = $self->get_chado_schema->resultset("Stock::Stock")->find( { uniquename => $source });
-            if ($source_row) {
-                $source_id = $source_row->stock_id();
-            }
-        }
-
-        $parsed_seedlots{$seedlot_name} = {
-            seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
-            accession => $accession_name,
-            accession_stock_id => $accession_stock_id,
-            cross_name => undef,
-            cross_stock_id => undef,
-            amount => $amount,
-            weight_gram => $weight,
-            description => $description,
-            box_name => $box_name,
-            operator_name => $operator_name,
-            quality => $quality,
-            source => $source,
-            source_id => $source_id,
-        };
-
-    }
-    #print STDERR Dumper \%parsed_seedlots;
-
+    my %parsed_seedlots;
     $self->_set_parsed_data(\%parsed_seedlots);
 
     return 1;
