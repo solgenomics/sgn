@@ -20,7 +20,7 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'seedlot_name', 'cross_unique_id', 'operator_name', 'box_name' ],
-        optional_columns => ['description', 'quality', 'amount', 'weight(g)'],
+        optional_columns => ['description', 'quality', 'amount', 'weight_gram'],
         column_aliases => {
             'seedlot_name' => ['seedlot name'],
             'cross_unique_id' => ['cross unique id', 'cross name'],
@@ -30,7 +30,6 @@ sub _validate_with_plugin {
     );
 
     my $parsed = $parser->parse();
-    print STDERR "PARSED =".Dumper($parsed)."\n";
     my $parsed_errors = $parsed->{errors};
     my $parsed_columns = $parsed->{columns};
     my $parsed_data = $parsed->{data};
@@ -56,23 +55,30 @@ sub _validate_with_plugin {
         my $row_num = $row->{_row};
         my $seedlot_name = $row->{'seedlot_name'};
         my $amount = $row->{'amount'};
-        my $weight = $row->{'weight(g)'};
+        my $weight = $row->{'weight_gram'};
 
         if ($seedlot_name =~ /\s/ || $seedlot_name =~ /\// || $seedlot_name =~ /\\/ ) {
-            push @error_messages, "Cell A$row_nam: seedlot_name must not contain spaces or slashes.";
+            push @error_messages, "Cell A$row_num: seedlot_name must not contain spaces or slashes.";
         }
 
         if ($duplicated_seedlot_names{$seedlot_name}) {
             push @error_messages, "Cell A$row_num: duplicate seedlot_name at cell A".$duplicated_seedlot_names{$seedlot_name}.": $seedlot_name";
         }
 
-        if (!$amount && !$weight) {
+        if (!$amount || $amount eq '') {
+            $amount = 'NA';
+        } elsif (!$weight || $weight eq '') {
+            $weight = 'NA';
+        }
+
+        if ($amount eq 'NA' && $weight eq 'NA') {
             push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
         }
+
     }
 
-    my $seen_seedlot_names = $parsed_value->{'seedlot_name'};
-    my $seen_cross_names = $parsed_value->{'cross_unique_id'};
+    my $seen_seedlot_names = $parsed_values->{'seedlot_name'};
+    my $seen_cross_names = $parsed_values->{'cross_unique_id'};
 
     my $cross_validator = CXGN::List::Validate->new();
     my @crosses_missing = @{$cross_validator->validate($schema,'crosses',$seen_cross_names)->{'missing'}};
@@ -109,6 +115,7 @@ sub _parse_with_plugin {
     my $parsed = $self->_parsed_data();
     my $parsed_data = $parsed->{data};
     my $parsed_values = $parsed->{values};
+    my %parsed_seedlots;
 
     my $cross_names = $parsed_values->{'cross_unique_id'};
     my $seedlot_names = $parsed_values->{'seedlot_name'};
@@ -143,8 +150,8 @@ sub _parse_with_plugin {
         my $seedlot_name;
         my $cross_name;
         my $operator_name;
-        my $amount = 'NA';
-        my $weight = 'NA';
+        my $amount;
+        my $weight;
         my $description;
         my $box_name;
         my $quality;
@@ -154,10 +161,16 @@ sub _parse_with_plugin {
         $cross_name = $row->{'cross_unique_id'};
         $operator_name = $row->{'operator_name'};
         $amount = $row->{'amount'};
-        $weight = $row->{'weight(g)'};
+        $weight = $row->{'weight_gram'};
         $description = $row->{'description'};
         $box_name = $row->{'box_name'};
         $quality = $row->{'quality'};
+
+        if (!$amount || $amount eq '') {
+            $amount = 'NA';
+        } elsif (!$weight || $weight eq '') {
+            $weight = 'NA';
+        }
 
         $parsed_seedlots{$seedlot_name} = {
             seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
@@ -172,8 +185,6 @@ sub _parse_with_plugin {
             operator_name => $operator_name
         };
     }
-
-    #print STDERR Dumper \%parsed_seedlots;
 
     $self->_set_parsed_data(\%parsed_seedlots);
 
