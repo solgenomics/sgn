@@ -560,20 +560,20 @@ my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014' ]
 
 my %plot_trait_value = (
     $trial_design->{7}->{plot_name} => {
-	'root number|CO_334:0000011' => [0,''],
+    	'root number|CO_334:0000011' => [0,''],
 	    'dry yield|CO_334:0000014' => [30,''],
     },
     
     $trial_design->{8}->{plot_name} => {
-	'root number|CO_334:0000011'  => [10,''],
+	    'root number|CO_334:0000011'  => [10,''],
 	    'dry yield|CO_334:0000014' => [40,'']
     },
 
     $trial_design->{9}->{plot_name} => {
-	'root number|CO_334:0000011'  => [20,''],
+	    'root number|CO_334:0000011'  => [20,''],
 	    'dry yield|CO_334:0000014' => [50,'']
     },
-    );
+);
 
 # add multiple repeat type to root number, dry yield and harvest index
 #
