@@ -683,6 +683,13 @@ solGS.cluster = {
       downloadLinks += " | " + kclusterVariancesLink + " | " + elbowLink;
     }
 
+    var plotId = res.cluster_pop_id.replace(/-/g, "_");
+    var clusterDownloadBtn = "download_cluster_plot_" + plotId;
+    var clusterPlot =
+      "<a href='#'  onclick='event.preventDefault();' id='" + clusterDownloadBtn + "'>Cluster plot</a>";
+
+    downloadLinks += " | " + clusterPlot;
+
     return downloadLinks;
   },
 
@@ -861,8 +868,6 @@ solGS.cluster = {
       }
     });
 
-    console.log(`pc12: ${JSON.stringify(pc12)}`)
-
     var groupsNames = groups;
 
     var height = 400;
@@ -877,23 +882,23 @@ solGS.cluster = {
     var totalH = height + pad.top + pad.bottom + 100;
     var totalW = width + pad.left + pad.right + 400;
 
-    var pcaCanvasDivId = this.canvas;
-    var pcaPlotPopId = plotData.cluster_pop_id.replace(/-/g, "_");
-    var pcaPlotDivId = `${this.clusterPlotDiv}_${pcaPlotPopId}`;
+    var clusterCanvasDivId = this.canvas;
+    var clusterPlotPopId = plotData.file_id.replace(/-/g, "_");
+    var clusterPlotDivId = `${this.clusterPlotDiv}_${clusterPlotPopId}`;
 
-    pcaPlotDivId = pcaPlotDivId.replace(/#/, "");
+    clusterPlotDivId = clusterPlotDivId.replace(/#/, "");
 
-    jQuery(pcaCanvasDivId).append("<div id=" + pcaPlotDivId + "></div>");
-    pcaPlotDivId = "#" + pcaPlotDivId;
+    jQuery(clusterCanvasDivId).append("<div id=" + clusterPlotDivId + "></div>");
+    clusterPlotDivId = "#" + clusterPlotDivId;
 
     var svg = d3
-      .select(pcaPlotDivId)
+      .select(clusterPlotDivId)
       .insert("svg", ":first-child")
       .attr("width", totalW)
       .attr("height", totalH);
 
-    var pcaPlot = svg.append("g")
-      .attr("id", pcaPlotDivId)
+    var clusterPlot = svg.append("g")
+      .attr("id", clusterPlotDivId)
       .attr("transform", "translate(0,0)");
 
     var pc1Min = d3.min(pc1);
@@ -916,7 +921,7 @@ solGS.cluster = {
     var labelFs = 12;
     var yAxisHeight = pad.top + height + nudgeVal; 
 
-    pcaPlot
+    clusterPlot
       .append("g")
       .attr("class", "PC1 axis")
       .attr("transform", "translate(" + pad.left + "," + yAxisHeight + ")")
@@ -932,7 +937,7 @@ solGS.cluster = {
         fill: axesLabelColor,
       });
 
-    pcaPlot
+    clusterPlot
       .append("g")
       .attr("class", "PC2 axis")
       .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
@@ -944,7 +949,7 @@ solGS.cluster = {
 
     var grpColor = d3.scaleOrdinal(d3.schemeCategory10);
 
-    pcaPlot.append("g")
+    clusterPlot.append("g")
       .selectAll("circle")
       .data(pc12)
       .enter()
@@ -970,9 +975,8 @@ solGS.cluster = {
         }
       })
       .on("mouseover", function (d) {
-        console.log(`mouseover d: ${JSON.stringify(d)}`)
         d3.select(this).attr("r", 5).style("fill", axesLabelColor);
-        pcaPlot
+        clusterPlot
         .data(d)
           .append("text")
           .attr("id", "dLabel")
@@ -983,7 +987,6 @@ solGS.cluster = {
           .attr("y", height - 0.1 * height);
       })
       .on("mouseout", function (d) {
-        console.log(`mouseout d: ${JSON.stringify(d)}`)
         d3.select(this)
           .attr("r", 3)
           .style("fill", function (d) {
@@ -992,7 +995,7 @@ solGS.cluster = {
         d3.selectAll("text#dLabel").remove();
       });
 
-    pcaPlot
+    clusterPlot
       .append("rect")
       .attr("transform", "translate(" + pad.left + "," + pad.top + ")")
       .attr("height", height + nudgeVal)
@@ -1008,7 +1011,7 @@ solGS.cluster = {
     }
 
     if (downloadLinks) {
-      jQuery(pcaPlotDivId).append('<p style="margin-left: 40px">' + downloadLinks + "</p>");
+      jQuery(clusterPlotDivId).append('<p style="margin-left: 40px">' + downloadLinks + "</p>");
     }
 
     if (groupsNames && Object.keys(groupsNames).length > 1) {
@@ -1018,7 +1021,7 @@ solGS.cluster = {
       var legendYOrig = height * 0.25;
       var legendValues = groups;
 
-      pcaPlot
+      clusterPlot
       .append("g")
       .attr("class", "cell")
       .attr("transform", "translate(" + legendXOrig + "," + legendYOrig + ")")
@@ -1027,8 +1030,7 @@ solGS.cluster = {
       .attr("x", 0)
       .attr("y", 15);
 
-
-     pcaPlot
+     clusterPlot
         .append("g")
         .attr("class", "cell")
         .attr("transform", "translate(" + legendXOrig + "," + legendYOrig + ")")
@@ -1048,12 +1050,10 @@ solGS.cluster = {
         .attr("height", recLW)
         .style("stroke", "black")
         .style("fill", function (d) {
-          console.log(`legend d: ${JSON.stringify(d)}`)
-
           return grpColor(groups.indexOf(d));
         });
 
-   pcaPlot
+   clusterPlot
         .append("g")
         .attr(
           "transform",
@@ -1071,7 +1071,6 @@ solGS.cluster = {
           return 1 + d[0] * recLH + d[0] * 5;
         })
         .text(function (d) {
-          console.log(`legendtxt d: ${JSON.stringify(d)}`)
           return d;
         })
         .attr("dominant-baseline", "middle")
@@ -1087,17 +1086,17 @@ jQuery.fn.doesExist = function () {
 
 jQuery(document).ready(function () {
   var url = location.pathname;
+  var canvas = solGS.cluster.canvas;
 
   if (url.match(/cluster\/analysis/)) {
     solGS.cluster.populateClusterMenu();
-    var canvas = solGS.cluster.canvas;
     var clusterMsgDiv = solGS.cluster.clusterMsgDiv;
 
     var clusterArgs = solGS.cluster.getClusterArgsFromUrl();
     var clusterPopId = clusterArgs.cluster_pop_id;
+
     if (clusterPopId) {
       jQuery(clusterMsgDiv).text("Running cluster... please wait...it may take minutes.").show();
-
       jQuery(`${canvas} .multi-spinner-container`).show();
 
       solGS.cluster.checkCachedCluster(url, clusterArgs).done(function (res) {
@@ -1110,6 +1109,13 @@ jQuery(document).ready(function () {
       });
     }
   }
+
+  jQuery(canvas).on("click", "a", function (e) {
+    var buttonId = e.target.id;
+    var clusterPlotId = buttonId.replace(/download_/, "");
+    saveSvgAsPng(document.getElementById("#" + clusterPlotId), clusterPlotId + ".png", { scale: 2 });
+  });
+
 });
 
 jQuery(document).ready(function () {
@@ -1203,17 +1209,12 @@ jQuery(document).ready(function () {
         .checkCachedCluster(page, clusterArgs)
         .done(function (res) {
           if (res.result == "success") {
-            jQuery(`${canvas} .multi-spinner-container`).hide();
-
-            // console.log(`k cluster groups: ${JSON.stringify(res.pc_scores_groups)}`)
-            
+            jQuery(`${canvas} .multi-spinner-container`).hide();            
             solGS.cluster.displayClusterOutput(res);
 
             jQuery(clusterMsgDiv).empty();
             jQuery("#" + runClusterBtnId).show();
           } else {
-
-
             jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery(clusterMsgDiv).empty();
 
@@ -1263,8 +1264,6 @@ jQuery(document).ready(function () {
                           jQuery(`${canvas} .multi-spinner-container`).hide();
 
                           solGS.cluster.displayClusterOutput(res);
-                          // console.log(`k cluster groups: ${JSON.stringify(res.pc_scores_groups)}`)
-
                           jQuery(clusterMsgDiv).empty();
                           jQuery(runClusterBtnId).show();
                         } else {
