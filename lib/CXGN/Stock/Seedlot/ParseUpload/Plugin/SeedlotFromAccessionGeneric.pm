@@ -96,7 +96,7 @@ sub _validate_with_plugin {
 
     if ($seen_source_names) {
         my $source_validator = CXGN::List::Validate->new();
-        my @source_missing = @{$source_validator->validate($schema,'seedlots_or_plots_or_subplots_or_plants_or_crosses_or_accessions',$seen_source_names)->{'missing'}};
+        my @source_missing = @{$source_validator->validate($schema,'plots_or_subplots_or_plants',$seen_source_names)->{'missing'}};
 
         if (scalar(@source_missing) > 0) {
             push @error_messages, "The following source are not in the database: ".join(',',@source_missing);
