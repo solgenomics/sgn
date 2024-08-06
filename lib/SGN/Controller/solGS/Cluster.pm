@@ -154,6 +154,7 @@ sub prepare_response {
     $ret->{json_data}            = $json_data;
     $ret->{cluster_report}       = $c->stash->{download_cluster_report};
     $ret->{cluster_pop_id}       = $c->stash->{cluster_pop_id};
+    $ret->{file_id}       = $file_id;
     $ret->{combo_pops_id}        = $c->stash->{combo_pops_id};
     $ret->{list_id}              = $c->stash->{list_id};
     $ret->{list_name}            = $c->stash->{list_name};
