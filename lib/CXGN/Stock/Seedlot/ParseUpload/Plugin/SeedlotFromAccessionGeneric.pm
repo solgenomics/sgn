@@ -30,7 +30,6 @@ sub _validate_with_plugin {
     );
 
     my $parsed = $parser->parse();
-    print STDERR "PARSED =".Dumper($parsed)."\n";
     my $parsed_errors = $parsed->{errors};
     my $parsed_columns = $parsed->{columns};
     my $parsed_data = $parsed->{data};
@@ -58,7 +57,7 @@ sub _validate_with_plugin {
         my $seedlot_name = $row->{'seedlot_name'};
         my $accession_name = $row->{'accession_name'};
         my $amount = $row->{'amount'};
-        my $weight = $row->{'weight(g)'};
+        my $weight = $row->{'weight_gram'};
         my $seedlot_source = $row->{'source'};
 
         if ($seedlot_name =~ /\s/ || $seedlot_name =~ /\// || $seedlot_name =~ /\\/ ) {
@@ -69,7 +68,13 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_num: duplicate seedlot_name at cell A".$duplicated_seedlot_names{$seedlot_name}.": $seedlot_name";
         }
 
-        if (!$amount && !$weight) {
+        if (!$amount || $amount eq '') {
+            $amount = 'NA';
+        } elsif (!$weight || $weight eq '') {
+            $weight = 'NA';
+        }
+
+        if ($amount eq 'NA' && $weight eq 'NA') {
             push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
         }
 
@@ -133,6 +138,7 @@ sub _parse_with_plugin {
     my $parsed = $self->_parsed_data();
     my $parsed_data = $parsed->{data};
     my $parsed_values = $parsed->{values};
+    my %parsed_seedlots;
 
     my $accession_names = $parsed_values->{'accession_name'};
     my $seedlot_names = $parsed_values->{'seedlot_name'};
@@ -162,7 +168,83 @@ sub _parse_with_plugin {
         $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
     }
 
-    my %parsed_seedlots;
+    my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => $seedlot_names },
+        'type_id' => $seedlot_cvterm_id
+    });
+    my %seedlot_lookup;
+    while (my $r=$seedlot_rs->next){
+        $seedlot_lookup{$r->uniquename} = $r->stock_id;
+    }
+
+    for my $row (@$parsed_data) {
+        my $row_num;
+        my $seedlot_name;
+        my $accession_name;
+        my $operator_name;
+        my $amount = 'NA';
+        my $weight = 'NA';
+        my $description;
+        my $box_name;
+        my $quality;
+        my $source;
+
+        $row_num = $row->{_row};
+        $seedlot_name = $row->{'seedlot_name'};
+        $accession_name = $row->{'accession_name'};
+        $operator_name = $row->{'operator_name'};
+        $amount = $row->{'amount'};
+        $weight = $row->{'weight_gram'};
+        $description = $row->{'description'};
+        $box_name = $row->{'box_name'};
+        $quality = $row->{'quality'};
+        $source = $row->{'source'};
+
+        my $accession_stock_id;
+        if ($acc_synonyms_lookup{$accession_name}){
+            my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+            if (scalar(@accession_names)>1){
+                print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+            }
+            $accession_stock_id = $acc_synonyms_lookup{$accession_name}->{$accession_names[0]};
+            $accession_name = $accession_names[0];
+        } else {
+            $accession_stock_id = $accession_lookup{$accession_name};
+        }
+
+        my $source_id;
+        if ($source) {
+            my $source_row = $self->get_chado_schema->resultset("Stock::Stock")->find( { uniquename => $source });
+            if ($source_row) {
+                $source_id = $source_row->stock_id();
+            }
+        }
+
+        if (!$amount || $amount eq '') {
+            $amount = 'NA';
+        } elsif (!$weight || $weight eq '') {
+            $weight = 'NA';
+        }
+
+        $parsed_seedlots{$seedlot_name} = {
+            seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
+            accession => $accession_name,
+            accession_stock_id => $accession_stock_id,
+            cross_name => undef,
+            cross_stock_id => undef,
+            amount => $amount,
+            weight_gram => $weight,
+            description => $description,
+            box_name => $box_name,
+            operator_name => $operator_name,
+            quality => $quality,
+            source => $source,
+            source_id => $source_id,
+        };
+
+    }
+
     $self->_set_parsed_data(\%parsed_seedlots);
 
     return 1;
