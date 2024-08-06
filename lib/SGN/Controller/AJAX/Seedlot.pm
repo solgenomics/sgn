@@ -20,6 +20,7 @@ use CXGN::Onto;
 use CXGN::List;
 use CXGN::List::Validate;
 use CXGN::Stock::Seedlot::Discard;
+use CXGN::Stock::RelatedStocks;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -334,14 +335,15 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $box_name = $c->req->param("seedlot_box_name");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
     my $cross_uniquename = $c->req->param("seedlot_cross_uniquename");
-    my $plot_uniquename = $c->req->param("seedlot_plot_uniquename");
-    my $origin_seedlot_uniquename = $c->req->param("origin_seedlot_uniquename");
+    my $seedlot_source = $c->req->param("seedlot_source") || $c->req->param("seedlot_plot_uniquename") || $c->req->param("origin_seedlot_uniquename");
     my $seedlot_quality = $c->req->param("seedlot_quality");
     my $description = $c->req->param("seedlot_description");
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $no_refresh = $c->req->param("no_refresh");
 
     my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename }); #type_id=>$seedlot_cvterm_id});
@@ -363,15 +365,80 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     }
     my $cross_id;
     if ($cross_uniquename){
-        $cross_id = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id})->stock_id();
+        my $rs = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id});
+        if (!$rs){
+            $c->stash->{rest} = {error=>'The cross name you provided does not match an existing cross name in the database.  Please make sure you are using the correct name or contact us.'};
+            $c->detach();
+        }
+        $cross_id = $rs->stock_id();
     }
-    my $plot_id;
-    if ($plot_uniquename){
-        $plot_id = $schema->resultset('Stock::Stock')->find({uniquename=>$plot_uniquename, type_id=>$plot_cvterm_id})->stock_id();
-    }
-    my $origin_seedlot_id;
-    if ($origin_seedlot_uniquename){
-        $origin_seedlot_id = $schema->resultset('Stock::Stock')->find({uniquename=>$origin_seedlot_uniquename, type_id=>$seedlot_cvterm_id})->stock_id();
+    my $source_id;
+    my $source_is_seedlot = 0;
+    if ($seedlot_source) {
+        my $rs = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_source, type_id => { -in => [ $seedlot_cvterm_id, $plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id ] }});
+        if ( !$rs ) {
+            $c->stash->{rest} = {error=>'The given seedlot source name does not match an existing entry in the database. Seedlot sources must be an existing seedlot, plot, subplot, or plant name.'};
+            $c->detach();
+        }
+        $source_id = $rs->stock_id();
+        my $type_id = $rs->type_id();
+
+        # Check the contents of the source seedlot against the new seedlots contents
+        if ( $type_id eq $seedlot_cvterm_id ) {
+            $source_is_seedlot = 1;
+            my $source_seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $source_id);
+            my $source_accession_name = $source_seedlot->accession() ? $source_seedlot->accession()->[1] : undef;
+            my $source_cross_name = $source_seedlot->cross() ? $source_seedlot->cross()->[1] : undef;
+            if ( $accession_uniquename && $accession_uniquename ne $source_accession_name ) {
+                    $c->stash->{rest} = { error => "The source seedlot contents accession ($source_accession_name) does not match the new seedlot contents accession ($accession_uniquename)." };
+                    $c->detach();
+            }
+            elsif ( $cross_uniquename && $cross_uniquename ne $source_cross_name ) {
+                    $c->stash->{rest} = { error => "The source seedlot contents cross ($source_cross_name) does not match the new seedlot contents cross ($cross_uniquename)." };
+                    $c->detach();
+            }
+        }
+
+        # Check the seedlot accession or cross against the source plot / subplot / plant accession or cross
+        elsif ( $type_id eq $plot_cvterm_id || $type_id eq $subplot_cvterm_id || $type_id eq $plant_cvterm_id ) {
+            my $trial_related_stock = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $source_id});
+            my $result = $trial_related_stock->get_trial_related_stock();
+            my $source_stock_name;
+            my $source_stock_type;
+            foreach my $s (@$result) {
+                my $t = $s->[2];
+                my $n = $s->[1];
+                if ( $t eq 'accession' ) {
+                    $source_stock_type = 'accession';
+                    $source_stock_name = $n;
+                }
+                elsif ( $t eq 'cross' ) {
+                    $source_stock_type = 'cross';
+                    $source_stock_name = $n;
+                }
+            }
+            if ( $source_stock_type eq 'accession' ) {
+                if ( $accession_uniquename ne $source_stock_name ) {
+                    $c->stash->{rest} = { error => "The source stock accession ($source_stock_name) does not match the seedlot contents accession ($accession_uniquename)." };
+                    $c->detach();
+                }
+            }
+            elsif ( $source_stock_type eq 'cross' ) {
+                if ( $cross_uniquename ne $source_stock_name ) {
+                    $c->stash->{rest} = { error => "The source stock cross ($source_stock_name) does not match the seedlot contents cross ($cross_uniquename)." };
+                    $c->detach();
+                }
+            }
+            else {
+                $c->stash->{rest} = { error => "Could not check seedlot source due to undefined source stock type" };
+                $c->detach();
+            }
+        }
+
+        else {
+            $c->stash->{rest} = {error => 'Unsupported seedlot source type'};
+            $c->detach();
+        }
     }
     if ($accession_uniquename && !$accession_id){
         $c->stash->{rest} = {error=>'The given accession name is not in the database! Seedlots can only be added onto existing accessions.'};
@@ -379,14 +446,6 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     }
     if ($cross_uniquename && !$cross_id){
         $c->stash->{rest} = {error=>'The given cross name is not in the database! Seedlots can only be added onto existing crosses.'};
-        $c->detach();
-    }
-    if ($plot_uniquename && !$plot_id){
-        $c->stash->{rest} = {error=>'The given plot name is not in the database! Seedlots can only use existing plots.'};
-        $c->detach();
-    }
-    if ($origin_seedlot_uniquename && !$origin_seedlot_id){
-        $c->stash->{rest} = {error=>'The given origin seedlot name is not in the database! Seedlots can only use existing Seedlots for the initial transaction.'};
         $c->detach();
     }
     if ($accession_id && $cross_id){
@@ -398,8 +457,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $c->detach();
     }
 
-    my $from_stock_id = $origin_seedlot_id ? $origin_seedlot_id : $plot_id ? $plot_id : $accession_id ? $accession_id : $cross_id;
-    my $from_stock_uniquename = $origin_seedlot_uniquename ? $origin_seedlot_uniquename : $plot_uniquename ? $plot_uniquename : $accession_uniquename ? $accession_uniquename : $cross_uniquename;
+    my $from_stock_id = $source_id ? $source_id : $accession_id ? $accession_id : $cross_id;
+    my $from_stock_uniquename = $seedlot_source ? $seedlot_source : $accession_uniquename ? $accession_uniquename : $cross_uniquename;
     my $population_name = $c->req->param("seedlot_population_name");
     my $organization = $c->req->param("seedlot_organization");
     my $amount = $c->req->param("seedlot_amount");
@@ -465,8 +524,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl_new->set_current_count_property();
         $sl_new->set_current_weight_property();
 
-        if ( $origin_seedlot_id ) {
-            my $sl_origin = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $origin_seedlot_id);
+        if ( $source_is_seedlot ) {
+            my $sl_origin = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $source_id);
             $sl_origin->set_current_count_property();
             $sl_origin->set_current_weight_property();
         }
@@ -993,7 +1052,9 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
-    my %types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $plot_type_id => 'plot', $cross_type_id => 'cross' );
+    my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "subplot", "stock_type")->cvterm_id();
+    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plant", "stock_type")->cvterm_id();
+    my %types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $plot_type_id => 'plot', $subplot_type_id => 'subplot', $plant_type_id => 'plant', $cross_type_id => 'cross' );
 
     #print STDERR Dumper $transactions;
     my @transactions;

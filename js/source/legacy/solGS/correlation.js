@@ -255,13 +255,9 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
 
   },
 
-  populateGenCorrMenu: function () {
-    var modelData = solGS.getModelArgs();
-    modelData = {
-      id: modelData.training_pop_id,
-      name: modelData.training_pop_name,
-      pop_type: 'training'
-    }
+  populateGenCorrMenu: function (newPop) {
+    var modelData = solGS.selectMenuModelArgs();
+  
     var corrPops = [modelData];
 
     if (!modelData.id.match(/list/)) {
@@ -272,20 +268,14 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       }
     }
 
-    var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
-    if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
-      if (listTypeSelPops) {
-        corrPops.push(listTypeSelPops);
-      }
-    }
+    var menu = new SelectMenu(this.corrPopsDiv, this.corrPopsSelectMenuId);
 
-    var menuId = this.corrPopsSelectMenuId;
-    var menu = new SelectMenu(menuId);
-    corrPops = corrPops.flat();
-    var menuElem = menu.addOptions(corrPops);
-    var corrPopDiv = this.corrPopsDiv;
-    jQuery(corrPopDiv).empty().append(menuElem).show();
+    if (newPop){
+        menu.updateOptions(newPop);   
+    } else {
+      menu.populateMenu(corrPops);
+    }
+    
   },
 
   getGeneticCorrArgs: function (corrPopId, corrPopType, sIndexFile, sIndexName) {
