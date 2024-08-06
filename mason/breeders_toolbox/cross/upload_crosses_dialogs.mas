@@ -35,7 +35,7 @@ $trial_name => undef
                                             <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
                                             <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                             <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
-					    <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from tetraploid to diploid.</li>
+                                            <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from tetraploid to diploid.</li>
                                         </ul>
                                     </ul>
                                 </li>
@@ -389,16 +389,14 @@ $trial_name => undef
                                     <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
                                     <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
                                     <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
-                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>                                
+                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                     <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
-				    <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from 4 to 2.</li>
-				    <li>
+                                    <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from 4 to 2.</li>
                                 </ul>
                             </ul>
-                        </li>
                         <div id = "accession_parent_info" style="display:none">
                             <li><b>female_parent:</b> Accession names (for biparental, self, open, sib, polycross, doubled_haploid cross types) or population names (for bulk, bulk_self and bulk_open cross types) or cross unique ids (for backcross cross type) must exist as <b>uniquenames</b> in the database.</li>
-                            <li><b>male_parent:</b> Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, accession names or population names must exist as <b>uniquenames</b> in the database.</li>
+                            <li><b>male_parent:</b> Required in the header, but value may be left blank for open cross type. Must be specified for biparental, sib, polycross, bulk, backcross, doubled_haploid and dihaploid_induction cross types. When specified, accession names or population names must exist as <b>uniquenames</b> in the database.</li>
                         </div>
                         <div id = "plot_parent_info" style="display:none">
                             <li><b>female_parent:</b> Accession names must exist as <b>uniquenames</b> in the database.</li>

@@ -26,45 +26,31 @@ my $cluster_dir  = catdir( $protocol_dir, 'cluster' );
 my $log_dir      = catdir( $protocol_dir, 'log' );
 
 my $accessions_list = $solgs_data->load_accessions_list();
-
-# my $accessions_list = $solgs_data->get_list_details('accessions');
 my $accessions_list_name = $accessions_list->{list_name};
 my $accessions_list_id   = 'list_' . $accessions_list->{list_id};
-print STDERR
-  "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
-my $plots_list = $solgs_data->load_plots_list();
 
-# my $plots_list =  $solgs_data->get_list_details('plots');
+my $plots_list = $solgs_data->load_plots_list();
 my $plots_list_name = $plots_list->{list_name};
 my $plots_list_id   = 'list_' . $plots_list->{list_id};
 
-print STDERR "\nadding trials list\n";
-my $trials_list = $solgs_data->load_trials_list();
 
-# my $trials_list =  $solgs_data->get_list_details('trials');
+my $trials_list = $solgs_data->load_trials_list();
 my $trials_list_name = $trials_list->{list_name};
 my $trials_list_id   = 'list_' . $trials_list->{list_id};
-print STDERR "\nadding trials dataset\n";
 
-# my $trials_dt =  $solgs_data->get_dataset_details('trials');
 my $trials_dt      = $solgs_data->load_trials_dataset();
 my $trials_dt_name = $trials_dt->{dataset_name};
 my $trials_dt_id   = 'dataset_' . $trials_dt->{dataset_id};
-print STDERR "\nadding accessions dataset\n";
 
-# my $accessions_dt =  $solgs_data->get_dataset_details('accessions');
 my $accessions_dt      = $solgs_data->load_accessions_dataset();
 my $accessions_dt_name = $accessions_dt->{dataset_name};
 my $accessions_dt_id   = 'dataset_' . $accessions_dt->{dataset_id};
 
-print STDERR "\nadding plots dataset\n";
-
-# my $plots_dt =  $solgs_data->get_dataset_details('plots');
 my $plots_dt      = $solgs_data->load_plots_dataset();
 my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id   = 'dataset_' . $plots_dt->{dataset_id};
 
-#$accessions_dt_name = '' . $accessions_dt_name . '';
+
 print STDERR "\ntrials dt: $trials_dt_name -- $trials_dt_id\n";
 print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
 print STDERR "\nplots dt: $plots_dt_name -- $plots_dt_id\n";
@@ -576,17 +562,7 @@ $d->while_logged_in_as(
         sleep(15);
 
         $d->find_element_ok(
-            '//select[@id="list_type_selection_pops_select"]/option[text()="'
-              . $accessions_list_name . '"]',
-            'xpath',
-            'accessions list sl pop'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath',
-            'select list sel pop' )->click();
-        sleep(5);
-        $d->find_element_ok(
-'//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]',
+'//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]',
             'xpath',
             'click list sel pred'
         )->click();
@@ -606,17 +582,7 @@ $d->while_logged_in_as(
         sleep(15);
 
         $d->find_element_ok(
-            '//select[@id="list_type_selection_pops_select"]/option[text()="'
-              . $accessions_dt_name . '"]',
-            'xpath',
-            'accession select list sl pop'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath',
-            'select dataset sel pop' )->click();
-        sleep(5);
-        $d->find_element_ok(
-'//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]',
+'//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]',
             'xpath',
             'list sel pred'
         )->click();
@@ -639,37 +605,10 @@ $d->while_logged_in_as(
           $d->find_element( 'Predict', 'partial_link_text', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -200);",
-            $sel_pops );
-
-        $d->find_element_ok(
-            '//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]',
-            'xpath',
-            'select list sel pop'
-        )->click();
+            $sel_pops );  
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
+    sleep(5);
         sleep(5);
-        $d->find_element_ok( 'list_type_selection_pops_select',
-            'id', 'select clones list menu' )->click();
-        sleep(5);
-        my $list = $d->find_element_ok(
-            '//select[@id="list_type_selection_pops_select"]/option[text()="'
-              . $accessions_list_name . '"]',
-            'xpath',
-            'select list sel pop'
-        );
-        $list->click();
-        sleep(5);
-
-        my $sel_pops =
-          $d->find_element( 'Predict', 'partial_link_text', 'scroll up' );
-        my $elem = $d->driver->execute_script(
-            "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);",
-            $sel_pops );
-        $d->find_element_ok(
-            '//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]',
-            'xpath',
-            'select list sel pop'
-        )->click();
-        sleep(3);
 
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );
@@ -722,22 +661,8 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);",
             $sel_pops );
         sleep(2);
-        $d->find_element_ok( 'list_type_selection_pops_select',
-            'id', 'select clones list menu' )->click();
-        sleep(2);
-        my $dataset = $d->find_element_ok(
-            '//select[@id="list_type_selection_pops_select"]/option[text()="'
-              . $accessions_dt_name . '"]',
-            'xpath',
-            'select dataset sel pop'
-        );
-        $dataset->click();
-        sleep(2);
-        $d->find_element_ok(
-            '//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]',
-            'xpath',
-            'select list sel pop'
-        )->click();
+        
+        $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
         sleep(5);
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );
@@ -798,23 +723,9 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);",
             $sel_pops );
         sleep(5);
-        $d->find_element_ok( 'list_type_selection_pops_select',
-            'id', 'select clones list menu' )->click();
+
+        $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions dataset sel pred')->click();
         sleep(5);
-        my $dataset = $d->find_element_ok(
-            '//select[@id="list_type_selection_pops_select"]/option[text()="'
-              . $accessions_dt_name . '"]',
-            'xpath',
-            'select accessions dataset sel pop'
-        );
-        $dataset->click();
-        sleep(5);
-        $d->find_element_ok(
-            '//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]',
-            'xpath',
-            'select list sel pop'
-        )->click();
-        sleep(15);
 
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );
@@ -1730,22 +1641,8 @@ $d->while_logged_in_as(
             'go back to combo trials multi models pg' )->click();
         sleep(15);
 
-        $d->find_element_ok(
-            '//select[@id="list_type_selection_pops_select"]/option[text()="'
-              . $accessions_list_name . '"]',
-            'xpath',
-            'list sl pop'
-        )->click();
-        sleep(10);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath',
-            'select list sel pop' )->click();
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
         sleep(5);
-        $d->find_element_ok(
-'//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]',
-            'xpath',
-            'click list sel pred'
-        )->click();
-        sleep(20);
         $d->find_element_ok( 'queue_job', 'id',
             'list type sel pop prediction job queueing' )->click();
         sleep(2);
@@ -1762,21 +1659,7 @@ $d->while_logged_in_as(
           ->click();
         sleep(5);
 
-        $d->find_element_ok(
-            '//select[@id="list_type_selection_pops_select"]/option[text()="'
-              . $accessions_dt_name . '"]',
-            'xpath',
-            'select list sl pop'
-        )->click();
-        sleep(5);
-        $d->find_element_ok( '//input[@value="View"]', 'xpath',
-            'select dataset sel pop' )->click();
-        sleep(5);
-        $d->find_element_ok(
-'//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]',
-            'xpath',
-            'click accessions dataset sel pred'
-        )->click();
+        $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions dataset sel pred')->click();
         sleep(5);
         $d->find_element_ok( 'queue_job', 'id',
             'dataset sel pop prediction job queueing' )->click();
@@ -1995,23 +1878,9 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);",
             $sel_pops );
         sleep(5);
-        $d->find_element_ok( 'list_type_selection_pops_select',
-            'id', 'select clones list menu' )->click();
-        sleep(5);
-        my $dataset = $d->find_element_ok(
-            '//select[@id="list_type_selection_pops_select"]/option[text()="'
-              . $accessions_dt_name . '"]',
-            'xpath',
-            'select dataset sel pop'
-        );
-        $dataset->click();
-        sleep(5);
-        $d->find_element_ok(
-            '//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]',
-            'xpath',
-            'select list sel pop'
-        )->click();
-        sleep(15);
+    
+        $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions dataset sel pred')->click();
+    sleep(5);
 
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );
@@ -2064,29 +1933,8 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -200);",
             $sel_pops );
 
-        $d->find_element_ok(
-            '//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]',
-            'xpath',
-            'select list type sel pop'
-        )->click();
+        $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
         sleep(5);
-        $d->find_element_ok( 'list_type_selection_pops_select',
-            'id', 'select clones list menu' )->click();
-        sleep(5);
-        my $list = $d->find_element_ok(
-            '//select[@id="list_type_selection_pops_select"]/option[text()="'
-              . $accessions_list_name . '"]',
-            'xpath',
-            'select list sel pop'
-        );
-        $list->click();
-        sleep(5);
-        $d->find_element_ok(
-            '//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]',
-            'xpath',
-            'select list sel pop'
-        )->click();
-        sleep(15);
 
         my $clustering =
           $d->find_element( 'Clustering', 'partial_link_text', 'scroll up' );

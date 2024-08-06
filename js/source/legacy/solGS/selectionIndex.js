@@ -15,8 +15,8 @@ solGS.sIndex = {
   siPopsSelectMenuId: "#si_pops_select",
   siFormId: "#si_form",
 
-  populateSindexMenu: function () {
-    var modelData = this.getTrainingPopulationData();
+  populateSindexMenu: function (newPop) {
+    var modelData = solGS.selectMenuModelArgs();
 
     var sIndexPops = [modelData];
 
@@ -26,40 +26,34 @@ solGS.sIndex = {
         sIndexPops.push(trialSelPopsList);
       }
     }
+    
+    var menu = new SelectMenu(this.siPopsDiv, this.siPopsSelectMenuId);
 
-    var listTypeSelPopsTable = jQuery("#list_type_selection_pops_table").length;
-    if (listTypeSelPopsTable) {
-      var listTypeSelPops = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
-      if (listTypeSelPops) {
-        sIndexPops.push(listTypeSelPops);
-      }
+    if (newPop){
+        menu.updateOptions(newPop);   
+    } else {
+      menu.populateMenu(sIndexPops);
     }
 
-    var menuId = this.siPopsSelectMenuId;
-    var menu = new SelectMenu(menuId);
-    sIndexPops = sIndexPops.flat();
-    var menuElem = menu.addOptions(sIndexPops);
-    var siPopsDiv = this.siPopsDiv;
-    jQuery(siPopsDiv).empty().append(menuElem).show();
   },
 
-  addIndexedClustering: function () {
-    var indexed = solGS.sIndex.indexed;
-    var sIndexList = [];
-
-    if (indexed) {
-      for (var i = 0; i < indexed.length; i++) {
-        var indexData = {
-          id: indexed[i].sindex_id,
-          name: indexed[i].sindex_name,
+  addIndexedClustering: function (indexedPop) {
+    // var indexed = solGS.sIndex.indexed;
+    // var sIndexList = [];
+    // var indexData;
+    // if (indexed) {
+    //   for (var i = 0; i < indexed.length; i++) {
+        return  {
+          id: indexedPop.sindex_id,
+          name: indexedPop.sindex_name,
           pop_type: "selection_index",
         };
 
-        sIndexList.push(indexData);
-      }
-    }
+    // //     sIndexList.push(indexData);
+    // //   }
+    // // }
 
-    return sIndexList;
+    // return sIndexList;
   },
 
   saveIndexedPops: function (siId) {
@@ -266,17 +260,7 @@ solGS.sIndex = {
     };
   },
 
-  getTrainingPopulationData: function () {
-    var modelArgs = solGS.getModelArgs();
-
-    return {
-      id: modelArgs.training_pop_id,
-      name: modelArgs.training_pop_name,
-      pop_type: "training",
-    };
-  },
-
-  /////
+/////
 };
 ////
 
@@ -425,7 +409,10 @@ jQuery(document).on("click", "#calculate_si", function () {
           };
 
           solGS.sIndex.saveIndexedPops(sIndexed);
-          solGS.cluster.listClusterPopulations();
+
+          // //solGS.cluster.populateClusterMenu();
+          var sIndexedPopArgs = solGS.sIndex.addIndexedClustering(sIndexed);
+          solGS.cluster.populateClusterMenu(sIndexedPopArgs);
         }
       })
       .fail(function () {

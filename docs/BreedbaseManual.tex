@@ -85,7 +85,7 @@
 
 \title{User Manual of Breedbase}
 \author{Breedbase team}
-\date{2024-01-30}
+\date{2024-07-22}
 
 \begin{document}
 \maketitle
@@ -673,6 +673,13 @@ Once you click ``Add Accessions'', the new accessions and information will be cr
 
 \begin{center}\includegraphics[width=0.75\linewidth]{assets/images/manage_accessions_add_accessions_saved} \end{center}
 
+\hypertarget{email-alert-for-accession-upload}{%
+\section{Email alert for accession upload}\label{email-alert-for-accession-upload}}
+
+When uploading accessions from a file, you have the option to receive email notifications about the status and results of your upload by clicking the ``Email Alert'' checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results, including any warnings or errors that may have occurred during the upload.
+
+\begin{center}\includegraphics[width=0.75\linewidth]{assets/images/accession_upload_using_email} \end{center}
+
 \hypertarget{add-parentage-pedigree-information-to-accessions}{%
 \section{Add Parentage (Pedigree) Information to Accessions}\label{add-parentage-pedigree-information-to-accessions}}
 
@@ -1187,6 +1194,10 @@ The ``Navigator'' section on the trial detail page allows easy access to all asp
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/trial_detail_page_navigator} \end{center}
 
+The ``transplanting date'' field feature will only be shown if it has a value. To add a transplanting date after creating a trial, change the show\_transplanting\_date parameter from 0 to 1 in the SGN config file. As a result, you will be able to add a date under the transplanting date field by clicking the ``Edit Trial Details'' on the trial detail page.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/add_transplanting_date} \end{center}
+
 \hypertarget{adding-trials}{%
 \section{Adding Trials}\label{adding-trials}}
 
@@ -1450,6 +1461,13 @@ To add multi-location trials, simply select the multiple locations while using t
 This will create a separate trial for each selected location, but they will share the same design and will be grouped in a single folder.
 
 By default each trial design will have a fresh randomization, but if desired you may check the ``Use same randomization for all locations'' option.
+
+\hypertarget{email-alert-for-multiple-trial-design-upload}{%
+\subsection{Email alert for multiple trial design upload}\label{email-alert-for-multiple-trial-design-upload}}
+
+When uploading multiple trials from a file, you have the option to receive email notifications by clicking the ``Email Alert'' checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/multiple_trial_upload_with_email} \end{center}
 
 \hypertarget{viewing-plot-layout-and-trait-heatmap}{%
 \subsection{Viewing Plot Layout and Trait HeatMap}\label{viewing-plot-layout-and-trait-heatmap}}

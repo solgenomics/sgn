@@ -6,8 +6,10 @@ $editable_stock_props_definitions
 
 <%perl>
     my $user_role = '';
+    my $email_address = '';
     if ($c->user) {
         $user_role = $c->user->get_object()->get_user_type();
+        $email_address = $c->user->get_object()->get_private_email();
     }
 </%perl>
 
@@ -47,7 +49,7 @@ $editable_stock_props_definitions
                             <div class="col-sm-8">
 % if ( $user_role eq 'curator' ) {
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked></input>
-% } else { 
+% } else {
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
 % }
                                 <br/>
@@ -75,6 +77,14 @@ $editable_stock_props_definitions
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-4 control-label">Email Alert: </label>
+                            <div class="col-sm-8">
+                                <input id="email_option_to_recieve_accession_upload_status" name="email_option_to_recieve_upload_status" type="checkbox" data-toggle="toggle" style="margin-right: 10px;">
+                                <label id="email_label_upload" class="control-label" style="display: none; margin-right: 10px;">Email:</label>
+                                <input id="email_address_upload" name="email_address_upload" type="email" value="<% $email_address %>" style="display: none;">
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
                             <div class="col-sm-8">
 % if ( $user_role eq 'curator' ) {
@@ -96,7 +106,7 @@ $editable_stock_props_definitions
                         </div>
                     </form>
 
-                    <& /help/file_upload_type.mas, type => "Accessions" &>
+                    <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
 
                 </div>
 
@@ -170,7 +180,7 @@ $editable_stock_props_definitions
 %  }
                     </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "Accessions" &>
+                <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
