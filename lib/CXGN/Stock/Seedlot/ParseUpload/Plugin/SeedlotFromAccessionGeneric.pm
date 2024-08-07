@@ -92,7 +92,7 @@ sub _validate_with_plugin {
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions',$seen_accession_names)->{'missing'}};
 
     if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+        push @error_messages, "The following accessions are not in the database as uniquenames: ".join(',',@accessions_missing);
     }
 
     if ($seen_source_names) {
