@@ -623,15 +623,6 @@ solGS.cluster = {
       clustersFile = res.newick_file;
     }
 
-    var clusterPlotLink =
-      '<a href="' +
-      res.cluster_plot +
-      '" download=' +
-      clusterPlotFileName +
-      '">' +
-      plotType +
-      "</a>";
-
     var clustersFileName = clustersFile.split("/").pop();
     var clustersLink =
       '<a href="' + clustersFile + '" download=' + clustersFileName + '">' + outFileType + "</a>";
@@ -671,7 +662,6 @@ solGS.cluster = {
 
     var downloadLinks = `<strong>Download 
       ${popName} (${dataType}) </strong>: 
-      ${clusterPlotLink} | 
       ${clustersLink} | 
       ${reportLink}`;
 
@@ -683,7 +673,7 @@ solGS.cluster = {
       downloadLinks += " | " + kclusterVariancesLink + " | " + elbowLink;
     }
 
-    var plotId = res.cluster_pop_id.replace(/-/g, "_");
+    var plotId = res.file_id.replace(/-/g, "_");
     var clusterDownloadBtn = "download_cluster_plot_" + plotId;
     var clusterPlot =
       "<a href='#'  onclick='event.preventDefault();' id='" + clusterDownloadBtn + "'>Cluster plot</a>";
@@ -1110,12 +1100,20 @@ jQuery(document).ready(function () {
     }
   }
 
-  jQuery(canvas).on("click", "a", function (e) {
-    var buttonId = e.target.id;
-    var clusterPlotId = buttonId.replace(/download_/, "");
-    saveSvgAsPng(document.getElementById("#" + clusterPlotId), clusterPlotId + ".png", { scale: 2 });
-  });
+});
 
+jQuery(document).ready(function () {
+  var canvas = solGS.cluster.canvas;
+console.log(`download interactive plot canvas: ${canvas}`)
+
+jQuery(canvas).on("click", "a", function (e) {
+  console.log(`download interactive plot: ${e}`)
+  var buttonId = e.target.id;
+  console.log(`download interactive plot btnid: ${buttonId}`)
+
+  var clusterPlotId = buttonId.replace(/download_/, "");
+  saveSvgAsPng(document.getElementById("#" + clusterPlotId), clusterPlotId + ".png", { scale: 2 });
+});
 });
 
 jQuery(document).ready(function () {
