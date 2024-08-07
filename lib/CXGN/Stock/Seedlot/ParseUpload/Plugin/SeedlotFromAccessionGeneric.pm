@@ -26,6 +26,7 @@ sub _validate_with_plugin {
             'accession_name' => ['accession name', 'accession'],
             'operator_name' => ['operator name', 'operator'],
             'box_name' => ['box name'],
+            'weight_gram' => ['weight(g)'],
         },
     );
 
@@ -124,9 +125,9 @@ sub _validate_with_plugin {
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
+    } else {
+        $self->_set_parsed_data($parsed);
     }
-
-    $self->_set_parsed_data($parsed);
 
     return 1;
 
