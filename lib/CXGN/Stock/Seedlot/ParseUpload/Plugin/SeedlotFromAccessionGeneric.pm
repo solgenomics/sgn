@@ -100,7 +100,7 @@ sub _validate_with_plugin {
         my @source_missing = @{$source_validator->validate($schema,'plots_or_subplots_or_plants',$seen_source_names)->{'missing'}};
 
         if (scalar(@source_missing) > 0) {
-            push @error_messages, "The following source are not in the database: ".join(',',@source_missing);
+            push @error_messages, "The following source names are not in the database as plot, subplot or plant: ".join(',',@source_missing);
         }
     }
 
@@ -153,20 +153,10 @@ sub _parse_with_plugin {
         'uniquename' => { -in => $accession_names },
         'type_id' => $accession_cvterm_id,
     });
+
     my %accession_lookup;
     while (my $r = $rs->next) {
         $accession_lookup{$r->uniquename} = $r->stock_id;
-    }
-    my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
-        'me.is_obsolete' => { '!=' => 't' },
-        'stockprops.value' => { -in => $accession_names},
-        'me.type_id' => $accession_cvterm_id,
-        'stockprops.type_id' => $synonym_cvterm_id
-    }, {join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
-
-    my %acc_synonyms_lookup;
-    while (my $r=$acc_synonym_rs->next){
-        $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
     }
 
     my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
@@ -184,12 +174,13 @@ sub _parse_with_plugin {
         my $seedlot_name;
         my $accession_name;
         my $operator_name;
-        my $amount = 'NA';
-        my $weight = 'NA';
+        my $amount;
+        my $weight;
         my $description;
         my $box_name;
         my $quality;
         my $source;
+        my $accession_stock_id;
 
         $row_num = $row->{_row};
         $seedlot_name = $row->{'seedlot_name'};
@@ -202,17 +193,7 @@ sub _parse_with_plugin {
         $quality = $row->{'quality'};
         $source = $row->{'source'};
 
-        my $accession_stock_id;
-        if ($acc_synonyms_lookup{$accession_name}){
-            my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
-            if (scalar(@accession_names)>1){
-                print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
-            }
-            $accession_stock_id = $acc_synonyms_lookup{$accession_name}->{$accession_names[0]};
-            $accession_name = $accession_names[0];
-        } else {
-            $accession_stock_id = $accession_lookup{$accession_name};
-        }
+        $accession_stock_id = $accession_lookup{$accession_name};
 
         my $source_id;
         if ($source) {
