@@ -661,7 +661,7 @@ solGS.cluster = {
       '<a href="' + reportFile + '" download=' + reportFileName + '">Analysis Report </a>';
 
     var downloadLinks = `<strong>Download 
-      ${popName} (${dataType}) </strong>: 
+      ${popName} (${dataType})</strong>: 
       ${clustersLink} | 
       ${reportLink}`;
 
@@ -673,12 +673,13 @@ solGS.cluster = {
       downloadLinks += " | " + kclusterVariancesLink + " | " + elbowLink;
     }
 
-    var plotId = res.file_id.replace(/-/g, "_");
-    var clusterDownloadBtn = "download_cluster_plot_" + plotId;
-    var clusterPlot =
-      "<a href='#'  onclick='event.preventDefault();' id='" + clusterDownloadBtn + "'>Cluster plot</a>";
+    var clusterPlotDiv = this.clusterPlotDiv.replace(/#/, '');
+    var plotId = res.file_id;;
+    var clusterDownloadLinkId = `download_${clusterPlotDiv}_${plotId}`;
+    var clusterPlotDownload =
+      `<a href='#'  onclick='event.preventDefault();' id='${clusterDownloadLinkId}'>Cluster plot</a>`;
 
-    downloadLinks += " | " + clusterPlot;
+    downloadLinks += " | " + clusterPlotDownload;
 
     return downloadLinks;
   },
@@ -873,9 +874,8 @@ solGS.cluster = {
     var totalW = width + pad.left + pad.right + 400;
 
     var clusterCanvasDivId = this.canvas;
-    var clusterPlotPopId = plotData.file_id.replace(/-/g, "_");
+    var clusterPlotPopId = plotData.file_id;
     var clusterPlotDivId = `${this.clusterPlotDiv}_${clusterPlotPopId}`;
-
     clusterPlotDivId = clusterPlotDivId.replace(/#/, "");
 
     jQuery(clusterCanvasDivId).append("<div id=" + clusterPlotDivId + "></div>");
@@ -1104,16 +1104,16 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
   var canvas = solGS.cluster.canvas;
-console.log(`download interactive plot canvas: ${canvas}`)
 
-jQuery(canvas).on("click", "a", function (e) {
-  console.log(`download interactive plot: ${e}`)
-  var buttonId = e.target.id;
-  console.log(`download interactive plot btnid: ${buttonId}`)
+  jQuery(canvas).on("click", "a", function (e) {
+    var linkId = e.target.id;
+    var clusterPlotId = linkId.replace(/download_/, "");
 
-  var clusterPlotId = buttonId.replace(/download_/, "");
-  saveSvgAsPng(document.getElementById("#" + clusterPlotId), clusterPlotId + ".png", { scale: 2 });
-});
+    if (clusterPlotId.match(/cluster_plot_/)) {
+      saveSvgAsPng(document.getElementById(`#${clusterPlotId}`), clusterPlotId + ".png", { scale: 2 });
+    }
+  });
+
 });
 
 jQuery(document).ready(function () {
