@@ -66,6 +66,12 @@ jQuery(window).ready( function() {
 	var observation_level = jQuery('#raw_data_observation_level').find(":selected").val();
 	var start_date = jQuery('#raw_data_start_date').val();
 	var end_date = jQuery('#raw_data_end_date').val();
+
+	console.log("check the selected trait ID:", trait_id);
+    console.log("check observation level:", observation_level);
+    console.log("see the start date:", start_date);
+    console.log("see the end date:", end_date);
+
 	alert("now fetching trait_id "+trait_id+" observation_level "+observation_level+" start date = "+start_date+" end date: "+end_date);
         get_trait_data(<% $trial_id %>, trait_id, start_date, end_date, observation_level)
 	    .then( (result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))

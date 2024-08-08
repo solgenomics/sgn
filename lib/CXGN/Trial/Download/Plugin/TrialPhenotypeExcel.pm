@@ -43,6 +43,8 @@ Then:
         phenotype_min_value       => $phenotype_min_value,
         phenotype_max_value       => $phenotype_max_value,
         has_header                => $has_header,
+        start_date                => $phenotype_start_date,
+	    end_date                  => $phenotype_end_date,
         repetitive_measurements   => 'average', # or 'first', 'last', 'all'
     });
     my $error = $download->download();
@@ -129,9 +131,9 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
-	    start_date => $phenotype_start_date,
-	    end_date => $phenotype_end_date,
-	    repetitive_measurements => $repetitive_measurements,
+	        start_date => $phenotype_start_date,
+	        end_date => $phenotype_end_date,
+	        repetitive_measurements => $repetitive_measurements,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }

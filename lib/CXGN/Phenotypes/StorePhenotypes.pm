@@ -433,8 +433,8 @@ sub verify {
 
             my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
 	    
-	    if (ref($measurements_array->[0])) {   ### we have a list of measurements, not just a trait_value timestamp pair
-		foreach my $value_array ($measurements_array) {
+	    if (ref($measurements_array->[0]) eq 'ARRAY') {   ### we have a list of measurements, not just a trait_value timestamp pair
+        foreach my $value_array (@$measurements_array) {
 		    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
 		    $all_errors .= $errors;
 		    $all_warnings .= $warnings;
@@ -707,7 +707,7 @@ sub store {
                 nd_experimentprops => [{type_id => $local_date_cvterm_id, value => $upload_date}, {type_id => $local_operator_cvterm_id, value => $operator}],
                 nd_experiment_projects => [{project_id => $project_id}],
                 nd_experiment_stocks => [{stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id}]
-											  });
+			});
 	    
             $experiment_ids{$experiment->nd_experiment_id()}=1;
 	    

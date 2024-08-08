@@ -147,9 +147,9 @@ sub download {
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
             include_pedigree_parents=>$include_pedigree_parents,
-	    repetitive_measurements => $repetitive_measurements,
-	    start_date => $start_date,
-	    end_date => $end_date,
+	        repetitive_measurements => $repetitive_measurements,
+	        start_date => $start_date,
+	        end_date => $end_date,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }

@@ -367,7 +367,7 @@ sub parse {
 
                                     if ( defined($trait_value) && defined($timestamp) ) {
                                         if ($trait_value ne '.'){
-                                            $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp];
+                                            push @{$data{$plot_name}->{$trait_name}}, [$trait_value, $timestamp];
                                         }
                                     }
                                 }
