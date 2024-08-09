@@ -53,15 +53,32 @@ $response = $ua->post(
         ]
     );
 
-#print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
-print STDERR "MESSAGE: $message\n";
 my $message_hash = JSON::XS->new->decode($message);
 
 is_deeply($message_hash->{'success'}, 1);
 my $added_seedlot = $message_hash->{'added_seedlot'};
 
+#test uploading with invalid source
+my $error_file = $f->config->{basepath}."/t/data/stock/seedlot_upload_named_accessions_error.xlsx";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/seedlot-upload',
+        Content_Type => 'form-data',
+        Content => [
+            seedlot_uploaded_file => [ $error_file, 'seedlot_upload_named_accessions_error.xlsx', Content_Type => 'application/vnd.ms-excel', ],
+            "upload_seedlot_breeding_program_id"=>$breeding_program_id,
+            "upload_seedlot_location"=>'test_location',
+            "upload_seedlot_organization_name"=>"testorg1",
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = JSON::XS->new->decode($message);
+is($message_hash->{'error_string'}, 'The source name: test_trial21 is not linked to the same accession as the access content: test_accession1<br><br>');
 
 $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_harvested";
 $ua = LWP::UserAgent->new;
