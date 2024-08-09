@@ -252,9 +252,6 @@ sub _search {
     my $start_date = $params->{observationTimeStampRangeStart}->[0] || undef;
     my $end_date = $params->{observationTimeStampRangeEnd}->[0] || undef;
 
-    print STDERR "see the start date format: $start_date\n";
-    print STDERR "check the end date format: $end_date\n";
-
     my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
     # observationUnitLevelName
     # observationUnitLevelOrder
@@ -306,28 +303,23 @@ sub _search {
                 seasonDbId => $_->{year}
             );
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
-
-	    #print STDERR "OBS TIMESTAMP: $obs_timestamp START : $start_date END: $end_date\n";
 	    
-	    if ($obs_timestamp) {
-        my ($obs_date, $obs_time) = split / /, $obs_timestamp;
-		my ($obs_year, $obs_month, $obs_day) = split /-/, $obs_date;
-		my ($start_year, $start_month, $start_day) = split /\-/, $start_date;
-		my ($end_year, $end_month, $end_day) = split /\-/, $end_date;
-        # print STDERR "check the month : $obs_month\n";
-        # print STDERR "check the yar : $obs_year\n";
-        # print STDERR "check the day : $obs_day\n";
+	        if ($obs_timestamp) {
+                my ($obs_date, $obs_time) = split / /, $obs_timestamp;
+		        my ($obs_year, $obs_month, $obs_day) = split /-/, $obs_date;
+		        my ($start_year, $start_month, $start_day) = split /\-/, $start_date;
+		        my ($end_year, $end_month, $end_day) = split /\-/, $end_date;
 
-		if ($obs_year && $obs_month && $obs_day && $start_year && $start_month && $start_day && $end_year && $end_month && $end_day) { 
-		    my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });
-		    my $start_date_obj = DateTime->new({ year => $start_year, month => $start_month, day => $start_day });
-		    my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
-		    
-		    
-		    if ( $start_date && (DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) ) { next; } #skip observations before date range
-		    if ( $end_date && (DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) ) { next; } #skip observations after date range
-		}
-	    }
+		        if ($obs_year && $obs_month && $obs_day && $start_year && $start_month && $start_day && $end_year && $end_month && $end_day) { 
+		            my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });
+		            my $start_date_obj = DateTime->new({ year => $start_year, month => $start_month, day => $start_day });
+		            my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
+
+
+		            if ( $start_date && (DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) ) { next; } #skip observations before date range
+		            if ( $end_date && (DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) ) { next; } #skip observations after date range
+		        }
+	        }
             if ($counter >= $start_index && $counter <= $end_index) {
                 push @data_window, {
                     additionalInfo => $_->{phenotype_additional_info} ? decode_json($_->{phenotype_additional_info}) : undef,

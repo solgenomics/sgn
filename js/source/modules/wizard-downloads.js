@@ -226,9 +226,9 @@ export function WizardDownloads(main_id,wizard){
             include_row_and_column_numbers: 1,
             exclude_phenotype_outlier: outliers,
             include_pedigree_parents: 0,
-	    repetitive_measurements: repetitive_measurements,
-	    phenotype_start_date: phenotype_start_date,
-	    phenotype_end_date: phenotype_end_date
+	          repetitive_measurements: repetitive_measurements,
+	          phenotype_start_date: phenotype_start_date,
+	          phenotype_end_date: phenotype_end_date
         });
       });
 });
