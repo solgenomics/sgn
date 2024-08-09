@@ -38,9 +38,9 @@ sub _validate_with_plugin {
     my $additional_columns = $parsed->{additional_columns};
 
     if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
-      $errors{'error_messages'} = $parsed_errors;
-      $self->_set_parse_errors(\%errors);
-      return;
+        $errors{'error_messages'} = $parsed_errors;
+        $self->_set_parse_errors(\%errors);
+        return;
     }
 
     if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
