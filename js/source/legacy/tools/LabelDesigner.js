@@ -675,7 +675,7 @@ function updateFields(data_type, source_id, data_level){
 
     jQuery.ajax({
         url: '/tools/label_designer/retrieve_longest_fields',
-        timeout: 300000,
+        timeout: 30000000,
         method: 'POST',
         data: {
             data_type: data_type,
