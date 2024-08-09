@@ -309,10 +309,14 @@ sub _search {
 
 	    #print STDERR "OBS TIMESTAMP: $obs_timestamp START : $start_date END: $end_date\n";
 	    
-	    if ($obs_timestamp) { 
-		my ($obs_year, $obs_month, $obs_day) = split /\-/, $obs_timestamp;
+	    if ($obs_timestamp) {
+        my ($obs_date, $obs_time) = split / /, $obs_timestamp;
+		my ($obs_year, $obs_month, $obs_day) = split /-/, $obs_date;
 		my ($start_year, $start_month, $start_day) = split /\-/, $start_date;
 		my ($end_year, $end_month, $end_day) = split /\-/, $end_date;
+        # print STDERR "check the month : $obs_month\n";
+        # print STDERR "check the yar : $obs_year\n";
+        # print STDERR "check the day : $obs_day\n";
 
 		if ($obs_year && $obs_month && $obs_day && $start_year && $start_month && $start_day && $end_year && $end_month && $end_day) { 
 		    my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });

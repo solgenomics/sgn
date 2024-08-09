@@ -5,41 +5,69 @@ $trial_id
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &>
 
-  <h4>Choose trait, observation level and data range to display</h4>
+<style>
 
-  <table>
-  <tr>
-    <tr><th>trait</th><th></th><th>observation level</th></tr>
+.form-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+.form-group input,
+.form-group select {
+  flex-grow: 1;
+}
+
+</style>
+
+<h4>Choose trait, observation level and data range to display</h4>
+
+<table>
+<tr>
     <td>
-      <div id="trait_selector_for_raw_data">[Loading...]</div><br />
+		<div class="form-group">
+			<label for="trait_selector_for_raw_data"> Trait:</label>
+    	  <div id="trait_selector_for_raw_data">[Loading...]</div>
+		</div>
     </td>
     <td width="30"></td>
     <td>
-      <select id="raw_data_observation_level">
-		<option>plots</option>
-		<option>plants</option>
-		<option>subplots</option>
-		<option>tissue_samples</option>
-      </select>
+		<div class="form-group">
+			<label for="raw_data_observation_level">Observation Level:</label>
+			<select id="raw_data_observation_level">
+				<option>Plots</option>
+				<option>Plants</option>
+				<option>Subplots</option>
+				<option>Tissue_samples</option>
+      		</select>
+		</div>
     </td>
-  </tr>
-  <tr><th>start date</th><th></th><th>end date</th></tr> 
-  <tr>
-    <td><input type="text" id="raw_data_start_date" title="raw_data_start_date"  /></td>
-    <td>&nbsp;</td>
+</tr>
+<tr>
     <td>
-      <input type="text" id="raw_data_end_date" title="raw_data_end_date"  />
-      <br />
-      <br />
+		<div class="form-group">
+			<label for="raw_data_start_date">Start Date:</label>
+			<input type="text" id="raw_data_start_date" title="raw_data_start_date"/>
+		</div>
+	</td>
+	<td width="30"></td>
+    <td>
+		<div class="form-group">
+			<label for="raw_data_end_date"> End Date:</label>
+			<input type="text" id="raw_data_end_date" title="raw_data_end_date"/>
+		</div>
     </td>
-  </tr>
-  <tr>
-    <td colspan="2">
+</tr>
+<tr>
+    <td colspan="4", style="text-align: center;">
       <button id="raw_data_trait_select_button">submit</button>
     </td>
-    <td></td>
-    <td></td>
-  </tr>
+</tr>
 </table>
 
 <br />

@@ -198,7 +198,7 @@ export function WizardDownloads(main_id,wizard){
         var names = JSON.stringify(d3.select(".wizard-download-phenotypes-name").node().value.split(","));
         var min = d3.select(".wizard-download-phenotypes-min").node().value;
 	      var max = d3.select(".wizard-download-phenotypes-max").node().value;
-	      var repetitive_measurements = d3.select(".wizard-download-repetitive-measurements").node().value;
+	      var repetitive_measurements = d3.select(".wizard-download-repetitive-measurements-type").node().value;
 	      var phenotype_start_date = d3.select(".wizard-download-start-date").node().value;
 	      var phenotype_end_date = d3.select(".wizard-download-end-date").node().value;
 
