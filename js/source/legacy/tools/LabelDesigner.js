@@ -632,7 +632,7 @@ function downloadLabels (design, download_type) {
     //send to server to build pdf file
     jQuery.ajax({
         url: '/tools/label_designer/download',
-        timeout: 300000,
+        timeout: 30000000,
         method: 'POST',
         data: {
             'download_type': download_type,
