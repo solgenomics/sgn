@@ -479,14 +479,15 @@ sub set_alleles {
     my ($common_name_id) = $sths->fetchrow_array();
 
     foreach my $locus (keys %$alleles) {
+        my $unique_locus_name = $protocol_id . '|' . $locus;
         my $allele_values = $alleles->{$locus};
-        my $locus_symbol = uc($locus);
+        my $locus_symbol = uc($unique_locus_name);
         $locus_symbol =~ s/\s//g;
 
         # Add the Major Locus to the phenome.locus table
         my $q = "INSERT INTO phenome.locus (locus_name, locus_symbol, common_name_id) VALUES (?,?,?) RETURNING locus_id";
         my $sth = $dbh->prepare($q);
-        $sth->execute($locus, $locus_symbol, $common_name_id || 1);
+        $sth->execute($unique_locus_name, $locus_symbol, $common_name_id || 1);
         my ($locus_id) = $sth->fetchrow_array();
 
         # Add each allele value for the locus
