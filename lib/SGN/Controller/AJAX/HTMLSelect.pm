@@ -259,6 +259,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
     my $get_genotyping_projects = $c->req->param("get_genotyping_projects");
     my $get_tracking_activities_projects = $c->req->param("get_tracking_activities_projects");
+    my $get_transformation_projects = $c->req->param("get_transformation_projects");
     my $include_analyses = $c->req->param("include_analyses");
     my $excluded_plates_in_project_id = $c->req->param("excluded_plates_in_project_id");
 
@@ -334,6 +335,12 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
         if ($get_tracking_activities_projects){
             if ($tracking_activities_projects && scalar(@$tracking_activities_projects)>0){
                 my @g_projects = sort { $a->[1] cmp $b->[1] } @$tracking_activities_projects;
+                push @projects, @g_projects;
+            }
+        }
+        if ($get_transformation_projects){
+            if ($transformation_projects && scalar(@$transformation_projects)>0){
+                my @g_projects = sort { $a->[1] cmp $b->[1] } @$transformation_projects;
                 push @projects, @g_projects;
             }
         }
