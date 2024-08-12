@@ -506,7 +506,46 @@ sub set_alleles {
     }
 }
 
+#
+# Get the allele values for the marker(s) in this protocol
+# @param marker_name = only return the alleles for this particular marker
+# @return an array of hashes with the keys: nd_protocol_id, locus_id, marker_name, allele_id, allele_name
+#
+sub get_alleles {
+    my $self = shift;
+    my $marker_name = shift;
+    my $schema = $self->bcs_schema();
+    my $dbh = $schema->storage->dbh();
+    my $protocol_id = $self->nd_protocol_id;
 
+    my $q = "SELECT nd_protocol_id, locus.locus_id, marker_name, allele.allele_id, allele_name ";
+    $q .= "FROM phenome.locus_geno_marker ";
+    $q .= "LEFT JOIN phenome.locus ON (locus_geno_marker.locus_id = locus.locus_id) ";
+    $q .= "LEFT JOIN phenome.allele ON (allele.locus_id = locus.locus_id) ";
+    $q .= "WHERE nd_protocol_id = ? ";
+    $q .= "AND marker_name = ?" if $marker_name;
+
+    my $sth = $dbh->prepare($q);
+    if ( $marker_name ) {
+        $sth->execute($protocol_id, $marker_name);
+    }
+    else {
+        $sth->execute($protocol_id);
+    }
+
+    my @alleles;
+    while (my ($nd_protocol_id, $locus_id, $marker_name, $allele_id, $allele_name) = $sth->fetchrow_array()) {
+        push @alleles, { 
+            nd_protocol_id => $nd_protocol_id,
+            locus_id => $locus_id,
+            marker_name => $marker_name,
+            allele_id => $allele_id,
+            allele_name => $allele_name
+        };
+    }
+
+    return \@alleles;
+}
 
 
 1;

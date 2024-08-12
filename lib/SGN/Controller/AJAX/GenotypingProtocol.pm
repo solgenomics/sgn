@@ -367,4 +367,24 @@ sub genotyping_protocol_upload_mla_POST : Args(1) {
     return;
 }
 
+sub genotyping_protocol_get_mla : Path('/ajax/genotyping_protocol/get_major_loci_alleles') : ActionClass('REST') { }
+
+sub genotyping_protocol_get_mla_GET : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $protocol_id = shift;
+    my $marker_name = $c->req->param("marker_name");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    # Get the allele information
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $schema,
+        nd_protocol_id => $protocol_id
+    });
+    my $alleles = $protocol->get_alleles($marker_name);
+
+    $c->stash->{rest} = $alleles || [];
+    return;
+}
+
 1;
