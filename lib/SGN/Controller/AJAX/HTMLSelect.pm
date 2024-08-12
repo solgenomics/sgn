@@ -138,6 +138,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $folder_for_genotyping_trials = 1 ? $c->req->param("folder_for_genotyping_trials") eq 'true' : 0;
     my $folder_for_genotyping_projects = 1 ? $c->req->param("folder_for_genotyping_projects") eq 'true' : 0;
     my $folder_for_tracking_activities = 1 ? $c->req->param("folder_for_tracking_activities") eq 'true' : 0;
+    my $folder_for_transformations = 1 ? $c->req->param("folder_for_transformations") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -152,7 +153,8 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
         folder_for_crosses => $folder_for_crosses,
         folder_for_genotyping_trials => $folder_for_genotyping_trials,
         folder_for_genotyping_projects => $folder_for_genotyping_projects,
-        folder_for_tracking_activities => $folder_for_tracking_activities
+        folder_for_tracking_activities => $folder_for_tracking_activities,
+        folder_for_transformations => $folder_for_transformations,
     });
 
     if (scalar(@folders)>0){
@@ -680,7 +682,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
     }
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-	
+
     my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id),
 		people_schema=>$c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
