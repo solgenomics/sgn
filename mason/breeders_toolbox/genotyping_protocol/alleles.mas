@@ -1,0 +1,15 @@
+<%args>
+$protocol_id
+</%args>
+
+<p id="major_loci_alleles_loading">Loading...</p>
+
+<div id="major_loci_alleles_table" style="display:none">
+
+</div>
+
+<div id="major_loci_alleles_upload" style="display:none">
+
+</div>
+
+<!-- TODO: Make AJAX request to get major loci alleles and populate DataTables with results -->
