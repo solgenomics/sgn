@@ -114,18 +114,21 @@ $trial_owner
         </div>
     </div>
 </div>
-<button class="btn btn-sm btn-primary" style="margin:3px" id="new_transformation_identifier_link">Add Transformation ID</button>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="new_transformation_identifier_link">Add New Transformation ID</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_transformation_ids_link">Upload New Transformation IDs</button>
 
 <& /transformation/add_transformation_identifier_dialog.mas, trial_id => $trial_id &>
+<& /transformation/upload_transformation_ids_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 <script>
 
 jQuery(document).ready(function($) {
 
     jQuery('#new_transformation_identifier_link').click(function() {
-
         jQuery("#add_transformation_identifier_dialog").modal("show");
+    });
 
+    jQuery('#upload_transformation_ids_link').click(function() {
+        jQuery("#upload_transformation_ids_dialog").modal("show");
     });
 
 });

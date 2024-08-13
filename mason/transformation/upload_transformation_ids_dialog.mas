@@ -1,0 +1,38 @@
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+<div class="modal fade" id="upload_transformation_ids_dialog" name="upload_transformation_ids_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransformationIDsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransformationIDsDialog">Upload Transformation IDs</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="transformation_ids_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                        </p>
+                    </&>
+                    <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_transformation_ids_form" name="upload_transformation_ids_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="transformation_ids_uploaded_file" id="transformation_ids_uploaded_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_transformation_ids_dialog_submit" id="upload_transformation_ids_dialog_submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
