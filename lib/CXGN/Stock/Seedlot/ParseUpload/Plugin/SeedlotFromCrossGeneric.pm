@@ -63,7 +63,9 @@ sub _validate_with_plugin {
         }
 
         if ($duplicated_seedlot_names{$seedlot_name}) {
-            push @error_messages, "Cell A$row_num: duplicate seedlot_name at cell A".$duplicated_seedlot_names{$seedlot_name}.": $seedlot_name";
+            push @error_messages, "Cell A$row_num: duplicated seedlot name: $seedlot_name. Seedlot name must be unique.";
+        } else {
+            $duplicated_seedlot_names{$seedlot_name}++;
         }
 
         if (!$amount || $amount eq '') {
