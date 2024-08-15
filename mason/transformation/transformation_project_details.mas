@@ -127,10 +127,6 @@ jQuery(document).ready(function($) {
         jQuery("#add_transformation_identifier_dialog").modal("show");
     });
 
-    jQuery('#upload_transformation_ids_link').click(function() {
-        jQuery("#upload_transformation_ids_dialog").modal("show");
-    });
-
 });
 
 </script>

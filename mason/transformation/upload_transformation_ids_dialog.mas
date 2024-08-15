@@ -23,7 +23,8 @@ $trial_name
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Upload File: </label>
                             <div class="col-sm-9" >
-                                <input type="file" name="transformation_ids_uploaded_file" id="transformation_ids_uploaded_file" encoding="multipart/form-data" />
+                                <input type="file" name="transformation_ids_file" id="transformation_ids_file" encoding="multipart/form-data" />
+                                <input name="transformation_project_id" id="transformation_project_id" type="hidden" value="<% $trial_id %>">
                             </div>
                         </div>
                     </form>
@@ -31,8 +32,66 @@ $trial_name
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_transformation_ids_dialog_submit" id="upload_transformation_ids_dialog_submit">Upload</button>
+                <button type="button" class="btn btn-primary" name="upload_transformation_ids_submit" id="upload_transformation_ids_submit">Upload</button>
             </div>
         </div>
     </div>
 </div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_transformation_ids_link').click(function() {
+        jQuery("#upload_transformation_ids_dialog").modal("show");
+    });
+
+    jQuery('#upload_transformation_ids_spreadsheet_format_info').click(function(){
+        jQuery("#transformation_ids_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_transformation_ids_submit").click(function(){
+        var uploadFile = jQuery("#transformation_ids_file").val();
+
+        jQuery('#upload_transformation_ids_form').attr("action", "/ajax/transformation/upload_transformation_identifiers");
+
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery("#upload_transformation_ids_form").submit();
+        jQuery("#upload_transformation_ids_dialog").modal("hide");
+    });
+
+    jQuery('#upload_transformation_ids_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_transformation_ids_error_display tbody").html('');
+                jQuery("#upload_transformation_ids_error_display tbody").append(response.error_string);
+                jQuery("#upload_transformation_ids_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#transformation_ids_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_transformation_ids_saved_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+</script>
