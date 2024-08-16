@@ -6,6 +6,7 @@ use JSON;
 use CXGN::People::Person;
 use SGN::Image;
 use CXGN::Stock::StockLookup;
+use CXGN::Stock::ParseUpload;
 use CXGN::Location::LocationLookup;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
@@ -170,9 +171,9 @@ sub upload_transformation_identifiers_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $transformation_project_id = $c->req->param('transformation_project_id');
-    print STDERR "TRANSFORMATION PROJECT ID =".Dumper($transformation_project_id)."\n";
     my $upload = $c->req->upload('transformation_ids_file');
     my $parser;
     my $parsed_data;
@@ -240,7 +241,9 @@ sub upload_transformation_identifiers_POST : Args(0) {
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    my @stock_props = ('transformation_notes');
+    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+
     $parser->load_plugin('TransformationIdentifiersGeneric');
     $parsed_data = $parser->parse();
     #print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
@@ -261,8 +264,39 @@ sub upload_transformation_identifiers_POST : Args(0) {
     }
 
     if ($parsed_data){
+        eval {
+            foreach my $row (keys %$parsed_data) {
+                my $transformation_identifier = $parsed_data->{$row}->{'transformation_identifier'};
+                my $accession_name = $parsed_data->{$row}->{'accession_name'};
+                my $vector_construct = $parsed_data->{$row}->{'vector_construct'};
+                my $notes = $parsed_data->{$row}->{'notes'};
 
+                print STDERR "ID =".Dumper($transformation_identifier)."\n";
+                print STDERR "ACCESSION =".Dumper($accession_name)."\n";
+                print STDERR "VECTOR CONSTRUCT =".Dumper($vector_construct)."\n";
+                print STDERR "NOTES =".Dumper($notes)."\n";
 
+                my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
+                    chado_schema => $schema,
+                    phenome_schema => $phenome_schema,
+                    dbh => $dbh,
+                    transformation_project_id => $transformation_project_id,
+                    transformation_identifier => $transformation_identifier,
+                    plant_material => $accession_name,
+                    vector_construct => $vector_construct,
+                    notes => $notes,
+                    owner_id => $user_id,
+                });
+
+                $add_transformation->add_transformation_identifier();
+            }
+        };
+
+        if ($@) {
+            $c->stash->{rest} = { success => 0, error => $@ };
+            print STDERR "An error condition occurred, was not able to create transformation ID. ($@).\n";
+            return;
+        }
     }
 
 

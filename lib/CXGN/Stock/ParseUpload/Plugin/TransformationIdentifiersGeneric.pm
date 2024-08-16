@@ -18,10 +18,10 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'transformation_id', 'accession_name', 'vector_construct' ],
+        required_columns => [ 'transformation_identifier', 'accession_name', 'vector_construct' ],
         optional_columns => [ 'notes' ],
         column_aliases => {
-            'transformation_id' => ['transformation id'],
+            'transformation_identifier' => ['transformation identifier'],
             'accession_name' => ['accession name'],
             'vector_construct' => ['vector construct'],
         }
@@ -48,6 +48,7 @@ sub _validate_with_plugin {
         return;
     }
 
+    my $seen_transformation_identifiers = $parsed_values->{'transformation_identifier'};
     my $seen_accession_names = $parsed_values->{'accession_name'};
     my $seen_vector_constructs = $parsed_values->{'vector_construct'};
 
@@ -63,11 +64,18 @@ sub _validate_with_plugin {
         push @error_messages, "The following vector constructs are not in the database, or are not in the database as uniquenames: ".join(',',@vector_constructs_missing);
     }
 
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => $seen_transformation_identifiers }
+    });
+    while (my $r=$rs->next){
+        push @error_messages, "Transformation Identifier already exists in database: ".$r->uniquename;
+    }
 
     my %duplicated_transformation_ids;
     foreach my $row (@$parsed_data) {
         my $row_num = $row->{_row};
-        my $transformation_id = $row->{'transformation_id'};
+        my $transformation_id = $row->{'transformation_identifier'};
 
         if ($duplicated_transformation_ids{$transformation_id}) {
             push @error_messages, "Cell A$row_num: duplicate transformation identifier: $transformation_id. Transformation Identifier must be unique.";
@@ -95,20 +103,19 @@ sub _parse_with_plugin {
     my %transformation_id_info;
 
     foreach my $row (@$parsed_data) {
-        my $transformation_id = $row->{'transformation_id'};
+        my $row_number = $row->{'_row'};
+        my $transformation_identifier = $row->{'transformation_identifier'};
         my $accession_name = $row->{'accession_name'};
         my $vector_construct = $row->{'vector_construct'};
         my $notes = $row->{'notes'};
-        $transformation_id_info{$transformation_id}{'accession_name'} = $accession_name;
-        $transformation_id_info{$transformation_id}{'vector_construct'} = $vector_construct;
-        if ($notes) {
-            $transformation_id_info{$transformation_id}{'notes'} = $notes;
-
-        }
+        $transformation_id_info{$row_number}{'transformation_identifier'} = $transformation_identifier;
+        $transformation_id_info{$row_number}{'accession_name'} = $accession_name;
+        $transformation_id_info{$row_number}{'vector_construct'} = $vector_construct;
+        $transformation_id_info{$row_number}{'notes'} = $notes;
     }
-
+    print STDERR "PARSED DATA INFO =".Dumper(\%transformation_id_info)."\n";
     $self->_set_parsed_data(\%transformation_id_info);
-    
+
     return 1;
 }
 
