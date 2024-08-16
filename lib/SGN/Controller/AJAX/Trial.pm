@@ -1180,11 +1180,9 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $parse_errors;
     my %parsed_data;
     my %upload_metadata;
-    my $user_id;
-    my $username;
     my $error;
-    my $email_address ;
-    my $email_option_enabled;
+    my $email_address        = $c->req->param('trial_email_address_upload');
+    my $email_option_enabled = $c->req->param('email_option_to_recieve_trial_upload_status');
     my $breeding_program_name;
 
 
@@ -1206,13 +1204,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         return;
     }
 
-    $user_id              = $c->user()->get_object()->get_sp_person_id();
-    $username             = $c->user()->get_object()->get_username();
-    $email_address        = $c->req->param('email_address');
-    $email_option_enabled = $c->req->param('email_option_enabled');
-
-    print STDERR "email option enabled : $email_option_enabled\n";
-    print STDERR "recieved  address: $email_address\n";
+    my $user_id  = $c->user()->get_object()->get_sp_person_id();
+    my $username = $c->user()->get_object()->get_username();
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({

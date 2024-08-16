@@ -299,7 +299,7 @@ jQuery(document).ready(function ($) {
 
     function toggleEmailField() {
         var checkbox = jQuery('#email_option_to_recieve_trial_upload_status');
-        var emailField = jQuery('#email_field');
+        var emailField = jQuery('#trial_email_field');
         if (checkbox.prop('checked')) {
             emailField.show();
         } else {
@@ -315,60 +315,13 @@ jQuery(document).ready(function ($) {
         json: true,
         post: function () {
             var uploadedTrialLayoutFile = jQuery("#multiple_trial_designs_upload_file").val();
-            var email_address = jQuery('#email_address_upload').val();
-            var email_option_enabled = jQuery('#email_option_to_recieve_trial_upload_status').is(':checked') ? 1 : 0;
-            // console.log("Email option enabled: ", email_option_enabled);
-            // console.log('check email address:', email_address);
-
-            // Clear existing messages
-            jQuery("#upload_multiple_trials_warning_messages").html('');
-            jQuery("#upload_multiple_trials_error_messages").html('');
-            jQuery("#upload_multiple_trials_success_messages").html('');
+            jQuery('#working_modal').modal("show");
 
             if (uploadedTrialLayoutFile === '') {
                 jQuery('#working_modal').modal("hide");
                 alert("No file selected");
                 return;
             }
-
-            var formData = new FormData();
-            formData.append('multiple_trial_designs_upload_file', jQuery('#multiple_trial_designs_upload_file')[0].files[0]);
-            formData.append('email_address', email_address);
-            formData.append('email_option_enabled', email_option_enabled);
-
-            // console.log("FormData prepared with email_address: ", email_address);
-            // console.log("FormData prepared with email_option_enabled:", email_option_enabled);
-
-            if (email_option_enabled === 1) {
-                if (confirm('You will receive an email once the process is complete. Do you want to continue?')) {
-                    jQuery("#upload_trial_dialog").modal('hide');
-                }else {
-                    return;
-                }
-            } else {
-                jQuery('#working_modal').modal("hide");
-            }
-
-            jQuery.ajax({
-                type: 'POST',
-                url: '/ajax/trial/upload_multiple_trial_designs_file',
-                dataType: "json",
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    jQuery('#working_modal').modal("hide");
-                    if (response.error){
-                        alert(responde.error);
-                    } else {
-                        console.log("upload successful: ", response);
-                    }
-                },
-                error: function(response) {
-                    jQuery('#working_modal').modal("hide");
-                    jQuery("#upload_multiple_trials_error_messages").html('<b>An error occurred:</b> ' + response.responseText);
-                }
-            });
         },
         complete: function(response) {
             // console.log(response);
@@ -393,18 +346,17 @@ jQuery(document).ready(function ($) {
             }
             if (response.success) {
                 // console.log("Success!!");
-                refreshTrailJsTree(0);
                 jQuery("#upload_multiple_trials_success_messages").show();
                 jQuery("#upload_multiple_trials_success_messages").html("Success! All trials successfully loaded.");
                 jQuery("#multiple_trial_designs_upload_submit").hide();
                 jQuery("#upload_multiple_trials_success_button").show();
+                refreshTrailJsTree(0);
                 return;
-                }
-            // }
+            }
         },
         error: function(response) {
+            jQuery("#working_modal").modal("hide");
             if (!jQuery('#email_option_to_recieve_trial_upload_status').is(':checked')) {
-                jQuery("#working_modal").modal("hide");
                 jQuery("#upload_multiple_trials_error_messages").html("An error occurred while trying to upload this file. Please check the formatting and try again");
                 return;
             }

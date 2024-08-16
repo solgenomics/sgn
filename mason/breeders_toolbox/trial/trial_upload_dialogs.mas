@@ -98,10 +98,10 @@ $design_types => ()
                                                 <div class="col-sm-2" style="margin-left: 0;">
                                                     <input id="email_option_to_recieve_trial_upload_status" name="email_option_to_recieve_trial_upload_status" type="checkbox" data-toggle="toggle">
                                                 </div>
-                                                <div id="email_field" style = "display: inline-block; vertical-align: middle;">
-                                                    <label id="email_label_upload" class="control-label" style="display: inline-block; margin-left: 0px; vertical-align: middle;">Email: </label>
+                                                <div id="trial_email_field" style = "display: inline-block; vertical-align: middle;">
+                                                    <label class="control-label" style="display: inline-block; margin-left: 0px; vertical-align: middle;">Email: </label>
                                                     <div style="display: inline-block; width: 150px; vertical-align: middle;">
-                                                        <input id="email_address_upload" name="email_address_upload" type="email" value="<% $email_address %>">
+                                                        <input id="trial_email_address_upload" name="trial_email_address_upload" type="email" value="<% $email_address %>">
                                                     </div>
                                                 </div>
                                                 <div class="col-sm-2"></div>
