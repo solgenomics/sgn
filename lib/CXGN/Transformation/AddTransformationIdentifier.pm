@@ -156,7 +156,7 @@ sub add_transformation_identifier {
 
         $transformation_stock_id = $transformation_identifier_stock->stock_id();
     };
-    print STDERR "TRANSFORMATION ID =".Dumper($transformation_stock_id)."\n";
+
     my $transaction_error;
     try {
         $schema->txn_do($coderef);

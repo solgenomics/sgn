@@ -270,12 +270,6 @@ sub upload_transformation_identifiers_POST : Args(0) {
                 my $accession_name = $parsed_data->{$row}->{'accession_name'};
                 my $vector_construct = $parsed_data->{$row}->{'vector_construct'};
                 my $notes = $parsed_data->{$row}->{'notes'};
-
-                print STDERR "ID =".Dumper($transformation_identifier)."\n";
-                print STDERR "ACCESSION =".Dumper($accession_name)."\n";
-                print STDERR "VECTOR CONSTRUCT =".Dumper($vector_construct)."\n";
-                print STDERR "NOTES =".Dumper($notes)."\n";
-
                 my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
                     chado_schema => $schema,
                     phenome_schema => $phenome_schema,
