@@ -119,7 +119,6 @@ sub download {
         @data = $metadata_search->get_metadata_matrix();
     }
     else {
-
         my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
             bcs_schema=>$schema,
             search_type=>$search_type,
@@ -144,6 +143,7 @@ sub download {
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }
+    print STDERR "repetitive_measurements option received :" .$repetitive_measurements ."\n";
     #print STDERR Dumper \@data;
 
     my $time = DateTime->now();

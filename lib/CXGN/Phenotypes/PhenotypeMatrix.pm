@@ -292,6 +292,7 @@ sub get_phenotype_matrix {
 	    #print STDERR "DATA = ".Dumper($data);
 	
         foreach my $obs_unit (@$data){
+            print STDERR "observation_unit_values: " . Dumper($obs_unit) . "\n";
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
             my $synonyms = $obs_unit->{germplasm_synonyms};
             my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
@@ -337,29 +338,65 @@ sub get_phenotype_matrix {
 		            $phenotype_ids{$observation->{trait_name}} = $observation->{phenotype_id};
 		        }
 	        }
-	        foreach my $trait (@sorted_traits) {
-		        push @line, $trait_observations{$trait};
 
-		        if ($include_phenotype_primary_key) {
-		            push @line, $phenotype_ids{$trait};
-		        }
-	        }
-		    
-            push @line, $obs_unit->{notes};
-
-            # add treatment values to each obsunit line
-            my %unit_treatments;
-            if ($treatment_details->{$obs_unit->{observationunit_stock_id}}) {
-                %unit_treatments = %{$treatment_details->{$obs_unit->{observationunit_stock_id}}};
-            };
-            foreach my $name (@$treatment_names) {
-                push @line, $unit_treatments{$name};
+            if ($self->repetitive_measurements () eq "all values") {
+                my $max_values = 1;
+	            foreach my $trait (@sorted_traits) {
+                    if (ref($trait_observations{$trait}) eq 'ARRAY') {
+                        my $trait_count = scalar(@{$trait_observations{$trait}});
+                        $max_values = $trait_count if $trait_count > $max_values;
+                    }
+                }
+                for (my $i = 0; $i < $max_values; $i++) {
+                    my @line = @line;
+                    foreach my $trait (@sorted_traits) {
+                        if (ref($trait_observations{$trait}) eq 'ARRAY') {
+                            my $v = $trait_observations{$trait}[$i];
+                            push @line, $v;
+                        } else {
+                            push @line, ($i == 0) ? $trait_observations{$trait} : '';
+                        }
+                    }
+                    push @line, $obs_unit->{notes} if $i == 0;
+                    # print STDERR "final line after all values: " . Dumper(\@line) . "\n";
+                    my %unit_treatments;
+                    if ($treatment_details->{$obs_unit->{observationunit_stock_id}}) {
+                        %unit_treatments = %{$treatment_details->{$obs_unit->{observationunit_stock_id}}};
+                    };
+                    foreach my $name (@$treatment_names) {
+                        # print STDERR "adding treatment $name " . Dumper ($unit_treatments{$name}) . "\n";
+                        push @line, $unit_treatments{$name};
+                    }
+                    push @info, \@line;
+                }
+            }else {
+                my @line = @line;
+                foreach my $trait (@sorted_traits) {
+                    push @line, $trait_observations{$trait};
+                    # print STDERR "adding trait $trait : " . $trait_observations{$trait} . "\n";
+		            if ($include_phenotype_primary_key) {
+		                push @line, $phenotype_ids{$trait};
+                        print STDERR "add the pheno_id for each trait $trait : $phenotype_ids{$trait}\n";
+		            }
+	            }
+                # print STDERR "print the list of sorted_traits:" . Dumper (\@sorted_traits) . "\n";
+                push @line, $obs_unit->{notes};
+                # print STDERR "final line after all values: " . Dumper(\@line) . "\n";
+                # add treatment values to each obsunit line
+                my %unit_treatments;
+                if ($treatment_details->{$obs_unit->{observationunit_stock_id}}) {
+                    %unit_treatments = %{$treatment_details->{$obs_unit->{observationunit_stock_id}}};
+                };
+                foreach my $name (@$treatment_names) {
+                    # print STDERR "Adding treatment $name with value: " . ($unit_treatments{$name} // '') . "\n";
+                    push @line, $unit_treatments{$name};
+                }
+                push @info, \@line;
             }
-
-            push @info, \@line;
         }
     }
     else {  ### NATIVE ??!!
+        print STDERR "from here the native search starts\n";
 	
         $data = $phenotypes_search->search();
         #print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
@@ -400,18 +437,15 @@ sub get_phenotype_matrix {
                 # } else {
                 #     $obsunit_data{$obsunit_id}->{$cvterm} = $value;
                 # }
+                # print STDERR "repetitive_measurements value passed from the CSV plugin : " . $self->repetitive_measurements() . "\n";
+                # print STDERR "data contents: " . Dumper($obsunit_data{$obsunit_id}->{$cvterm}) . "\n";
 
 		        if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq "ARRAY") {
-
-		            if ($self->repetitive_measurements() eq "first") {
+		            if ($self->repetitive_measurements() eq "first value") {
 		        	    $obsunit_data{$obsunit_id}->{$cvterm} = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
-		            }
-
-		            if ($self->repetitive_measurements() eq "last") {
+		            }elsif ($self->repetitive_measurements() eq "last value") {
 		        	    $obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
-		            }
-
-		            if ($self->repetitive_measurements() eq "average") {
+		            }elsif ($self->repetitive_measurements() eq "averaged value") {
 		        	    my $count = 0;
 		        	    my $sum = undef;
 		        	    foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
@@ -425,13 +459,15 @@ sub get_phenotype_matrix {
 		        	    }
 		        	    else {
 		        	        $obsunit_data{$obsunit_id}->{$cvterm} = undef;
+                            # print STDERR "average value for this traits $cvterm: " . $obsunit_data{$obsunit_id}->{$cvterm} . "\n";
 		        	    }
 
-		            }
-
-		            if ($self->repetitive_measurements() eq "all") {
-		        	    $obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
-		            }
+		            }elsif ($self->repetitive_measurements() eq "all values") {
+                        # print STDERR "show all the values for the trait $cvterm\n";
+		        	    # $obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
+		            }else {
+                        $obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                    }
 		        }
 
                 $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
@@ -505,22 +541,37 @@ sub get_phenotype_matrix {
         push @info, \@line;
 
         foreach my $p (@unique_obsunit_list) {
-            my @line = @{$obsunit_data{$p}->{metadata}};
-
+            my $values_max = 1;
             foreach my $trait (@sorted_traits) {
-                push @line, $obsunit_data{$p}->{$trait};
+                if (ref($obsunit_data{$p}->{$trait}) eq 'ARRAY') {
+                    my $trait_count = scalar(@{$obsunit_data{$p}->{$trait}});
+                    $values_max = $trait_count if $trait_count > $values_max;
+                }
             }
-            push @line,  $obsunit_data{$p}->{'notes'};
+            print STDERR " maximum values fr the observation unit $p is $values_max\n";
+            for (my $i = 0; $i < $values_max; $i++) {
+                my @line = @{$obsunit_data{$p}->{metadata}};
+                foreach my $trait (@sorted_traits) {
+                    if(ref($obsunit_data{$p}->{$trait}) eq 'ARRAY') {
+                        my $v = $obsunit_data{$p}->{$trait}[$i];
+                        push @line, $v;
+                    } else {
+                        push @line, ($i == 0) ? $obsunit_data{$p}->{$trait} : '';
+                    }
+                }
+                push @line, $obsunit_data{$p}->{'notes'} if $i == 0;
+                # }
 
-            # add treatment values to each obsunit line
-            my %unit_treatments;
-            if ($treatment_details->{$p}) {
-                %unit_treatments = %{$treatment_details->{$p}};
-            };
-            foreach my $name (@$treatment_names) {
-                push @line, $unit_treatments{$name};
+                # add treatment values to each obsunit line
+                # my %unit_treatments;
+                # if ($treatment_details->{$p}) {
+                #     %unit_treatments = %{$treatment_details->{$p}};
+                # };
+                foreach my $name (@$treatment_names) {
+                    push @line, $treatment_details->{$p}->{$name};
+                }
+                push @info, \@line;
             }
-            push @info, \@line;
         }
     }
 
@@ -547,7 +598,13 @@ sub format_observations {
     foreach my $observation (@$de_duplicated_observations){
 	    my $collect_date = $observation->{collect_date};
 	    my $timestamp = $observation->{timestamp};
-	
+        my $value = $observation->{value};
+
+        if ($self->repetitive_measurements() eq 'all values') {
+            $trait_observations{$observation->{trait_name}} = [];
+            push @{$trait_observations{$observation->{trait_name}}}, $value;
+            next;
+        }
 	    if ($include_timestamp && $timestamp) {
 
 	        if (ref($observation->{value})) {
@@ -581,9 +638,6 @@ sub format_observations {
     }
 
     #print STDERR "detecting multiple observations in ".Dumper($observations);
-    
-
-
     return %trait_observations;
 }
 
@@ -630,36 +684,21 @@ sub process_duplicate_measurements {
 
     #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
     
-    if ($self->repetitive_measurements() eq "first") {
+    if ($self->repetitive_measurements() eq "first value") {
 	    print STDERR "Retrieving first value...\n";
-	    $trait_observations =  $trait_observations->[0];
-	    $trait_observations->{squash_method} = "first";
-    }
-
-    if ($self->repetitive_measurements() eq "last") {
+	    return $trait_observations->[0];
+    }elsif ($self->repetitive_measurements() eq "last value") {
 	    print STDERR "Retrieving last value...\n";
-	    $trait_observations = $trait_observations->[-1] ;
-	    $trait_observations->{squash_method} = "last";
-    }
-
-    if ($self->repetitive_measurements() eq "average") {
+	    return $trait_observations->[-1] ;
+    }elsif ($self->repetitive_measurements() eq "averaged value") {
 	    print STDERR "Averaging values ...\n";
-	    $trait_observations = $self->average_observations($trait_observations);
-	    $trait_observations->{squash_method} = "average";
-    }
-
-
-    if ($self->repetitive_measurements() eq "all") {
+	    return $self->average_observations($trait_observations);
+    }elsif ($self->repetitive_measurements() eq "all values") {
 	    print STDERR "Retrieving all values...\n";
-	    my $collated_multiple_observation = $trait_observations->[0];
-	    my @trait_values;
-	foreach my $o (@$trait_observations) {
-	    push @trait_values, $o->{value};
-	}
-
-	$collated_multiple_observation->{value} = \@trait_values;
-	$collated_multiple_observation->{squash_method} = $self->repetitive_measurements();
-	$trait_observations = $collated_multiple_observation;
+        return $trait_observations;
+    }else {
+        print STDERR "Unknown repetitive_measurements value: " . $self->repetitive_measurements() . ". Defaulting to average value.\n";
+        return $self->average_observations($trait_observations);
     }
 
     #print STDERR "DONE WITH DUPLICATES, NOW: ".Dumper($trait_observations);
