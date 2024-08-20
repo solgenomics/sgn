@@ -1276,7 +1276,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             CXGN::Contact::send_email($email_subject, $email_body, $email_address);
         }
 
-        die $return_error;
+        $c->stash->{rest} = {errors => $return_error};
+        return;
     }
 
     if ($parser->has_parse_warnings()) {
