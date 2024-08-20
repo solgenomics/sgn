@@ -213,24 +213,25 @@ sub store_external_references {
     return $external_references_stored;
 }
 
-sub store_additional_info {
-    my $self = shift;
-    my $additional_info = shift;
+## this function has written twice, therefore, commented this out. 
+# sub store_additional_info {
+#     my $self = shift;
+#     my $additional_info = shift;
 
-    my $phenotype_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
+#     my $phenotype_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
     
-    my $pheno_additional_info = $self->schema()->resultset("Phenotype::Phenotypeprop")->find_or_create({
-	phenotype_id => $self->phenotype_id,
-	type_id       => $phenotype_additional_info_type_id,
-											       });
-    $pheno_additional_info = $pheno_additional_info->update(
-	{
-	    value => encode_json $additional_info,
-	});
+#     my $pheno_additional_info = $self->schema()->resultset("Phenotype::Phenotypeprop")->find_or_create({
+# 	phenotype_id => $self->phenotype_id,
+# 	type_id       => $phenotype_additional_info_type_id,
+# 											       });
+#     $pheno_additional_info = $pheno_additional_info->update(
+# 	{
+# 	    value => encode_json $additional_info,
+# 	});
     
-    my $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
-    return $additional_info_stored;
-}
+#     my $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
+#     return $additional_info_stored;
+# }
 
 sub store_high_dimensional_data {
     my $self = shift;
