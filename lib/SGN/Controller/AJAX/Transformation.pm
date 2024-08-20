@@ -384,6 +384,80 @@ sub add_transformants_POST :Args(0){
 }
 
 
+sub add_transformants_using_list : Path('/ajax/transformation/add_transformants_using_list') : ActionClass('REST'){ }
+
+sub add_transformants_using_list_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error_string => "You must be logged in to add new transformants." };
+        return;
+    }
+    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
+        $c->stash->{rest} = { error_string => "You do not have sufficient privileges to add new transformants." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh();
+    my @error_messages;
+
+    my $transformation_name = $c->req->param("transformation_name");
+    my $list_id = $c->req->param("list_id");
+
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation', 'stock_type')->cvterm_id();
+    my $transformation_stock_id;
+    my $transformation_identifier_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $transformation_name, type_id => $transformation_type_id });
+    if (!$transformation_identifier_rs) {
+        $c->stash->{rest} = { error_string => "Error! Transformation Identifier: $transformation_name was not found in the database.\n" };
+        return;
+    } else {
+        $transformation_stock_id = $transformation_identifier_rs->stock_id();
+    }
+
+    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
+    my $new_transformant_names = $list->elements();
+
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => $new_transformant_names }
+    });
+    while (my $r=$rs->next){
+        push @error_messages, "Transformant name already exists in database: ".$r->uniquename;
+    }
+
+    if (scalar(@error_messages) >= 1) {
+        $c->stash->{rest} = { error_string => \@error_messages};
+        return;
+    }
+
+    eval {
+        my $add_transformants = CXGN::Transformation::AddTransformant->new({
+            schema => $schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            transformation_stock_id => $transformation_stock_id,
+            transformant_names => $new_transformant_names,
+            owner_id => $user_id,
+        });
+
+        $add_transformants->add_transformant();
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { success => 0, error => $@ };
+        print STDERR "An error condition occurred, was not able to create new transformants. ($@).\n";
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
 sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
     my $self = shift;
     my $c = shift;

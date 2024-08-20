@@ -100,10 +100,10 @@ jQuery(document).ready(function(){
         jQuery('#add_transformants_using_list_dialog').modal('show');
     });
 
-    jQuery("#generate_tracking_identifiers_submit").click(function(){
-        var new_transformants_list_id = jQuery('#new_transformants_list_select').val();
+    jQuery("#new_transformants_list_submit").click(function(){
+        var transformants_list_id = jQuery('#new_transformants_list_select').val();
 
-        if (!new_transformants_list_id) {
+        if (!transformants_list_id) {
             alert("Please select a list");
             return;
         }
@@ -114,7 +114,7 @@ jQuery(document).ready(function(){
             type: 'POST',
             data : {
                 'list_id' : transformants_list_id,
-                'transformation_id': "<%$transformation_id%>",
+                'transformation_name': "<%$transformation_name%>",
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
