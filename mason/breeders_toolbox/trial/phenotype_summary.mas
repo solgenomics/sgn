@@ -173,7 +173,7 @@ input[type="text"] {
 	    jQuery.ajax( {
             url: '/ajax/trial/collect_date_range?trial_id=<% $trial_id %>'
 	    }).done( function(r) {
-            alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
+            //alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
             jQuery('#summary_start_date').val(r.start_date);
             jQuery('#summary_end_date').val(r.end_date);
 	    }).fail( function(r) { alert('An error occurred!') });
@@ -252,7 +252,7 @@ function datatables_display_phenosummary(type) {
     var start_date = jQuery('#summary_start_date').val();
     var end_date = jQuery('#summary_end_date').val();
 
-    alert('datatables_display_phenosummary: START: '+start_date+' END: '+end_date);
+    //alert('datatables_display_phenosummary: START: '+start_date+' END: '+end_date);
     var summary_table = jQuery('#phenotype_summary_data').DataTable( {
         "lengthMenu": [ 10, 20, 50, 100, 500, 1000 ],
         "retrieve": true,
@@ -399,7 +399,7 @@ function trait_summary_hist_change(value) {
     var start_date = jQuery('#summary_start_date').val();
     var end_date = jQuery('#summary_end_date').val();
 
-    alert('START '+start_date+' etc.');
+    //alert('START '+start_date+' etc.');
     // console.log("value",value);
     jQuery.ajax( {
         url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val()+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
