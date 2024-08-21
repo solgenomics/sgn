@@ -430,7 +430,11 @@ sub add_transformants_using_list_POST : Args(0) {
     }
 
     if (scalar(@error_messages) >= 1) {
-        $c->stash->{rest} = { error_string => \@error_messages};
+        my $return_error = '';
+        foreach my $error_string (@error_messages){
+            $return_error .= $error_string."<br>";
+        }
+        $c->stash->{rest} = { error_string => $return_error};
         return;
     }
 
