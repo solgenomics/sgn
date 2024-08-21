@@ -277,8 +277,8 @@ jQuery(document).ready(function () {
 
   solGS.listTypeTrainingPopulation.displayTrainingListPopsTable(tableId, trainingPopsRows);
 
-  // jQuery("#lists_datasets_message").hide();
-  // jQuery("#lists_datasets_progress .multi-spinner-container").hide();
+  jQuery("#lists_datasets_message").hide();
+  jQuery("#lists_datasets_progress .multi-spinner-container").hide();
   jQuery("#add_new_pops").show();
 
 });
