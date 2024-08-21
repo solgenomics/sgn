@@ -263,7 +263,11 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
 
-  trainingPopsDataDiv = solGS.listTypeTrainingPopulation.trainingListPopsDataDiv;
+  jQuery("#lists_datasets_message").show();
+  jQuery("#lists_datasets_progress .multi-spinner-container").show();
+ 
+  var trainingPopsDataDiv = solGS.listTypeTrainingPopulation.trainingListPopsDataDiv;
+  
   var tableId = solGS.listTypeTrainingPopulation.trainingListPopsTable;
   var trainingPopsTable = solGS.listTypeTrainingPopulation.createTable(tableId)
 
@@ -271,6 +275,10 @@ jQuery(document).ready(function () {
   var trainingPops = solGS.listTypeTrainingPopulation.getTrainingListPops()
   var trainingPopsRows = solGS.listTypeTrainingPopulation.getTrainingListPopsRows(trainingPops);
 
-  solGS.listTypeTrainingPopulation.displayTrainingListPopsTable(tableId, trainingPopsRows)
+  solGS.listTypeTrainingPopulation.displayTrainingListPopsTable(tableId, trainingPopsRows);
+
+  // jQuery("#lists_datasets_message").hide();
+  // jQuery("#lists_datasets_progress .multi-spinner-container").hide();
+  jQuery("#add_new_pops").show();
 
 });
