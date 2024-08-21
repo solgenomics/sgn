@@ -91,7 +91,15 @@ solGS.genotypingProtocol= {
 
 
 jQuery(document).ready( function() {
+	
+	jQuery('#genotyping_protocols_canvas #genotyping_protocols_message').show();
+	jQuery('#genotyping_protocols_canvas #genotyping_protocols_progress .multi-spinner-container').show();
+	
     solGS.genotypingProtocol.getAllProtocols();
+	jQuery('#genotyping_protocol').show();
+	jQuery('#genotyping_protocols_canvas #genotyping_protocols_message').hide();
+	jQuery('#genotyping_protocols_canvas #genotyping_protocols_progress .multi-spinner-container').hide();
+
 });
 
 
@@ -127,7 +135,6 @@ jQuery(document).ready( function() {
 	var divPlace = jQuery(this).parent().parent().parent().attr('id');
 
     divPlace = solGS.genotypingProtocol.formatId(divPlace);
-    console.log('divPlace ' + divPlace + ' selectId: ' + selectedId + ' name ' + selectedName)
 	solGS.genotypingProtocol.setGenotypingProtocol(divPlace, selected);
 
 	jQuery(divPlace + ' #genotyping_protocol #genotyping_protocols_list_div').hide();
