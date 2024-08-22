@@ -27,6 +27,7 @@ jQuery(document).ready(function () {
                 var html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="plant_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
 
                 html += '<tr><td><button class="btn btn-default btn-sm" id="plant_select_all" name="1">Select All</button><br><br>'
+                html += '<button class="btn btn-default btn-sm" id="delete_plants_button" name="1">Delete Selected Plant Entries</button><br><br>'
                 html += '<div class="well well-sm"><div id="plant_data_count" name="1">No Selection</div></div>'
                 html += '<div id="plant_to_list_menu"></div><td><tr></table>'
 
@@ -54,6 +55,11 @@ jQuery(document).ready(function () {
                     var data = jQuery("#"+data_id).val() || [];
                     var count_id = "plant_data_count";
                     show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('#delete_plants_button').click( function() { // delete selected plots
+                    alert("delete plants");
+                    jQuery('#delete_plants_dialog').modal("show");
                 });
 
                 jQuery('#plant_data').change( function() { // update count when data selections change

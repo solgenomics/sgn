@@ -2870,6 +2870,36 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
 
 }
 
+sub delete_plant_entries : Chained('trial') PathPart('delete_plant_entries') Args(0) {
+    my $self = shift;
+    my $c = shift;
+#    my $plants_selected_delete = "Test_fake_plant_id";
+    my $user_id = $c->user->get_object->get_sp_person_id();
+    my $plant_owner_username = $c->user->get_object->get_username;
+    my $plants_selected_delete = $c->req->param('selected_plants_to_delete') || "test_plant_name";
+    print STDERR "PLANTS FOR DELETION: " . Dumper($plants_selected_delete) . "\n";
+
+    if (my $error = $self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
+
+    if ($t->delete_plant_entities($plants_selected_delete, $user_id, $plant_owner_username)) {
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+        $c->stash->{rest} = {success => 1};
+        return;
+    } else {
+        $c->stash->{rest} = { error => "Error deleting plant entries in controller." };
+    	return;
+    }
+
+}
+
 sub create_subplot_entries : Chained('trial') PathPart('create_subplot_entries') Args(0) {
     my $self = shift;
     my $c = shift;

@@ -1,0 +1,79 @@
+
+<%args>
+$trial_id
+$trial_name => undef
+</%args>
+
+<div class="modal fade" id="delete_plants_dialog" name="delete_plants_dialog" tabindex="-1" role="dialog" aria-labelledby="deletePlantsDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="deletePlantsDialog">Delete selected plants from <% $trial_name %></h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <center>
+            <p3> Are you sure you want to delete the selected plant entries from this trial? </p3>
+            </center></br>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="delete_plants_cancel_button" id="delete_plants_cancel_button" data-dismiss="modal">Cancel</button>
+	      <button type="button" class="btn btn-primary" name="delete_plants_confirm_button" id="delete_plants_confirm_button" title="Confirm_Delete">Delete Plant Entries</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<script>
+
+jQuery(document).ready(function() {
+
+    jQuery('#delete_plants_confirm_button').click( function () {
+        delete_plants_from_trial();
+    });
+
+});
+
+
+function delete_plants_from_trial() {
+    alert("inside the delete function");
+    var selected_plants = jQuery('#plant_data').val();
+    alert(selected_plants);
+    jQuery.ajax( {
+        url: '/ajax/breeders/trial/'+<% $trial_id %>+'/delete_plant_entries/',
+        type: 'POST',
+        beforeSend: function() {
+            enable_working_modal();
+        },
+        data: {
+            'selected_plants_to_delete' : selected_plants
+        },
+        success: function(response) {
+            disable_working_modal();
+            if (response.error) {
+                alert(response.error);
+            }
+            else {
+                alert("Successfully deleted plant entries.");
+                jQuery('#delete_plants_dialog').modal("hide");
+                window.location.replace('/breeders/trial/'+<% $trial_id %>);
+            }
+        },
+        error: function(response) {
+            disable_working_modal();
+            alert("An error occurred deleting plant entries");
+        },
+    });
+
+
+}
+
+
+</script>
