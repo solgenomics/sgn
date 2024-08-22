@@ -301,7 +301,9 @@ jQuery(document).ready(function ($) {
         var checkbox = jQuery('#email_option_to_recieve_trial_upload_status');
         var emailField = jQuery('#email_field');
         if (checkbox.prop('checked')) {
-            emailField.show();
+            emailField.css('display', 'inline-block');
+            jQuery('#email_label_upload').show();
+            jQuery('#email_address_upload').show();
         } else {
             emailField.hide();
         }
