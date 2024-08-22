@@ -19,7 +19,8 @@ jobs:
     permissions:
       contents: read
       packages: read
-      id-token: write
+      # To report GitHub Actions status checks
+      statuses: write
 
     steps:
       - name: Checkout code
@@ -32,5 +33,7 @@ jobs:
       - name: Super-linter
         uses: super-linter/super-linter@v7.0.0 # x-release-please-version
         env:
+          # To report GitHub Actions status checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_ANSIBLE: false
