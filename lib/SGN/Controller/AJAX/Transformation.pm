@@ -15,6 +15,8 @@ use CXGN::Transformation::AddTransformationProject;
 use CXGN::Transformation::AddTransformationIdentifier;
 use CXGN::Transformation::Transformation;
 use CXGN::Transformation::AddTransformant;
+use CXGN::TrackingActivity::AddActivityProject;
+use CXGN::Stock::TrackingActivity::TrackingIdentifier;
 use List::MoreUtils qw /any /;
 
 
@@ -162,6 +164,7 @@ sub add_transformation_identifier_POST :Args(0){
         return;
     }
 
+    my $transformation_stock_id;
     eval {
         my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
             chado_schema => $schema,
@@ -175,13 +178,38 @@ sub add_transformation_identifier_POST :Args(0){
             owner_id => $user_id,
         });
 
-        $add_transformation->add_transformation_identifier();
+        my $add = $add_transformation->add_transformation_identifier();
+        $transformation_stock_id = $add->{transformation_id};
     };
 
     if ($@) {
         $c->stash->{rest} = { success => 0, error => $@ };
         print STDERR "An error condition occurred, was not able to create transformation ID. ($@).\n";
         return;
+    }
+
+    my $tracking_transformation = $c->config->{tracking_transformation};
+
+    if ($tracking_transformation && $transformation_stock_id) {
+        my $progress_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'progress_of', 'project_relationship')->cvterm_id();
+        my $project_rel_row = $schema->resultset('Project::ProjectRelationship')->find({object_project_id => $transformation_project_id, type_id => $progress_of_cvterm_id });
+        my $tracking_project_id = $project_rel_row->subject_project_id;
+        my $tracking_identifier = 'Tracking_'.$transformation_identifier;
+
+        my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new({
+            schema => $schema,
+            phenome_schema => $phenome_schema,
+            tracking_identifier => $tracking_identifier,
+            material => $transformation_identifier,
+            project_id => $tracking_project_id,
+            user_id => $user_id
+        });
+
+        my $return = $tracking_obj->store();
+        if (!$return){
+            $c->stash->{rest} = {error => "Error generating tracking identifier",};
+            return;
+        }
     }
 
     $c->stash->{rest} = { success => 1 };
