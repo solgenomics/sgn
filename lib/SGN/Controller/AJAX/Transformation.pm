@@ -61,6 +61,7 @@ sub add_transformation_project_POST :Args(0){
        }
 
     my $error;
+    my $transformation_project_id;
     eval{
         my $add_transformation_project = CXGN::Transformation::AddTransformationProject->new({
             chado_schema => $schema,
@@ -76,6 +77,8 @@ sub add_transformation_project_POST :Args(0){
         my $return = $add_transformation_project->save_transformation_project();
         if ($return->{error}){
             $error = $return->{error};
+        } else {
+            $transformation_project_id = $return->{project_id};
         }
     };
 
@@ -83,6 +86,28 @@ sub add_transformation_project_POST :Args(0){
         $c->stash->{rest} = {error => $@};
         return;
     };
+    print STDERR "TRANSFORMATION PROJECT ID =".Dumper($transformation_project_id)."\n";
+    my $tracking_transformation = $c->config->{tracking_transformation};
+    if ($tracking_transformation) {
+        my $tracking_project_id;
+        my $tracking_project_name = $project_name."_"."progress";
+
+        my $add_tracking_project = CXGN::TrackingActivity::AddActivityProject->new({
+            bcs_schema => $schema,
+            dbh => $dbh,
+            breeding_program_id => $breeding_program_id,
+            year => $year,
+            project_description => "Tracking transformation progress for $project_name",
+            activity_project_name => $tracking_project_name,
+            activity_type => 'tissue_culture',
+            nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
+            owner_id => $user_id,
+            progress_of_project_id => $transformation_project_id,
+        });
+
+        $tracking_project_id = $add_tracking_project->save_activity_project();
+        print STDERR "TRACKING PROJECT ID =".Dumper($tracking_project_id)."\n";
+    }
 
     if ($error){
         $c->stash->{rest} = {error => $error};
