@@ -11,6 +11,7 @@ $folder_name
 $folder_id
 $identifier_prefix
 $trial_owner
+$tracking_project_id
 </%args>
 
 
@@ -115,6 +116,13 @@ $trial_owner
     </div>
 </div>
 <button class="btn btn-sm btn-primary" style="margin:3px" id="new_transformation_identifier_link">Add New Transformation ID</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_transformation_ids_link">Upload New Transformation IDs</button>
+</br>
+</br>
+% if ($tracking_project_id) {
+    <td>
+        <a href='/breeders/trial/<%$tracking_project_id%>'><p>Go to Tracking Page</p></a>
+    </td>
+% }
 
 <& /transformation/add_transformation_identifier_dialog.mas, trial_id => $trial_id &>
 <& /transformation/upload_transformation_ids_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>

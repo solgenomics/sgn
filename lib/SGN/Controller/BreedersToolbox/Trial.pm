@@ -317,6 +317,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{template} = '/tracking_activities/activity_project.mas';
     }
     elsif ($trial_type_name eq "transformation_project"){
+        my $transformation_project_id = $c->stash->{trial_id};
         my $program_name = $breeding_program_data->[0]->[1];
         my $locations = $program_object->get_all_locations_by_breeding_program();
         my @locations_by_program;
@@ -330,6 +331,13 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
         my $locations_by_program_json = encode_json(\@locations_by_program);
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
+
+        my $progress_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'progress_of', 'project_relationship')->cvterm_id();
+        my $project_rel_row = $schema->resultset('Project::ProjectRelationship')->find({object_project_id => $transformation_project_id, type_id => $progress_of_cvterm_id });
+        if ($project_rel_row) {
+            my $tracking_project_id = $project_rel_row->subject_project_id;
+            $c->stash->{tracking_project_id} = $tracking_project_id;
+        }
         $c->stash->{template} = '/transformation/transformation_project.mas';
     }
     else {
