@@ -12,6 +12,7 @@ $folder_id
 $identifier_prefix
 $trial_owner
 $vendor_id
+$parent_project_id
 </%args>
 
 
@@ -115,8 +116,16 @@ $vendor_id
         </div>
     </div>
 </div>
-% if (!$vendor_id) {
+% if (!$vendor_id && !$parent_project_id) {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="generate_identifiers_link">Generate Tracking Identifiers</button>
 % }
+</br>
+</br>
+% if ($parent_project_id) {
+    <td>
+        <a href='/breeders/trial/<%$parent_project_id%>'><p>Go to Transformation Page</p></a>
+    </td>
+% }
+
 
 <& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name &>

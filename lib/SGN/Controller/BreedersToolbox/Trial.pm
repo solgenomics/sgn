@@ -314,6 +314,14 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
 
         $c->stash->{vendor_id} = $vendor_id;
+
+        my $progress_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'progress_of', 'project_relationship')->cvterm_id();
+        my $project_rel_row = $schema->resultset('Project::ProjectRelationship')->find({subject_project_id => $project_id, type_id => $progress_of_cvterm_id });
+        if ($project_rel_row) {
+            my $parent_project_id = $project_rel_row->object_project_id;
+            $c->stash->{parent_project_id} = $parent_project_id;
+        }
+
         $c->stash->{template} = '/tracking_activities/activity_project.mas';
     }
     elsif ($trial_type_name eq "transformation_project"){
