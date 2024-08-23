@@ -33,6 +33,23 @@ solGS.dataset = {
     return datasets;
   },
 
+  addDataTypeAttr(datasets) {
+
+    for (var i = 0; i < datasets.length; i++) {
+      if (datasets[i].categories.match(/accessions/)) {
+        datasets[i]["data_type"] = ["Genotype"];
+      } else if (datasets[i].categories.match(/plots/)) {
+        datasets[i]["data_type"] = ["Phenotype"];
+      } else if (datasets[i].categories.match(/trials/)) {
+        datasets[i]["data_type"] = ["Genotype", "Phenotype"];
+      }
+  
+    }
+
+    return datasets;
+  },
+
+
   converDatasetArrayToJson(datasets, datasetTypes) {
 
     var dataset = new CXGN.Dataset();
