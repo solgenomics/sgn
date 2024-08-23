@@ -184,13 +184,14 @@ solGS.pca = {
 
     var pcaPopId = solGS.pca.getPcaPopId(popId, dataStr);
    
-    var dataTypeOpts = this.getDataTypeOpts({
-      id: popId,
-      name: popName,
-      data_str: dataStr,
-    });
+    var dataTypes;
+    if (location.pathname.match(/pca\/analysis/)) {
+      dataTypes = pcaPop.data_type;
+    } else {
+      dataTypes = this.getDataTypeOpts();
+    }
 
-    dataTypeOpts = this.createDataTypeSelect(dataTypeOpts, pcaPopId);
+    var dataTypeOpts = this.createDataTypeSelect(dataTypes, pcaPopId);
     
     var runPcaBtnId = this.getRunPcaId(pcaPopId);
 
@@ -268,65 +269,27 @@ solGS.pca = {
     var list = new solGSList();
     var lists = list.getLists(["accessions", "plots", "trials"]);
     lists = list.addDataStrAttr(lists);
-
+    lists = list.addDataTypeAttr(lists);
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    datasets = list.addDataTypeAttr(datasets);
     var pcaPops = [lists, datasets];
 
     return pcaPops.flat();
 
   },
 
-  getDataTypeOpts: function (args) {
-    if (args) {
-      var dataStr = args.data_str;
-      var selectedId = args.id;
-      var popType = args.type;
-    }
-
+  getDataTypeOpts: function () {
+    
     var dataTypeOpts = [];
-    var page = location.pathname;
-
-    if (selectedId && isNaN(selectedId)) {
-      selectedId = selectedId.replace(/\w+_/g, "");
-    }
-
-    if (page.match(/pca\/analysis/)) {
-      if (dataStr.match(/list/)) {
-        var list = new solGSList(selectedId);
-        var listDetail = list.getListDetail(selectedId);
-
-        if (listDetail.type.match(/accessions/)) {
-          dataTypeOpts = ["Genotype"];
-        } else if (listDetail.type.match(/plots/)) {
-          dataTypeOpts = ["Phenotype"];
-        } else if (listDetail.type.match(/trials/)) {
-          dataTypeOpts = ["Genotype", "Phenotype"];
-        }
-      } else if (dataStr.match(/dataset/)) {
-        var dataset = new CXGN.Dataset();
-        dt = dataset.getDataset(selectedId);
-
-        if (dt.categories["accessions"]) {
-          dataTypeOpts = ["Genotype"];
-        } else if (dt.categories["plots"]) {
-          dataTypeOpts = ["Phenotype"];
-        } else if (dt.categories["trials"]) {
-          dataTypeOpts = ["Genotype", "Phenotype"];
-        }
-      }
-    } else if (page.match(/breeders\/trial/)) {
+   
+    if (location.pathname.match(/breeders\/trial/)) {
       dataTypeOpts = ["Genotype", "Phenotype"];
     } else if (page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//)) {
       dataTypeOpts = ["Genotype"];
-    } else {
-      if (!popType) {
-        popType = "undef";
-      }
-    }
-
+    } 
+    
     return dataTypeOpts;
   },
-
 
   checkCachedPca: function (pcaArgs) {
     if (document.URL.match(/pca\/analysis/)) {
