@@ -70,6 +70,17 @@ $material_name
     </div>
 </&>
 
+<&| /page/info_section.mas, title=>"Update Status",  collapsible => 1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link" name = "update_status_usage_link">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="update_status_link">Update Status</button>
+            </div>
+        </div>
+    </div>
+</&>
+
+
 <&| /page/info_section.mas, title => 'Summary', collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
@@ -132,6 +143,7 @@ $material_name
     </div>
 </div>
 
+<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id &>
 
 <script>
 
