@@ -1,0 +1,37 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="project_inactive_tracking_identifiers_table">
+        <thead>
+            <tr>
+                <th>Tracking Identifier</th>
+                <th>Transformation ID</th>
+% my $tracking_activities = $c->config->{tracking_activities_header};
+% my @column_header = split ',',$tracking_activities;
+% foreach my $column_header(@column_header){
+                <th><%$column_header%></th>
+%}
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var project_id = "<%$trial_id%>";
+
+    jQuery('#project_inactive_tracking_identifiers_table').DataTable({
+        'autoWidth': false,
+        'ajax': '/ajax/tracking_activity/project_inactive_identifiers/'+project_id,
+    });
+
+});
+
+</script>

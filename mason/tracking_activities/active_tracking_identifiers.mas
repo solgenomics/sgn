@@ -10,7 +10,7 @@ $trial_id
         <thead>
             <tr>
                 <th>Tracking Identifier</th>
-                <th>Material</th>
+                <th>Transformation ID</th>
 % my $tracking_activities = $c->config->{tracking_activities_header};
 % my @column_header = split ',',$tracking_activities;
 % foreach my $column_header(@column_header){
@@ -23,7 +23,7 @@ $trial_id
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Add Identifiers to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Adding identifiers in this project to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, title => 'Add Identifiers to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding identifiers in this project to a new or exisiting list</i>'&>
         <br>
         <div id="identifiers_to_new_list" style="display:none"></div>
         <div id="identifiers_add_to_list"></div>
