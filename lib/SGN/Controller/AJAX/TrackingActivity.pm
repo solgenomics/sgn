@@ -17,6 +17,7 @@ use CXGN::TrackingActivity::ActivityProject;
 use SGN::Model::Cvterm;
 use CXGN::Location::LocationLookup;
 use CXGN::List;
+use CXGN::Stock::Status;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -439,6 +440,59 @@ sub get_project_active_identifier_names :Path('/ajax/tracking_activity/project_a
     }
 
     $c->stash->{rest} = { data => \@identifier_names };
+
+}
+
+
+sub update_status : Path('/ajax/tracking_activity/update_status') : ActionClass('REST'){ }
+
+sub update_status_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh();
+    my $identifier_id = $c->req->param("identifier_id");
+    my $status_type = $c->req->param("status_type");
+    my $comments = $c->req->param("comments");
+    my $time = DateTime->now();
+    my $update_date = $time->ymd();
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error_string => "You must be logged in to update status" };
+        return;
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error_string => "You do not have the correct role to update status. Please contact us." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", 'stock_type')->cvterm_id();
+
+    my $identifier_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $identifier_id, type_id => $tracking_identifier_type_id });
+    if (!$identifier_rs) {
+        $c->stash->{rest} = { error_string => 'Error. No stock entry found in the database.' };
+	    return;
+    }
+
+    my $update_status = CXGN::Stock::Status->new({
+        bcs_schema => $schema,
+        parent_id => $identifier_id,
+    });
+
+    $update_status->person_id($user_id);
+    $update_status->update_date($update_date);
+    $update_status->comments($comments);
+
+    $update_status->store();
+
+    if (!$update_status->store()){
+        $c->stash->{rest} = {error_string => "Error updating status"};
+        return;
+    }
+
+    $c->stash->{rest} = {success => "1",};
 
 }
 

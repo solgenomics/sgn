@@ -100,7 +100,7 @@ jQuery(document).ready(function(){
         jQuery('#update_status_dialog').modal('show');
     });
 
-    jQuery('#update_status_submit').click(function() {  
+    jQuery('#update_status_submit').click(function() {
 
         var status_type = jQuery('#status_type').val();
         var comments = jQuery('#comments_for_updating').val();
@@ -117,9 +117,10 @@ jQuery(document).ready(function(){
 
         jQuery.ajax({
             url: '/ajax/tracking_activity/update_status',
+            type: 'POST',
             dataType: "json",
             data : {
-                'identifier_id': identifier,
+                'identifier_id': identifier_id,
                 'status_type': status_type,
                 'comments' : comments
             },
