@@ -9,6 +9,7 @@ $type_select_options => undef
 $activity_headers
 $timestamp => undef
 $material_name
+$material_id
 
 </%args>
 
@@ -143,7 +144,7 @@ $material_name
     </div>
 </div>
 
-<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id &>
+<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id, material_id => $material_id &>
 
 <script>
 

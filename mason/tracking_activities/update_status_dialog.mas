@@ -1,6 +1,7 @@
 <%args>
 $identifier_id
 $identifier_name
+$material_id
 </%args>
 
 <div class="modal fade" id="update_status_dialog" name="_dialog" tabindex="-1" role="dialog" aria-labelledby="updateStatusDialog">
@@ -95,6 +96,7 @@ $identifier_name
 jQuery(document).ready(function(){
 
     var identifier_id = "<% $identifier_id %>";
+    var material_id = "<% $material_id %>";
 
     jQuery("#update_status_link").click( function() {
         jQuery('#update_status_dialog').modal('show');
@@ -122,6 +124,7 @@ jQuery(document).ready(function(){
             data : {
                 'identifier_id': identifier_id,
                 'status_type': status_type,
+                'material_id': material_id,
                 'comments' : comments
             },
             beforeSend: function(response){

@@ -45,6 +45,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{type_select_options} = \@options;
     $c->stash->{activity_headers} = \@activity_headers;
     $c->stash->{material_name} = $material_name;
+    $c->stash->{material_id} = $material_id;
     $c->stash->{timestamp} = $timestamp;
 
     $c->stash->{template} = '/order/activity_info_details.mas';

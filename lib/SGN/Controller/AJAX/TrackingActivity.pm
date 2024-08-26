@@ -459,8 +459,10 @@ sub update_status_POST : Args(0) {
     my $identifier_id = $c->req->param("identifier_id");
     my $status_type = $c->req->param("status_type");
     my $comments = $c->req->param("comments");
+    my $material_id = $c->req->param("material_id");
     my $time = DateTime->now();
     my $update_date = $time->ymd();
+    my @stocks_to_update;
 
     if (!$c->user()){
         $c->stash->{rest} = { error_string => "You must be logged in to update status" };
@@ -474,27 +476,45 @@ sub update_status_POST : Args(0) {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", 'stock_type')->cvterm_id();
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
 
     my $identifier_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $identifier_id, type_id => $tracking_identifier_type_id });
     if (!$identifier_rs) {
-        $c->stash->{rest} = { error_string => 'Error. No stock entry found in the database.' };
+        $c->stash->{rest} = { error_string => 'Error. No tracking identifier entry found in the database.' };
 	    return;
+    } else {
+        push @stocks_to_update, $identifier_id;
     }
 
-    my $update_status = CXGN::Stock::Status->new({
-        bcs_schema => $schema,
-        parent_id => $identifier_id,
-    });
-
-    $update_status->person_id($user_id);
-    $update_status->update_date($update_date);
-    $update_status->comments($comments);
-
-    $update_status->store();
-
-    if (!$update_status->store()){
-        $c->stash->{rest} = {error_string => "Error updating status"};
+    my $material_stock_type_id;
+    my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
+    if (!$material_rs) {
+        $c->stash->{rest} = { error_string => 'Error. No material entry found in the database.' };
         return;
+    } else {
+       $material_stock_type_id = $material_rs->type_id;
+    }
+
+    if ($material_stock_type_id == $transformation_type_id) {
+        push @stocks_to_update, $material_id;
+    }
+
+    foreach my $stock_id (@stocks_to_update) {
+        my $update_status = CXGN::Stock::Status->new({
+            bcs_schema => $schema,
+            parent_id => $stock_id,
+        });
+
+        $update_status->person_id($user_id);
+        $update_status->update_date($update_date);
+        $update_status->comments($comments);
+
+        $update_status->store();
+
+        if (!$update_status->store()){
+            $c->stash->{rest} = {error_string => "Error updating status"};
+            return;
+        }
     }
 
     $c->stash->{rest} = {success => "1",};
@@ -552,7 +572,7 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
             push @all_identifiers,[@row];
         } else {
             next;
-        }            
+        }
     }
 
 
