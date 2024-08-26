@@ -251,6 +251,7 @@ sub _search {
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $start_date = $params->{observationTimeStampRangeStart}->[0] || undef;
     my $end_date = $params->{observationTimeStampRangeEnd}->[0] || undef;
+    my $repetitive_measurements_type = $params->{repetitiveMeasurements_type} || 'all';
 
     my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
     # observationUnitLevelName
@@ -283,6 +284,7 @@ sub _search {
             order_by=>"plot_number",
 	        start_date => $start_date,
 	        end_date => $end_date,
+            repetitive_measurements => $repetitive_measurements_type,
 	        include_dateless_items => 1,
         }
     );

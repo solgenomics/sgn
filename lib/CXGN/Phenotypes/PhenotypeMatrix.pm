@@ -381,7 +381,6 @@ sub get_phenotype_matrix {
 	            }
                 # print STDERR "print the list of sorted_traits:" . Dumper (\@sorted_traits) . "\n";
                 push @line, $obs_unit->{notes};
-                # print STDERR "final line after all values: " . Dumper(\@line) . "\n";
                 # add treatment values to each obsunit line
                 my %unit_treatments;
                 if ($treatment_details->{$obs_unit->{observationunit_stock_id}}) {
@@ -396,7 +395,6 @@ sub get_phenotype_matrix {
         }
     }
     else {  ### NATIVE ??!!
-        print STDERR "from here the native search starts\n";
 	
         $data = $phenotypes_search->search();
         #print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
@@ -410,6 +408,14 @@ sub get_phenotype_matrix {
         my %seen_obsunits;        
 
 	    foreach my $d (@$data) {
+            # print STDERR "check the retrieved data: " . Dumper($d) . "\n";
+            my $phenotype_uniquename = $d->{phenotype_uniquename};
+            if ($phenotype_uniquename =~ /date:\s+(\d{4}-\d{2}-\d{2})/) {
+                my $extracted_date = $1;
+                $d->{collect_date} = $extracted_date;
+            }else {
+                $d->{collect_date} = undef;
+            }
 	        my $value = "";
 	        if ($include_timestamp && exists($d->{timestamp})) {
 	    	    $value = "$d->{phenotype_value},$d->{timestamp}";
@@ -431,6 +437,7 @@ sub get_phenotype_matrix {
 
                 my $timestamp_value = $d->{timestamp};
                 my $value = $d->{phenotype_value};
+                my $collect_date = $d->{collect_date};
                 #my $cvterm = $trait."|".$cvterm_accession;
                 # if ($include_timestamp && $timestamp_value) {
                 #     $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
@@ -442,9 +449,16 @@ sub get_phenotype_matrix {
 
 		        if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq "ARRAY") {
 		            if ($self->repetitive_measurements() eq "first value") {
-		        	    $obsunit_data{$obsunit_id}->{$cvterm} = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        my $first_value = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        my $output_val = defined $collect_date ? "$first_value, $collect_date" : $first_value;
+                        print STDERR "first value of the trait obs:  $output_val\n";
+                        $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
+                        print STDERR "see what it prints for the first value: " . $obsunit_data{$obsunit_id}->{$cvterm} . "\n";
 		            }elsif ($self->repetitive_measurements() eq "last value") {
-		        	    $obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        my $last_value = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        my $output_val = defined $collect_date ? "$last_value, $collect_date" : $last_value;
+                        print STDERR "the last value of the trait obs: $output_val\n";
+                        $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
 		            }elsif ($self->repetitive_measurements() eq "averaged value") {
 		        	    my $count = 0;
 		        	    my $sum = undef;
@@ -454,19 +468,46 @@ sub get_phenotype_matrix {
 		        	    	    $count++;
 		        	        }
 		        	    }
+                        ## the collected_date for the average obs will prin the first collect_date of that obs
 		        	    if (defined($sum) && ($count > 0) ) {
-		        	        $obsunit_data{$obsunit_id}->{$cvterm} = $sum/$count;
+                            my $average_value = $sum/$count;
+                            my $output_val = defined $collect_date ? "$average_value, $collect_date" : $average_value;
+                            print STDERR "the average value : $output_val\n";
+                            $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
 		        	    }
 		        	    else {
 		        	        $obsunit_data{$obsunit_id}->{$cvterm} = undef;
-                            # print STDERR "average value for this traits $cvterm: " . $obsunit_data{$obsunit_id}->{$cvterm} . "\n";
 		        	    }
 
 		            }elsif ($self->repetitive_measurements() eq "all values") {
-                        # print STDERR "show all the values for the trait $cvterm\n";
-		        	    # $obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq 'ARRAY') {
+                            my $values_ref = $obsunit_data{$obsunit_id}->{$cvterm};
+                            my @output_values;
+
+                            for my $i (0..$#$values_ref) {
+                                my $value = $values_ref->[$i];
+                                my $date = $collect_date;
+                                my $output_val = defined $date ? "$value,$date" : $value;
+                                # print STDERR "Value: $output_val\n";
+                                push @output_values, [$value, $date];
+                            }
+        
+                            # Instead of joining, we store these separately
+                            $obsunit_data{$obsunit_id}->{$cvterm} = \@output_values;
+                        } else {
+                            # Default case: Handle a single value
+                            my $value = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                            my $output_val = defined $collect_date ? "$value,$collect_date" : $value;
+
+                            # Print for debugging
+                            print STDERR "Default value: $output_val\n";
+                            $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
+                        }
 		            }else {
-                        $obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        my $value = $obsunit_data{$obsunit_id}->{$cvterm};
+                        my $output_val = defined $collect_date ? "$value,$collect_date" : $value;
+                        print STDERR "check the single value: $output_val\n";
+                        $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
                     }
 		        }
 
@@ -530,6 +571,9 @@ sub get_phenotype_matrix {
         my @sorted_traits = sort keys(%traits);
         foreach my $trait (@sorted_traits) {
             push @line, $trait;
+            if ($include_phenotype_primary_key) {
+                push @line, $trait.'_phenotype_id';
+            }
         }
         push @line, 'notes';
 
@@ -552,16 +596,26 @@ sub get_phenotype_matrix {
             for (my $i = 0; $i < $values_max; $i++) {
                 my @line = @{$obsunit_data{$p}->{metadata}};
                 foreach my $trait (@sorted_traits) {
+                    my $value_with_date = '';
                     if(ref($obsunit_data{$p}->{$trait}) eq 'ARRAY') {
                         my $v = $obsunit_data{$p}->{$trait}[$i];
-                        push @line, $v;
+                        my $cd = $obsunit_data{$p}->{$trait.'_collect_date'}[$i];
+                        # print the the obs_value as the value, recorded date of that obs
+                        $value_with_date = defined($v) ? (defined($cd) ? "$v, $cd" : $v) : '';
+                        push @line, $value_with_date;
+
                     } else {
-                        push @line, ($i == 0) ? $obsunit_data{$p}->{$trait} : '';
+                        my $v = $obsunit_data{$p}->{$trait};
+                        my $cd = $obsunit_data{$p}->{$trait.'_collect_date'};
+                        
+                        #the recorded will be added to the obs value by separating with comma
+                        $value_with_date = ($i == 0 && defined($v)) ? (defined($cd) ? "$v, $cd" : $v) : '';
+                        push @line, $value_with_date;
+                        # push @line, ($i == 0) ? $obsunit_data{$p}->{$trait.'_collect_date'} : '';
                     }
                 }
                 push @line, $obsunit_data{$p}->{'notes'} if $i == 0;
                 # }
-
                 # add treatment values to each obsunit line
                 # my %unit_treatments;
                 # if ($treatment_details->{$p}) {
@@ -575,7 +629,7 @@ sub get_phenotype_matrix {
         }
     }
 
-    #print STDERR Dumper \@info;
+    # print STDERR "check the info data structure " . Dumper \@info;
     print STDERR "Construct Pheno Matrix End:".localtime."\n";
     return @info;
 }

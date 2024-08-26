@@ -145,6 +145,7 @@ sub download {
     }
     print STDERR "repetitive_measurements option received :" .$repetitive_measurements ."\n";
     #print STDERR Dumper \@data;
+    print STDERR "the trial data:" . Dumper \@data;
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
