@@ -12,20 +12,19 @@ my $f = SGN::Test::Fixture->new();
 
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 160, 'plots_list_subset' => 160});
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
-print STDERR "\nadding plots list '\n";
+
 my $plots_list =  $solgs_data->load_plots_list();
 my $plots_list_name = $plots_list->{list_name};
 my $plots_list_id = 'list_' . $plots_list->{list_id};
 
-print STDERR "\nadding trials list '\n";
 my $trials_list =  $solgs_data->load_trials_list();
 my $trials_list_name = $trials_list->{list_name};
 my $trials_list_id = 'list_' . $trials_list->{list_id};
+
 my $trials_dt = $solgs_data->load_trials_dataset();
 my $trials_dt_name = $trials_dt->{dataset_name};
 my $trials_dt_id = 'dataset_' . $trials_dt->{dataset_id};
 
-print STDERR "\nadding plots dataset\n";
 my $plots_dt = $solgs_data->load_plots_dataset();
 my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id = 'dataset_' . $plots_dt->{dataset_id};
@@ -40,9 +39,6 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/correlation/analysis', 'correlation home page');
     sleep(5);
 
-
-    # $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*starts-with(@id,"corr_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-    # sleep(2);
     $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
@@ -53,9 +49,6 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-
-    # $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*starts-with(@id,"corr_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-    # sleep(2);
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
@@ -66,8 +59,6 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    # $d->find_element_ok('//tr[@id="' . $plots_dt_id .'"]//*[starts-with(@id,"corr_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-    # sleep(3);
     $d->find_element_ok('//tr[@id="' . $plots_dt_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
@@ -80,12 +71,9 @@ $d->while_logged_in_as("submitter", sub {
 
     `rm -r $cache_dir`;
 
-    
-    # $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"corr_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-    # sleep(3);
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
-   $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
+    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table'); 
     sleep(2);

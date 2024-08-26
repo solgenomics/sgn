@@ -814,6 +814,39 @@ sub seedlot_name_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
+=head2 seedlot_source_autocomplete
+
+Public Path: /ajax/stock/seedlot_source_autocomplete
+
+Autocomplete a seedlot source name (seedlot, plot, subplot, or plant).
+Takes a single GET param, C<term>, responds with a JSON array of completions for that term.
+
+=cut
+
+sub seedlot_source_autocomplete : Local : ActionClass('REST') { }
+
+sub seedlot_source_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+
+    my @response_list;
+    my $q = "SELECT uniquename FROM stock where type_id IN (?, ?, ?, ?) AND uniquename ilike ? LIMIT 1000";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute($seedlot_cvterm_id, $plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id, '%'.$term.'%');
+    while  (my ($uniquename) = $sth->fetchrow_array ) {
+        push @response_list, $uniquename;
+    }
+    $c->stash->{rest} = \@response_list;
+}
+
 
 =head2 stockproperty_autocomplete
 
@@ -1883,12 +1916,12 @@ sub get_pedigree_string_ :Chained('/stock/get_stock') PathPart('pedigreestring')
     }
     elsif ($level eq "Great-Grandparents") {
         my $m_maternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'mother'}}{'3'}{'mother'} || 'NA';
-        my $m_maternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
-        my $p_maternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $m_maternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $p_maternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
         my $p_maternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'father'}}{'3'}{'father'} || 'NA';
         my $m_paternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'mother'}}{'3'}{'mother'} || 'NA';
-        my $m_paternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
-        my $p_paternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $m_paternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $p_paternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
         my $p_paternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'father'}}{'3'}{'father'} || 'NA';
         my $mm_parent_string = "$m_maternal_mother/$m_maternal_father";
         my $mf_parent_string = "$p_maternal_mother/$p_maternal_father";
