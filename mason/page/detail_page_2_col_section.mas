@@ -597,6 +597,10 @@ $parent_project_id => undef
 % if ($info_section_id eq 'transformations_in_project_section'){
                                 <& /transformation/transformations_in_project.mas, trial_id=>$trial_id &>
 % } #End transformations_in_project_section
+% if ($info_section_id eq 'inactive_transformation_ids_in_project_section'){
+                                <& /transformation/inactive_transformation_ids_in_project.mas, trial_id=>$trial_id &>
+% } #End inactive_transformation_ids_in_project_section
+
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
