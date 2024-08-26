@@ -88,7 +88,7 @@ sub add_transformation_project_POST :Args(0){
         $c->stash->{rest} = {error => $@};
         return;
     };
-    print STDERR "TRANSFORMATION PROJECT ID =".Dumper($transformation_project_id)."\n";
+
     my $tracking_transformation = $c->config->{tracking_transformation};
     if ($tracking_transformation) {
         my $tracking_project_id;
@@ -108,7 +108,6 @@ sub add_transformation_project_POST :Args(0){
         });
 
         $tracking_project_id = $add_tracking_project->save_activity_project();
-        print STDERR "TRACKING PROJECT ID =".Dumper($tracking_project_id)."\n";
     }
 
     if ($error){

@@ -381,6 +381,8 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
     my $tracking_activities = $c->config->{tracking_activities};
     my @activity_types = split ',',$tracking_activities;
 
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
+
     my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
     my $all_identifier_info = $activity_project->get_project_active_identifiers();
     my @all_identifiers;
@@ -392,10 +394,17 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
         } else {
             my $identifier_id = $identifier_info->[0];
             my $identifier_name = $identifier_info->[1];
-            my $material_id = $identifier_info->[2];
-            my $material_name = $identifier_info->[3];
             push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
-            push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
+
+            my $material_id = $identifier_info->[2];
+            my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
+            my $material_stock_type_id = $material_rs->type_id;
+            my $material_name = $identifier_info->[3];
+            if ($material_stock_type_id == $transformation_type_id) {
+                push @row, qq{<a href="/transformation/$material_id">$material_name</a>}
+            } else {
+                push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
+            }
             my $progress = $identifier_info->[5];
             my $input;
             if ($progress) {
@@ -530,6 +539,8 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
     my $tracking_activities = $c->config->{tracking_activities};
     my @activity_types = split ',',$tracking_activities;
 
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
+
     my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
     my $all_identifier_info = $activity_project->get_project_active_identifiers();
     my @all_identifiers;
@@ -539,10 +550,18 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
         if ($updated_status) {
             my $identifier_id = $identifier_info->[0];
             my $identifier_name = $identifier_info->[1];
+            push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
+
             my $material_id = $identifier_info->[2];
             my $material_name = $identifier_info->[3];
-            push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
-            push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
+            my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
+            my $material_stock_type_id = $material_rs->type_id;
+            if ($material_stock_type_id == $transformation_type_id) {
+                push @row, qq{<a href="/transformation/$material_id">$material_name</a>}
+            } else {
+                push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
+            }
+
             my $progress = $identifier_info->[5];
             my $input;
             if ($progress) {
