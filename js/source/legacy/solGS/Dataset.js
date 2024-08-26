@@ -169,29 +169,35 @@ solGS.dataset = {
     solGS.waitPage(page, args);
   },
 
-  createDatasetTrainingReqArgs: function (datasetId, datasetName) {
+
+  getDatasetGenoProtocolId: function (datasetId) {
     var dataset = new CXGN.Dataset();
     var d = dataset.getDataset(datasetId);
 
     var protocolId = d.categories["genotyping_protocols"]
-      ? d.categories["genotyping_protocols"][0]
-      : null;
+    ? d.categories["genotyping_protocols"][0]
+    : null;
 
     if (!protocolId) {
       protocolId = jQuery("#genotyping_protocol_id").val();
     }
 
-    var popId = "dataset_" + datasetId;
-    var popType = "dataset_training";
+    return protocolId;
+
+  },
+
+  createDatasetTrainingReqArgs: function (datasetId, datasetName) {
+   
+    var protocolId = this.getDatasetGenoProtocolId(datasetId);
 
     var args = {
       dataset_name: datasetName,
       dataset_id: datasetId,
-      analysis_type: "training_dataset",
+      analysis_type: "dataset_type_training",
       data_set_type: "single_population",
-      training_pop_id: popId,
+      training_pop_id: `dataset_${datasetId}`,
       training_pop_name: datasetName,
-      population_type: popType,
+      population_type: "dataset_training",
       genotyping_protocol_id: protocolId,
     };
 
