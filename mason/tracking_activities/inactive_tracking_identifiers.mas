@@ -10,6 +10,7 @@ $trial_id
         <thead>
             <tr>
                 <th>Tracking Identifier</th>
+                <th>Status</th>
                 <th>Transformation ID</th>
 % my $tracking_activities = $c->config->{tracking_activities_header};
 % my @column_header = split ',',$tracking_activities;

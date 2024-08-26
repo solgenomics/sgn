@@ -546,11 +546,18 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
     my @all_identifiers;
     foreach my $identifier_info (@$all_identifier_info) {
         my @row = ();
-        my $updated_status = $identifier_info->[6];
-        if ($updated_status) {
+        my $status = $identifier_info->[6];
+        if ($status) {
             my $identifier_id = $identifier_info->[0];
             my $identifier_name = $identifier_info->[1];
             push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
+
+            if ($status eq 'discarded_metadata') {
+                $status = '<span style="color:red">'.'TERMINATED'.'</span>';
+            } elsif ($status eq 'completed_metadata') {
+                $status = '<span style="color:red">'.'COMPLETED'.'</span>';
+            }
+            push @row, $status;
 
             my $material_id = $identifier_info->[2];
             my $material_name = $identifier_info->[3];
