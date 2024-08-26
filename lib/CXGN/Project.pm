@@ -3763,10 +3763,10 @@ sub _save_plant_entry {
 
 sub delete_plant_entities {
     my $self = shift;
-    my $plants_selected_delete = shift;
+    my $plants_to_delete = shift;
     my $plant_owner = shift;
     my $plant_owner_username = shift;
-    print STDERR Dumper($plants_selected_delete);
+    print STDERR Dumper($plants_to_delete);
     my $delete_plant_entities_txn = sub {
         my $chado_schema = $self->bcs_schema();
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });

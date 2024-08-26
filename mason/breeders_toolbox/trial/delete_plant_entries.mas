@@ -1,7 +1,7 @@
-
 <%args>
 $trial_id
 $trial_name => undef
+$plants_delete_selected => undef
 </%args>
 
 <div class="modal fade" id="delete_plants_dialog" name="delete_plants_dialog" tabindex="-1" role="dialog" aria-labelledby="deletePlantsDialog">
@@ -44,8 +44,10 @@ jQuery(document).ready(function() {
 
 function delete_plants_from_trial() {
     alert("inside the delete function");
-    var selected_plants = jQuery('#plant_data').val();
-    alert(selected_plants);
+    var plants_delete_selected = jQuery('#plant_data').val();
+    alert(plants_delete_selected);
+    var trial_id = <% $trial_id %>;
+    alert(trial_id);
     jQuery.ajax( {
         url: '/ajax/breeders/trial/'+<% $trial_id %>+'/delete_plant_entries/',
         type: 'POST',
@@ -53,7 +55,7 @@ function delete_plants_from_trial() {
             enable_working_modal();
         },
         data: {
-            'selected_plants_to_delete' : selected_plants
+            'plants_delete_selected' : plants_delete_selected
         },
         success: function(response) {
             disable_working_modal();

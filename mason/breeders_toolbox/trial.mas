@@ -38,6 +38,7 @@ $hidap_enabled => undef
 $folder_name => undef
 $folder_id => undef
 $plants_per_plot => undef
+$plants_delete_selected => undef
 $has_expression_atlas => undef
 $expression_atlas_url => undef
 $site_project_name => undef
