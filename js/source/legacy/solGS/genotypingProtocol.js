@@ -117,7 +117,6 @@ jQuery(document).ready( function() {
 });
 
 
-
 jQuery(document).ready( function() {
 
     jQuery('#genotyping_protocol #genotyping_protocols_change').click(function() {

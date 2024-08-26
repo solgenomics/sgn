@@ -199,6 +199,7 @@ solGS.dataset = {
       training_pop_name: datasetName,
       population_type: "dataset_training",
       genotyping_protocol_id: protocolId,
+      data_structure: 'dataset'
     };
 
     return args;
