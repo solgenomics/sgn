@@ -56,7 +56,6 @@ if ($url !~ /pca\/analysis/) {
 </%perl>
 
 <& /solgs/tools/base.mas &>
-<& /util/import_javascript.mas, classes => ["solGS.pca"] &>
 
 % if ($url =~ /pca\/analysis/) {
 
@@ -98,3 +97,5 @@ if ($url !~ /pca\/analysis/) {
 
 </div>
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.pca"] &>

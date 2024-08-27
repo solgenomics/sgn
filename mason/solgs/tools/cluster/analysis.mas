@@ -60,7 +60,6 @@ if ($url !~ /cluster\/analysis/) {
 
 <& /solgs/tools/base.mas &>
  
-<& /util/import_javascript.mas, classes => ["solGS.cluster", "solGS.dendrogram"] &>
 
 % if ($url =~ /cluster\/analysis/) {
   <& /page/page_title.mas,
@@ -113,3 +112,5 @@ if ($url !~ /cluster\/analysis/) {
 
 </div>
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.cluster", "solGS.dendrogram"] &>
