@@ -10,7 +10,7 @@ use DateTime;
 use CXGN::People::Person;
 use CXGN::Contact;
 use CXGN::Trial::Download;
-use CXGN::Stock::TrackingActivity::TrackingIdentifier;
+use CXGN::Stock::TrackingActivity::AddTrackingIdentifier;
 use CXGN::Stock::TrackingActivity::ActivityInfo;
 use CXGN::TrackingActivity::AddActivityProject;
 use CXGN::TrackingActivity::ActivityProject;
@@ -183,7 +183,7 @@ sub generate_tracking_identifiers_POST : Args(0) {
         my $tracking_identifier = $identifier_info->[0];
         my $material = $identifier_info->[1];
 
-        my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new({
+        my $tracking_obj = CXGN::Stock::TrackingActivity::AddTrackingIdentifier->new({
             schema => $schema,
             phenome_schema => $phenome_schema,
             tracking_identifier => $tracking_identifier,

@@ -40,6 +40,12 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $number_of_transformants = scalar(@$result);
     my $basename = $transformation_name.'_T';
     my $next_new_transformant = $basename. (sprintf "%04d", $number_of_transformants + 1);
+    my $updated_status = $info->[0]->[5];
+    if ($updated_status eq 'discarded_metadata') {
+        $updated_status = '<span style="color:red">'.'TERMINATED'.'</span>'
+    } elsif ($updated_status eq 'completed_metadata') {
+        $updated_status = '<span style="color:red">'.'COMPLETED'.'</span>'
+    }
 
     $c->stash->{transformation_id} = $transformation_id;
     $c->stash->{transformation_name} = $transformation_name;
@@ -48,6 +54,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{plant_material} = $plant_material;
     $c->stash->{vector_construct} = $vector_construct;
     $c->stash->{transformation_notes} = $transformation_notes;
+    $c->stash->{updated_status} = $updated_status;
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{template} = '/transformation/transformation.mas';
 
