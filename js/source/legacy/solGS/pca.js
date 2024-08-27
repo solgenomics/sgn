@@ -271,7 +271,7 @@ solGS.pca = {
     lists = list.addDataStrAttr(lists);
     lists = list.addDataTypeAttr(lists);
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    datasets = list.addDataTypeAttr(datasets);
+    datasets = solGS.dataset.addDataTypeAttr(datasets);
     var pcaPops = [lists, datasets];
 
     return pcaPops.flat();
@@ -1050,10 +1050,13 @@ jQuery(document).ready(function () {
     var pcaPopsTable = solGS.pca.createTable(tableId)
     jQuery(pcaPopsDataDiv).append(pcaPopsTable).show();
 
-    var pcaPops = solGS.pca.getPcaPops()
+    var pcaPops = solGS.pca.getPcaPops();
     var pcaPopsRows = solGS.pca.getPcaPopsRows(pcaPops);
 
-    solGS.pca.displayPcaPopsTable(tableId, pcaPopsRows)
+    solGS.pca.displayPcaPopsTable(tableId, pcaPopsRows);
+
+    jQuery("#add_new_pops").show();
+
   }
 });
 
