@@ -4,6 +4,7 @@ package SGN::Controller::ActivityInfo;
 use Moose;
 use URI::FromHash 'uri';
 use Data::Dumper;
+use CXGN::TrackingActivity::TrackingIdentifier;
 
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -30,6 +31,10 @@ sub activity_details :Path('/activity/details') : Args(1) {
     for my $i (0 .. $#type_select_options) {
         push @options, [$type_select_options[$i], $activity_headers[$i]];
     }
+
+    my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
+    my $tracking_info = $tracking_identifier_obj->get_tracking_identifier_info();
+    print STDERR "TRACKING INFO =".Dumper($tracking_info)."\n";
 
     my $identifier_name = $schema->resultset("Stock::Stock")->find({stock_id => $identifier_id})->uniquename();
     my $material_of_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id();
