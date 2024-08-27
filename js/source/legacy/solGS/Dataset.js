@@ -36,17 +36,18 @@ solGS.dataset = {
   addDataTypeAttr(datasets) {
 
     for (var i = 0; i < datasets.length; i++) {
-      if (datasets[i].categories.match(/accessions/)) {
+      if (datasets[i].type.match(/accessions/)) {
         datasets[i]["data_type"] = ["Genotype"];
-      } else if (datasets[i].categories.match(/plots/)) {
+      } else if (datasets[i].type.match(/plots/)) {
         datasets[i]["data_type"] = ["Phenotype"];
-      } else if (datasets[i].categories.match(/trials/)) {
+      } else if (datasets[i].type.match(/trials/)) {
         datasets[i]["data_type"] = ["Genotype", "Phenotype"];
       }
   
     }
 
     return datasets;
+    
   },
 
 
