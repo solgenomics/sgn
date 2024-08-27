@@ -171,44 +171,16 @@ solGS.cluster = {
   },
 
   getDataTypeOpts: function (args) {
+
+    var popType;
     if (args) {
-      var dataStr = args.data_str;
-      var selectedId = args.id;
-      var popType = args.type;
+      popType = args.type;
     }
 
     var dataTypeOpts = [];
     var page = location.pathname;
 
-    if (selectedId && isNaN(selectedId)) {
-      selectedId = selectedId.replace(/\w+_/g, "");
-    }
-
-    if (page.match(/cluster\/analysis/)) {
-      if (dataStr.match(/list/)) {
-        var list = new solGSList(selectedId)
-        listDetail = list.getListDetail(selectedId);
-
-        if (listDetail.type.match(/accessions/)) {
-          dataTypeOpts = ["Genotype"];
-        } else if (listDetail.type.match(/plots/)) {
-          dataTypeOpts = ["Phenotype"];
-        } else if (listDetail.type.match(/trials/)) {
-          dataTypeOpts = ["Genotype", "Phenotype"];
-        }
-      } else if (dataStr.match(/dataset/)) {
-        var dataset = new CXGN.Dataset();
-        dt = dataset.getDataset(selectedId);
-
-        if (dt.categories["accessions"]) {
-          dataTypeOpts = ["Genotype"];
-        } else if (dt.categories["plots"]) {
-          dataTypeOpts = ["Phenotype"];
-        } else if (dt.categories["trials"]) {
-          dataTypeOpts = ["Genotype", "Phenotype"];
-        }
-      }
-    } else if (page.match(/breeders\/trial/)) {
+    if (page.match(/breeders\/trial/)) {
       dataTypeOpts = ["Genotype", "Phenotype"];
     } else if (page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//)) {
       dataTypeOpts = ["Genotype"];
@@ -237,13 +209,14 @@ solGS.cluster = {
     var clusterPopId = solGS.cluster.getClusterPopId(popId, dataStr);
     var clusterTypeOpts = solGS.cluster.createClusterTypeSelect(clusterPopId);
 
-    var dataTypeOpts = solGS.cluster.getDataTypeOpts({
-      id: popId,
-      name: popName,
-      data_str: dataStr,
-    });
+    var dataTypes;
+    if (location.pathname.match(/pca\/analysis/)) {
+      dataTypes = clusterPop.data_type;
+    } else {
+      dataTypes = this.getDataTypeOpts();
+    }
 
-    dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypeOpts, clusterPopId);
+    var dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypes, clusterPopId);
     var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId);
     var runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
 
@@ -793,8 +766,10 @@ solGS.cluster = {
     var list = new solGSList();
     var lists = list.getLists(["accessions", "plots", "trials"]);
     lists = list.addDataStrAttr(lists);
+    lists = list.addDataTypeAttr(lists);
+
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    
+    datasets = solGS.dataset.addDataTypeAttr(datasets);
     clusterPops = [lists, datasets];
 
     return clusterPops.flat();
@@ -1147,5 +1122,8 @@ jQuery(document).ready(function () {
     var clusterPopsRows = solGS.cluster.getClusterPopsRows(clusterPops);
 
     solGS.cluster.displayClusterPopsTable(tableId, clusterPopsRows)
+ 
+    jQuery("#add_new_pops").show();
+    
   }
 });
