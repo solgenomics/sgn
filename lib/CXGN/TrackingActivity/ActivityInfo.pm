@@ -1,9 +1,9 @@
-package CXGN::Stock::TrackingActivity::ActivityInfo;
+package CXGN::TrackingActivity::ActivityInfo;
 
 
 =head1 NAME
 
-CXGN::Stock::TrackingActivity::ActivityInfo - a modul to handle tracking activity info
+CXGN::TrackingActivity::ActivityInfo - a modul to handle tracking activity info
 
 =head1 USAGE
 

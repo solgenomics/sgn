@@ -16,7 +16,7 @@ use CXGN::Transformation::AddTransformationIdentifier;
 use CXGN::Transformation::Transformation;
 use CXGN::Transformation::AddTransformant;
 use CXGN::TrackingActivity::AddActivityProject;
-use CXGN::Stock::TrackingActivity::AddTrackingIdentifier;
+use CXGN::TrackingActivity::AddTrackingIdentifier;
 use List::MoreUtils qw /any /;
 
 
@@ -195,7 +195,7 @@ sub add_transformation_identifier_POST :Args(0){
         my $tracking_project_id = $project_rel_row->subject_project_id;
         my $tracking_identifier = 'Tracking_'.$transformation_identifier;
 
-        my $tracking_obj = CXGN::Stock::TrackingActivity::AddTrackingIdentifier->new({
+        my $tracking_obj = CXGN::TrackingActivity::AddTrackingIdentifier->new({
             schema => $schema,
             phenome_schema => $phenome_schema,
             tracking_identifier => $tracking_identifier,
