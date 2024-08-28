@@ -64,7 +64,6 @@ sub get_status_details {
         foreach my $field (@fields){
             push @status_details, $detail_hash->{$field};
         }
-        print STDERR "STATUS DETAILS =".Dumper(\@status_details)."\n";
     }
 
     return \@status_details;

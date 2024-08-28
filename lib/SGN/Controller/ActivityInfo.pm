@@ -5,7 +5,8 @@ use Moose;
 use URI::FromHash 'uri';
 use Data::Dumper;
 use CXGN::TrackingActivity::TrackingIdentifier;
-
+use CXGN::Stock::Status;
+use CXGN::People::Person;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -36,12 +37,32 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $tracking_info = $tracking_identifier_obj->get_tracking_identifier_info();
     print STDERR "TRACKING INFO =".Dumper($tracking_info)."\n";
 
-    my $identifier_name = $schema->resultset("Stock::Stock")->find({stock_id => $identifier_id})->uniquename();
-    my $material_of_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id();
-    my $material_info = $schema->resultset("Stock::StockRelationship")->find( { object_id => $identifier_id, type_id => $material_of_cvterm_id} );
-    my $material_id = $material_info->subject_id();
-    my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
-    my $material_name = $material_rs->uniquename();
+    my $identifier_name = $tracking_info->[0]->[1];
+    my $material_id = $tracking_info->[0]->[2];
+    my $material_name = $tracking_info->[0]->[3];
+    my $updated_status_type = $tracking_info->[0]->[6];
+    if ($updated_status_type eq 'discarded_metadata') {
+        $updated_status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
+    } elsif ($updated_status_type eq 'completed_metadata') {
+        $updated_status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
+    }
+
+    my $updated_status_string;
+    if ($updated_status_type) {
+        my $updated_status = CXGN::Stock::Status->new({ bcs_schema => $schema, parent_id => $identifier_id});
+        my $updated_status_info = $updated_status->get_status_details();
+        print STDERR "STATUS INFO =".Dumper($updated_status_info)."\n";
+        my $person_id = $updated_status_info->[0];
+        my $person= CXGN::People::Person->new($dbh, $person_id);
+        my $person_name=$person->get_first_name()." ".$person->get_last_name();
+        my $operator_info = "Updated by". ":"."".$person_name;
+        my $date_info = "Updated Date". ":"."".$updated_status_info->[1];
+        my $reason_info = "Comments". ":"."".$updated_status_info->[2];
+        my @all_info = ($operator_info, $date_info, $reason_info);
+        my $all_info_string = join("<br>", @all_info);
+        $updated_status_string = '<span style="color:red">'.$all_info_string.'</span>';
+    }
+
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
@@ -51,6 +72,8 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{activity_headers} = \@activity_headers;
     $c->stash->{material_name} = $material_name;
     $c->stash->{material_id} = $material_id;
+    $c->stash->{updated_status_type} = $updated_status_type;
+    $c->stash->{updated_status_string} = $updated_status_string;
     $c->stash->{timestamp} = $timestamp;
 
     $c->stash->{template} = '/order/activity_info_details.mas';

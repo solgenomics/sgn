@@ -40,11 +40,26 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $number_of_transformants = scalar(@$result);
     my $basename = $transformation_name.'_T';
     my $next_new_transformant = $basename. (sprintf "%04d", $number_of_transformants + 1);
-    my $updated_status = $info->[0]->[5];
-    if ($updated_status eq 'discarded_metadata') {
-        $updated_status = '<span style="color:red">'.'TERMINATED'.'</span>'
-    } elsif ($updated_status eq 'completed_metadata') {
-        $updated_status = '<span style="color:red">'.'COMPLETED'.'</span>'
+    my $updated_status_type = $info->[0]->[5];
+    if ($updated_status_type eq 'discarded_metadata') {
+        $updated_status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
+    } elsif ($updated_status_type eq 'completed_metadata') {
+        $updated_status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
+    }
+
+    my $updated_status_string;
+    if ($updated_status_type) {
+        my $updated_status = CXGN::Stock::Status->new({ bcs_schema => $schema, parent_id => $transformation_id});
+        my $updated_status_info = $updated_status->get_status_details();
+        my $person_id = $updated_status_info->[0];
+        my $person= CXGN::People::Person->new($dbh, $person_id);
+        my $person_name=$person->get_first_name()." ".$person->get_last_name();
+        my $operator_info = "Updated by". ":"."".$person_name;
+        my $date_info = "Updated Date". ":"."".$updated_status_info->[1];
+        my $reason_info = "Comments". ":"."".$updated_status_info->[2];
+        my @all_info = ($operator_info, $date_info, $reason_info);
+        my $all_info_string = join("<br>", @all_info);
+        $updated_status_string = '<span style="color:red">'.$all_info_string.'</span>';
     }
 
     $c->stash->{transformation_id} = $transformation_id;
@@ -54,7 +69,8 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{plant_material} = $plant_material;
     $c->stash->{vector_construct} = $vector_construct;
     $c->stash->{transformation_notes} = $transformation_notes;
-    $c->stash->{updated_status} = $updated_status;
+    $c->stash->{updated_status_type} = $updated_status_type;
+    $c->stash->{updated_status_string} = $updated_status_string;    
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{template} = '/transformation/transformation.mas';
 
