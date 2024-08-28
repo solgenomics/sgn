@@ -57,7 +57,6 @@ if ($url !~ /kinship\/analysis/) {
 </%perl>
 
 <& /solgs/tools/base.mas &>
-<& /util/import_javascript.mas, classes => ["solGS.kinship", "solGS.heatMap"] &>
 
 % if ($url =~ /kinship\/analysis/) {
   <& /page/page_title.mas,
@@ -97,3 +96,5 @@ if ($url !~ /kinship\/analysis/) {
 </div>
 
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.kinship", "solGS.heatMap"] &>
