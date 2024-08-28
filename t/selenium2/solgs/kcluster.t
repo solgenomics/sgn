@@ -1509,7 +1509,7 @@ $d->while_logged_in_as(
             '//table[@id="searched_trials_table"]//input[@value="141"]',
             'xpath', 'select trial nacrri' )->click();
         sleep(2);
-        $d->find_element_ok( 'done_selecting', 'id', 'done selecting' )
+        $d->find_element_ok( 'select_trials_btn', 'id', 'done selecting' )
           ->click();
         sleep(2);
         $d->find_element_ok( 'combine_trait_trials', 'id', 'combine trials' )
@@ -1561,7 +1561,7 @@ $d->while_logged_in_as(
             '//table[@id="searched_trials_table"]//input[@value="141"]',
             'xpath', 'select trial nacrri' )->click();
         sleep(2);
-        $d->find_element_ok( 'done_selecting', 'id', 'done selecting' )
+        $d->find_element_ok( 'select_trials_btn', 'id', 'done selecting' )
           ->click();
         sleep(2);
         $d->find_element_ok( 'combine_trait_trials', 'id', 'combine trials' )

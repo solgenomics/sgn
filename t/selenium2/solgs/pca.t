@@ -382,7 +382,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
     sleep(2);
-    $d->find_element_ok('done_selecting', 'id', 'done selecting')->click();
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
     sleep(2);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(3);
@@ -413,7 +413,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
     sleep(3);
-    $d->find_element_ok('done_selecting', 'id', 'done selecting')->click();
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
     sleep(3);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials -- go to combined trials training pop page')->click();
     sleep(20);
