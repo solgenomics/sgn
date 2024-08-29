@@ -47,7 +47,7 @@ solGS.dataset = {
     }
 
     return datasets;
-    
+
   },
 
 
@@ -207,34 +207,26 @@ solGS.dataset = {
   },
 
   createDatasetTypeSelectionReqArgs: function (datasetId, datasetName) {
-    var trainingPopDetails = solGS.getPopulationDetails();
     var selectionPopId = "dataset_" + datasetId;
 
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-
-    var dataset = new CXGN.Dataset();
-    var d = dataset.getDataset(datasetId);
-
-    var protocolId;
-    if (d.categories["genotyping_protocols"]) {
-      protocolId = d.categories["genotyping_protocols"][0];
-    } else {
-      protocolId = jQuery("#genotyping_protocol_id").val();
-    }
-
+    var modelArgs = solGS.getModelArgs();
+    var protocolId = this.getDatasetGenoProtocolId(datasetId);
+   
     var args = {
       dataset_id: datasetId,
       dataset_name: datasetName,
-      training_pop_id: trainingPopDetails.training_pop_id,
+      training_pop_id: modelArgs.training_pop_id,
       selection_pop_id: selectionPopId,
       selection_pop_name: datasetName,
-      training_traits_ids: trainingTraitsIds,
+      training_traits_ids: modelArgs.training_traits_ids,
       population_type: "dataset_selection",
-      data_set_type: trainingPopDetails.data_set_type,
+      data_set_type: modelArgs.data_set_type,
       genotyping_protocol_id: protocolId,
+      data_structure: 'dataset'
     };
 
     return args;
+
   },
 
 
