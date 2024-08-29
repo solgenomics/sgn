@@ -154,6 +154,9 @@ solGS.listTypeTrainingPopulation = {
       'pageLength': 5,
       'rowId': function (a) {
         return a[4]
+      },
+      "oLanguage": {
+        "sSearch": "Filter"
       }
     });
 
