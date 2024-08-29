@@ -48,7 +48,7 @@ my $collapsed = 0;
 my $collapsible = 0;
 
 if ($url !~ /pca\/analysis/) {
-  $title = 'Principal Component Analysis (PCA)';
+  $title = 'Principal component analysis (PCA)';
   $collapsible = 1;
   $collapsed = 1 if $url =~ /breeders\/trial/;
 }
