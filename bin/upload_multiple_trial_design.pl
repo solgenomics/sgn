@@ -87,6 +87,28 @@ use CXGN::Calendar;
 use CXGN::UploadFile;
 use File::Path qw(make_path);
 use File::Spec;
+use JSON::MaybeXS qw(encode_json);
+
+# sub print_json_error {
+#     my ($message) = @_;
+#     my $error_response = {
+#         status  => 'error',
+#         message => $message,
+#     };
+#     print header('application/json');
+#     print encode_json($error_response);
+#     exit;
+# }
+
+sub print_json_response {
+    my ($status, $message) = @_;
+    my $response = {
+        status  => $status,
+        message => $message,
+    };
+    print encode_json($response);
+    exit;
+}
 
 my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $infile, $sites, $types, $username, $breeding_program_name, $email_address, $logged_in_name, $email_option_enabled, $temp_file_nd_experiment_id);
 GetOptions(
@@ -108,7 +130,8 @@ GetOptions(
 #Ensure the parent directory exists before creating the temporary file
 my $parent_dir = File::Spec->catdir($basepath, 'static', 'documents', 'tempfiles', 'delete_nd_experiment_ids');
 unless (-d $parent_dir) {
-    make_path($parent_dir) or die "Failed to create directory $parent_dir: $!";
+    # make_path($parent_dir) or die "Failed to create directory $parent_dir: $!";
+    print_json_response('error', "Failed to create directory $parent_dir: $!");
 }
 
 # Create the temporary file in the parent directory
@@ -184,11 +207,17 @@ my $breeding_program = $schema->resultset("Project::Project")->find(
     { join       =>  { projectprops => 'type' }}
 );
 
-if (!$breeding_program) { die "Breeding program $breeding_program_name does not exist in the database. Check your input \n"; }
+if (!$breeding_program) {
+    print_json_response('error', "Breeding program $breeding_program_name does not exist in the database. Check your input");
+}
+    # die "Breeding program $breeding_program_name does not exist in the database. Check your input \n"; }
 # print STDERR "Found breeding program $breeding_program_name " . $breeding_program->project_id . "\n";
 
 my $sp_person_id= CXGN::People::Person->get_person_by_username($dbh, $username);
-die "Need to have a user pre-loaded in the database! " if !$sp_person_id;
+if (!$sp_person_id) {
+    print_json_response('error', "Need to have a user pre-loaded in the database!");
+}
+# die "Need to have a user pre-loaded in the database! " if !$sp_person_id;
 
 #Column headers for trial design/s
 #plot_name	accession_name	plot_number	block_number	trial_name	trial_description	trial_location	year	trial_type	is_a_control	rep_number	range_number	row_number	col_number entry_numbers
@@ -202,8 +231,10 @@ my $parser = CXGN::File::Parse->new(
 # warn "Starting to parse the file...\n";
 my $parsed = $parser->parse();
 # warn "Parsed data = " . Dumper($parsed);
-
-die "Error parsing file: " . join(',', @{$parsed->{errors}}) if scalar(@{$parsed->{errors}}) > 0;
+if (scalar(@{$parsed->{errors}}) > 0) {
+    print_json_response('error', "Error parsing file: " . join(',', @{$parsed->{errors}}));
+}
+# die "Error parsing file: " . join(',', @{$parsed->{errors}}) if scalar(@{$parsed->{errors}}) > 0;
 
 if (exists $parsed->{warnings}) {
     print "Warnings: " . join("\n", @{$parsed->{warnings}}) . "\n";
@@ -229,7 +260,8 @@ foreach my $row (@{$parsed->{data}}) {
         description => { ilike => '%' . $trial_location . '%' },
     });
     if (scalar($location_rs) == 0) {
-        die "ERROR: location must be pre-loaded in the database. Location name = '" . $trial_location . "'\n";
+        print_json_response('error', "ERROR: location must be pre-loaded in the database. Location name = '" . $trial_location . "'");
+        # die "ERROR: location must be pre-loaded in the database. Location name = '" . $trial_location . "'\n";
     }
     my $location_id = $location_rs->first->nd_geolocation_id;
     ######################################################
@@ -338,13 +370,15 @@ if (!$parsed_data) {
     my $return_error = '';
 
     if (! $parser->has_parse_errors() ){
-        die "could not get parsing errors\n";
+        # die "could not get parsing errors\n";
+        print_json_response('error', "could not get parsing errors\n");
     }else {
         $parse_errors = $parser->get_parse_errors();
-        die $parse_errors->{'error_messages'};
+        # die $parse_errors->{'error_messages'};
+        print_json_response('error', $parse_errors->{'error_messages'});
     }
 
-    die $return_error;
+    print_json_response('error', $return_error);
 }
 
 if ($parser->has_parse_warnings()) {
