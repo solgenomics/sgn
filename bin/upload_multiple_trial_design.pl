@@ -89,17 +89,6 @@ use File::Path qw(make_path);
 use File::Spec;
 use JSON::MaybeXS qw(encode_json);
 
-# sub print_json_error {
-#     my ($message) = @_;
-#     my $error_response = {
-#         status  => 'error',
-#         message => $message,
-#     };
-#     print header('application/json');
-#     print encode_json($error_response);
-#     exit;
-# }
-
 sub print_json_response {
     my ($status, $message) = @_;
     my $response = {
