@@ -1761,7 +1761,7 @@ sub add_synonym {
 =head2 get_synonyms()
 
   Usage: my @synonyms = $stock->get_synonyms()
-  Returns: a list of synonyms
+  Returns: a list of [ stockprop_id, 'synonym' ]
   Args: nothing
   
 =cut
