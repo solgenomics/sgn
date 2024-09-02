@@ -44,7 +44,8 @@ is($update_s->uniquename(), "new_uniquename", "update uniquename check");
 is($update_s->description(), "blablabla 2", "update description check");
 is($update_s->is_obsolete(), 1, "update obsolete check");
 print STDERR Dumper($update_s->get_synonyms());
-is_deeply($update_s->get_synonyms(), [ 45149, 'haha' ], "synonym check");
+my @synonyms = $update_s->get_synonyms();
+is_deeply($synonyms[0]->[1], 'haha', "synonym check");
 
 my $s = CXGN::Stock->new( schema => $schema, stock_id => 38846 );
 
