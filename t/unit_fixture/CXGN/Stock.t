@@ -35,6 +35,7 @@ $new_s->uniquename("new_uniquename");
 $new_s->type("plot");
 $new_s->description("blablabla 2");
 $new_s->is_obsolete(1);
+$new_s->add_synonym("haha");
 $new_s->store();
 
 my $update_s = CXGN::Stock->new(schema => $schema, stock_id => $new_s_id);
@@ -42,6 +43,8 @@ is($update_s->name(), "new_name", "update name check");
 is($update_s->uniquename(), "new_uniquename", "update uniquename check");
 is($update_s->description(), "blablabla 2", "update description check");
 is($update_s->is_obsolete(), 1, "update obsolete check");
+print STDERR Dumper($update_s->get_synonyms());
+is_deeply($update_s->get_synonyms(), [ 45149, 'haha' ], "synonym check");
 
 my $s = CXGN::Stock->new( schema => $schema, stock_id => 38846 );
 
