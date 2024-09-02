@@ -1758,7 +1758,20 @@ sub add_synonym {
     $stock->create_stockprops({$synonym_cvterm->name() => $synonym});
 }
 
+=head2 get_synonyms()
 
+  Usage: my @synonyms = $stock->get_synonyms()
+  Returns: a list of synonyms
+  Args: nothing
+  
+=cut
+
+sub get_synonyms {
+    my $self = shift;
+    my @synonyms = $self->_retrieve_stockprops('stock_synonym');
+
+    return @synonyms;
+}
 
 =head2 merge()
 
