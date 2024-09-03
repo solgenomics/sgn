@@ -16,10 +16,15 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $identifier_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
-
+    my $user_role;
+    
     if (! $c->user()) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
+    }
+
+    if ($c->user() && $c->user()->check_roles("curator")) {
+        $user_role = "curator";
     }
 
     my $types = $c->config->{tracking_activities};
@@ -75,7 +80,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{updated_status_type} = $updated_status_type;
     $c->stash->{updated_status_string} = $updated_status_string;
     $c->stash->{timestamp} = $timestamp;
-
+    $c->stash->{user_role} = $user_role;
     $c->stash->{template} = '/order/activity_info_details.mas';
 
 }
