@@ -1417,7 +1417,8 @@ sub get_pedigree_rows {
 =cut
 
 sub get_pedigree_string {
-    my ($self, $level) = @_;
+    my $self = shift;
+    my $level = shift || "Parents";
 
     my $pedigree_hashref = $self->get_ancestor_hash();
 
