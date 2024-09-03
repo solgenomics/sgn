@@ -328,7 +328,7 @@ has 'type_id' => (
 
  Usage:        this should be set to the same value as uniquename,
                which is used as the canonical name in the database.
-               (synonyms are stored as stockprops, see synonyms()).
+               (synonyms are stored as stockprops, see get_synonyms()).
  Desc:
  Ret:
  Args:
@@ -360,8 +360,8 @@ has 'uniquename' => (
 
 =head2 accessor description()
 
- Usage:
- Desc:
+ Usage:        $description = $stock->description();
+ Desc:         returns the description of the stock [string]
  Ret:
  Args:
  Side Effects:
@@ -377,9 +377,9 @@ has 'description' => (
 
 =head2 accessor is_obsolete()
 
- Usage:
- Desc:
- Ret:
+ Usage:        $is_obsolete = $stock->is_obsolete();
+ Desc:         returns the value of the is_obsolete field [boolean]
+ Ret:          true or false value
  Args:
  Side Effects:
  Example:
@@ -395,7 +395,7 @@ has 'is_obsolete' => (
 =head2 accessor organization_name()
 
  Usage:
- Desc:
+ Desc:         Returns the organization name, which is store as a stockprop
  Ret:
  Args:
  Side Effects:
@@ -411,7 +411,8 @@ has 'organization_name' => (
 =head2 accessor population_name()
 
  Usage:
- Desc:
+ Desc:         set this to add a new population for the stock 
+               will be associated through stock_relationship
  Ret:
  Args:
  Side Effects:
@@ -427,7 +428,7 @@ has 'population_name' => (
 =head2 accessor populations()
 
  Usage:
- Desc:
+ Desc:         retrieves all the populations this stock is associated to
  Ret:
  Args:
  Side Effects:
@@ -443,7 +444,7 @@ has 'populations' => (
 =head2 accessor sp_person_id()
 
  Usage:
- Desc:
+ Desc:         retrieves the owner of this stock
  Ret:
  Args:
  Side Effects:
@@ -459,7 +460,7 @@ has 'sp_person_id' => (
 =head2 accessor user_name()
 
  Usage:
- Desc:
+ Desc:          retrieves the username of the owner
  Ret:
  Args:
  Side Effects:
@@ -488,10 +489,32 @@ has 'modification_note' => (
     is => 'rw',
 );
 
+=head1 objects()
+
+ Usage:
+ Desc:         retrieves object relationships to other stocks
+ Ret:          list of [ stock_id stock.uniquename type_id ]
+ Args:
+ Side Effects:
+ Example:
+
+=cut 
+
 has 'objects' => (
     isa => 'Maybe[Ref]',
     is => 'rw',
 );
+
+=head2 subjects()
+
+ Usage:
+ Desc:         retrieves subject relationships to other stocks
+ Ret:          list of [ stock_id stock.uniquename type_id ]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'subjects' => (
     isa => 'Maybe[Ref]',
