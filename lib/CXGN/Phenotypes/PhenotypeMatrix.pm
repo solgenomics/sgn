@@ -405,25 +405,25 @@ sub get_phenotype_matrix {
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
-        my %seen_obsunits;        
+        my %seen_obsunits;
+        my %process_obs;
 
 	    foreach my $d (@$data) {
             # print STDERR "check the retrieved data: " . Dumper($d) . "\n";
             my $phenotype_uniquename = $d->{phenotype_uniquename};
+            my $collect_date;
             if ($phenotype_uniquename =~ /date:\s+(\d{4}-\d{2}-\d{2})/) {
-                my $extracted_date = $1;
-                $d->{collect_date} = $extracted_date;
+                $collect_date = $1;
+                $d->{collect_date} = $collect_date;
             }else {
+                $collect_date = undef;
                 $d->{collect_date} = undef;
             }
-	        my $value = "";
+	        my $value = $d->{phenotype_value};
 	        if ($include_timestamp && exists($d->{timestamp})) {
-	    	    $value = "$d->{phenotype_value},$d->{timestamp}";
+	    	    $value .= ",$d->{timestamp}";
 	        }
-	        else {
-	    	    $value = $d->{phenotype_value};
-	        }
-	        push @{ $obsunit_data{$d->{obsunit_stock_id}}->{$d->{trait_name} } }, $value;
+	        push @{ $obsunit_data{$d->{obsunit_stock_id}}->{$d->{trait_name} } }, [$value, $collect_date];
 	    }
 	
         foreach my $d (@$data) {
@@ -435,9 +435,6 @@ sub get_phenotype_matrix {
                     $seen_obsunits{$obsunit_id} = 1;
                 }
 
-                my $timestamp_value = $d->{timestamp};
-                my $value = $d->{phenotype_value};
-                my $collect_date = $d->{collect_date};
                 #my $cvterm = $trait."|".$cvterm_accession;
                 # if ($include_timestamp && $timestamp_value) {
                 #     $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
@@ -449,69 +446,80 @@ sub get_phenotype_matrix {
 
 		        if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq "ARRAY") {
 		            if ($self->repetitive_measurements() eq "first value") {
-                        my $first_value = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
-                        my $output_val = defined $collect_date ? "$first_value, $collect_date" : $first_value;
-                        print STDERR "first value of the trait obs:  $output_val\n";
+                        my $first_entry = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        my $first_obs_value = $first_entry->[0];
+                        my $first_obs_collect_date = $first_entry->[1];
+                        my $output_val = defined $first_obs_collect_date ? "$first_obs_value, $first_obs_collect_date" : $first_obs_value;
                         $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
-                        print STDERR "see what it prints for the first value: " . $obsunit_data{$obsunit_id}->{$cvterm} . "\n";
+                        # print STDERR "see the values and collect date of first observations: " . $obsunit_data{$obsunit_id}->{$cvterm} . "\n";
 		            }elsif ($self->repetitive_measurements() eq "last value") {
-                        my $last_value = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
-                        my $output_val = defined $collect_date ? "$last_value, $collect_date" : $last_value;
-                        print STDERR "the last value of the trait obs: $output_val\n";
+                        my $last_entry = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        my $last_obs_value = $last_entry->[0];
+                        my $last_obs_collect_date = $last_entry->[1];
+                        my $output_val = defined $last_obs_collect_date ? "$last_obs_value, $last_obs_collect_date" : $last_obs_value;
                         $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
+                        # print STDERR "the last value of the trait obs: $output_val\n";
 		            }elsif ($self->repetitive_measurements() eq "averaged value") {
 		        	    my $count = 0;
-		        	    my $sum = undef;
+		        	    my $sum = 0;
+                        my $earliest_date; #here, using the first_date as the collect_date for the averaged values
 		        	    foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
-		        	        if (defined($v)) {   
-		        	    	    $sum += $v;
+		        	        if (defined($v->[0])) {   
+		        	    	    $sum += $v->[0];
 		        	    	    $count++;
+                                if (!defined($earliest_date) && defined($v->[1])) {
+                                    $earliest_date = $v->[1];
+                                }
 		        	        }
 		        	    }
                         ## the collected_date for the average obs will prin the first collect_date of that obs
-		        	    if (defined($sum) && ($count > 0) ) {
+		        	    if ($count > 0) {
                             my $average_value = $sum/$count;
-                            my $output_val = defined $collect_date ? "$average_value, $collect_date" : $average_value;
-                            print STDERR "the average value : $output_val\n";
+                            my $output_val = defined $earliest_date ? "$average_value, $earliest_date" : $average_value;
                             $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
+                            # print STDERR "the average value : $output_val\n";
 		        	    }
 		        	    else {
 		        	        $obsunit_data{$obsunit_id}->{$cvterm} = undef;
 		        	    }
-
 		            }elsif ($self->repetitive_measurements() eq "all values") {
-                        if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq 'ARRAY') {
+                        if (!$process_obs{$obsunit_id}->{$cvterm}) {
+                            $process_obs{$obsunit_id}->{$cvterm} = 1;
+                            # print STDERR "see all values for block wise - first, intermediate and last: $obsunit_id, $cvterm\n"; #debugging only
                             my $values_ref = $obsunit_data{$obsunit_id}->{$cvterm};
                             my @output_values;
 
-                            for my $i (0..$#$values_ref) {
-                                my $value = $values_ref->[$i];
-                                my $date = $collect_date;
-                                my $output_val = defined $date ? "$value,$date" : $value;
-                                # print STDERR "Value: $output_val\n";
+                            foreach my $entry (@$values_ref) {
+                                my ($value, $date);
+                                if (ref($entry) eq 'ARRAY') {
+                                    ($value, $date) = @$entry;
+                                }else {
+                                    $value = $entry;
+                                    $date = undef;
+                                }
+                                my $output_val = defined $date ? "$value, $date" : $value;
                                 push @output_values, [$value, $date];
+                                # print STDERR "Value: $output_val\n";
                             }
-        
                             # Instead of joining, we store these separately
                             $obsunit_data{$obsunit_id}->{$cvterm} = \@output_values;
                         } else {
                             # Default case: Handle a single value
                             my $value = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
-                            my $output_val = defined $collect_date ? "$value,$collect_date" : $value;
-
-                            # Print for debugging
-                            print STDERR "Default value: $output_val\n";
-                            $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
+                            # my $output_val = defined $collect_date ? "$value,$collect_date" : $value;
+                            $obsunit_data{$obsunit_id}->{$cvterm} = [$value];
                         }
 		            }else {
-                        my $value = $obsunit_data{$obsunit_id}->{$cvterm};
-                        my $output_val = defined $collect_date ? "$value,$collect_date" : $value;
-                        print STDERR "check the single value: $output_val\n";
+                        my $values_ref = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        my $value = $values_ref->[0] // '';
+                        my $collect_date = $values_ref->[1] // '';
+                        my $output_val = defined $collect_date ? "$value, $collect_date" : $value;
                         $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
+                        # print STDERR "check the single value: $output_val\n";
                     }
 		        }
 
-                $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
+                # $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
                 my $synonyms = $d->{synonyms};
                 my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
                 my $entry_type = $d->{is_a_control} ? 'check' : 'test';
