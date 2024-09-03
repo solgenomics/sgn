@@ -40,16 +40,21 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $number_of_transformants = scalar(@$result);
     my $basename = $transformation_name.'_T';
     my $next_new_transformant = $basename. (sprintf "%04d", $number_of_transformants + 1);
+
     my $updated_status_type = $info->[0]->[5];
-    if ($updated_status_type eq 'discarded_metadata') {
+    my $completed_metadata;
+    my $terminated_metadata;
+    if ($updated_status_type eq 'terminated_metadata') {
         $updated_status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
+        $terminated_metadata = 1;
     } elsif ($updated_status_type eq 'completed_metadata') {
         $updated_status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
+        $completed_metadata = 1;
     }
 
     my $updated_status_string;
     if ($updated_status_type) {
-        my $updated_status = CXGN::Stock::Status->new({ bcs_schema => $schema, parent_id => $transformation_id});
+        my $updated_status = CXGN::Stock::Status->new({ bcs_schema => $schema, parent_id => $transformation_id, completed_metadata => $completed_metadata, terminated_metadata => $terminated_metadata});
         my $updated_status_info = $updated_status->get_status_details();
         my $person_id = $updated_status_info->[0];
         my $person= CXGN::People::Person->new($dbh, $person_id);
@@ -70,7 +75,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{vector_construct} = $vector_construct;
     $c->stash->{transformation_notes} = $transformation_notes;
     $c->stash->{updated_status_type} = $updated_status_type;
-    $c->stash->{updated_status_string} = $updated_status_string;    
+    $c->stash->{updated_status_string} = $updated_status_string;
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{template} = '/transformation/transformation.mas';
 

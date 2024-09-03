@@ -28,16 +28,24 @@ extends 'CXGN::JSONProp';
 has 'person_id' => (isa => 'Int', is => 'rw');
 has 'update_date' => (isa => 'Str', is => 'rw');
 has 'comments' => (isa => 'Str', is => 'rw');
+has 'completed_metadata' => (isa => 'Bool', is => 'rw', default => 0 );
+has 'terminated_metadata' => (isa => 'Bool', is => 'rw', default => 0 );
 
 
 sub BUILD {
     my $self = shift;
     my $args = shift;
+    my $completed_metadata = $self->completed_metadata();
+    my $terminated_metadata = $self->terminated_metadata();
 
     $self->prop_table('stockprop');
     $self->prop_namespace('Stock::Stockprop');
     $self->prop_primary_key('stockprop_id');
-    $self->prop_type('discarded_metadata');
+    if ($completed_metadata) {
+        $self->prop_type('completed_metadata');
+    } elsif ($terminated_metadata) {
+        $self->prop_type('terminated_metadata');
+    }
     $self->cv_name('stock_property');
     $self->allowed_fields([ qw | person_id update_date comments | ]);
     $self->parent_table('stock');

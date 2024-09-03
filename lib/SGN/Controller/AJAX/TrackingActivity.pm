@@ -508,15 +508,24 @@ sub update_status_POST : Args(0) {
         push @stocks_to_update, $material_id;
     }
 
+    my $completed_metadata;
+    my $terminated_metadata;
+    if ($status_type eq 'completed') {
+        $completed_metadata = 1;
+    } elsif ($status_type eq 'terminated') {
+        $terminated_metadata = 1;
+    }
+
     foreach my $stock_id (@stocks_to_update) {
         my $update_status = CXGN::Stock::Status->new({
             bcs_schema => $schema,
             parent_id => $stock_id,
+            person_id => $user_id,
+            update_date => $update_date,
+            comments => $comments,
+            completed_metadata => $completed_metadata,
+            terminated_metadata => $terminated_metadata
         });
-
-        $update_status->person_id($user_id);
-        $update_status->update_date($update_date);
-        $update_status->comments($comments);
 
         $update_status->store();
 

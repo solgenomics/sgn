@@ -17,7 +17,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
     my $user_role;
-    
+
     if (! $c->user()) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
@@ -46,15 +46,19 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $material_id = $tracking_info->[0]->[2];
     my $material_name = $tracking_info->[0]->[3];
     my $updated_status_type = $tracking_info->[0]->[6];
-    if ($updated_status_type eq 'discarded_metadata') {
+    my $completed_metadata;
+    my $terminated_metadata;
+    if ($updated_status_type eq 'terminated_metadata') {
         $updated_status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
+        $terminated_metadata = 1;
     } elsif ($updated_status_type eq 'completed_metadata') {
         $updated_status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
+        $completed_metadata = 1;
     }
 
     my $updated_status_string;
     if ($updated_status_type) {
-        my $updated_status = CXGN::Stock::Status->new({ bcs_schema => $schema, parent_id => $identifier_id});
+        my $updated_status = CXGN::Stock::Status->new({ bcs_schema => $schema, parent_id => $identifier_id, completed_metadata => $completed_metadata, terminated_metadata => $terminated_metadata});
         my $updated_status_info = $updated_status->get_status_details();
         print STDERR "STATUS INFO =".Dumper($updated_status_info)."\n";
         my $person_id = $updated_status_info->[0];
