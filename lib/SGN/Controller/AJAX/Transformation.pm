@@ -350,7 +350,7 @@ sub upload_transformation_identifiers_POST : Args(0) {
 }
 
 
-sub get_transformations_in_project :Path('/ajax/transformation/transformations_in_project') :Args(1) {
+sub get_active_transformations_in_project :Path('/ajax/transformation/active_transformations_in_project') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $project_id = shift;
@@ -359,19 +359,15 @@ sub get_transformations_in_project :Path('/ajax/transformation/transformations_i
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
 
-    my $result = $transformation_obj->get_transformations_in_project();
-#    print STDERR "RESULT =".Dumper($result)."\n";
+    my $result = $transformation_obj->get_active_transformations_in_project();
+
     my @transformations;
     foreach my $r (@$result){
         my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $status_type) =@$r;
-        if ($status_type) {
-            next;
-        } else {
-            my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
-            my $transformants = $transformation_obj->get_transformants();
-            my $number_of_transformants = scalar(@$transformants);
-            push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
-        }
+        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
+        my $transformants = $transformation_obj->get_transformants();
+        my $number_of_transformants = scalar(@$transformants);
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
     }
 
     $c->stash->{rest} = { data => \@transformations };
@@ -388,24 +384,20 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
 
-    my $result = $transformation_obj->get_transformations_in_project();
-#    print STDERR "RESULT =".Dumper($result)."\n";
+    my $result = $transformation_obj->get_inactive_transformations_in_project();
+
     my @transformations;
     foreach my $r (@$result){
         my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $status_type) =@$r;
-        if ($status_type) {
-            if ($status_type eq 'discarded_metadata') {
-                $status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
-            } elsif ($status_type eq 'completed_metadata') {
-                $status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
-            }
-            my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
-            my $transformants = $transformation_obj->get_transformants();
-            my $number_of_transformants = scalar(@$transformants);
-            push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
-        } else {
-            next;
+        if ($status_type eq 'terminated_metadata') {
+            $status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
+        } elsif ($status_type eq 'completed_metadata') {
+            $status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
         }
+        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
+        my $transformants = $transformation_obj->get_transformants();
+        my $number_of_transformants = scalar(@$transformants);
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
     }
 
     $c->stash->{rest} = { data => \@transformations };

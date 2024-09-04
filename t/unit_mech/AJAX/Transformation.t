@@ -88,7 +88,7 @@ $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
 #retrieving transformation info
-$mech->post_ok("http://localhost:3010/ajax/transformation/transformations_in_project/$project_id");
+$mech->post_ok("http://localhost:3010/ajax/transformation/active_transformations_in_project/$project_id");
 
 $response = decode_json $mech->content;
 my $transformation = $response->{'data'};
