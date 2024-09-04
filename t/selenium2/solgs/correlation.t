@@ -192,7 +192,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
 
-    my $si = $d->find_element('Calculate selection', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
@@ -350,7 +350,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
 
-    my $si = $d->find_element('Calculate selection', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();

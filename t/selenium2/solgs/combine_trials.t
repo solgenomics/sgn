@@ -196,7 +196,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('DMCP', 'partial_link_text', 'go back')->click();
 	sleep(5);
 
-	my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
+	my $sel_pred = $d->find_element('Expected genetic gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
@@ -234,7 +234,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "DMCP")]', 'xpath', 'click list sel pred')->click();
     sleep(10);
 
-	my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
+	my $sel_pred = $d->find_element('Expected genetic gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
@@ -273,7 +273,7 @@ $d->while_logged_in_as("submitter", sub {
 
 #$d->get('/solgs/combined/model/2804608595/selection/dataset_5/trait/70741/gp/1', 'combo trials tr pop page');
 
-	my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
+	my $sel_pred = $d->find_element('Expected genetic gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();

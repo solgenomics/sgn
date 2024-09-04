@@ -90,7 +90,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('DMCP', 'partial_link_text', 'go back')->click();
     sleep(5);
     
-    my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
+    my $sel_pred = $d->find_element('Expected genetic gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
     sleep(2);
     $d->find_element_ok('check_genetic_gain', 'id',  'run plot genetic gain')->click();
@@ -148,7 +148,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
    
-    my $sel_pred = $d->find_element('Check Expected Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
+    my $sel_pred = $d->find_element('Expected genetic gain', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
     sleep(2);
     $d->find_element_ok('gg_pops_select', 'id', 'select list sl pop')->click();
