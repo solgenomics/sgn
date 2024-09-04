@@ -40,7 +40,6 @@ sub activity_details :Path('/activity/details') : Args(1) {
 
     my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
     my $tracking_info = $tracking_identifier_obj->get_tracking_identifier_info();
-    print STDERR "TRACKING INFO =".Dumper($tracking_info)."\n";
 
     my $identifier_name = $tracking_info->[0]->[1];
     my $material_id = $tracking_info->[0]->[2];
@@ -48,11 +47,12 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $updated_status_type = $tracking_info->[0]->[6];
     my $completed_metadata;
     my $terminated_metadata;
+    my $status_display;
     if ($updated_status_type eq 'terminated_metadata') {
-        $updated_status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
+        $status_display = '<span style="color:red">'.'TERMINATED'.'</span>';
         $terminated_metadata = 1;
     } elsif ($updated_status_type eq 'completed_metadata') {
-        $updated_status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
+        $status_display = '<span style="color:red">'.'COMPLETED'.'</span>';
         $completed_metadata = 1;
     }
 
@@ -60,7 +60,6 @@ sub activity_details :Path('/activity/details') : Args(1) {
     if ($updated_status_type) {
         my $updated_status = CXGN::Stock::Status->new({ bcs_schema => $schema, parent_id => $identifier_id, completed_metadata => $completed_metadata, terminated_metadata => $terminated_metadata});
         my $updated_status_info = $updated_status->get_status_details();
-        print STDERR "STATUS INFO =".Dumper($updated_status_info)."\n";
         my $person_id = $updated_status_info->[0];
         my $person= CXGN::People::Person->new($dbh, $person_id);
         my $person_name=$person->get_first_name()." ".$person->get_last_name();
@@ -83,6 +82,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{material_id} = $material_id;
     $c->stash->{updated_status_type} = $updated_status_type;
     $c->stash->{updated_status_string} = $updated_status_string;
+    $c->stash->{status_display} = $status_display;    
     $c->stash->{timestamp} = $timestamp;
     $c->stash->{user_role} = $user_role;
     $c->stash->{template} = '/order/activity_info_details.mas';

@@ -534,6 +534,63 @@ sub update_status_POST : Args(0) {
 
 }
 
+sub reverse_status : Path('/ajax/tracking_activity/reverse_status') : ActionClass('REST'){ }
+
+sub reverse_status_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh();
+    my $identifier_id = $c->req->param("identifier_id");
+    my $updated_status_type = $c->req->param("updated_status_type");
+    my $material_id = $c->req->param("material_id");
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error_string => "You must be logged in to reverse status of this tracking identifier" };
+        return;
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error_string => "You do not have the correct role to reverse status of this tracking identifier. Please contact us." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $status_type_id;
+    if ($updated_status_type) {
+        $status_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $updated_status_type, 'stock_property')->cvterm_id();
+        my $status_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $status_type_id});
+
+        if (defined $status_stockprop_rs->stockprop_id) {
+            $status_stockprop_rs->delete();
+        }
+    }
+
+    my $material_stock_type_id;
+    my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
+    if (!$material_rs) {
+        $c->stash->{rest} = { error_string => 'Error. No material entry found in the database.' };
+        return;
+    } else {
+       $material_stock_type_id = $material_rs->type_id;
+    }
+
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
+
+    if ($material_stock_type_id == $transformation_type_id) {
+        if ($status_type_id) {
+            my $transformation_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $material_id, type_id => $status_type_id});
+
+            if (defined $transformation_stockprop_rs->stockprop_id) {
+                $transformation_stockprop_rs->delete();
+            }
+        }
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
 
 sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inactive_identifiers') :Args(1) {
     my $self = shift;

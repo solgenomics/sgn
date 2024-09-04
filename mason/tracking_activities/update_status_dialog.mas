@@ -2,6 +2,7 @@
 $identifier_id
 $identifier_name
 $material_id
+$updated_status_type
 </%args>
 
 <div class="modal fade" id="update_status_dialog" name="_dialog" tabindex="-1" role="dialog" aria-labelledby="updateStatusDialog">
@@ -69,12 +70,12 @@ $material_id
     </div>
 </div>
 
-<div class="modal fade" id="undo_updated_dialog_message" name="undo_updated_dialog_message" tabindex="-1" role="dialog" aria-labelledby="undoUpdatedDialog">
+<div class="modal fade" id="reverse_status_dialog_message" name="reverse_status_dialog_message" tabindex="-1" role="dialog" aria-labelledby="reverseStatusDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="undoUpdatedDialog">Success</h4>
+                <h4 class="modal-title" id="reverseStatusDialog">Success</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -85,7 +86,7 @@ $material_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_undo_updated_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_reverse_status_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
             </div>
         </div>
     </div>
@@ -152,15 +153,18 @@ jQuery(document).ready(function(){
         location.reload();
     });
 
-    jQuery('#undo_updated_link').click(function() {
-        var identifier_id = "<% $identifier_id %>";
-        var confirmation = confirm("Are you sure you want to activate this tracking identifier ?");
+    jQuery('#reverse_status_link').click(function() {
+        var updated_status_type = "<% $updated_status_type %>";
+        var confirmation = confirm("Are you sure you want to reverse status of this tracking identifier ?");
         if (confirmation) {
             jQuery.ajax({
-                url: '/ajax/tracking_activity/activate',
+                url: '/ajax/tracking_activity/reverse_status',
+                type: 'POST',
                 dataType: "json",
                 data : {
-                    'tracking_id' : tracking_id,
+                    'identifier_id' : identifier_id,
+                    'updated_status_type' : updated_status_type,
+                    'material_id' : material_id
                 },
                 beforeSend: function(response){
                     jQuery('#working_modal').modal('show');
@@ -168,7 +172,7 @@ jQuery(document).ready(function(){
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
-                        jQuery('#undo_updating_dialog_message').modal("show");
+                        jQuery('#reverse_status_dialog_message').modal("show");
                     }
                     if (response.error_string) {
                         alert(response.error_string);
@@ -182,8 +186,8 @@ jQuery(document).ready(function(){
         }
     });
 
-    jQuery("#dismiss_undo_updated_dialog").click( function() {
-        jQuery('#undo_updated_dialog_message').modal('hide');
+    jQuery("#dismiss_reverse_status_dialog").click( function() {
+        jQuery('#reverse_status_dialog_message').modal('hide');
         location.reload();
     });
 
