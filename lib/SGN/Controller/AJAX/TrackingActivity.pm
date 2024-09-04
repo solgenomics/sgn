@@ -388,51 +388,46 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
     my @all_identifiers;
     foreach my $identifier_info (@$all_identifier_info) {
         my @row = ();
-        my $updated_status = $identifier_info->[6];
-        if ($updated_status) {
-            next;
-        } else {
-            my $identifier_id = $identifier_info->[0];
-            my $identifier_name = $identifier_info->[1];
-            push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
+        my $identifier_id = $identifier_info->[0];
+        my $identifier_name = $identifier_info->[1];
+        push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
 
-            my $material_id = $identifier_info->[2];
-            my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
-            my $material_stock_type_id = $material_rs->type_id;
-            my $material_name = $identifier_info->[3];
-            if ($material_stock_type_id == $transformation_type_id) {
-                push @row, qq{<a href="/transformation/$material_id">$material_name</a>}
-            } else {
-                push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
-            }
-            my $progress = $identifier_info->[5];
-            my $input;
-            if ($progress) {
-                my $progress_ref = JSON::Any->jsonToObj($progress);
-                my %progress_hash = %{$progress_ref};
-                foreach my $type (@activity_types){
-                    if ($progress_hash{$type}) {
-                        my $details = {};
-                        my %details_hash = ();
-                        $details = $progress_hash{$type};
-                        %details_hash = %{$details};
-                        my $input = 0;
-                        foreach my $key (keys %details_hash) {
-                            $input += $details_hash{$key}{'input'};
-                        }
-                        push @row, $input
-                    } else {
-                        push @row, $input;
+        my $material_id = $identifier_info->[2];
+        my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
+        my $material_stock_type_id = $material_rs->type_id;
+        my $material_name = $identifier_info->[3];
+        if ($material_stock_type_id == $transformation_type_id) {
+            push @row, qq{<a href="/transformation/$material_id">$material_name</a>}
+        } else {
+            push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
+        }
+        my $progress = $identifier_info->[5];
+        my $input;
+        if ($progress) {
+            my $progress_ref = JSON::Any->jsonToObj($progress);
+            my %progress_hash = %{$progress_ref};
+            foreach my $type (@activity_types){
+                if ($progress_hash{$type}) {
+                    my $details = {};
+                    my %details_hash = ();
+                    $details = $progress_hash{$type};
+                    %details_hash = %{$details};
+                    my $input = 0;
+                    foreach my $key (keys %details_hash) {
+                        $input += $details_hash{$key}{'input'};
                     }
-                }
-            } else {
-                foreach my $type (@activity_types) {
+                    push @row, $input
+                } else {
                     push @row, $input;
                 }
             }
-            push @row, $identifier_name;
-            push @all_identifiers,[@row];
+        } else {
+            foreach my $type (@activity_types) {
+                push @row, $input;
+            }
         }
+        push @row, $identifier_name;
+        push @all_identifiers,[@row];
     }
 
     $c->stash->{rest} = { data => \@all_identifiers };
@@ -551,63 +546,59 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
     my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
 
     my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
-    my $all_identifier_info = $activity_project->get_project_active_identifiers();
+    my $all_identifier_info = $activity_project->get_project_inactive_identifiers();
     my @all_identifiers;
     foreach my $identifier_info (@$all_identifier_info) {
         my @row = ();
+        my $identifier_id = $identifier_info->[0];
+        my $identifier_name = $identifier_info->[1];
+        push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
+
         my $status = $identifier_info->[6];
-        if ($status) {
-            my $identifier_id = $identifier_info->[0];
-            my $identifier_name = $identifier_info->[1];
-            push @row, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
+        if ($status eq 'terminated_metadata') {
+            $status = '<span style="color:red">'.'TERMINATED'.'</span>';
+        } elsif ($status eq 'completed_metadata') {
+            $status = '<span style="color:red">'.'COMPLETED'.'</span>';
+        }
+        push @row, $status;
 
-            if ($status eq 'discarded_metadata') {
-                $status = '<span style="color:red">'.'TERMINATED'.'</span>';
-            } elsif ($status eq 'completed_metadata') {
-                $status = '<span style="color:red">'.'COMPLETED'.'</span>';
-            }
-            push @row, $status;
+        my $material_id = $identifier_info->[2];
+        my $material_name = $identifier_info->[3];
+        my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
+        my $material_stock_type_id = $material_rs->type_id;
+        if ($material_stock_type_id == $transformation_type_id) {
+            push @row, qq{<a href="/transformation/$material_id">$material_name</a>}
+        } else {
+            push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
+        }
 
-            my $material_id = $identifier_info->[2];
-            my $material_name = $identifier_info->[3];
-            my $material_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $material_id });
-            my $material_stock_type_id = $material_rs->type_id;
-            if ($material_stock_type_id == $transformation_type_id) {
-                push @row, qq{<a href="/transformation/$material_id">$material_name</a>}
-            } else {
-                push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
-            }
-
-            my $progress = $identifier_info->[5];
-            my $input;
-            if ($progress) {
-                my $progress_ref = JSON::Any->jsonToObj($progress);
-                my %progress_hash = %{$progress_ref};
-                foreach my $type (@activity_types){
-                    if ($progress_hash{$type}) {
-                        my $details = {};
-                        my %details_hash = ();
-                        $details = $progress_hash{$type};
-                        %details_hash = %{$details};
-                        my $input = 0;
-                        foreach my $key (keys %details_hash) {
-                            $input += $details_hash{$key}{'input'};
-                        }
-                        push @row, $input
-                    } else {
-                        push @row, $input;
+        my $progress = $identifier_info->[5];
+        my $input;
+        if ($progress) {
+            my $progress_ref = JSON::Any->jsonToObj($progress);
+            my %progress_hash = %{$progress_ref};
+            foreach my $type (@activity_types){
+                if ($progress_hash{$type}) {
+                    my $details = {};
+                    my %details_hash = ();
+                    $details = $progress_hash{$type};
+                    %details_hash = %{$details};
+                    my $input = 0;
+                    foreach my $key (keys %details_hash) {
+                        $input += $details_hash{$key}{'input'};
                     }
-                }
-            } else {
-                foreach my $type (@activity_types) {
+                    push @row, $input
+                } else {
                     push @row, $input;
                 }
             }
-            push @row, $identifier_name;
-            push @all_identifiers,[@row];
         } else {
-            next;
+            foreach my $type (@activity_types) {
+                push @row, $input;
+            }
         }
+        push @row, $identifier_name;
+        push @all_identifiers,[@row];
     }
 
 
