@@ -78,8 +78,30 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table'); 
     sleep(2);
 
+
+    `rm -r $cache_dir`;
+    sleep(3);
+
+    ########## trial detail page ##########
+    $d->get_ok('/breeders/trial/139', 'trial detail home page');
+    sleep(5);
+    my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    sleep(5);
+    $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
+    sleep(5);
+    $d->find_element_ok('Phenotypic correlation', 'partial_link_text', 'expand correlation')->click();
+    sleep(1);
+    $d->find_element_ok('run_correlation', 'id', 'run correlation')->click();
+    sleep(200);
+    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot -- trial detail page')->click();
+    sleep(5);
+    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
+    sleep(2);
+
     `rm -r $cache_dir`;
 
+    ########## solGS ##########
     $d->get('/solgs', 'solgs home page');
     sleep(3);
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
@@ -370,26 +392,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
 
-    `rm -r $cache_dir`;
-    sleep(3);
-
-    $d->get_ok('/breeders/trial/139', 'trial detail home page');
-    sleep(5);
-    my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
-    sleep(5);
-    $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
-    sleep(5);
-    $d->find_element_ok('Phenotypic correlation', 'partial_link_text', 'expand correlation')->click();
-    sleep(1);
-    $d->find_element_ok('run_correlation', 'id', 'run correlation')->click();
-    sleep(200);
-    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot -- trial detail page')->click();
-    sleep(5);
-    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
-    sleep(2);
    
-
     foreach my $list_id ($trials_list_id,  $plots_list_id) {
         $list_id =~ s/\w+_//g;
         $solgs_data->delete_list($list_id);
