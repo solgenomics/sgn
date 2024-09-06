@@ -1312,8 +1312,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     # print STDERR "infile:  $infile \n";
 
     my $async_upload = CXGN::Tools::Run->new();
-    $async_upload->run_async("perl $basepath/bin/upload_multiple_trial_design.pl -H $dbhost -D $dbname -P $dbpass -w $basepath -U $dbuser -b $breeding_program_name -i $infile -un $username -e $email_address -eo $email_option_enabled -r $temp_file_nd_experiment_id");
-
+    $async_upload->run_async("perl $basepath/bin/upload_multiple_trial_design.pl -H $dbhost -D $dbname -P \"$dbpass\" -w \"$basepath\" -U \"$dbuser\" -b \"$breeding_program_name\" -i \"$infile\" -un \"$username\" -e \"$email_address\" -eo $email_option_enabled -r $temp_file_nd_experiment_id");
     #print STDERR "Check 5: ".localtime()."\n";
     if (scalar @{$save{'errors'}} > 0) {
         print STDERR "Errors saving trials: ".@{$save{'errors'}};
