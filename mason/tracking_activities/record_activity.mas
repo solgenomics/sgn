@@ -4,6 +4,7 @@ $identifier_id => undef
 $activity_select => undef
 $type_select_options => undef
 $timestamp => undef
+$date => undef
 $activity_headers
 
 </%args>
@@ -51,7 +52,7 @@ $activity_headers
                 <textarea class="form-control" id="record_page_notes" name="record_page_notes" ></textarea>
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="display:none">
             <label class="col-sm-3 control-label">Timestamp: </label>
             <div class="col-sm-5">
                 <input class="form-control" id="record_timestamp_record_page" name="record_timestamp_record_page" type="text" disabled value="<%$timestamp%>">
@@ -135,6 +136,7 @@ $activity_headers
 $(window).ready( function() {
 
     var identifier_id = "<%$identifier_id%>";
+    var date = "<%$date%>";
 
     if (identifier_id) {
         jQuery('#record_page_activity_info_table').DataTable({
@@ -170,6 +172,14 @@ $(window).ready( function() {
             jQuery('input[name="record_page_identifier_name_input"]').val(identifier_name);
         }
     }
+
+    jQuery('#record_page_type_select').change(function() {
+        jQuery('#record_page_info_input').val('');
+        var input_type = jQuery('#record_page_type_select').val();
+        if (input_type.indexOf('date') != -1) {
+            jQuery('#record_page_info_input').val(date);
+        }
+    });
 
     jQuery('#record_page_activity_info_submit').click( function(e) {
         e.preventDefault();

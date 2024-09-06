@@ -124,14 +124,16 @@ sub record_activity :Path('/activity/record') :Args(0) {
     if ($identifier_name) {
         $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
     }
-    print STDERR "IDENTIFIER ID =".Dumper($identifier_id)."\n";
+    
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $date = $time->ymd();
 
     $c->stash->{identifier_id} = $identifier_id;
     $c->stash->{type_select_options} = \@options;
     $c->stash->{activity_headers} = \@activity_headers;
     $c->stash->{timestamp} = $timestamp;
+    $c->stash->{date} = $date;
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
 }

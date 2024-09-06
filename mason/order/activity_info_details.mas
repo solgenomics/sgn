@@ -71,7 +71,7 @@ $user_role
                     <textarea class="form-control" id="selected_type_notes" name="selected_type_notes" ></textarea>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="display:none">
                 <label class="col-sm-3 control-label">Timestamp: </label>
                 <div class="col-sm-5">
                     <input class="form-control" id="record_timestamp" name="record_timestamp" type="text" disabled value="<%$timestamp%>">
@@ -198,7 +198,6 @@ jQuery(document).ready( function() {
             jQuery('#selected_type_input').val(date);
         }
     });
-
 
     jQuery('#activity_info_submit').click( function(e) {
         e.preventDefault();
