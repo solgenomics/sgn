@@ -375,7 +375,7 @@ sub search {
     }
     if ($self->trait_list && scalar(@{$self->trait_list})>0) {
         my $trait_sql = _sql_from_arrayref($self->trait_list);
-        push @where_clause, "cvterm.cvterm_id in ($trait_sql)";
+        push @where_clause, "(cvterm.cvterm_id in ($trait_sql) OR cvterm.cvterm_id IS NULL)";
     }
     if ($self->location_list && scalar(@{$self->location_list})>0) {
         my $arrayref = $self->location_list;
