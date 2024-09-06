@@ -45,7 +45,7 @@ has 'selected_type' => (
 );
 
 has 'input' => (
-    isa => 'Maybe[Int]',
+    isa => 'Maybe[Str]',
     is => 'rw',
     required => 1,
 );

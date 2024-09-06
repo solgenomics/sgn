@@ -73,6 +73,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $date = $time->ymd();
 
     $c->stash->{identifier_id} = $identifier_id;
     $c->stash->{identifier_name} = $identifier_name;
@@ -82,8 +83,9 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{material_id} = $material_id;
     $c->stash->{updated_status_type} = $updated_status_type;
     $c->stash->{updated_status_string} = $updated_status_string;
-    $c->stash->{status_display} = $status_display;    
+    $c->stash->{status_display} = $status_display;
     $c->stash->{timestamp} = $timestamp;
+    $c->stash->{date} = $date;
     $c->stash->{user_role} = $user_role;
     $c->stash->{template} = '/order/activity_info_details.mas';
 

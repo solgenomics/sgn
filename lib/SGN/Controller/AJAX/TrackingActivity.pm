@@ -227,6 +227,11 @@ sub activity_info_save_POST : Args(0) {
     my $notes = $c->req->param("notes");
     my $record_timestamp = $c->req->param("record_timestamp");
 
+    if ($selected_type =~ m/number/ && !($input =~ /^\d+?$/) ) {
+        $c->stash->{rest} = {error => "Input is not a positive integer"};
+        return;
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $add_activity_info = CXGN::TrackingActivity::ActivityInfo->new({
@@ -290,7 +295,7 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
 
                     push @each_timestamp_details, "operator".":"."".$operator_name;
                     my $input = $details_hash{$timestamp}{'input'};
-                    push @each_timestamp_details, "count".":"."".$input;
+                    push @each_timestamp_details, "input".":"."".$input;
                     my $notes = $details_hash{$timestamp}{'notes'};
                     push @each_timestamp_details, "notes".":"."".$notes;
 
@@ -337,11 +342,11 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
     if ($activity_info_rs) {
-        my $input;
         my $activity_json = $activity_info_rs->value();
         my $info = JSON::Any->jsonToObj($activity_json);
         my %info_hash = %{$info};
         foreach my $type (@activity_types){
+            my $input = '';
             my $empty_string;
             my @each_type_details = ();
             my $each_timestamp_string;
@@ -351,11 +356,19 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
                 my %details_hash = ();
                 $details = $info_hash{$type};
                 %details_hash = %{$details};
-                my $input = 0;
-                foreach my $key (keys %details_hash) {
-                    $input += $details_hash{$key}{'input'};
+
+                if (($type =~ m/number/) || ($type =~ m/count/)) {
+                    $input = 0;
+                    foreach my $key (keys %details_hash) {
+                        $input += $details_hash{$key}{'input'};
+                    }
+                    push @summary, $input;
+                } elsif ($type =~ m/date/) {
+                    foreach my $key (keys %details_hash) {
+                        $input = $details_hash{$key}{'input'};
+                    }
+                    push @summary, $input;
                 }
-                push @summary, $input;
             } else {
                 push @summary, $input;
             }
