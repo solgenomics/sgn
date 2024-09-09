@@ -2876,9 +2876,10 @@ sub delete_plant_entries : Chained('trial') PathPart('delete_plant_entries') Arg
 #    my $plants_selected_delete = "Test_fake_plant_id";
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $plant_owner_username = $c->user->get_object->get_username;
-    my $plants_to_delete = $c->req->param("plants_delete_selected");
-    print STDERR "VARIABLE: " . $plants_to_delete . "\n";
-    print STDERR "PLANTS FOR DELETION: " . Dumper($plants_to_delete) . "\n";
+    my @plants_to_delete = $c->req->param("plants_delete_selected[]");
+    print STDERR "VARIABLE: " . $plants_to_delete[2] . "\n";
+    print STDERR "PLANTS FOR DELETION: " . Dumper(@plants_to_delete) . "\n";
+    print STDERR Dumper $c->req->params();
 
     if (my $error = $self->privileges_denied($c)) {
         $c->stash->{rest} = { error => $error };
@@ -2887,7 +2888,7 @@ sub delete_plant_entries : Chained('trial') PathPart('delete_plant_entries') Arg
 
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
 
-    if ($t->delete_plant_entities($plants_to_delete, $user_id, $plant_owner_username)) {
+    if ($t->delete_plant_entities(\@plants_to_delete, $user_id, $plant_owner_username)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

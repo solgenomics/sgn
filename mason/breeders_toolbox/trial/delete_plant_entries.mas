@@ -1,7 +1,6 @@
 <%args>
 $trial_id
 $trial_name => undef
-$plants_delete_selected => undef
 </%args>
 
 <div class="modal fade" id="delete_plants_dialog" name="delete_plants_dialog" tabindex="-1" role="dialog" aria-labelledby="deletePlantsDialog">
