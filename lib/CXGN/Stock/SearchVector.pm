@@ -362,58 +362,58 @@ sub search {
     my $nd_experiment_joins = [];
 
 
-    if (scalar(@location_name_array)>0){
-        push @$nd_experiment_joins, 'nd_geolocation';
-        foreach (@location_name_array){
-            if ($_){
-                push @{$and_conditions->{ 'lower(nd_geolocation.description)' }}, { -like  => lc($_) };
-            }
-        }
-    }
+    # if (scalar(@location_name_array)>0){
+    #     push @$nd_experiment_joins, 'nd_geolocation';
+    #     foreach (@location_name_array){
+    #         if ($_){
+    #             push @{$and_conditions->{ 'lower(nd_geolocation.description)' }}, { -like  => lc($_) };
+    #         }
+    #     }
+    # }
 
-    if (scalar(@trial_name_array)>0 || scalar(@trial_id_array)>0 || scalar(@year_array)>0 || scalar(@program_id_array)>0){
-        push @$nd_experiment_joins, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } };
-        foreach (@trial_name_array){
-            if ($_){
-                push @{$and_conditions->{ 'lower(project.name)' }}, { -like  => lc($_) } ;
-            }
-        }
-        foreach (@trial_id_array){
-            if ($_){
-                push @{$and_conditions->{ 'project.project_id' }}, $_ ;
-            }
-        }
-        my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id;
-        foreach (@year_array){
-            if ($_){
-                $and_conditions->{ 'projectprops.type_id'} = $year_type_id;
-                push @{$and_conditions->{ 'lower(projectprops.value)' }}, { -like  => lc($_) } ;
-            }
-        }
-        foreach (@program_id_array){
-            if ($_){
-                push @{$and_conditions->{ 'project_relationship_subject_projects.object_project_id' }}, $_ ;
-            }
-        }
-    }
+    # if (scalar(@trial_name_array)>0 || scalar(@trial_id_array)>0 || scalar(@year_array)>0 || scalar(@program_id_array)>0){
+    #     push @$nd_experiment_joins, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } };
+    #     foreach (@trial_name_array){
+    #         if ($_){
+    #             push @{$and_conditions->{ 'lower(project.name)' }}, { -like  => lc($_) } ;
+    #         }
+    #     }
+    #     foreach (@trial_id_array){
+    #         if ($_){
+    #             push @{$and_conditions->{ 'project.project_id' }}, $_ ;
+    #         }
+    #     }
+    #     my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id;
+    #     foreach (@year_array){
+    #         if ($_){
+    #             $and_conditions->{ 'projectprops.type_id'} = $year_type_id;
+    #             push @{$and_conditions->{ 'lower(projectprops.value)' }}, { -like  => lc($_) } ;
+    #         }
+    #     }
+    #     foreach (@program_id_array){
+    #         if ($_){
+    #             push @{$and_conditions->{ 'project_relationship_subject_projects.object_project_id' }}, $_ ;
+    #         }
+    #     }
+    # }
 
-    foreach (@genus_array){
-        if ($_){
-            push @{$and_conditions->{ 'lower(organism.genus)' }}, { -like  => lc($_) } ;
-        }
-    }
+    # foreach (@genus_array){
+    #     if ($_){
+    #         push @{$and_conditions->{ 'lower(organism.genus)' }}, { -like  => lc($_) } ;
+    #     }
+    # }
 
-    foreach (@species_array){
-        if ($_){
-            push @{$and_conditions->{ 'lower(organism.species)' }}, { -like  => lc($_) } ;
-        }
-    }
+    # foreach (@species_array){
+    #     if ($_){
+    #         push @{$and_conditions->{ 'lower(organism.species)' }}, { -like  => lc($_) } ;
+    #     }
+    # }
 
-    foreach (@crop_name_array){
-        if ($_){
-            push @{$and_conditions->{ 'lower(organism.common_name)' }}, { -like  => lc($_) } ;
-        }
-    }
+    # foreach (@crop_name_array){
+    #     if ($_){
+    #         push @{$and_conditions->{ 'lower(organism.common_name)' }}, { -like  => lc($_) } ;
+    #     }
+    # }
 
     my @vectorprop_filtered_stock_ids;
 
@@ -423,6 +423,7 @@ sub search {
         foreach my $term_name (keys %{$self->stockprops_values}){
             my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
             if ($property_term){
+		my $property_term_id = $property_term->cvterm_id();
                 my $matchtype = $self->stockprops_values->{$term_name}->{'matchtype'};
                 my $value = $self->stockprops_values->{$term_name}->{'value'};
 
@@ -441,12 +442,14 @@ sub search {
                     $search =~ tr/*?/%_/;
                 }
 
+		# Moved this query from matviews to native tables...
+		#
                 if ( $matchtype eq 'one of' ) {
                     my @values = split ',', $value;
                     my $search_vals_sql = "'".join ("','" , @values)."'";
-                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
+                    push @stockprop_wheres, " (type_id=$property_term_id AND value in ($search_vals_sql) ";
                 } else {
-                    push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
+                    push @stockprop_wheres, " (type_id=$property_term_id AND value ilike $search) ";
                 }
 
             } else {
@@ -455,7 +458,7 @@ sub search {
         }
         my $stockprop_where = 'WHERE ' . join ' OR ', @stockprop_wheres;
 
-        my $stockprop_query = "SELECT stock_id FROM materialized_stockprop $stockprop_where;";
+        my $stockprop_query = "SELECT stock_id FROM stockprop $stockprop_where;";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my $stock_id = $h->fetchrow_array()) {
@@ -469,7 +472,10 @@ sub search {
         $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
     }
 
-    #$schema->storage->debug(1);
+
+
+    
+    $schema->storage->debug(1);
     my $operator = $default_operator ? $default_operator : (scalar(@vectorprop_filtered_stock_ids)>0 ? "or" : "and");
     my $search_query = {
         -$operator => [
@@ -477,6 +483,9 @@ sub search {
             $and_conditions,
         ],
     };
+
+    print STDERR "SEARCH QUERY NOW: ".Dumper($search_query)."\n";
+    
     if (!$self->include_obsolete) {
         $search_query->{'me.is_obsolete'} = 'f';
     }
@@ -554,21 +563,20 @@ sub search {
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
     
     # Get additional stock properties (pedigree, synonyms, donor info)
-    my $stock_query = "SELECT stock_id, uniquename, organism_id, stock_synonym
-        FROM materialized_stockprop
-        WHERE stock_id IN ($id_ph);";
+    #my $stock_query = "SELECT stock_id, uniquename, organism_id, stock_synonym
+    #    FROM materialized_stockprop
+    #    WHERE stock_id IN ($id_ph);";
+
+    my $stock_query = "SELECT stock_id, uniquename, organism_id, stockprop.value FROM stock join stockprop using(stock_id) where stock.type_id=? and stock.stock_id in ($id_ph)";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
-    $sth->execute(@result_stock_ids);
+    $sth->execute($stock_synonym_cvterm_id, @result_stock_ids);
     
     # Add additional organism and stock properties to the result hash for each stock
-    while (my @r = $sth->fetchrow_array()) {
-        my $stock_id = $r[0];
-        my $organism_id = $r[2];
-        my $syn_json = $r[3] ? decode_json(encode("utf8",$r[3])) : {};
-        my @synonyms = sort keys %{$syn_json};
+    while (my ($stock_id, $stock_name, $organism_id, $synonym) = $sth->fetchrow_array()) {
+	
 
         # add stock props to the result hash
-        $result_hash{$stock_id}{synonyms} = \@synonyms;
+        push @{$result_hash{$stock_id}{synonyms}}, $synonym;
     }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
@@ -576,38 +584,50 @@ sub search {
         my $result_stock_ids_sql = join ",", @result_stock_ids;
         my $stockprop_where = "WHERE stock_id IN ($result_stock_ids_sql)";
 
-        $self->_refresh_materialized_stockprop(\@stockprop_view);
+        #$self->_refresh_materialized_stockprop(\@stockprop_view);
 
-        my $stockprop_select_sql .= ', "' . join ('","', @stockprop_view) . '"';
-        my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
+        my $stockprop_select_sql .= "'".join ("','", @stockprop_view) . "'";
+        #my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
+
+	my $stockprop_clause = "";
+	if (@stockprop_view) {
+	    print STDERR "STOCKPROP VIEW = ".Dumper(\@stockprop_view);
+	    $stockprop_clause = " and cvterm.name in ($stockprop_select_sql)";
+	}
+	my $stockprop_query = "SELECT stock_id, stockprop.type_id, cvterm.name, value FROM stockprop LEFT JOIN cvterm ON (stockprop.type_id=cvterm_id) where stock_id in ($result_stock_ids_sql) $stockprop_clause ";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
-        while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
-            for my $s (0 .. scalar(@stockprop_view)-1){
+#        while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
+#            for my $s (0 .. scalar(@stockprop_view)-1){
                 # my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
-                my $stockprop_vals = $stockprop_select_return[$s] ? decode_json(encode("utf8",$stockprop_select_return[$s])) : {};
-                my @stockprop_vals_string;
-                foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
-                    push @stockprop_vals_string, $_;
-                }
-                my $stockprop_vals_string = join ',', @stockprop_vals_string;
-                $result_hash{$stock_id}->{$stockprop_view[$s]} = $stockprop_vals_string;
-            }
-        }
+#                my $stockprop_vals = $stockprop_select_return[$s] ? decode_json(encode("utf8",$stockprop_select_return[$s])) : {};
+#                my @stockprop_vals_string;
+#                foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
+#                    push @stockprop_vals_string, $_;
+#                }
+#                my $stockprop_vals_string = join ',', @stockprop_vals_string;
+#                $result_hash{$stock_id}->{$stockprop_view[$s]} = $stockprop_vals_string;
+ #           }
+  #      }
 
-        while (my ($uniquename, $info) = each %result_hash){
-            foreach (@stockprop_view){
-                if (!$info->{$_}){
-                    $info->{$_} = '';
-                }
-            }
-        }
+	while (my ($stock_id, $type_id, $type, $value) = $h->fetchrow_array()) { 
+	    #while (my ($uniquename, $info) = each %result_hash){
+
+	    push @{$result_hash{$stock_id}->{$type}}, $value;
+	    
+#            foreach (@stockprop_view){
+#                if (!$info->{$_}){
+#                    $info->{$_} = '';
+#                }
+	}
     }
 
+
+    print STDERR "RESULTS: ".Dumper(\%result_hash);
+    
     foreach (sort keys %result_hash){
         push @result, $result_hash{$_};
     }
-
 
     print STDERR "CXGN::Stock::SearchVector search end\n";
     return (\@result, $records_total);
