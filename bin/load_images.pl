@@ -149,7 +149,7 @@ while ( my $hashref = $sth->fetchrow_hashref() ) {
     my $image_id = $hashref->{image_id};
     my $chado_table_id = $hashref->{stock_id};  ##### table specific
 
-    if ($chado_table_id % 10000) {
+    if ($chado_table_id % 10000 == 0) {
 	print STDERR "CACHING $chado_table_id\n";
     }
 
