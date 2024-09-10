@@ -39,6 +39,7 @@
 	<div style="float: left; width: 50%">
 	  <% $search{accessions} %>
 	  <% $search{populations} %>
+	  <% $search{vectors} %>
 	  <% $search{trials} %>
 	</div>
 	<div style="float: right; width: 50%">
