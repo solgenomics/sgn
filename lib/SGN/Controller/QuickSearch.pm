@@ -53,7 +53,7 @@ my %searches = (
     marker     => { function => \&quick_mapped_geno_marker_search },
     manual_annotations    => { function => \&quick_manual_annotation_search    },
     automatic_annotations => { function => \&quick_automatic_annotation_search },
-    sgn_pages  => { function => \&quick_page_search },
+#    sgn_pages  => { function => \&quick_page_search },
 #    web        => { function => \&quick_web_search  },
     phenotype  => { function => \&quick_phenotype_search },
     accessions => { function => \&quick_accession_search },
