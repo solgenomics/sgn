@@ -922,10 +922,8 @@ solGS.cluster = {
       .attr("dy", ".1em")
       .attr("transform", "rotate(90)")
       .attr("fill", axesLabelColor)
-      .style({
-        "text-anchor": "start",
-        fill: axesLabelColor,
-      });
+      .style("text-anchor", "start")
+      .style("fill", axesLabelColor);
 
     clusterPlot
       .append("g")
@@ -1018,7 +1016,9 @@ solGS.cluster = {
       .append("text")
       .text("Clusters")
       .attr("x", 0)
-      .attr("y", 15);
+      .attr("y", 15)
+      .style("font-size",'12px')
+      .style("fill", axesLabelColor);
 
      clusterPlot
         .append("g")
@@ -1110,7 +1110,7 @@ jQuery(document).ready(function () {
     var clusterPlotId = linkId.replace(/download_/, "");
 
     if (clusterPlotId.match(/cluster_plot_/)) {
-      saveSvgAsPng(document.getElementById(`#${clusterPlotId}`), clusterPlotId + ".png", { scale: 2 });
+      saveSvgAsPng(document.getElementById(`#${clusterPlotId}`), `${clusterPlotId}.png`, { scale: 2});
     }
   });
 
@@ -1122,9 +1122,7 @@ jQuery(document).ready(function () {
 
     var clusterTypeId = solGS.cluster.clusterTypeSelectId(rowId);
     var kNumId = solGS.cluster.clusterKnumSelectId(rowId);
-    var clusterDataTypeId = solGS.cluster.clusterDataTypeSelectId(rowId);
     var clusterType = jQuery("#" + clusterTypeId).val();
-    var clusterDataType = jQuery("#" + clusterDataTypeId).val();
     if (clusterType.match(/hierarchical/i)) {
       jQuery("#k_number_div").hide();
       jQuery("#" + kNumId).prop("disabled", true);
