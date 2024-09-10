@@ -415,28 +415,36 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
             push @row, qq{<a href="/stock/$material_id/view">$material_name</a>};
         }
         my $progress = $identifier_info->[5];
-        my $input;
         if ($progress) {
             my $progress_ref = JSON::Any->jsonToObj($progress);
             my %progress_hash = %{$progress_ref};
             foreach my $type (@activity_types){
+                my $input = '';
                 if ($progress_hash{$type}) {
                     my $details = {};
                     my %details_hash = ();
                     $details = $progress_hash{$type};
                     %details_hash = %{$details};
-                    my $input = 0;
-                    foreach my $key (keys %details_hash) {
-                        $input += $details_hash{$key}{'input'};
+
+                    if (($type =~ m/number/) || ($type =~ m/count/)) {
+                        $input = 0;
+                        foreach my $key (keys %details_hash) {
+                            $input += $details_hash{$key}{'input'};
+                        }
+                        push @row, $input;
+                    } elsif ($type =~ m/date/) {
+                        foreach my $key (keys %details_hash) {
+                            $input = $details_hash{$key}{'input'};
+                        }
+                        push @row, $input;
                     }
-                    push @row, $input
                 } else {
                     push @row, $input;
                 }
             }
         } else {
             foreach my $type (@activity_types) {
-                push @row, $input;
+                push @row, '';
             }
         }
         push @row, $identifier_name;
@@ -643,34 +651,41 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
         }
 
         my $progress = $identifier_info->[5];
-        my $input;
         if ($progress) {
             my $progress_ref = JSON::Any->jsonToObj($progress);
             my %progress_hash = %{$progress_ref};
             foreach my $type (@activity_types){
+                my $input = '';
                 if ($progress_hash{$type}) {
                     my $details = {};
                     my %details_hash = ();
                     $details = $progress_hash{$type};
                     %details_hash = %{$details};
-                    my $input = 0;
-                    foreach my $key (keys %details_hash) {
-                        $input += $details_hash{$key}{'input'};
+
+                    if (($type =~ m/number/) || ($type =~ m/count/)) {
+                        $input = 0;
+                        foreach my $key (keys %details_hash) {
+                            $input += $details_hash{$key}{'input'};
+                        }
+                        push @row, $input;
+                    } elsif ($type =~ m/date/) {
+                        foreach my $key (keys %details_hash) {
+                            $input = $details_hash{$key}{'input'};
+                        }
+                        push @row, $input;
                     }
-                    push @row, $input
                 } else {
                     push @row, $input;
                 }
             }
         } else {
             foreach my $type (@activity_types) {
-                push @row, $input;
+                push @row, '';
             }
         }
         push @row, $identifier_name;
         push @all_identifiers,[@row];
     }
-
 
     $c->stash->{rest} = { data => \@all_identifiers };
 
