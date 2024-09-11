@@ -25,6 +25,7 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Chado::Publication;
 use CXGN::Genotype::DownloadFactory;
+use CXGN::Login;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -52,15 +53,27 @@ has 'default_page_size' => (
 sub vector_new :Path('/vector/new') Args(0) {
     my ($self, $c ) = @_;
     my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
-    $c->stash(
-        
 
-        stock_types => stock_types($self->schema),
-        sp_person_autocomplete_uri => '/ajax/people/autocomplete',
-        editable_vector_props => \@editable_vector_props,
-        template => '/stock/add_vector.mas'
+    
+    $c->stash->{sp_person_id} =
+	CXGN::Login->new( $c->dbc->dbh )->has_session();
+
+    if( $person_id ) {
+        $c->stash->{person} = CXGN::People::Person->new( $dbh, $person_id );
+    }
+    
+    unless( $c->stash->{person_id} ) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+    
+    $c->stash
+	(
+	 stock_types => stock_types($self->schema),
+	 sp_person_autocomplete_uri => '/ajax/people/autocomplete',
+	 editable_vector_props => \@editable_vector_props,
+	 template => '/stock/add_vector.mas'
 	);
-
+    
 }
 
 =head2 stock search using jQuery data tables
