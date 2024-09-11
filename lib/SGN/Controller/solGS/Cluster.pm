@@ -134,8 +134,9 @@ sub prepare_response {
         $json_data = read_file( $json_file, { binmode => ':utf8' } );
     } else {
      my $pc_scores_file = $c->stash->{"${cluster_type}_pc_scores_file"};
-     print STDERR "pc_scores_file: $pc_scores_file\n";
-    $pc_scores_groups = $c->controller('solGS::Utils')->read_file_data($pc_scores_file);
+     if (-s $pc_scores_file) {
+        $pc_scores_groups = $c->controller('solGS::Utils')->read_file_data($pc_scores_file);
+     }
     }
 
     print STDERR Dumper $pc_scores_groups;
@@ -154,7 +155,7 @@ sub prepare_response {
     $ret->{json_data}            = $json_data;
     $ret->{cluster_report}       = $c->stash->{download_cluster_report};
     $ret->{cluster_pop_id}       = $c->stash->{cluster_pop_id};
-    $ret->{file_id}       = $file_id;
+    $ret->{file_id}              = $file_id;
     $ret->{combo_pops_id}        = $c->stash->{combo_pops_id};
     $ret->{list_id}              = $c->stash->{list_id};
     $ret->{list_name}            = $c->stash->{list_name};
@@ -171,7 +172,7 @@ sub prepare_response {
     $ret->{kcluster_means}       = $c->stash->{download_kmeans_means};
     $ret->{kcluster_variances}   = $c->stash->{download_variances};
     $ret->{elbow_plot}           = $c->stash->{download_elbow_plot};
-    $ret->{pc_scores_groups}      = $pc_scores_groups;
+    $ret->{pc_scores_groups}     = $pc_scores_groups;
 
     return $ret;
 
@@ -567,11 +568,8 @@ sub cluster_gebvs_input_files {
 sub cluster_sindex_input_files {
     my ( $self, $c ) = @_;
 
-    my $dir         = $c->stash->{selection_index_cache_dir};
-    my $sindex_name = $c->stash->{sindex_name};
-    my $file = catfile( $dir, "selection_index_only_${sindex_name}.txt" );
-
-    $c->stash->{cluster_sindex_input_files} = $file;
+    $c->controller('solGS::SelectionIndex')->selection_index_file($c);
+    $c->stash->{cluster_sindex_input_files} = $c->stash->{selection_index_only_file};
 
 }
 
