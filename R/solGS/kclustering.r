@@ -226,7 +226,13 @@ if (!grepl('genotype', kResultFile)) {
 
 }
 
-pca    <- prcomp(clusterData, scale=TRUE, retx=TRUE)
+pca <- c()
+if (is.null(selectedIndexGenotypes)) {
+    pca    <- prcomp(clusterData, scale=TRUE, retx=TRUE)
+} else {
+    pca    <- prcomp(clusterData, retx=TRUE)
+}
+
 pca    <- summary(pca)
 scores   <- data.frame(pca$x)
 scores   <- scores[, 1:2]
