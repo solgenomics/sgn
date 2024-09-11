@@ -14,6 +14,7 @@ use CXGN::TrackingActivity::AddTrackingIdentifier;
 use CXGN::TrackingActivity::ActivityInfo;
 use CXGN::TrackingActivity::AddActivityProject;
 use CXGN::TrackingActivity::ActivityProject;
+use CXGN::TrackingActivity::TrackingIdentifier;
 use SGN::Model::Cvterm;
 use CXGN::Location::LocationLookup;
 use CXGN::List;
@@ -222,6 +223,7 @@ sub activity_info_save_POST : Args(0) {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     my $tracking_identifier = $c->req->param("tracking_identifier");
+    my $tracking_identifier_id = $c->req->param("tracking_identifier_id");
     my $selected_type = $c->req->param("selected_type");
     my $input = $c->req->param("input");
     my $notes = $c->req->param("notes");
@@ -233,6 +235,12 @@ sub activity_info_save_POST : Args(0) {
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh();
+
+    my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$tracking_identifier_id});
+    my $project_and_program = $tracking_identifier_obj->get_associated_project_program();
+    print STDERR "PROJECT AND PROGRAM =".Dumper($project_and_program)."\n";
 
     my $add_activity_info = CXGN::TrackingActivity::ActivityInfo->new({
         schema => $schema,

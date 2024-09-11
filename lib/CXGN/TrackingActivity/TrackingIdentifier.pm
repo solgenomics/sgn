@@ -71,6 +71,37 @@ sub get_tracking_identifier_info {
 }
 
 
+sub get_associated_project_program {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $tracking_identifier_stock_id = $self->tracking_identifier_stock_id();
+    my @project_program;
+
+    my $experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_activity', 'experiment_type')->cvterm_id();
+    my $program_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+
+    my $q = "SELECT tracking_project.project_id, tracking_project.name, program.project_id, program.name
+        FROM nd_experiment_stock
+        JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN project AS tracking_project ON (nd_experiment_project.project_id = tracking_project.project_id)
+        JOIN project_relationship ON (tracking_project.project_id = project_relationship.subject_project_id) AND project_relationship.type_id = ?
+        JOIN project AS program ON (project_relationship.object_project_id = program.project_id)
+        WHERE nd_experiment_stock.stock_id = ? ";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($program_relationship_cvterm_id, $tracking_identifier_stock_id);
+
+    my @project_and_program = ();
+    while(my($project_id, $project_name, $program_id, $program_name) = $h->fetchrow_array()){
+        push @project_and_program, [$project_id, $project_name, $program_id, $program_name];
+    }
+
+    return \@project_and_program;
+
+}
+
+
+
 ###
 1;
 ###

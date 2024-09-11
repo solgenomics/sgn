@@ -221,6 +221,7 @@ jQuery(document).ready( function() {
             type: 'POST',
             data : {
                 'tracking_identifier' : "<%$identifier_name%>",
+                'tracking_identifier_id' : "<%$identifier_id%>",
                 'selected_type': selected_type,
                 'input': input,
                 'record_timestamp': record_timestamp,
