@@ -244,6 +244,7 @@ solGS.kinship = {
     lists = list.addDataStrAttr(lists);
 
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+
     var kinshipPops = [lists, datasets];
 
     return kinshipPops.flat();
@@ -553,12 +554,13 @@ jQuery(document).ready(function () {
   if (url.match(/kinship\/analysis/)) {
     kinshipPopsDataDiv = solGS.kinship.kinshipPopsDataDiv;
     var tableId = 'kinship_pops_table';
-    var kinshipPopsTable = solGS.kinship.createTable(tableId)
+    var kinshipPopsTable = solGS.kinship.createTable(tableId);
     jQuery(kinshipPopsDataDiv).append(kinshipPopsTable).show();
 
-    var kinshipPops = solGS.kinship.getKinshipPops()
+    var kinshipPops = solGS.kinship.getKinshipPops();
     var kinshipPopsRows = solGS.kinship.getKinshipPopsRows(kinshipPops);
 
-    solGS.kinship.displayKinshipPopsTable(tableId, kinshipPopsRows)
+    solGS.kinship.displayKinshipPopsTable(tableId, kinshipPopsRows);
+    jQuery("#add_new_pops").show();
   }
 });

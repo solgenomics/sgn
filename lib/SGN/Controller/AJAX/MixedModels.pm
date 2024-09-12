@@ -183,7 +183,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
     $mm->engine($engine);
-    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_shared_tempdir} . "/mixed_models", $c->config->{cluster_host});
+    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models" );
     
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
