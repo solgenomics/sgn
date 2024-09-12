@@ -47,7 +47,7 @@ sub _validate_with_plugin {
     }
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
+    if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of transaction data
         push @error_messages, "Spreadsheet is missing header or contains no rows";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -162,6 +162,10 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,6)) {
             $new_seedlot_box_name = $worksheet->get_cell($row,6)->value();
+        }
+
+        if (!defined $from_seedlot_name && !defined $to_new_seedlot_name) {
+            last;
         }
 
         if (!$from_seedlot_name || $from_seedlot_name eq '' ) {
@@ -335,9 +339,8 @@ sub _parse_with_plugin {
             $new_seedlot_quality = $worksheet->get_cell($row,8)->value();
         }
 
-        #skip blank lines
-        if (!$to_new_seedlot_name && !$from_seedlot_name) {
-            next;
+        if (!defined $to_new_seedlot_name && !defined $from_seedlot_name) {
+            last;
         }
 
         my $from_seedlot_rs = $schema->resultset("Stock::Stock")->find({

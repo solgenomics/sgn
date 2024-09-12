@@ -75,9 +75,6 @@ jQuery(document).ready(function ($) {
         else if (trial_year === '') {
             alert("Please select a trial year");
         }
-        else if (planting_date === '') {
-            alert("Please select a trial planting date");
-        }
         else if (plot_width < 0 ){
             alert("Please check the plot width");
         }
@@ -645,7 +642,7 @@ jQuery(document).ready(function ($) {
         }
 
 	var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
-	
+
         $.ajax({
             type: 'POST',
             timeout: 3000000,
@@ -935,8 +932,8 @@ jQuery(document).ready(function ($) {
             alert('Year and description are required.');
             return;
         }
-        if(planting_date === '' || desc === '') {
-            alert('Planting date and description are required.');
+        if(desc === '') {
+            alert('Description is required.');
             return;
         }
         if (stock_list_verified == 1 && seedlot_list_verified == 1){
@@ -983,13 +980,15 @@ jQuery(document).ready(function ($) {
 
         var design_method = $("#select_design_method").val();
         var stock_type = jQuery('#select_stock_type').val();
-
+        console.log("The method is: ", design_method);
         if (design_method == "CRD"){
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Completely Randomized design (CRD) with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
         } else if (design_method == "RCBD") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Randomized Complete Block design (RCBD), using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
         } else if (design_method == "RRC") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Resolvable Row-Column design (RRC), using the blocksdesign package in R. In addition to the one-way blocks it adds a constraint that no treatment may appear more than once in each row (latinization). Each row becomes an incomplete block.</p></div>');
+        } else if (design_method == "DRRC") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Doubly-Resolvable Row-Column design (DRRC), using the blocksdesign package in R. It creates complete blocks in columns and rows. The number of accessions must be divisible by the number of columns and rows.</p></div>');
         } else if (design_method == "Alpha") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Alpha design starting from design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Lattice") {
@@ -1245,6 +1244,85 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+        } else if (design_method == "DRRC") {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").show();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").show();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").show();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
+            $("#field_map_row_aug").hide();
+            $("#trial_multi-design_more_info").show();
+            $("#FieldMap").show();
+            $("#prephelp").hide();
+            $("#show_no_of_row_in_design").hide();
+            $("#show_no_of_col_in_design").hide();
+            $("#show_no_of_rep_times").hide();
+            $("#show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
+            $("#rep_count_section").show();
+            $("#block_number_section").hide();
+            $("#block_size_section").hide();
+            $("#max_block_size_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").show();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
+            $("#design_info").show();
+            $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
+            $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         } else if (design_method == "Alpha") {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
@@ -1465,10 +1543,9 @@ jQuery(document).ready(function ($) {
             $("#block_size_section").hide();
             $("#max_block_size_section").show();
             $("#row_number_section").hide();
-            $("#row_number_per_block_section").hide();
+            $("#row_number_per_block_section").show();
             $("#col_number_per_block_section").hide();
             $("#col_number_section").hide();
-            $("#row_number_per_block_section").hide();
             $("#other_parameter_section").hide();
             $("#design_info").show();
             $("#greenhouse_num_plants_per_accession_section").hide();
@@ -2101,7 +2178,7 @@ jQuery(document).ready(function ($) {
         }
 
 	    var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
-	
+
         jQuery.ajax({
            type: 'POST',
            timeout: 3000000,

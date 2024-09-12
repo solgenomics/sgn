@@ -21,6 +21,7 @@ use SGN::Model::Cvterm;
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Stock::TissueSample::Search;
 use CXGN::Genotype::Protocol;
+use CXGN::TrackingActivity::ActivityProject;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -57,7 +58,7 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
 
 sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #print STDERR "Check 1: ".localtime()."\n";
-    print STDERR "TRIAL INIT...\n\n";
+    #print STDERR "TRIAL INIT...\n\n";
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
@@ -145,6 +146,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $design_type = $trial->get_design_type();
     $c->stash->{design_name} = $design_type;
     $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
+
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
 
     #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
@@ -298,6 +301,36 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my $locations_by_program_json = encode_json(\@locations_by_program);
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
+    } elsif ($trial_type_name eq 'activity_record') {
+        my $project_id = $c->stash->{trial_id};
+        my $project_vendor_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_vendor', 'project_property')->cvterm_id();
+        my $project_vendor_rs = $schema->resultset("Project::Projectprop")->find ({
+            project_id => $project_id,
+            type_id => $project_vendor_cvterm_id
+        });
+        my $vendor_id;
+        if ($project_vendor_rs) {
+            $vendor_id = $project_vendor_rs->value();
+        }
+
+        $c->stash->{vendor_id} = $vendor_id;
+        $c->stash->{template} = '/tracking_activities/activity_project.mas';
+    }
+    elsif ($trial_type_name eq "transformation_project"){
+        my $program_name = $breeding_program_data->[0]->[1];
+        my $locations = $program_object->get_all_locations_by_breeding_program();
+        my @locations_by_program;
+        foreach my $location_hashref (@$locations) {
+            my $properties = $location_hashref->{'properties'};
+            my $program = $properties->{'Program'};
+            my $name = $properties->{'Name'};
+            if ($program eq $program_name) {
+                push @locations_by_program, $name;
+            }
+        }
+        my $locations_by_program_json = encode_json(\@locations_by_program);
+        $c->stash->{locations_by_program_json} = $locations_by_program_json;
+        $c->stash->{template} = '/transformation/transformation_project.mas';
     }
     else {
         my $field_management_factors = $c->config->{management_factor_types};
@@ -373,8 +406,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
-#    print STDERR "WHAT =".Dumper($what)."\n";
-#    print STDERR Dumper $c->req->params();
+    #print STDERR "trial_download: WHAT =".Dumper($what)."\n";
+    #print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -479,14 +512,14 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $trial_name = $trial->get_name();
+    $trial_name =~ s/ /\_/g;
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
-    my $temp_file_name = $trial_id . "_" . "$what" . "XXXX";
+    my $temp_file_name = $trial_name . "_" . "$what" . "XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-#    print STDERR "TEMPFILE : $tempfile\n";
 
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
@@ -513,7 +546,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         $format = 'csv';
     }
 
-    my $file_name = $trial_id . "_" . "$what" . ".$format";
+    #my $file_name = $trial_id . "_" . "$what" . ".$format";
+    my $file_name = $trial_name . "_" . "layout" . ".$format";
     $c->res->content_type('Application/'.$format);
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
@@ -525,7 +559,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     my $self = shift;
     my $c = shift;
-#    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -561,7 +594,7 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-#    print STDERR "TEMPFILE : $tempfile\n";
+    #print STDERR "TEMPFILE : $tempfile\n";
 
     my $trial_download_args = {
         bcs_schema => $schema,

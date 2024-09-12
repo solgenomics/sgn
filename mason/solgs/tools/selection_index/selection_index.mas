@@ -37,7 +37,7 @@ $training_pop_name
 <&| /page/info_section.mas,
   collapsible => 1,
   collapsed  => 0,
-  title      => "Calculate selection index"
+  title      => "Selection index calculator"
   &>
 
   <div id="si_canvas">

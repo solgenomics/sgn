@@ -152,6 +152,91 @@ is(scalar @{$response->{'added'}}, 5);
 my $list_id = $message_hash->{list_id};
 CXGN::List::delete_list($schema->storage->dbh, $list_id);
 
+############## test upload file for Email functionality ###################
+my $file2 = $f->config->{basepath}."/t/data/stock/test_accession_email_upload.xlsx";
+my $email_address;
+my $session_id;
+
+my $verify_response = $ua->post(
+    'http://localhost:3010/ajax/accessions/verify_accessions_file',
+    Content_Type => 'form-data',
+    Content => [
+        new_accessions_upload_file => [ $file2, 'test_accession_email_upload.xlsx', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id" => $session_id,
+        "fuzzy_check_upload_accessions" => 1,
+    ]
+);
+ok($verify_response->is_success, 'Verify accessions file request successful');
+my $verify_message = $verify_response->decoded_content;
+my $verify_hash;
+eval { $verify_hash = decode_json($verify_message); };
+ok(!$@, 'Verify response is valid JSON') or diag("JSON parse error: $@");
+diag("Verify response: " . Dumper($verify_hash));
+
+SKIP: {
+    skip "Verification failed, cannot proceed with adding accessions", 1 unless $verify_hash && $verify_hash->{success};
+
+    # Now, add the accessions
+    my $add_response = $ua->post(
+        'http://localhost:3010/ajax/accession_list/add',
+        Content_Type => 'form-data',
+        Content => [
+            full_info => encode_json($verify_hash->{full_data}),
+            allowed_organisms => encode_json(['Solanum lycopersicum']),
+            "sgn_session_id" => $sgn_session_id,
+            "email_address_upload" => $email_address,
+        ]
+    );
+
+    ok($add_response->is_success, 'Add accessions request successful');
+    my $add_message = $add_response->decoded_content;
+    my $add_hash;
+    eval { $add_hash = decode_json($add_message); };
+    ok(!$@, 'Add response is valid JSON') or diag("JSON parse error: $@");
+    diag("Add response: " . Dumper($add_hash));
+
+    ok($add_hash->{success}, 'Accessions added successfully');
+    is(scalar @{$add_hash->{added}}, 2, 'Two accessions were added');
+}
+
+#Remove added list so tests downstream pass
+# Clean up
+if ($verify_hash && $verify_hash->{list_id}) {
+    CXGN::List::delete_list($schema->storage->dbh, $verify_hash->{list_id});
+}
+
+###############################
+
+# test upload of synonym append / replace function
+my $synonyms_file = $f->config->{basepath}."/t/data/stock/test_accession_upload_synonyms.xls";
+$response = $ua->post(
+    'http://localhost:3010/ajax/accessions/verify_accessions_file',
+    Content_Type => 'form-data',
+    Content => [
+        new_accessions_upload_file => [ $synonyms_file, 'test_accession_upload', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id"=>$sgn_session_id,
+        "fuzzy_check_upload_accessions"=>1,
+        "append_synonyms"=>1
+    ]
+);
+ok($response->is_success);
+my $resp_append = decode_json $response->decoded_content;
+is_deeply($resp_append->{'full_data'}->{'new_test_accession03'}->{'synonyms'}, ['new_test_accession3_synonym1','new_test_accession3_synonym2']);
+
+$response = $ua->post(
+    'http://localhost:3010/ajax/accessions/verify_accessions_file',
+    Content_Type => 'form-data',
+    Content => [
+        new_accessions_upload_file => [ $synonyms_file, 'test_accession_upload', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id"=>$sgn_session_id,
+        "fuzzy_check_upload_accessions"=>1,
+        "append_synonyms"=>0
+    ]
+);
+ok($response->is_success);
+my $resp_replace = decode_json $response->decoded_content;
+is_deeply($resp_replace->{'full_data'}->{'new_test_accession03'}->{'synonyms'}, ['new_test_accession3_synonym2']);
+
 #Remove added stocks so tests downstream do not fail, but also test if for attributes
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_test_accession01'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);

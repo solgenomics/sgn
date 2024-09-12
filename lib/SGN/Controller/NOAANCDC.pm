@@ -11,7 +11,8 @@ sub noaa_ncdc_analysis :Path('/noaa_ncdc_analysis') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $user_id;
     if ($c->user()) {
         $user_id = $c->user->get_object()->get_sp_person_id();

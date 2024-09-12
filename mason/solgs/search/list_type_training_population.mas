@@ -25,13 +25,17 @@ my $search_params = '?dsp=genotyping_protocols,trials|plots,traits,accessions&ds
 <&| /page/info_section.mas, 
     collapsible => 1, 
   collapsed   => 0,
-  title       => "Or use a list or dataset type training population or create a new one",
+  title       => "Or use a list or dataset as a training population",
 &>
 
-<& /solgs/tools/select_menu.mas,
-analysis_type => 'list_type_training',
-wizard_link_txt => 'Create a new dataset of plots or trials',
-breeder_search_params => $search_params  &>
+
+
+  <& /solgs/tools/login.mas,
+    tool_url => '/solgs/search/' ,
+    analysis_type => 'list_type_training',
+    wizard_link_txt => 'Create a new dataset of plots or trials',
+    breeder_search_params => $search_params  
+    &>
 
 </&>
 

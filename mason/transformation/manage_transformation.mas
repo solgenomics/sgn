@@ -1,0 +1,34 @@
+<%args>
+$locations
+$programs
+$roles
+$user_id
+</%args>
+
+<%perl>
+    my $subtitle;
+    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="create_transformation_project_link" name="create_transformation_project_link" >Add Transformation Project</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_vector_construct_link">Add Vector Construct</button>';
+</%perl>
+
+<br />
+<& /page/page_title.mas, title => "Manage Transformations" &>
+
+<div class="container-fluid">
+
+<&| /page/info_section.mas, title=>"Transformations" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
+
+<& /transformation/transformation_project_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles,  &>
+
+</&>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+    jQuery('#add_vector_construct_link').click(function() {
+        location.href = '/vector/new';
+    })
+});
+
+</script>

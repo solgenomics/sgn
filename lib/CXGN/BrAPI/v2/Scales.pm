@@ -184,9 +184,26 @@ has 'scale_db' => (
         );
 
         my $scale_ref = \%scale;
+        my $data_type;
+        my $decimal_places;
+        my $trait_categories;
+        my $valid_values_max;
+        my $valid_values_min;
+        my $additional_info;
+        my $external_references;
+        my $ontology_reference;
+        my $scale_id;
+        my $scale_name;
+        my $scale_PUI;
+        my $units;
+        $scale_ref->{'validValues'}{'categories'} =undef;
 
         while (my $prop = $props->next()){
             my $category = $categories{$prop->get_column('rank')};
+
+            if ($prop->get_column('type_id') == $self->scale_categories_id) {
+                $trait_categories = $prop->get_column('value');
+            }
 
             if ($prop->get_column('type_id') == $self->scale_categories_label_id) {
                 $category->{'label'} = $prop->get_column('value');
@@ -199,26 +216,45 @@ has 'scale_db' => (
             }
 
             if ($prop->get_column('type_id') == $self->scale_format_id) {
-                $scale_ref->{'dataType'} = $prop->get_column('value');
+                $data_type = $prop->get_column('value');
             }
             if ($prop->get_column('type_id') == $self->scale_decimal_places_id) {
-                $scale_ref->{'decimalPlaces'} = $prop->get_column('value')+0;
+                $decimal_places = $prop->get_column('value')+0;
             }
 
             if ($prop->get_column('type_id') == $self->scale_maximum_id) {
-                $scale_ref->{'validValues'}{'max'} = $prop->get_column('value')+0;
+                $valid_values_max = $prop->get_column('value')+0;
             }
             if ($prop->get_column('type_id') == $self->scale_minimum_id) {
-                $scale_ref->{'validValues'}{'min'} = $prop->get_column('value')+0;
+                $valid_values_min = $prop->get_column('value')+0;
             }
         }
 
-        if (%categories) {
+        if ($trait_categories){ #Breedbase categories
+            my @categories = split(/\//, $trait_categories);
+            foreach (@categories){
+                push @{$scale_ref->{'validValues'}{'categories'}}, {
+                    'label' => qq|$_|,
+                    'value' => qq|$_|
+                };
+            }
+        } elsif (%categories) { #Implemented by BI
             my $ref = \%categories;
             my $maxkey = max keys %$ref;
             my @array = @{$ref}{0 .. $maxkey};
             $scale_ref->{'validValues'}{'categories'} = \@array;
         }
+        $scale_ref->{'additionalInfo'} = $additional_info;
+        $scale_ref->{'dataType'} = $self-> _format_data_type($data_type);
+        $scale_ref->{'decimalPlaces'} = $decimal_places;
+        $scale_ref->{'validValues'}{'maximumValue'} = $valid_values_max;
+        $scale_ref->{'validValues'}{'minimumValue'} = $valid_values_min;
+        $scale_ref->{'externalReferences'} = $external_references;
+        $scale_ref->{'ontologyReference'} = $ontology_reference;
+        $scale_ref->{'scaleDbId'} = $scale_id;
+        $scale_ref->{'scaleName'} = $scale_name;
+        $scale_ref->{'scalePUI'} = $scale_PUI;
+        $scale_ref->{'units'} = $units;
 
         return $scale_ref;
     }
@@ -385,6 +421,31 @@ sub delete {
             }
         }
     )->delete;
+}
+
+sub _format_data_type {
+    my $self = shift;
+    my $value = shift;
+    my $dataType = "Text"; #Text is the default trait_format for phenotypes in breedbase
+    $value =~ s/^\s+|\s+$//g;
+
+    if ($value) {
+        my %formats = (
+	    "categorical" => "Ordinal",
+            "numeric"  => "Numerical",
+            "qualitative"  => "Nominal",
+            "numerical"  => "Numerical",
+            "nominal"  => "Nominal",
+            "code" => "Code",
+            "date" => "Date" ,
+            "duration" => "Duration",
+            "ordinal" => "Ordinal",
+            "text"=> "Text",
+        );
+
+        $dataType = $formats{lc $value} ? $formats{lc $value} : $dataType;
+    }
+    return $dataType;
 }
 
 1;

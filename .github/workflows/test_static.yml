@@ -1,0 +1,45 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Build documentation with R bookmark
+
+on:
+  # Runs on pushes/marge targeting the default branch
+  pull_request:    
+    paths:
+      - 'docs/r_markdown_docs/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write 
+  id-token: write
+
+jobs:
+  # Single deploy job since we're just deploying
+  build_and_deploy_static_pages_for_manual:          
+    runs-on: ubuntu-latest
+    container: 
+      image: bienkowskid/fedora40-r-bookdown
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:          
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}        
+      - name: Save directory for checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Create gitbook         
+        working-directory: ./docs/r_markdown_docs
+        run: R -q -e 'bookdown::render_book("index.Rmd", "bookdown::gitbook")'        
+      - name: Create manual pdf         
+        working-directory: ./docs/r_markdown_docs
+        run: R -q -e 'bookdown::render_book("index.Rmd", "bookdown::pdf_book")'        
+      - name: Commit and push documentation        
+        run: |          
+          date > generated.txt
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add --force --all docs/
+          git commit -m "update bookdown docs"
+          git push

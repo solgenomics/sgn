@@ -298,6 +298,8 @@ rect.bordered {
 %        $method = 'RCBD';
 %    } elsif ($type eq 'Resolvable Row-Column'){
 %        $method = 'RRC';
+%    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
+%        $method = 'DRRC';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
@@ -525,6 +527,18 @@ rect.bordered {
                                         <label class="col-sm-7 control-label">Number of field rows (Required): </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="row_number" name="row_number" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="col_number_section" style="display: none">
+                                        <label class="col-sm-7 control-label">Number of Columns (Required): </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="col_number" name="col_number" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="col_number_per_block_section" style="display: none">
+                                        <label class="col-sm-7 control-label">Number of Columns per Block (2 or 4): </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="fieldMap_col_number" name="fieldMap_col_number" />
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="row_number_per_block_section" style="display: none">
@@ -770,7 +784,7 @@ rect.bordered {
 				    <span class="col-sm-1 text-right">
 				      <input type="radio" name="plot_numbering_scheme"  id="block_based" value="block_based" checked="checked" />
 				    </span>
-				  
+
                                     <span class="col-sm-6 text-left">block based plot numbers (increment leading digit for every block)</span>
 				  </div>
 				  <div class="form-group form-group-sm">
@@ -784,7 +798,7 @@ rect.bordered {
 				      consecutive plot numbers throughout the blocks
 				    </span>
 				  </div>
-				
+
                                      <div class="form-group form-group-sm" >
                                          <label class="col-sm-7 control-label">Plot prefix: </label>
                                          <div class="col-sm-5" >
@@ -1002,7 +1016,7 @@ jQuery(document).ready(function(){
             jQuery('#randomization_div').hide();
         }
     });
-    
+
     var planting_date_element = jQuery("#add_project_planting_date");
     jQuery('input[title="planting_date"]').daterangepicker(
         {

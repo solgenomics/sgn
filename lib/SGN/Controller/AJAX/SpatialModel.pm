@@ -37,8 +37,9 @@ sub shared_phenotypes: Path('/ajax/spatial_model/shared_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $traits = $ds->retrieve_traits();
 
@@ -107,10 +108,9 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     print STDERR "pheno_filepath: $pheno_filepath\n";
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-
-    
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $temppath =  $tempfile;
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema,  file_name => $temppath, quotes=>0);
     $ds -> trials([$trial_id]);

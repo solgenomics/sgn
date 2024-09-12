@@ -136,18 +136,16 @@ $latest_trial_activity => undef
                     </div>
                 </td>
             </tr>
-            <tr>
-                <td><b>Transplanting Date</b></td>
-                <td>
-                    <div id="transplanting_date">
-% if ($transplanting_date) {
-    <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $transplanting_date %>" ><% $transplanting_date %></a>
-% } else {
-%  print "<span class='text-danger'>[No Transplanting Date]</span>";
+% if ($transplanting_date && $transplanting_date ne '') {
+<tr>
+    <td><b>Transplanting Date</b></td>
+    <td>
+        <div id="transplanting_date">
+            <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $transplanting_date %>" ><% $transplanting_date %></a>
+        </div>
+    </td>
+</tr>
 % }
-                    </div>
-                </td>
-            </tr>
             <tr>
                 <td><b>Harvest Date</b></td>
                 <td>
@@ -218,7 +216,7 @@ $latest_trial_activity => undef
         <table class="table table-hover table-bordered">
             <tr><td><b>Plot Width (m)</b></td>
                 <td>
-                    <div id="trial_description">
+                    <div id="plot_width">
 % if ($plot_width) {
 %  print "$plot_width";
 % } else {
@@ -229,7 +227,7 @@ $latest_trial_activity => undef
             </tr>
             <tr><td><b>Plot Length (m)</b></td>
                 <td>
-                    <div id="trial_description">
+                    <div id="plot_length">
 % if ($plot_length) {
 %  print "$plot_length";
 % } else {
@@ -240,7 +238,7 @@ $latest_trial_activity => undef
             </tr>
             <tr><td><b>Field Size (ha)</b></td>
                 <td>
-                    <div id="trial_description">
+                    <div id="field_size">
 % if ($field_size) {
 %  print "$field_size";
 % } else {
@@ -251,7 +249,7 @@ $latest_trial_activity => undef
             </tr>
             <tr><td><b>Trial Will Be Genotyped</b></td>
                 <td>
-                    <div id="trial_description">
+                    <div id="planned_to_be_genotyped">
 % if ($field_trial_is_planned_to_be_genotyped) {
 %  print "$field_trial_is_planned_to_be_genotyped";
 % } else {
@@ -262,7 +260,7 @@ $latest_trial_activity => undef
             </tr>
             <tr><td><b>Trial Will Be In Crosses</b></td>
                 <td>
-                    <div id="trial_description">
+                    <div id="planned_to_cross">
 % if ($field_trial_is_planned_to_cross) {
 %  print "$field_trial_is_planned_to_cross";
 % } else {

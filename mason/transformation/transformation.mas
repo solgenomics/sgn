@@ -1,0 +1,101 @@
+<%args>
+$transformation_id
+$transformation_name => ''
+$user_id => undef
+$identifier_prefix => ''
+$next_new_transformant => undef
+$last_number => undef
+$plant_material
+$vector_construct
+$transformation_notes => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<& /page/page_title.mas, title => "Details for transformation '$transformation_name'" &>
+
+
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <table class="table table-bordered table-hover">
+                        <tr><td><b>Plant Material</b></td><td><%$plant_material%></td></tr>
+                        <tr><td><b>Vector Construct</b></td><td><%$vector_construct%></td></tr>
+                        <tr><td><b>Notes</b></td><td><%$transformation_notes%></td></tr>
+                    </table>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_transformants_link">Add New Transformants (Accessions)</button><button class="btn btn-sm btn-default" style="margin:3px" id="custom_barcode_link">Design Custom Barcodes Using a List</button>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Transformants (Accessions) Derived from this Transformation ', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="transformants_table">
+                        <thead>
+                            <tr>
+                                <th>Accessions</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <&| /page/info_section.mas, title => 'Add transformants (accessions) to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding transformants (accessions) to a new or exisiting list</i>'&>
+                            <br>
+                            <div id="transformant_to_new_list" style="display:none"></div>
+                            <div id="transformant_add_to_list"></div>
+                        </&>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+<& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number  &>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var transformation_stock_id = "<%$transformation_id%>";
+    var transformants_table = jQuery('#transformants_table').DataTable({
+        'ajax': '/ajax/transformation/transformants/'+transformation_stock_id,
+        'autoWidth': false,
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#transformant_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i][1]+"\n";
+                }
+                jQuery("#transformant_to_new_list").html(html);
+                addToListMenu("transformant_add_to_list", "transformant_to_new_list", {
+                    selectText: true,
+                    listType: 'accessions',
+                });
+            }
+        }
+
+    });
+
+    jQuery('#custom_barcode_link').click(function() {
+        location.href = '/tools/label_designer';
+    })
+
+});
+
+</script>

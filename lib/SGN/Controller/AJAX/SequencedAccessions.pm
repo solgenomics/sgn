@@ -22,7 +22,7 @@ sub get_all_sequenced_stocks :Path('/ajax/genomes/sequenced_stocks') {
     my $c = shift;
 
     my $user_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $sequenced_stocks = CXGN::Stock::SequencingInfo->get_props($schema);
 
     print STDERR "SEQeunced STOCKS: ".Dumper($sequenced_stocks);
@@ -40,7 +40,7 @@ sub get_all_sequenced_stocks :Path('/ajax/genomes/sequenced_stocks') {
      my $user_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
      print STDERR "Retrieving sequencing info for stock $stock_id...\n";
      
-     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
      my $sequenced_stocks = CXGN::Stock::SequencingInfo->get_props($schema, $stock_id);
 
      my @info = $self->format_sequencing_infos($schema, $user_id, $sequenced_stocks);
@@ -122,7 +122,8 @@ sub get_sequencing_info :Path('/ajax/genomes/sequencing_info') Args(1) {
     my $c = shift;
     my $stockprop_id = shift;
 
-    my $si = CXGN::Stock::SequencingInfo->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), prop_id => $stockprop_id });
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $si = CXGN::Stock::SequencingInfo->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), prop_id => $stockprop_id });
 
     my $hashref = $si->to_hashref();
 
@@ -154,7 +155,8 @@ sub store_sequencing_info :Path('/ajax/genomes/store_sequencing_info') Args(0) {
     if (!$params->{stockprop_id}) { $params->{stockprop_id} = undef; } # force it to undef if it is a ""
 
     print STDERR "Create sequencing info object...\n";
-    my $si = CXGN::Stock::SequencingInfo->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $si = CXGN::Stock::SequencingInfo->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) });
     print STDERR "Done\n";
     my $timestamp = DateTime->now();
     $params->{sp_person_id} = $c->user()->get_object()->get_sp_person_id();
@@ -194,9 +196,10 @@ tion." };
 	return;
     }
 
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $si = CXGN::Stock::SequencingInfo->new(
 	{
-	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
 	    prop_id => $stockprop_id,
 	});
 

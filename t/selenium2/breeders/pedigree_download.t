@@ -108,10 +108,10 @@ $t->while_logged_in_as("submitter", sub {
 
     # PEDIGREE LIST DOWNLOAD
     $t->get_ok('/breeders/download');
-    sleep(4);
+    sleep(10);
 
     $t->find_element_ok("pedigree_accession_list_list_select", "id", "select pedigrees accession download list")->click();
-    sleep(1);
+    sleep(4);
 
     $t->find_element_ok(
         "//select[\@id='pedigree_accession_list_list_select']/option[contains(text(),\"$list_name\")]",

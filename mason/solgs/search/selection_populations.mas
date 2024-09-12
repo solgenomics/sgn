@@ -33,7 +33,6 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.Dataset", "jquery.dataTables", "solGS.selectionPopulations",  "solGS.ajaxAutocomplete"] &>
-
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <&| /page/info_section.mas,
@@ -46,7 +45,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     <div id="search_div" class="form-inline">
     <input  type="text"
 	    class="form-control"
-	    placeholder="search for a selection population"
+	    placeholder="search for a trial"
 	    size="30" id="population_search_entry"/>
 
     <button type="submit"
@@ -56,7 +55,6 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     </button>
     <div  id="form-feedback-search-trials" style="color:red"> </div>
   </div>
-
 
   <div id="selection_pops_message"  class="message"></div>
   <& /solgs/spinner/spinner.mas &>
@@ -68,7 +66,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 	  <th>Selection population</th>
 	  <th>Description</th>
 	  <th>Year</th>
-    <th>More details</th>
+	  <th>More details</th>
 	  <th>View GEBVs</th>
 	</tr>
       </thead>
@@ -76,6 +74,5 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
   </div>
 
   <& /solgs/search/list_type_selection_population.mas &>
-
-</&>
 </div>
+</&>

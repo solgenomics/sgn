@@ -48,7 +48,7 @@ sub _validate_with_plugin {
     }
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
+    if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of transaction data
         push @error_messages, "Spreadsheet is missing header or contains no rows";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -136,6 +136,10 @@ sub _validate_with_plugin {
             $transaction_description =  $worksheet->get_cell($row,5)->value();
         }
 
+        if (!defined $from_seedlot_name && !defined $to_seedlot_name) {
+            last;
+        }
+
         if (!$from_seedlot_name || $from_seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: from_seedlot_name missing.";
         } else {
@@ -151,17 +155,17 @@ sub _validate_with_plugin {
         }
 
         if (!defined($amount) || $amount eq '') {
-            push @error_messages, "Cell D$row_name: amount missing";
+            push @error_messages, "Cell C$row_name: amount missing";
         }
         if (!defined($weight) || $weight eq '') {
-            push @error_messages, "Cell E$row_name: weight(g) missing";
+            push @error_messages, "Cell D$row_name: weight(g) missing";
         }
         if ($amount eq 'NA' && $weight eq 'NA') {
             push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
         }
 
         if (!defined($operator_name) || $operator_name eq '') {
-            push @error_messages, "Cell C$row_name: operator_name missing";
+            push @error_messages, "Cell E$row_name: operator_name missing";
         }
 
         push @from_seedlot_to_seedlot_pairs, [$from_seedlot_name, $to_seedlot_name];
@@ -270,9 +274,8 @@ sub _parse_with_plugin {
             $transaction_description =  $worksheet->get_cell($row,5)->value();
         }
 
-        #skip blank lines
-        if (!$to_seedlot_name && !$from_seedlot_name) {
-            next;
+        if (!defined $from_seedlot_name && !defined $to_seedlot_name) {
+            last;
         }
 
         my $from_seedlot_rs = $schema->resultset("Stock::Stock")->find({
