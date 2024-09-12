@@ -304,6 +304,16 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     } elsif ($trial_type_name eq 'activity_record') {
         my $project_id = $c->stash->{trial_id};
         my $project_vendor_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_vendor', 'project_property')->cvterm_id();
+        my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+
+        my $activity_type = $schema->resultset("Project::Projectprop")->find ({ project_id => $project_id, type_id => $activity_type_cvterm_id })->value();
+        if ($activity_type eq 'transformation') {
+            $activity_type = 'Transformation';
+        } elsif ($activity_type eq 'tissue_culture') {
+            $activity_type = 'Tissue Culture';
+        }
+        $c->stash->{activity_type} = $activity_type;
+
         my $project_vendor_rs = $schema->resultset("Project::Projectprop")->find ({
             project_id => $project_id,
             type_id => $project_vendor_cvterm_id

@@ -102,7 +102,7 @@ sub add_transformation_project_POST :Args(0){
             year => $year,
             project_description => "Tracking transformation progress for $project_name",
             activity_project_name => $tracking_project_name,
-            activity_type => 'tissue_culture',
+            activity_type => 'transformation',
             nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
             owner_id => $user_id,
             progress_of_project_id => $transformation_project_id,
