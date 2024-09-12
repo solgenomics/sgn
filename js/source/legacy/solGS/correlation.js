@@ -522,13 +522,16 @@ jQuery(document).ready(function () {
   if (location.pathname.match(/correlation\/analysis/)) {
     corrPopsDataDiv = solGS.correlation.corrPopsDataDiv;
     var tableId = 'corr_pops_table';
-    var corrPopsTable = solGS.correlation.createTable(tableId)
+    var corrPopsTable = solGS.correlation.createTable(tableId);
     jQuery(corrPopsDataDiv).append(corrPopsTable).show();
 
-    var corrPops = solGS.correlation.getCorrPops()
+    var corrPops = solGS.correlation.getCorrPops();
     var corrPopsRows = solGS.correlation.getCorrPopsRows(corrPops);
 
-    solGS.correlation.displayCorrPopsTable(tableId, corrPopsRows)
+    solGS.correlation.displayCorrPopsTable(tableId, corrPopsRows);
+
+    jQuery("#add_new_pops").show();
+
   }
 });
 
