@@ -186,6 +186,55 @@ sub get_transformation_info {
 }
 
 
+sub get_project_info {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformation_stock_id = $self->transformation_stock_id();
+
+    my $q = "SELECT project.project_id, project.name
+        FROM nd_experiment_stock
+        JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+        JOIN project ON (nd_experiment_project.project_id = project.project_id)
+        WHERE nd_experiment_stock.stock_id = ? ";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($transformation_stock_id);
+
+    my @project_info = ();
+    while (my ($project_id,  $project_name) = $h->fetchrow_array()){
+        push @project_info, [$project_id,  $project_name]
+    }
+
+    return \@project_info;    
+}
+
+
+sub get_tracking_identifier {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $material_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "material_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.object_id = stock.stock_id) and stock_relationship.type_id = ?
+        where stock_relationship.subject_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($material_of_type_id, $transformation_stock_id);
+
+    my @tracking_identifiers = ();
+    while (my ($stock_id,  $stock_name) = $h->fetchrow_array()){
+        push @tracking_identifiers, [$stock_id,  $stock_name]
+    }
+
+    return \@tracking_identifiers;
+}
+
+
+
 ###
 1;
 ###

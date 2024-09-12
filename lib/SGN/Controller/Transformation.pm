@@ -67,6 +67,22 @@ sub transformation_page : Path('/transformation') Args(1) {
         $updated_status_string = '<span style="color:red">'.$all_info_string.'</span>';
     }
 
+    my $project_info = $transformation_obj->get_project_info();
+    my $project_id = $project_info->[0]->[0];
+    my $project_name = $project_info->[0]->[1];
+    print STDERR "ID =".Dumper($project_id)."\n";
+    print STDERR "NAME =".Dumper($project_name)."\n";
+    my $project_link = qq{<a href="/breeders/trial/$project_id">$project_name</a>};
+
+    my $identifier_link;
+    my $tracking_transformation = $c->config->{tracking_transformation};
+    if ($tracking_transformation) {
+        my $tracking_info = $transformation_obj->get_tracking_identifier();
+        my $identifier_id = $tracking_info->[0]->[0];
+        my $identifier_name = $tracking_info->[0]->[1];
+        $identifier_link = qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
+    }
+
     $c->stash->{transformation_id} = $transformation_id;
     $c->stash->{transformation_name} = $transformation_name;
     $c->stash->{next_new_transformant} = $next_new_transformant;
@@ -77,6 +93,8 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{updated_status_type} = $updated_status_type;
     $c->stash->{updated_status_string} = $updated_status_string;
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
+    $c->stash->{identifier_link} = $identifier_link;
+    $c->stash->{project_link} = $project_link;
     $c->stash->{template} = '/transformation/transformation.mas';
 
 }
