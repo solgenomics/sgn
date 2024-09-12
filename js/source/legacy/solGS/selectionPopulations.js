@@ -128,7 +128,7 @@ jQuery(document).ready(function () {
 
         solGS.selectionPopulation.displaySelectionPopulations(res.data);
       } else {
-        var msg = "No result found.";
+        var msg = "No cached trial for selection prediction found.";
         solGS.selectionPopulation.feedbackOnFail(msg);
       }
 

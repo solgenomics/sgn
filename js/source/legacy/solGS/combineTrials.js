@@ -28,7 +28,7 @@ solGS.combinedTrials = {
 	     .filter(':has(:checkbox:checked)')
              .bind('click',  function() {
 
-		 jQuery("#done_selecting").val('Done selecting');
+		 jQuery("#select_trials_btn").val('Done selecting');
 		 var td =  jQuery(this).html();
 
 		 var selectedTrial = '<tr>' + td + '</tr>';
@@ -52,7 +52,7 @@ solGS.combinedTrials = {
     hideTrialsList: function() {
 	jQuery("#all_trials_div").empty();
 	jQuery("#searched_trials_div").empty();
-	jQuery("#done_selecting_div").hide();
+	jQuery("#select_trials_div").hide();
 	jQuery("#all_trials_search_message").hide();
 
     },
@@ -68,7 +68,7 @@ solGS.combinedTrials = {
 		jQuery("#selected_trials").hide();
 		jQuery("#combine_trials_div").hide();
 		jQuery("#search_again_div").hide();
-		jQuery("#done_selecting").val('Select');
+		jQuery("#select_trials_btn").val('Select');
 
 		//  searchAgain();
             }
@@ -92,8 +92,8 @@ solGS.combinedTrials = {
 	jQuery("#searched_trials_div").empty();
 	searchAllTrials(url);
 	jQuery("#all_trials_search_message").show();
-	jQuery("#done_selecting_div").show();
-	jQuery("#done_selecting").val('Select');
+	jQuery("#select_trials_div").show();
+	jQuery("#select_trials_btn").val('Select');
 
     },
 
@@ -422,7 +422,7 @@ Array.prototype.unique =
 
 
 jQuery(document).ready(function() {
-    jQuery('#done_selecting').on('click', function() {
+    jQuery('#select_trials_btn').on('click', function() {
 	solGS.combinedTrials.hideTrialsList();
     });
 

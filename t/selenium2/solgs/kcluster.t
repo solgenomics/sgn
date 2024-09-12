@@ -90,7 +90,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(90);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
@@ -128,9 +128,9 @@ $d->while_logged_in_as(
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(140);
+        sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
@@ -166,7 +166,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
@@ -206,7 +206,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
 
-        my $sel_pops = $d->find_element('//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
@@ -276,7 +276,7 @@ $d->while_logged_in_as(
         # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
         # sleep(250);
 
-        my $sel_pops = $d->find_element('//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
@@ -313,7 +313,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, 500);",
@@ -351,7 +351,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, 500);",
@@ -1509,7 +1509,7 @@ $d->while_logged_in_as(
             '//table[@id="searched_trials_table"]//input[@value="141"]',
             'xpath', 'select trial nacrri' )->click();
         sleep(2);
-        $d->find_element_ok( 'done_selecting', 'id', 'done selecting' )
+        $d->find_element_ok( 'select_trials_btn', 'id', 'done selecting' )
           ->click();
         sleep(2);
         $d->find_element_ok( 'combine_trait_trials', 'id', 'combine trials' )
@@ -1561,7 +1561,7 @@ $d->while_logged_in_as(
             '//table[@id="searched_trials_table"]//input[@value="141"]',
             'xpath', 'select trial nacrri' )->click();
         sleep(2);
-        $d->find_element_ok( 'done_selecting', 'id', 'done selecting' )
+        $d->find_element_ok( 'select_trials_btn', 'id', 'done selecting' )
           ->click();
         sleep(2);
         $d->find_element_ok( 'combine_trait_trials', 'id', 'combine trials' )
