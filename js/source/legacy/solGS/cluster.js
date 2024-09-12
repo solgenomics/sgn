@@ -808,6 +808,18 @@ solGS.cluster = {
 
   },
 
+  cleanupFeedback: function(canvasId, runBtnId, msgDiv, message) {
+    jQuery(`${canvasId} .multi-spinner-container`).hide();
+    jQuery(runBtnId).show();
+
+    jQuery(msgDiv).empty();
+
+    if (message) {
+      jQuery(msgDiv).html(message);
+    }
+
+  },
+
   plotCluster: function (plotData, downloadLinks) {
     var scores = plotData.pc_scores_groups;
  
@@ -1176,21 +1188,16 @@ jQuery(document).ready(function () {
       runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
       var page = clusterArgs.analysis_page;
 
+      runClusterBtnId = `#${runClusterBtnId}`;
       solGS.cluster
         .checkCachedCluster(page, clusterArgs)
         .done(function (res) {
           if (res.result == "success") {
-            jQuery(`${canvas} .multi-spinner-container`).hide();            
+            solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv);
             solGS.cluster.displayClusterOutput(res);
-
-            jQuery(clusterMsgDiv).empty();
-            jQuery("#" + runClusterBtnId).show();
           } else {
             jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery(clusterMsgDiv).empty();
-
-            runClusterBtnId = `#${runClusterBtnId}`;
-
             var title =
               "<p>This analysis may take a long time. " +
               "Do you want to submit the analysis and get an email when it completes?</p>";
@@ -1232,23 +1239,23 @@ jQuery(document).ready(function () {
                       .runClusterAnalysis(clusterArgs)
                       .done(function (res) {
                         if (res.result == "success") {
-                          jQuery(`${canvas} .multi-spinner-container`).hide();
+                          if (res.pc_scores_groups) {
+                            solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv )
+                            solGS.cluster.displayClusterOutput(res);
+                          } else {
+                            var msg = "There is no cluster groups data to plot. " + 
+                            "The R clustering script did not write cluster results to output files.";
 
-                          solGS.cluster.displayClusterOutput(res);
-                          jQuery(clusterMsgDiv).empty();
-                          jQuery(runClusterBtnId).show();
+                            solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
+                          }
                         } else {
-                          jQuery(clusterMsgDiv).html(
-                            "Error occured running the clustering. Possibly the R script failed."
-                          );
-                          jQuery(`${canvas} .multi-spinner-container`).hide();
-                          jQuery(runClusterBtnId).show();
+                          var msg = "Error occured running the clustering. Possibly the R script failed.";
+                          solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
                         }
                       })
                       .fail(function () {
-                        jQuery(clusterMsgDiv).html("Error occured running the clustering");
-                        jQuery(`${canvas} .multi-spinner-container`).hide();
-                        jQuery(runClusterBtnId).show();
+                        var msg = "Error occured running the clustering";
+                        solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
                       });
                   },
                 },
