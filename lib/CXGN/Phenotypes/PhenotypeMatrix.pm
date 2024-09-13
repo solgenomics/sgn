@@ -462,20 +462,21 @@ sub get_phenotype_matrix {
 		            }elsif ($self->repetitive_measurements() eq "averaged value") {
 		        	    my $count = 0;
 		        	    my $sum = 0;
-                        my $earliest_date; #here, using the first_date as the collect_date for the averaged values
+                        my $latest_date; #using the last_date as the collect_date for the averaged values
 		        	    foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
 		        	        if (defined($v->[0])) {   
 		        	    	    $sum += $v->[0];
 		        	    	    $count++;
-                                if (!defined($earliest_date) && defined($v->[1])) {
-                                    $earliest_date = $v->[1];
+                                if (defined($v->[1])) {
+                                    $latest_date = $v->[1];
+                                    # print STDERR "the latest date: $latest_date\n";
                                 }
 		        	        }
 		        	    }
                         ## the collected_date for the average obs will prin the first collect_date of that obs
 		        	    if ($count > 0) {
                             my $average_value = $sum/$count;
-                            my $output_val = defined $earliest_date ? "$average_value, $earliest_date" : $average_value;
+                            my $output_val = defined $latest_date ? "$average_value, $latest_date" : $average_value;
                             $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
                             # print STDERR "the average value : $output_val\n";
 		        	    }
