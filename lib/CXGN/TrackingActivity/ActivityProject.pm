@@ -103,5 +103,16 @@ sub get_project_inactive_identifiers {
 }
 
 
+sub get_project_activity_type {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $project_id = $self->trial_id;
+
+    my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+    my $activity_type = $schema->resultset("Project::Projectprop")->find ({ project_id => $project_id, type_id => $activity_type_cvterm_id })->value();
+
+    return $activity_type;
+}
+
 
 1;

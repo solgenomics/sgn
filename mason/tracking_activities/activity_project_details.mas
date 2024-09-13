@@ -39,8 +39,10 @@ $activity_type
                 <td><b>Record Type</b></td>
                 <td>
                     <div id="activity_type">
-% if ($activity_type) {
-%   print "$activity_type";
+% if ($activity_type eq 'transformation') {
+%     print 'Transformation';
+% } elsif ($activity_type eq 'tissue_culture') {
+%     print 'Tissue Culture';
 % } else {
 %   print "<span class='text-danger'>[No Record Type]</span>";
 % }

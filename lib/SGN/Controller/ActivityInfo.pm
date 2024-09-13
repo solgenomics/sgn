@@ -27,17 +27,6 @@ sub activity_details :Path('/activity/details') : Args(1) {
         $user_role = "curator";
     }
 
-    my $types = $c->config->{tracking_activities};
-    my @type_select_options = split ',',$types;
-
-    my $activity_type_header = $c->config->{tracking_activities_header};
-    my @activity_headers = split ',',$activity_type_header;
-
-    my @options = ();
-    for my $i (0 .. $#type_select_options) {
-        push @options, [$type_select_options[$i], $activity_headers[$i]];
-    }
-
     my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
     my $tracking_info = $tracking_identifier_obj->get_tracking_identifier_info();
 
@@ -54,6 +43,29 @@ sub activity_details :Path('/activity/details') : Args(1) {
     } elsif ($updated_status_type eq 'completed_metadata') {
         $status_display = '<span style="color:red">'.'COMPLETED'.'</span>';
         $completed_metadata = 1;
+    }
+
+    my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
+    my $tracking_project_id = $associated_projects->[0]->[0];
+    my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
+    my $activity_type = $tracking_project->get_project_activity_type();
+
+    my $types;
+    my $activity_type_header;
+    if ($activity_type eq 'tissue_culture') {
+        $types = $c->config->{tracking_tissue_culture};
+        $activity_type_header = $c->config->{tracking_tissue_culture_header};
+    } elsif ($activity_type eq 'transformation') {
+        $types = $c->config->{tracking_transformation};
+        $activity_type_header = $c->config->{tracking_transformation_header};
+    }
+
+    my @type_select_options = split ',',$types;
+    my @activity_headers = split ',',$activity_type_header;
+
+    my @options = ();
+    for my $i (0 .. $#type_select_options) {
+        push @options, [$type_select_options[$i], $activity_headers[$i]];
     }
 
     my $updated_status_string;
@@ -124,7 +136,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     if ($identifier_name) {
         $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
     }
-    
+
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $date = $time->ymd();

@@ -317,8 +317,20 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
 
+    my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
+    my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
+    my $tracking_project_id = $associated_projects->[0]->[0];
+    my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
+    my $activity_type = $tracking_project->get_project_activity_type();
+
+    my $tracking_activities;
+    if ($activity_type eq 'tissue_culture') {
+        $tracking_activities = $c->config->{tracking_tissue_culture};
+    } elsif ($activity_type eq 'transformation') {
+        $tracking_activities = $c->config->{tracking_transformation};
+    }
+
     my @details;
-    my $tracking_activities = $c->config->{tracking_activities};
     my @activity_types = split ',',$tracking_activities;
 
     my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
@@ -388,9 +400,22 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $c = shift;
     my $identifier_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+
+    my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
+    my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
+    my $tracking_project_id = $associated_projects->[0]->[0];
+    my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
+    my $activity_type = $tracking_project->get_project_activity_type();
+
+    my $tracking_activities;
+    if ($activity_type eq 'tissue_culture') {
+        $tracking_activities = $c->config->{tracking_tissue_culture};
+    } elsif ($activity_type eq 'transformation') {
+        $tracking_activities = $c->config->{tracking_transformation};
+    }
 
     my @summary = ();
-    my $tracking_activities = $c->config->{tracking_activities};
     my @activity_types = split ',',$tracking_activities;
 
     my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
@@ -445,7 +470,17 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
     my $c = shift;
     my $project_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $tracking_activities = $c->config->{tracking_activities};
+
+    my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
+    my $activity_type = $tracking_project->get_project_activity_type();
+
+    my $tracking_activities;
+    if ($activity_type eq 'tissue_culture') {
+        $tracking_activities = $c->config->{tracking_tissue_culture};
+    } elsif ($activity_type eq 'transformation') {
+        $tracking_activities = $c->config->{tracking_transformation};
+    }
+
     my @activity_types = split ',',$tracking_activities;
 
     my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
@@ -672,7 +707,17 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
     my $c = shift;
     my $project_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $tracking_activities = $c->config->{tracking_activities};
+
+    my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
+    my $activity_type = $tracking_project->get_project_activity_type();
+
+    my $tracking_activities;
+    if ($activity_type eq 'tissue_culture') {
+        $tracking_activities = $c->config->{tracking_tissue_culture};
+    } elsif ($activity_type eq 'transformation') {
+        $tracking_activities = $c->config->{tracking_transformation};
+    }
+
     my @activity_types = split ',',$tracking_activities;
 
     my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();

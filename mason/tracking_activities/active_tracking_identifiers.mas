@@ -1,5 +1,6 @@
 <%args>
 $trial_id
+$field_headers
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -11,9 +12,7 @@ $trial_id
             <tr>
                 <th>Tracking Identifier</th>
                 <th>Transformation ID</th>
-% my $tracking_activities = $c->config->{tracking_activities_header};
-% my @column_header = split ',',$tracking_activities;
-% foreach my $column_header(@column_header){
+% foreach my $column_header(@$field_headers){
                 <th><%$column_header%></th>
 %}
             </tr>
