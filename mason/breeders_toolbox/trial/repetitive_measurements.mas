@@ -1,0 +1,79 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'd3.d3v5Min', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min'] &>
+
+
+<div class="well well-sm table-responsive">
+    <center><h4>View plots for repetitive measurement traits</h4>
+    <br/>
+
+    <form class="form-horizontal" role="form">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 50px;">
+		    <div style="display: flex; align-items: center;">
+		    	<label for="select_trait_for_repetitive_plot"> Select Trait:</label>
+		    </div>
+            <div style="display: flex; align-items: center;">
+                <label for="repetitive_measurement_start_date"> Start Date: </label>
+                <input type="text" id="repetitive_measurement_start_date" title="repetitive_measurement_start_date" />
+            </div>
+            <div style="display: flex; align-items: center;"> 
+                <label for="repetitive_measurement_end_date"> End Date: </label>
+                <input type="text" id="repetitive_measurement_end_date" title="repetitive_measurement_end_date" />
+            </div>
+        </div>
+        <br/>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+            <div style="display: flex; align-items: center;">
+                <label for="trait_observation_level" style="margin-left: 10px;">Observation Level</label>
+                <select class="form-control" id="trait_observation_level">
+                    <option value="plots">Values for Plots of this Trait </option>
+                    <option value="plants">Values for Plants of this Trait </option>
+                    <option value="subplots">Values for Subplots of this Trait </option>
+                    <option value="tissue_sample">Values for Tissue Samples from this Trait </option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <label for="repetitive_measurements_level" style="margin-right: 10px;">Repetitive Measurements Level</label>
+                <select class="form-control" id="repetitive_measurements_level">
+                    <option value="first value">First Value of this Trait</option>
+                    <option value="last value">Last Value of this Trait</option>
+                    <option value="averaged values"> Averaged Values for this Trait</option>
+                    <option value="all values"> All Values of this Trait</option>
+                </select>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    jQuery('input[title="repetitive_measurement_start_date"]').daterangepicker(
+    	{
+    	    "singleDatePicker": true,
+    	    "showDropdowns": true,
+    	    "autoUpdateInput": true,
+    	    "startDate": "1960-01-01",
+    	    "yearSelect" : true,
+    	    "minDate": "1960-01-01",
+    	    "maxDate": "2030-12-31",
+    	    locale: { 
+    			format: 'YYYY-MM-DD'
+    	    }
+    	},
+    );
+
+    jQuery('input[title="repetitive_measurement_end_date"]').daterangepicker(
+    	{
+    	    "singleDatePicker": true,
+            "showDropdowns": true,
+    	    "autoUpdateInput": true,
+    	    "minDate": "1960-01-01",
+    	    "maxDate" : "2030-12-31",
+    	    "yearSelect" : true,
+    	    locale: {
+    			format: 'YYYY-MM-DD'
+    	    },
+    	},
+    );
+</script>
