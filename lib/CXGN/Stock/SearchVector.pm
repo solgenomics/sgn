@@ -276,8 +276,15 @@ sub search {
     my ($or_conditions, $and_conditions);
     $and_conditions->{'me.stock_id'} = { '>' => 0 };
 
-        my @vectorprop_filtered_stock_ids;
+    my @vectorprop_filtered_stock_ids;
 
+    my $stock_synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    
+    if ($stock_type_name){
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type_name, 'stock_type')->cvterm_id();
+    }
+
+    
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
 
         my @stockprop_wheres;
@@ -317,7 +324,7 @@ sub search {
                 print STDERR "Stockprop $term_name is not in this database! Only use stock_property in sgn_local configuration!\n";
             }
         }
-        my $stockprop_where = " WHERE  (" . join(" OR ", @stockprop_wheres).")";
+        my $stockprop_where = " WHERE stock.type_id=$stock_type_id AND (" . join(" OR ", @stockprop_wheres).")";
 
         my $stockprop_query = "SELECT stock_id FROM stock join stockprop using(stock_id) $stockprop_where;";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
@@ -343,11 +350,6 @@ sub search {
         $end = '';
     }
 
-    my $stock_synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
-
-    if ($stock_type_name){
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type_name, 'stock_type')->cvterm_id();
-    }
     
     if ($any_name) {
 	$or_conditions = [
@@ -363,7 +365,7 @@ sub search {
 
 	print STDERR "VECTORPROP FILTERED STOCK IDS = ".Dumper(\@vectorprop_filtered_stock_ids);
 	if (@vectorprop_filtered_stock_ids) {
-	    push @$or_conditions, { '-and' => [ 'me.stock_id'      => { '-in' => [ @vectorprop_filtered_stock_ids ] }, 'me.type_id' => $stock_type_id ] };
+	    push @$or_conditions, { 'me.stock_id' => { '-in' => [ @vectorprop_filtered_stock_ids ] } };
 	}
 	
     } else {
