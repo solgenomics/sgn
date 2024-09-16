@@ -359,7 +359,7 @@ sub search {
 
 	print STDERR "VECTORPROP FILTERED STOCK IDS = ".Dumper(\@vectorprop_filtered_stock_ids);
 	if (@vectorprop_filtered_stock_ids) {
-	    push @$or_conditions, { 'me.stock_id'      => { '-in' => [ @vectorprop_filtered_stock_ids ] } };
+	    push @$or_conditions, { '-and' => [ 'me.stock_id'      => { '-in' => [ @vectorprop_filtered_stock_ids ] }, 'me.type_id' => $stock_type_id ] };
 	}
 	
     } else {
