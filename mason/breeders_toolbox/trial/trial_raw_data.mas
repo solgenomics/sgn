@@ -48,18 +48,6 @@ $trial_id
       		</select>
 		</div>
     </td>
-	<td width="30"></td>
-    <td>
-		<div class="form-group">
-			<label for="repetitive_measurements_level">Repetitive measurements :</label>
-			<select id="repetitive_measurements_level">
-				<option>first value</option>
-				<option>last value</option>
-				<option>averaged value</option>
-				<option>all values</option>
-			</select>
-		</div>
-    </td>
 </tr>
 <tr>
     <td>
@@ -105,7 +93,6 @@ jQuery(window).ready( function() {
     jQuery('#raw_data_trait_select_button').click( function() {
 		var trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
 		var observation_level = jQuery('#raw_data_observation_level').find(":selected").val();
-		var repetitive_measurements_type = jQuery('#repetitive_measurements_level').find(":selected").val();
 		var start_date = jQuery('#raw_data_start_date').val();
 		var end_date = jQuery('#raw_data_end_date').val();
 
@@ -113,10 +100,9 @@ jQuery(window).ready( function() {
     	//console.log("check observation level:", observation_level);
     	//console.log("see the start date:", start_date);
     	//console.log("see the end date:", end_date);
-		//console.log("see the value for repetitive_measurement_type:", repetitive_measurements_type)
 
-	//alert("now fetching trait_id "+trait_id+" observation_level "+observation_level+" repetitive_measurements_type "+repetitive_measurements_type+" start date = "+start_date+" end date: "+end_date);
-        get_trait_data(<% $trial_id %>, trait_id, start_date, end_date, observation_level, repetitive_measurements_type)
+	//alert("now fetching trait_id "+trait_id+" observation_level "+observation_level+" start date = "+start_date+" end date: "+end_date);
+        get_trait_data(<% $trial_id %>, trait_id, start_date, end_date, observation_level)
 	    .then( (result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))
 	    .then( (result) => displayRawObservations(result.result) )
 	    .then( (final) => {
@@ -181,10 +167,10 @@ jQuery(window).ready( function() {
 	jQuery('#trait_selector_for_raw_data').html(menu);
     }
     
-    function get_trait_data(trial_id, trait_id, start_date, end_date, observation_level, repetitive_measurements_type) {
+    function get_trait_data(trial_id, trait_id, start_date, end_date, observation_level) {
 		return jQuery.ajax( {
     	   	url: "/brapi/v2/search/observations/",
-		    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ], observationTimeStampRangeStart: start_date, observationTimeStampRangeEnd: end_date, observationLevels: observation_level, repetitiveMeasurements_type: repetitive_measurements_type },
+		    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ], observationTimeStampRangeStart: start_date, observationTimeStampRangeEnd: end_date, observationLevels: observation_level},
 		    method: "POST"
 		});
     }
@@ -198,7 +184,7 @@ jQuery(window).ready( function() {
     }
     
     
-    function displayRawObservations(result, repetitive_measurements_type) {
+    function displayRawObservations(result) {
 		var data = new Array();
 		//alert(result);
 		for (var i=0; i<result.data.length; i++) {

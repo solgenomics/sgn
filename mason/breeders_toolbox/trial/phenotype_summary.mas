@@ -169,13 +169,14 @@ input[type="text"] {
     
     jQuery(document).ready(function () {
 	    var type = "<% $trial_stock_type %>";
-	
 	    jQuery.ajax( {
-            url: '/ajax/breeders/trial/'+ <% $trial_id %>' + '/collect_date_range',
+            url: '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
 	    }).done( function(r) {
             //alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
-            jQuery('#summary_start_date').val(r.start_date);
-            jQuery('#summary_end_date').val(r.end_date);
+            var raw_startDate = new Date(r.start_date).toISOString().split('T')[0];
+            var raw_endDate = new Date(r.end_date).toISOString().split('T')[0];
+            jQuery('#summary_start_date').val(raw_startDate);
+            jQuery('#summary_end_date').val(raw_endDate);
 	    }).fail( function(r) { alert('An error occurred!') });
 	    
     
