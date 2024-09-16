@@ -204,7 +204,6 @@ solGS.kinship = {
 
   displayKinshipPopsTable: function (tableId, data) {
 
-    console.log(`displayKinshipPopsTable data: ${data}`)
     var table = jQuery(`#${tableId}`).DataTable({
       'searching': true,
       'ordering': true,
@@ -527,7 +526,6 @@ jQuery(document).ready(function () {
 
   if (url.match(/kinship\/analysis/)) {
     var args = solGS.kinship.getKinshipArgsFromUrl();
-    console.log(`kinsip url args: ${JSON.stringify(args)}`)
     if (args.kinship_pop_id) {
       if (args.data_structure) {
         args["kinship_pop_id"] = args.data_structure + "_" + args.kinship_pop_id;
@@ -558,8 +556,8 @@ jQuery(document).ready(function () {
   var kinshipCanvas = solGS.kinship.canvas;
   jQuery(kinshipCanvas).on("click", "a", function (e) {
     var buttonId = e.target.id;
-    var kinPlotId = buttonId.replace(/download_/, "");
-    saveSvgAsPng(document.getElementById("#" + kinPlotId), kinPlotId + ".png", { scale: 1 });
+    var kinshipPlotId = buttonId.replace(/download_/, "");
+    saveSvgAsPng(document.getElementById("#" + kinshipPlotId), kinshipPlotId + ".png", { scale: 1 });
   });
 });
 
