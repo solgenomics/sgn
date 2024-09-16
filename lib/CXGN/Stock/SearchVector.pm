@@ -562,6 +562,8 @@ sub search {
     }
     # Comma separated list of query placeholders for the result stock ids
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
+
+    print STDERR "RESULT STOCK IDS: ".Dumper(\@result_stock_ids);
     
     # Get additional stock properties (pedigree, synonyms, donor info)
     #my $stock_query = "SELECT stock_id, uniquename, organism_id, stock_synonym
