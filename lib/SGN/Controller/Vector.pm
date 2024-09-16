@@ -55,12 +55,13 @@ sub vector_new :Path('/vector/new') Args(0) {
     my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
 
     
-    $c->stash->{sp_person_id} =
-	CXGN::Login->new( $c->dbc->dbh )->has_session();
+    my $sp_person_id = CXGN::Login->new( $c->dbc->dbh )->has_session();
 
-    if( $person_id ) {
-        $c->stash->{person} = CXGN::People::Person->new( $dbh, $person_id );
+    if( $sp_person_id ) {
+        $c->stash->{person} = CXGN::People::Person->new( $c->dbc->dbh, $sp_person_id );
     }
+
+    $c->stash->{person_id} = $sp_person_id;
     
     unless( $c->stash->{person_id} ) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
