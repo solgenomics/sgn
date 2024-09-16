@@ -108,8 +108,9 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+
     my $identifier_name = $c->req->param("identifier_name");
-#    print STDERR "IDENTIFIER NAME =".Dumper($identifier_name)."\n";
 
     if (! $c->user()) {
 	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -121,20 +122,34 @@ sub record_activity :Path('/activity/record') :Args(0) {
         $c->stash->{check_vendor_role} = $check_vendor_role;
     }
 
-    my $types = $c->config->{tracking_activities};
-    my @type_select_options = split ',',$types;
-
-    my $activity_type_header = $c->config->{tracking_activities_header};
-    my @activity_headers = split ',',$activity_type_header;
-
-    my @options = ();
-    for my $i (0 .. $#type_select_options) {
-        push @options, [$type_select_options[$i], $activity_headers[$i]];
-    }
-
     my $identifier_id;
+    my @options = ();
+    my @activity_headers = ();
+
     if ($identifier_name) {
         $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
+        my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
+        my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
+        my $tracking_project_id = $associated_projects->[0]->[0];
+        my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
+        my $activity_type = $tracking_project->get_project_activity_type();
+
+        my $types;
+        my $activity_type_header;
+        if ($activity_type eq 'tissue_culture') {
+            $types = $c->config->{tracking_tissue_culture_info};
+            $activity_type_header = $c->config->{tracking_tissue_culture_info_header};
+        } elsif ($activity_type eq 'transformation') {
+            $types = $c->config->{tracking_transformation_info};
+            $activity_type_header = $c->config->{tracking_transformation_info_header};
+        }
+
+        my @type_select_options = split ',',$types;
+        @activity_headers = split ',',$activity_type_header;
+
+        for my $i (0 .. $#type_select_options) {
+            push @options, [$type_select_options[$i], $activity_headers[$i]];
+        }
     }
 
     my $time = DateTime->now();

@@ -5,7 +5,7 @@ $activity_select => undef
 $type_select_options => undef
 $timestamp => undef
 $date => undef
-$activity_headers
+$activity_headers => undef
 
 </%args>
 
