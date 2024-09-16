@@ -1,6 +1,7 @@
 <%args>
 $trial_id
 $field_headers
+$activity_type
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -11,10 +12,14 @@ $field_headers
         <thead>
             <tr>
                 <th>Tracking Identifier</th>
+% if ($activity_type eq 'transformation') {
                 <th>Transformation ID</th>
+% } elsif ($activity_type eq 'tissue_culture') {
+                <th>Accession</th>
+% }
 % foreach my $column_header(@$field_headers){
                 <th><%$column_header%></th>
-%}
+% }
             </tr>
         </thead>
     </table>
