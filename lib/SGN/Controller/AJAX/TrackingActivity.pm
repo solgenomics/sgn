@@ -325,9 +325,9 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
 
     my $tracking_activities;
     if ($activity_type eq 'tissue_culture') {
-        $tracking_activities = $c->config->{tracking_tissue_culture};
+        $tracking_activities = $c->config->{tracking_tissue_culture_info};
     } elsif ($activity_type eq 'transformation') {
-        $tracking_activities = $c->config->{tracking_transformation};
+        $tracking_activities = $c->config->{tracking_transformation_info};
     }
 
     my @details;
@@ -410,9 +410,9 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
 
     my $tracking_activities;
     if ($activity_type eq 'tissue_culture') {
-        $tracking_activities = $c->config->{tracking_tissue_culture};
+        $tracking_activities = $c->config->{tracking_tissue_culture_info};
     } elsif ($activity_type eq 'transformation') {
-        $tracking_activities = $c->config->{tracking_transformation};
+        $tracking_activities = $c->config->{tracking_transformation_info};
     }
 
     my @summary = ();
@@ -476,13 +476,12 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
 
     my $tracking_activities;
     if ($activity_type eq 'tissue_culture') {
-        $tracking_activities = $c->config->{tracking_tissue_culture};
+        $tracking_activities = $c->config->{tracking_tissue_culture_info};
     } elsif ($activity_type eq 'transformation') {
-        $tracking_activities = $c->config->{tracking_transformation};
+        $tracking_activities = $c->config->{tracking_transformation_info};
     }
 
     my @activity_types = split ',',$tracking_activities;
-
     my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
 
     my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $project_id);
@@ -713,9 +712,9 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
 
     my $tracking_activities;
     if ($activity_type eq 'tissue_culture') {
-        $tracking_activities = $c->config->{tracking_tissue_culture};
+        $tracking_activities = $c->config->{tracking_tissue_culture_info};
     } elsif ($activity_type eq 'transformation') {
-        $tracking_activities = $c->config->{tracking_transformation};
+        $tracking_activities = $c->config->{tracking_transformation_info};
     }
 
     my @activity_types = split ',',$tracking_activities;

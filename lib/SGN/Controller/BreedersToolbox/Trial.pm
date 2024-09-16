@@ -311,9 +311,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
         my $input_field_headers;
         if ($activity_type eq 'tissue_culture') {
-            $input_field_headers = $c->config->{tracking_tissue_culture_header};
+            $input_field_headers = $c->config->{tracking_tissue_culture_info_header};
         } elsif ($activity_type eq 'transformation') {
-            $input_field_headers = $c->config->{tracking_transformation_header};
+            $input_field_headers = $c->config->{tracking_transformation_info_header};
         }
         my @field_headers = split ',',$input_field_headers;
         $c->stash->{field_headers} = \@field_headers;

@@ -53,11 +53,11 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $types;
     my $activity_type_header;
     if ($activity_type eq 'tissue_culture') {
-        $types = $c->config->{tracking_tissue_culture};
-        $activity_type_header = $c->config->{tracking_tissue_culture_header};
+        $types = $c->config->{tracking_tissue_culture_info};
+        $activity_type_header = $c->config->{tracking_tissue_culture_info_header};
     } elsif ($activity_type eq 'transformation') {
-        $types = $c->config->{tracking_transformation};
-        $activity_type_header = $c->config->{tracking_transformation_header};
+        $types = $c->config->{tracking_transformation_info};
+        $activity_type_header = $c->config->{tracking_transformation_info_header};
     }
 
     my @type_select_options = split ',',$types;

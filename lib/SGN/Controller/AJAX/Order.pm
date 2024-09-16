@@ -764,7 +764,7 @@ sub get_order_progress :Path('/ajax/order/progress') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $tracking_activities = $c->config->{tracking_tissue_culture};
+    my $tracking_activities = $c->config->{tracking_tissue_culture_info};
     my @activity_types = split ',',$tracking_activities;
 
     my $order_properties = $c->config->{order_properties};
