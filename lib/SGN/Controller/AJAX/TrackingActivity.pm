@@ -163,7 +163,8 @@ sub generate_tracking_identifiers_POST : Args(0) {
     my @error_messages;
     foreach my $name (sort @$material_names) {
         $last_number++;
-        my $tracking_id = $project_name.":".$name."_"."T".(sprintf "%04d", $last_number);
+#        my $tracking_id = $project_name.":".$name."_"."T".(sprintf "%04d", $last_number);
+        my $tracking_id = $project_name.":".$name."_"."T".$last_number;
         push @tracking_identifiers, [$tracking_id, $name];
         push @check_identifier_names, $tracking_id;
     }

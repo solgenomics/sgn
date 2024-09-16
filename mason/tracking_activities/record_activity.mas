@@ -6,6 +6,7 @@ $type_select_options => undef
 $timestamp => undef
 $date => undef
 $activity_headers => undef
+$material_name => undef
 
 </%args>
 
@@ -27,6 +28,14 @@ $activity_headers => undef
                 <button id="identifier_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Scan Barcode</button>
             </div>
         </div>
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Material Name: </label>
+            <div class="col-sm-6" >
+                <input class="form-control" name="record_page_material_name" id="record_page_material_name" disabled value="<% $material_name %>">
+            </div>
+        </div>
+
         <div class="form-group">
             <label class="col-sm-3 control-label">Type: </label>
             <div class="col-sm-5">
