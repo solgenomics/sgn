@@ -161,12 +161,14 @@ sub save_activity_project {
 
     my $progress_of_project_id = $self->get_progress_of_project_id();
 
-    my $project_rel_row = $schema->resultset('Project::ProjectRelationship')->create({
-        object_project_id => $progress_of_project_id,
-        subject_project_id => $project_id,
-        type_id => $progress_of_cvterm_id,
-    });
-    $project_rel_row->insert();
+    if ($progress_of_project_id) {
+        my $project_rel_row = $schema->resultset('Project::ProjectRelationship')->create({
+            object_project_id => $progress_of_project_id,
+            subject_project_id => $project_id,
+            type_id => $progress_of_cvterm_id,
+        });
+        $project_rel_row->insert();        
+    }
 
     return $project_id;
 
