@@ -77,6 +77,7 @@ use warnings;
 use Moose;
 use Try::Tiny;
 use Data::Dumper;
+use List::Util qw | uniq |;
 use SGN::Model::Cvterm;
 use CXGN::Stock;
 use CXGN::Chado::Stock;
@@ -334,6 +335,8 @@ sub search {
         $stock_type_search = $stock_type_id;
     }
 
+    my @stock_ids;
+
     if ( $owner_first_name || $owner_last_name ){
         my %person_params;
         if ($owner_first_name) {
@@ -351,7 +354,7 @@ sub search {
         my $stock_owner_rs = $phenome_schema->resultset("StockOwner")->search({
             sp_person_id => { -in  => $p_rs->get_column('sp_person_id')->as_query },
         });
-        my @stock_ids;
+
         while ( my $o = $stock_owner_rs->next ) {
             push @stock_ids, $o->stock_id;
         }
@@ -466,7 +469,7 @@ sub search {
         }
     }
 
-    
+    @vectorprop_filtered_stock_ids = uniq(@vectorprop_filtered_stock_ids, @stock_ids);
     #if ($stock_type_search == $stock_type_id){
     #    $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
     #} else {
@@ -506,7 +509,7 @@ sub search {
         my $rs = $schema->resultset("Stock::Stock")->search(
         $search_query,
         {
-            join => ['type', 'organism', 'stockprops', $stock_join],
+            join => ['type', 'organism', 'stockprops' ], # $stock_join],
             '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
             '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
             order_by  => 'me.name',
