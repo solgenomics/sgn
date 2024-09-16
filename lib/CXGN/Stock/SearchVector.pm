@@ -276,6 +276,62 @@ sub search {
     my ($or_conditions, $and_conditions);
     $and_conditions->{'me.stock_id'} = { '>' => 0 };
 
+        my @vectorprop_filtered_stock_ids;
+
+    if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
+
+        my @stockprop_wheres;
+        foreach my $term_name (keys %{$self->stockprops_values}){
+            my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
+            if ($property_term){
+		my $property_term_id = $property_term->cvterm_id();
+                my $matchtype = $self->stockprops_values->{$term_name}->{'matchtype'};
+                my $value = $self->stockprops_values->{$term_name}->{'value'};
+
+                my $start = '%';
+                my $end = '%';
+                if ( $matchtype eq 'exactly' ) {
+                    $start = '%"';
+                    $end = '"%';
+                } elsif ( $matchtype eq 'starts_with' ) {
+                    $start = '';
+                } elsif ( $matchtype eq 'ends_with' ) {
+                    $end = '';
+                }
+                my $search = "'$start$value$end'";
+                if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
+                    $search =~ tr/*?/%_/;
+                }
+
+		# Moved this query from matviews to native tables...
+		#
+                if ( $matchtype eq 'one of' ) {
+                    my @values = split ',', $value;
+                    my $search_vals_sql = "'".join ("','" , @values)."'";
+                    push @stockprop_wheres, " (stockprop.type_id=$property_term_id AND value in ($search_vals_sql) ";
+                } else {
+                    push @stockprop_wheres, " (stockprop.type_id=$property_term_id AND value ilike $search) ";
+                }
+
+            } else {
+                print STDERR "Stockprop $term_name is not in this database! Only use stock_property in sgn_local configuration!\n";
+            }
+        }
+        my $stockprop_where = " WHERE  (" . join(" OR ", @stockprop_wheres).")";
+
+        my $stockprop_query = "SELECT stock_id FROM stock join stockprop using(stock_id) $stockprop_where;";
+        my $h = $schema->storage->dbh()->prepare($stockprop_query);
+        $h->execute();
+        while (my $stock_id = $h->fetchrow_array()) {
+            push @vectorprop_filtered_stock_ids, $stock_id;
+        }
+    }
+
+    #if ( scalar(@vectorprop_filtered_stock_ids)>0){
+    #    $search_query->{'me.stock_id'} = {'in'=>\@vectorprop_filtered_stock_ids};
+  #  }
+
+    
     my $start = '%';
     my $end = '%';
     if ( $matchtype eq 'exactly' ) {
@@ -294,15 +350,22 @@ sub search {
 	    { 'me.name'          => {'ilike' => $start.$any_name.$end} },
 	    { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
 	    { 'me.description'   => {'ilike' => $start.$any_name.$end} },
+
 	    { -and => [
 		   'stockprops.value'  => {'ilike' => $start.$any_name.$end},
 		   'stockprops.type_id' => $stock_synonym_cvterm_id,
 		  ],},
 	    ];
+
+	if (@vectorprop_filtered_stock_ids) {
+	    push @$or_conditions, { 'me.stock_id'      => { '-in' => @vectorprop_filtered_stock_ids } };
+	}
+	
     } else {
         $or_conditions = [ { 'me.uniquename' => { '!=' => undef } } ];
     }
 
+    
     foreach (@uniquename_array){
         if ($_){
             if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
@@ -337,29 +400,29 @@ sub search {
 
     my @stock_ids;
 
-    if ( $owner_first_name || $owner_last_name ){
-        my %person_params;
-        if ($owner_first_name) {
-            $owner_first_name =~ s/\s+//g;
-            $person_params{first_name} = {'ilike' => '%'.$owner_first_name.'%'};
-        }
-        if ($owner_last_name) {
-            $owner_last_name =~ s/\s+//g;
-            $person_params{last_name} = {'ilike' => '%'.$owner_last_name.'%'};
-        }
+    # if ( $owner_first_name || $owner_last_name ){
+    #     my %person_params;
+    #     if ($owner_first_name) {
+    #         $owner_first_name =~ s/\s+//g;
+    #         $person_params{first_name} = {'ilike' => '%'.$owner_first_name.'%'};
+    #     }
+    #     if ($owner_last_name) {
+    #         $owner_last_name =~ s/\s+//g;
+    #         $person_params{last_name} = {'ilike' => '%'.$owner_last_name.'%'};
+    #     }
 
-        #$people_schema->storage->debug(1);
-        my $p_rs = $people_schema->resultset("SpPerson")->search(\%person_params);
+    #     #$people_schema->storage->debug(1);
+    #     my $p_rs = $people_schema->resultset("SpPerson")->search(\%person_params);
 
-        my $stock_owner_rs = $phenome_schema->resultset("StockOwner")->search({
-            sp_person_id => { -in  => $p_rs->get_column('sp_person_id')->as_query },
-        });
+    #     my $stock_owner_rs = $phenome_schema->resultset("StockOwner")->search({
+    #         sp_person_id => { -in  => $p_rs->get_column('sp_person_id')->as_query },
+    #     });
 
-        while ( my $o = $stock_owner_rs->next ) {
-            push @stock_ids, $o->stock_id;
-        }
-        $and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids } ;
-    }
+    #     while ( my $o = $stock_owner_rs->next ) {
+    #         push @stock_ids, $o->stock_id;
+    #     }
+    #     $and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids } ;
+    # }
 
     my $stock_join;
     my $nd_experiment_joins = [];
@@ -418,58 +481,7 @@ sub search {
     #     }
     # }
 
-    my @vectorprop_filtered_stock_ids;
 
-    if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
-
-        my @stockprop_wheres;
-        foreach my $term_name (keys %{$self->stockprops_values}){
-            my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
-            if ($property_term){
-		my $property_term_id = $property_term->cvterm_id();
-                my $matchtype = $self->stockprops_values->{$term_name}->{'matchtype'};
-                my $value = $self->stockprops_values->{$term_name}->{'value'};
-
-                my $start = '%';
-                my $end = '%';
-                if ( $matchtype eq 'exactly' ) {
-                    $start = '%"';
-                    $end = '"%';
-                } elsif ( $matchtype eq 'starts_with' ) {
-                    $start = '';
-                } elsif ( $matchtype eq 'ends_with' ) {
-                    $end = '';
-                }
-                my $search = "'$start$value$end'";
-                if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
-                    $search =~ tr/*?/%_/;
-                }
-
-		# Moved this query from matviews to native tables...
-		#
-                if ( $matchtype eq 'one of' ) {
-                    my @values = split ',', $value;
-                    my $search_vals_sql = "'".join ("','" , @values)."'";
-                    push @stockprop_wheres, " (type_id=$property_term_id AND value in ($search_vals_sql) ";
-                } else {
-                    push @stockprop_wheres, " (type_id=$property_term_id AND value ilike $search) ";
-                }
-
-            } else {
-                print STDERR "Stockprop $term_name is not in this database! Only use stock_property in sgn_local configuration!\n";
-            }
-        }
-        my $stockprop_where = 'WHERE ' . join ' OR ', @stockprop_wheres;
-
-        my $stockprop_query = "SELECT stock_id FROM stockprop $stockprop_where;";
-        my $h = $schema->storage->dbh()->prepare($stockprop_query);
-        $h->execute();
-        while (my $stock_id = $h->fetchrow_array()) {
-            push @vectorprop_filtered_stock_ids, $stock_id;
-        }
-    }
-
-    @vectorprop_filtered_stock_ids = uniq(@vectorprop_filtered_stock_ids, @stock_ids);
     #if ($stock_type_search == $stock_type_id){
     #    $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
     #} else {
@@ -477,7 +489,8 @@ sub search {
     #}
 
 
-
+    print STDERR "OR CONDITIONS: ".Dumper($or_conditions);
+    print STDERR "AND CONDITIONS: ".Dumper($and_conditions);
     
     $schema->storage->debug(1);
     my $operator = $default_operator ? $default_operator : (scalar(@vectorprop_filtered_stock_ids)>0 ? "or" : "and");
@@ -494,9 +507,6 @@ sub search {
         $search_query->{'me.is_obsolete'} = 'f';
     }
 
-    if ( scalar(@vectorprop_filtered_stock_ids)>0){
-        $search_query->{'me.stock_id'} = {'in'=>\@vectorprop_filtered_stock_ids};
-    }
 
     #skip rest of query if no results
     my @result;
