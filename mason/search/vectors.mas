@@ -196,11 +196,11 @@ my $stock_type_select = simple_selectbox_html(
         jQuery("#any_name").autocomplete({
             source: '/ajax/stock/stock_autocomplete?stock_type_id=' + '<% $vector_cvterm_id %>',
         });
-        jQuery('#stock_type_select').change(function(){
-            jQuery("#any_name").autocomplete({
-                source: '/ajax/stock/stock_autocomplete?stock_type_id=' + '<% $vector_cvterm_id %>',
-            });
-        });
+    //jQuery('#stock_type_select').change(function(){
+    //        jQuery("#any_name").autocomplete({
+    //            source: '/ajax/stock/stock_autocomplete?stock_type_id=' + '<% $vector_cvterm_id %>',
+    //        });
+    //    });
 
 
         var editable_stockprops_search = {};
