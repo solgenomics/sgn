@@ -466,11 +466,12 @@ sub search {
         }
     }
 
-    if ($stock_type_search == $stock_type_id){
-        $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
-    } else {
-        $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
-    }
+    
+    #if ($stock_type_search == $stock_type_id){
+    #    $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
+    #} else {
+    #    $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
+    #}
 
 
 
