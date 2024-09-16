@@ -345,6 +345,10 @@ sub search {
 
     my $stock_synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 
+    if ($stock_type_name){
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type_name, 'stock_type')->cvterm_id();
+    }
+    
     if ($any_name) {
 	$or_conditions = [
 	    { 'me.name'          => {'ilike' => $start.$any_name.$end} },
@@ -389,9 +393,7 @@ sub search {
         $and_conditions->{'me.organism_id'} = $organism_id;
     }
 
-    if ($stock_type_name){
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type_name, 'stock_type')->cvterm_id();
-    }
+   
 
     my $stock_type_search = 0;
     if ($stock_type_id) {
