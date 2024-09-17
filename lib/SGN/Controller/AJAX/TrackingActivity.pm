@@ -224,7 +224,7 @@ sub activity_info_save_POST : Args(0) {
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    my $tracking_identifier = $c->req->param("tracking_identifier");
+    my $tracking_identifier = $c->req->param("tracking_identifier_name");
     my $tracking_identifier_id = $c->req->param("tracking_identifier_id");
     my $selected_type = $c->req->param("selected_type");
     my $input = $c->req->param("input");
