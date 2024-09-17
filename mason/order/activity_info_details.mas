@@ -15,6 +15,7 @@ $updated_status_type => undef
 $updated_status_string => undef
 $status_display => undef
 $user_role
+$project_id
 
 </%args>
 
@@ -35,6 +36,10 @@ $user_role
         <h4><%$updated_status_string%></h4>
     </div>
 % }
+
+<td>
+    <a href='/breeders/trial/<%$project_id%>'><p>Go to Project Page</p></a>
+</td>
 
 <&| /page/info_section.mas, title => 'Record', collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class="well ">

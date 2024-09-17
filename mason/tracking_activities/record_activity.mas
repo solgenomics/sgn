@@ -7,6 +7,7 @@ $timestamp => undef
 $date => undef
 $activity_headers => undef
 $material_name => undef
+$project_id => undef
 
 </%args>
 
@@ -31,7 +32,7 @@ $material_name => undef
 
         <div class="form-group">
             <label class="col-sm-3 control-label">Material Name: </label>
-            <div class="col-sm-6" >
+            <div class="col-sm-5" >
                 <input class="form-control" name="record_page_material_name" id="record_page_material_name" disabled value="<% $material_name %>">
             </div>
         </div>
@@ -75,6 +76,10 @@ $material_name => undef
 
 
 % if ($identifier_id) {
+    <td>
+        <a href='/breeders/trial/<%$project_id%>'><p>Go to Project Page</p></a>
+    </td>
+
     <&| /page/info_section.mas, title => 'Summary', collapsible => 1, collapsed => 0, subtitle => '' &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
@@ -94,27 +99,26 @@ $material_name => undef
             </div>
         </div>
     </&>
-% }
-
-<&| /page/info_section.mas, title => 'Activity Details', collapsible => 1, collapsed => 0, subtitle => '' &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <div style="overflow:scroll">
-                    <table id = "record_page_activity_details_table" class="table table-hover table-striped">
-                        <thead>
-                            <tr>
+    <&| /page/info_section.mas, title => 'Activity Details', collapsible => 1, collapsed => 0, subtitle => '' &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <div style="overflow:scroll">
+                        <table id = "record_page_activity_details_table" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
 % foreach my $header(@$activity_headers){
-                                <th><%$header%></th>
+                                    <th><%$header%></th>
 %}
-                            </tr>
-                        </thead>
-                    </table>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</&>
+    </&>
+% }
 
 
 <div class="modal fade" id="record_page_saved_dialog_message" name="record_page_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="recordPageSavedDialog">
