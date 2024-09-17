@@ -1,0 +1,199 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'd3.d3v5Min', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<style>
+.form-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+}
+
+.form-group label {
+  margin-right: 5px;
+  white-space: nowrap;
+}
+</style>
+
+<div class="well well-sm table-responsive">
+    <center><h4>View plots for repetitive measurement traits</h4>
+
+    <form class="form-horizontal" role="form">
+    <div class="form-row">
+        <div class="form-group">
+		    <label for="select_trait_for_repetitive_data_and_plot">Select Trait:</label>
+            <div id="select_trait_for_repetitive_data_and_plot">[Loading...]</div>
+		</div>
+        <div class="form-group">
+            <label for="repetitive_measurement_start_date">Start Date:</label>
+            <input type="text" id="repetitive_measurement_start_date" title="repetitive_measurement_start_date" />
+        </div>
+        <div class="form-group">
+            <label for="repetitive_measurement_end_date"> End Date:</label>
+            <input type="text" id="repetitive_measurement_end_date" title="repetitive_measurement_end_date" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label for="repetitive_measurement_observation_level">Observation Level: </label>
+            <select class="form-control" id="repetitive_measurement_observation_level">
+                <option value="plots">Values for Plots of this Trait </option>
+                <option value="plants">Values for Plants of this Trait </option>
+                <option value="subplots">Values for Subplots of this Trait </option>
+                <option value="tissue_sample">Values for Tissue Samples from this Trait </option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="repetitive_measurements_level">Repetitive Measurements Level:</label>
+            <select class="form-control" id="repetitive_measurements_level">
+                <option value="first value">First Value of this Trait</option>
+                <option value="last value">Last Value of this Trait</option>
+                <option value="averaged values"> Averaged Values for this Trait</option>
+                <option value="all values"> All Values of this Trait</option>
+            </select>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: center; margin-top:20px">
+        <button id="repetitive_measurement_select_button" class="btn btn-primary">Submit</button>
+    </div>
+    </form>
+</div>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<script>
+
+jQuery(document).ready(function() {
+    
+    jQuery('#repetitive_measurements_data_onswitch').click(function() {
+        create_menu_for_repetitive_values(<% $trial_id %>)
+        .then((result) => fetch_repetitive_measurement_traits(result.result.searchResultsDbId))
+        .then((result) => repetitive_build_menu(result.result))
+        .then((final) => {});
+    });
+
+    jQuery('#repetitive_measurement_select_button').click(function() {
+        var repetitive_trait_id = jQuery('#select_trait_for_repetitive_data_and_plot').find(":selected").val();
+        var repetitive_start_date = jQuery('#repetitive_measurement_start_date').val();
+        var repetitive_end_date = jQuery('#repetitive_measurement_end_date').val();
+        var repetitive_observation_level = jQuery('#repetitive_measurement_observation_level').find(":selected").val();
+        //var repetitive_measurement_level = jQuery('#repetitive_measurements_level').find(":selected").val();
+
+        //alert("now fetching repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
+        get_repetitive_measurement_data($trial_id, repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
+        .then((result) => fetch_repetitve_measurement_dataTable(result.result.searchResultsDbId))
+        .then((result) => show_repetitive_measurement_values(result.result))
+        .then((final) => {});
+    });
+
+    jQuery.ajax({
+        'url': '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
+    }).done(function(data) {
+        var startDate = new Date(data.start_date).toISOString().split('T')[0];
+        var endDate = new Date(data.end_date).toISOString().split('T')[0];
+        jQuery('#repetitive_measurement_start_date').val(startDate);
+        jQuery('#repetitive_measurement_end_date').val(endDate);
+    }).fail(function(xhr, status, error) {
+        alert('An error occured in the repetitive measurement!' + xhr.responseText);
+        console.error("the status:", xhr.status);
+        console.error("the error:", error);
+    })
+    
+    function create_menu_for_repetitive_values(trial_id) {
+        return jQuery.ajax({
+            'url':"/brapi/v2/search/variables",
+            'data': {'studyDbIds': [ trial_id ], 'pageSize': 10000},
+            'method': 'POST'
+        });
+    }
+
+    function fetch_repetitive_measurement_traits(searchResultsDbId) {
+        return jQuery.ajax( {
+	        'url': "/brapi/v2/search/variables/"+searchResultsDbId,
+	        'data': {'pageSize': 10000 },
+            'method' : 'GET',
+	    });
+    }
+
+    function repetitive_build_menu(result) {
+        var menu='<select id="selectRawDataTrait">';
+        for (var i =0; i<result.data.length; i++) {
+            menu += '<option value="'+result.data[i].observationVariableDbId+'">'+result.data[i].trait.traitName+'</option>';
+        }
+        menu += '</select>';
+        jQuery('#select_trait_for_repetitive_data_and_plot').html(menu);
+    }
+    
+    function get_repetitive_measurement_data(trial_id, trait_id, accession_id, start_date, end_date, observation_level) {
+        return jQuery.ajax({
+            'url': "/brapi/v2/search/observations/",
+		    'data': {
+                studyDbIds: [ trial_id ], 
+                observationVariableDbIds: [ trait_id ], 
+                germplasmDbId: [accession_id ],
+                observationTimeStampRangeStart: start_date, 
+                observationTimeStampRangeEnd: end_date, 
+                observationLevels: observation_level
+            },
+		    'method': "POST"
+		});
+    }
+
+    function fetch_repetitve_measurement_dataTable(searchResultsDbId) {
+        return jQuery.ajax({
+            'url': "/brapi/v2/search/observations/"+searchResultsDbId,
+	    	'data': {
+                'pageSize': 10000
+            },
+            'method': "GET"
+		});
+    }
+
+    function show_repetitive_measurement_values(result) {
+        //var repetitive_measurement_date = new Array();
+        var data = result.data;
+        jQuery('#repetitive_measurement_data_table').DataTable( {
+		   'destroy': true,
+		   'columns': [
+		       { title: 'observation id'},
+		       { title: 'observation unit' },
+               { title: 'accession List' },
+		   ],
+		   'data' : data
+		});
+    }
+
+    jQuery('input[title="repetitive_measurement_start_date"]').daterangepicker({
+    	"singleDatePicker": true,
+    	"showDropdowns": true,
+    	"autoUpdateInput": true,
+    	"startDate": "1960-01-01",
+    	"yearSelect" : true,
+    	"minDate":"1960-01-01",
+    	"maxDate":"2100-12-31",
+    	locale: {
+    		format: 'YYYY-MM-DD'
+    	}
+    });
+
+    jQuery('input[title="repetitive_measurement_end_date"]').daterangepicker({
+    	"singleDatePicker": true,
+        "showDropdowns": true,
+    	"autoUpdateInput": true,
+    	"minDate":"1960-01-01",
+    	"maxDate":"2100-12-31",
+    	"yearSelect": true,
+    	locale: {
+    		format: 'YYYY-MM-DD'
+    	},
+    });
+});
+</script>
