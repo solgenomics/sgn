@@ -826,9 +826,7 @@ jQuery.fn.doesExist = function () {
 
 jQuery(document).ready(function () {
   var url = location.pathname;
-  console.log(`url: ${url}`)
-  console.log(`url: ${url.match(/pca\/analysis/)}`)
-
+ 
   if (url.match(/cluster\/analysis/)) {
     var canvas = solGS.cluster.canvas;
     var clusterMsgDiv = solGS.cluster.clusterMsgDiv;
