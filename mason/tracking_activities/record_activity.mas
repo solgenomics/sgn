@@ -37,7 +37,7 @@ $material_name => undef
         </div>
 
         <div class="form-group">
-            <label class="col-sm-3 control-label">Type: </label>
+            <label class="col-sm-3 control-label">Input Type: </label>
             <div class="col-sm-5">
 % if ($type_select_options) {
                 <select id="record_page_type_select">
