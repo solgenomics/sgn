@@ -42,6 +42,12 @@ $trial_id
         </div>
     </div>
     <div class="form-row">
+        <div style="display:flex; align-items:center; white-space:nowrap; width:30%; margin-center: auto;">
+            <label for="repetitive_measurement_timeline_slider" style="margin-right: 10px;">DateRange slider:</label>
+            <div id="slider-range" style="width: 80%; margin: 10px auto;"></div>
+        </div>
+    </div>
+    <div class="form-row">
         <div class="form-group">
             <label for="repetitive_measurement_observation_level">Observation Level: </label>
             <select class="form-control" id="repetitive_measurement_observation_level">
@@ -97,10 +103,24 @@ jQuery(document).ready(function() {
     jQuery.ajax({
         'url': '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
     }).done(function(data) {
-        var startDate = new Date(data.start_date).toISOString().split('T')[0];
-        var endDate = new Date(data.end_date).toISOString().split('T')[0];
-        jQuery('#repetitive_measurement_start_date').val(startDate);
-        jQuery('#repetitive_measurement_end_date').val(endDate);
+        var repetitive_startDate = new Date(data.start_date).toISOString().split('T')[0];
+        var repetitive_endDate = new Date(data.end_date).toISOString().split('T')[0];
+        jQuery('#repetitive_measurement_start_date').val(repetitive_startDate);
+        jQuery('#repetitive_measurement_end_date').val(repetitive_endDate);
+
+        jQuery('#slider-range').slider({
+            range: true,
+            min: new Date(repetitive_startDate).getTime(),
+            max: new Date(repetitive_endDate).getTime(),
+            values: [new Date(repetitive_startDate).getTime(), new Date(repetitive_endDate).getTime()],
+            slide: function(event, ui) {
+                //the start and end date of this measurement will be updated based on the slider moved from.
+                var start = new Date(ui.values[0]).toISOString().split('T')[0];
+                var end = new Date(ui.values[1]).toISOString().split('T')[0];
+                jQuery('#repetitive_measurement_start_date').val(start);
+                jQuery('#repetitive_measurement_end_date').val(end);
+            }
+        });
     }).fail(function(xhr, status, error) {
         alert('An error occured in the repetitive measurement!' + xhr.responseText);
         console.error("the status:", xhr.status);
