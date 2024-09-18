@@ -327,17 +327,21 @@ sub search {
         my $stockprop_where = " WHERE stock.type_id=$stock_type_id AND (" . join(" OR ", @stockprop_wheres).")";
 
         my $stockprop_query = "SELECT stock_id FROM stock join stockprop using(stock_id) $stockprop_where;";
+
+	print STDERR "STOCKPROP QUERY = $stockprop_query\n";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my $stock_id = $h->fetchrow_array()) {
             push @vectorprop_filtered_stock_ids, $stock_id;
         }
+
+	@vectorprop_filtered_stock_ids = uniq(@vectorprop_filtered_stock_ids);
     }
 
     #if ( scalar(@vectorprop_filtered_stock_ids)>0){
     #    $search_query->{'me.stock_id'} = {'in'=>\@vectorprop_filtered_stock_ids};
   #  }
-
+    
     
     my $start = '%';
     my $end = '%';
@@ -357,10 +361,10 @@ sub search {
 	    { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
 	    { 'me.description'   => {'ilike' => $start.$any_name.$end} },
 
-	    { -and => [
+	    { -and => {
 		   'stockprops.value'  => {'ilike' => $start.$any_name.$end},
 		   'stockprops.type_id' => $stock_synonym_cvterm_id,
-		  ],},
+		  },},
 	    ];
 
 	print STDERR "VECTORPROP FILTERED STOCK IDS = ".Dumper(\@vectorprop_filtered_stock_ids);
