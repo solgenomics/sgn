@@ -167,10 +167,10 @@ sub save_activity_project {
             subject_project_id => $project_id,
             type_id => $progress_of_cvterm_id,
         });
-        $project_rel_row->insert();        
+        $project_rel_row->insert();
     }
 
-    return $project_id;
+    return {project_id => $project_id};
 
 }
 

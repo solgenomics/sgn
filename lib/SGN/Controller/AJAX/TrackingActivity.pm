@@ -80,7 +80,7 @@ sub create_tracking_activity_project_POST : Args(0) {
         return;
     }
 
-    my $error;
+    my $return;
     eval{
         my $add_activity_project = CXGN::TrackingActivity::AddActivityProject->new({
             bcs_schema => $schema,
@@ -94,28 +94,26 @@ sub create_tracking_activity_project_POST : Args(0) {
             owner_id => $user_id
         });
 
-        my $return = $add_activity_project->save_activity_project();
-        if (!$return){
-            $c->stash->{rest} = {error => "Error saving project",};
-            return;
-        }
-
-#        if ($return->{error}){
-#            $error = $return->{error};
-#        }
+        $return = $add_activity_project->save_activity_project();
     };
+
+    if (!$return){
+        $c->stash->{rest} = {error => "Error saving project",};
+        return;
+    }
+
+    if ($return->{error}){
+        $c->stash->{rest} = {error => $return->{error}};
+        return;
+    }
 
     if ($@) {
         $c->stash->{rest} = {error => $@};
         return;
-    };
-
-
-    if ($error){
-        $c->stash->{rest} = {error => $error};
     } else {
         $c->stash->{rest} = {success => 1};
     }
+
 
 }
 

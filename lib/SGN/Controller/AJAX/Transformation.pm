@@ -43,7 +43,6 @@ sub add_transformation_project_POST :Args(0){
     my $project_description = $c->req->param('project_description');
     $project_name =~ s/^\s+|\s+$//g;
 
-    print STDERR "PROJECT NAME =".Dumper($project_name)."\n";
     if (!$c->user()){
         $c->stash->{rest} = {error => "You need to be logged in to add a transformation project."};
         return;
@@ -64,6 +63,7 @@ sub add_transformation_project_POST :Args(0){
        }
 
     my $error;
+    my $return;
     my $transformation_project_id;
     eval{
         my $add_transformation_project = CXGN::Transformation::AddTransformationProject->new({
@@ -77,13 +77,22 @@ sub add_transformation_project_POST :Args(0){
             owner_id => $user_id
         });
 
-        my $return = $add_transformation_project->save_transformation_project();
-        if ($return->{error}){
-            $error = $return->{error};
-        } else {
-            $transformation_project_id = $return->{project_id};
-        }
+        $return = $add_transformation_project->save_transformation_project();
     };
+
+    if (!$return){
+        $c->stash->{rest} = {error => "Error saving project",};
+        return;
+    }
+
+    if ($return->{error}){
+        $error = $return->{error};
+        $c->stash->{rest}={error => $error};
+        return;
+    } else {
+        $transformation_project_id = $return->{project_id};
+    }
+
 
     if ($@) {
         $c->stash->{rest} = {error => $@};
@@ -92,7 +101,6 @@ sub add_transformation_project_POST :Args(0){
 
     my $tracking_transformation = $c->config->{tracking_transformation};
     if ($tracking_transformation) {
-        my $tracking_project_id;
         my $tracking_project_name = $project_name."_"."progress";
 
         my $add_tracking_project = CXGN::TrackingActivity::AddActivityProject->new({
@@ -108,14 +116,20 @@ sub add_transformation_project_POST :Args(0){
             progress_of_project_id => $transformation_project_id,
         });
 
-        $tracking_project_id = $add_tracking_project->save_activity_project();
+        my $return = $add_tracking_project->save_activity_project();
+        if (!$return){
+            $c->stash->{rest} = {error => "Error saving project",};
+            return;
+        }
+
+        if ($return->{error}){
+            $error = $return->{error};
+            $c->stash->{rest} = {error => $error};
+            return;
+        }
     }
 
-    if ($error){
-        $c->stash->{rest} = {error => $error};
-    } else {
-        $c->stash->{rest} = {success => 1};
-    }
+    $c->stash->{rest} = {success => 1};
 
 }
 

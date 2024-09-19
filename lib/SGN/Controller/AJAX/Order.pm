@@ -176,7 +176,14 @@ sub submit_order_POST : Args(0) {
                     project_vendor => $contact_id
                 });
 
-                $activity_project_id = $add_activity_project->save_activity_project();
+                my $return = $add_activity_project->save_activity_project();
+                if ($return->{error}) {
+                    my $error = $return->{error};
+                    $c->stash->{rest} = {error_string => $error};
+                    return;
+                } else {
+                    $activity_project_id = $return->{project_id};                    
+                }
             }
 
             foreach my $identifier_info (@tracking_identifiers) {
