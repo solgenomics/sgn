@@ -177,8 +177,8 @@ jQuery(document).ready(function(){
                     jQuery("#generate_tracking_identifiers_dialog").modal("hide");
                     jQuery("#tracking_identifiers_saved_dialog_message").modal("show");
                 }
-                if (response.error_string) {
-                    alert(response.error_string);
+                if (response.error) {
+                    alert(response.error);
                 }
             },
             error: function(response){

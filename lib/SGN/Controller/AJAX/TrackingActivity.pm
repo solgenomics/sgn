@@ -125,11 +125,11 @@ sub generate_tracking_identifiers_POST : Args(0) {
     my $c = shift;
 
     if (!$c->user()) {
-        $c->stash->{rest} = { error_string => "You must be logged in to generate tracking identifiers." };
+        $c->stash->{rest} = { error => "You must be logged in to generate tracking identifiers." };
         return;
     }
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-        $c->stash->{rest} = { error_string => "You do not have sufficient privileges to generate tracking identifiers." };
+        $c->stash->{rest} = { error => "You do not have sufficient privileges to generate tracking identifiers." };
         return;
     }
 
@@ -143,7 +143,7 @@ sub generate_tracking_identifiers_POST : Args(0) {
     my $project_id;
     my $project_rs = $schema->resultset("Project::Project")->find( { name => $project_name });
     if (!$project_rs) {
-        $c->stash->{rest} = { error_string => "Error! Project name: $project_name was not found in the database.\n" };
+        $c->stash->{rest} = { error => "Error! Project name: $project_name was not found in the database.\n" };
         return;
     } else {
         $project_id = $project_rs->project_id();
@@ -176,7 +176,7 @@ sub generate_tracking_identifiers_POST : Args(0) {
     }
 
     if (scalar(@error_messages) >= 1) {
-        $c->stash->{rest} = { error_string => \@error_messages};
+        $c->stash->{rest} = { error => \@error_messages};
         return;
     }
 
@@ -194,8 +194,12 @@ sub generate_tracking_identifiers_POST : Args(0) {
          });
 
         my $return = $tracking_obj->store();
-        if (!$return){
-            $c->stash->{rest} = {error_string => "Error generating tracking identifier",};
+        if (!$return) {
+            $c->stash->{rest} = {error => "Error generating tracking identifier"};
+            return;
+        } elsif ($return->{error}) {
+            my $error = $return->{error};
+            $c->stash->{rest} = {error => $error};
             return;
         }
     }

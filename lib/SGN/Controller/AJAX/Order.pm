@@ -182,7 +182,7 @@ sub submit_order_POST : Args(0) {
                     $c->stash->{rest} = {error_string => $error};
                     return;
                 } else {
-                    $activity_project_id = $return->{project_id};                    
+                    $activity_project_id = $return->{project_id};
                 }
             }
 
@@ -197,8 +197,18 @@ sub submit_order_POST : Args(0) {
                     project_id => $activity_project_id,
                     user_id => $contact_id
                  });
-                my $tracking_stock_id = $tracking_obj->store();
-                push @identifier_stock_ids, $tracking_stock_id;
+                my $return = $tracking_obj->store();
+                if (!$return) {
+                    $c->stash->{rest} = {error_string => "Error generating tracking identifier"};
+                    return;
+                } elsif ($return->{error}) {
+                    my $error = $return->{error};
+                    $c->stash->{rest} = {error_string => $error};
+                    return;
+                } else {
+                    my $tracking_stock_id = $return->{tracking_id};
+                    push @identifier_stock_ids, $tracking_stock_id;
+                }
             }
 
             my $order_tracking_identifier_prop = CXGN::Stock::OrderTrackingIdentifier->new({ bcs_schema => $schema, people_schema => $people_schema});

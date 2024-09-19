@@ -165,7 +165,7 @@ sub add_transformation_identifier_POST :Args(0){
 
     if ($schema->resultset("Stock::Stock")->find({uniquename => $transformation_identifier})){
         $c->stash->{rest} = {error =>  "Transformation ID already exists. Please use another name" };
-        return 0;
+        return;
     }
 
     if (! $schema->resultset("Stock::Stock")->find({uniquename => $plant_material, type_id => $accession_cvterm_id })){
@@ -222,6 +222,10 @@ sub add_transformation_identifier_POST :Args(0){
         my $return = $tracking_obj->store();
         if (!$return){
             $c->stash->{rest} = {error => "Error generating tracking identifier",};
+            return;
+        } elsif ($return->{error}) {
+            my $error = $return->{error};
+            $c->stash->{rest} = {error => $error};
             return;
         }
     }
