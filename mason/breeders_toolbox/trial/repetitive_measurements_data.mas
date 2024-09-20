@@ -3,7 +3,6 @@ $trial_id
 </%args>
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'd3.d3v5Min', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 <style>
 .form-row {
     display: flex;
@@ -42,9 +41,9 @@ $trial_id
         </div>
     </div>
     <div class="form-row">
-        <div style="display:flex; align-items:center; white-space:nowrap; width:30%; margin-center: auto;">
-            <label for="repetitive_measurement_timeline_slider" style="margin-right: 10px;">DateRange slider:</label>
-            <div id="slider-range" style="width: 80%; margin: 10px auto;"></div>
+        <div style="display:flex; align-items:center; white-space:nowrap; width:70%; margin-center: auto;">
+            <label for="repetitive_measurement_timeline_slider" style="margin-right: 10px;">Choose DateRange slider:</label>
+            <div id="repetitive_slider_range" style="width: 80%; margin: 10px auto;"></div>
         </div>
     </div>
     <div class="form-row">
@@ -70,6 +69,9 @@ $trial_id
     <div style="display: flex; align-items: center; justify-content: center; margin-top:20px">
         <button id="repetitive_measurement_select_button" class="btn btn-primary">Submit</button>
     </div>
+    <br>
+    <table id="repetitive_measurement_data_table" style="width:100%">
+    </table>
     </form>
 </div>
 
@@ -87,6 +89,7 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#repetitive_measurement_select_button').click(function() {
+        event.preventDefault();
         var repetitive_trait_id = jQuery('#select_trait_for_repetitive_data_and_plot').find(":selected").val();
         var repetitive_start_date = jQuery('#repetitive_measurement_start_date').val();
         var repetitive_end_date = jQuery('#repetitive_measurement_end_date').val();
@@ -94,7 +97,7 @@ jQuery(document).ready(function() {
         //var repetitive_measurement_level = jQuery('#repetitive_measurements_level').find(":selected").val();
 
         //alert("now fetching repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
-        get_repetitive_measurement_data($trial_id, repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
+        get_repetitive_measurement_data(<% $trial_id %>, repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
         .then((result) => fetch_repetitve_measurement_dataTable(result.result.searchResultsDbId))
         .then((result) => show_repetitive_measurement_values(result.result))
         .then((final) => {});
@@ -108,13 +111,13 @@ jQuery(document).ready(function() {
         jQuery('#repetitive_measurement_start_date').val(repetitive_startDate);
         jQuery('#repetitive_measurement_end_date').val(repetitive_endDate);
 
-        jQuery('#slider-range').slider({
+        jQuery('#repetitive_slider_range').slider({
             range: true,
             min: new Date(repetitive_startDate).getTime(),
             max: new Date(repetitive_endDate).getTime(),
             values: [new Date(repetitive_startDate).getTime(), new Date(repetitive_endDate).getTime()],
             slide: function(event, ui) {
-                //the start and end date of this measurement will be updated based on the slider moved from.
+                //the start and end date of this measurement will be updated based on the slider moved from !!
                 var start = new Date(ui.values[0]).toISOString().split('T')[0];
                 var end = new Date(ui.values[1]).toISOString().split('T')[0];
                 jQuery('#repetitive_measurement_start_date').val(start);
@@ -127,7 +130,7 @@ jQuery(document).ready(function() {
         console.error("the error:", error);
     })
     
-    function create_menu_for_repetitive_values(trial_id) {
+    function create_menu_for_repetitive_values($trial_id) {
         return jQuery.ajax({
             'url':"/brapi/v2/search/variables",
             'data': {'studyDbIds': [ trial_id ], 'pageSize': 10000},
@@ -152,13 +155,13 @@ jQuery(document).ready(function() {
         jQuery('#select_trait_for_repetitive_data_and_plot').html(menu);
     }
     
-    function get_repetitive_measurement_data(trial_id, trait_id, accession_id, start_date, end_date, observation_level) {
+    function get_repetitive_measurement_data(trial_id, trait_id, accession_uniquename, start_date, end_date, observation_level) {
         return jQuery.ajax({
             'url': "/brapi/v2/search/observations/",
 		    'data': {
                 studyDbIds: [ trial_id ], 
                 observationVariableDbIds: [ trait_id ], 
-                germplasmDbId: [accession_id ],
+                germplasmName: [accession_uniquename ],
                 observationTimeStampRangeStart: start_date, 
                 observationTimeStampRangeEnd: end_date, 
                 observationLevels: observation_level
@@ -178,14 +181,16 @@ jQuery(document).ready(function() {
     }
 
     function show_repetitive_measurement_values(result) {
-        //var repetitive_measurement_date = new Array();
-        var data = result.data;
+        var data = [];
+        result.data.forEach(function(item) {
+            data.push([item.observationUnitName, item.germplasmName, item.value]);
+        });
         jQuery('#repetitive_measurement_data_table').DataTable( {
 		   'destroy': true,
 		   'columns': [
-		       { title: 'observation id'},
-		       { title: 'observation unit' },
-               { title: 'accession List' },
+		       { title: 'Observation Unit Name'},
+		       { title: 'Accession Name' },
+               { title: 'Repetitive Values' },
 		   ],
 		   'data' : data
 		});
