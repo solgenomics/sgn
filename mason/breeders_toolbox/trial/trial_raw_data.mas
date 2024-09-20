@@ -50,6 +50,7 @@ $trial_id
     </td>
 </tr>
 <tr>
+<!--
     <td>
 		<div class="form-group">
 			<label for="raw_data_start_date">Start Date:</label>
@@ -63,10 +64,11 @@ $trial_id
 			<input type="text" id="raw_data_end_date" title="raw_data_end_date"/>
 		</div>
     </td>
+-->
 </tr>
 <tr>
     <td colspan="4", style="text-align: center;">
-      <button id="raw_data_trait_select_button">submit</button>
+      <button id="raw_data_trait_select_button" class="btn btn-primary">Submit</button>
     </td>
 </tr>
 </table>
@@ -93,22 +95,22 @@ jQuery(window).ready( function() {
     jQuery('#raw_data_trait_select_button').click( function() {
 		var trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
 		var observation_level = jQuery('#raw_data_observation_level').find(":selected").val();
-		var start_date = jQuery('#raw_data_start_date').val();
-		var end_date = jQuery('#raw_data_end_date').val();
+		//var start_date = jQuery('#raw_data_start_date').val();
+		//var end_date = jQuery('#raw_data_end_date').val();
 
 		//console.log("check the selected trait ID:", trait_id);
     	//console.log("check observation level:", observation_level);
     	//console.log("see the start date:", start_date);
     	//console.log("see the end date:", end_date);
 
-	//alert("now fetching trait_id "+trait_id+" observation_level "+observation_level+" start date = "+start_date+" end date: "+end_date);
-        get_trait_data(<% $trial_id %>, trait_id, start_date, end_date, observation_level)
+	//alert("now fetching trait_id "+trait_id+" observation_level "+observation_level+");
+        get_trait_data(<% $trial_id %>, trait_id, observation_level)
 	    .then( (result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))
 	    .then( (result) => displayRawObservations(result.result) )
 	    .then( (final) => {
 	    });
     });    
-    
+    /*
     jQuery('input[title="raw_data_start_date"]').daterangepicker(
 	{
 	    "singleDatePicker": true,
@@ -139,7 +141,8 @@ jQuery(window).ready( function() {
 	},
 	
     );
-    
+	*/
+
     function create_trait_menu_for_trial(trial_id) {
         return jQuery.ajax( {
             'url': "/brapi/v2/search/variables",
@@ -167,10 +170,10 @@ jQuery(window).ready( function() {
 	jQuery('#trait_selector_for_raw_data').html(menu);
     }
     
-    function get_trait_data(trial_id, trait_id, start_date, end_date, observation_level) {
+    function get_trait_data(trial_id, trait_id, observation_level) {
 		return jQuery.ajax( {
     	   	url: "/brapi/v2/search/observations/",
-		    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ], observationTimeStampRangeStart: start_date, observationTimeStampRangeEnd: end_date, observationLevels: observation_level},
+		    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ], observationLevels: observation_level},
 		    method: "POST"
 		});
     }
