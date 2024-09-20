@@ -76,6 +76,10 @@ input[type="text"] {
             </div>
         </div>
 	</form>
+    <div style="display:flex; align-items:center; white-space:nowrap; width:70%; margin-center: auto;">
+        <label for="summary_phenotype_timeline_slider" style="margin-right: 10px;">Choose DateRange slider:</label>
+        <div id="summary_phenotype_slider_range" style="width: 80%; margin: 10px auto;"></div>
+    </div>
     <hr>
 
     <div id="pheno_summary_table_div">
@@ -177,9 +181,31 @@ input[type="text"] {
             var raw_endDate = new Date(r.end_date).toISOString().split('T')[0];
             jQuery('#summary_start_date').val(raw_startDate);
             jQuery('#summary_end_date').val(raw_endDate);
-	    }).fail( function(r) { alert('An error occurred!') });
-	    
-    
+
+            jQuery('#summary_phenotype_slider_range').slider({
+                range: true,
+                min: new Date(raw_startDate).getTime(),
+                max: new Date(raw_endDate).getTime(),
+                values: [new Date(raw_startDate).getTime(), new Date(raw_endDate).getTime()],
+                slide: function(event, ui) {
+                    //the start and end date of this measurement will be updated based on the slider moved from.
+                    var raw_phenotype_startDate = new Date(ui.values[0]).toISOString().split('T')[0];
+                    var raw_phenotype_endDate = new Date(ui.values[1]).toISOString().split('T')[0];
+                    jQuery('#summary_start_date').val(raw_phenotype_startDate);
+                    jQuery('#summary_end_date').val(raw_phenotype_endDate);
+                    console.log("Slided moved Start_date in Pheno summ :", raw_phenotype_startDate);
+                    console.log("Slided moved End Date in pheno Summ :", raw_phenotype_endDate);
+
+                    var html = setup_tables();
+                    jQuery('#pheno_summary_table_div').empty().html(html);
+                    datatables_display_phenosummary(type);
+                }
+            });
+	    }).fail( function(xhr, status, error) { 
+            alert('An error occurred!' + xhr.responseText);
+            console.error("the status:", xhr.status);
+            console.error("the error:", error);
+        });
 	    jQuery("#summary_start_date").change( function() {
 	        //datatables_display_phenosummary(type);
             var html = setup_tables();
