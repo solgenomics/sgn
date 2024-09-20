@@ -1063,16 +1063,9 @@ jQuery.fn.doesExist = function () {
 
 jQuery(document).ready(function () {
   var url = location.pathname;
-<<<<<<< HEAD
  
   if (url.match(/cluster\/analysis/)) {
     var canvas = solGS.cluster.canvas;
-=======
-  var canvas = solGS.cluster.canvas;
-
-  if (url.match(/cluster\/analysis/)) {
-    solGS.cluster.populateClusterMenu();
->>>>>>> master
     var clusterMsgDiv = solGS.cluster.clusterMsgDiv;
 
     var clusterArgs = solGS.cluster.getClusterArgsFromUrl();
