@@ -33,6 +33,24 @@ solGS.dataset = {
     return datasets;
   },
 
+  addDataTypeAttr(datasets) {
+
+    for (var i = 0; i < datasets.length; i++) {
+      if (datasets[i].type.match(/accessions/)) {
+        datasets[i]["data_type"] = ["Genotype"];
+      } else if (datasets[i].type.match(/plots/)) {
+        datasets[i]["data_type"] = ["Phenotype"];
+      } else if (datasets[i].type.match(/trials/)) {
+        datasets[i]["data_type"] = ["Genotype", "Phenotype"];
+      }
+  
+    }
+
+    return datasets;
+
+  },
+
+
   converDatasetArrayToJson(datasets, datasetTypes) {
 
     var dataset = new CXGN.Dataset();
@@ -152,67 +170,69 @@ solGS.dataset = {
     solGS.waitPage(page, args);
   },
 
-  createDatasetTrainingReqArgs: function (datasetId, datasetName) {
+
+  getDatasetGenoProtocolId: function (datasetId) {
     var dataset = new CXGN.Dataset();
     var d = dataset.getDataset(datasetId);
 
     var protocolId = d.categories["genotyping_protocols"]
-      ? d.categories["genotyping_protocols"][0]
-      : null;
+    ? d.categories["genotyping_protocols"][0]
+    : null;
 
     if (!protocolId) {
       protocolId = jQuery("#genotyping_protocol_id").val();
     }
 
-    var popId = "dataset_" + datasetId;
-    var popType = "dataset_training";
+    return protocolId;
+
+  },
+
+  createDatasetTrainingReqArgs: function (datasetId, datasetName) {
+   
+    var protocolId = this.getDatasetGenoProtocolId(datasetId);
 
     var args = {
       dataset_name: datasetName,
       dataset_id: datasetId,
-      analysis_type: "training_dataset",
+      analysis_type: "dataset_type_training",
       data_set_type: "single_population",
-      training_pop_id: popId,
+      training_pop_id: `dataset_${datasetId}`,
       training_pop_name: datasetName,
-      population_type: popType,
+      population_type: "dataset_training",
       genotyping_protocol_id: protocolId,
+      data_structure: 'dataset'
     };
 
     return args;
   },
 
   createDatasetTypeSelectionReqArgs: function (datasetId, datasetName) {
-    var trainingPopDetails = solGS.getPopulationDetails();
     var selectionPopId = "dataset_" + datasetId;
-
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-
-    var dataset = new CXGN.Dataset();
-    var d = dataset.getDataset(datasetId);
-
-    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
-    var selPopProtocolId;
+    var modelArgs = solGS.getModelArgs();
     var protocolId = protocols.genotyping_protocol_id;
-    if (d.categories["genotyping_protocols"]) {
-      selPopProtocolId = d.categories["genotyping_protocols"][0];
-    } else {
+
+    var selPopProtocolId = this.getDatasetGenoProtocolId(datasetId);
+    if (!selPopProtocolId) {
+      var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
       selPopProtocolId = protocols.selection_pop_genotyping_protocol_id;
     }
 
     var args = {
       dataset_id: datasetId,
       dataset_name: datasetName,
-      training_pop_id: trainingPopDetails.training_pop_id,
-      selection_pop_id: selectionPopId,
+      training_pop_id: modelArgs.training_pop_id,
+      selection_pop_id: selectionPqopId,
       selection_pop_name: datasetName,
-      training_traits_ids: trainingTraitsIds,
+      training_traits_ids: modelArgs.training_traits_ids,
       population_type: "dataset_selection",
-      data_set_type: trainingPopDetails.data_set_type,
+      data_set_type: modelArgs.data_set_type,
       genotyping_protocol_id: protocolId,
       selection_pop_genotyping_protocol_id: selPopProtocolId,
+      data_structure: 'dataset'
     };
 
     return args;
+
   },
 
 

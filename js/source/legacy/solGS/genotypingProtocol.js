@@ -39,41 +39,16 @@ solGS.genotypingProtocol = {
       }
   },
 
-  getAllProtocols: function () {
-    jQuery.ajax({
-      type: "POST",
-      dataType: "json",
-      url: "/get/genotyping/protocols/",
-      success: function (res) {
-        var divPlaces = [""];
-        if (document.URL.match(/breeders/)) {
-          divPlaces = ["#pca_div", "#cluster_div", "#kinship_div"];
-        }
-
-        var sessionGenoProtocol;
-        if (document.URL.match(/solgs\//)) {
-          sessionGenoProtocol = solGS.genotypingProtocol.getSessionGenoProtocol();
-        }
+  getAllProtocols: function() {	
+  var protocolsQuery = jQuery.ajax({
+    type: 'POST',
+    dataType: 'json',
+    url: '/get/genotyping/protocols/',
+  });
 
 
-        for (i = 0; i < divPlaces.length; i++) {
-          if (sessionGenoProtocol) {
-            solGS.genotypingProtocol.setGenotypingProtocol(divPlaces[i], sessionGenoProtocol);
-          } else {
+  return protocolsQuery;
 
-            var sessionData = {
-              genotyping_protocol_id: res.default_protocol.protocol_id,
-              genotyping_protocol_name: res.default_protocol.name,
-              divPlace: divPlaces[i]
-            };
-
-            solGS.genotypingProtocol.setGenotypingProtocol(divPlaces[i], sessionData);
-          }
-        }
-
-        solGS.genotypingProtocol.populateMenu(res.all_protocols);
-      },
-    });
   },
 
   createGenoProtocolsOpts: function (allProtocols) {
@@ -159,11 +134,6 @@ solGS.genotypingProtocol = {
 		return protocolId;
 	},
 
-  getGenotypingProtocolName: function () {
-    return  jQuery("#genotyping_protocol_name").val();
-  
-  },
-
 
   getPredictionGenotypingProtocols: function () {
     var protocolId = this.getGenotypingProtocolId();
@@ -183,10 +153,51 @@ solGS.genotypingProtocol = {
       selection_pop_genotyping_protocol_id: selPopProtocolId,
     };
   },
+
+
+
+  getGenotypingProtocolName: function () {
+    return  jQuery("#genotyping_protocol_name").val();
+  
+  },
 };
 
-jQuery(document).ready(function () {
-  solGS.genotypingProtocol.getAllProtocols();
+
+jQuery(document).ready( function() {
+	jQuery('#genotyping_protocols_message').show();
+	jQuery('#genotyping_protocols_progress .multi-spinner-container').show();
+
+	solGS.genotypingProtocol.getAllProtocols().done(function(res) {
+		if (res) {
+			var divPlaces = [''];
+			if (document.URL.match(/breeders/)) {
+				divPlaces = ['#pca_div', '#cluster_div', '#kinship_div'];
+			}
+
+			for (i=0; i < divPlaces.length; i++) {
+				solGS.genotypingProtocol.setGenotypingProtocol(divPlaces[i], res.default_protocol);
+			}
+
+			console.log(`done looping res time start: ${new Date().toLocaleString()}`);
+
+
+			solGS.genotypingProtocol.populateMenu(res.all_protocols);
+
+			jQuery('#genotyping_protocol').show();
+			jQuery('#genotyping_protocols_message').hide();
+			jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
+		} else {
+			var message = "<p class='px-4'>No genotyping protocols found.</p>";
+
+			jQuery('#genotyping_protocols_message').html(message).show();
+			jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
+		}	
+	}).fail(function (res) {
+		var message = "<p class='px-4'>No genotyping protocols found.</p>";
+
+		jQuery('#genotyping_protocols_message').html(message).show();
+		jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
+	});
 });
 
 jQuery(document).ready(function () {
@@ -229,6 +240,8 @@ jQuery(document).ready(function () {
         protocolId = selectedId;
         protocolName = selectedName;      
       }
+    divPlace = solGS.genotypingProtocol.formatId(divPlace);
+	  solGS.genotypingProtocol.setGenotypingProtocol(divPlace, selectedId);
 
 
     var divPlace = jQuery(this).parent().parent().parent().attr("id");
@@ -258,3 +271,9 @@ jQuery(document).ready(function () {
     }
   });
 });
+
+
+// var sessionGenoProtocol;
+// if (document.URL.match(/solgs\//)) {
+//   sessionGenoProtocol = solGS.genotypingProtocol.getSessionGenoProtocol();
+// }

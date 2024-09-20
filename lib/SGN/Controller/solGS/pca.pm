@@ -164,7 +164,8 @@ sub prepare_pca_output_response {
                 $ret->{scree_plot_file} = $scree_plot_file;
                 $ret->{status}          = 'success';
                 $ret->{cached}          = 1;
-                $ret->{pca_pop_id} = $file_id;    # if $list_type eq 'trials';
+                $ret->{pca_pop_id}   = $c->stash->{pca_pop_id};
+                $ret->{file_id}      = $file_id;
                 $ret->{list_id}      = $c->stash->{list_id};
                 $ret->{trials_names} = $trials_names;
                 $ret->{output_link}  = $output_link;

@@ -41,15 +41,15 @@ if (!$data_structure) {
    }
 }
 
-my $url = $c->req->path;
-
-
-my $title; 
+my $title = 'Kinship and Inbreeding Analysis'; 
 my $collapsed = 0;
 my $collapsible = 0;
+my $section_title;
+
+my $url = $c->req->path;
 
 if ($url !~ /kinship\/analysis/) {
-  $title = 'Kinship and Inbreeding Analysis';
+  $section_title = 'Kinship and inbreeding analysis';
   $collapsible = 1;
   $collapsed = 1 if $url =~ /breeders\/trial/;
 }
@@ -57,7 +57,6 @@ if ($url !~ /kinship\/analysis/) {
 </%perl>
 
 <& /solgs/tools/base.mas &>
-<& /util/import_javascript.mas, classes => ["solGS.kinship", "solGS.heatMap"] &>
 
 % if ($url =~ /kinship\/analysis/) {
   <& /page/page_title.mas,
@@ -68,7 +67,7 @@ if ($url !~ /kinship\/analysis/) {
 <&| /page/info_section.mas,
   collapsible => $collapsible,
   collapsed   => $collapsed,
-  title       => $title
+  title       => $section_title
 &>
 
 <div id='kinship_div'>
@@ -97,3 +96,5 @@ if ($url !~ /kinship\/analysis/) {
 </div>
 
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.kinship", "solGS.heatMap"] &>
