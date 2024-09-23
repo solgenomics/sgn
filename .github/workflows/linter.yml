@@ -40,4 +40,5 @@ jobs:
           VALIDATE_CHECKOV: false
           VALIDATE_JSCPD: false
           FIX_YAML_PRETTIER: true
-          DISABLE_ERRORS: true
+          VALIDATE_JAVASCRIPT_PRETTIER: false
+          VALIDATE_JAVASCRIPT_STANDRD: false
