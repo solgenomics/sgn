@@ -77,7 +77,7 @@ input[type="text"] {
         </div>
 	</form>
     <div style="display:flex; align-items:center; white-space:nowrap; width:70%; margin-center: auto;">
-        <label for="summary_phenotype_timeline_slider" style="margin-right: 10px;">Choose DateRange slider:</label>
+        <label for="summary_phenotype_slider_range" style="margin-right: 10px;">Choose DateRange slider:</label>
         <div id="summary_phenotype_slider_range" style="width: 80%; margin: 10px auto;"></div>
     </div>
     <hr>
