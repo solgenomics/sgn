@@ -435,6 +435,7 @@ sub add_transformants_POST :Args(0){
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
     my $new_name_count = $c->req->param('new_name_count');
     my $last_number = $c->req->param('last_number');
+    my $prefix = $c->req->param('last_prefix');
 
     if (!$c->user()){
         $c->stash->{rest} = {error => "You need to be logged in to add new transformants."};
