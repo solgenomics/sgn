@@ -36,10 +36,6 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $plant_material = qq{<a href="/stock/$info->[0]->[0]/view">$info->[0]->[1]</a>};
     my $vector_construct = qq{<a href="/stock/$info->[0]->[2]/view">$info->[0]->[3]</a>};
     my $transformation_notes = $info->[0]->[4];
-    my $result = $transformation_obj->get_transformants();
-    my $number_of_transformants = scalar(@$result);
-    my $basename = $transformation_name.'_T';
-    my $next_new_transformant = $basename. (sprintf "%04d", $number_of_transformants + 1);
 
     my $updated_status_type = $info->[0]->[5];
     my $completed_metadata;
@@ -95,8 +91,6 @@ sub transformation_page : Path('/transformation') Args(1) {
 
     $c->stash->{transformation_id} = $transformation_id;
     $c->stash->{transformation_name} = $transformation_name;
-    $c->stash->{next_new_transformant} = $next_new_transformant;
-    $c->stash->{last_number} = $number_of_transformants;
     $c->stash->{plant_material} = $plant_material;
     $c->stash->{vector_construct} = $vector_construct;
     $c->stash->{transformation_notes} = $transformation_notes;
