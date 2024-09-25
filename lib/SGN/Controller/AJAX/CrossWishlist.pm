@@ -301,13 +301,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 $cross_wishlist_file_name =~ s/.csv//;
                 my $wishlist_file_name_loc = $cross_wishlist_file_name;
                 $wishlist_file_name_loc =~ s/cross_wishlist_//;
-                print STDERR Dumper $wishlist_file_name_loc;
-
+#                print STDERR "WISHLIST FILE NAME LOC =".Dumper($wishlist_file_name_loc)."\n";
                 if ($separate_crosswishlist_by_location){
                     if ($female_location_name eq $wishlist_file_name_loc) {
                         getstore($t->{media_url}, $cross_wishlist_temp_file_path);
                         $cross_wihlist_ona_id = $t->{id};
-                    } elsif ($ona_form_name eq 'BTracTSendusuMultiParental') {
+                    } elsif ($wishlist_file_name_loc eq 'BTracTSendusuMultiParental') {
                         getstore($t->{media_url}, $cross_wishlist_temp_file_path);
                         $cross_wihlist_ona_id = $t->{id};
                     }
@@ -328,7 +327,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     if ($female_location_name eq $germplasm_info_file_name_loc) {
                         getstore($t->{media_url}, $germplasm_info_temp_file_path);
                         $germplasm_info_ona_id = $t->{id};
-                    } elsif ($ona_form_name eq 'BTracTSendusuMultiParental') {
+                    } elsif ($germplasm_info_file_name_loc eq 'BTracTSendusuMultiParental') {
                         getstore($t->{media_url}, $germplasm_info_temp_file_path);
                         $germplasm_info_ona_id = $t->{id};
                     }
@@ -799,7 +798,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         if ($ona_form_name eq 'BTracTSendusuMultiParental') {
             $germplasm_info_archive_name = 'germplasm_info_'.$ona_form_name.'.csv';
         } else {
-            $germplasm_info_archive_name = 'germplasm_info_'.$female_location_name.'.csv';            
+            $germplasm_info_archive_name = 'germplasm_info_'.$female_location_name.'.csv';
         }
     } else {
         $germplasm_info_archive_name = 'germplasm_info_'.$site_name.'.csv';
