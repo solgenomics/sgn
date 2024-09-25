@@ -40,7 +40,11 @@ Test run. Rolling back at the end.
 
 =head1 DESCRIPTION
 
-This script loads user account data into the sgn_people.sp_person and sgn_people.sp_login table. Each column in the spreadsheet represents a single user, and one row will be added to sp_login and one row to sp_person. 
+This script loads user account data into the sgn_people.sp_person and sgn_people.sp_login table. Each column in the spreadsheet represents a single user, and one row will be added to sp_login and one row to sp_person.
+
+The script checks if the proposed username is already in the database, and skips that record if it already exists.
+
+It also skips the entry if the email matches either contact_email, private_email, or pending_email in the sgn_people.sp_person table. 
 
 The input file is xlsx format, and should have the following columns (column order is not important):
 
@@ -56,7 +60,7 @@ research_keywords
 research_interests
 webpage
 
-The first four columns listed are required.
+The first four columns are required.
 
 The script outputs the username, first_name, last_name, email and assigned initial random password. This can be used to send the password to the user.
 
@@ -185,12 +189,13 @@ my $coderef = sub {
 		next();
 	    }
 
-	    $row = $people_schema->resultset("SpPerson")->find( { contact_email => $data{email} } );
+	    $row = $people_schema->resultset("SpPerson")->find( { -or => [  contact_email => $data{email}, private_email => $data{email}, pending_email => $data{email} ] } );
 	    if ($row) {
-		print STDERR "Email $data{contact_email} already exists in the database. Skipping this row.\n";
+		print STDERR "Email $data{email} already exists in the database in either contact_email, private_email, or pending_email fields. Skipping this row.\n";
 		next();
 	    }
 
+	    
 	    my $password =Crypt::RandPasswd->word( 8 , 8 );
 	    if ($data{username}) {
 		my $login = CXGN::People::Login->new($dbh);
