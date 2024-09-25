@@ -13,6 +13,7 @@ $updated_status_string => undef
 $identifier_link => undef
 $project_link
 $prefix => undef
+$program_id
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables"] &>
@@ -78,7 +79,7 @@ $prefix => undef
         </div>
     </div>
 </&>
-<& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number, prefix => $prefix  &>
+<& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number, prefix => $prefix, program_id => $program_id &>
 <& /transformation/add_transformants_using_list_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name &>
 
 <script>

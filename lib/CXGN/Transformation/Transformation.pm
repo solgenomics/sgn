@@ -186,27 +186,30 @@ sub get_transformation_info {
 }
 
 
-sub get_project_info {
+sub get_associated_projects {
     my $self = shift;
     my $schema = $self->schema();
     my $transformation_stock_id = $self->transformation_stock_id();
+    my $program_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
 
-    my $q = "SELECT project.project_id, project.name
+    my $q = "SELECT project.project_id, project.name, program.project_id, program.name
         FROM nd_experiment_stock
         JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
         JOIN project ON (nd_experiment_project.project_id = project.project_id)
+        JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id) AND project_relationship.type_id = ?
+        JOIN project AS program ON (project_relationship.object_project_id = program.project_id)
         WHERE nd_experiment_stock.stock_id = ? ";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($transformation_stock_id);
+    $h->execute($program_relationship_cvterm_id, $transformation_stock_id);
 
-    my @project_info = ();
-    while (my ($project_id,  $project_name) = $h->fetchrow_array()){
-        push @project_info, [$project_id,  $project_name]
+    my @associated_projects = ();
+    while (my ($project_id,  $project_name, $program_id, $program_name) = $h->fetchrow_array()){
+        push @associated_projects, [$project_id,  $project_name, $program_id, $program_name]
     }
 
-    return \@project_info;    
+    return \@associated_projects;
 }
 
 

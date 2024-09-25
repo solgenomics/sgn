@@ -4,6 +4,7 @@ $transformation_name
 $next_new_transformant
 $last_number
 $prefix
+$program_id
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -95,9 +96,10 @@ jQuery(document).ready(function(){
             dataType: "json",
             type: 'POST',
             data : {
-                'transformation_name': "<%$transformation_name%>",
+//                'transformation_name': "<%$transformation_name%>",
                 'transformation_stock_id': "<%$transformation_id%>",
-                'prefix': prefix;
+                'program_id': "<%$program_id%>",
+                'prefix': prefix,
                 'new_name_count': new_name_count,
 //                'last_number': last_number,
             },
