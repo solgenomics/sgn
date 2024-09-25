@@ -2909,3 +2909,21 @@ id: TIME:0000482
 name: post inoculation
 def: "After inoculation with a pathogen" []
 is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000483
+name: early season
+def: "first third of the growing season" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000484
+name: mid season
+def: "second third of the growing season" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000485
+name: late season
+def: "last third of the growing season" []
+is_a: TIME:0000477 ! Event relations

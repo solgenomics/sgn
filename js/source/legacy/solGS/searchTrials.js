@@ -139,8 +139,16 @@ function checkTrainingPopulation (popIds) {
 			    'data'   : data
 			};
 
+			var table = document.querySelector(tableId);
+			if (table) {
+				var rowsCount = table.rows.length;
+			
+				if (rowsCount > 1) {	
+					jQuery('#select_trials_div').show();
+				}
+			}
+
 			displayTrainingPopulations(tableDetails);
-                jQuery('#done_selecting_div').show();
 
             } else {
 				var msg =  ('<p> Population ' + popIds + ' can not be used as a training population. It has no phenotype or/and genotype data.');
