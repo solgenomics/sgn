@@ -52,8 +52,8 @@ sub _validate_with_plugin {
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of plot data
         push @error_messages, "Spreadsheet is missing header or contains no rows";
-        $errors{'error_messages'} = \@error_messages;
-        $self->_set_parse_errors(\%errors);
+	$errors{'error_messages'} = \@error_messages;
+	$self->_set_parse_errors(\%errors);
         return;
     }
 
@@ -72,6 +72,9 @@ sub _validate_with_plugin {
     }
 
     push @$editable_stockprops, ('VectorType','Strain','CloningOrganism','InherentMarker','Backbone','SelectionMarker','CassetteName','Gene','Promotors','Terminators','BacterialResistantMarker','PlantAntibioticResistantMarker');
+
+    print STDERR "EDITABLE STOCKPROPS: ".Dumper($editable_stockprops);
+    
     my %allowed_stockprops_head = map { $_ => 1 } @$editable_stockprops;
     for my $i (3..$col_max){
         my $stockprops_head;
@@ -90,6 +93,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell B1: species_name is missing from the header";
     }
 
+    print STDERR "Checking entries...\n";
     my %seen_vector_names;
     my %vector_name_counts;
     my %seen_species_names;
@@ -128,6 +132,8 @@ sub _validate_with_plugin {
     my $species_validator = CXGN::List::Validate->new();
     my @species_missing = @{$species_validator->validate($schema,'species',\@species)->{'missing'}};
 
+    print STDERR "List validation completed! :-)\n";
+    
     if (scalar(@species_missing) > 0) {
         push @error_messages, "The following species are not in the database as species in the organism table: ".join(',',@species_missing);
         $errors{'missing_species'} = \@species_missing;
@@ -139,9 +145,11 @@ sub _validate_with_plugin {
         }
     }
 
-
+    
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
+	print STDERR "ERROR MESSAGES AFTER VALIDATION: ".Dumper(\@error_messages);
+	
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -211,8 +219,10 @@ sub _parse_with_plugin {
         my $species_name;
         if($autogenerate_uniquename > 0 ){
             $vector_name = "T" . ($vector_max_id + $row);
+	    print STDERR "Generating vector name: $vector_name\n";
         } elsif ($worksheet->get_cell($row,0)) {
             $vector_name = $worksheet->get_cell($row,0)->value();
+	    print STDERR "Using provided vector name $vector_name\n";
         }
         if ($worksheet->get_cell($row,1)) {
             $species_name = $worksheet->get_cell($row,1)->value();
@@ -233,6 +243,7 @@ sub _parse_with_plugin {
     my $vector_in_db_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-ilike=>\@vector_list}});
     while(my $r=$vector_in_db_rs->next){
         $vector_lookup{$r->uniquename} = $r->stock_id;
+	print STDERR "Vectors already present: ".$r->uniquename()."\n";
     }
 
     my %col_name_map = (
@@ -352,7 +363,10 @@ sub _parse_with_plugin {
         }
     } else {
         my $validator = CXGN::List::Validate->new();
-        my $absent_vectors = $validator->validate($schema, 'vector_construct', \@vector_list)->{'missing'};
+	my $validated_vectors = $validator->validate($schema, 'vector_construct', \@vector_list);
+        if (ref($validated_vectors) eq "HASH") {
+	    $absent_vectors = $validated_vectors->{'missing'};
+	}
         my %vectors_missing_hash = map { $_ => 1 } @$absent_vectors;
 
         foreach (@vector_list){
