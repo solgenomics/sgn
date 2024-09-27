@@ -72,8 +72,8 @@ for my $extension ("xls", "xlsx") {
 	#
 	my $archived_filename_with_path = $uploader->archive();
 	my $md5 = $uploader->get_md5($archived_filename_with_path);
-	ok($archived_filename_with_path);
-	ok($md5);
+	ok($archived_filename_with_path, "check filename");
+	ok($md5, "check md5sum");
 
 	# Now parse phenotyping spreadsheet file using correct parser
 	#
@@ -84,7 +84,7 @@ for my $extension ("xls", "xlsx") {
 	my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 	ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
-	print STDERR Dumper $parsed_file;
+	print STDERR "PARSED FILE: ".Dumper $parsed_file;
 	
 	my %phenotype_metadata;
 	$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
@@ -122,6 +122,7 @@ for my $extension ("xls", "xlsx") {
 	my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 	ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
+	print STDERR "DONE WITH THIS TEST!\n";
 	$f->dbh()->rollback();
 	$f->clean_up_db();
 }
