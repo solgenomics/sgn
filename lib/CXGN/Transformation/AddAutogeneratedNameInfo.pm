@@ -52,7 +52,7 @@ has 'prefix' => (
     required => 1,
 );
 
-has 'current_serial_number' => (
+has 'last_serial_number' => (
     isa => 'Int',
     is => 'rw',
     predicate => 'has_prefix',
@@ -91,7 +91,7 @@ sub add_info {
     my $schema = $self->get_schema();
     my $breeding_program_id = $self->get_breeding_program_id();
     my $prefix = $self->get_prefix();
-    my $current_serial_number = $self->get_current_serial_number();
+    my $last_serial_number = $self->get_last_serial_number();
 #    my $number_of_digits = $self->get_number_of_digits();
     my $description = $self->get_description();
     my $added_by = $self->get_added_by();;
@@ -116,7 +116,7 @@ sub add_info {
     }
 
     my %name_metadata;
-    $name_metadata{'current_serial_number'} = $current_serial_number;
+    $name_metadata{'last_serial_number'} = $last_serial_number;
 #    $name_metadata{'number_of_digits'} = $number_of_digits;
     $name_metadata{'description'} = $description;
     $name_metadata{'added_by'} = $added_by;

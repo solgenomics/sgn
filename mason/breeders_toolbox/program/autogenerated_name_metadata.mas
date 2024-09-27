@@ -10,7 +10,7 @@ $program_id
         <thead>
             <tr>
                 <th>Prefix</th>
-                <th>Latest Serial Number</th>
+                <th>Last Serial Number</th>
                 <th>Description</th>
                 <th>Added by</th>
                 <th>Created Date</th>
