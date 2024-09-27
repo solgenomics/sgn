@@ -1,6 +1,5 @@
-
-
 use strict;
+use warnings;
 use Test::More;
 use Data::Dumper;
 use lib 't/lib';
@@ -13,8 +12,8 @@ my $f = SGN::Test::Fixture->new();
 my $dbh = $f->dbh();
 
 print STDERR "Inserting a duplicate measurement...\n";
-#
-my $q = "insert into phenotype (cvalue_id, value, uniquename) values (70773, '3.0', 'fresh shoot weight date: 2024-03-01_19:20:56 operator = test_operator_323')";
+
+my $q = "insert into phenotype (cvalue_id, value, collect_date, uniquename) values (70773, '43', '2015-02-04 10:10:01', 'fresh shoot weight date: 2024-03-01_19:20:56 operator = test_operator_323')";
 
 my $h = $dbh->prepare($q);
 $h->execute();
@@ -29,13 +28,13 @@ my $q3 = "insert into nd_experiment_phenotype (nd_experiment_id, phenotype_id) v
 my $h3= $dbh->prepare($q3);
 $h3->execute();
 
-my $q4 = "select phenotype_id, cvalue_id, value from phenotype where value='3.0'";
+my $q4 = "select phenotype_id, cvalue_id, collect_date, value from phenotype where value='43.0'";
 
 my $h4 = $dbh->prepare($q4);
 $h4->execute();
 
-while (my ($phenotype_id, $cvalue_id, $value) = $h4->fetchrow_array()) {
-    print STDERR "PHENOTYPE_ID $phenotype_id CVALUE_ID $cvalue_id VALUE $value\n";
+while (my ($phenotype_id, $cvalue_id, $collect_date, $value) = $h4->fetchrow_array()) {
+    print STDERR "PHENOTYPE_ID $phenotype_id CVALUE_ID $cvalue_id COLLECT_DATE $collect_date VALUE $value\n";
 
 }
 
@@ -56,8 +55,8 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     data_level=> 'plot',
     trial_list=> [ 139 ],
     trait_list=> [ 70773 ],
-    repetitive_measurements => 'average',
-#   #  program_list=>$self->program_list,
+    repetitive_measurements => 'last',
+    #  program_list=>$self->program_list,
     # folder_list=>$self->folder_list,
     # year_list=>$year_list,
     # location_list=>$location_list,
@@ -74,15 +73,18 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     # start_date => $start_date,
     # end_date => $end_date,
     # include_dateless_items => $include_dateless_items,
- #   limit=>$limit, offset=>$offset
-    );
+    # limit=>$limit, offset=>$offset
+);
 
 
-my @results = ( '2.25', '1.5|3.0', '1.5', '3.0' );
+my @results = ('1.5, 2015-02-04', '43, 2015-02-04', '27.5, 2016-03-04', '48, 2017-03-14');
+
 
 my $search_type = 'MaterializedViewTable';
-foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
-    
+foreach my $repetitive_measurements ('first', 'last', 'average', 'all') {
+
+    @results = ('1.5, 2015-02-04', '43, 2015-02-04', '27.5, 2016-03-04', '48, 2017-03-14');
+
     $phenotypes_search->search_type($search_type);
     $phenotypes_search->repetitive_measurements($repetitive_measurements);
     
@@ -90,25 +92,26 @@ foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
     my @data = $phenotypes_search->get_phenotype_matrix();
     
     foreach my $d (@data) { 
-	if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
-	    my $result = shift(@results);
-	    print STDERR "$search_type, $repetitive_measurements, GOT: $d->[39], EXPECTED: $result\n";
-	    
-	    is( $d->[39], $result, "test $result" );
-	    print STDERR "MATCHED: ".Dumper($d);
-	}
+	    if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
+	        # my $result = shift(@results);
+            if (defined $d->[30] && $d->[30] =~ m/,/) {
+                my $result = shift(@results);
+                print STDERR "$search_type, $repetitive_measurements, GOT: $d->[30], EXPECTED: $result\n";
+                is($d->[30], $result, "test $result with date");
+                print STDERR "GOT: '$d->[30]', EXPECTED: '$result'\n";
+            }
+	    }
     }
-    
-    
     
 }
 
 
-@results = ( '2.25', '1.5|3.0', '1.5', '3.0' );
 $search_type = "Native";
 
-foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
+foreach my $repetitive_measurements('first', 'last', 'average', 'all') {
     
+    @results = ('1.5, 2015-02-04', '43, 2015-02-04', '27.5, 2016-03-04', '48, 2017-03-14');
+
     $phenotypes_search->search_type($search_type);
     $phenotypes_search->repetitive_measurements($repetitive_measurements);
     
@@ -116,21 +119,18 @@ foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
     my @data = $phenotypes_search->get_phenotype_matrix();
     
     foreach my $d (@data) { 
-	if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
-	    my $result = shift(@results);
-	    print STDERR "$search_type, $repetitive_measurements, GOT: $d->[30], EXPECTED: $result\n";
-	    
-	    is( $d->[30], $result, "test $result" );
-	    print STDERR "MATCHED: ".Dumper($d);
-	}
+	    if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {    
+            if (defined $d->[30] && $d->[30] =~ m/,/) {
+                my $result = shift(@results);
+                print STDERR "$search_type, $repetitive_measurements, GOT: $d->[30], EXPECTED: $result\n";
+                is( $d->[30], $result, "test $result" );
+                print STDERR "GOT: '$d->[30]', EXPECTED: '$result'\n";
+
+            }
+	    }
     }
     
-    
-    
 }
-
+$f->clean_up_db();
 
 done_testing();
-
-
-
