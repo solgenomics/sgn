@@ -504,11 +504,8 @@ sub get_phenotype_matrix {
                             }
                             # Instead of joining, we store these separately
                             $obsunit_data{$obsunit_id}->{$cvterm} = \@output_values;
-                        } else {
-                            # Default case: Handle a single value
-                            my $value = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
-                            # my $output_val = defined $collect_date ? "$value,$collect_date" : $value;
-                            $obsunit_data{$obsunit_id}->{$cvterm} = [$value];
+                            # print STDERR "Processed 'all values' for obsunit_id: $obsunit_id, trait: $cvterm\n";
+                            # print STDERR "Value-Date Pairs: " . Dumper(\@output_values) . "\n";
                         }
 		            }else {
                         my $values_ref = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
@@ -607,16 +604,13 @@ sub get_phenotype_matrix {
                 foreach my $trait (@sorted_traits) {
                     my $value_with_date = '';
                     if(ref($obsunit_data{$p}->{$trait}) eq 'ARRAY') {
-                        my $v = $obsunit_data{$p}->{$trait}[$i];
-                        my $cd = $obsunit_data{$p}->{$trait.'_collect_date'}[$i];
-                        # print the the obs_value as the value, recorded date of that obs
+                        my $value_entry = $obsunit_data{$p}->{$trait}[$i];
+                        my ($v, $cd) = @$value_entry;
                         $value_with_date = defined($v) ? (defined($cd) ? "$v, $cd" : $v) : '';
                         push @line, $value_with_date;
-
                     } else {
                         my $v = $obsunit_data{$p}->{$trait};
                         my $cd = $obsunit_data{$p}->{$trait.'_collect_date'};
-                        
                         #the recorded will be added to the obs value by separating with comma
                         $value_with_date = ($i == 0 && defined($v)) ? (defined($cd) ? "$v, $cd" : $v) : '';
                         push @line, $value_with_date;
@@ -638,7 +632,7 @@ sub get_phenotype_matrix {
         }
     }
 
-    # print STDERR "check the info data structure " . Dumper \@info;
+    print STDERR "check the info data structure " . Dumper \@info;
     print STDERR "Construct Pheno Matrix End:".localtime."\n";
     return @info;
 }
