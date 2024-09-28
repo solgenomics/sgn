@@ -84,8 +84,7 @@ sub _search {
             $data_level = ['all'];
         }
     }
-    my $page_obj = CXGN::Page->new();
-    my $main_production_site_url = $page_obj->get_hostname();
+    my $main_production_site_url = $c->config->{main_production_site_url};
 
     my $lt = CXGN::List::Transform->new();
 
