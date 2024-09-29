@@ -185,31 +185,49 @@ sub _search {
             $additional_info = $additional_info_json ? decode_json($additional_info_json) : undef;
         }
 
+	my %numbers;
+
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
 
         my $replicate = $obs_unit->{rep};
+
         my $block = $obs_unit->{block};
+
         my $plot;
+
         my $plant;
+
         my $family_stock_id;
+
         my $family_name;
 
         ## Following code lines add observationUnitParent to additionalInfo, useful for BI
         if ($obs_unit->{obsunit_type_name} eq 'plant') {
             $plant = $obs_unit->{plant_number};
+
+	    $numbers{plant} = $plant;
+
             if ($plant_parents{$obs_unit->{obsunit_stock_id}}) {
                 my $plot_object = $plant_parents{$obs_unit->{obsunit_stock_id}};
                 $plot = $plot_object->{plot_number};
+
+		$numbers{plot} = $plot;
+
                 $additional_info->{observationUnitParent} = $plot_object->{id};
             }
         } else {
             $plot = $obs_unit->{plot_number};
+	    $numbers{plot} = $plot;
         }
 
         ## Format position coordinates
         my $level_name = $obs_unit->{obsunit_type_name};
+
+	print STDERR "LEVEL NAME: ".Dumper(\%numbers);
+
         my $level_order = _order($level_name) + 0;
-        my $level_code = $level_name || ""; ###### eval "\$$level_name" || "";
+
+        my $level_code = $numbers{$level_name}; ###### eval "\$$level_name" || "";
 
         if ( $level_order_arrayref &&  ! grep { $_ eq $level_order } @{$level_order_arrayref}  ) { next; }
         if ( $level_code_arrayref &&  ! grep { $_ eq $level_code } @{$level_code_arrayref}  ) { next; }
