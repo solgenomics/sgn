@@ -209,7 +209,7 @@ sub _search {
         ## Format position coordinates
         my $level_name = $obs_unit->{obsunit_type_name};
         my $level_order = _order($level_name) + 0;
-        my $level_code = eval "\$$level_name" || "";
+        my $level_code = $level_name || ""; ###### eval "\$$level_name" || "";
 
         if ( $level_order_arrayref &&  ! grep { $_ eq $level_order } @{$level_order_arrayref}  ) { next; }
         if ( $level_code_arrayref &&  ! grep { $_ eq $level_code } @{$level_code_arrayref}  ) { next; }
