@@ -217,7 +217,7 @@ $dataset_id => undef
                 </tr>
                 <tr>
                     <td colspan="6">
-                        <span>Markerset Filter</span>
+                        <span>Marker / Markerset Filter</span>
                         <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
                     </td>
                     <td colspan="6">

@@ -5,7 +5,7 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" name="close_seedlots_upload" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="seedlot_upload_dialog">Upload Seedlots</h4>
             </div>
             <div class="modal-body">
@@ -17,7 +17,7 @@
                             <ul>
                             <li>Seedlots represent physical seed in packets.</li>
                             <li>This seed can be from crosses or for named accessions.</li>
-                            <li>Seedlots can have a specific location, box, weight(g), and count.</li>
+                            <li>Seedlots can have a specific location, box, weight_gram, and count.</li>
                             <li>Seedlots can belong to breeding programs and organizations.</li>
                             <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
                             </ul>
@@ -98,7 +98,7 @@
 
                                 <div id="upload_seedlots_accessions_section" style="display:none">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
+                                        <label class="col-sm-3 control-label">Upload File: </label>
                                         <div class="col-sm-9" >
                                             <input type="file" name="seedlot_uploaded_file" id="seedlot_uploaded_file" encoding="multipart/form-data" />
                                         </div>
@@ -107,7 +107,7 @@
 
                                 <div id="upload_seedlots_harvested_section" style="display:none">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Upload File (.xls or .xlsx): </label>
+                                        <label class="col-sm-3 control-label">Upload File: </label>
                                         <div class="col-sm-9" >
                                             <input type="file" name="seedlot_harvested_uploaded_file" id="seedlot_harvested_uploaded_file" encoding="multipart/form-data" />
                                         </div>
@@ -220,7 +220,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_seedlot_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_seedlot_upload_dialog" name="close_seedlots_upload" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -235,11 +235,9 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Seedlots may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
-                    The first row (header) must contain the following:
+                    The first row (header) should contain the following:
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -250,7 +248,7 @@
                                 <td>accession_name</td>
                                 <td>operator_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>description</td>
                                 <td>box_name</td>
                                 <td>quality</td>
@@ -265,9 +263,9 @@
                     <li>accession_name (must exist in the database. the accession_name is the unique identifier for the named genotype)</li>
                     <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                     <li>
-                    amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
+                    amount (number of seeds in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
                     <br/><b>AND/OR</b><br/>
-                    weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                    weight_gram (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight_gram or both.)
                     </li>
                     <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>
@@ -276,12 +274,10 @@
                     <ul>
                       <li>description (information about why this seedlot is being added)</li>
                       <li>quality (status of the seedlot, for example "ok", "moldy", "insect damage" etc.</li>
-                      <li>source (an alternate source, such as a plot, subplot, or plant identifier from which the seed was sourced if no specific cross experiment was entered in the database)</li>
+                      <li>source (an alternate source, such as a plot, subplot, or plant identifier from which the seed was collected)</li>
                     </ul>
-
-		    Note that the columns have to be arranged in the order presented above and carry the correct column headers.
-
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlot_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -299,11 +295,9 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Seedlots may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
-                    The first row (header) must contain the following:
+                    The first row (header) should contain the following:
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -314,11 +308,10 @@
                                 <td>cross_unique_id</td>
                                 <td>operator_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>description</td>
                                 <td>box_name</td>
                                 <td>quality</td>
-                                <td>source</td>
                             </tr>
                         </tbody>
                     </table>
@@ -329,9 +322,9 @@
                     <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
                     <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                     <li>
-                    amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
+                    amount (number of seeds in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
                     <br/><b>AND/OR</b><br/>
-                    weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                    weight_gram (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight_gram or both.)
                     </li>
                     <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>
@@ -340,11 +333,9 @@
                     <ul>
                       <li>description (information about why this seedlot is being added)</li>
                       <li>quality (brief description of quality, e.g.,  "ok", "moldy", "insect damage", etc)</li>
-                      <li>source (an alternate source, such as a plot, subplot, or plant identifier from which the seed was sourced if no specific cross experiment was entered in the database)</li>
                     </ul>
-		    
-
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlot_harvested_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -499,5 +490,16 @@ jQuery(document).ready(function(){
         jQuery('#upload_seedlot_dialog').modal('hide');
         //location.reload();
     });
+
+    jQuery('[name="close_seedlots_upload"]').click(function () {
+        jQuery('#upload_seedlots_type_select').val("");
+        jQuery('#upload_seedlot_location').val("");
+        jQuery('#upload_seedlot_organization_name').val("");
+        jQuery('#seedlot_uploaded_file').val("");
+        jQuery('#seedlot_harvested_uploaded_file').val("");
+        location.reload();
+    });
+
+
 });
 </script>

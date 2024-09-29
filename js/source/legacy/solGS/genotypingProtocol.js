@@ -22,26 +22,15 @@ solGS.genotypingProtocol= {
 
     },
 
-    getAllProtocols: function() {
+    getAllProtocols: function() {	
+		var protocolsQuery = jQuery.ajax({
+			type: 'POST',
+			dataType: 'json',
+			url: '/get/genotyping/protocols/',
+		});
 
-	jQuery.ajax({
-	    type: 'POST',
-	    dataType: 'json',
-	    url: '/get/genotyping/protocols/',
-	    success: function(res) {
 
-		var divPlaces = [''];
-        if (document.URL.match(/breeders/)) {
-            divPlaces = ['#pca_div', '#cluster_div', '#kinship_div'];
-        }
-
-        for (i=0; i < divPlaces.length; i++) {
-            solGS.genotypingProtocol.setGenotypingProtocol(divPlaces[i], res.default_protocol);
-        }
-
-		solGS.genotypingProtocol.populateMenu(res.all_protocols);
-	   }
-	});
+		return protocolsQuery;
 
     },
 
@@ -91,7 +80,40 @@ solGS.genotypingProtocol= {
 
 
 jQuery(document).ready( function() {
-    solGS.genotypingProtocol.getAllProtocols();
+	jQuery('#genotyping_protocols_message').show();
+	jQuery('#genotyping_protocols_progress .multi-spinner-container').show();
+
+	solGS.genotypingProtocol.getAllProtocols().done(function(res) {
+		if (res) {
+			var divPlaces = [''];
+			if (document.URL.match(/breeders/)) {
+				divPlaces = ['#pca_div', '#cluster_div', '#kinship_div'];
+			}
+
+			for (i=0; i < divPlaces.length; i++) {
+				solGS.genotypingProtocol.setGenotypingProtocol(divPlaces[i], res.default_protocol);
+			}
+
+			console.log(`done looping res time start: ${new Date().toLocaleString()}`);
+
+
+			solGS.genotypingProtocol.populateMenu(res.all_protocols);
+
+			jQuery('#genotyping_protocol').show();
+			jQuery('#genotyping_protocols_message').hide();
+			jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
+		} else {
+			var message = "<p class='px-4'>No genotyping protocols found.</p>";
+
+			jQuery('#genotyping_protocols_message').html(message).show();
+			jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
+		}	
+	}).fail(function (res) {
+		var message = "<p class='px-4'>No genotyping protocols found.</p>";
+
+		jQuery('#genotyping_protocols_message').html(message).show();
+		jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
+	});
 });
 
 
@@ -127,7 +149,6 @@ jQuery(document).ready( function() {
 	var divPlace = jQuery(this).parent().parent().parent().attr('id');
 
     divPlace = solGS.genotypingProtocol.formatId(divPlace);
-    console.log('divPlace ' + divPlace + ' selectId: ' + selectedId + ' name ' + selectedName)
 	solGS.genotypingProtocol.setGenotypingProtocol(divPlace, selected);
 
 	jQuery(divPlace + ' #genotyping_protocol #genotyping_protocols_list_div').hide();

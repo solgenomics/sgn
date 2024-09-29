@@ -1208,8 +1208,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
     $user_id              = $c->user()->get_object()->get_sp_person_id();
     $username             = $c->user()->get_object()->get_username();
-    $email_address        = $c->req->param('email_address');
-    $email_option_enabled = $c->req->param('email_option_enabled');
+    $email_address        = $c->req->param('trial_email_address_upload');
+    $email_option_enabled = $c->req->param('email_option_to_recieve_trial_upload_status') eq 'on';
 
     print STDERR "email option enabled : $email_option_enabled\n";
     print STDERR "recieved  address: $email_address\n";
@@ -1243,6 +1243,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin('MultipleTrialDesignExcelFormat');
     $parsed_data = $parser->parse();
+    print STDERR "the parsed data : " . Dumper($parsed_data) . "\n";
 
     # print STDERR "check the parsed data : \n" . Dumper($parsed_data); 
     if (!$parsed_data) {
@@ -1276,7 +1277,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             CXGN::Contact::send_email($email_subject, $email_body, $email_address);
         }
 
-        die $return_error;
+        $c->stash->{rest} = {errors => $return_error};
+        return;
     }
 
     if ($parser->has_parse_warnings()) {
@@ -1312,8 +1314,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     # print STDERR "infile:  $infile \n";
 
     my $async_upload = CXGN::Tools::Run->new();
-    $async_upload->run_async("perl $basepath/bin/upload_multiple_trial_design.pl -H $dbhost -D $dbname -P $dbpass -w $basepath -U $dbuser -b $breeding_program_name -i $infile -un $username -e $email_address -eo $email_option_enabled -r $temp_file_nd_experiment_id");
-
+    $async_upload->run_async("perl $basepath/bin/upload_multiple_trial_design.pl -H $dbhost -D $dbname -P \"$dbpass\" -w \"$basepath\" -U \"$dbuser\" -b \"$breeding_program_name\" -i \"$infile\" -un \"$username\" -e \"$email_address\" -eo $email_option_enabled -r $temp_file_nd_experiment_id");
     #print STDERR "Check 5: ".localtime()."\n";
     if (scalar @{$save{'errors'}} > 0) {
         print STDERR "Errors saving trials: ".@{$save{'errors'}};
