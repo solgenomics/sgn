@@ -184,6 +184,19 @@ $user_role => undef
 % }
 </&>
 
+<&| /page/info_section.mas, title=>"Delete seedlots using a list",  collapsible => 1, collapsed=>1 &>
+% if ($user_role eq "curator" ) {
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="delete_seedlots_link">Delete seedlots using a list</button>
+            </div>
+        </div>
+    </div>
+% } else {
+    You need to be logged in or you do not have sufficient privileges to delete seedlots.
+% }
+</&>
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>

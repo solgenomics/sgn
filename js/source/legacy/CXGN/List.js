@@ -58,6 +58,18 @@ CXGN.List = function () {
 
 CXGN.List.prototype = {
 
+    // CXGN::List::Transform Plugin names for list types
+    transform_keys: {
+        "traits": 'traits_2_trait_ids',
+        "locations": 'locations_2_location_ids',
+        "trials": 'projects_2_project_ids',
+        "breeding_programs": 'projects_2_project_ids',
+        "accessions": 'accessions_2_accession_ids',
+        "plots": 'plots_2_plot_ids',
+        "seedlots": 'stocks_2_stock_ids',
+        "crosses": 'stocks_2_stock_ids'
+    },
+
     // Return the data as a straight list
     //
     getList: function(list_id) {
@@ -458,6 +470,7 @@ CXGN.List.prototype = {
         var list_name = this.listNameById(list_id);
         var type_select_id = 'type_select';
         var html = '';
+        var enable_details_link = !!this.getListItemUrl(list_type);
 
         if (list_type == 'catalog_items') {
             html += '<div class="well well-sm"><table id="list_cart_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
@@ -493,7 +506,15 @@ CXGN.List.prototype = {
         html += '<div class="well well-sm"><table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
         for(var n=0; n<items.length; n++) {
-            html = html +'<tr><td id="list_item_toggle_edit_div_'+items[n][0]+'" ><div name="list_item_toggle_edit" data-listitemdiv="list_item_toggle_edit_div_'+items[n][0]+'" data-listitemid="'+items[n][0]+'" data-listitemname="'+items[n][1]+'" >'+ items[n][1] + '</div></td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
+            html = html +'<tr>';
+            html += '<td id="list_item_toggle_edit_div_'+items[n][0]+'" >';
+            html += '<div name="list_item_toggle_edit" data-listitemdiv="list_item_toggle_edit_div_'+items[n][0]+'" data-listitemid="'+items[n][0]+'" data-listitemname="'+items[n][1]+'" >'+ items[n][1] + '</div>';
+            html += '</td>'
+            html += '<td>';
+            html += '<span data-list-item-id="'+items[n][0]+'" class="list_item_remove btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove</span>'
+            if ( enable_details_link ) html += '<span data-list-item-name="'+items[n][1]+'" class="list_item_details btn btn-default btn-xs" style="margin-left: 15px"><span class="glyphicon glyphicon-new-window"></span>&nbsp;&nbsp;Details</span>';
+            html += '</td>';
+            html += '</tr>';
         }
         html += '</tbody></table></div>';
 
@@ -532,18 +553,29 @@ CXGN.List.prototype = {
             }
         });
 
-        for (var n=0; n<items.length; n++) {
-            var list_item_id = items[n][0];
+        jQuery('.list_item_remove').click( function() {
+            var id = jQuery(this).data("list-item-id");
+            jQuery(this).attr("disabled", true);
 
-            jQuery('#'+items[n][0]).click( function() {
-                var lo = new CXGN.List();
-                var i = lo.availableLists();
+            var lo = new CXGN.List();
+            lo.removeItem(list_id, id);
+            lo.renderItems(div, list_id);
+            lo.renderLists('list_dialog');
+        });
+        jQuery('.list_item_details').click( function() {
+            var el = this;
+            var name = jQuery(el).data("list-item-name");
+            jQuery(el).attr("disabled", true);
 
-                lo.removeItem(list_id, this.id );
-                lo.renderItems(div, list_id);
-                lo.renderLists('list_dialog');
+            var lo = new CXGN.List();
+            lo.getListItemDbId(list_type, name).then((list_item_db_id) => {
+                jQuery(el).attr("disabled", false);
+                var url = lo.getListItemUrl(list_type, list_item_db_id);
+                window.open(url, '_blank');
+            }).catch((err) => {
+                alert(err);
             });
-        }
+        });
 
         jQuery('#dialog_add_list_item_button').click( function() {
             addMultipleItemsToList('dialog_add_list_item', list_id);
@@ -1073,37 +1105,72 @@ CXGN.List.prototype = {
         //console.log("data ="+JSON.stringify(data));
         var list_type = data.type_name;
 
-        var new_type;
-        switch (list_type)
-        {
-            case "traits":
-                new_type = 'traits_2_trait_ids';
-                break;
-            case "locations":
-                new_type = 'locations_2_location_ids';
-                break;
-            case "trials":
-            case "breeding_programs":
-                new_type = 'projects_2_project_ids';
-                break;
-            case "accessions":
-                new_type = 'accessions_2_accession_ids';
-                break;
-            case "plots":
-                new_type = 'plots_2_plot_ids';
-                break;
-            case "seedlots":
-                new_type = 'stocks_2_stock_ids';
-                break;
-            default:
-                return { 'error' : "cannot convert the list because of unknown type" };
-        }
+        var new_type = this.transform_keys[list_type];
+        if ( !new_type ) return { 'error' : "cannot convert the list because of unknown type" };
         //if (window.console) console.log("new type = "+new_type);
         var transformed = this.transform(list_id, new_type);
         //if (window.console) console.log("transformed="+JSON.stringify(transformed));
         return transformed;
+    },
 
+    getListItemDbId: function(list_type, list_item_name) {
+        return new Promise((resolve, reject) => {
+            var new_type = this.transform_keys[list_type];
+            if ( !new_type ) return reject('Unsupported list type');
+
+            jQuery.ajax({
+                url: '/list/transform/temp',
+                method: 'GET',
+                data: {
+                    type: new_type,
+                    items: JSON.stringify([list_item_name])
+                },
+                success: (resp) => {
+                    if ( resp && resp.missing && resp.transform ) {
+                        if ( resp.missing.length > 0 ) {
+                            return reject(`The list item ${list_item_name} is not in the database`);
+                        }
+                        else if ( resp.transform.length === 1 ) {
+                            return resolve(resp.transform[0]);
+                        }
+                    }
+                    return reject(`Could not get list item db id`);
+                },
+                error: (resp) => {
+                    return reject(`Could not get list item db id [${resp}]`);
+                }
+            });
+        });
+    },
+
+    getListItemUrl: function(list_type, list_item_db_id) {
+        switch (list_type) {
+            case "accessions":
+            case "plants":
+            case "plots":
+                return document.location.origin + `/stock/${list_item_db_id}/view`;
+            case "seedlots":
+                return document.location.origin + `/breeders/seedlot/${list_item_db_id}`;
+            case "crosses":
+                return document.location.origin + `/cross/${list_item_db_id}`;
+            case "breeding_programs":
+                return document.location.origin + `/breeders/manage_programs`;
+            case "locations":
+                return document.location.origin + `/breeders/locations`;
+            case "traits":
+            case "trait_components":
+                return document.location.origin + `/cvterm/${list_item_db_id}/view`;
+            case "trials":
+                return document.location.origin + `/breeders/trial/${list_item_db_id}`;
+            case "genotyping_protocols":
+                return document.location.origin + `/breeders_toolbox/protocol/${list_item_db_id}`;
+            case "genotyping_projects":
+                return document.location.origin + `/breeders/trial/${list_item_db_id}`;
+            default:
+                return null;
+        }
     }
+
 };
 
 function setUpLists() {

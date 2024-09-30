@@ -17,22 +17,27 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <& /util/import_javascript.mas, classes => ['solGS.genotypingProtocol'] &>
 
+<div id="genotyping_protocols_canvas">
+<div id="genotyping_protocols_message" class="message" style="display:none;">Retrieving genotyping protocols...please wait...</div>
+ <div id="genotyping_protocols_progress">
+    <& /solgs/spinner/spinner.mas &>
+</div>
+</div>
 
-  <div  class='row text-center'
+<div  class='row text-center'
        id='genotyping_protocol'
-       style='margin:40px 0 40px 0;'>
+       style='margin:40px 0 40px 0;display:none'>
     <div>
       <button class='btn btn-light'
 	      type='button'
-	      id='genotyping_protocol_message'>Retrieving genotyping protocols...please wait...
+	      id='genotyping_protocol_message'>Retrieving genotyping protocols...
       </button>
       <button class='btn btn-success'
 	      type='button'
 	      id='genotyping_protocols_change'>Change
       </button>
     </div>
-    <div id='genotyping_protocols_list_div'
-	 style='text-align:center;width:40%;display:none;margin:0 auto;'>
+    <div id='genotyping_protocols_list_div' style='text-align:center;width:40%;display:none;margin:0 auto;'>
       <select class='form-control text-center'
 	      id='genotyping_protocols_list_select'>
       </select>
@@ -41,4 +46,5 @@ Isaak Y Tecle (iyt2@cornell.edu)
    <input type='hidden'
 	   id='genotyping_protocol_id'
 	   value=''/>
-  </div>
+</div>
+
