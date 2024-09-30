@@ -1981,7 +1981,7 @@ sub merge {
             print STDERR "Moving stock_dbxref relationships from $other_stock_id to stock ".$self->stock_id()."\n";
         }
         else {
-            print STDERR "Not moving stock_dbxref because it alredy exists for that stock (".$self->stock_id().")\n";
+            print STDERR "Not moving stock_dbxref because it already exists for that stock (".$self->stock_id().")\n";
         }
     }
 
