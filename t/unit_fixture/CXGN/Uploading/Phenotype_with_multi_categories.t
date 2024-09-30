@@ -4,7 +4,7 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
-use SimulateC;
+#use SimulateC;
 use CXGN::UploadFile;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
@@ -81,10 +81,11 @@ for my $extension ("xls", "xlsx") {
 	my $validate_file = $parser->validate('phenotype spreadsheet simple', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 	ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-	my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+	my $parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 	ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 	print STDERR "PARSED FILE: ".Dumper $parsed_file;
+       
 	
 	my %phenotype_metadata;
 	$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
@@ -117,8 +118,11 @@ for my $extension ("xls", "xlsx") {
 	my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 	ok(!$verified_error);
 
+	my $expected_error = '<small>This trait value should be one of 1/2/3/4/5: <br/>Plot Name: KASESE_TP2013_669<br/>Trait Name: CO_334:0000191<br/>Value: asdf</small><hr>';
 	print STDERR "ERRORS DETECTED: ".Dumper($verified_error);
 
+	is($verified_error, $expected_error, "check error from store");
+	
 	my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 	ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
