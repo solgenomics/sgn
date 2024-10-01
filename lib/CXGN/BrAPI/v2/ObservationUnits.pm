@@ -188,11 +188,14 @@ sub _search {
 	my %numbers;
 
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
-
+	$numbers{entry_type} = $entry_type;
+	
         my $replicate = $obs_unit->{rep};
-
+	$numbers{replicate} = $replicate;
+	
         my $block = $obs_unit->{block};
-
+	$numbers{block} = $block;
+	
         my $plot;
 
         my $plant;
