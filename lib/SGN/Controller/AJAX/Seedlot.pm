@@ -1339,12 +1339,16 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
     # Get cvterm of root term
     my ($db_name, $accession) = split ":", $c->config->{seedlot_maintenance_event_ontology_root};
     my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
-    my $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
-    my $root_cvterm = $dbxref->cvterm if $dbxref;
-    my $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
+    my $dbxref;
+    $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
+    my $root_cvterm;
+    $root_cvterm = $dbxref->cvterm if $dbxref;
+    my $root_cvterm_id
+    $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
 
     # Get children (recursively) of root cvterm
-    my $ontology = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
+    my $ontology;
+    $ontology = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
 
     $c->stash->{rest} = { ontology => $ontology };
 }
