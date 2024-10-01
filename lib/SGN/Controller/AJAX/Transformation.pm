@@ -589,11 +589,16 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
 
     my $result = $transformation_obj->get_transformants();
-#    print STDERR "RESULT =".Dumper($result)."\n";
+    
     my @transformants;
     foreach my $r (@$result){
-        my ($stock_id, $stock_name) =@$r;
-        push @transformants, [qq{<a href="/stock/$stock_id/view">$stock_name</a>}, $stock_name];
+        my ($stock_id, $stock_name, $is_obsolete) =@$r;
+        if (!$is_obsolete) {
+            push @transformants, {
+                transformant_id => $stock_id,
+                transformant_name => $stock_name,
+            };
+        }
     }
 
     $c->stash->{rest} = { data => \@transformants };
