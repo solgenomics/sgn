@@ -100,7 +100,7 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         columns: [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteTransformant("+row.transformant_id+")'>Obsolete</a>"; } },
+            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteTransformant("+row.transformant_id+")'>X</a>"; } },
         ],
 
         "fnInitComplete": function(oSettings, json) {
