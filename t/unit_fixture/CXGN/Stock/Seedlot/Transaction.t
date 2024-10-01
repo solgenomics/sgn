@@ -270,21 +270,21 @@ foreach my $t (@{$source_seedlot_after_trans3_delete->transactions()}) {
 print STDERR "Source seedlot transactions...\n";
 print STDERR Dumper \@transactions3;
 is_deeply(\@transactions3, [
-          [
-            'test seedlot 2',
-            'test seedlot',
-            -7,
-            'janedoe',
-            'Moving 7 seed from seedlot 2 to seedlot 1'
-          ],
-          [
-            'test seedlot 2',
-            'test seedlot',
-            -5,
-            'janedoe',
-            'Moving 5 seed from seedlot 2 to seedlot 1'
-          ]
-        ], "check source seedlot transactions after transaction 3 deletion");
+    [
+        'test seedlot 2',
+        'test seedlot',
+        -7,
+        'janedoe',
+        'Moving 7 seed from seedlot 2 to seedlot 1'
+    ],
+    [
+        'test seedlot 2',
+        'test seedlot',
+        -5,
+        'janedoe',
+        'Moving 5 seed from seedlot 2 to seedlot 1'
+    ]
+], "check source seedlot transactions after transaction 3 deletion");
 
 #Checking destination seedlot after transaction deletion
 print STDERR "Checking destination seedlot after deletion...\n";
@@ -310,21 +310,21 @@ foreach my $t (@{$dest_seedlot_after_trans3_delete->transactions()}) {
 print STDERR "Destination seedlot transactions...\n";
 print STDERR Dumper \@transactions4;
 is_deeply(\@transactions4, [
-          [
-            'test seedlot 2',
-            'test seedlot',
-            7,
-            'janedoe',
-            'Moving 7 seed from seedlot 2 to seedlot 1'
-          ],
-          [
-            'test seedlot 2',
-            'test seedlot',
-            5,
-            'janedoe',
-            'Moving 5 seed from seedlot 2 to seedlot 1'
-          ]
-        ], 'check transactions of dest_seedlot after transaction 3 deletion');
+    [
+        'test seedlot 2',
+        'test seedlot',
+        7,
+        'janedoe',
+        'Moving 7 seed from seedlot 2 to seedlot 1'
+    ],
+    [
+        'test seedlot 2',
+        'test seedlot',
+        5,
+        'janedoe',
+        'Moving 5 seed from seedlot 2 to seedlot 1'
+    ]
+], 'check transactions of dest_seedlot after transaction 3 deletion');
 
 #clean up data and done testing
 $f->clean_up_db();

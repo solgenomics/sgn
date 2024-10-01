@@ -830,28 +830,27 @@ function editSeedlotTransaction(transaction_id){
 
 function deleteSeedlotTransaction(transaction_id){
     if (confirm("Are you sure you want to delete this seedlot transaction?")){
-      jQuery.ajax({
-          url: '/ajax/breeders/seedlot/<% $seedlot_id %>/transaction/'+transaction_id+'/delete',
-          beforeSend: function(){
-              jQuery('#working_modal').modal('show');
-          },
-          success: function(response) {
-              jQuery('#working_modal').modal('hide');
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot/<% $seedlot_id %>/transaction/'+transaction_id+'/delete',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
                     alert('The seedlot transaction has been deleted');
                     location.reload();
-              }
-              if (response.error) {
-                  alert(response.error);
-              }
-          },
-          error: function(response){
-              jQuery('#working_modal').modal('hide');
-              alert('An error occurred deleting seedlot transaction');
-          }
-      });
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred deleting seedlot transaction');
+            }
+        });
     }
-
 }
 
 </script>
