@@ -204,7 +204,6 @@ solGS.kinship = {
 
   displayKinshipPopsTable: function (tableId, data) {
 
-    console.log(`displayKinshipPopsTable data: ${data}`)
     var table = jQuery(`#${tableId}`).DataTable({
       'searching': true,
       'ordering': true,
@@ -385,13 +384,10 @@ jQuery(document).ready(function () {
     var runKinshipBtnId = e.target.id;
     if (runKinshipBtnId.match(/run_kinship/)) {
       var kinshipArgs = solGS.kinship.getKinshipArgs();
-      console.log(`kinshipArgs: ${JSON.stringify(kinshipArgs)}`)
       var kinshipPopId = kinshipArgs.kinship_pop_id;
       if (!kinshipPopId) {
         kinshipArgs = solGS.kinship.getSelectedPopKinshipArgs(runKinshipBtnId);
       }
-
-      console.log(`kinshipArgs: ${JSON.stringify(kinshipArgs)}`)
 
       kinshipPopId = kinshipArgs.kinship_pop_id;
       var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("kinship_div");
@@ -415,7 +411,7 @@ jQuery(document).ready(function () {
         .checkCachedKinship(kinshipUrl, kinshipArgs)
         .done(function (res) {
           if (res.data) {
-            jQuery(this.kinshipMsgDiv).html("Generating heatmap... please wait...").show();
+            jQuery(kinshipMsgDiv).html("Generating heatmap... please wait...").show();
 
             kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
 
@@ -494,7 +490,7 @@ jQuery(document).ready(function () {
                         }
                       })
                       .fail(function () {
-                        jQuery(this.kinshipMsgDiv)
+                        jQuery(kinshipMsgDiv)
                           .html("Error occured running the kinship.")
                           .show()
                           .fadeOut(8400);
@@ -534,17 +530,34 @@ jQuery(document).ready(function () {
       if (args.data_structure) {
         args["kinship_pop_id"] = args.data_structure + "_" + args.kinship_pop_id;
       }
-      solGS.kinship.checkCachedKinship(url, args);
-    }
+      solGS.kinship.checkCachedKinship(url, args).done(function (res) {
+        if (res.data) {
+          var kinshipMsgDiv = solGS.kinship.kinshipMsgDiv;
+          var canvas = solGS.kinship.canvas;
+
+          jQuery(kinshipMsgDiv).html("Generating heatmap... please wait...").show();
+          jQuery(`${canvas} .multi-spinner-container`).show();
+
+          var kinshipPlotDivId = solGS.kinship.kinshipPlotDivPrefix;
+          kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
+
+          var links = solGS.kinship.addDowloandLinks(res);
+          solGS.heatmap.plot(res.data, canvas, kinshipPlotDivId, links);
+
+          jQuery(`${canvas} .multi-spinner-container`).hide();
+          jQuery(kinshipMsgDiv).empty();
+        }
+    })
   }
+}
 });
 
 jQuery(document).ready(function () {
   var kinshipCanvas = solGS.kinship.canvas;
   jQuery(kinshipCanvas).on("click", "a", function (e) {
     var buttonId = e.target.id;
-    var kinPlotId = buttonId.replace(/download_/, "");
-    saveSvgAsPng(document.getElementById("#" + kinPlotId), kinPlotId + ".png", { scale: 1 });
+    var kinshipPlotId = buttonId.replace(/download_/, "");
+    saveSvgAsPng(document.getElementById("#" + kinshipPlotId), kinshipPlotId + ".png", { scale: 1 });
   });
 });
 
