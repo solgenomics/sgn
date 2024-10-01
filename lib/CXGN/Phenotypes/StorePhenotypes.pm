@@ -328,9 +328,9 @@ sub verify {
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
     print STDERR Dumper \@trait_list;
-# my %plot_trait_value = %{$self->values_hash};
-    #my %phenotype_metadata = %{$self->metadata_hash};
-#    my $timestamp_included = $self->has_timestamps;
+    # my %plot_trait_value = %{$self->values_hash};
+    # my %phenotype_metadata = %{$self->metadata_hash};
+    # my $timestamp_included = $self->has_timestamps;
     my $archived_image_zipfile_with_path = $self->image_zipfile_path;
     my $schema = $self->bcs_schema;
     my $transaction_error;
@@ -430,22 +430,115 @@ sub verify {
     
     foreach my $plot_name (@plot_list) {
         foreach my $trait_name (@trait_list) {
-
             my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
 	    
-	    if (ref($measurements_array->[0]) eq 'ARRAY') {   ### we have a list of measurements, not just a trait_value timestamp pair
-        foreach my $value_array (@$measurements_array) {
-		    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
-		    $all_errors .= $errors;
-		    $all_warnings .= $warnings;
-		}
+	        if (ref($measurements_array->[0]) eq 'ARRAY') {   ### we have a list of measurements, not just a trait_value timestamp pair
+                foreach my $value_array (@$measurements_array) {
+		            ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
+		            $all_errors .= $errors;
+		            $all_warnings .= $warnings;
+		        }
+	        }else {
+		        ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $measurements_array);
+		        $all_errors .= $errors;
+		        $all_warnings .= $warnings;
+	        }
 	    }
-	    else {
-		($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $measurements_array);
-		$all_errors .= $errors;
-		$all_warnings .= $warnings;
-	    }
-	}
+
+        #Trait values can be non alphanumeric 
+        #if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9,.\-\/\_]/ && $trait_value ne '.')){
+        #    $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+        #}
+
+        #check that trait value is valid for trait name
+        if (exists($check_trait_format{$trait_cvterm_id})) {
+            if ($check_trait_format{$trait_cvterm_id} eq 'numeric') {
+                my $trait_format_checked = looks_like_number($trait_value);
+                if (!$trait_format_checked && $trait_value ne '') {
+                    $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                }
+            }
+            if ($check_trait_format{$trait_cvterm_id} eq 'image') {
+                $trait_value =~ s/^.*photos\///;
+                if (!exists($image_plot_full_names{$trait_value})) {
+                    $error_message = $error_message."<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile called $trait_value. </small><hr>";
+                }
+            }
+        }
+
+        if (exists($check_trait_category{$trait_cvterm_id})) {
+		    my @check_values;
+            my @trait_categories = split /\//, $check_trait_category{$trait_cvterm_id};
+            my %trait_categories_hash;
+
+		    if ($check_trait_format{$trait_cvterm_id} eq "Multicat") {
+		        @check_values = split /\:/, $trait_value;
+		    }else {
+			    @check_values = ( $trait_value );
+		    }
+
+            if ($check_trait_format{$trait_cvterm_id} eq 'Ordinal' || $check_trait_format{$trait_cvterm_id} eq 'Nominal' || $check_trait_format{$trait_cvterm_id} eq 'Multicat') {
+                # Ordinal looks like <value>=<category>
+
+                foreach my $ordinal_category (@trait_categories) {
+                    my @split_value = split('=', $ordinal_category);
+                    if (scalar(@split_value) >= 1) {
+                        $trait_categories_hash{$split_value[0]} = 1;
+                    }
+                }
+            } else {
+                # Catch everything else
+                %trait_categories_hash = map { $_ => 1 } @trait_categories;
+            }
+
+		    foreach my $tw (@check_values) { 
+			    if ($tw ne '' && !exists($trait_categories_hash{$tw})) {
+			        my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
+			        $error_message = "<small>This trait value should be one of $valid_values: <br/>Plot Name: $plot_name<br/>Trait Name: $trait_name<br/>Value: $trait_value</small><hr>";
+			        print STDERR $error_message;
+			    } else {
+			        print STDERR "Trait value is valid $tw.\n";
+			    }
+		    }
+        }
+
+        #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
+        #check if the plot_name, trait_name combination already exists in database.
+        if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
+            my $prev = $check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id};
+            if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
+                $same_value_count++;
+            }
+        } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
+            my $prev = $check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp};
+            if ( defined($prev) ) {
+                $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+            }
+        } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
+            my $prev = $check_unique_trait_stock{$trait_cvterm_id, $stock_id};
+            if ( defined($prev) ) {
+                $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+            }
+        }
+
+        #check if the plot_name, trait_name combination already exists in same file.
+        if (exists($check_file_stock_trait_duplicates{$trait_cvterm_id, $stock_id})) {
+            $warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
+        } else {
+            $check_file_stock_trait_duplicates{$trait_cvterm_id, $stock_id} = 1;
+        }
+
+        if ($timestamp_included) {
+            if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
+                if ($timestamp) {
+                    if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                        $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+                    }
+                }
+            }
+        }
+
+        # }
     }
     return ($all_warnings, $all_errors);
 }
