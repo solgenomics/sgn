@@ -746,7 +746,7 @@ sub exists_in_database {
 	    return 0;
 	}
     }
-    return undef;
+    return;
 }
 
 
@@ -769,7 +769,7 @@ sub get_organism {
     if ($bcs_stock) {
         return $bcs_stock->organism;
     }
-    return undef;
+    return;
 }
 
 
@@ -791,7 +791,7 @@ sub get_species {
         return $organism->species;
     }
     else {
-	return undef;
+	return;
     }
 }
 
@@ -813,7 +813,7 @@ sub get_genus {
         return $organism->genus;
     }
     else {
-	return undef;
+	return;
     }
 }
 
@@ -2094,7 +2094,7 @@ sub merge {
     Other stock deleted: $other_stock_deleted.
 COUNTS
 
-	return undef;
+	return;
 }
 
 =head2 delete
