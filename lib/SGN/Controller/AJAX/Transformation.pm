@@ -589,7 +589,7 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
 
     my $result = $transformation_obj->get_transformants();
-    
+
     my @transformants;
     foreach my $r (@$result){
         my ($stock_id, $stock_name, $is_obsolete) =@$r;
@@ -602,6 +602,33 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
     }
 
     $c->stash->{rest} = { data => \@transformants };
+
+}
+
+
+sub get_obsoleted_transformants :Path('/ajax/transformation/obsoleted_transformants') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformation_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+
+    my $result = $transformation_obj->get_transformants();
+
+    my @obsoleted_transformants;
+    foreach my $r (@$result){
+        my ($stock_id, $stock_name, $is_obsolete) =@$r;
+        if ($is_obsolete) {
+            push @obsoleted_transformants, {
+                transformant_id => $stock_id,
+                transformant_name => $stock_name,
+            };
+        }
+    }
+
+    $c->stash->{rest} = { data => \@obsoleted_transformants };
 
 }
 
