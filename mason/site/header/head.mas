@@ -32,6 +32,7 @@
 
 <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min"] &>
 % if ($c->config->{production_server}) {
+    <& /util/import_javascript.mas, classes => [ "jquery.dataTables-min" ] &>
 % } else {
     <& /util/import_javascript.mas, classes => [ "jquerymigrate", "jquery.dataTables" ] &>
 % }
