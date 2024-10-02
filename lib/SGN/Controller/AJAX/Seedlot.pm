@@ -1343,7 +1343,7 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
     $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
     my $root_cvterm;
     $root_cvterm = $dbxref->cvterm if $dbxref;
-    my $root_cvterm_id
+    my $root_cvterm_id;
     $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
 
     # Get children (recursively) of root cvterm
