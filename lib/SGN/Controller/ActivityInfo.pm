@@ -126,7 +126,9 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $identifier_id;
     my @options = ();
     my @activity_headers = ();
+    my $material_stock_id;
     my $material_name;
+    my $material_type;
     my $tracking_project_id;
 
     if ($identifier_name) {
@@ -134,7 +136,9 @@ sub record_activity :Path('/activity/record') :Args(0) {
         my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
         my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
         my $material_info = $tracking_identifier_obj->get_tracking_identifier_info();
+        $material_stock_id = $material_info->[0]->[2];
         $material_name = $material_info->[0]->[3];
+        $material_type = $material_info->[0]->[4];
 
         $tracking_project_id = $associated_projects->[0]->[0];
         my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
@@ -165,7 +169,9 @@ sub record_activity :Path('/activity/record') :Args(0) {
     $c->stash->{identifier_id} = $identifier_id;
     $c->stash->{type_select_options} = \@options;
     $c->stash->{activity_headers} = \@activity_headers;
+    $c->stash->{material_stock_id} = $material_stock_id;
     $c->stash->{material_name} = $material_name;
+    $c->stash->{material_type} = $material_type;
     $c->stash->{timestamp} = $timestamp;
     $c->stash->{date} = $date;
     $c->stash->{project_id} = $tracking_project_id;
