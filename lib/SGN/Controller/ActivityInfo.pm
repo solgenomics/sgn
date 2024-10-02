@@ -100,7 +100,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{date} = $date;
     $c->stash->{user_role} = $user_role;
     $c->stash->{project_id} = $tracking_project_id;
-    $c->stash->{template} = '/order/activity_info_details.mas';
+    $c->stash->{template} = '/tracking_activities/activity_info_details.mas';
 
 }
 
