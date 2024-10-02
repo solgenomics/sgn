@@ -568,9 +568,10 @@ sub upload_genotype_verify_POST : Args(0) {
                     foreach my $error ( sort @mismatch_marker_names) {
                         $marker_name_error .= $error."<br>";
                     }
-
-                    $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
-                    $c->detach();
+                    if (!$accept_warnings){
+                        $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
+                        $c->detach();
+		    }
                 }
 
 
