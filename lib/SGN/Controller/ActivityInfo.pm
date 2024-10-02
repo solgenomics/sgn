@@ -33,6 +33,8 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $identifier_name = $tracking_info->[0]->[1];
     my $material_id = $tracking_info->[0]->[2];
     my $material_name = $tracking_info->[0]->[3];
+    my $material_type = $tracking_info->[0]->[4];
+
     my $updated_status_type = $tracking_info->[0]->[6];
     my $completed_metadata;
     my $terminated_metadata;
@@ -93,6 +95,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{activity_headers} = \@activity_headers;
     $c->stash->{material_name} = $material_name;
     $c->stash->{material_id} = $material_id;
+    $c->stash->{material_type} = $material_type;
     $c->stash->{updated_status_type} = $updated_status_type;
     $c->stash->{updated_status_string} = $updated_status_string;
     $c->stash->{status_display} = $status_display;
