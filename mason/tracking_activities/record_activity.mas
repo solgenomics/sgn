@@ -10,6 +10,7 @@ $material_stock_id => undef
 $material_name => undef
 $material_type => undef
 $project_id => undef
+$activity_type => undef
 
 </%args>
 
@@ -242,6 +243,7 @@ $(window).ready( function() {
         var input = jQuery('#record_page_info_input').val();
         var record_timestamp = jQuery('#record_timestamp_record_page').val();
         var notes = jQuery('#record_page_notes').val();
+        var activity_type = "<%$activity_type%>";
 
         if (identifier_name == '') {
             alert("Please scan an identifier name barcode");
@@ -268,6 +270,7 @@ $(window).ready( function() {
                 'input': input,
                 'record_timestamp': record_timestamp,
                 'notes': notes,
+                'activity_type': activity_type
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

@@ -67,6 +67,11 @@ has 'notes' => (
     is => 'rw',
 );
 
+has 'activity_type' => (
+    isa =>'Maybe[Str]',
+    is => 'rw',
+);
+
 sub add_info {
     my $self = shift;
     my $schema = $self->get_schema();
@@ -76,12 +81,18 @@ sub add_info {
     my $operator_id = $self->get_operator_id();
     my $timestamp = $self->get_timestamp();
     my $notes = $self->get_notes();
+    my $activity_type = $self->get_activity_type;
     my $error;
 
     my $coderef = sub {
 
         my $tracking_identifier_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
-        my $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property');
+        my $tracking_info_json_cvterm;
+        if ($activity_type eq 'tissue_culture') {
+            $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property');
+        } elsif ($activity_type eq 'transformation') {
+            $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_transformation_json', 'stock_property');
+        }
 
         my $tracking_identifier_stock = $self->_get_tracking_identifier($tracking_identifier);
         if (!$tracking_identifier_stock) {

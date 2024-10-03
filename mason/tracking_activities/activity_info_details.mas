@@ -17,6 +17,7 @@ $updated_status_string => undef
 $status_display => undef
 $user_role
 $project_id
+$activity_type
 
 </%args>
 
@@ -269,7 +270,8 @@ jQuery(document).ready( function() {
                 'selected_type': selected_type,
                 'input': input,
                 'record_timestamp': record_timestamp,
-                'notes': notes
+                'notes': notes,
+                'activity_type': "<%$activity_type%>",
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

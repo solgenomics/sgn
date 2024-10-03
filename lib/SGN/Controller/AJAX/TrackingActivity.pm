@@ -232,6 +232,7 @@ sub activity_info_save_POST : Args(0) {
     my $input = $c->req->param("input");
     my $notes = $c->req->param("notes");
     my $record_timestamp = $c->req->param("record_timestamp");
+    my $activity_type = $c->req->param("activity_type");
     my $tracking_transformation = $c->config->{tracking_transformation};
 
     if ($selected_type =~ m/number/ && !($input =~ /^\d+?$/) ) {
@@ -309,6 +310,7 @@ sub activity_info_save_POST : Args(0) {
         timestamp => $record_timestamp,
         operator_id => $user_id,
         notes => $notes,
+        activity_type => $activity_type
     });
     my $return = $add_activity_info->add_info();
 #    print STDERR "ADD INFO =".Dumper ($add_activity_info->add_info())."\n";
@@ -336,17 +338,20 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
     my $activity_type = $tracking_project->get_project_activity_type();
 
+
     my $tracking_activities;
+    my $tracking_data_json_cvterm_id;
     if ($activity_type eq 'tissue_culture') {
         $tracking_activities = $c->config->{tracking_tissue_culture_info};
+        $tracking_data_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
+        $tracking_data_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_transformation_json', 'stock_property')->cvterm_id();
     }
 
     my @details;
     my @activity_types = split ',',$tracking_activities;
 
-    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
     if ($activity_info_rs) {
         my $activity_json = $activity_info_rs->value();
@@ -422,16 +427,18 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $activity_type = $tracking_project->get_project_activity_type();
 
     my $tracking_activities;
+    my $tracking_data_json_cvterm_id;
     if ($activity_type eq 'tissue_culture') {
         $tracking_activities = $c->config->{tracking_tissue_culture_info};
+        $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
+        $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_transformation_json', 'stock_property')->cvterm_id();
     }
 
     my @summary = ();
     my @activity_types = split ',',$tracking_activities;
 
-    my $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
     if ($activity_info_rs) {
         my $activity_json = $activity_info_rs->value();

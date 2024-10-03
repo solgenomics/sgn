@@ -35,7 +35,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $material_name = $tracking_info->[0]->[3];
     my $material_type = $tracking_info->[0]->[4];
 
-    my $updated_status_type = $tracking_info->[0]->[6];
+    my $updated_status_type = $tracking_info->[0]->[7];
     my $completed_metadata;
     my $terminated_metadata;
     my $status_display;
@@ -103,6 +103,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{date} = $date;
     $c->stash->{user_role} = $user_role;
     $c->stash->{project_id} = $tracking_project_id;
+    $c->stash->{activity_type} = $activity_type;
     $c->stash->{template} = '/tracking_activities/activity_info_details.mas';
 
 }
@@ -133,6 +134,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $material_name;
     my $material_type;
     my $tracking_project_id;
+    my $activity_type;
 
     if ($identifier_name) {
         $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
@@ -145,7 +147,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
 
         $tracking_project_id = $associated_projects->[0]->[0];
         my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
-        my $activity_type = $tracking_project->get_project_activity_type();
+        $activity_type = $tracking_project->get_project_activity_type();
 
         my $types;
         my $activity_type_header;
@@ -178,6 +180,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     $c->stash->{timestamp} = $timestamp;
     $c->stash->{date} = $date;
     $c->stash->{project_id} = $tracking_project_id;
+    $c->stash->{activity_type} = $activity_type;
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
 }

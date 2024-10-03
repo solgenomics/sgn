@@ -43,27 +43,29 @@ sub get_tracking_identifier_info {
     my $tracking_identifier_stock_id = $self->tracking_identifier_stock_id();
     my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", "stock_type")->cvterm_id();
     my $material_of_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'material_of', 'stock_relationship')->cvterm_id;
-    my $activity_stockprop_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id;
+    my $tissue_culture_stockprop_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id;
+    my $transformation_stockprop_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_transformation_json', 'stock_property')->cvterm_id;
     my $completed_metadata_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'completed_metadata', 'stock_property')->cvterm_id();
     my $terminated_metadata_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'terminated_metadata', 'stock_property')->cvterm_id();
 
-    my $q = "SELECT tracking_id.stock_id, tracking_id.uniquename, material.stock_id, material.uniquename, material_type.name, activity_info.value, status_type.name
+    my $q = "SELECT tracking_id.stock_id, tracking_id.uniquename, material.stock_id, material.uniquename, material_type.name, activity_info.value, info_type.name, status_type.name
         FROM stock AS tracking_id
         JOIN stock_relationship ON (tracking_id.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
         JOIN stock AS material ON (stock_relationship.subject_id = material.stock_id)
         JOIN cvterm AS material_type ON (material.type_id = material_type.cvterm_id)
-        LEFT JOIN stockprop AS activity_info ON (activity_info.stock_id = tracking_id.stock_id) AND activity_info.type_id = ?
-        LEFT JOIN stockprop AS updated_status ON (updated_status.stock_id = tracking_id.stock_id) AND updated_status.type_id in (?, ?)
+        LEFT JOIN stockprop AS activity_info ON (activity_info.stock_id = tracking_id.stock_id) AND activity_info.type_id IN (?, ?)
+        LEFT JOIN cvterm AS info_type ON (info_type.cvterm_id = activity_info.type_id)
+        LEFT JOIN stockprop AS updated_status ON (updated_status.stock_id = tracking_id.stock_id) AND updated_status.type_id IN (?, ?)
         LEFT JOIN cvterm AS status_type ON (status_type.cvterm_id = updated_status.type_id)
         WHERE tracking_id.stock_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($material_of_type_id, $activity_stockprop_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $tracking_identifier_stock_id);
+    $h->execute($material_of_type_id, $tissue_culture_stockprop_type_id, $transformation_stockprop_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $tracking_identifier_stock_id);
 
     my @tracking_info = ();
-    while (my ($tracking_stock_id, $tracking_name, $material_stock_id, $material_name, $material_stock_type, $activity_info, $updated_status_type) = $h->fetchrow_array()){
-        push @tracking_info, [$tracking_stock_id, $tracking_name, $material_stock_id, $material_name, $material_stock_type, $activity_info, $updated_status_type]
+    while (my ($tracking_stock_id, $tracking_name, $material_stock_id, $material_name, $material_stock_type, $activity_info, $info_type, $updated_status_type) = $h->fetchrow_array()){
+        push @tracking_info, [$tracking_stock_id, $tracking_name, $material_stock_id, $material_name, $material_stock_type, $activity_info, $info_type, $updated_status_type]
     }
     print STDERR "TRACKING INFO =".Dumper(\@tracking_info)."\n";
     return \@tracking_info;
