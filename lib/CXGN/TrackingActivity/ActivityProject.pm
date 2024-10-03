@@ -54,7 +54,6 @@ sub get_project_active_identifiers {
         push @data, [$identifier_id, $identifier_name, $material_id, $material_name, $material_type_id, $tracking_info];
     }
 
-    print STDERR "DATA =".Dumper(\@data)."\n";
     return \@data;
 }
 
@@ -100,7 +99,6 @@ sub get_project_inactive_identifiers {
         push @data, [$identifier_id, $identifier_name, $material_id, $material_name, $material_type_id, $tracking_info, $status_type, $status_details];
     }
 
-    print STDERR "INACTIVE DATA =".Dumper(\@data)."\n";
     return \@data;
 }
 

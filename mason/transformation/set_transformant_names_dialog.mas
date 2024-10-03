@@ -111,6 +111,12 @@ jQuery(document).ready(function(){
         });
     });
 
+    jQuery("#dismiss_set_name_saved_dialog").click(function(){
+        jQuery('#prefix_select').val('');
+        location.reload();
+    });
+
+
 });
 
 </script>
