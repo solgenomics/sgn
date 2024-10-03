@@ -387,6 +387,7 @@ sub get_active_transformations_in_project :Path('/ajax/transformation/active_tra
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
         my $transformants = $transformation_obj->get_transformants();
         my $number_of_transformants = scalar(@$transformants);
+
         push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
     }
 
@@ -417,6 +418,7 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
         my $transformants = $transformation_obj->get_transformants();
         my $number_of_transformants = scalar(@$transformants);
+
         push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
     }
 
@@ -592,13 +594,11 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
 
     my @transformants;
     foreach my $r (@$result){
-        my ($stock_id, $stock_name, $is_obsolete) =@$r;
-        if (!$is_obsolete) {
-            push @transformants, {
-                transformant_id => $stock_id,
-                transformant_name => $stock_name,
-            };
-        }
+        my ($stock_id, $stock_name) =@$r;
+        push @transformants, {
+            transformant_id => $stock_id,
+            transformant_name => $stock_name,
+        };
     }
 
     $c->stash->{rest} = { data => \@transformants };
@@ -615,17 +615,15 @@ sub get_obsoleted_transformants :Path('/ajax/transformation/obsoleted_transforma
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
 
-    my $result = $transformation_obj->get_transformants();
+    my $result = $transformation_obj->get_obsoleted_transformants();
 
     my @obsoleted_transformants;
     foreach my $r (@$result){
-        my ($stock_id, $stock_name, $is_obsolete) =@$r;
-        if ($is_obsolete) {
-            push @obsoleted_transformants, {
-                transformant_id => $stock_id,
-                transformant_name => $stock_name,
-            };
-        }
+        my ($stock_id, $stock_name) =@$r;
+        push @obsoleted_transformants, {
+            transformant_id => $stock_id,
+            transformant_name => $stock_name,
+        };
     }
 
     $c->stash->{rest} = { data => \@obsoleted_transformants };
