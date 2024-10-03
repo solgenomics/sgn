@@ -1288,6 +1288,7 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
 #depends on CXGN/Stock/Seedlot/Transaction.pm: delete_transaction sub
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if (!$c->user()){
         $c->stash->{rest} = { error => "You must be logged in to delete seedlot transactions" };
@@ -1297,8 +1298,34 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
         $c->stash->{rest} = { error => "You do not have the correct role to delete seedlot transactions. Please contact us." };
         $c->detach();
     }
-    my $success = $c->stash->{transaction_object}->delete_transaction();
-    if ($success){
+
+    my $t = $c->stash->{transaction_object};
+    my $from_stock = $t->from_stock();
+    my $from_stock_id = $from_stock->[0];
+    my $from_stock_type = $from_stock->[2];
+    my $to_stock = $t->to_stock();
+    my $to_stock_id = $to_stock->[0];
+    my $to_stock_type = $to_stock->[2];
+    my $delete = $t->delete_transaction();
+
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+
+    if ($from_stock_type == $seedlot_cvterm_id) {
+        my $from_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_stock_id);
+        $from_stock_update->set_current_count_property();
+        $from_stock_update->set_current_weight_property();
+    }
+
+    if ($to_stock_type == $seedlot_cvterm_id) {
+        my $to_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $to_stock_id);
+        $to_stock_update->set_current_count_property();
+        $to_stock_update->set_current_weight_property();
+    }
+
+    if ($delete){
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
         $c->stash->{rest} = { success => 1 };
     }
     else {
