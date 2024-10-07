@@ -67,7 +67,7 @@ sub get_tracking_identifier_info {
     while (my ($tracking_stock_id, $tracking_name, $material_stock_id, $material_name, $material_stock_type, $activity_info, $info_type, $updated_status_type) = $h->fetchrow_array()){
         push @tracking_info, [$tracking_stock_id, $tracking_name, $material_stock_id, $material_name, $material_stock_type, $activity_info, $info_type, $updated_status_type]
     }
-    print STDERR "TRACKING INFO =".Dumper(\@tracking_info)."\n";
+
     return \@tracking_info;
 
 }

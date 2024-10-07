@@ -343,19 +343,18 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my $tracking_data_json_cvterm_id;
     if ($activity_type eq 'tissue_culture') {
         $tracking_activities = $c->config->{tracking_tissue_culture_info};
-        $tracking_data_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
-        $tracking_data_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_transformation_json', 'stock_property')->cvterm_id();
     }
 
     my @details;
     my @activity_types = split ',',$tracking_activities;
 
-    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
-    if ($activity_info_rs) {
-        my $activity_json = $activity_info_rs->value();
-        my $info = JSON::Any->jsonToObj($activity_json);
+    my $tracking_identifier_info = $tracking_identifier_obj->get_tracking_identifier_info();
+    my $tracking_identifier_stockprop = $tracking_identifier_info->[0]->[5];
+
+    if ($tracking_identifier_stockprop) {
+        my $info = JSON::Any->jsonToObj($tracking_identifier_stockprop);
         my %info_hash = %{$info};
         foreach my $type (@activity_types){
             my $empty_string;
@@ -368,7 +367,6 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
                 my %details_hash = ();
                 $details = $info_hash{$type};
                 %details_hash = %{$details};
-#                print STDERR "DETAILS HASH =".Dumper(\%details_hash);
                 foreach my $timestamp (sort keys %details_hash) {
                     my @each_timestamp_details = ();
                     push @each_timestamp_details, "timestamp".":"."".$timestamp;
@@ -406,8 +404,6 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my @all_details;
     push @all_details, [@details];
 
-#    print STDERR "ALL DETAILS =".Dumper(\@all_details)."\n";
-
     $c->stash->{rest} = { data => \@all_details };
 
 }
@@ -430,19 +426,18 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $tracking_data_json_cvterm_id;
     if ($activity_type eq 'tissue_culture') {
         $tracking_activities = $c->config->{tracking_tissue_culture_info};
-        $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property')->cvterm_id();
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
-        $tracking_data_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_transformation_json', 'stock_property')->cvterm_id();
     }
 
     my @summary = ();
     my @activity_types = split ',',$tracking_activities;
 
-    my $activity_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $tracking_data_json_cvterm_id});
-    if ($activity_info_rs) {
-        my $activity_json = $activity_info_rs->value();
-        my $info = JSON::Any->jsonToObj($activity_json);
+    my $tracking_identifier_info = $tracking_identifier_obj->get_tracking_identifier_info();
+    my $tracking_identifier_stockprop = $tracking_identifier_info->[0]->[5];
+
+    if ($tracking_identifier_stockprop) {
+        my $info = JSON::Any->jsonToObj($tracking_identifier_stockprop);
         my %info_hash = %{$info};
         foreach my $type (@activity_types){
             my $input = '';
