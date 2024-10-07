@@ -287,9 +287,10 @@ __PACKAGE__->config(
         my $source_id = $c->req->param("source_id");
         my $data_level = $c->req->param("data_level");
         my %longest_hash;
-        print STDERR "Data type is $data_type and id is $source_id and data level is $data_level\n";
+#        print STDERR "Data type is $data_type and id is $source_id and data level is $data_level\n";
 
         my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
+        print STDERR "TRIAL NUM =".Dumper($trial_num)."\n";
 
        if ($trial_num > 1) {
            $c->stash->{rest} = { error => "The selected list contains plots, plants, subplots or tissues from more than one trial. This is not supported. Please select a different data source." };
@@ -363,6 +364,10 @@ __PACKAGE__->config(
             }
             %longest_hash = (%longest_hash, %longest_additional_list_data);
         }
+
+        print STDERR "FIELDS =".Dumper(\%longest_hash)."\n";
+        print STDERR "REPS =".Dumper(\%reps)."\n";
+        print STDERR "NUM UNITS =".Dumper($num_units)."\n";        
 
         $c->stash->{rest} = {
             fields => \%longest_hash,
@@ -897,7 +902,7 @@ sub get_data {
     elsif ($data_level eq "plants") {
         if ($data_type =~ m/Field Trials/) {
             $design = get_trial_design($c, $schema, [$id], 'plants');
-            print STDERR "PLANT DESIGN =".Dumper($design)."\n";
+#            print STDERR "PLANT DESIGN =".Dumper($design)."\n";
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
