@@ -287,7 +287,7 @@ __PACKAGE__->config(
         my $source_id = $c->req->param("source_id");
         my $data_level = $c->req->param("data_level");
         my %longest_hash;
-        #print STDERR "Data type is $data_type and id is $source_id and data level is $data_level\n";
+        print STDERR "Data type is $data_type and id is $source_id and data level is $data_level\n";
 
         my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
 
@@ -837,7 +837,7 @@ sub get_data {
     my $design;
     my $dbh = $schema->storage->dbh();
 
-    # print STDERR "starting to get data,level is $data_level and type is $data_type\n";
+     print STDERR "starting to get data,level is $data_level and type is $data_type\n";
     # use data level as well as type to determine and enact correct retrieval
 
     if ($data_level =~ /batch-/) {  # handle batches of identifiers
