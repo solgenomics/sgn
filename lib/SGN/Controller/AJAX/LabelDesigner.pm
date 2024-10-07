@@ -897,6 +897,7 @@ sub get_data {
     elsif ($data_level eq "plants") {
         if ($data_type =~ m/Field Trials/) {
             $design = get_trial_design($c, $schema, [$id], 'plants');
+            print STDERR "PLANT DESIGN =".Dumper($design)."\n";
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
