@@ -3,6 +3,7 @@ $transformation_id
 $transformation_name
 $prefix
 $program_id
+$program_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -87,6 +88,7 @@ jQuery(document).ready(function(){
             data : {
                 'transformation_stock_id': "<%$transformation_id%>",
                 'program_id': "<%$program_id%>",
+                'program_name': "<%$program_name%>",
                 'prefix': prefix,
                 'new_name_count': new_name_count,
             },
