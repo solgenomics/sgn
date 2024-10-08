@@ -2,7 +2,7 @@
 <%args>
 $identifier_name
 $identifier_id
-$breeding_program => undef
+$program_name
 $user_id => undef
 $identifier_prefix => ''
 $type_select_options => undef
@@ -211,7 +211,7 @@ $activity_type
 % }
 </&>
 
-<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id, material_id => $material_id, updated_status_type => $updated_status_type, material_id => $material_id &>
+<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id, material_id => $material_id, updated_status_type => $updated_status_type, material_id => $material_id, program_name => $program_name &>
 
 <script>
 
@@ -272,6 +272,7 @@ jQuery(document).ready( function() {
                 'record_timestamp': record_timestamp,
                 'notes': notes,
                 'activity_type': "<%$activity_type%>",
+                'program_name': "<%$program_name%>",
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

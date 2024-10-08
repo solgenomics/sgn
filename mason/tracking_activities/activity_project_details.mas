@@ -142,4 +142,4 @@ $activity_type
 % }
 
 
-<& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name &>
+<& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name, breeding_program_name => $breeding_program_name &>

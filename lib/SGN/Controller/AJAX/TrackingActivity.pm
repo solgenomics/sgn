@@ -51,6 +51,14 @@ sub create_tracking_activity_project : Path('/ajax/tracking_activity/create_trac
 sub create_tracking_activity_project_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    my $project_name = $c->req->param("project_name");
+    my $activity_type = $c->req->param("activity_type");
+    my $breeding_program_id = $c->req->param("breeding_program");
+    my $project_location = $c->req->param("project_location");
+    my $year = $c->req->param("year");
+    my $project_description = $c->req->param("project_description");
 
     my $user = $c->user();
     if (!$user) {
@@ -63,16 +71,17 @@ sub create_tracking_activity_project_POST : Args(0) {
         return;
     }
 
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $dbh = $c->dbc->dbh;
+    my $program_name = $schema->resultset('Project::Project')->find({project_id => $breeding_program_id})->name();
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
 
-    my $project_name = $c->req->param("project_name");
-    my $activity_type = $c->req->param("activity_type");
-    my $breeding_program_id = $c->req->param("breeding_program");
-    my $project_location = $c->req->param("project_location");
-    my $year = $c->req->param("year");
-    my $project_description = $c->req->param("project_description");
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add tracking project." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($project_location);
@@ -124,13 +133,25 @@ sub generate_tracking_identifiers : Path('/ajax/tracking_activity/generate_track
 sub generate_tracking_identifiers_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $project_name = $c->req->param("project_name");
+    my $list_id = $c->req->param("list_id");
+    my $program_name = $c->req->param("program_name");
 
     if (!$c->user()) {
         $c->stash->{rest} = { error => "You must be logged in to generate tracking identifiers." };
         return;
     }
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-        $c->stash->{rest} = { error => "You do not have sufficient privileges to generate tracking identifiers." };
+        $c->stash->{rest} = { error => "You do not have sufficient privileges to add tracking identifiers." };
+        return;
+    }
+
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add tracking identifiers." };
         return;
     }
 
@@ -139,8 +160,6 @@ sub generate_tracking_identifiers_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh();
 
-    my $project_name = $c->req->param("project_name");
-    my $list_id = $c->req->param("list_id");
     my $project_id;
     my $project_rs = $schema->resultset("Project::Project")->find( { name => $project_name });
     if (!$project_rs) {
@@ -215,6 +234,15 @@ sub activity_info_save : Path('/ajax/tracking_activity/save') : ActionClass('RES
 sub activity_info_save_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $tracking_identifier = $c->req->param("tracking_identifier_name");
+    my $tracking_identifier_id = $c->req->param("tracking_identifier_id");
+    my $selected_type = $c->req->param("selected_type");
+    my $input = $c->req->param("input");
+    my $notes = $c->req->param("notes");
+    my $record_timestamp = $c->req->param("record_timestamp");
+    my $activity_type = $c->req->param("activity_type");
+    my $program_name = $c->req->param("program_name");
+    my $tracking_transformation = $c->config->{tracking_transformation};
 
     if (!$c->user()) {
         $c->stash->{rest} = { error => "You must be logged in to add new information." };
@@ -225,16 +253,16 @@ sub activity_info_save_POST : Args(0) {
         return;
     }
 
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
 
-    my $tracking_identifier = $c->req->param("tracking_identifier_name");
-    my $tracking_identifier_id = $c->req->param("tracking_identifier_id");
-    my $selected_type = $c->req->param("selected_type");
-    my $input = $c->req->param("input");
-    my $notes = $c->req->param("notes");
-    my $record_timestamp = $c->req->param("record_timestamp");
-    my $activity_type = $c->req->param("activity_type");
-    my $tracking_transformation = $c->config->{tracking_transformation};
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to record new information." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     if ($selected_type =~ m/number/ && !($input =~ /^\d+?$/) ) {
         $c->stash->{rest} = {error => "Input is not a positive integer"};
@@ -611,6 +639,7 @@ sub update_status_POST : Args(0) {
     my $status_type = $c->req->param("status_type");
     my $comments = $c->req->param("comments");
     my $material_id = $c->req->param("material_id");
+    my $program_name = $c->req->param("program_name");
     my $time = DateTime->now();
     my $update_date = $time->ymd();
     my @stocks_to_update;
@@ -621,6 +650,15 @@ sub update_status_POST : Args(0) {
     }
     if (!$c->user()->check_roles("curator")) {
         $c->stash->{rest} = { error_string => "You do not have the correct role to update status. Please contact us." };
+        return;
+    }
+
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to update status." };
         return;
     }
 
@@ -691,6 +729,7 @@ sub reverse_status_POST : Args(0) {
     my $identifier_id = $c->req->param("identifier_id");
     my $updated_status_type = $c->req->param("updated_status_type");
     my $material_id = $c->req->param("material_id");
+    my $program_name = $c->req->param("program_name");
 
     if (!$c->user()){
         $c->stash->{rest} = { error_string => "You must be logged in to reverse status of this tracking identifier" };
@@ -698,6 +737,15 @@ sub reverse_status_POST : Args(0) {
     }
     if (!$c->user()->check_roles("curator")) {
         $c->stash->{rest} = { error_string => "You do not have the correct role to reverse status of this tracking identifier. Please contact us." };
+        return;
+    }
+
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to update status." };
         return;
     }
 
