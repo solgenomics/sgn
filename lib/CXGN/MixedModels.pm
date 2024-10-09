@@ -405,7 +405,7 @@ sub run_model {
 	
 	print STDERR "running R command $clean_tempfile...\n";
 	
-	my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host } );
+	my $ctr = CXGN::Tools::Run->new( { backend => $backend, temp_base => $cluster_shared_tempdir, working_dir => dirname($self->tempfile()), submit_host => $cluster_host } );
 	
 	
 	$ctr->run_cluster($cmd);
