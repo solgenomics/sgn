@@ -113,6 +113,42 @@ jQuery(document).ready(function() {
         jQuery('#repetitive_measurement_start_date').val(repetitive_startDate);
         jQuery('#repetitive_measurement_end_date').val(repetitive_endDate);
 
+        jQuery('input[title="repetitive_measurement_start_date"]').on('focus', function () {
+            jQuery(this).daterangepicker({
+            	"singleDatePicker": true,
+            	"showDropdowns": true,
+            	"autoUpdateInput": true,
+            	"startDate": jQuery('#repetitive_measurement_start_date').val(),
+            	"minDate": repetitive_startDate,
+            	"maxDate":repetitive_endDate,
+            	locale: {
+            		format: 'YYYY-MM-DD'
+            	}
+            },function (start) {
+                var new_start_date = new Date(start).getTime();
+                var new_end_date = new Date(jQuery('#repetitive_measurement_end_date').val()).getTime();
+                jQuery('#repetitive_slider_range').slider('values', [new_start_date, new_end_date]);
+            });
+        });
+
+        jQuery('input[title="repetitive_measurement_end_date"]').on('focus', function () {
+            jQuery(this).daterangepicker({
+        	    "singleDatePicker": true,
+                "showDropdowns": true,
+        	    "autoUpdateInput": true,
+                "startDate" : jQuery('#repetitive_measurement_end_date').val(),
+        	    "minDate": repetitive_startDate,
+        	    "maxDate": repetitive_endDate,
+        	    locale: {
+        	    	format: 'YYYY-MM-DD'
+        	    },
+            }, function (end) {
+                var new_start_date = new Date(jQuery('#repetitive_measurement_start_date').val()).getTime();
+                var new_end_date = new Date(end).getTime();
+                jQuery('#repetitive_slider_range').slider('values', [new_start_date, new_end_date]);
+            });
+        });
+           
         jQuery('#repetitive_slider_range').slider({
             range: true,
             min: new Date(repetitive_startDate).getTime(),
@@ -227,30 +263,5 @@ jQuery(document).ready(function() {
 		   'data' : data
 		});
     }
-
-    jQuery('input[title="repetitive_measurement_start_date"]').daterangepicker({
-    	"singleDatePicker": true,
-    	"showDropdowns": true,
-    	"autoUpdateInput": true,
-    	"startDate": "1960-01-01",
-    	"yearSelect" : true,
-    	"minDate":"1960-01-01",
-    	"maxDate":"2100-12-31",
-    	locale: {
-    		format: 'YYYY-MM-DD'
-    	}
-    });
-
-    jQuery('input[title="repetitive_measurement_end_date"]').daterangepicker({
-    	"singleDatePicker": true,
-        "showDropdowns": true,
-    	"autoUpdateInput": true,
-    	"minDate":"1960-01-01",
-    	"maxDate":"2100-12-31",
-    	"yearSelect": true,
-    	locale: {
-    		format: 'YYYY-MM-DD'
-    	},
-    });
 });
 </script>
