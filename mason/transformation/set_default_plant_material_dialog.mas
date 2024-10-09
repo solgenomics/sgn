@@ -72,10 +72,10 @@ jQuery(document).ready(function(){
     });
 
 
-    jQuery('#new_transformation_identifier_submit').click(function() {
+    jQuery('#set_default_plant_material_submit').click(function() {
 
         var default_plant_material = jQuery("#default_plant_material").val();
-        if (!plant_material) {
+        if (!default_plant_material) {
             alert("Plant material is required");
             return;
         }
@@ -104,7 +104,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred creating transformation ID');
+                alert('An error occurred saving default plant material');
             }
         });
 
