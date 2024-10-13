@@ -1,0 +1,188 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['qualitycontrol' ] &>
+
+<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
+
+<& /page/page_title.mas, title=>"Quality Control" &>
+
+
+<div id="qualitycontrol_tool">
+</div>
+
+
+<style>
+  .factor {
+  z-index:4;
+  border-style:solid;
+  border-radius:8px;
+  width:200px;
+  height:100;
+  border-color:#337ab7;
+  background-color:#337ab7;
+  color:white;
+  margin:4px
+  }
+  .factor_panel {
+  min-height:100px;
+  height:auto;
+  margin-top:0px;
+  border-style:dotted;
+  border-width:5px;
+  color:grey;
+  background-color:lightyellow;
+  }
+  .factor_interaction_panel {
+  border-style:dotted;
+  border-width:0px;
+  margin-top:20px;
+  height:auto;
+  z-index:1;
+  }
+  .model_bg {
+  margin-left:30px;
+  margin-right:30px;
+  background-color:#DDEEEE;
+  min-height:80px;
+  padding-top:10px;
+  padding-left:10px;
+  padding-bottom:10px;
+  border-radius:8px;
+  }
+</style>
+
+<div id="qualitycontrol_tool">
+</div>
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="container-fluid">
+        <&| /util/workflow.mas, id=> "quality_control_analysis_workflow" &>
+          <&| /util/workflow.mas:step, title=> "Choose Dataset" &>
+            <& /page/page_title.mas, title=>"Choose the dataset for QC" &>
+        <span style="width:240px" id="qc_dataset_select">
+        </span>
+        <div>
+          <div style="float:right">
+            <button class="btn btn-main" id="qc_analysis_prepare_button"   onclick="Workflow.complete(this);">Choose Dataset and continue</button>
+          </div>
+        </div>
+        <br />
+        <br />
+
+        </&>
+
+
+        <&| /util/workflow.mas:step, title=> "Select Trait" &>
+        <& /page/page_title.mas, title=>"Select a Trait for QC" &>
+
+        <div id="selected_variable" style="margin-bottom:50px">
+          <label for="trait_select">Select Trait:</label>
+          <select id="trait_select" name="trait_select" class="form-control">
+              <option disabled selected value>Select a trait</option>
+          </select>
+        </div>
+        <div id="trait_histogram">
+        <br>
+        </div>
+        <div class="col-md-12 well" style="margin-top: 10px;">  
+            <h3>Outliers Range</h3>   
+            <div class="col-md-8">
+                <div id="outliers_range">
+                    <div id="custom-handle" class="ui-slider-handle"></div>
+                </div>
+            </div>
+            <script>
+                $(function() {
+                    $("#outliers_range").slider({
+                        orientation: "horizontal",
+                        range: "min",
+                        max: 10,
+                        min: 0,                        
+                        value: 1.5,
+                        step: 0.1,
+                    });
+                    var handle = $( "#custom-handle" );
+                    $("#outliers_range").slider({
+                        create: function(event, ui) {                            
+                            handle.text(ui.value);
+                        },
+                        slide: function(event, ui) {                            
+                            handle.text(ui.value);
+                        }
+                    });
+                });
+            </script>
+            <style>                      
+                #outliers_range .ui-slider-range { background: #5cb85c; }
+                #outliers_range .ui-slider-handle { border-color: #d9534f; }                
+                #outliers_range { background: #d9534f; margin-top: 0.7em;}       
+                #custom-handle {
+                    width: 3em;
+                    height: 1.6em;
+                    top: 50%;
+                    margin-top: -.8em;
+                    text-align: center;
+                    line-height: 1.6em;
+                }           
+            </style>
+        </div>
+        <div id="outlier_table_container">
+          <h3>Outliers Table</h3>
+          <table id="outlier_table" class="table table-bordered table-striped">
+              <thead>
+                  <tr>
+                      <th>Location ID</th>
+                      <th>Location Name</th>
+                      <th>Plot Name</th>
+                      <th>Trait Name</th>
+                      <th>Value</th>
+                      <!-- <th>Set Outlier</th> <!-- Checkbox column header --> -->
+                  </tr>
+              </thead>
+              <tbody></tbody> <!-- Table body to be populated dynamically -->
+          </table>
+          <br>
+          <button id="download_csv" onclick="downloadCSV()">Download Data as CSV</button>
+          <br>
+          <div id="pagination_controls"></div>
+        </div>
+          <div style="float:right">
+              <button class="btn btn-main" id="qc_choose_variable"  onclick="Workflow.complete(this);">Next step</button>
+          </div>
+      </&>
+
+      <&| /util/workflow.mas:step, title=> "Save Outliers" &>
+        <& /page/page_title.mas, title=>"Save Outliers" &>
+
+          <div>
+          <div style="float:right">
+            <button class="btn btn-main" id="store_outliers_button"   onclick="Workflow.complete(this);">Save</button>
+          </div>
+          <p3>This is a test</p3>
+
+      </&>
+        <div id="tempfile" style="display:none" >
+        </div>
+    </div>
+  </div>
+</div>
+
+
+</&>
+
+
+<script>
+
+$(document).ready( function() {
+var qualitycontrol = window.jsMod['qualitycontrol'].init("qualitycontrol");
+});
+
+</script>
