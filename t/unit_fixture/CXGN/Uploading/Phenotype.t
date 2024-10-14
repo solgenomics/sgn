@@ -1,4 +1,3 @@
-
 use strict;
 use lib 't/lib';
 
@@ -94,14 +93,15 @@ for my $extension ("xls", "xlsx") {
 	my $parser = CXGN::Phenotypes::ParseUpload->new();
 	my $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
 	my $validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots', $f->bcs_schema);
-	ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for fieldbook");
+	# print STDERR "the validate file of field book: ". Dumper ($validate_file) . "\n";
+	is($validate_file->{'error'}, 'No Excel data found in file', "Check if parse validate phenotype spreadsheet fails for fieldbook");
 
 	#check that parse fails for datacollector file when using phenotype spreadsheet parser
 	$parser = CXGN::Phenotypes::ParseUpload->new();
 	$filename = "t/data/trial/data_collector_upload.$extension";
 	$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots', $f->bcs_schema);
-	ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for datacollector");
-
+	ok(exists $validate_file->{'error'}, "Check if parse validate phenotype spreadsheet fails for datacollector");
+	
 	#Now parse phenotyping spreadsheet file using correct parser
 	$parser = CXGN::Phenotypes::ParseUpload->new();
 	$validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
@@ -112,9 +112,9 @@ for my $extension ("xls", "xlsx") {
 
 	print STDERR "Check parse phenotyping spreadsheet... ".Dumper $parsed_file;
 
-	is_deeply($parsed_file, {'variables' => ['dry matter content|CO_334:0000092','fresh root weight|CO_334:0000012','fresh shoot weight|CO_334:0000016','harvest index|CO_334:0000015','notes'],'data' => {'test_trial23' => {'fresh shoot weight|CO_334:0000016' => ['22','2016-02-11 01:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 01:12:20-0500'],'harvest index|CO_334:0000015' => ['2.8','2016-03-16 01:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 01:12:20-0500']},'test_trial25' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 09:12:20-0500'],'harvest index|CO_334:0000015' => ['4.8','2016-03-16 09:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 09:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['24','2016-02-11 09:12:20-0500']},'test_trial24' => {'fresh shoot weight|CO_334:0000016' => ['23','2016-02-11 11:12:20-0500'],'harvest index|CO_334:0000015' => ['3.8','2016-03-16 11:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 11:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 11:12:20-0500']},'test_trial22' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 02:12:20-0500'],'notes' => ['testnote2',''],'harvest index|CO_334:0000015' => ['1.8','2016-03-16 02:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 02:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['21','2016-02-11 02:12:20-0500']},'test_trial210' => {'harvest index|CO_334:0000015' => ['9.8','2016-03-16 15:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 15:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 15:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['29','2016-02-11 15:12:20-0500']},'test_trial26' => {'fresh shoot weight|CO_334:0000016' => ['25','2016-02-11 16:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 16:12:20-0500'],'harvest index|CO_334:0000015' => ['5.8','2016-03-16 16:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 16:12:20-0500']},'test_trial211' => {'fresh shoot weight|CO_334:0000016' => ['30','2016-02-11 03:12:20-0500'],'harvest index|CO_334:0000015' => ['10.8','2016-03-16 03:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 03:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 03:12:20-0500']},'test_trial29' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 14:12:20-0500'],'harvest index|CO_334:0000015' => ['8.8','2016-03-16 14:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 14:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['28','2016-02-11 14:12:20-0500']},'test_trial28' => {'fresh shoot weight|CO_334:0000016' => ['27','2016-02-11 13:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 13:12:20-0500'],'harvest index|CO_334:0000015' => ['7.8','2016-03-16 13:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 13:12:20-0500']},'test_trial27' => {'fresh shoot weight|CO_334:0000016' => ['26','2016-02-11 17:12:20-0500'],'harvest index|CO_334:0000015' => ['6.8','2016-03-16 17:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 17:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 17:12:20-0500']},'test_trial21' => {'notes' => ['test note1',''],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 12:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 12:12:20-0500'],'harvest index|CO_334:0000015' => ['0.8','2016-03-16 12:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['20','2016-02-11 12:12:20-0500']},'test_trial212' => {'fresh shoot weight|CO_334:0000016' => ['31','2016-02-11 21:12:20-0500'],'harvest index|CO_334:0000015' => ['11.8','2016-03-16 21:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 21:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 21:12:20-0500']},'test_trial215' => {'fresh shoot weight|CO_334:0000016' => ['34','2016-02-11 19:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 19:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 19:12:20-0500'],'harvest index|CO_334:0000015' => ['14.8','2016-03-16 19:12:20-0500']},'test_trial214' => {'fresh shoot weight|CO_334:0000016' => ['33','2016-02-11 23:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 23:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 23:12:20-0500'],'harvest index|CO_334:0000015' => ['13.8','2016-03-16 23:12:20-0500']},'test_trial213' => {'harvest index|CO_334:0000015' => ['12.8','2016-03-16 22:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 22:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 22:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['32','2016-02-11 22:12:20-0500']}},'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29']}, "Check parse phenotyping spreadsheet" );
-
-
+	# is_deeply($parsed_file, {'variables' => ['dry matter content|CO_334:0000092','fresh root weight|CO_334:0000012','fresh shoot weight|CO_334:0000016','harvest index|CO_334:0000015','notes'],'data' => {'test_trial23' => {'fresh shoot weight|CO_334:0000016' => ['22','2016-02-11 01:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 01:12:20-0500'],'harvest index|CO_334:0000015' => ['2.8','2016-03-16 01:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 01:12:20-0500']},'test_trial25' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 09:12:20-0500'],'harvest index|CO_334:0000015' => ['4.8','2016-03-16 09:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 09:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['24','2016-02-11 09:12:20-0500']},'test_trial24' => {'fresh shoot weight|CO_334:0000016' => ['23','2016-02-11 11:12:20-0500'],'harvest index|CO_334:0000015' => ['3.8','2016-03-16 11:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 11:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 11:12:20-0500']},'test_trial22' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 02:12:20-0500'],'notes' => ['testnote2',''],'harvest index|CO_334:0000015' => ['1.8','2016-03-16 02:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 02:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['21','2016-02-11 02:12:20-0500']},'test_trial210' => {'harvest index|CO_334:0000015' => ['9.8','2016-03-16 15:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 15:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 15:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['29','2016-02-11 15:12:20-0500']},'test_trial26' => {'fresh shoot weight|CO_334:0000016' => ['25','2016-02-11 16:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 16:12:20-0500'],'harvest index|CO_334:0000015' => ['5.8','2016-03-16 16:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 16:12:20-0500']},'test_trial211' => {'fresh shoot weight|CO_334:0000016' => ['30','2016-02-11 03:12:20-0500'],'harvest index|CO_334:0000015' => ['10.8','2016-03-16 03:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 03:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 03:12:20-0500']},'test_trial29' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 14:12:20-0500'],'harvest index|CO_334:0000015' => ['8.8','2016-03-16 14:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 14:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['28','2016-02-11 14:12:20-0500']},'test_trial28' => {'fresh shoot weight|CO_334:0000016' => ['27','2016-02-11 13:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 13:12:20-0500'],'harvest index|CO_334:0000015' => ['7.8','2016-03-16 13:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 13:12:20-0500']},'test_trial27' => {'fresh shoot weight|CO_334:0000016' => ['26','2016-02-11 17:12:20-0500'],'harvest index|CO_334:0000015' => ['6.8','2016-03-16 17:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 17:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 17:12:20-0500']},'test_trial21' => {'notes' => ['test note1',''],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 12:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 12:12:20-0500'],'harvest index|CO_334:0000015' => ['0.8','2016-03-16 12:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['20','2016-02-11 12:12:20-0500']},'test_trial212' => {'fresh shoot weight|CO_334:0000016' => ['31','2016-02-11 21:12:20-0500'],'harvest index|CO_334:0000015' => ['11.8','2016-03-16 21:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 21:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 21:12:20-0500']},'test_trial215' => {'fresh shoot weight|CO_334:0000016' => ['34','2016-02-11 19:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 19:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 19:12:20-0500'],'harvest index|CO_334:0000015' => ['14.8','2016-03-16 19:12:20-0500']},'test_trial214' => {'fresh shoot weight|CO_334:0000016' => ['33','2016-02-11 23:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 23:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 23:12:20-0500'],'harvest index|CO_334:0000015' => ['13.8','2016-03-16 23:12:20-0500']},'test_trial213' => {'harvest index|CO_334:0000015' => ['12.8','2016-03-16 22:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 22:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 22:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['32','2016-02-11 22:12:20-0500']}},'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29']}, "Check parse phenotyping spreadsheet" );
+	is_deeply($parsed_file, {'variables' => ['dry matter content|CO_334:0000092','fresh root weight|CO_334:0000012','fresh shoot weight|CO_334:0000016','harvest index|CO_334:0000015','notes'],'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],'data' => {'test_trial211' => {'dry matter content|CO_334:0000092' => [['38','2016-04-27 03:12:20-0500']],'harvest index|CO_334:0000015' => [['10.8','2016-03-16 03:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 03:12:20-0500']],'fresh shoot weight|CO_334:0000016' => [['30','2016-02-11 03:12:20-0500']]},'test_trial28' => {'fresh shoot weight|CO_334:0000016' => [['27','2016-02-11 13:12:20-0500']],'dry matter content|CO_334:0000092' => [['39','2016-04-27 13:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 13:12:20-0500']],'harvest index|CO_334:0000015' => [['7.8','2016-03-16 13:12:20-0500']]},'test_trial214' => {'fresh root weight|CO_334:0000012' => [['15','2016-01-15 23:12:20-0500']],'harvest index|CO_334:0000015' => [['13.8','2016-03-16 23:12:20-0500']],'dry matter content|CO_334:0000092' => [['30','2016-04-27 23:12:20-0500']],'fresh shoot weight|CO_334:0000016' => [['33','2016-02-11 23:12:20-0500']]},'test_trial212' => {'harvest index|CO_334:0000015' => [['11.8','2016-03-16 21:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 21:12:20-0500']],'dry matter content|CO_334:0000092' => [['39','2016-04-27 21:12:20-0500']],'fresh shoot weight|CO_334:0000016' => [['31','2016-02-11 21:12:20-0500']]},'test_trial27' => {'fresh root weight|CO_334:0000012' => [['15','2016-01-15 17:12:20-0500']],'harvest index|CO_334:0000015' => [['6.8','2016-03-16 17:12:20-0500']],'dry matter content|CO_334:0000092' => [['38','2016-04-27 17:12:20-0500']],'fresh shoot weight|CO_334:0000016' => [['26','2016-02-11 17:12:20-0500']]},'test_trial21' => {'fresh shoot weight|CO_334:0000016' => [['20','2016-02-11 12:12:20-0500']],'dry matter content|CO_334:0000092' => [['35','2016-04-27 12:12:20-0500']],'notes' => [['test note1','']],'harvest index|CO_334:0000015' => [['0.8','2016-03-16 12:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 12:12:20-0500']]},'test_trial26' => {'fresh shoot weight|CO_334:0000016' => [['25','2016-02-11 16:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 16:12:20-0500']],'harvest index|CO_334:0000015' => [['5.8','2016-03-16 16:12:20-0500']],'dry matter content|CO_334:0000092' => [['30','2016-04-27 16:12:20-0500']]},'test_trial24' => {'dry matter content|CO_334:0000092' => [['39','2016-04-27 11:12:20-0500']],'harvest index|CO_334:0000015' => [['3.8','2016-03-16 11:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 11:12:20-0500']],'fresh shoot weight|CO_334:0000016' => [['23','2016-02-11 11:12:20-0500']]},'test_trial25' => {'fresh shoot weight|CO_334:0000016' => [['24','2016-02-11 09:12:20-0500']],'dry matter content|CO_334:0000092' => [['35','2016-04-27 09:12:20-0500']],'harvest index|CO_334:0000015' => [['4.8','2016-03-16 09:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 09:12:20-0500']]},'test_trial22' => {'dry matter content|CO_334:0000092' => [['30','2016-04-27 02:12:20-0500']],'harvest index|CO_334:0000015' => [['1.8','2016-03-16 02:12:20-0500']],'notes' => [['testnote2','']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 02:12:20-0500']],'fresh shoot weight|CO_334:0000016' => [['21','2016-02-11 02:12:20-0500']]},'test_trial213' => {'fresh root weight|CO_334:0000012' => [['15','2016-01-15 22:12:20-0500']],'harvest index|CO_334:0000015' => [['12.8','2016-03-16 22:12:20-0500']],'dry matter content|CO_334:0000092' => [['35','2016-04-27 22:12:20-0500']],'fresh shoot weight|CO_334:0000016' => [['32','2016-02-11 22:12:20-0500']]},'test_trial215' => {'fresh shoot weight|CO_334:0000016' => [['34','2016-02-11 19:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 19:12:20-0500']],'harvest index|CO_334:0000015' => [['14.8','2016-03-16 19:12:20-0500']],'dry matter content|CO_334:0000092' => [['38','2016-04-27 19:12:20-0500']]},'test_trial210' => {'fresh shoot weight|CO_334:0000016' => [['29','2016-02-11 15:12:20-0500']],'harvest index|CO_334:0000015' => [['9.8','2016-03-16 15:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 15:12:20-0500']],'dry matter content|CO_334:0000092' => [['30','2016-04-27 15:12:20-0500']]},'test_trial23' => {'harvest index|CO_334:0000015' => [['2.8','2016-03-16 01:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 01:12:20-0500']],'dry matter content|CO_334:0000092' => [['38','2016-04-27 01:12:20-0500']],'fresh shoot weight|CO_334:0000016' => [['22','2016-02-11 01:12:20-0500']]},'test_trial29' => {'fresh shoot weight|CO_334:0000016' => [['28','2016-02-11 14:12:20-0500']],'harvest index|CO_334:0000015' => [['8.8','2016-03-16 14:12:20-0500']],'fresh root weight|CO_334:0000012' => [['15','2016-01-15 14:12:20-0500']],'dry matter content|CO_334:0000092' => [['35','2016-04-27 14:12:20-0500']]}}}, 'check for the multiple values in the phenotype spreadsheet' );
+	
 	my %phenotype_metadata;
 	$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
 	$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
@@ -153,7 +153,7 @@ for my $extension ("xls", "xlsx") {
 
 	my $traits_assayed  = $tn->get_traits_assayed(); # returns the counts assayed
 	my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-	print STDERR Dumper @traits_assayed_sorted;
+	# print STDERR Dumper @traits_assayed_sorted;
 	my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
 	is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload 1' );
 
@@ -185,58 +185,58 @@ for my $extension ("xls", "xlsx") {
 	$experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
 	my $post1_experiment_count = $experiment->count();
 	my $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
-	print STDERR "Experiment count: ".$post1_experiment_diff."\n";
+	# print STDERR "Experiment count: ".$post1_experiment_diff."\n";
 	ok($post1_experiment_diff == 15, "Check num rows in NdExperiment table after addition of phenotyping spreadsheet upload 1");
 
 	$phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 	my $post1_phenotype_count = $phenotype_rs->count();
 	my $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
-	print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
+	# print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
 	ok($post1_phenotype_diff == 60, "Check num rows in Phenotype table after addition of phenotyping spreadsheet upload 1");
 
 	$exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 	my $post1_exp_prop_count = $exp_prop_rs->count();
 	my $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
-	print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
+	# print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
 	ok($post1_exp_prop_diff == 30, "Check num rows in Experimentprop table after addition of phenotyping spreadsheet upload 1");
 
 	$exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 	my $post1_exp_proj_count = $exp_proj_rs->count();
 	my $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
-	print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
+	# print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
 	ok($post1_exp_proj_diff == 15, "Check num rows in NdExperimentproject table after addition of phenotyping spreadsheet upload 1");
 
 	$exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 	my $post1_exp_stock_count = $exp_stock_rs->count();
 	my $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
-	print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
+	# print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
 	ok($post1_exp_stock_diff == 15, "Check num rows in NdExperimentstock table after addition of phenotyping spreadsheet upload 1");
 
 	$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 	my $post1_exp_pheno_count = $exp_pheno_rs->count();
 	my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
-	print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
+	# print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
 	ok($post1_exp_pheno_diff == 60, "Check num rows in NdExperimentphenotype table after addition of phenotyping spreadsheet upload 1");
 
 	$md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 	my $post1_md_count = $md_rs->count();
 	my $post1_md_diff = $post1_md_count - $pre_md_count;
-	print STDERR "MdMetadata count: ".$post1_md_diff."\n";
+	# print STDERR "MdMetadata count: ".$post1_md_diff."\n";
 	ok($post1_md_diff == 1, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload 1");
 
 	$md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 	my $post1_md_files_count = $md_files_rs->count();
 	my $post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
-	print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
+	# print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
 	ok($post1_md_files_diff == 1, "Check num rows in MdFiles table after addition of phenotyping spreadsheet upload 1");
 
 	$exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 	my $post1_exp_md_files_count = $exp_md_files_rs->count();
 	my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
-	print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
+	# print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
 	ok($post1_exp_md_files_diff == 15, "Check num rows in NdExperimentMdFIles table after addition of phenotyping spreadsheet upload 1");
 
-	#Check what happens on duplication of plot_name, trait, and value. timestamps must be unique or it will not be uploaded.
+	# Check what happens on duplication of plot_name, trait, and value. timestamps must be unique or it will not be uploaded.
 
 	$parser = CXGN::Phenotypes::ParseUpload->new();
 	$filename = "t/data/trial/upload_phenotypin_spreadsheet_duplicate.$extension";
@@ -284,12 +284,12 @@ for my $extension ("xls", "xlsx") {
 
 	my $traits_assayed  = $tn->get_traits_assayed();
 	my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-	print STDERR Dumper @traits_assayed_sorted;
+	# print STDERR "the traits sorted " . Dumper \@traits_assayed_sorted;
 	my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15, undef, undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
 
 
-	########################################
-	#Tests for phenotype spreadsheet parsing - this time updating and removing some observations
+	#######################################
+	# Tests for phenotype spreadsheet parsing - this time updating and removing some observations
 
 	my $filename = "t/data/trial/upload_phenotypin_spreadsheet_update.$extension";
 	my $time = DateTime->now();
@@ -321,7 +321,7 @@ for my $extension ("xls", "xlsx") {
 	my $parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
 	ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
-	print STDERR "PARSED FILE = ".Dumper($parsed_file);
+	# print STDERR "PARSED FILE = ".Dumper($parsed_file);
 
 	is_deeply($parsed_file, {'variables' => ['dry matter content|CO_334:0000092'],'data' => {'test_trial28' => {'dry matter content|CO_334:0000092' => [['139','']]},'test_trial23' => {'dry matter content|CO_334:0000092' => [['','']]},'test_trial21' => {'dry matter content|CO_334:0000092' => [['135','']]},'test_trial25' => {'dry matter content|CO_334:0000092' => [['135','']]},'test_trial22' => {'dry matter content|CO_334:0000092' => [['130','']]},'test_trial27' => {'dry matter content|CO_334:0000092' => [['138','']]},'test_trial212' => {'dry matter content|CO_334:0000092' => [['139','']]},'test_trial29' => {'dry matter content|CO_334:0000092' => [['135','']]},'test_trial210' => {'dry matter content|CO_334:0000092' => [['130','']]},'test_trial211' => {'dry matter content|CO_334:0000092' => [['138','']]},'test_trial214' => {'dry matter content|CO_334:0000092' => [['130','']]},'test_trial215' => {'dry matter content|CO_334:0000092' => [['138','']]},'test_trial24' => {'dry matter content|CO_334:0000092' => [['','']]},'test_trial213' => {'dry matter content|CO_334:0000092' => [['','']]},'test_trial26' => {'dry matter content|CO_334:0000092' => [['','']]}},'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29']}, "check phenotype data 2" );
 	#is_deeply($parsed_file, {'data' => {'test_trial28' => {'dry matter content|CO_334:0000092' => ['139','']},'test_trial210' => {'dry matter content|CO_334:0000092' => ['130','']},'test_trial27' => {'dry matter content|CO_334:0000092' => ['138','']},'test_trial211' => {'dry matter content|CO_334:0000092' => ['138','']},'test_trial21' => {'dry matter content|CO_334:0000092' => ['135','']},'test_trial26' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial214' => {'dry matter content|CO_334:0000092' => ['130','']},'test_trial213' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial29' => {'dry matter content|CO_334:0000092' => ['135','']},'test_trial23' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial24' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial212' => {'dry matter content|CO_334:0000092' => ['139','']},'test_trial22' => {'dry matter content|CO_334:0000092' => ['130','']},'test_trial25' => {'dry matter content|CO_334:0000092' => ['135','']},'test_trial215' => {'dry matter content|CO_334:0000092' => ['138','']}},'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],'variables' => ['dry matter content|CO_334:0000092']}, "Check parse phenotyping spreadsheet 2" );
@@ -366,19 +366,19 @@ for my $extension ("xls", "xlsx") {
 
 	my $traits_assayed  = $tn->get_traits_assayed(); # returns the counts assayed
 	my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-	print STDERR Dumper @traits_assayed_sorted;
+	# print STDERR Dumper @traits_assayed_sorted;
 	my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
 	is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload update' );
 
 	my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
 	my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-	#print STDERR Dumper @pheno_for_trait_sorted;
+	# print STDERR Dumper @pheno_for_trait_sorted;
 	my @pheno_for_trait_check = ('15','15','15','15','15','15','15','15','15','15','15','15','15','15','15');
 	is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70666 from phenotyping spreadsheet upload update' );
 
 	@pheno_for_trait = $tn->get_phenotypes_for_trait(70668);
 	@pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-	#print STDERR Dumper @pheno_for_trait_sorted;
+	# print STDERR Dumper @pheno_for_trait_sorted;
 	@pheno_for_trait_check = ('0.8','1.8','2.8','3.8','4.8','5.8','6.8','7.8','8.8','9.8','10.8','11.8','12.8','13.8','14.8');
 	is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70668 from phenotyping spreadsheet upload update' );
 
@@ -394,10 +394,9 @@ for my $extension ("xls", "xlsx") {
 	is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload update' );
 
 
-	print STDERR "THIS TEST NEEDS TO BE HEAVILY REVISED. SKIPPING OUT EARLY.\n";
+	# print STDERR "THIS TEST NEEDS TO BE HEAVILY REVISED. SKIPPING OUT EARLY.\n";
 
 	$tn->delete_phenotype_data();
-
 
 	$f->dbh()->rollback();
 	$f->clean_up_db();
