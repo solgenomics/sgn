@@ -1,6 +1,8 @@
 <%args>
 $trial_id
 $breeding_program_name
+$default_plant_material_id
+$default_plant_material_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -18,16 +20,25 @@ $breeding_program_name
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
                             <label class="col-sm-4 control-label" >Transformation ID: </label>
-                                <div class="col-sm-7">
-                                    <input class="form-control" type="text" id="new_transformation_identifier_name" name="new_transformation_identifier_name"  />
-                                </div>
+                            <div class="col-sm-7">
+                                <input class="form-control" type="text" id="new_transformation_identifier_name" name="new_transformation_identifier_name"  />
+                            </div>
                         </div>
+% if ($default_plant_material_name) {
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" >Plant Material (accession name): </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" name="plant_material" id="plant_material" disabled value="<% $default_plant_material_name %>">
+                            </div>
+                        </div>
+% } else {
                         <div class="form-group">
                             <label class="col-sm-4 control-label" >Plant Material (accession name): </label>
                                 <div class="col-sm-7">
                                     <input class="form-control" type="text" id="plant_material" name="plant_material"  />
                                 </div>
                         </div>
+% }
                         <div class="form-group">
                             <label class="col-sm-4 control-label" >Vector Construct: </label>
                                 <div class="col-sm-7">
