@@ -182,6 +182,44 @@ input[type="text"] {
             jQuery('#summary_start_date').val(raw_startDate);
             jQuery('#summary_end_date').val(raw_endDate);
 
+            jQuery('input[title="summary_start_date"]').on('focus', function () {
+                jQuery(this).daterangepicker({
+	                "singleDatePicker": true,
+	                "showDropdowns": true,
+	                "autoUpdateInput": true,
+	                "startDate": "1960-01-01",
+	                "yearSelect" : true,
+	                "minDate": jQuery('#summary_start_date').val(),
+	                "maxDate": jQuery('#summary_end_date').val(),
+	                locale: {
+	            	    format: 'YYYY-MM-DD'
+	                }
+	            },function(start) { 
+                    var summary_new_start_date = new Date(start).getTime();
+                    var summary_new_end_date = new Date(jQuery('#summary_end_date').val()).getTime();
+                    jQuery('#summary_phenotype_slider_range').slider('values', [summary_new_start_date, summary_new_end_date]);
+                });
+
+            });
+
+            jQuery('input[title="summary_end_date"]').on('focus', function () {
+                jQuery(this). daterangepicker({
+	                "singleDatePicker": true,
+                    "showDropdowns": true,
+	                "autoUpdateInput": true,
+                    "minDate": jQuery('#summary_start_date').val(),
+	                "maxDate": jQuery('#summary_end_date').val(),
+	                "yearSelect" : true,
+	                locale: { 
+	            	    format: 'YYYY-MM-DD'
+	                },
+	            },function (end) {
+                    var summary_new_start_date = new Date(jQuery('#summary_start_date').val()).getTime();
+                    var summary_new_end_date = new Date(end).getTime();
+                    jQuery('#summary_phenotype_slider_range').slider('values', [summary_new_start_date, summary_new_end_date]);
+                });
+            });
+
             jQuery('#summary_phenotype_slider_range').slider({
                 range: true,
                 min: new Date(raw_startDate).getTime(),
@@ -451,41 +489,7 @@ function trait_summary_hist_change(value) {
             alert('An error occured retrieving trait histogram data.');
         }
     });
-}
-
-
-    jQuery('input[title="summary_start_date"]').daterangepicker(
-	{
-	    "singleDatePicker": true,
-	    "showDropdowns": true,
-	    "autoUpdateInput": true,
-	    "startDate": "1960-01-01",
-	    "yearSelect" : true,
-	    "minDate": jQuery('#summary_start_date').val(),
-	    "maxDate": jQuery('#summary_end_date').val(),
-	    locale: {
-		    format: 'YYYY-MM-DD'
-	    }
-	},
-	
-    );
-    
-    jQuery('input[title="summary_end_date"]').daterangepicker(
-	{
-	    "singleDatePicker": true,
-         "showDropdowns": true,
-	    "autoUpdateInput": true,
-        "minDate": jQuery('#summary_start_date').val(),
-	    "maxDate": jQuery('#summary_end_date').val(),
-	    "yearSelect" : true,
-	    locale: { 
-		    format: 'YYYY-MM-DD'
-	    },
-	},
-	
-    );
-
-    
+}  
 							       
 //end of immediately inoked function
 })();
