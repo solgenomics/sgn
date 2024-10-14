@@ -30,7 +30,6 @@ sub search {
     if (!$brapi_study_ids_arrayref || scalar (@$brapi_study_ids_arrayref) < 1) { $limit=1000000; } # if no ids, limit should be set to max and retrieve whole database. If ids no limit to retrieves all
 
     ($data,$counter) = _search($self,$params,$limit);
-
     my %result = (data=>$data);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
@@ -251,7 +250,7 @@ sub _search {
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $start_date = $params->{observationTimeStampRangeStart}->[0] || undef;
     my $end_date = $params->{observationTimeStampRangeEnd}->[0] || undef;
-    my $repetitive_measurements_type = $params->{repetitiveMeasurements_type} || 'all';
+    my $repetitive_measurements_type = $params->{repetitiveMeasurements_type} || 'average';
 
     my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
     # observationUnitLevelName
@@ -289,7 +288,6 @@ sub _search {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
-
     my @data_window;
     my $counter = 0;
 
@@ -298,7 +296,6 @@ sub _search {
             my $observation_id = "$_->{phenotype_id}";
             my $additional_info;
             my $external_references;
-
             my %season = (
                 year => $_->{year},
                 season => $_->{year},
@@ -345,7 +342,7 @@ sub _search {
             $counter++;
         }
     }
-
+    # print STDERR "values for all the params: ".Dumper(\@data_window);
     return (\@data_window,$counter);
 }
 
