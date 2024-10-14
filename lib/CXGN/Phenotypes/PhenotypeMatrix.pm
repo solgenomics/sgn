@@ -354,7 +354,7 @@ sub get_phenotype_matrix {
                             my $v = $trait_observations{$trait}[$i];
                             push @line, $v;
                         } else {
-                            push @line, ($i == 0) ? $trait_observations{$trait} : '';
+                            push @line, ($i == 0) ? $trait_observations{$trait} : undef;
                         }
                     }
                     push @line, $obs_unit->{notes} if $i == 0;
@@ -402,8 +402,8 @@ sub get_phenotype_matrix {
         my %obsunit_data;
         my %traits;
 
-        print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
-        print STDERR "Construct Pheno Matrix Start:".localtime."\n";
+        # print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
+        # print STDERR "Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
         my %seen_obsunits;
         my %process_obs;
@@ -509,8 +509,8 @@ sub get_phenotype_matrix {
                         }
 		            }else {
                         my $values_ref = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
-                        my $value = $values_ref->[0] // '';
-                        my $collect_date = $values_ref->[1] // '';
+                        my $value = $values_ref->[0];
+                        my $collect_date = $values_ref->[1];
                         my $output_val = defined $collect_date ? "$value, $collect_date" : $value;
                         $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
                         # print STDERR "check the single value: $output_val\n";
@@ -561,7 +561,7 @@ sub get_phenotype_matrix {
             }
         }
         #print STDERR "PLOT DATA = ".Dumper \%plot_data;
-        print STDERR "TRAITS = ".Dumper \%traits;
+        # print STDERR "TRAITS = ".Dumper \%traits;
 
         # retrieve treatments
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
@@ -606,13 +606,13 @@ sub get_phenotype_matrix {
                     if(ref($obsunit_data{$p}->{$trait}) eq 'ARRAY') {
                         my $value_entry = $obsunit_data{$p}->{$trait}[$i];
                         my ($v, $cd) = @$value_entry;
-                        $value_with_date = defined($v) ? (defined($cd) ? "$v, $cd" : $v) : '';
+                        $value_with_date = defined($v) ? (defined($cd) ? "$v, $cd" : $v) : undef;
                         push @line, $value_with_date;
                     } else {
                         my $v = $obsunit_data{$p}->{$trait};
                         my $cd = $obsunit_data{$p}->{$trait.'_collect_date'};
                         #the recorded will be added to the obs value by separating with comma
-                        $value_with_date = ($i == 0 && defined($v)) ? (defined($cd) ? "$v, $cd" : $v) : '';
+                        $value_with_date = ($i == 0 && defined($v)) ? (defined($cd) ? "$v, $cd" : $v) : undef;
                         push @line, $value_with_date;
                         # push @line, ($i == 0) ? $obsunit_data{$p}->{$trait.'_collect_date'} : '';
                     }
@@ -632,8 +632,8 @@ sub get_phenotype_matrix {
         }
     }
 
-    print STDERR "check the info data structure " . Dumper \@info;
-    print STDERR "Construct Pheno Matrix End:".localtime."\n";
+    # print STDERR "check the info data structure " . Dumper \@info;
+    # print STDERR "Construct Pheno Matrix End:".localtime."\n";
     return @info;
 }
 
