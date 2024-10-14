@@ -294,10 +294,14 @@ sub create_hash_lookups {
         $self->check_trait_format($trait_format_props);
     
         my $trait_min_value_props = $self->get_trait_props($cvterm_id, 'trait_minimum');
+        # print STDERR "Trait min value props: ".Dumper($trait_min_value_props);
         $self->check_trait_min_value($trait_min_value_props);
+        # print STDERR "Trait min value hash: ".Dumper($self->check_trait_min_value);
     
         my $trait_max_value_props = $self->get_trait_props($cvterm_id, 'trait_maximum');
+        # print STDERR "Trait max value props: ".Dumper($trait_max_value_props);
         $self->check_trait_max_value($trait_max_value_props);
+        # print STDERR "Trait max value hash: ".Dumper($self->check_trait_max_value);
     
         my $trait_repeat_type_props = $self->get_trait_props($cvterm_id, 'trait_repeat_type');
         $self->check_trait_repeat_type($trait_repeat_type_props);
@@ -449,7 +453,9 @@ sub verify {
             my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
 	    
 	        if (ref($measurements_array->[0]) eq 'ARRAY') {   ### we have a list of measurements, not just a trait_value timestamp pair
+            # print STDERR "Trait name = $trait_name\n";
                 foreach my $value_array (@$measurements_array) {
+                    # print STDERR "Value array = ".Dumper($value_array)."\n";
 		            ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
 		            $all_errors .= $errors;
 		            $all_warnings .= $warnings;
@@ -571,9 +577,10 @@ sub check_measurement {
     my $timestamp = $value_array->[1];
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
     if ( defined($trait_value) ) {
-	    print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
+	    # print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
 	    my $trait_cvterm = $self->trait_objs->{$trait_name};
 	    my $trait_cvterm_id = $trait_cvterm->cvterm_id();
+        # print STDERR "the trait cvterm id of this trait is: " . $trait_cvterm_id . "\n";
 	    my $stock_id = $self->bcs_schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
     
 	    #Trait values can be non alphanumeric 
@@ -583,18 +590,39 @@ sub check_measurement {
     
 	    #check that trait value is valid for trait name
 	    if (exists($self->check_trait_format->{$trait_cvterm_id})) {
+            # print STDERR "Trait minimum value checks if it exists: " . $self->check_trait_min_value->{$trait_cvterm_id} . "\n";
 	        if ($self->check_trait_format->{$trait_cvterm_id} eq 'numeric') {
 	    	    my $trait_format_checked = looks_like_number($trait_value);
 	    	    if (!$trait_format_checked && $trait_value ne '') {
 	    	        $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
 	    	    }
-	    	    if ($trait_value < $self->check_trait_min_value->{$trait_cvterm_id}) {
-	    	        $error_message .= "<small>For trait '$trait_name' the trait value ($trait_value) should not be smaller than the defined trait_minimum, ". $self->check_trait_min_value->{$trait_cvterm_id}. "</small></hr>";
-	    	    }
+                my $trait_min = defined $self->check_trait_min_value->{$trait_cvterm_id} ? $self->check_trait_min_value->{$trait_cvterm_id} : undef;
+                my $trait_max = defined $self->check_trait_max_value->{$trait_cvterm_id} ? $self->check_trait_max_value->{$trait_cvterm_id} : undef;
 
-	    	    if ($trait_value > $self->check_trait_max_value->{$trait_cvterm_id}) {
-	    	        $error_message .= "<small>For the trait '$trait_name' The trait vlue($trait_value) should not be larger than the defined trait_maximum, ".$self->check_trait_max_value->{$trait_cvterm_id}."</small></hr>";
-	    	    }
+                print STDERR "the trait minimum: Trait Minimum for trait $trait_name: ", (defined $trait_min ? $trait_min : undef), "\n";
+                print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
+
+                if (defined $trait_min && $trait_value < $trait_min) {
+                    $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, $trait_min.</small><hr>";
+                } else {
+                    print STDERR "the trait min and trait value : No minimum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id).\n";
+                }
+
+                if (defined $trait_max && $trait_value > $trait_max) {
+                    $error_message .= "<small>For the trait '$trait_name' the trait value $trait_value should not be larger than the defined trait_maximum, $trait_max.</small><hr>";
+                }else {
+                    print STDERR "the trait max and trait value: No maximum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id). \n";
+                }
+
+	    	    # if ($trait_value < $self->check_trait_min_value->{$trait_cvterm_id}) {
+                #     # print STDERR "Trait value: $trait_value, Trait minimum value: ".$self->check_trait_min_value->{$trait_cvterm_id}."\n";
+	    	    #     $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, ". $self->check_trait_min_value->{$trait_cvterm_id}. "</small></hr>";
+	    	    # }
+
+	    	    # if ($trait_value > $self->check_trait_max_value->{$trait_cvterm_id}) {
+                #     # print STDERR "Trait value: $trait_value, Trait min value: ".$self->check_trait_min_value->{$trait_cvterm_id}."\n";
+	    	    #     $error_message .= "<small>For the trait '$trait_name' The trait value $trait_value should not be larger than the defined trait_maximum, ".$self->check_trait_max_value->{$trait_cvterm_id}."</small></hr>";
+	    	    # }
 	        }
 	        if ($self->check_trait_format->{$trait_cvterm_id} eq 'image') {
 	    	    $trait_value =~ s/^.*photos\///;
@@ -752,12 +780,12 @@ sub store {
     my @trait_list = @{$self->trait_list};
     
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes so they can be handled separately
-    #my %trait_objs = %{$self->trait_objs};
-    #    my %plot_trait_value = %{$self->values_hash};
-    #my %phenotype_metadata = %{$self->metadata_hash};
-    #    my $timestamp_included = $self->has_timestamps;
+    # my %trait_objs = %{$self->trait_objs};
+    # my %plot_trait_value = %{$self->values_hash};
+    # my %phenotype_metadata = %{$self->metadata_hash};
+    # my $timestamp_included = $self->has_timestamps;
     my $archived_image_zipfile_with_path = $self->image_zipfile_path;
-    #my $phenotype_metadata = $self->metadata_hash;
+    # my $phenotype_metadata = $self->metadata_hash;
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
@@ -1049,11 +1077,6 @@ sub store {
 	    }
 	    
 	}
-	
-	
-	
-	
-	
 	print STDERR "TRAIT STOCK\n";
 	
 	
@@ -1347,11 +1370,15 @@ sub get_trait_props {
     my $property_name = shift;
 
     my %property_by_cvterm_id;
-    my $sql = "SELECT cvtermprop.value, cvterm.cvterm_id, cvterm.name FROM cvterm join cvtermprop on(cvterm.cvterm_id=cvtermprop.cvterm_id) join cvterm as proptype on(cvtermprop.type_id=proptype.cvterm_id) where proptype.name=? ";
+    my $sql = "SELECT cvtermprop.value, cvterm.cvterm_id, cvterm.name FROM cvterm LEFT join cvtermprop on(cvterm.cvterm_id=cvtermprop.cvterm_id) LEFT join cvterm as proptype on(cvtermprop.type_id=proptype.cvterm_id) where proptype.name=? ";
     my $sth= $self->bcs_schema()->storage()->dbh()->prepare($sql);
     $sth->execute($property_name);
     while (my ($property_value, $cvterm_id, $cvterm_name) = $sth->fetchrow_array) {
-	$property_by_cvterm_id{$cvterm_id} = $property_value;
+        if (defined $property_value) {
+            $property_by_cvterm_id{$cvterm_id} = $property_value;
+        } else {
+            print STDERR "Warning: property '$property_name' not found for trait '$cvterm_name' (cvterm_id: '$cvterm_id') is not defined \n";
+        }
     }
     print STDERR "PROPERTIES FROM $property_name: ".Dumper(\%property_by_cvterm_id);
     return \%property_by_cvterm_id;
