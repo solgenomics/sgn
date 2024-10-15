@@ -270,14 +270,18 @@ my $parser = CXGN::Genotype::ParseUpload->new({
 });
 
 $parser->load_plugin($opt_c);
-$parser->parse_with_iterator();
+my $parser_return = $parser->parse_with_iterator();
+if ($parser->get_parse_errors()) {
+    my $parse_errors = $parser->get_parse_errors();
+    print STDERR Dumper $parse_errors;
+    die("parse errors");
+}
 
 my $project_id;
 my $protocol = $parser->protocol_data();
 my $observation_unit_names_all = $parser->observation_unit_names();
 $protocol->{'reference_genome_name'} = $reference_genome_name;
 $protocol->{'species_name'} = $organism_species;
-
 
 my $vcf_genotyping_type = $opt_T ? $opt_T : 'vcf_snp_genotyping';
 # my $genotyping_type;
@@ -342,6 +346,56 @@ if (scalar(keys %$genotype_info) > 0) {
             print STDERR Dumper $warning_string;
             print STDERR "You can accept these warnings and continue with store if you use -A\n";
             die;
+        }
+    }
+
+    my @protocol_match_errors;
+    if ($protocol_id) {
+        my $new_marker_data = $protocol->{markers};
+        my $stored_protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id
+        });
+        my $stored_markers = $stored_protocol->markers();
+
+        my @all_stored_markers = keys %$stored_markers;
+        my %compare_marker_names = map {$_ => 1} @all_stored_markers;
+        my @mismatch_marker_names;
+        while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+            while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
+                if (exists($compare_marker_names{$marker_name})) {
+                    while (my ($key, $value) = each %$new_marker_details) {
+                        if ($value ne ($stored_markers->{$marker_name}->{$key})) {
+                            push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                        }
+                    }
+                } else {
+                    push @mismatch_marker_names, $marker_name;
+                }
+            }
+        }
+
+        if (scalar(@mismatch_marker_names) > 0){
+            my $marker_name_error;
+            $marker_name_error .= "<br>";
+            foreach my $error ( sort @mismatch_marker_names) {
+                $marker_name_error .= "$error\n";
+ 	    } 
+            print STDERR Dumper $marker_name_error;
+	    print STDERR "These marker names in your file are not in the selected protocol.\n";
+            die; 
+        }
+
+        if (scalar(@protocol_match_errors) > 0){
+            my $protocol_warning;
+            foreach my $match_error (@protocol_match_errors) {
+                $protocol_warning .= $match_error."<br>";
+            }
+            if (!$opt_A){
+                print STDERR Dumper $protocol_warning;
+		print STDERR "Protocol match error\n";
+                die;
+            }
         }
     }
 
