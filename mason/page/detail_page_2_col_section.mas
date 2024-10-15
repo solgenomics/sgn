@@ -609,6 +609,9 @@ $field_headers => ()
 % if ($info_section_id eq 'inactive_transformation_ids_in_project_section'){
                                 <& /transformation/inactive_transformation_ids_in_project.mas, trial_id=>$trial_id &>
 % } #End inactive_transformation_ids_in_project_section
+% if ($info_section_id eq 'transformation_project_deletion_section'){
+                                <& /transformation/transformation_project_deletion.mas, trial_id=>$trial_id &>
+% } #End transformation_project_deletion_section
 
 
 % if (!$info_section_id){
