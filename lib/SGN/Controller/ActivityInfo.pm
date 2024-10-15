@@ -140,7 +140,15 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $program_name;
 
     if ($identifier_name) {
-        $identifier_id = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name})->stock_id();
+        my $identifier_rs = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name});
+        if (!$identifier_rs) {
+            $c->stash->{message} = "The tracking identifier does not exist or has been deleted.";
+            $c->stash->{template} = 'generic_message.mas';
+            return;
+        } else {
+            $identifier_id = $identifier_rs->stock_id();
+        }
+        
         my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
         my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
         $program_name = $associated_projects->[0]->[3];
