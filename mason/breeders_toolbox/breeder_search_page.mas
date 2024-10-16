@@ -420,31 +420,30 @@ $dataset_id => undef
                   </label>
                 </div>
               </td>
-	      <td style="border-top: none; padding-top: 0">
-		Repetitive measurements: <br />
-
-		<select class="wizard-download-repetitive-measurements-type" >
-                  <option>first value</option>
-                  <option>last value</option>
-                  <option selected>averaged value</option>
-                  <option>all values</option>
-		</select>
-	      </td>
-	      <td style="border-top: none; padding-top: 0">
-		&nbsp;
-	      </td>
-            </tr>
-	    <tr>
-		<td>
-		    From:  <input type="text" class="wizard-download-start-date" id="phenotype_start_date" title="phenotype_start_date"  />
-		</td>
-		<td>
-		    To: <input type="text" class="wizard-download-end-date" id="phenotype_end_date" title="phenotype_end_date" />	
-		</td>
-		<td>
-		    <input type="checkbox" id="include_dateless_items" checked="1" > include items without a date</input>
-		</td>
-		</tr>	
+				<td style="border-top: none; padding-top: 0">
+					Repetitive measurements: <br />
+					<select class="wizard-download-repetitive-measurements-type" >
+        			    <option value="first">First value</option>
+        			    <option value="last">Last value</option>
+        			    <option value="average" selected>Average value</option>
+        			    <option value="all">All values</option>
+					</select>
+	      		</td>
+	      	<td style="border-top: none; padding-top: 0">
+			&nbsp;
+	      	</td>
+        	</tr>
+	    	<tr>
+			<td>
+			    From:  <input type="text" class="wizard-download-start-date" id="phenotype_start_date" title="phenotype_start_date"  />
+			</td>
+			<td>
+			    To: <input type="text" class="wizard-download-end-date" id="phenotype_end_date" title="phenotype_end_date" />	
+			</td>
+			<td>
+			    <input type="checkbox" id="include_dateless_items" checked="1" > include items without a date</input>
+			</td>
+			</tr>	
             <tr>
               <td>
                 <span>Trait Name Contains</span>

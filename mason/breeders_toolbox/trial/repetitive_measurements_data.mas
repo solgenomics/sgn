@@ -51,19 +51,19 @@ $trial_stock_type => undef
         <div class="form-group">
             <label for="repetitive_measurement_observation_level">Observation Level: </label>
             <select class="form-control" id="repetitive_measurement_observation_level">
-                <option value="plots">Values for Plots of this Trait </option>
-                <option value="plants">Values for Plants of this Trait </option>
-                <option value="subplots">Values for Subplots of this Trait </option>
+                <option value="plot">Values for Plots of this Trait </option>
+                <option value="plant">Values for Plants of this Trait </option>
+                <option value="subplot">Values for Subplots of this Trait </option>
                 <option value="tissue_sample">Values for Tissue Samples from this Trait </option>
             </select>
         </div>
         <div class="form-group">
             <label for="repetitive_measurements_level">Repetitive Measurements Level:</label>
             <select class="form-control" id="repetitive_measurements_level">
-                <option value="first value">First Value of this Trait</option>
-                <option value="last value">Last Value of this Trait</option>
-                <option value="averaged value"> Averaged Values for this Trait</option>
-                <option value="all values"> All Values of this Trait</option>
+                <option value="first">First value</option>
+                <option value="last">Last value</option>
+                <option value="average">Average value</option>
+                <option value="all">All values</option>
             </select>
         </div>
     </div>
@@ -239,15 +239,15 @@ jQuery(document).ready(function() {
             var values = group.values;
             var valueToShow = '';
 
-            if (repetitive_measurement_level === 'first value') {
+            if (repetitive_measurement_level === 'first') {
                 valueToShow = values[0];
-            } else if(repetitive_measurement_level === 'last value') {
+            } else if(repetitive_measurement_level === 'last') {
                 valueToShow = values[values.length -1];
-            } else if(repetitive_measurement_level === 'averaged value') {
+            } else if(repetitive_measurement_level === 'average') {
                 var sum = values.reduce((a, b) => a + b, 0) ;
                 var avg = sum / values.length;
                 valueToShow = avg.toFixed(2);
-            } else if(repetitive_measurement_level === 'all values') {
+            } else if(repetitive_measurement_level === 'all') {
                 valueToShow = values.join(', ');
             }
             data.push([group.observationUnitName, group.germplasmName, valueToShow]);
