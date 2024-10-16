@@ -339,7 +339,7 @@ sub get_phenotype_matrix {
 		        }
 	        }
 
-            if ($self->repetitive_measurements () eq "all values") {
+            if ($self->repetitive_measurements () eq "all") {
                 my $max_values = 1;
 	            foreach my $trait (@sorted_traits) {
                     if (ref($trait_observations{$trait}) eq 'ARRAY') {
@@ -445,21 +445,21 @@ sub get_phenotype_matrix {
                 # print STDERR "data contents: " . Dumper($obsunit_data{$obsunit_id}->{$cvterm}) . "\n";
 
 		        if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq "ARRAY") {
-		            if ($self->repetitive_measurements() eq "first value") {
+		            if ($self->repetitive_measurements() eq "first") {
                         my $first_entry = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
                         my $first_obs_value = $first_entry->[0];
                         my $first_obs_collect_date = $first_entry->[1];
                         my $output_val = defined $first_obs_collect_date ? "$first_obs_value, $first_obs_collect_date" : $first_obs_value;
                         $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
                         # print STDERR "see the values and collect date of first observations: " . $obsunit_data{$obsunit_id}->{$cvterm} . "\n";
-		            }elsif ($self->repetitive_measurements() eq "last value") {
+		            }elsif ($self->repetitive_measurements() eq "last") {
                         my $last_entry = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
                         my $last_obs_value = $last_entry->[0];
                         my $last_obs_collect_date = $last_entry->[1];
                         my $output_val = defined $last_obs_collect_date ? "$last_obs_value, $last_obs_collect_date" : $last_obs_value;
                         $obsunit_data{$obsunit_id}->{$cvterm} = $output_val;
                         # print STDERR "the last value of the trait obs: $output_val\n";
-		            }elsif ($self->repetitive_measurements() eq "averaged value") {
+		            }elsif ($self->repetitive_measurements() eq "average") {
 		        	    my $count = 0;
 		        	    my $sum = 0;
                         my $latest_date; #using the last_date as the collect_date for the averaged values
@@ -483,7 +483,7 @@ sub get_phenotype_matrix {
 		        	    else {
 		        	        $obsunit_data{$obsunit_id}->{$cvterm} = undef;
 		        	    }
-		            }elsif ($self->repetitive_measurements() eq "all values") {
+		            }elsif ($self->repetitive_measurements() eq "all") {
                         if (!$process_obs{$obsunit_id}->{$cvterm}) {
                             $process_obs{$obsunit_id}->{$cvterm} = 1;
                             # print STDERR "see all values for block wise - first, intermediate and last: $obsunit_id, $cvterm\n"; #debugging only
@@ -657,7 +657,7 @@ sub format_observations {
 	    my $timestamp = $observation->{timestamp};
         my $value = $observation->{value};
 
-        if ($self->repetitive_measurements() eq 'all values') {
+        if ($self->repetitive_measurements() eq 'all') {
             $trait_observations{$observation->{trait_name}} = [];
             push @{$trait_observations{$observation->{trait_name}}}, $value;
             next;
@@ -741,16 +741,16 @@ sub process_duplicate_measurements {
 
     #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
     
-    if ($self->repetitive_measurements() eq "first value") {
+    if ($self->repetitive_measurements() eq "first") {
 	    print STDERR "Retrieving first value...\n";
 	    return $trait_observations->[0];
-    }elsif ($self->repetitive_measurements() eq "last value") {
+    }elsif ($self->repetitive_measurements() eq "last") {
 	    print STDERR "Retrieving last value...\n";
 	    return $trait_observations->[-1] ;
-    }elsif ($self->repetitive_measurements() eq "averaged value") {
+    }elsif ($self->repetitive_measurements() eq "average") {
 	    print STDERR "Averaging values ...\n";
 	    return $self->average_observations($trait_observations);
-    }elsif ($self->repetitive_measurements() eq "all values") {
+    }elsif ($self->repetitive_measurements() eq "all") {
 	    print STDERR "Retrieving all values...\n";
         return $trait_observations;
     }else {

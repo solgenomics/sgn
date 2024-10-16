@@ -1370,7 +1370,7 @@ sub get_trait_props {
     my $property_name = shift;
 
     my %property_by_cvterm_id;
-    my $sql = "SELECT cvtermprop.value, cvterm.cvterm_id, cvterm.name FROM cvterm LEFT join cvtermprop on(cvterm.cvterm_id=cvtermprop.cvterm_id) LEFT join cvterm as proptype on(cvtermprop.type_id=proptype.cvterm_id) where proptype.name=? ";
+    my $sql = "SELECT cvtermprop.value, cvterm.cvterm_id, cvterm.name FROM cvterm join cvtermprop on(cvterm.cvterm_id=cvtermprop.cvterm_id) join cvterm as proptype on(cvtermprop.type_id=proptype.cvterm_id) where proptype.name=? ";
     my $sth= $self->bcs_schema()->storage()->dbh()->prepare($sql);
     $sth->execute($property_name);
     while (my ($property_value, $cvterm_id, $cvterm_name) = $sth->fetchrow_array) {

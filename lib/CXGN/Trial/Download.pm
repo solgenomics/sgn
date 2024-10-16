@@ -225,7 +225,7 @@ has 'filename' => (isa => 'Str', is => 'ro',
 		   predicate => 'has_filename',
 		   required => 1,
 		  );
-has 'repetitive_measurements' => (isa => 'Str', is => 'rw', default => "averaged value" );
+has 'repetitive_measurements' => (isa => 'Str', is => 'rw', default => "average" );
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0);
 has 'field_crossing_data_order' => (isa => 'ArrayRef[Str]|Undef', is => 'rw', required => 0);
