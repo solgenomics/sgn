@@ -68,6 +68,7 @@ Can use a transposedVCF or normal VCF
 =cut
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use Data::Dumper;
@@ -171,7 +172,7 @@ if ($opt_c eq 'VCF' && !$opt_w) {
     open (my $Fout, ">", $opt_o) || die "Can't open file $opt_o\n";
     open (my $F, "<", $file) or die "Can't open file $file \n";
     my @outline;
-    my $lastcol;
+    my $lastcol = 0;
     while (<$F>) {
         if ($_ =~ m/^\##/) {
             print $Fout $_;
@@ -245,7 +246,7 @@ if ($protocol_id){
 
 my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
 my @found_organisms;
-my $h = $schema->storage->dbh()->prepare($organism_q);
+$h = $schema->storage->dbh()->prepare($organism_q);
 $h->execute($organism_species);
 while (my ($organism_id) = $h->fetchrow_array()){
     push @found_organisms, $organism_id;
@@ -341,7 +342,7 @@ if (scalar(keys %$genotype_info) > 0) {
         die;
     }
     if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-        my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+        my $warning_string = join "\n", @{$verified_errors->{warning_messages}};
         if (!$opt_A){
             print STDERR Dumper $warning_string;
             print STDERR "You can accept these warnings and continue with store if you use -A\n";
@@ -376,12 +377,9 @@ if (scalar(keys %$genotype_info) > 0) {
         }
 
         if (scalar(@mismatch_marker_names) > 0){
-            my $marker_name_error;
-            $marker_name_error .= "<br>";
             foreach my $error ( sort @mismatch_marker_names) {
-                $marker_name_error .= "$error\n";
- 	    } 
-            print STDERR Dumper $marker_name_error;
+                print STDERR "$error\n";
+	    }
 	    print STDERR "These marker names in your file are not in the selected protocol.\n";
             die; 
         }
@@ -389,7 +387,7 @@ if (scalar(keys %$genotype_info) > 0) {
         if (scalar(@protocol_match_errors) > 0){
             my $protocol_warning;
             foreach my $match_error (@protocol_match_errors) {
-                $protocol_warning .= $match_error."<br>";
+                $protocol_warning .= "$match_error\n";
             }
             if (!$opt_A){
                 print STDERR Dumper $protocol_warning;
