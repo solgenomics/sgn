@@ -195,7 +195,7 @@ has 'offset' => (
 has 'repetitive_measurements' => (
     isa => 'Str',
     is => 'rw',
-    default => sub { return 'average'; }, # can be first, last, average, all
+    default => sub { return 'average'; }, # can be first, last, average, all, sum
 );
 
 has 'single_measurements' => (
@@ -483,7 +483,20 @@ sub get_phenotype_matrix {
 		        	    else {
 		        	        $obsunit_data{$obsunit_id}->{$cvterm} = undef;
 		        	    }
-		            }elsif ($self->repetitive_measurements() eq "all") {
+		            }elsif ($self->repetitive_measurements() eq "sum") {
+                        my $sum_all_values = 0;
+                        my $sum_collect_date; 
+                        my $values_ref = $obsunit_data{$obsunit_id}->{$cvterm};
+                        if (ref($values_ref) eq 'ARRAY') {
+                            foreach my $entry (@$values_ref) {
+                                my $obs_value = $entry->[0];
+                                $sum_collect_date = $entry->[1]; #the collect_date will be the most recent or last collect_date of the trait !!
+                                $sum_all_values += $obs_value if defined $obs_value; # summing all the values, if the repetitive_values are defined
+                            }
+                            my $sum_output_val = defined $sum_collect_date ? "$sum_all_values, $sum_collect_date" : $sum_all_values;
+                            $obsunit_data{$obsunit_id}->{$cvterm} = $sum_output_val;
+                        }
+                    }elsif ($self->repetitive_measurements() eq "all") {
                         if (!$process_obs{$obsunit_id}->{$cvterm}) {
                             $process_obs{$obsunit_id}->{$cvterm} = 1;
                             # print STDERR "see all values for block wise - first, intermediate and last: $obsunit_id, $cvterm\n"; #debugging only
@@ -753,6 +766,9 @@ sub process_duplicate_measurements {
     }elsif ($self->repetitive_measurements() eq "average") {
 	    print STDERR "Averaging values ...\n";
 	    return [ $self->average_observations($trait_observations) ];
+    }elsif ($self->repetitive_measurements() eq "sum") {
+        print STDERR "add all values ...\n";
+        return [ $self->sum_observations($trait_observations) ];
     }elsif ($self->repetitive_measurements() eq "all") {
 	    print STDERR "Retrieving all values...\n";
 	    return $trait_observations;
@@ -808,6 +824,31 @@ sub average_observations {
 
     return $averaged_observation;
 		      
+}
+
+sub sum_observations {
+    my $self = shift;
+    my $observations_ref = shift || [];
+
+    if (! @$observations_ref) { return; }
+    
+    #print STDERR "add all the obs of this trait: ".Dumper($observations_ref);
+    
+    my $sum = 0;
+    my @values;
+    foreach my $v (@$observations_ref) {
+        if (! $v->{outlier} && defined($v->{value}) ) { 
+            $sum += $v->{value};
+            push @values, $v->{value};
+        }
+    }
+
+    my $summed_observation = $observations_ref->[0];
+    $summed_observation->{value} = $sum;
+    $summed_observation->{summed_from} = join(", ", @values);
+    #print STDERR "add all the obs for this trait: ".Dumper( $summed_observation );
+
+    return $summed_observation;
 }
 
 sub retrieve_trait_repeat_types {
