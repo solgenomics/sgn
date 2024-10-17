@@ -657,9 +657,25 @@ solGS.cluster = {
     return downloadLinks;
   },
 
+  displayStaticPlot: function(res, downloadLinks) {
+      var imageId = res.plot_name;
+      imageId = 'id="' + imageId + '"';
+      var plot = "<img " + imageId + ' src="' + res.cluster_plot + '">';
+  
+      jQuery("#cluster_plot").prepend('<p style="margin-top: 20px">' + downloadLinks + "</p>");
+      jQuery("#cluster_plot").prepend(plot);
+      //     // solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', downloadLinks)
+    },
+  
+
   displayClusterOutput: function (res) {
     var downloadLinks = this.createClusterDownloadLinks(res);
-    this.plotCluster(res, downloadLinks)
+   
+    if (res.cluster_type.match(/k-means/i)) {
+      this.plotCluster(res, downloadLinks)
+    } else {
+      this.displayStaticPlot(res, downloadLinks);
+    }
   
   },
 
