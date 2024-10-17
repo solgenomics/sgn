@@ -651,6 +651,8 @@ sub format_observations {
     my $dataset_excluded_outliers_ref = $self->dataset_excluded_outliers;
 
     my $de_duplicated_observations = $self->detect_multiple_measurements($observations);
+
+    print STDERR "DE DUPLICATE OBS = ".Dumper($de_duplicated_observations);
     
     foreach my $observation (@$de_duplicated_observations){
 	    my $collect_date = $observation->{collect_date};
@@ -717,9 +719,10 @@ sub detect_multiple_measurements {
 	        #print STDERR "De-duplicating measurements... ".Dumper($duplicate_measurements{$trait_id});
     
 	        my $trait_observations = $self->process_duplicate_measurements($duplicate_measurements{$trait_id});
-	        $duplicate_measurements{$trait_id} = [ $trait_observations ];
 
-	        #print STDERR "After de-duplication: ".Dumper($duplicate_measurements{$trait_id});
+		$duplicate_measurements{$trait_id} = $trait_observations;
+
+	        print STDERR "After de-duplication: ".Dumper($duplicate_measurements{$trait_id});
 	    }
     }
 
@@ -739,20 +742,20 @@ sub process_duplicate_measurements {
     my $self = shift;
     my $trait_observations = shift;
 
-    #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
+    print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
     
     if ($self->repetitive_measurements() eq "first") {
 	    print STDERR "Retrieving first value...\n";
-	    return $trait_observations->[0];
+	    return [ $trait_observations->[0] ];
     }elsif ($self->repetitive_measurements() eq "last") {
 	    print STDERR "Retrieving last value...\n";
-	    return $trait_observations->[-1] ;
+	    return [ $trait_observations->[-1] ] ;
     }elsif ($self->repetitive_measurements() eq "average") {
 	    print STDERR "Averaging values ...\n";
-	    return $self->average_observations($trait_observations);
+	    return [ $self->average_observations($trait_observations) ];
     }elsif ($self->repetitive_measurements() eq "all") {
 	    print STDERR "Retrieving all values...\n";
-        return $trait_observations;
+	    return $trait_observations;
     }else {
         print STDERR "Unknown repetitive_measurements value: " . $self->repetitive_measurements() . ". Defaulting to average value.\n";
         return $self->average_observations($trait_observations);
