@@ -144,28 +144,33 @@ my $coderef= sub  {
 	    die "Species $species_name does not exist in the database! " if !$organism_id;
 	}
 	
-	my $population_name  =  $spreadsheet->value_at($accession, "population_name");
+	my $population_names  =  $spreadsheet->value_at($accession, "population_name"); # new: can be more than one, | separated
         my $synonym_string   =  $spreadsheet->value_at($accession, "synonyms");
+	my $description      =  $spreadsheet->value_at($accession, "description");
+	
 	my @synonyms = split /\|/ , $synonym_string;
 
-	my $population;
-	if ($population_name) { 
-	    print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
-	    $population = $stock_rs->find_or_create(
-		{
-		    'me.name'        => $population_name,
-			'me.uniquename'  => $population_name,
-			'me.organism_id' => $organism_id,
-			type_id          => $population_cvterm->cvterm_id,
-		},
-		{ join => 'type' }
-		);
+	my @population_rows;
+	if ($population_names) {
+	    my @populations = split /\|/, $population_names;
+
+	    foreach my $name (@populations) { 
+		print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
+		my $row = $stock_rs->find_or_create( {
+		    'me.name'        => $name,
+		    'me.uniquename'  => $name,
+		    'me.organism_id' => $organism_id,
+		    type_id          => $population_cvterm->cvterm_id, }, { join => 'type' }
+		    );
+		push @population_rows, $row;
+	    }
 	}
 	
 	print "Find or create stock for accesssion $accession\n";
 	my $stock = $schema->resultset("Stock::Stock")->find_or_create(
 	    { organism_id => $organism_id,
 	      name  => $accession,
+	      description => $description,
 	      uniquename => $accession,
 	      type_id => $accession_cvterm->cvterm_id(),
 	    });
@@ -180,16 +185,19 @@ my $coderef= sub  {
                 sp_person_id => $sp_person_id,
             });
 
-	# the stock belongs to the population:
-        # add new stock_relationship
+	# the stock belongs to population(s):
+        # add new stock_relationship(s)
 	#
-	if ($population_name) { 
-	    print "Accession $accession is member_of population $population_name \n";
-	    $population->find_or_create_related('stock_relationship_objects', {
-		type_id => $member_of->cvterm_id(),
-		subject_id => $stock->stock_id(),
-						} );
+	if ($population_names) {
+	    foreach my $row (@population_rows) { 
+		print "Accession $accession is member_of population ".$row->uniquename();
+		$row->find_or_create_related('stock_relationship_objects', {
+		    type_id => $member_of->cvterm_id(),
+		    subject_id => $stock->stock_id(),
+                } );
+	    }
 	}
+	
         if ($synonym_string) {print "Adding synonyms #" . scalar(@synonyms) . "\n"; }
 	foreach my $syn (@synonyms) {
 	    if ($syn && defined($syn) && ($syn ne $accession) ) {
