@@ -41,10 +41,10 @@ $trial_id
 		<div class="form-group">
 			<label for="raw_data_observation_level">Observation Level:</label>
 			<select id="raw_data_observation_level">
-				<option>Plots</option>
-				<option>Plants</option>
-				<option>Subplots</option>
-				<option>Tissue_samples</option>
+				<option value="plot">Plots</option>
+				<option value="plant">Plants</option>
+				<option value="subplot">Subplots</option>
+				<option value"tissue_sample">Tissue_samples</option>
       		</select>
 		</div>
     </td>
@@ -171,9 +171,12 @@ jQuery(window).ready( function() {
     }
     
     function get_trait_data(trial_id, trait_id, observation_level) {
+		//console.log("the trial_id:" trial_id);
+		//console.log("the trait_id:" trait_id);
+		//console.log("the observation level:" observation_level);
 		return jQuery.ajax( {
     	   	url: "/brapi/v2/search/observations/",
-		    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ], observationLevels: observation_level},
+		    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ], observationLevel: [ observation_level ]},
 		    method: "POST"
 		});
     }

@@ -426,6 +426,7 @@ $dataset_id => undef
         			    <option value="first">First value</option>
         			    <option value="last">Last value</option>
         			    <option value="average" selected>Average value</option>
+                  <option value="sum">Sum values</option>
         			    <option value="all">All values</option>
 					</select>
 	      		</td>

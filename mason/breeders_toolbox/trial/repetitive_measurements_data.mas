@@ -51,10 +51,10 @@ $trial_stock_type => undef
         <div class="form-group">
             <label for="repetitive_measurement_observation_level">Observation Level: </label>
             <select class="form-control" id="repetitive_measurement_observation_level">
-                <option value="plot">Values for Plots of this Trait </option>
-                <option value="plant">Values for Plants of this Trait </option>
-                <option value="subplot">Values for Subplots of this Trait </option>
-                <option value="tissue_sample">Values for Tissue Samples from this Trait </option>
+                <option value="plot">Plots</option>
+                <option value="plant">Plants</option>
+                <option value="subplot">Subplots</option>
+                <option value="tissue_sample">Tissue Samples</option>
             </select>
         </div>
         <div class="form-group">
@@ -63,6 +63,7 @@ $trial_stock_type => undef
                 <option value="first">First value</option>
                 <option value="last">Last value</option>
                 <option value="average">Average value</option>
+                <option value="sum">Sum values</option>
                 <option value="all">All values</option>
             </select>
         </div>
@@ -201,7 +202,7 @@ jQuery(document).ready(function() {
                 observationVariableDbIds: [ trait_id ],
                 observationTimeStampRangeStart: start_date, 
                 observationTimeStampRangeEnd: end_date, 
-                observationLevels: observation_level
+                observationLevel: [ observation_level ],
             },
 		    'method': "POST"
 		});
@@ -247,7 +248,11 @@ jQuery(document).ready(function() {
                 var sum = values.reduce((a, b) => a + b, 0) ;
                 var avg = sum / values.length;
                 valueToShow = avg.toFixed(2);
-            } else if(repetitive_measurement_level === 'all') {
+            } else if(repetitive_measurement_level === 'sum') {
+                var sum = values.reduce((a,b) => a + b, 0);
+                valueToShow = sum.toFixed(2);
+            }
+            else if(repetitive_measurement_level === 'all') {
                 valueToShow = values.join(', ');
             }
             data.push([group.observationUnitName, group.germplasmName, valueToShow]);
