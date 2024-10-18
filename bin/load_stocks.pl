@@ -28,7 +28,7 @@ if the corresponding stock_property does not exist in the database it will be ad
 
 File format for infile (tab delimited):
 
-accession species_name population_name synonyms other_stock_props ...
+accession species_name population_name synonyms description other_stock_props ...
 
 Multiple synonyms can be specified, separated by the | symbol
 
