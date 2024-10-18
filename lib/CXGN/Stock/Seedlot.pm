@@ -409,13 +409,15 @@ sub list_seedlots {
 
     if ($minimum_count || $minimum_weight || $quality || $only_good_quality || $box_name) {
         if ($minimum_count) {
-	    print STDERR "Minimum count $minimum_count\n";
-            $search_criteria{'stockprops.value' }  = { '>=' => $minimum_count };
-            $search_criteria{'stockprops.type_id' }  = $current_count_cvterm_id;
+            print STDERR "Minimum count $minimum_count\n";
+            $search_criteria{'stockprops.value'} = { '<>' => 'NA' };
+            $search_criteria{'stockprops.value::numeric'}  = { '>=' => $minimum_count };
+            $search_criteria{'stockprops.type_id'}  = $current_count_cvterm_id;
         } elsif ($minimum_weight) {
-	    print STDERR "Minimum weight $minimum_weight\n";
-            $search_criteria{'stockprops.value' }  = { '>=' => $minimum_weight };
-            $search_criteria{'stockprops.type_id' }  = $current_weight_cvterm_id;
+            print STDERR "Minimum weight $minimum_weight\n";
+            $search_criteria{'stockprops.value'} = { '<>' => 'NA' };
+            $search_criteria{'stockprops.value::numeric'}  = { '>=' => $minimum_weight };
+            $search_criteria{'stockprops.type_id'}  = $current_weight_cvterm_id;
         }
 	if ($quality) {
 	    print STDERR "Quality $quality\n";

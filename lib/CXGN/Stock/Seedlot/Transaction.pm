@@ -306,9 +306,11 @@ sub update_transaction_object_id {
     return $row->stock_relationship_id();
 }
 
-sub delete {
-
-
+sub delete_transaction {
+    my $self = shift;
+    my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
+    $row->delete();
+    return $row->stock_relationship_id();
 }
 
 1;
