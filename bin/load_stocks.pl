@@ -10,13 +10,13 @@ load_stock_data.pl -H [dbhost] -D [dbname] [-t] [-s species name ] [-p stock pop
 
 =head1 COMMAND-LINE OPTIONS
 
- -H  host name
- -D  database name
+ -H host name
+ -D database name
  -i infile
  -u username for associating the new stocks 
  -s species name - must be in the database. Can also be read from the input file 
  -p population name - will create a new stock of type 'population' if doesn't exist. 
- -t  Test run . Rolling back at the end.
+ -t Test run . Rolling back at the end.
 
 =head1 DESCRIPTION
 
@@ -28,13 +28,14 @@ if the corresponding stock_property does not exist in the database it will be ad
 
 File format for infile (tab delimited):
 
-accession genus species_name population_name synonyms other_stock_props ...
+accession species_name population_name synonyms other_stock_props ...
 
 Multiple synonyms can be specified, separated by the | symbol
 
 =head1 AUTHORS
 
 Naama Menda (nm249@cornell.edu) - April 2013
+
 Lukas Mueller (lam87@cornell.edu) - minor edits, November 2022
 
 =cut
@@ -57,20 +58,23 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use Getopt::Long;
 
-my ( $dbhost, $dbname, $file, $population_name, $species,  $username, $test );
+my ( $dbhost, $dbname, $file, $population_name, $species,  $username, $password, $test );
 GetOptions(
     'i=s'        => \$file,
     'p=s'        => \$population_name,
     's=s'        => \$species,
     'u=s'        => \$username,
+    'P=s'        => \$password,
     't'          => \$test,
     'dbname|D=s' => \$dbname,
     'dbhost|H=s' => \$dbhost,
 );
 
 
-my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
+my $dbh = CXGN::DB::Connection->new( { dbhost=>$dbhost,
 				      dbname=>$dbname,
+				      dbuser=>'postgres',
+				      dbpass=>$password,
 				      dbargs => {AutoCommit => 1,
 						 RaiseError => 1}
 				    }
@@ -111,8 +115,6 @@ print STDERR "Stock property CV ID = $stock_property_cv_id\n";
 print "Finding/creating cvterm for population\n";
 my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
 
-
-
 # the cvterm for the accession
 #
 my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
@@ -129,7 +131,9 @@ my @columns = $spreadsheet->column_labels();
 
 my $syn_count;
 
-# accession genus species population_name synonyms
+print STDERR "COLUMN LABELS = ".join(", ", @columns)."\n";
+
+# accession species population_name synonyms
 #
 my $coderef= sub  {
     foreach my $accession (@rows ) {
