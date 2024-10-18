@@ -145,6 +145,7 @@ $editable_stock_props_definitions
                                 <td>population_name</td>
                                 <td>organization_name</td>
                                 <td>synonym</td>
+				<td>description</td>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
 %                               print "<td>$editable_stockprop</td>";
 % }
