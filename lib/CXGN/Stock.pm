@@ -1613,18 +1613,23 @@ sub _store_population_relationship {
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
 
-    print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
-    my $population = $schema->resultset("Stock::Stock")->find_or_create({
-        uniquename => $self->population_name(),
-        name => $self->population_name(),
-        organism_id => $self->organism_id(),
-        type_id => $population_cvterm_id,
-    });
-    $self->stock->find_or_create_related('stock_relationship_subjects', {
-        type_id => $population_member_cvterm_id,
-        object_id => $population->stock_id(),
-        subject_id => $self->stock_id(),
-    });
+    my @populations = split /\|/, $self->population_name();
+
+    foreach my $population_name (@populations) { 
+    
+	print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
+	my $population_row = $schema->resultset("Stock::Stock")->find_or_create({
+	    uniquename => $population_name,
+	    name => $population_name,
+	    organism_id => $self->organism_id(),
+	    type_id => $population_cvterm_id,
+        });
+	$self->stock->find_or_create_related('stock_relationship_subjects', {
+	    type_id => $population_member_cvterm_id,
+	    object_id => $population_row->stock_id(),
+	    subject_id => $self->stock_id(),
+        });
+    }
 }
 
 ##Move to a population child object##
