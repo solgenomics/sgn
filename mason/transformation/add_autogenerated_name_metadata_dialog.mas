@@ -117,19 +117,25 @@ jQuery(document).ready(function(){
     })
 
     function name_attributes_form () {
-        var number_of_attributes = jQuery('#number_of_attributes').val();
+        let number_of_attributes = parseInt(jQuery('#number_of_attributes').val());
+        number_of_attributes = number_of_attributes + 1;
 
-        var html = '<table class="table table-bordered" id="name_attributes_table"><thead><tr><th>Attribute</th><th></th></tr></thead><tbody>';
-        for(var i=0; i<number_of_attributes; i++){
+        let html = '<table class="table table-bordered" id="name_attributes_table"><thead><tr><th>Attribute Order</th><th>Select Attribute</th></tr></thead><tbody>';
+        for(let i=1; i<number_of_attributes; i++){
             html = html + '<tr><td>' + i + '</td><td><div name="attribute_selects" id="attribute_select_' +i+ '"></div></td><td></td></tr>';
         };
         html = html + '</tbody></table>';
 
         jQuery('#name_attributes_form_div').html(html);
 
+        let attribute_list = jQuery('#name_attributes_table')
+            .find("div")
+            .map(function() { return this.id; })
+            .get();
+        for(let i=0; i<attribute_list.length; i++){
+            get_select_box('related_attributes', attribute_list[i], { });
+        };
     };
-
-
 
 });
 

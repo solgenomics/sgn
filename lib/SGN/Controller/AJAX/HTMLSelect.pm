@@ -2355,4 +2355,30 @@ sub _clean_inputs {
 }
 
 
+sub get_related_attributes_select : Path('/ajax/html/select/related_attributes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "related_attributes_select";
+    my $name = $c->req->param("name") || "related_attributes_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my @related_attributes;
+    push @related_attributes, ["", "Select Attribute"];
+    push @related_attributes, ['breeding_program', 'breeding program'];
+    push @related_attributes, ['transformation_project', 'transformation project'];
+    push @related_attributes, ['transfomation_id', 'transformation id'];
+    push @related_attributes, ['vector_construct', 'vector construct'];
+    push @related_attributes, ['plant_material', 'plant material'];
+    push @related_attributes, ['text', 'text'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@related_attributes,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
 1;
