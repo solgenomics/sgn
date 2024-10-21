@@ -467,11 +467,6 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $transaction_description = $c->req->param("seedlot_transaction_description");
     my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
-    if (!$weight && !$amount){
-        $c->stash->{rest} = {error=>'A seedlot must have either a weight or an amount.'};
-        $c->detach();
-    }
-
     if (!$timestamp){
         $c->stash->{rest} = {error=>'A seedlot must have a timestamp for the transaction.'};
         $c->detach();
