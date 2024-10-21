@@ -68,6 +68,7 @@ Can use a transposedVCF or normal VCF
 =cut
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use Data::Dumper;
@@ -171,7 +172,7 @@ if ($opt_c eq 'VCF' && !$opt_w) {
     open (my $Fout, ">", $opt_o) || die "Can't open file $opt_o\n";
     open (my $F, "<", $file) or die "Can't open file $file \n";
     my @outline;
-    my $lastcol;
+    my $lastcol = 0;
     while (<$F>) {
         if ($_ =~ m/^\##/) {
             print $Fout $_;
@@ -245,7 +246,7 @@ if ($protocol_id){
 
 my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
 my @found_organisms;
-my $h = $schema->storage->dbh()->prepare($organism_q);
+$h = $schema->storage->dbh()->prepare($organism_q);
 $h->execute($organism_species);
 while (my ($organism_id) = $h->fetchrow_array()){
     push @found_organisms, $organism_id;
@@ -270,14 +271,18 @@ my $parser = CXGN::Genotype::ParseUpload->new({
 });
 
 $parser->load_plugin($opt_c);
-$parser->parse_with_iterator();
+my $parser_return = $parser->parse_with_iterator();
+if ($parser->get_parse_errors()) {
+    my $parse_errors = $parser->get_parse_errors();
+    print STDERR Dumper $parse_errors;
+    die("parse errors");
+}
 
 my $project_id;
 my $protocol = $parser->protocol_data();
 my $observation_unit_names_all = $parser->observation_unit_names();
 $protocol->{'reference_genome_name'} = $reference_genome_name;
 $protocol->{'species_name'} = $organism_species;
-
 
 my $vcf_genotyping_type = $opt_T ? $opt_T : 'vcf_snp_genotyping';
 # my $genotyping_type;
@@ -337,11 +342,58 @@ if (scalar(keys %$genotype_info) > 0) {
         die;
     }
     if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-        my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+        my $warning_string = join "\n", @{$verified_errors->{warning_messages}};
         if (!$opt_A){
             print STDERR Dumper $warning_string;
             print STDERR "You can accept these warnings and continue with store if you use -A\n";
             die;
+        }
+    }
+
+    my @protocol_match_errors;
+    if ($protocol_id) {
+        my $new_marker_data = $protocol->{markers};
+        my $stored_protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id
+        });
+        my $stored_markers = $stored_protocol->markers();
+
+        my @all_stored_markers = keys %$stored_markers;
+        my %compare_marker_names = map {$_ => 1} @all_stored_markers;
+        my @mismatch_marker_names;
+        while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+            while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
+                if (exists($compare_marker_names{$marker_name})) {
+                    while (my ($key, $value) = each %$new_marker_details) {
+                        if ($value ne ($stored_markers->{$marker_name}->{$key})) {
+                            push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                        }
+                    }
+                } else {
+                    push @mismatch_marker_names, $marker_name;
+                }
+            }
+        }
+
+        if (scalar(@mismatch_marker_names) > 0){
+            foreach my $error ( sort @mismatch_marker_names) {
+                print STDERR "$error\n";
+	    }
+	    print STDERR "These marker names in your file are not in the selected protocol.\n";
+            die; 
+        }
+
+        if (scalar(@protocol_match_errors) > 0){
+            my $protocol_warning;
+            foreach my $match_error (@protocol_match_errors) {
+                $protocol_warning .= "$match_error\n";
+            }
+            if (!$opt_A){
+                print STDERR Dumper $protocol_warning;
+		print STDERR "Protocol match error\n";
+                die;
+            }
         }
     }
 
