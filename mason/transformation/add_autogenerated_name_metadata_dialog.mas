@@ -140,7 +140,7 @@ jQuery(document).ready(function(){
     };
 
     jQuery(document).on('change', "select[name='selected_attribute']", function() {
-        var div_id = '#' + this.id;
+        let div_id = '#' + this.id;
         let attribute = jQuery(div_id).val();
         if (attribute == 'text') {
             attribute_string(div_id, div_id + '_string');
@@ -148,10 +148,8 @@ jQuery(document).ready(function(){
     });
 
     function attribute_string(div_id, select_id){
-        var attribute_text = jQuery(div_id).val();
-        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th></th></tr></thead><tbody>';
-        html = html + '<tr><td><input class="form-control"  name ="select_id" id="select_id" value="" placeholder="Please enter text string"/></td></tr>';
-        html = html + '</tbody></table>';
+        let attribute_text = jQuery(div_id).val();
+        let html = '<td><input class="form-control"  name ="select_id" id="select_id" value="" placeholder="Please enter text string"/></td>';
         jQuery(select_id).html(html);
 
     };
