@@ -274,7 +274,7 @@ sub search {
     }
 
     my ($or_conditions, $and_conditions);
-    $and_conditions->{'me.stock_id'} = { '>' => 0 };
+    push @{$and_conditions->{'me.stock_id'}}, { '>' => 0 };
 
     my @vectorprop_filtered_stock_ids;
 
@@ -360,6 +360,7 @@ sub search {
 	    { 'me.name'          => {'ilike' => $start.$any_name.$end} },
 	    { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
 	    { 'me.description'   => {'ilike' => $start.$any_name.$end} },
+	  
 
 	    { -and => {
 		   'stockprops.value'  => {'ilike' => $start.$any_name.$end},
@@ -369,7 +370,7 @@ sub search {
 
 	print STDERR "VECTORPROP FILTERED STOCK IDS = ".Dumper(\@vectorprop_filtered_stock_ids);
 	if (@vectorprop_filtered_stock_ids) {
-	    push @$or_conditions, { 'me.stock_id' => { '-in' => [ @vectorprop_filtered_stock_ids ] } };
+	    push @{ $and_conditions->{'me.stock_id'}}, { '-in' => [ @vectorprop_filtered_stock_ids ]};
 	}
 	
     } else {
@@ -400,10 +401,10 @@ sub search {
     }
 
    
-
+    
     my $stock_type_search = 0;
     if ($stock_type_id) {
-        $and_conditions->{'me.type_id'} = $stock_type_id;
+        $and_conditions->{'me.type_id'} =>  $stock_type_id;
         $stock_type_search = $stock_type_id;
     }
 
@@ -436,70 +437,8 @@ sub search {
     my $stock_join;
     my $nd_experiment_joins = [];
 
-
-    # if (scalar(@location_name_array)>0){
-    #     push @$nd_experiment_joins, 'nd_geolocation';
-    #     foreach (@location_name_array){
-    #         if ($_){
-    #             push @{$and_conditions->{ 'lower(nd_geolocation.description)' }}, { -like  => lc($_) };
-    #         }
-    #     }
-    # }
-
-    # if (scalar(@trial_name_array)>0 || scalar(@trial_id_array)>0 || scalar(@year_array)>0 || scalar(@program_id_array)>0){
-    #     push @$nd_experiment_joins, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } };
-    #     foreach (@trial_name_array){
-    #         if ($_){
-    #             push @{$and_conditions->{ 'lower(project.name)' }}, { -like  => lc($_) } ;
-    #         }
-    #     }
-    #     foreach (@trial_id_array){
-    #         if ($_){
-    #             push @{$and_conditions->{ 'project.project_id' }}, $_ ;
-    #         }
-    #     }
-    #     my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id;
-    #     foreach (@year_array){
-    #         if ($_){
-    #             $and_conditions->{ 'projectprops.type_id'} = $year_type_id;
-    #             push @{$and_conditions->{ 'lower(projectprops.value)' }}, { -like  => lc($_) } ;
-    #         }
-    #     }
-    #     foreach (@program_id_array){
-    #         if ($_){
-    #             push @{$and_conditions->{ 'project_relationship_subject_projects.object_project_id' }}, $_ ;
-    #         }
-    #     }
-    # }
-
-    # foreach (@genus_array){
-    #     if ($_){
-    #         push @{$and_conditions->{ 'lower(organism.genus)' }}, { -like  => lc($_) } ;
-    #     }
-    # }
-
-    # foreach (@species_array){
-    #     if ($_){
-    #         push @{$and_conditions->{ 'lower(organism.species)' }}, { -like  => lc($_) } ;
-    #     }
-    # }
-
-    # foreach (@crop_name_array){
-    #     if ($_){
-    #         push @{$and_conditions->{ 'lower(organism.common_name)' }}, { -like  => lc($_) } ;
-    #     }
-    # }
-
-
-    #if ($stock_type_search == $stock_type_id){
-    #    $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
-    #} else {
-    #    $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
-    #}
-
-
-    print STDERR "OR CONDITIONS: ".Dumper($or_conditions);
-    print STDERR "AND CONDITIONS: ".Dumper($and_conditions);
+#    print STDERR "OR CONDITIONS: ".Dumper($or_conditions);
+#    print STDERR "AND CONDITIONS: ".Dumper($and_conditions);
     
     $schema->storage->debug(1);
     my $operator = $default_operator ? $default_operator : (scalar(@vectorprop_filtered_stock_ids)>0 ? "or" : "and");
@@ -525,6 +464,8 @@ sub search {
     
     if ($using_vectorprop_filter == 0 || ($using_vectorprop_filter = 1 && scalar(@vectorprop_filtered_stock_ids)>0 )){  
 
+	print STDERR "CONTINUING QUERY...\n";
+	
         my $rs = $schema->resultset("Stock::Stock")->search(
         $search_query,
         {
