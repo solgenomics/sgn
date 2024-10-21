@@ -1,7 +1,7 @@
 
 package SGN::Controller::Cvterm;
 
-use CXGN::Chado::Cvterm; #DEPRECATE this !! 
+#use CXGN::Chado::Cvterm; #DEPRECATE this !! 
 use CXGN::Cvterm;
 
 use Moose;
