@@ -47,6 +47,7 @@ my $db_name     = $cvterm->db->name;
 my $accession   = $cvterm->accession;
 my $cvterm_name = $cvterm->name;
 my $definition  = $cvterm->definition;
+my $is_variable = $cvterm->is_variable;
 my $comment     = '' ;#$cvterm->comment;
 #$stockref->{props} (hash of arrayrefs of cvtermprops. Keys = prop name, value = prop value)
 my $editable_cvterm_props_string = $cvtermref->{editable_cvterm_props};
@@ -165,6 +166,7 @@ my $edit_privs = $curator ;
 
 % my $props_subtitle = $edit_privs ? "[<a id=\"cvterm_add_props\" href=\"javascript:cvtermprops_addPropDialog()\">Add...</a>]" : "[Add]";
 
+% if ($is_variable) { 
 <&| /page/info_section.mas, title => "Trait Properties" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /chado/cvtermprops.mas,
        cv_name    => 'trait_property',
@@ -176,11 +178,17 @@ my $edit_privs = $curator ;
 	editable   => \@editable_cvterm_props  &>
 </&>
 
-<h4>Add this term to a list</h4>
+% }
+% else {
+    <&| /page/info_section.mas, title => "Trait Properties" , collapsible=> 1, is_collapsed => 1, is_subsection => 1, &>
+    No properties for traits. Trait properties can be set for variables only.
+    </&>
+
+%}
 
 <div id="cvterm_id" style="display:none" ><% $cvterm_name %>|<% $accession %></div>
 
-<&| /page/info_section.mas, title=>"Add to list", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Add this term to a list", collapsible=>1, collapsed=>1 &>
 <div id="paste_to_list">
 LOAD...
 </div>
