@@ -442,6 +442,7 @@ sub _format_data_type {
             "ordinal" => "Ordinal",
             "text" => "Text",
 	    "photo" => "Photo",
+	    "multicat" => "Multicat",
         );
 
         $dataType = $formats{lc $value} ? $formats{lc $value} : $dataType;
