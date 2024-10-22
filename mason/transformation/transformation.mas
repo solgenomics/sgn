@@ -12,7 +12,7 @@ $updated_status_type => undef
 $updated_status_string => undef
 $identifier_link => undef
 $project_link
-$prefix => undef
+$name_format => undef
 $program_id
 $program_name
 </%args>
@@ -35,7 +35,7 @@ $program_name
                         <tr><td><b>Vector Construct</b></td><td><%$vector_construct%></td></tr>
                         <tr><td><b>Notes</b></td><td><%$transformation_notes%></td></tr>
                         <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
-                        <tr><td><b>Prefix for Transformant Names</b></td><td><%$prefix%></td></tr>
+                        <tr><td><b>Name Format for Transformants</b></td><td><%$name_format%></td></tr>
 %if ($updated_status_type) {
                         <tr><td><b>Status</b></td><td><%$updated_status_type%></td></tr>
                         <tr><td><b>Updated Status Info</b></td><td><%$updated_status_string%></td></tr>
@@ -89,7 +89,7 @@ $program_name
     </div>
 </&>
 
-<& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number, prefix => $prefix, program_id => $program_id, program_name => $program_name &>
+<& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number, name_format => $name_format, program_id => $program_id, program_name => $program_name &>
 <& /transformation/add_transformants_using_list_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, program_name => $program_name &>
 
 <script>
