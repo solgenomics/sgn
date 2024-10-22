@@ -100,7 +100,7 @@ sub _cvtermprops {
     my $properties ;
     if ($cvterm) {
 	my $bcs_cvterm = $cvterm->cvterm;
-	if (!$bcs_cvterm) { return undef ; } 
+	if (!$bcs_cvterm) { return; } 
         my $cvtermprops = $bcs_cvterm->search_related("cvtermprops");
         while ( my $prop =  $cvtermprops->next ) {
             push @{ $properties->{$prop->type->name} } ,   $prop->value ;
