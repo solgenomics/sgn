@@ -1241,8 +1241,19 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('MultipleTrialDesignExcelFormat');
+    $parser->load_plugin('MultipleTrialDesignGeneric');
     $parsed_data = $parser->parse();
+
+    print STDERR "\n\n\n\n===> PARSED TRIAL DATA:\n";
+    print STDERR Dumper $parsed_data;
+    print STDERR "\nErrors:\n";
+    print STDERR Dumper $parser->get_parse_errors();
+    print STDERR "\nWarnings:\n";
+    print STDERR Dumper $parser->get_parse_warnings();
+    print STDERR "\n\n\n\n";
+
+    $c->stash->{rest} = {errors => "Upload not implemented"};
+    return;
 
     # print STDERR "check the parsed data : \n" . Dumper($parsed_data); 
     if (!$parsed_data) {
