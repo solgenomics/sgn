@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::People::Person;
 use Data::Dumper;
 use CXGN::Transformation::Transformation;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -33,8 +34,12 @@ sub transformation_page : Path('/transformation') Args(1) {
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
     my $info = $transformation_obj->get_transformation_info();
-    my $plant_material = qq{<a href="/stock/$info->[0]->[0]/view">$info->[0]->[1]</a>};
-    my $vector_construct = qq{<a href="/stock/$info->[0]->[2]/view">$info->[0]->[3]</a>};
+    my $plant_material_id = $info->[0]->[0];
+    my $plant_material_name = $info->[0]->[1];
+    my $vector_id = $info->[0]->[2];
+    my $vector_name = $info->[0]->[3];
+    my $plant_material = qq{<a href="/stock/$plant_material_id/view">$plant_material_name</a>};
+    my $vector_construct = qq{<a href="/stock/$vector_id/view">$vector_name</a>};
     my $transformation_notes = $info->[0]->[4];
 
     my $updated_status_type = $info->[0]->[5];
@@ -82,6 +87,14 @@ sub transformation_page : Path('/transformation') Args(1) {
         $identifier_link = qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
     }
 
+    my $source_info_hash = {};
+    $source_info_hash->{'breedingProgram'} = $program_name;
+    $source_info_hash->{'transformationProject'} = $project_name;
+    $source_info_hash->{'transformationID'} = $transformation_name;
+    $source_info_hash->{'vectorConstruct'} = $vector_name;
+    $source_info_hash->{'plantMaterial'} = $plant_material_name;
+    my $source_info_string = encode_json $source_info_hash;
+
     $c->stash->{transformation_id} = $transformation_id;
     $c->stash->{transformation_name} = $transformation_name;
     $c->stash->{plant_material} = $plant_material;
@@ -95,6 +108,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{program_id} = $program_id;
     $c->stash->{program_name} = $program_name;
     $c->stash->{name_format} = $name_format;
+    $c->stash->{source_info} = $source_info_string;
     $c->stash->{template} = '/transformation/transformation.mas';
 
 }
