@@ -18,6 +18,7 @@ $status_display => undef
 $user_role
 $project_id
 $activity_type
+$source_info => undef
 
 </%args>
 
@@ -273,6 +274,7 @@ jQuery(document).ready( function() {
                 'notes': notes,
                 'activity_type': "<%$activity_type%>",
                 'program_name': "<%$program_name%>",
+                'source_info': '<%$source_info%>'
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
