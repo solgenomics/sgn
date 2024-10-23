@@ -501,7 +501,7 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
                         my $generated_count = 'Selected'. ":"." ".$input;
                         my $obsoleted_count = 'Obsoleted'. ":"." ".$obsoleted_transformant_count;
                         my $current_number = 'Current Number'. ":"." ".($input-=$obsoleted_transformant_count);
-                        push @details, ($generated_count, $obsoleted_count, $current_number);
+                        push @details, ($current_number, $generated_count, $obsoleted_count);
                         my $details_string = join("<br>", @details);
                         push @summary, $details_string;
                     } else {
