@@ -12,6 +12,7 @@ $material_type => undef
 $project_id => undef
 $activity_type => undef
 $program_name => undef
+$source_info => undef
 
 </%args>
 
@@ -274,6 +275,7 @@ $(window).ready( function() {
                 'notes': notes,
                 'activity_type': activity_type,
                 'program_name': program_name,
+                'source_info': '<%$source_info%>'
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

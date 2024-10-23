@@ -7,6 +7,8 @@ use Data::Dumper;
 use CXGN::TrackingActivity::TrackingIdentifier;
 use CXGN::Stock::Status;
 use CXGN::People::Person;
+use CXGN::Transformation::Transformation;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -138,6 +140,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $tracking_project_id;
     my $activity_type;
     my $program_name;
+    my $source_info_string;
 
     if ($identifier_name) {
         my $identifier_rs = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name});
@@ -148,7 +151,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
         } else {
             $identifier_id = $identifier_rs->stock_id();
         }
-        
+
         my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
         my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
         $program_name = $associated_projects->[0]->[3];
@@ -156,6 +159,21 @@ sub record_activity :Path('/activity/record') :Args(0) {
         $material_stock_id = $material_info->[0]->[2];
         $material_name = $material_info->[0]->[3];
         $material_type = $material_info->[0]->[4];
+
+        if ($material_type eq 'transformation') {
+            my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$material_stock_id});
+            my $info = $transformation_obj->get_transformation_info();
+            my $plant_material_name = $info->[0]->[1];
+            my $vector_name = $info->[0]->[3];
+            my $transformation_project_name = $associated_projects->[0]->[5];
+            my $source_info_hash = {};
+            $source_info_hash->{'breedingProgram'} = $program_name;
+            $source_info_hash->{'transformationProject'} = $transformation_project_name;
+            $source_info_hash->{'transformationID'} = $material_name;
+            $source_info_hash->{'vectorConstruct'} = $vector_name;
+            $source_info_hash->{'plantMaterial'} = $plant_material_name;
+            $source_info_string = encode_json $source_info_hash;
+        }
 
         $tracking_project_id = $associated_projects->[0]->[0];
         my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
@@ -194,6 +212,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     $c->stash->{project_id} = $tracking_project_id;
     $c->stash->{activity_type} = $activity_type;
     $c->stash->{program_name} = $program_name;
+    $c->stash->{source_info} = $source_info_string;
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
 }
