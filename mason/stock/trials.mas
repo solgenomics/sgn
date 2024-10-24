@@ -4,16 +4,50 @@ $stock_id
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<table class="table table-hover table-bordered" id="trial_summary_data">
-<thead>
-  <tr>
-    <th>Trial name</th>
-    <th>Location</th>
-    <th>Details</th>
-  </tr>
-</thead>
+<div class="panel panel-default">
+	<div class="panel-body panel-body-sm">
+		<b> Field Trials </b>
+		<br/> <br/>
+		<table class="table table-hover table-bordered" id="trial_summary_data">
+			<thead>
+			  <tr>
+				<th>Trial name</th>
+				<th>Location</th>
+				<th>Details</th>
+			  </tr>
+			</thead>
+		</table>
+	</div>
+</div>
 
-</table>
+<div class="panel panel-default">
+	<div class="panel-body panel-body-sm">
+		<b> Breeding Programs </b>
+		<br/> <br/>
+		<table class="table table-hover table-bordered" id="breeding_program_usage_data">
+			<thead>
+			  <tr>
+				<th>Program Name</th>
+			  </tr>
+			</thead>
+		</table>
+	</div>
+</div>
+
+<div class="panel panel-default">
+	<div class="panel-body panel-body-sm">
+		<b> Analyses </b>
+		<br/> <br/>
+		<table class="table table-hover table-bordered" id="analysis_usage_data">
+			<thead>
+			  <tr>
+				<th>Analysis</th>
+				<th>Details</th>
+			  </tr>
+			</thead>
+		</table>
+	</div>
+</div>
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
