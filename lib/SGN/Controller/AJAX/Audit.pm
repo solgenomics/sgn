@@ -65,7 +65,7 @@ sub retrieve_table_names : Path('/ajax/audit/retrieve_table_names'){
     $c->stash->{rest} = {
         result1 => $json_string,
         };
-
+};
 
 sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     my $self = shift;
@@ -88,23 +88,24 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
 
     
     my @matches;
-    my $j = 0; #this is to make sure only matched audits go into the matches array
     for (my $i = 0; $i<$counter; $i++){
         my $operation = $all_audits[$i][1];
-        my $stock_json_string = new JSON;
-        if($operation eq "DELETE"){
-            $stock_json_string = decode_json($before[$i]);
-        }else{
-            $stock_json_string = decode_json($after[$i]);
+        my $stock_json_string;
+	eval {
+            if ($operation eq "DELETE"){
+                $stock_json_string = decode_json($before[$i]);
+            } else {
+                $stock_json_string = decode_json($after[$i]);
+            }
+	};
+	if ($@) {
+	    warn "Failed to decode JSON at index $i: $@";
+            next; # Skip this iteration in case of error
         }
         my $desired_uniquename = $stock_json_string->{'uniquename'};
         if($stock_uniquename eq $desired_uniquename){
-            $matches[$j] = $all_audits[$i];
-            $j++;
+            push @matches, $all_audits[$i];
         }
-        #for(my $num = 0; $num<$j; $num++){
-         #   print STDERR Dumper($matches[$num])."\n";
-        #}
     }
     print STDERR Dumper(@matches)."\n";
 
@@ -171,4 +172,3 @@ sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
         match_project => $match_trial_json,
         }
 };
-}
