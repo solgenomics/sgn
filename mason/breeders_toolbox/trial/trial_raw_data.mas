@@ -25,58 +25,86 @@ $trial_id
 
 </style>
 
-<h4 style= "text-align:center">Choose trait, observation level and data range to display</h4>
-<br/>
+<div class="well well-sm" id="phenotypes_recorded_observation_level">
+	<center><h4>Phenotypes recorded across observation levels</h4></center></hr>
+	<div id="phenotypes_measured_per_observation_level">
+		<div class="row">
+			<div class="col-sm-8">
+				<form class="form-horizontal">
+				<table id="phenotypes_measured_per_observation_level" style= "text-align:left; width:100%;">
+					<thead>
+						<tr>
+							<th>Observation Level </th>
+							<th>Number of Phenotypes Measured</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td>Plot</td><td id="phenotypes_per_plot"></td></tr>
+						<tr><td>Plant</td><td id="phenotypes_per_plant"></td></tr>
+						<tr><td>Sub plot</td><td id="phenotypes_per_subplot"></td></tr>
+						<tr><td>Tissue sample</td><td id="phenotypes_per_tissue_sample"></td></tr>
+					</tbody>
+				</table>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
 
-<table>
-<tr>
-    <td>
-		<div class="form-group">
-			<label for="trait_selector_for_raw_data"> Trait:</label>
-    	  <div id="trait_selector_for_raw_data">[Loading...]</div>
-		</div>
-    </td>
-    <td width="30"></td>
-    <td>
-		<div class="form-group">
-			<label for="raw_data_observation_level">Observation Level:</label>
-			<select id="raw_data_observation_level">
-				<option value="plot">Plots</option>
-				<option value="plant">Plants</option>
-				<option value="subplot">Subplots</option>
-				<option value"tissue_sample">Tissue_samples</option>
-      		</select>
-		</div>
-    </td>
-</tr>
-<tr>
-<!--
-    <td>
-		<div class="form-group">
-			<label for="raw_data_start_date">Start Date:</label>
-			<input type="text" id="raw_data_start_date" title="raw_data_start_date"/>
-		</div>
-	</td>
-	<td width="30"></td>
-    <td>
-		<div class="form-group">
-			<label for="raw_data_end_date"> End Date:</label>
-			<input type="text" id="raw_data_end_date" title="raw_data_end_date"/>
-		</div>
-    </td>
--->
-</tr>
-<tr>
-    <td colspan="4", style="text-align: center;">
-      <button id="raw_data_trait_select_button" class="btn btn-primary">Submit</button>
-    </td>
-</tr>
-</table>
+<div class="well well-sm" id="raw_phenotypic_data">
+	<h4 style= "text-align:center">Choose trait, observation level and data range to display</h4>
+	<br/>
 
-<br />
+	<table>
+	<tr>
+	    <td>
+			<div class="form-group">
+				<label for="trait_selector_for_raw_data"> Trait:</label>
+	    	  <div id="trait_selector_for_raw_data">[Loading...]</div>
+			</div>
+	    </td>
+	    <td width="30"></td>
+	    <td>
+			<div class="form-group">
+				<label for="raw_data_observation_level">Observation Level:</label>
+				<select id="raw_data_observation_level">
+					<option value="plot">Plots</option>
+					<option value="plant">Plants</option>
+					<option value="subplot">Subplots</option>
+					<option value"tissue_sample">Tissue_samples</option>
+	      		</select>
+			</div>
+	    </td>
+	</tr>
+	<tr>
+	<!--
+	    <td>
+			<div class="form-group">
+				<label for="raw_data_start_date">Start Date:</label>
+				<input type="text" id="raw_data_start_date" title="raw_data_start_date"/>
+			</div>
+		</td>
+		<td width="30"></td>
+	    <td>
+			<div class="form-group">
+				<label for="raw_data_end_date"> End Date:</label>
+				<input type="text" id="raw_data_end_date" title="raw_data_end_date"/>
+			</div>
+	    </td>
+	-->
+	</tr>
+	<tr>
+	    <td colspan="4", style="text-align: center;">
+	      <button id="raw_data_trait_select_button" class="btn btn-primary">Submit</button>
+	    </td>
+	</tr>
+	</table>
 
-<table id="raw_trait_data_table">
-</table>
+	<br />
+
+	<table id="raw_trait_data_table">
+	</table>
+</div>
 
 <script>
 
@@ -142,6 +170,60 @@ jQuery(window).ready( function() {
 	
     );
 	*/
+
+	update_phenotype_measures_table(<% $trial_id %>);
+
+	function update_phenotype_measures_table(trial_id) {
+    	var observation_levels = ['plot', 'plant', 'subplot', 'tissue_sample'];
+    	for (let observation_level of observation_levels) {
+    	    get_observation_variable_count(trial_id, observation_level)
+    	    .then(function(count) {
+				//alert('see the phenotype count for in ' + observation_level + ': '+ count);
+    	        jQuery('#phenotypes_per_' + observation_level).html(count);
+    	    });
+    	}
+	}
+
+	function get_observation_variable_count(trial_id, observation_level) {
+    	return jQuery.ajax({
+    	    url: "/brapi/v2/search/observations",
+    	    method: "POST",
+    	    data: { studyDbIds: [trial_id], observationLevel: [observation_level] }
+    	})
+    	.then(function(result) {
+			//console.log('Search Results DbId:', result.result.searchResultsDbId);
+    	    var searchResultsDbId = result.result.searchResultsDbId;
+    	    return fetch_observations(searchResultsDbId);
+    	})
+    	.then(function(observations) {
+    	    var variableIds = observations.map(function(obs) { return obs.observationVariableDbId; });
+    	    var unique_obs_VariableIds = Array.from(new Set(variableIds));
+    	    return unique_obs_VariableIds.length;
+    	});
+	}
+
+	function fetch_observations(searchResultsDbId) {
+    	var observations = [];
+    	function fetchPage(page) {
+    	    return jQuery.ajax({
+    	        url: "/brapi/v2/search/observations/" + searchResultsDbId,
+    	        method: "GET",
+    	        data: { page: page, pageSize: 10000 }
+    	    })
+    	    .then(function(result) {
+    	        observations = observations.concat(result.result.data);
+    	        var currentPage = result.metadata.pagination.currentPage;
+    	        var totalPages = result.metadata.pagination.totalPages;
+    	        if (currentPage < totalPages - 1) {
+    	            return fetchPage(currentPage + 1);
+    	        } else {
+					//console.log('All pages fetched. Total observations:', observations.length);
+    	            return observations;
+    	        }
+    	    });
+    	}
+    	return fetchPage(0);
+	}
 
     function create_trait_menu_for_trial(trial_id) {
         return jQuery.ajax( {
