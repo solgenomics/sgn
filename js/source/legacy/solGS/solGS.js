@@ -909,6 +909,14 @@ solGS.checkPageType = function () {
   return pageType;
 };
 
+
+solGS.blockSearchInterface = function () {
+  var msg = `<div class="row"><div class="col-md-4 col-md-offset-4  bg-info">` 
+  + `<p>This database has no genotype data.Therefore, solGS is not available for this website.</p><p>`
+  + `Please load genotype data to the database and try again.</p></div></div>`;
+	jQuery("#search_interfaces").html(msg).show();
+};
+
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function (a, b) {
   return this.each(function () {
