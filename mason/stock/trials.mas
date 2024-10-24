@@ -7,7 +7,7 @@ $type_name
 
 <div class="panel panel-default">
 	<div class="panel-body panel-body-sm">
-		<b> Field Trials </b>
+		<b> Trials </b>
 		<br/> <br/>
 		<table class="table table-hover table-bordered" id="trial_summary_data">
 			<thead>
@@ -21,6 +21,7 @@ $type_name
 	</div>
 </div>
 
+% if ($type_name eq "accession") {
 <div class="panel panel-default">
 	<div class="panel-body panel-body-sm">
 		<b> Breeding Programs </b>
@@ -35,7 +36,6 @@ $type_name
 	</div>
 </div>
 
-% if ($type_name eq "accession") {
 <div class="panel panel-default">
 	<div class="panel-body panel-body-sm">
 		<b> Analyses </b>
@@ -61,6 +61,7 @@ $type_name
                 'destroy': true,
                 'ajax': '/stock/'+ <% $stock_id %> + '/datatables/trials',
             });
+% if ($type_name eq "accession") {
 			jQuery('#breeding_program_usage_data').DataTable( {
                 'destroy': true,
                 'ajax': '/stock/'+ <% $stock_id %> + '/datatables/breeding_programs',
@@ -69,6 +70,7 @@ $type_name
                 'destroy': true,
                 'ajax': '/stock/'+ <% $stock_id %> + '/datatables/stored_analyses',
             });
+% }
         });
     });
 
