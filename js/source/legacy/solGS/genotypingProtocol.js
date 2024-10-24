@@ -29,7 +29,6 @@ solGS.genotypingProtocol= {
 			url: '/get/genotyping/protocols/',
 		});
 
-
 		return protocolsQuery;
 
     },
@@ -69,7 +68,7 @@ solGS.genotypingProtocol= {
 		if (!protocolId) {
 			protocolId = jQuery('#genotyping_protocol_id').val();
 		}
-	
+
 		return protocolId;
 	},
 
@@ -94,14 +93,17 @@ jQuery(document).ready( function() {
 				solGS.genotypingProtocol.setGenotypingProtocol(divPlaces[i], res.default_protocol);
 			}
 
-			console.log(`done looping res time start: ${new Date().toLocaleString()}`);
-
-
 			solGS.genotypingProtocol.populateMenu(res.all_protocols);
-
+			var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
+		
 			jQuery('#genotyping_protocol').show();
 			jQuery('#genotyping_protocols_message').hide();
 			jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
+			if (protocolId) {
+				jQuery("#search_interfaces").show();
+			} else {
+				solGS.blockSearchInterface();
+			}
 		} else {
 			var message = "<p class='px-4'>No genotyping protocols found.</p>";
 
@@ -113,6 +115,8 @@ jQuery(document).ready( function() {
 
 		jQuery('#genotyping_protocols_message').html(message).show();
 		jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
+
+		solGS.blockSearchInterface();
 	});
 });
 
