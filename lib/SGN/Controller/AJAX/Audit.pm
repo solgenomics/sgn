@@ -42,7 +42,7 @@ sub retrieve_results : Path('/ajax/audit/retrieve_results'){
         };
 
 
-    my $json_string = new JSON;
+    my $json_string;
     $json_string = encode_json(\@all_audits);
     $c->stash->{rest} = {
         result => $json_string,
@@ -60,7 +60,7 @@ sub retrieve_table_names : Path('/ajax/audit/retrieve_table_names'){
         push @ids, $drop_options;
 
     };
-    my $json_string = new JSON;
+    my $json_string;
     $json_string = encode_json(\@ids);
     $c->stash->{rest} = {
         result1 => $json_string,
@@ -109,14 +109,12 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     }
     print STDERR Dumper(@matches)."\n";
 
-
-
-    my $stock_match_json = new JSON;
+    my $stock_match_json;
     $stock_match_json = encode_json(\@matches);
 
     $c->stash->{rest} = {
         stock_match_after => $stock_match_json,
-        }
+    }
 };
 
 
@@ -146,7 +144,7 @@ sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
     for (my $i = 0; $i<$counter; $i++){
         my $operation = $all_audits[$i][1];
         print STDERR Dumper($operation)."\n";
-        my $json_string = new JSON;
+        my $json_string;
         if($operation eq "DELETE"){
             $json_string = decode_json($before[$i]);
         }else{
@@ -163,10 +161,8 @@ sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
         }
     }
 
-
-    my $match_trial_json = new JSON;
+    my $match_trial_json;
     $match_trial_json = encode_json(\@matches);
-    
 
     $c->stash->{rest} = {
         match_project => $match_trial_json,
