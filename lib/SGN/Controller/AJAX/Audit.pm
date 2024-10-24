@@ -107,7 +107,6 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
             push @matches, $all_audits[$i];
         }
     }
-    print STDERR Dumper(@matches)."\n";
 
     my $stock_match_json;
     $stock_match_json = encode_json(\@matches);
@@ -143,7 +142,6 @@ sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
 
     for (my $i = 0; $i<$counter; $i++){
         my $operation = $all_audits[$i][1];
-        print STDERR Dumper($operation)."\n";
         my $json_string;
         if($operation eq "DELETE"){
             $json_string = decode_json($before[$i]);
