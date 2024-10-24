@@ -1175,7 +1175,11 @@ sub get_trials {
     }
 
     my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'project location', 'project_property')->cvterm_id();
-    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on (accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id) where projectprop.type_id=$geolocation_type_id AND accession.stock_id=?;";
+    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on 
+	(accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) 
+	JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id) 
+	JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id) 
+	where projectprop.type_id=$geolocation_type_id AND accession.stock_id=?;";
 
     my $h = $dbh->prepare($q);
     $h->execute($self->stock_id());

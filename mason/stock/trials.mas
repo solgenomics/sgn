@@ -1,5 +1,6 @@
 <%args>
 $stock_id
+$type_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -26,28 +27,29 @@ $stock_id
 		<br/> <br/>
 		<table class="table table-hover table-bordered" id="breeding_program_usage_data">
 			<thead>
-			  <tr>
-				<th>Program Name</th>
-			  </tr>
+				<tr>
+					<th>Program name</th>
+				</tr>
 			</thead>
 		</table>
 	</div>
 </div>
 
+% if ($type_name eq "accession") {
 <div class="panel panel-default">
 	<div class="panel-body panel-body-sm">
 		<b> Analyses </b>
 		<br/> <br/>
 		<table class="table table-hover table-bordered" id="analysis_usage_data">
 			<thead>
-			  <tr>
-				<th>Analysis</th>
-				<th>Details</th>
-			  </tr>
+				<tr>
+					<th>Name</th>
+				</tr>
 			</thead>
 		</table>
 	</div>
 </div>
+% }
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
@@ -58,6 +60,14 @@ $stock_id
             jQuery('#trial_summary_data').DataTable( {
                 'destroy': true,
                 'ajax': '/stock/'+ <% $stock_id %> + '/datatables/trials',
+            });
+			jQuery('#breeding_program_usage_data').DataTable( {
+                'destroy': true,
+                'ajax': '/stock/'+ <% $stock_id %> + '/datatables/breeding_programs',
+            });
+			jQuery('#analysis_usage_data').DataTable( {
+                'destroy': true,
+                'ajax': '/stock/'+ <% $stock_id %> + '/datatables/stored_analyses',
             });
         });
     });
