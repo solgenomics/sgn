@@ -42,6 +42,7 @@
     ex.build_table = function(accession_names, list_type){
       jQuery('#working_modal').modal('show');
 	  selectall_checkbox.setAttribute('disabled', 'true'); //Reset the checkbox if looking at a different list
+	  selectall_checkbox.checked = false;
       jQuery.ajax({
         type: 'POST',
         url: '/ajax/accessions/possible_seedlots',
