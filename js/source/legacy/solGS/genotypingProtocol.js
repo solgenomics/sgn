@@ -99,9 +99,9 @@ jQuery(document).ready( function() {
 			jQuery('#genotyping_protocol').show();
 			jQuery('#genotyping_protocols_message').hide();
 			jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
-			if (protocolId) {
-				jQuery("#search_interfaces").show();
-			} else {
+
+			if (!protocolId) {
+				jQuery("#solgs_tool_message").show();
 				solGS.blockSearchInterface();
 			}
 		} else {
@@ -116,7 +116,9 @@ jQuery(document).ready( function() {
 		jQuery('#genotyping_protocols_message').html(message).show();
 		jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
 
+		jQuery("#solgs_tool_message").show();	
 		solGS.blockSearchInterface();
+
 	});
 });
 

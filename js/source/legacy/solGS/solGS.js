@@ -911,10 +911,9 @@ solGS.checkPageType = function () {
 
 
 solGS.blockSearchInterface = function () {
-  var msg = `<div class="row"><div class="col-md-4 col-md-offset-4  bg-info">` 
-  + `<p>This database has no genotype data.Therefore, solGS is not available for this website.</p><p>`
-  + `Please load genotype data to the database and try again.</p></div></div>`;
-	jQuery("#search_interfaces").html(msg).show();
+
+	jQuery("#search_interfaces").hide();
+
 };
 
 //executes two functions alternately
