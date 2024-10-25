@@ -217,7 +217,7 @@ sub get_phenotype_matrix {
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
 
     $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
-    print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
+    #print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
     
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         $self->search_type,
@@ -292,7 +292,7 @@ sub get_phenotype_matrix {
 	    #print STDERR "DATA = ".Dumper($data);
 	
         foreach my $obs_unit (@$data){
-            print STDERR "observation_unit_values: " . Dumper($obs_unit) . "\n";
+            #print STDERR "observation_unit_values: " . Dumper($obs_unit) . "\n";
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
             my $synonyms = $obs_unit->{germplasm_synonyms};
             my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
@@ -331,7 +331,7 @@ sub get_phenotype_matrix {
 		        %trait_observations = $self->format_observations($observations);
 	        }
 
-	        print STDERR "FORMATTED OBSERVATIONS =".Dumper(\%trait_observations)."\n";
+	    #print STDERR "FORMATTED OBSERVATIONS =".Dumper(\%trait_observations)."\n";
 
 	        if ($include_phenotype_primary_key) {
 		        foreach my $observation (@$observations) {
@@ -376,7 +376,7 @@ sub get_phenotype_matrix {
                     # print STDERR "adding trait $trait : " . $trait_observations{$trait} . "\n";
 		            if ($include_phenotype_primary_key) {
 		                push @line, $phenotype_ids{$trait};
-                        print STDERR "add the pheno_id for each trait $trait : $phenotype_ids{$trait}\n";
+				#print STDERR "add the pheno_id for each trait $trait : $phenotype_ids{$trait}\n";
 		            }
 	            }
                 # print STDERR "print the list of sorted_traits:" . Dumper (\@sorted_traits) . "\n";
@@ -611,7 +611,7 @@ sub get_phenotype_matrix {
                     $values_max = $trait_count if $trait_count > $values_max;
                 }
             }
-            print STDERR " maximum values fr the observation unit $p is $values_max\n";
+            #print STDERR " maximum values fr the observation unit $p is $values_max\n";
             for (my $i = 0; $i < $values_max; $i++) {
                 my @line = @{$obsunit_data{$p}->{metadata}};
                 foreach my $trait (@sorted_traits) {
@@ -665,7 +665,7 @@ sub format_observations {
 
     my $de_duplicated_observations = $self->detect_multiple_measurements($observations);
 
-    print STDERR "DE DUPLICATE OBS = ".Dumper($de_duplicated_observations);
+    #print STDERR "DE DUPLICATE OBS = ".Dumper($de_duplicated_observations);
     
     foreach my $observation (@$de_duplicated_observations){
 	    my $collect_date = $observation->{collect_date};
@@ -735,7 +735,7 @@ sub detect_multiple_measurements {
 
 		$duplicate_measurements{$trait_id} = $trait_observations;
 
-	        print STDERR "After de-duplication: ".Dumper($duplicate_measurements{$trait_id});
+	        #print STDERR "After de-duplication: ".Dumper($duplicate_measurements{$trait_id});
 	    }
     }
 
@@ -743,7 +743,7 @@ sub detect_multiple_measurements {
 
     my @processed_observations;
     foreach my $trait_id (keys %duplicate_measurements) { 
-	    push @processed_observations, @{$duplicate_measurements{$trait_id}}[0];
+	push @processed_observations, @{$duplicate_measurements{$trait_id}}[0];
     }
 
     #print STDERR "PROCESSED observations = ".Dumper(\@processed_observations);
@@ -755,7 +755,7 @@ sub process_duplicate_measurements {
     my $self = shift;
     my $trait_observations = shift;
 
-    print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
+    #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
     
     if ($self->repetitive_measurements() eq "first") {
 	    print STDERR "Retrieving first value...\n";

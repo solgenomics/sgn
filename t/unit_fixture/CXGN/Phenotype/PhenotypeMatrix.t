@@ -91,7 +91,8 @@ foreach my $repetitive_measurements ('first', 'last', 'average', 'all') {
     
     my @data = $phenotypes_search->get_phenotype_matrix();
     
-    foreach my $d (@data) { 
+    foreach my $d (@data) {
+	no warnings;
 	    if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
 	        # my $result = shift(@results);
             if (defined $d->[30] && $d->[30] =~ m/,/) {
@@ -118,8 +119,10 @@ foreach my $repetitive_measurements('first', 'last', 'average', 'all') {
     
     my @data = $phenotypes_search->get_phenotype_matrix();
     
-    foreach my $d (@data) { 
-	    if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {    
+    foreach my $d (@data) {
+	no warnings;
+	if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
+	    print STDERR "D now: ".Dumper($d);
             if (defined $d->[30] && $d->[30] =~ m/,/) {
                 my $result = shift(@results);
                 print STDERR "$search_type, $repetitive_measurements, GOT: $d->[30], EXPECTED: $result\n";
