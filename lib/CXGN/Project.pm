@@ -2139,54 +2139,59 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
     my $dbname = shift;
     my $dbuser = shift;
     my $dbpass = shift;
-    my $temp_file_nd_experiment_id = shift;
+    my $temp_file_nd_experiment_id = shift || "/tmp/tempfile_nd_exp_id_deletion_$$";
     my $basepath = shift;
     my $schema = shift;
     my $phenotype_ids_and_nd_experiment_ids_to_delete = shift;
 
     my $coderef = sub {
-        my $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}});
-        my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
-        my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
-        $h2->execute();
+	my $phenotype_id_sql = "";
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids})) { 
+	    $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}});
+	    
+	    my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
+	    my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
+	    $h2->execute();
+	    
+	    print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
+	}
 
-        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) { 
+	    my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
+	    
+	    # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
+	    #
+	    my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
+	    my $check_h = $schema->storage->dbh()->prepare($checkq);
+	    $check_h ->execute();
+	    
+	    my @nd_experiment_ids;
+	    while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
+		push @nd_experiment_ids, $nd_experiment_id;
+	    }
+	    
+	    if (scalar(@nd_experiment_ids)>0) {
+		$nd_experiment_id_sql = join(",", @nd_experiment_ids);
+		
+		my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+		my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
+		$h3->execute();
 
-        my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
-
-        # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
-        #
-        my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
-        my $check_h = $schema->storage->dbh()->prepare($checkq);
-        $check_h ->execute();
-
-        my @nd_experiment_ids;
-        while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
-            push @nd_experiment_ids, $nd_experiment_id;
-        }
-
-        if (scalar(@nd_experiment_ids)>0) {
-            $nd_experiment_id_sql = join(",", @nd_experiment_ids);
-
-            my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-            my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
-            $h3->execute();
-
-            my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
-            my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
-            $h_nd_json->execute();
-
-            my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-            my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
-            $h4->execute();
-
-            open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
+		my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
+		my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
+		$h_nd_json->execute();
+		
+		my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+		my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
+		$h4->execute();
+		
+		open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
                 foreach (@nd_experiment_ids) {
                     print $fh "$_\n";
                 }
-            close($fh);
-
-            my $async_delete = CXGN::Tools::Run->new();
+		close($fh);
+	    }
+	    my $async_delete = CXGN::Tools::Run->new();
             $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
 
             print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (and ".scalar(@nd_experiment_ids)." nd_experiment entries may still be in deletion in asynchronous process.)\n";
@@ -2238,20 +2243,20 @@ sub delete_field_layout {
     # Note: metadata entries need to be deleted separately using delete_metadata()
     #
     my $error = '';
-    eval {
-        $self->bcs_schema()->txn_do(
-            sub {
+#    eval {
+ #       $self->bcs_schema()->txn_do(
+  #          sub {
                 #print STDERR "DELETING FIELD LAYOUT FOR TRIAL $trial_id...\n";
                 $self->_delete_field_layout_experiment();
                 #print STDERR "DELETE MANAGEMENT FACTORS FOR TRIAL $trial_id...\n";
                 $self->_delete_management_factors_experiments();
-            }
-        );
-    };
-    if ($@) {
-        print STDERR "ERROR $@\n";
-        return "An error occurred: $@\n";
-    }
+   #         }
+    #    );
+#    };
+#    if ($@) {
+#        print STDERR "ERROR $@\n";
+#        return "An error occurred: $@\n";
+#    }
 
     return '';
 }
@@ -2298,8 +2303,8 @@ sub get_phenotype_metadata {
 
 sub delete_phenotype_metadata {
     my $self = shift;
-    my $metadata_schema = shift;
-    my $phenome_schema = shift;
+    my $metadata_schema = $self->metadata_schema() || shift;
+    my $phenome_schema = $self->phenome_schema || shift;
 
     if (!$metadata_schema || !$phenome_schema) { die "Need metadata schema parameter\n"; }
 
@@ -2317,13 +2322,13 @@ sub delete_phenotype_metadata {
 	#print STDERR "Associated metadata id: $md_id\n";
 	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
 	if ($mdmd_row) {
-	    #print STDERR "Obsoleting $md_id...\n";
+	    print STDERR "Obsoleting $md_id...\n";
 
 	    $mdmd_row -> update( { obsolete => 1 });
 	}
     }
 
-    #print STDERR "Deleting the entries in the linking table...\n";
+    print STDERR "Deleting the entries in the linking table...\n";
 
     # delete the entries from the linking table...
     $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
@@ -2356,8 +2361,8 @@ sub delete_phenotype_metadata {
 
 sub delete_metadata {
     my $self = shift;
-    my $metadata_schema = $self->metadata_schema;
-    my $phenome_schema = $self->phenome_schema;
+    my $metadata_schema = $self->metadata_schema || shift;
+    my $phenome_schema = $self->phenome_schema || shift;
 
     if (!$metadata_schema || !$phenome_schema) { die "Need metadata schema parameter\n"; }
 
@@ -2376,7 +2381,7 @@ sub delete_metadata {
         return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
     }
 
-    #print STDERR "Deleting metadata for trial $trial_id...\n";
+    print STDERR "Deleting metadata for trial $trial_id...\n";
 
     # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
     #
@@ -2385,16 +2390,20 @@ sub delete_metadata {
     $h->execute($trial_id);
 
     while (my ($md_id) = $h->fetchrow_array()) {
-	#print STDERR "Associated metadata id: $md_id\n";
-	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
-	if ($mdmd_row) {
-	    #print STDERR "Obsoleting $md_id...\n";
+	print STDERR "Associated metadata id: $md_id\n";
 
-	    $mdmd_row -> update( { obsolete => 1 });
-	}
+	my $uq = "UPDATE metadata.md_metadata set obsolete=1 where metadata_id=?";
+	my $uh = $self->bcs_schema->storage->dbh->prepare($uq);
+	$uh->execute($md_id);
+	#my $mdmd_row = $self->metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
+	#if ($mdmd_row) {
+	 #   print STDERR "Obsoleting $md_id...\n";
+
+	  #  $mdmd_row -> update( { obsolete => 1 });
+	#}
     }
 
-    #print STDERR "Deleting the entries in the linking table...\n";
+    print STDERR "Deleting the entries in the linking table...\n";
 
     # delete the entries from the linking table... (left joins are due to sometimes missing md_file entries)
     $q = "SELECT distinct(file_id) FROM nd_experiment_project LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
@@ -2435,6 +2444,10 @@ sub _delete_field_layout_experiment {
     my $layout_design = $self->get_layout->get_design;
     my @all_stock_ids;
     while( my($plot_num, $design_info) = each %$layout_design){
+	if (! ref($design_info)) {
+	    print STDERR "Design info missing for plot $plot_num. Skipping.\n";
+	    next;
+	}
         my $plot_id = $design_info->{plot_id}; #this includes the "tissue_sample" in "genotyping_layout"
         my @plant_ids = $design_info->{plant_ids} ? @{$design_info->{plant_ids}} : ();
         my @subplot_ids = $design_info->{subplot_ids} ? @{$design_info->{subplot_ids}} : ();
@@ -2490,9 +2503,9 @@ sub _delete_field_layout_experiment {
     }
 
     my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id, $analysis_experiment_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
-    if ($nde_rs->count != 1){
-        die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
-    }
+#    if ($nde_rs->count != 1){
+#        die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
+#    }
     while( my $r = $nde_rs->next){
         $r->delete();
     }
