@@ -79,11 +79,13 @@ print STDERR "TRAITS: ".Dumper(\%traits);
 foreach my $d (@$data) {
     $variables{$d->{'Variable'}}->{count}++;
     $variables{$d->{'Variable'}}->{'Trait name'} = $d->{'Trait name'};
+    $variables{$d->{'Variable'}}->{'Trait description'} = $d->{'Trait description'};
     $variables{$d->{'Variable'}}->{'Entity'} = $d->{'Entity'};
     $variables{$d->{'Variable'}}->{'Attribute'} = $d->{'Attribute'};
     $variables{$d->{'Variable'}}->{'Method Name'} = $d->{'Method Name'};
     $variables{$d->{'Variable'}}->{'Scale abbreviation'} = $d->{'Scale abbreviation'};
     $variables{$d->{'Variable'}}->{'Variable'} = $d->{'Variable'};
+    $variables{$d->{'Variable'}}->{'Scale name'} = $d->{'Scale name'};
 }
 print STDERR "VARIABLES: ".Dumper(\%variables);
 
@@ -112,8 +114,9 @@ my $header = <$F>;
 print <<TERM;
 
 [Term]
-id: $acc
+id: $ontology_name:$acc
 name: ROOT
+namespace: $ontology_name
 
 TERM
 
@@ -144,11 +147,11 @@ foreach my $k (keys %traits) {
 	$ontology_name,
 	$count,
 	$k,
-	undef,
-	undef,
+	$traits{$k}->{'Trait description'},
+	$traits{$k}->{'Trait synonym'},
 	$trait_classes{ $traits{$k}->{'Trait class'} }->{acc},
 	$traits{$k}->{'Trait class'},
-	);
+	)."\n";
     
     $traits{$k}->{name} = $k;
     $traits{$k}->{acc} = $count;
@@ -173,14 +176,12 @@ foreach my $k (keys %variables) {
 	$ontology_name,
 	$count,
 	$variables{$k}->{Variable},
-	$variables{$k}->{'Trait description'} ." ". $variables{$k}->{Entity} ." ".$variables{$k}->{Attribute},
-	$variables{$k}->{'Method name'},
-	$variables{$k}->{'Scale name'},
+	join(" - ", $variables{$k}->{'Trait description'}, $variables{$k}->{'Method Name'}, $variables{$k}->{'Scale name'}),
 	$variables{$k}->{'synonyms'},
 	$traits{$variables{$k}->{'Trait name'}}->{acc},
 	$variables{$k}->{'Trait name'},
 	
-	);
+	)."\n";
 
     $count++;
 	
@@ -207,16 +208,21 @@ sub format_trait {
     my $trait_id = format_ontology_id($ontology_code, $id);
     my $parent_trait_id = format_ontology_id($ontology_code, $parent_class_id);
 
-    return <<TERM;
-    
-[Term]
-id: $trait_id
-name: $name
-def: "$description" []
-synonyms: $synonyms
-is_a: $parent_trait_id ! $parent_trait
+    my %record = (
+	"[Term]" => "",
+	"id:" =>  $trait_id,
+	"name:" =>  $name,
+	"def:" => "\"$description\" []",
+	"synonyms:" => $synonyms,
+	"namespace:" => $ontology_name,
+	"is_a:" => "$parent_trait_id ! $parent_trait",
+	);
 
-TERM
+    foreach my $k ("[Term]", "id:", "name:", "def:", "synonyms:", "namespace", "is_a:") {
+	if (defined($record{$k})) {
+	    print "$k $record{$k}\n";
+	}
+    }
 
 }
 
@@ -226,8 +232,6 @@ sub format_variable {
     my $id = shift;
     my $name = shift;
     my $description = shift;
-    my $method_name = shift;
-    my $scale_name = shift;
     my $synonyms = shift;
     my $parent_trait_id = shift;
     my $parent_trait_name = shift;
@@ -236,15 +240,20 @@ sub format_variable {
 
     my $variable_id = format_ontology_id($ontology_code, $id);
     my $parent_trait_id = format_ontology_id($ontology_code, $parent_trait_id);
-    return <<TERM;
+    my %record = (
+	"[Term]"  => "", 
+	"id:" =>  $variable_id,
+	"name:" => $name,
+	"def:"=> "\"$description\" []",
+	"synonyms:" =>  $synonyms,
+	"namespace:" => $ontology_name,
+	"relationship:" => "variable_of $parent_trait_id ! $parent_trait_name",
+	);
     
-[Term]
-id: $variable_id
-name: $name	
-def: "$description $method_name $scale_name" []
-synonyms: $synonyms
-relationship: variable_of $parent_trait_id ! $parent_trait_name
-
-TERM
-
+    foreach my $k ("[Term]", "id:", "name:", "def:", "synonyms:", "namespace:", "relationship:") {
+	if (defined($record{$k})) {
+	    print "$k $record{$k}\n";
+	}
+    }
+       
 }
