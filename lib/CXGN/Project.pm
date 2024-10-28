@@ -265,7 +265,7 @@ sub get_year {
     my $rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $self->get_trial_id() })->search_related('projectprops', { 'projectprops.type_id' => $type_id } );
 
     if ($rs->count() == 0) {
-	return undef;
+	return;
     }
     else {
 	return $rs->first()->value();
@@ -944,7 +944,7 @@ sub get_project_type {
 	    }
 	}
     }
-    return undef;
+    return;
 
 }
 
@@ -1033,7 +1033,7 @@ sub get_breeding_program {
 	    type_id => $self->get_breeding_program_trial_relationship_cvterm_id(),
 		});
     if ($rs->count() == 0) {
-			return undef;
+			return;
     }
 
     my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search({
@@ -1043,7 +1043,7 @@ sub get_breeding_program {
 			return $bp_rs->first()->name();
     }
 
-    return undef;
+    return;
 }
 
 sub set_breeding_program {
