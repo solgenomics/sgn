@@ -280,10 +280,10 @@ sub _validate_with_plugin {
     if ($working_on_new_trial) {
 
       ## PLOT NUMBER CHECK FOR PREVIOUS TRIAL
-      foreach $plot_number ( keys %seen_plot_numbers ) {
-        my $count = $seen_plot_numbers{$plot_number};
+      foreach my $pn ( keys %seen_plot_numbers ) {
+        my $count = $seen_plot_numbers{$pn};
         if ($count > 1) {
-          push @error_messages, "Plot number <b>$plot_number</b> must be unique within the trial. You used this plot number more than once in trial $trial_name";
+          push @error_messages, "Plot number <b>$pn</b> must be unique within the trial. You used this plot number more than once in trial $trial_name";
         }
       }
       ## reset counting hash
