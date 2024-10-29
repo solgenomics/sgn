@@ -21,7 +21,7 @@ sub _validate_with_plugin {
     my %missing_accessions;
 
     # optional columns = these hard-coded columns plus any editable stock props
-    my @optional_columns = ('synonyms', 'populationName', 'organizationName', 'locationCode', 'ploidyLevel', 'genomeStructure', 'variety', 'donor', 'donor institute', 'donor PUI', 'countryOfOriginCode', 'state', 'instituteCode', 'instituteName', 'biologicalStatusOfAccessionCode', 'notes', 'accessionNumber', 'germplasmPUI', 'germplasmSeedSource', 'typeOfGermplasmStorageCode', 'acquisitionDate', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp');
+    my @optional_columns = ('description', 'synonyms', 'populationName', 'organizationName', 'locationCode', 'ploidyLevel', 'genomeStructure', 'variety', 'donor', 'donor institute', 'donor PUI', 'countryOfOriginCode', 'state', 'instituteCode', 'instituteName', 'biologicalStatusOfAccessionCode', 'notes', 'accessionNumber', 'germplasmPUI', 'germplasmSeedSource', 'typeOfGermplasmStorageCode', 'acquisitionDate', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp');
     push @optional_columns, @$editable_stockprops;
 
     my $parser = CXGN::File::Parse->new(
@@ -149,7 +149,7 @@ sub _parse_with_plugin {
     my $row_num = $row->{_row};
     my $accession = $row->{'accession_name'};
     my $synonyms = $row->{'synonyms'} || [];
-
+    my $description = $row->{'description'} || '';
     my $stock_id;
     if(exists($accession_lookup{$accession})){
       $stock_id = $accession_lookup{$accession};
@@ -161,7 +161,8 @@ sub _parse_with_plugin {
       species => $row->{'species_name'},
       populationName => $row->{'populationName'},
       organizationName => $row->{'organizationName'},
-      synonyms => $synonyms
+      synonyms => $synonyms,
+      description => $description,
     );
 
     #For "updating" existing accessions by adding properties.
