@@ -1705,30 +1705,6 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
     $c->stash->{rest} = { data => \@formatted_trials };
 }
 
-=head2 action get_stock_breeding_programs()
-
- Usage:        /stock/<stock_id>/datatables/breeding_programs
- Desc:         retrieves breeding programs that use this stock (accession)
- Ret:          a table in json suitable for datatables
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub get_stock_breeding_programs :Chained('/stock/get_stock') PathPart('datatables/breeding_programs') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-	my @breeding_programs = $c->stash->{stock}->get_breeding_programs();
-
-    my @formatted_programs;
-    foreach my $t (@breeding_programs) {
-	push @formatted_programs, [ '<a href="/breeders/program/'.$t->[0].'">'.$t->[1].'</a>' ];
-    }
-    $c->stash->{rest} = { data => \@formatted_programs };
-}
-
 =head2 action get_stored_analyses()
 
  Usage:        /stock/<stock_id>/datatables/stored_analyses

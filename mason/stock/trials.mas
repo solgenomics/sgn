@@ -24,20 +24,6 @@ $type_name
 % if ($type_name eq "accession") {
 <div class="panel panel-default">
 	<div class="panel-body panel-body-sm">
-		<b> Breeding Programs </b>
-		<br/> <br/>
-		<table class="table table-hover table-bordered" id="breeding_program_usage_data">
-			<thead>
-				<tr>
-					<th>Program name</th>
-				</tr>
-			</thead>
-		</table>
-	</div>
-</div>
-
-<div class="panel panel-default">
-	<div class="panel-body panel-body-sm">
 		<b> Analyses </b>
 		<br/> <br/>
 		<table class="table table-hover table-bordered" id="analysis_usage_data">
