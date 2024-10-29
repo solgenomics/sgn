@@ -17,7 +17,7 @@ rename_locations.pl - renaming locations in a cxgn database
 =head1 DESCRIPTION
 
 This script loads locations data into Chado, by adding data to nd_geolocation table. Infile is Excel .xls and .xlsx format.
-Header is in this order: 'old name', 'new name'
+Header is in this order: 'old_location_name', 'new_location_name'
 
 =head1 AUTHOR
 
@@ -76,7 +76,7 @@ my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
 my ( $row_min, $row_max ) = $worksheet->row_range();
 my ( $col_min, $col_max ) = $worksheet->col_range();
 
-if ($col_max ne '2' || $worksheet->get_cell(0,0)->value() ne 'old_location_name' || $worksheet->get_cell(0,1)->value() ne 'new_location_name') {
+if ($col_max ne '1' || $worksheet->get_cell(0,0)->value() ne 'old_location_name' || $worksheet->get_cell(0,1)->value() ne 'new_location_name') {
     pod2usage(-verbose => 2, -message => "Headers must be only in this order: old_location_name, new_location_name.\n");
 }
 
