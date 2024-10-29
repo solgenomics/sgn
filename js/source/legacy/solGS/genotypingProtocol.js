@@ -74,6 +74,12 @@ solGS.genotypingProtocol= {
 
 	getSelPopGenotypingProtocolId: function() {
 		return  jQuery("#selection_pop_genotyping_protocol_id").val();
+	},
+
+	displayGenotypeMissingMsg: function () {
+		jQuery("#genotyping_protocol").hide();	
+		jQuery("#genotyping_protocols_message").hide();	
+		jQuery("#genotype_missing_message").show();		
 	}
 }
 
@@ -83,6 +89,7 @@ jQuery(document).ready( function() {
 	jQuery('#genotyping_protocols_progress .multi-spinner-container').show();
 
 	solGS.genotypingProtocol.getAllProtocols().done(function(res) {
+		var protocolId;
 		if (res) {
 			var divPlaces = [''];
 			if (document.URL.match(/breeders/)) {
@@ -94,32 +101,36 @@ jQuery(document).ready( function() {
 			}
 
 			solGS.genotypingProtocol.populateMenu(res.all_protocols);
-			var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
+			protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 		
 			jQuery('#genotyping_protocol').show();
 			jQuery('#genotyping_protocols_message').hide();
 			jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
-
-			if (!protocolId) {
-				jQuery("#solgs_tool_message").show();
-				solGS.blockSearchInterface();
-			}
 		} else {
 			var message = "<p class='px-4'>No genotyping protocols found.</p>";
 
 			jQuery('#genotyping_protocols_message').html(message).show();
 			jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
 		}	
+
+		if (!protocolId) {
+			solGS.genotypingProtocol.displayGenotypeMissingMsg();
+		}
+
 	}).fail(function (res) {
 		var message = "<p class='px-4'>No genotyping protocols found.</p>";
 
 		jQuery('#genotyping_protocols_message').html(message).show();
 		jQuery('#genotyping_protocols_progress .multi-spinner-container').hide();
 
-		jQuery("#solgs_tool_message").show();	
-		solGS.blockSearchInterface();
+		if (document.URL.match(/solgs/)) {
+			// solGS.blockSearchInterface();
+		} 
 
+		solGS.genotypingProtocol.displayGenotypeMissingMsg();
+				
 	});
+
 });
 
 

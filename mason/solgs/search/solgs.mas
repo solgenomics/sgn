@@ -36,14 +36,7 @@ $gs_traits_index => undef
 
 	<& /solgs/genotyping_protocol/index.mas &>
 
-<div class="row" style="margin-top:10px;margin-bottom:10px">
-	<div  id="solgs_tool_message"  class="col-md-6 col-md-offset-3  bg-info" style="padding-top:10px;display:none">
-  		<p>This database has no genotype data.Therefore, solGS does not function in this website.</p>
-  		<p>Please load genotype data to the database and try again.</p
-  	</div>
-</div>
-
-<div id="search_interfaces">
+<div id="solgs_search_interfaces">
 	<& /solgs/search/trial_search_form.mas &>
 	<& /solgs/search/list_type_training_population.mas &>
 	<& /solgs/search/trait_search_form.mas, gs_traits_index => $gs_traits_index &>

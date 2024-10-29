@@ -910,11 +910,12 @@ solGS.checkPageType = function () {
 };
 
 
-solGS.blockSearchInterface = function () {
+solGS.blockSolgsSearchInterface = function () {
 
-	jQuery("#search_interfaces").hide();
+	jQuery("#solgs_search_interfaces").hide();
 
 };
+
 
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function (a, b) {
