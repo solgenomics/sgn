@@ -20,7 +20,6 @@ my $url = $c->req->path;
 my $geno_msg;
 
 if ($url =~ /solgs/) {
-  $geno_msg = 'text';
   $geno_msg = '<p>This database has no genotype data. Therefore, solGS does not function in this website.</p>
   <p>Please load genotype data to the database and try again.</p>';
 } else {
