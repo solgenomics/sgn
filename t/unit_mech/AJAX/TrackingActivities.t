@@ -68,32 +68,33 @@ is($identifiers_count, '3');
 my @sorted_ids = sort(@$identifiers);
 
 is_deeply(\@sorted_ids, [
-    'tracking_project_1:UG120001_T0001',
-    'tracking_project_1:UG120002_T0002',
-    'tracking_project_1:UG120003_T0003'
+    'tracking_project_1:UG120001_T1',
+    'tracking_project_1:UG120002_T2',
+    'tracking_project_1:UG120003_T3'
     ], "check ids");
 
 #test saving activity
-my $identifier_stock_id_1 = $schema->resultset("Stock::Stock")->find({ uniquename => 'tracking_project_1:UG120001_T0001' })->stock_id();
-my $identifier_stock_id_2 = $schema->resultset("Stock::Stock")->find({ uniquename => 'tracking_project_1:UG120002_T0002' })->stock_id();
-my $identifier_stock_id_3 = $schema->resultset("Stock::Stock")->find({ uniquename => 'tracking_project_1:UG120003_T0003' })->stock_id();
+
+my $identifier_stock_id_1 = $schema->resultset("Stock::Stock")->find({ uniquename => 'tracking_project_1:UG120001_T1' })->stock_id();
+my $identifier_stock_id_2 = $schema->resultset("Stock::Stock")->find({ uniquename => 'tracking_project_1:UG120002_T2' })->stock_id();
+my $identifier_stock_id_3 = $schema->resultset("Stock::Stock")->find({ uniquename => 'tracking_project_1:UG120003_T3' })->stock_id();
 
 my $time = DateTime->now();
 my $timestamp_1 = $time->ymd() . "_" . $time->hms();
-$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120001_T0001', 'selected_type' => 'subculture_count', 'input' => '4', 'notes' => 'test', 'record_timestamp' => $timestamp_1 ]);
+$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'program_name' => 'test','tracking_identifier_name' => 'tracking_project_1:UG120001_T1', 'tracking_identifier_id' => $identifier_stock_id_1, 'activity_type' => 'tissue_culture', 'selected_type' => 'subculture_count', 'input' => '4', 'notes' => 'test', 'record_timestamp' => $timestamp_1, 'source_info' => undef, ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
 my $timestamp_2 = $time->ymd();
-$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120001_T0001', 'selected_type' => 'subculture_count', 'input' => '10', 'notes' => 'test 2', 'record_timestamp' => $timestamp_2 ]);
+$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'program_name' => 'test', 'tracking_identifier_name' => 'tracking_project_1:UG120001_T1', 'tracking_identifier_id' => $identifier_stock_id_1, 'activity_type' => 'tissue_culture','selected_type' => 'subculture_count', 'input' => '10', 'notes' => 'test 2', 'record_timestamp' => $timestamp_2, 'source_info' => undef ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
-$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120002_T0002', 'selected_type' => 'subculture_count', 'input' => '7', 'notes' => 'test', 'record_timestamp' => $timestamp_1 ]);
+$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'program_name' => 'test', 'tracking_identifier_name' => 'tracking_project_1:UG120002_T2', 'tracking_identifier_id' => $identifier_stock_id_2, 'activity_type' => 'tissue_culture', 'selected_type' => 'subculture_count', 'input' => '7', 'notes' => 'test', 'record_timestamp' => $timestamp_1, 'source_info' => undef ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
-$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'tracking_identifier' => 'tracking_project_1:UG120002_T0002', 'selected_type' => 'rooted_count', 'input' => '3', 'notes' => 'test', 'record_timestamp' => $timestamp_2 ]);
+$mech->post_ok('http://localhost:3010/ajax/tracking_activity/save', [ 'program_name' => 'test', 'tracking_identifier_name' => 'tracking_project_1:UG120002_T2', 'tracking_identifier_id' => $identifier_stock_id_2, 'activity_type' => 'tissue_culture','selected_type' => 'rooted_count', 'input' => '3', 'notes' => 'test', 'record_timestamp' => $timestamp_2, 'source_info' => undef ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
@@ -104,8 +105,8 @@ my $summary_1 = $response->{'data'};
 my $summary_data_1 = $summary_1->[0];
 is_deeply($summary_data_1, [
     14,
-    undef,
-    undef
+    '',
+    ''
     ], "check summary 1");
 
 
@@ -116,7 +117,7 @@ my $summary_data_2 = $summary_2->[0];
 is_deeply($summary_data_2, [
     7,
     3,
-    undef
+    ''
     ], "check summary 2");
 
 #deleting project and tracking identifiers
