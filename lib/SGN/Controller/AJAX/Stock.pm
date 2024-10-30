@@ -1782,9 +1782,10 @@ sub get_shared_trials_GET :Args(1) {
     my @shared_trials = @{$trial_query->{results}};
 
     my @formatted_rows = ();
+    my @all_analyses = ();
 
     foreach my $stock_id (@stock_ids) {
-	     my $trials_string ='';
+	    my $trials_string ='';
        my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
        my $uniquename = $stock->uniquename;
        $dataref = {
@@ -1792,23 +1793,46 @@ sub get_shared_trials_GET :Args(1) {
                          'accessions' => $stock_id
                        }
                 };
+        my $analysis_q = "SELECT DISTINCT materialized_phenoview.trial_id
+        FROM materialized_phenoview 
+        JOIN nd_experiment_project ON nd_experiment_project.project_id=materialized_phenoview.trial_id 
+        JOIN project ON project.project_id=materialized_phenoview.trial_id 
+        JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id 
+        JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id 
+        WHERE accession_id=? AND cvterm.name='analysis_experiment';";
+        my $h = $dbh->prepare($analysis_q);
+        $h->execute($stock_id);
+        my @analyses;
+        while (my $analysis_id = $h->fetchrow_array()){
+            push @analyses, $analysis_id;
+            push @all_analyses, $analysis_id;
+        }
+
         $trial_query = $bs->metadata_query($criteria_list, $dataref, $queryref);
         my @current_trials = @{$trial_query->{results}};
-	      my $num_trials = scalar @current_trials;
+	    my $num_trials = scalar @current_trials;
 
-	      foreach my $t (@current_trials) {
-          print STDERR "t = " . Dumper($t);
-          $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
-	      }
-	      $trials_string =~ s/,\s+$//;
-	      push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $num_trials, $trials_string ];
+        foreach my $t (@current_trials) {
+            #print STDERR "t = " . Dumper($t);
+            if (grep {$t->[0] == $_} @analyses){
+                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: gray">'.$t->[1].' (Analysis)'.'</a>,  ';
+            } else {
+                $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+            }
+        }
+        $trials_string =~ s/,\s+$//;
+        push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $num_trials, $trials_string ];
     }
 
     my $num_trials = scalar @shared_trials;
     if ($num_trials > 0) {
 	    my $trials_string = '';
 	    foreach my $t (@shared_trials) {
-	       $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+            if (grep {$t->[0] == $_} @all_analyses){
+                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: gray">'.$t->[1].' (Analysis)'.'</a>,  ';
+            } else {
+                $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+            }
       }
 	    $trials_string  =~ s/,\s+$//;
 	    push @formatted_rows, [ "Trials in Common", $num_trials, $trials_string];
