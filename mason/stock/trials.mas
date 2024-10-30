@@ -48,10 +48,6 @@ $type_name
                 'ajax': '/stock/'+ <% $stock_id %> + '/datatables/trials',
             });
 % if ($type_name eq "accession") {
-			jQuery('#breeding_program_usage_data').DataTable( {
-                'destroy': true,
-                'ajax': '/stock/'+ <% $stock_id %> + '/datatables/breeding_programs',
-            });
 			jQuery('#analysis_usage_data').DataTable( {
                 'destroy': true,
                 'ajax': '/stock/'+ <% $stock_id %> + '/datatables/stored_analyses',
