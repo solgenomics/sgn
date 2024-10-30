@@ -29,6 +29,7 @@ Header is in this order: 'old_location_name', 'new_location_name'
 
 use strict;
 
+use Try::Tiny;
 use Getopt::Std;
 use Data::Dumper;
 use Carp qw /croak/ ;
@@ -81,20 +82,28 @@ if ($col_max ne '1' || $worksheet->get_cell(0,0)->value() ne 'old_location_name'
 }
 
 
-for my $row ( 1 .. $row_max ) {
-
-	my $old_name = $worksheet->get_cell($row,0)->value();
-	my $new_name = $worksheet->get_cell($row,1)->value();
-
-	my $row = $schema->resultset('NaturalDiversity::NdGeolocation')->find({ description => $old_name });
-	if ($row) {
-	    $row->description($new_name);
-	    $row->update();
-	    print STDERR "Updated $old_name to $new_name\n";
-	}
-	else {
-	    print STDERR "Location $old_name was not found. Skipping.\n";
-	}
+try { 
+    $schema->txn_do(
+	sub {  
+	    for my $row ( 1 .. $row_max ) {	
+		my $old_name = $worksheet->get_cell($row,0)->value();
+		my $new_name = $worksheet->get_cell($row,1)->value();
+		my $row = $schema->resultset('NaturalDiversity::NdGeolocation')->find({ description => $old_name });
+		if ($row) {
+		    $row->description($new_name);
+		    $row->update();
+		    print STDERR "Updated $old_name to $new_name\n";
+		}
+		else {
+		    print STDERR "Location $old_name was not found. Skipping.\n";
+		}
+	    }
+	});
 }
+
+catch { 
+    my $error = shift;
+    print STDERR "An error occurred ($error). Rolling back.\n";
+};
 
 print STDERR "Script Complete.\n";
