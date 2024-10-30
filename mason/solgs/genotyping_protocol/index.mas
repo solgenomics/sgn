@@ -17,14 +17,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%perl>
 
 my $url = $c->req->path;
-my $geno_msg;
-
+my $geno_msg = "<p>This database has no genotype data or you have not selected one. ";
+my $geno_msg_part = "either select a genotyping protocol (from above) or load genotype data to the database and try again.";
 if ($url =~ /solgs/) {
-  $geno_msg = '<p>This database has no genotype data. Therefore, solGS does not function in this website.</p>
-  <p>Please load genotype data to the database and try again.</p>';
+  $geno_msg = "$geno_msg Therefore, solGS does not function in this website.</p>
+  <p>Please $geno_msg_part</p>";
 } else {
-  $geno_msg = "<p>This database has no genotype data. Therefore, This tool does not function on genotype data in this website.</p>
-  <p>If you intend to use the tool on a genotype data, please load genotype data to the database and try again.</p>";
+  $geno_msg = "$geno_msg  Therefore, this tool does not function on genotype data in this website.</p>
+  <p>If you intend to use the tool on a genotype data, please $geno_msg_part</p>";
 }
 
 </%perl>

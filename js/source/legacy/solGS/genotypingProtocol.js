@@ -79,7 +79,7 @@ solGS.genotypingProtocol = {
   },
 
   displayGenotypeMissingMsg: function () {
-    jQuery("#genotyping_protocol").hide();
+    // jQuery("#genotyping_protocol").hide();
     jQuery("#genotyping_protocols_message").hide();
     jQuery("#genotype_missing_message").show();
   },
