@@ -14,19 +14,44 @@ my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type 
 my @OPTIONAL_COLUMNS = qw|plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
+# VALID DESIGN TYPES
+my %valid_design_types = (
+    "CRD" => 1,
+    "RCBD" => 1,
+    "RRC" => 1,
+    "DRRC" => 1,
+    "ARC" => 1,
+    "Alpha" => 1,
+    "Lattice" => 1,
+    "Augmented" => 1,
+    "MAD" => 1,
+    "genotyping_plate" => 1,
+    "greenhouse" => 1,
+    "p-rep" => 1,
+    "splitplot" => 1,
+    "stripplot" => 1,
+    "Westcott" => 1,
+    "Analysis" => 1
+);
+
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
 
+    # Date and List validators
+    my $calendar_funcs = CXGN::Calendar->new({});
+    my $validator = CXGN::List::Validate->new();
+
+    # Valid Trial Types
+    my @valid_trial_types = CXGN::Trial::get_all_project_types($schema);
+    my %valid_trial_types = map { @{$_}[1] => 1 } @valid_trial_types;
+
+    # Encountered Error and Warning Messages
     my %errors;
     my @error_messages;
     my %warnings;
     my @warning_messages;
-    my %missing_accessions;
-
-    my $calendar_funcs = CXGN::Calendar->new({});
-    my $validator = CXGN::List::Validate->new();
 
     # Read and parse the upload file
     my $parser = CXGN::File::Parse->new(
@@ -35,10 +60,10 @@ sub _validate_with_plugin {
         optional_columns => \@OPTIONAL_COLUMNS
     );
     my $parsed = $parser->parse();
-    my $parsed_errors = $parsed->{errors};
-    my $parsed_data = $parsed->{data};
-    my $parsed_values = $parsed->{values};
-    my $treatments = $parsed->{additional_columns};
+    my $parsed_errors = $parsed->{'errors'};
+    my $parsed_data = $parsed->{'data'};
+    my $parsed_values = $parsed->{'values'};
+    my $treatments = $parsed->{'additional_columns'};
 
     # Return file parsing errors
     if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
@@ -47,12 +72,217 @@ sub _validate_with_plugin {
         return;
     }
 
+    # Maps of plot-level data to use in overall validation
+    my %seen_plot_numbers;      # check for a plot numbers: used only once per trial
+    my %seen_plot_names;        # check for plot names: used only once per trial
+    my %seen_plot_positions;    # check for plot row / col positions: each position only used once per trial
+    my %seen_entry_numbers;     # check for entry numbers: used only once per trial
+    my @seedlot_pairs;          # 2D array of [seedlot_name, accession_name]
+
+    ##
+    ## ROW BY ROW VALIDATION
+    ## These are checks on the individual plot-level data
+    ##
+    foreach (@$parsed_data) {
+        my $row = $_->{'_row'};
+        my $trial_name = $_->{'trial_name'};
+        my $breeding_program = $_->{'breeding_program'};
+        my $location = $_->{'location'};
+        my $year = $_->{'year'};
+        my $design_type = $_->{'design_type'};
+        my $description = $_->{'description'};
+        my $accession_name = $_->{'accession_name'};
+        my $plot_number = $_->{'plot_number'};
+        my $block_number = $_->{'block_number'};
+        my $plot_name = $_->{'plot_name'};
+        my $trial_type = $_->{'trial_type'};
+        my $plot_width = $_->{'plot_width'};
+        my $plot_length = $_->{'plot_length'};
+        my $field_size = $_->{'field_size'};
+        my $planting_date = $_->{'planting_date'};
+        my $transplanting_date = $_->{'transplanting_date'};
+        my $harvest_date = $_->{'harvest_date'};
+        my $is_a_control = $_->{'is_a_control'};
+        my $rep_number = $_->{'rep_number'};
+        my $range_number = $_->{'range_number'};
+        my $row_number = $_->{'row_number'};
+        my $col_number = $_->{'col_number'};
+        my $seedlot_name = $_->{'seedlot_name'};
+        my $num_seed_per_plot = $_->{'num_seed_per_plot'};
+        my $weight_gram_seed_per_plot = $_->{'weight_gram_seed_per_plot'};
+        my $entry_number = $_->{'entry_number'};
+
+        # TODO: Remove
+        print STDERR "ROW: $row = $trial_name / $plot_name / $accession_name / $plot_number\n";
+
+        # Plot Number: must be a positive number
+        if (!($plot_number =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: plot number <strong>$plot_number</strong> must be a positive integer.";
+        }
+
+        # Block Number: must be a positive integer
+        if (!($block_number =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: block number <strong>$block_number</strong> must be a positive integer.";
+        }
+
+        # Rep Number: must be a positive integer, if provided
+        if ($rep_number && !($rep_number =~ /^\d+?$/)){
+            push @error_messages, "Row $row: rep_number <strong>$rep_number</strong> must be a positive integer.";
+        }
+
+        # Plot Name: cannot contain spaces, should not contain slashes
+        if ($plot_name =~ /\s/ ) {
+            push @error_messages, "Row $row: plot name <strong>$plot_name</strong> must not contain spaces.";
+        }
+        if ($plot_name =~ /\// || $plot_name =~ /\\/) {
+            push @warning_messages, "Row $row: plot name <strong>$plot_name</strong> contains slashes. Note that slashes can cause problems for third-party applications; however, plot names can be saved with slashes if you ignore warnings.";
+        }
+
+        # Plot Width / Plot Length / Field Size: must be a positive number, if provided
+        if ($plot_width && !($plot_width =~ /^([\d]*)([\.]?)([\d]+)$/)) {
+            push @error_messages, "Row $row: plot_width <strong>$plot_width</strong> must be a positive number.";
+        }
+        if ($plot_length && !($plot_length =~ /^([\d]*)([\.]?)([\d]+)$/)) {
+            push @error_messages, "Row $row: plot_length <strong>$plot_length</strong> must be a positive number.";
+        }
+        if ($field_size && !($field_size =~ /^([\d]*)([\.]?)([\d]+)$/)) {
+            push @error_messages, "Row $row: plot_width <strong>$field_size</strong> must be a positive number.";
+        }
+
+        # Transplanting / Planting / Harvest Dates: must be YYYY-MM-DD format, if provided
+        if ($transplanting_date && !$calendar_funcs->check_value_format($transplanting_date)) {
+            push @error_messages, "Row $row: transplanting_date <strong>$transplanting_date</strong> must be in the format YYYY-MM-DD.";
+        }
+        if ($planting_date && !$calendar_funcs->check_value_format($planting_date)) {
+            push @error_messages, "Row $row: planting_date <strong>$planting_date</strong> must be in the format YYYY-MM-DD.";
+        }
+        if ($harvest_date && !$calendar_funcs->check_value_format($harvest_date)) {
+            push @error_messages, "Row $row: harvest_date <strong>$harvest_date</strong> must be in the format YYYY-MM-DD.";
+        }
+
+        # Is A Control: must be blank, 0, or 1, if provided
+        if ( $is_a_control && $is_a_control ne '' && $is_a_control ne '0' && $is_a_control ne '1' ) {
+            push @error_messages, "Row $row: is_a_control value of <strong>$is_a_control</strong> is invalid.  It must be blank (not a control), 0 (not a control), or 1 (is a control).";
+        }
+
+        # Range Number / Row Number / Col Number: must be a positive integer, if provided
+        if ($range_number && !($range_number =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: range_number <strong>$range_number</strong> must be a positive integer.";
+        }
+        if ($row_number && !($row_number =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: row_number <strong>$row_number</strong> must be a positive integer.";
+        }
+        if ($col_number && !($col_number =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: col_number <strong>$col_number</strong> must be a positive integer.";
+        }
+
+        # Seedlots: add seedlot_name / accession_name to seedlot_pairs
+        # count and weight must be a positive integer
+        # return a warning if both count and weight are not provided
+        if ( $seedlot_name ) {
+            push @seedlot_pairs, [$seedlot_name, $accession_name];
+            if ( $num_seed_per_plot && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/) ) {
+                push @error_messages, "Row $row: num_seed_per_plot <strong>$num_seed_per_plot</strong> must be a positive integer.";
+            }
+            if ( $weight_gram_seed_per_plot && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/) ) {
+                push @error_messages, "Row $row: weight_gram_seed_per_plot <strong>$weight_gram_seed_per_plot</strong> must be a positive integer.";
+            }
+            if ( !$num_seed_per_plot && !$weight_gram_seed_per_plot ) {
+                push @warning_messages, "Row $row: this plot does not have a count or weight of seed to be used from seedlot <strong>$seedlot_name</strong>."
+            }
+        }
+
+        # Entry Number: must be a positive integer, if provided
+        if ($entry_number && !($entry_number =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: entry_number <strong>$entry_number</strong> must be a positive integer.";
+        }
+
+        # Treatment Values: must be either blank, 0, or 1
+        foreach my $treatment (@$treatments) {
+            my $treatment_value = $row->{$treatment};
+            print STDERR "Row $row: $treatment = $treatment_value\n";
+            if ( $treatment_value && $treatment_value ne '' && $treatment_value ne '0' && $treatment_value ne '1' ) {
+                push @error_messages, "Row $row: Treatment value for treatment <strong>$treatment</strong> should be either 1 (applied) or empty (not applied).";
+            }
+        }
+
+
+        # Create maps to check for overall validation within individual trials
+        my $tk = $trial_name;
+
+        # Map to check for duplicated plot numbers
+        if ( $plot_number ) {
+            my $pk = $plot_number;
+            if ( !exists $seen_plot_numbers{$tk} ) {
+                $seen_plot_numbers{$tk} = {};
+            }
+            if ( !exists $seen_plot_numbers{$tk}{$pk} ) {
+                $seen_plot_numbers{$tk}{$pk} = 1;
+            }
+            else {
+                $seen_plot_numbers{$tk}{$pk}++;
+            }
+        }
+
+        # Map to check for duplicated plot names
+        if ( $plot_name ) {
+            my $pk = $plot_name;
+            if ( !exists $seen_plot_names{$tk} ) {
+                $seen_plot_names{$tk} = {};
+            }
+            if ( !exists $seen_plot_names{$tk}{$pk} ) {
+                $seen_plot_names{$tk}{$pk} = [$plot_number];
+            }
+            else {
+                push @{$seen_plot_names{$tk}{$pk}}, $plot_number;
+            }
+        }
+
+        # Map to check for overlapping plots
+        if ( $row_number && $col_number ) {
+            my $pk = "$row_number-$col_number";
+            if ( !exists $seen_plot_positions{$tk} ) {
+                $seen_plot_positions{$tk} = {};
+            }
+            if ( !exists $seen_plot_positions{$tk}{$pk} ) {
+                $seen_plot_positions{$tk}{$pk} = [$plot_number];
+            }
+            else {
+                push @{$seen_plot_positions{$tk}{$pk}}, $plot_number;
+            }
+        }
+
+        # Map to check the entry number <-> accession associations
+        # For each trial: each entry number should only be associated with one accession
+        # and each accession should only be associated with one entry number
+        if ( $entry_number ) {
+            if ( !exists $seen_entry_numbers{$tk} ) {
+                $seen_entry_numbers{$tk}->{'by_num'} = {};
+                $seen_entry_numbers{$tk}->{'by_acc'} = {};
+            }
+
+            if ( !exists $seen_entry_numbers{$tk}->{'by_num'}->{$entry_number} ) {
+                $seen_entry_numbers{$tk}->{'by_num'}->{$entry_number} = [$accession_name];
+            }
+            else {
+                push @{$seen_entry_numbers{$tk}->{'by_num'}->{$entry_number}}, $accession_name;
+            }
+
+            if ( !exists $seen_entry_numbers{$tk}->{'by_acc'}->{$accession_name} ) {
+                $seen_entry_numbers{$tk}->{'by_acc'}->{$accession_name} = [$entry_number];
+            }
+            else {
+                push @{$seen_entry_numbers{$tk}->{'by_acc'}->{$accession_name}}, $entry_number;
+            }
+        }
+    }
+
     ##
     ## OVERALL VALIDATION
     ## These are checks on the unique values of different columns
     ##
 
-    # Trial Name: cannot contain spaces or slashes or already exist in the database
+    # Trial Name: cannot already exist in the database, cannot contain spaces, should not contain slashes
     my @already_used_trial_names;
     my @missing_trial_names = @{$validator->validate($schema,'trials',$parsed_values->{'trial_name'})->{'missing'}};
     my %unused_trial_names = map { $missing_trial_names[$_] => $_ } 0..$#missing_trial_names;
@@ -61,8 +291,8 @@ sub _validate_with_plugin {
         if ($_ =~ /\s/) {
             push @error_messages, "trial_name <strong>$_</strong> must not contain spaces.";
         }
-        elsif ($_ =~ /\// || $_ =~ /\\/) {
-            push @warning_messages, "trial_name <strong>$_</strong> contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
+        if ($_ =~ /\// || $_ =~ /\\/) {
+            push @warning_messages, "trial_name <strong>$_</strong> contains slashes. Note that slashes can cause problems for third-party applications; however, trial names can be saved with slashes if you ignore warnings.";
         }
     }
     if (scalar(@already_used_trial_names) > 0) {
@@ -76,11 +306,8 @@ sub _validate_with_plugin {
         push @error_messages, "Breeding program(s) <strong>".join(',',@breeding_programs_missing)."</strong> are not in the database.";
     }
 
-    # Location: must already exist in the database
-    # Transform location abbreviations to full names
+    # Location: Transform location abbreviations/codes to full names
     my $locations_hashref = $validator->validate($schema,'locations',$parsed_values->{'location'});
-
-    # Find valid location codes
     my @codes = @{$locations_hashref->{'codes'}};
     my %location_code_map;
     foreach my $code (@codes) {
@@ -91,57 +318,80 @@ sub _validate_with_plugin {
     }
     $self->_set_location_code_map(\%location_code_map);
 
-    # Check the missing locations, ignoring matched codes
+    # Location: must already exist in the database
     my @locations_missing = @{$locations_hashref->{'missing'}};
     my @locations_missing_no_codes = grep { !exists $location_code_map{$_} } @locations_missing;
     if (scalar(@locations_missing_no_codes) > 0) {
         push @error_messages, "Location(s) <strong>".join(',',@locations_missing_no_codes)."</strong> are not in the database.";
     }
 
-
-
-    # Year: must be a 4 digit number
+    # Year: must be a 4 digit integer
     foreach (@{$parsed_values->{'year'}}) {
         if (!($_ =~ /^\d{4}$/)) {
             push @error_messages, "year <strong>$_</strong> is not a valid year, must be a 4 digit positive integer.";
         }
     }
 
-
-
-
-
-
-
-
-    # Dates: must be YYYY-MM-DD format
-    foreach (@{$parsed_values->{'transplanting_date'}}) {
-        unless ($calendar_funcs->check_value_format($_)) {
-          push @error_messages, "transplanting_date <strong>$_</strong> must be in the format YYYY-MM-DD.";
-        }
-    }
-    foreach (@{$parsed_values->{'planting_date'}}) {
-        unless ($calendar_funcs->check_value_format($_)) {
-          push @error_messages, "planting_date <strong>$_</strong> must be in the format YYYY-MM-DD.";
-        }
-    }
-    foreach (@{$parsed_values->{'harvest_date'}}) {
-        unless ($calendar_funcs->check_value_format($_)) {
-          push @error_messages, "harvest_date <strong>$_</strong> must be in the format YYYY-MM-DD.";
+    # Design Type: must be a valid / supported design type
+    foreach (@{$parsed_values->{'design_type'}}) {
+        if ( !exists $valid_design_types{$_} ) {
+            push @error_messages, "design_type <strong>$_</strong> is not supported. Supported design types: " . join(', ', keys(%valid_design_types)) . ".";
         }
     }
 
+    # Trial Type: must be a valid / supported trial type
+    foreach (@{$parsed_values->{'trial_type'}}) {
+        if ( !exists $valid_trial_types{$_} ) {
+            push @error_messages, "trial_type <strong>$_</strong> is not supported. Supported trial types: " . join(', ', keys(%valid_trial_types)) . ".";
+        }
+    }
 
+    # Accession Names: must exist in the database
+    my @accessions = @{$parsed_values->{'accession_name'}};
+    my $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
 
+    #find unique synonyms. Sometimes trial uploads use synonym names instead of the unique accession name. We allow this if the synonym is unique and matches one accession in the database
+    my @synonyms = @{$accessions_hashref->{'synonyms'}};
+    foreach my $synonym (@synonyms) {
+        my $found_acc_name_from_synonym = $synonym->{'uniquename'};
+        my $matched_synonym = $synonym->{'synonym'};
 
-    ##
-    ## ROW BY ROW VALIDATION
-    ## These are checks on the individual plot-level data
-    ##
+        push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
+
+        @accessions = grep !/\Q$matched_synonym/, @accessions;
+        push @accessions, $found_acc_name_from_synonym;
+    }
+
+    #now validate again the accession names
+    $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+
+    my @accessions_missing = @{$accessions_hashref->{'missing'}};
+    my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
+
+    if (scalar(@accessions_missing) > 0) {
+        push @error_messages, "Accession(s) <strong>".join(',',@accessions_missing)."</strong> are not in the database as uniquenames or synonyms.";
+    }
+    if (scalar(@multiple_synonyms) > 0) {
+        my @msgs;
+        foreach my $m (@multiple_synonyms) {
+            push(@msgs, 'Name: ' . @$m[0] . ' = Synonym: ' . @$m[1]);
+        }
+        push @error_messages, "Accession(s) <strong>".join(',',@msgs)."</strong> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
+    }
+
+    # Seedlots...
+
+    # Check trial-level maps
 
 
     # NOT FINISHED!
-    push(@error_messages, "Generic Trial Upload not fully implemented!");
+    push @error_messages, "Generic Trial Upload not fully implemented!";
+
+
+    print STDERR "\n\n\n\n=====> WARNINGS:\n";
+    print STDERR Dumper \@warning_messages;
+    print STDERR "\n=====> ERRORS:\n";
+    print STDERR Dumper \@error_messages;
 
 
     if (scalar(@warning_messages) >= 1) {
