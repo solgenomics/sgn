@@ -37,7 +37,7 @@ function enable_ui() {
 jQuery(document).ready(function ($) {
 
     jQuery('#manage_accessions_populations_new').click(function(){
-        jQuery("#create_population_list_div").html(list.listSelect("create_population_list_div", ["accessions"], undefined, undefined, undefined ));
+//        jQuery("#create_population_list_div").html(list.listSelect("create_population_list_div", ["accessions"], undefined, undefined, undefined ));
         jQuery('#manage_populations_add_population_dialog').modal('show');
     });
 
