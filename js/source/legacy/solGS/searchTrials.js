@@ -8,10 +8,14 @@
 var solGS = solGS || function solGS() {};
 
 solGS.searchTrials = {
-  msgDiv: "#searched_trials_message",
+  msgDiv: "#trial_search_progress_message",
+  searchResultMsg: "#trial_search_result_message",
+  searchResultDiv: "#trial_search_result",
+
+
 
   searchAllTrials: function (url, result) {
-    jQuery("#all_trials_search_message")
+    jQuery(this.searchResultMsg)
       .html("Searching for GS trials..")
       .show();
 
@@ -25,51 +29,25 @@ solGS.searchTrials = {
 
     return traitTrials;
 
-    // jQuery("#all_trials_div").on('click', "div.paginate_nav a", function(e) {
-    //     var page = jQuery(this).attr('href');
-
-    //     jQuery("#all_trials_div").empty();
-
-    //     jQuery("#all_trials_search_message").html('Searching for more GS trials..').show();
-
-    //     if (page) {
-    //         jQuery.ajax({
-    //             type: 'POST',
-    //             dataType: "json",
-    //             url: page,
-    //             success: function(res) {
-    // 	    solGS.searchTrials.listAllTrials(res.trials)
-    //                 var pagination = res.pagination;
-    //                 jQuery("#all_trials_search_message").hide();
-    // 	    jQuery("#all_trials_div").append(pagination);
-    //             },
-    //             error: function() {
-    //                 jQuery("#all_trials_search_message").html('Error occured fetching the next set of GS trials.').show();
-    //             }
-    //         });
-    //     }
-
-    //     return false;
-    // });
   },
 
   listAllTrials: function (trials) {
     if (trials) {
       var tableId = "#all_trials_table";
-      var allTrialsDivId = "#all_trials_div";
+      //var allTrialsDivId = this.searchResultDiv; //"#trial_search_result";
 
       var tableDetails = {
-        divId: allTrialsDivId,
+        divId: this.searchResultDiv,
         tableId: tableId,
         data: trials,
       };
 
-      jQuery("#searched_trials_div").empty();
-      jQuery(allTrialsDivId).empty();
+      jQuery(this.searchResultDiv).empty();
+      // jQuery(this.searchResultDiv).empty();
 
       this.displayTrainingPopulations(tableDetails);
     } else {
-      jQuery("#all_trials_search_message").html("No trials to show.").show();
+      jQuery(this.searchResultMsg).html("No trials were found.").show();
     }
   },
 
@@ -91,14 +69,14 @@ solGS.searchTrials = {
   },
 
   checkPopulationExists: function (name) {
-    var msgDiv = this.msgDiv; // "#searched_trials_message";
+    var msgDiv = this.msgDiv; // "#trial_search_progress_message";
     var msg =
       "Checking if trial or training population " +
       name +
       " exists...please wait...";
     solGS.showMessage(msgDiv, msg);
 
-    jQuery("#all_trials_div").empty();
+    jQuery(this.searchResultMsg).empty();
 
     var checkPopExists = jQuery.ajax({
       type: "POST",
@@ -111,8 +89,6 @@ solGS.searchTrials = {
   },
 
   createTrialsTable: function (tableId) {
-    console.log(`create trials table tableid ${tableId}`);
-
     tableId = tableId.replace("#", "");
     var table =
       '<table id="' +
@@ -168,8 +144,8 @@ solGS.searchTrials = {
 
 //     jQuery('#search_all_training_pops').on('click', function () {
 
-// 	jQuery("#searched_trials_div").empty();
-// 	jQuery("#all_trials_div").empty();
+// 	jQuery("#trial_search_result").empty();
+// 	jQuery(searchResultMsg).empty();
 // 	var url = '/solgs/search/trials';
 //         var result = 'all';
 // 	solGS.searchTrials.searchAllTrials(url, result);
@@ -182,9 +158,11 @@ jQuery(document).ready(function () {
 });
 
 jQuery(document).ready(function () {
-  jQuery("#all_trials_div").on("click", "div.paginate_nav a", function (e) {
-    jQuery("#all_trials_div").empty();
-    jQuery("#all_trials_search_message")
+  var searchResultMsg = solGS.searchTrials.searchResultMsg;
+  var searchResultDiv = solGS.searchTrials.searchResultDiv;
+  jQuery(searchResultDiv).on("click", "div.paginate_nav a", function (e) {
+    jQuery(searchResultDiv).empty();
+    jQuery(searchResultMsg)
       .html("Searching for more GS trials..")
       .show();
 
@@ -197,11 +175,11 @@ jQuery(document).ready(function () {
         success: function (res) {
           solGS.searchTrials.listAllTrials(res.trials);
           var pagination = res.pagination;
-          jQuery("#all_trials_search_message").hide();
-          jQuery("#all_trials_div").append(pagination);
+          jQuery(searchResultMsg).hide();
+          jQuery(searchResultDiv).append(pagination);
         },
         error: function () {
-          jQuery("#all_trials_search_message")
+          jQuery(searchResultMsg)
             .html("Error occured fetching the next set of GS trials.")
             .show();
         },
@@ -213,6 +191,8 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
   var url = window.location.pathname;
+  var searchResultMsg = solGS.searchTrials.searchResultMsg;
+  var searchResultDiv = solGS.searchTrials.searchResultDiv;
 
   if (url.match(/solgs\/search\/trials\/trait\//) != null) {
     var traitId = jQuery("input[name='trait_id']").val();
@@ -226,20 +206,20 @@ jQuery(document).ready(function () {
       .searchAllTrials(url)
       .done(function (res) {
         if (res) {
-          jQuery("#all_trials_search_message").hide();
+          jQuery(searchResultMsg).hide();
           solGS.searchTrials.listAllTrials(res.trials);
           var pagination = res.pagination;
 
-          jQuery("#all_trials_search_message").hide();
-          jQuery("#all_trials_div").append(pagination);
+          jQuery(searchResultMsg).hide();
+          jQuery(searchResultDiv).append(pagination);
         } else {
-          jQuery("#all_trials_search_message")
+          jQuery(searchResultMsg)
             .html("No trials phenotyped for the trait were found.")
             .show();
         }
       })
       .fail(function () {
-        jQuery("#all_trials_search_message")
+        jQuery(searchResultMsg)
           .html("Error occured fetching the first set of GS trials.")
           .show();
       });
@@ -255,18 +235,18 @@ jQuery(document).ready(function () {
   var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
   console.log(`SearchTrials protocolId: ${protocolId}`);
 
-  jQuery("#population_search_entry").keyup(function (e) {
-    jQuery("#population_search_entry").css("border", "solid #96d3ec");
+  jQuery("#trial_search_box").keyup(function (e) {
+    jQuery("#trial_search_box").css("border", "solid #96d3ec");
     jQuery("#form-feedback-search-trials").empty();
 
     if (e.keycode == 13) {
-      jQuery("#search_training_pop").click();
+      jQuery("#search_trial").click();
     }
   });
 
-  jQuery("#search_training_pop").on("click", function () {
-    var entry = jQuery("#population_search_entry").val();
-    jQuery("#searched_trials_message").hide();
+  jQuery("#search_trial").on("click", function () {
+    var entry = jQuery("#trial_search_box").val();
+    jQuery("#trial_search_progress_message").hide();
 
     var msgDiv = solGS.searchTrials.msgDiv;
     if (entry) {
@@ -283,9 +263,9 @@ jQuery(document).ready(function () {
               .checkTrainingPopulation(res.population_ids)
               .done(function (res) {
                 if (res.is_training_population) {
-                  var resultDivId = "#searched_trials_div";
+                  var resultDivId = "#trial_search_result";
                   var tableId = "#searched_trials_table";
-                  var msgDiv = solGS.searchTrials.msgDiv; //'#searched_trials_message';
+                  var msgDiv = solGS.searchTrials.msgDiv; //'#trial_search_progress_message';
                   jQuery(msgDiv).hide();
                   jQuery(resultDivId).show();
 
@@ -300,7 +280,7 @@ jQuery(document).ready(function () {
                   if (table) {
                     var rowsCount = table.rows.length;
                     if (rowsCount > 1) {
-                      jQuery("#select_trials_div").show();
+                      jQuery("#trial_search_result_select").show();
                     }
                   }
 
@@ -329,7 +309,7 @@ jQuery(document).ready(function () {
           solGS.showMessage(msgDiv, msg);
         });
     } else {
-      jQuery("#population_search_entry").css("border", "solid #FF0000");
+      jQuery("#trial_search_box").css("border", "solid #FF0000");
 
       jQuery("#form-feedback-search-trials").text("Please enter trial name.");
     }
