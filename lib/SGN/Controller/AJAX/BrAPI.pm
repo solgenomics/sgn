@@ -298,12 +298,14 @@ sub _authenticate_user {
 	}
 	else { 
 	    print STDERR "GET USER ID FROM LOGIN...\n";
-	    $user_id = $c->user->get_object->get_sp_person_id();
-	    ($user_type) = $c->user->get_object->get_user_type();
+	    if ($c->user) {
+		$user_id = $c->user->get_object->get_sp_person_id();
+		($user_type) = $c->user->get_object->get_user_type();
 	   
-	    my $cookie_string = $login->get_login_cookie();
-	    print STDERR "USER ID: $user_id, EXPIRED: $expired, USER TYPE: $user_type\n";
-	    $c->stash->{session_token} = $login->get_login_cookie();
+		my $cookie_string = $login->get_login_cookie();
+		print STDERR "USER ID: $user_id, EXPIRED: $expired, USER TYPE: $user_type\n";
+		$c->stash->{session_token} = $login->get_login_cookie();
+	    }
 	}
           
         if (!$user_id || $expired || !$user_type || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
