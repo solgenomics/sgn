@@ -260,8 +260,10 @@ sub _authenticate_user {
 	my $expired;
 	my $wildcard = 'any';
 
+        print STDERR "AUTHENTICATING USER status: $status\n";    
 	my %server_permission;
-	my $rc = eval{
+    my $rc = eval{
+	print STDERR "SERVER PERMISSION CHECK...\n";
 		my $server_permission = $c->config->{"brapi_" . $c->request->method};
 		my @server_permission  = split ',', $server_permission;
 		%server_permission = map { $_ => 1 } @server_permission;
@@ -271,9 +273,11 @@ sub _authenticate_user {
 		$server_permission{$wildcard} = 1;
 	}
 
+    print STDERR "SERVER CHECK DONE...\n";
 	# Check if there is a config for default brapi user. This will be overwritten if a token is passed.
 	# Will still throw error if auth is required
-	if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
+    if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
+	print STDERR "BRAPI DEFAULT USER CHECK...\n";
 		$user_id = CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
 		$user_type = $c->config->{brapi_default_user_role};
 		if (! defined $user_id) {
@@ -283,11 +287,25 @@ sub _authenticate_user {
 	}
 
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
-	# authentication or serverinfo call method request auth, we authenticate.
+    # authentication or serverinfo call method request auth, we authenticate.
+    my $login = CXGN::Login->new($c->dbc->dbh); 
     if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
-        ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-        #print STDERR $user_id." : ".$user_type." : ".$expired;
-
+	print STDERR "REQUIRE LOGIN... logging in user\n";
+	print STDERR "SESSION TOKEN: ".$c->stash->{session_token}."\n";
+	if ($c->stash->{session_token}) { 
+	    ($user_id, $user_type, $user_pref, $expired) = $login->query_from_cookie($c->stash->{session_token});
+	    print STDERR "LOGGING IN USER: ".$user_id." : ".$user_type." : ".$expired;
+	}
+	else { 
+	    print STDERR "GET USER ID FROM LOGIN...\n";
+	    $user_id = $c->user->get_object->get_sp_person_id();
+	    ($user_type) = $c->user->get_object->get_user_type();
+	   
+	    my $cookie_string = $login->get_login_cookie();
+	    print STDERR "USER ID: $user_id, EXPIRED: $expired, USER TYPE: $user_type\n";
+	    $c->stash->{session_token} = $login->get_login_cookie();
+	}
+          
         if (!$user_id || $expired || !$user_type || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
