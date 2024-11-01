@@ -1,6 +1,7 @@
 package CXGN::Trial::ParseUpload::Plugin::MultipleTrialDesignGeneric;
 
 use Moose::Role;
+use List::MoreUtils qw(uniq);
 use CXGN::File::Parse;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
@@ -224,17 +225,14 @@ sub _validate_with_plugin {
             }
         }
 
-        # Map to check for duplicated plot names
+        # Map to check for duplicated plot names (unique across all trials)
         if ( $plot_name ) {
             my $pk = $plot_name;
-            if ( !exists $seen_plot_names{$tk} ) {
-                $seen_plot_names{$tk} = {};
-            }
-            if ( !exists $seen_plot_names{$tk}{$pk} ) {
-                $seen_plot_names{$tk}{$pk} = [$plot_number];
+            if ( !exists $seen_plot_names{$pk} ) {
+                $seen_plot_names{$pk} = 1;
             }
             else {
-                push @{$seen_plot_names{$tk}{$pk}}, $plot_number;
+                $seen_plot_names{$pk}++;
             }
         }
 
@@ -314,7 +312,7 @@ sub _validate_with_plugin {
         my $location_code = $code->[0];
         my $found_location_name = $code->[1];
         $location_code_map{$location_code} = $found_location_name;
-        push @warning_messages, "File location '$location_code' matches the code for the location named '$found_location_name' and will be substituted if you ignore warnings.";
+        push @warning_messages, "File location <strong>$location_code</strong> matches the code for the location named <strong>$found_location_name</strong> and will be substituted if you ignore warnings.";
     }
     $self->_set_location_code_map(\%location_code_map);
 
@@ -379,21 +377,85 @@ sub _validate_with_plugin {
         push @error_messages, "Accession(s) <strong>".join(',',@msgs)."</strong> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
     }
 
-    # Seedlots...
+    # Plot Names: should nnot exist (as any stock)
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => $parsed_values->{'plot_name'} }
+    });
+    while (my $r=$rs->next) {
+        push @error_messages, "Plot name <strong>".$r->uniquename."</strong> already exists in the database. Each plot must have a new unique name.";
+    }
 
-    # Check trial-level maps
+    # Seedlots: names must exist in the database
+    my @seedlots_missing = @{$validator->validate($schema,'seedlots',$parsed_values->{'seedlot_name'})->{'missing'}};
+    if (scalar(@seedlots_missing) > 0) {
+      push @error_messages, "Seedlot(s) <strong>".join(',',@seedlots_missing)."</strong> are not in the database.  To use a seedlot as a seed source for a plot, the seedlot must already exist in the database.";
+    }
 
+    # Verify seedlot pairs: accession name of plot must match seedlot contents
+    if ( scalar(@seedlot_pairs) > 0 ) {
+        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_pairs);
+        if (exists($return->{error})){
+        push @error_messages, $return->{error};
+        }
+    }
 
-    # NOT FINISHED!
-    push @error_messages, "Generic Trial Upload not fully implemented!";
+    # Check for duplicated plot numbers
+    foreach my $tk (keys %seen_plot_numbers) {
+        foreach my $pk (keys %{$seen_plot_numbers{$tk}}) {
+            my $count = $seen_plot_numbers{$tk}{$pk};
+            if ( $count > 1 ) {
+                push @error_messages, "Plot number <strong>$pk</strong> in trial <strong>$tk</strong> is used $count times.  Each plot should have a unique plot number in an individual trial.";
+            }
+        }
+    }
 
+    # Check for duplicated plot names
+    foreach my $pk (keys %seen_plot_names) {
+        my $count = $seen_plot_names{$pk};
+        if ( $count > 1 ) {
+            push @error_messages, "Plot name <strong>$pk</strong> is used $count times. Each plot should have a unique plot name across all trials.";
+        }
+    }
 
-    print STDERR "\n\n\n\n=====> WARNINGS:\n";
-    print STDERR Dumper \@warning_messages;
-    print STDERR "\n=====> ERRORS:\n";
-    print STDERR Dumper \@error_messages;
+    # Check for overlapping plot positions (more than one plot assigned the same row/col positions)
+    foreach my $tk (keys %seen_plot_positions) {
+        foreach my $pk (keys %{$seen_plot_positions{$tk}}) {
+            my $plots = $seen_plot_positions{$tk}{$pk};
+            my $count = scalar(@$plots);
+            if ( $count > 1 ) {
+                my @pos = split('-', $pk);
+                push @warning_messages, "More than 1 plot is assigned to the position row=" . $pos[0] . " col=" . $pos[1] . " trial=" . $tk . " plots=" . join(',', @$plots);
+            }
+        }
+    }
 
+    # Check for entry number errors:
+    # the same accession assigned different entry numbers
+    # the same entry number assigned to different accessions
+    foreach my $tk (keys %seen_entry_numbers) {
 
+        # check assignments by accessions
+        foreach my $an (keys %{$seen_entry_numbers{$tk}{'by_acc'}} ) {
+            my @ens = uniq @{$seen_entry_numbers{$tk}{'by_acc'}{$an}};
+            my $count = scalar(@ens);
+            if ( scalar(@ens) > 1 ) {
+                push @error_messages, "Entry Number mismatch: Accession <strong>$an</strong> has multiple entry numbers (" . join(', ', @ens) . ") assigned to it in trial <strong>$tk</strong>.";
+            }
+        }
+
+        # check assigments by entry number
+        foreach my $en (keys %{$seen_entry_numbers{$tk}{'by_num'}} ) {
+            my @ans = uniq @{$seen_entry_numbers{$tk}{'by_num'}{$en}};
+            my $count = scalar(@ans);
+            if ( scalar(@ans) > 1 ) {
+                push @error_messages, "Entry Number mismatch: Entry number <strong>$en</strong> has multiple accessions (" . join(', ', @ans) . ") assigned to it in trial <strong>$tk</strong>.";
+            }
+        }
+
+    }
+
+    # Return warnings and error messages
     if (scalar(@warning_messages) >= 1) {
         $warnings{'warning_messages'} = \@warning_messages;
         $self->_set_parse_warnings(\%warnings);
@@ -412,6 +474,8 @@ sub _parse_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
+
+  print STDERR "\n\n\n\n===> PARSE WITH PLUGIN:\n";
 
   # Match a dot, extension .xls / .xlsx
   my ($extension) = $filename =~ /(\.[^.]+)$/;
