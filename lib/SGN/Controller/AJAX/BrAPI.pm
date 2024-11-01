@@ -61,7 +61,7 @@ my $DEFAULT_PAGE_SIZE=10;
 sub deserialize_image {
 	my ( $self, $data, $c ) = @_;
 	# want $c->request->data to be undefined so that parsing in brapi sub skips it
-	return undef;
+	return;
 }
 
 # have to serialize the json because using the callbacks in the config map
@@ -100,13 +100,16 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $session_token = $c->req->headers->header("access_token") || $bearer_token;
 
 	if (defined $c->request->data){
-		my $data_type = ref $c->request->data;
-		my $current_page = $c->request->data->{"page"} if ($data_type ne 'ARRAY');
-		my $current_page_size = $c->request->data->{"pageSize"} if ($data_type ne 'ARRAY');
-		my $current_sesion_token = $c->request->data->{"access_token"} if ($data_type ne 'ARRAY');
-		$page = $current_page || $page || 0;
-		$page_size = $current_page_size || $page_size || $DEFAULT_PAGE_SIZE;
-        $session_token = $current_sesion_token|| $session_token;
+	    my $data_type = ref $c->request->data;
+	    my $current_page;
+	    $current_page = $c->request->data->{"page"} if ($data_type ne 'ARRAY');
+	    my $current_page_size;
+	    $current_page_size = $c->request->data->{"pageSize"} if ($data_type ne 'ARRAY');
+	    my $current_session_token;
+	    $current_session_token = $c->request->data->{"access_token"} if ($data_type ne 'ARRAY');
+	    $page = $current_page || $page || 0;
+	    $page_size = $current_page_size || $page_size || $DEFAULT_PAGE_SIZE;
+	    $session_token = $current_session_token|| $session_token;
 	}
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
