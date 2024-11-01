@@ -1,6 +1,9 @@
 <%args>
 </%args>
 
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Accessions'] &>
+
+
 <div class="modal fade" id="manage_populations_add_population_dialog" name="manage_populations_add_population_dialog" tabindex="-1" role="dialog" aria-labelledby="addPopulationDialog" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -21,30 +24,30 @@
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Member Type: </label>
                             <div class="col-sm-8">
-                                <select class="form-control" id="select_member_type">
+                                <select class="form-control" id="member_type">
                                     <option value="">Select a member type</option>
-                                    <option value="accession">accession</option>
-                                    <option value="plot">plot</option>
-                                    <option value="plant">plant</option>
+                                    <option value="accessions">accessions</option>
+                                    <option value="plots">plots</option>
+                                    <option value="plants">plants</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <div id="population_accession_list" style="display:none">
+                        <div id="population_accession_list" style="display:none">
+                            <div class="form-group">
                                 <label class="col-sm-4 control-label">Choose a List of Accessions to Add: </label>
                                 <div class="col-sm-8" id="create_population_accession_list_div" name="create_population_accession_list_div">
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <div id="population_plot_list" style="display:none">
+                        <div id="population_plot_list" style="display:none">
+                            <div class="form-group">
                                 <label class="col-sm-4 control-label">Choose a List of Plots to Add: </label>
                                 <div class="col-sm-8" id="create_population_plot_list_div" name="create_population_plot_list_div">
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <div id="population_plant_list" style="display:none">
+                        <div id="population_plant_list" style="display:none">
+                            <div class="form-group">
                                 <label class="col-sm-4 control-label">Choose a List of Plants to Add: </label>
                                 <div class="col-sm-8" id="create_population_plant_list_div" name="create_population_plant_list_div">
                                 </div>
@@ -140,23 +143,23 @@
 
 jQuery(document).ready(function(){
 
-    jQuery("#select_member_type").change(function() {
+    jQuery("#member_type").change(function() {
 
         if(jQuery(this).val() == ''){
             jQuery('#population_accession_list').hide();
             jQuery('#population_plot_list').hide();
             jQuery('#population_plant_list').hide();
-        } else if(jQuery(this).val() == 'accession'){
+        } else if(jQuery(this).val() == 'accessions'){
             document.getElementById("create_population_accession_list_div").innerHTML = list.listSelect("create_population_accession_list_div", [ 'accessions' ], 'select a list', undefined, undefined);
             jQuery('#population_accession_list').show();
             jQuery('#population_plot_list').hide();
             jQuery('#population_plant_list').hide();
-        } else if (jQuery(this).val() == 'plot'){
+        } else if (jQuery(this).val() == 'plots'){
             document.getElementById("create_population_plot_list_div").innerHTML = list.listSelect("create_population_plot_list_div", [ 'plots' ], 'select a list', undefined, undefined);
             jQuery('#population_accession_list').hide();
             jQuery('#population_plot_list').show();
             jQuery('#population_plant_list').hide();
-        } else if (jQuery(this).val() == 'plant'){
+        } else if (jQuery(this).val() == 'plants'){
             document.getElementById("create_population_plant_list_div").innerHTML = list.listSelect("create_population_plant_list_div", [ 'plants' ], 'select a list', undefined, undefined);
             jQuery('#population_accession_list').hide();
             jQuery('#population_plot_list').hide();

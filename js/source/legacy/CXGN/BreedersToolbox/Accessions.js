@@ -42,13 +42,69 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery("#create_population_submit").click(function(){
+        const lo = new CXGN.List();
+
+        const population_name = jQuery('#create_population_name').val();
+        if (!population_name) {
+            alert ("Population name is required");
+            return;
+        }
+
+        const member_type = jQuery('#member_type').val();
+        if (!member_type) {
+            alert ("Member type is required");
+            return;
+        }
+
+        let list_id;
+        let list_validation = 1;
+
+        if (member_type == 'accessions') {
+            list_id =  jQuery('#create_population_accession_list_div_list_select').val();
+            if (!list_id) {
+                alert ("A list of accessions is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(list_id, 'accessions', true);
+                if (list_validation != 1) {
+                    alert("The accession list did not pass validation. Names in the list must be uniquenames in the database");
+                    return;
+                }
+            }
+        } else if (member_type == 'plots') {
+            list_id =  jQuery('#create_population_plot_list_div_list_select').val();
+            if (!list_id) {
+                alert ("A list of plots is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(list_id, 'plots', true);
+                if (list_validation != 1) {
+                    alert("The plot list did not pass validation. Names in the list must be uniquenames in the database");
+                    return;
+                }
+            }
+        } else if (member_type == 'plants') {
+            list_id =  jQuery('#create_population_plant_list_div_list_select').val();
+            if (!list_id) {
+                alert ("A list of plants is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(list_id, 'plants', true);
+                if (list_validation != 1) {
+                    alert("The plant list did not pass validation. Names in the list must be uniquenames in the database");
+                    return;
+                }
+            }
+        }
+
         jQuery.ajax({
             type: 'POST',
             url: '/ajax/population/new',
             dataType: "json",
             data: {
-                'population_name': jQuery('#create_population_name').val(),
-                'accession_list_id': jQuery('#create_population_list_div_list_select').val(),
+                'population_name': population_name,
+                'member_type': member_type,
+                'list_id': list_id,
             },
             beforeSend: function(){
                 disable_ui();

@@ -56,18 +56,20 @@ sub create_population :Path('/ajax/population/new') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
 
     my $population_name = $c->req->param('population_name');
-    my $accession_list_id = $c->req->param('accession_list_id');
+    my $member_type = $c->req->param('member_type');
+    my $list_id =  $c->req->param('list_id');
+
     my $members;
-    if ($accession_list_id){
+    if ($list_id){
         my $dbh = $c->dbc->dbh;
-        my $list = CXGN::List->new({dbh=>$dbh, list_id=>$accession_list_id});
+        my $list = CXGN::List->new({dbh=>$dbh, list_id=>$list_id});
         $members = $list->elements();
     } else {
         my @input_members = $c->req->param('accessions[]');
         $members = \@input_members;
     }
 
-    my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, phenome_schema => $phenome_schema, user_id => $user_id, name => $population_name, members => $members} );
+    my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, phenome_schema => $phenome_schema, user_id => $user_id, name => $population_name, members => $members, member_type => $member_type} );
     my $return = $population_add->add_population();
 
     $c->stash->{rest} = $return;

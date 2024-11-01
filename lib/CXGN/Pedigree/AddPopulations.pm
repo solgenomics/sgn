@@ -59,6 +59,14 @@ has 'members' => (
     required => 1,
 );
 
+has 'member_type' => (
+    isa =>'Str',
+    is => 'rw',
+    predicate => 'has_member_type',
+    default => 'accessions'
+);
+
+
 sub add_population {
     my $self = shift;
     my $schema = $self->get_schema();
@@ -66,12 +74,15 @@ sub add_population {
     my $phenome_schema = $self->get_phenome_schema();
     my $user_id = $self->get_user_id();
     my @members = @{$self->get_members()};
+    my $member_type = $self->get_member_type();
     my $error;
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $member_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property')->cvterm_id();
+
     my $population_id;
 
     my $previous_pop_rs = $schema->resultset("Stock::Stock")->search({
