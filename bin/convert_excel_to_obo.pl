@@ -90,7 +90,7 @@ foreach my $d (@$data) {
 print STDERR "VARIABLES: ".Dumper(\%variables);
 
     
-my $root_id = 0;
+my $root_id = format_ontology_id($opt_n, 0);
 my $count = $root_id;
 my $acc = sprintf "%07d", $count; # the number after the ontology name and a colon
 
@@ -111,6 +111,9 @@ HEADER
 #
 my $header = <$F>;
 
+my $root_acc = $acc;
+my $root_name = "ROOT";
+
 print <<TERM;
 
 [Term]
@@ -129,11 +132,11 @@ foreach my $k (keys %trait_classes) {
 	$ontology_name,
 	$count,
 	$k,
-	undef,
+	$k,
 	undef,
 	$ontology_name,
-	$root_id,
-	);
+	$root_name,
+	)."\n";
 
     $trait_classes{$k}->{acc} = $count;
     $trait_classes{$k}->{name} = $k;
@@ -175,9 +178,9 @@ foreach my $k (keys %variables) {
     print format_variable(
 	$ontology_name,
 	$count,
-	$variables{$k}->{Variable},
+	$variables{$k}->{'Trait name'}.", ".$variables{$k}->{'Method Name'}.", ".$variables{$k}->{'Scale name'},
 	join(" - ", $variables{$k}->{'Trait description'}, $variables{$k}->{'Method Name'}, $variables{$k}->{'Scale name'}),
-	$variables{$k}->{'synonyms'},
+	$k, #$variables{$k}->{'synonyms'},
 	$traits{$variables{$k}->{'Trait name'}}->{acc},
 	$variables{$k}->{'Trait name'},
 	
@@ -213,12 +216,12 @@ sub format_trait {
 	"id:" =>  $trait_id,
 	"name:" =>  $name,
 	"def:" => "\"$description\" []",
-	"synonyms:" => $synonyms,
+	"synonym:" => $synonyms,
 	"namespace:" => $ontology_name,
 	"is_a:" => "$parent_trait_id ! $parent_trait",
 	);
 
-    foreach my $k ("[Term]", "id:", "name:", "def:", "synonyms:", "namespace", "is_a:") {
+    foreach my $k ("[Term]", "id:", "name:", "def:", "synonym:", "namespace:", "is_a:") {
 	if (defined($record{$k})) {
 	    print "$k $record{$k}\n";
 	}
@@ -236,7 +239,7 @@ sub format_variable {
     my $parent_trait_id = shift;
     my $parent_trait_name = shift;
 
-    print STDERR "Parent trait name: $parent_trait_name\n";
+    #print STDERR "Parent trait name: $parent_trait_name\n";
 
     my $variable_id = format_ontology_id($ontology_code, $id);
     my $parent_trait_id = format_ontology_id($ontology_code, $parent_trait_id);
@@ -245,12 +248,12 @@ sub format_variable {
 	"id:" =>  $variable_id,
 	"name:" => $name,
 	"def:"=> "\"$description\" []",
-	"synonyms:" =>  $synonyms,
+	"synonym:" =>  $synonyms,
 	"namespace:" => $ontology_name,
 	"relationship:" => "variable_of $parent_trait_id ! $parent_trait_name",
 	);
     
-    foreach my $k ("[Term]", "id:", "name:", "def:", "synonyms:", "namespace:", "relationship:") {
+    foreach my $k ("[Term]", "id:", "name:", "def:", "synonym:", "namespace:", "relationship:") {
 	if (defined($record{$k})) {
 	    print "$k $record{$k}\n";
 	}
