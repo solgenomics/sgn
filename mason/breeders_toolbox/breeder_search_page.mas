@@ -424,10 +424,10 @@ $dataset_id => undef
 		Repetitive measurements: <br />
 
 		<select class="wizard-download-repetitive-measurements-type" >
-                  <option>first value</option>
-                  <option>last value</option>
-                  <option selected>averaged value</option>
-                  <option>all values</option>
+                  <option value="first">First value</option>
+                  <option value="last">Last value</option>
+                  <option value="average" selected>Averaged value</option>
+                  <option value="all">All values</option>
 		</select>
 	      </td>
 	      <td style="border-top: none; padding-top: 0">
