@@ -502,8 +502,7 @@ sub _parse_with_plugin {
     my %seen_entry_numbers;
     my $trial_name = '';
     for my $row (@$data) {
-        print STDERR Dumper $row;
-
+        my $row_id = $row->{'_row'};
         my $current_trial_name = $row->{'trial_name'};
         my $accession_name = $row->{'accession_name'};
         my $plot_number = $row->{'plot_number'};
@@ -593,7 +592,7 @@ sub _parse_with_plugin {
             $accession_name = $accession_names[0];
         }
 
-        my $key = $row;
+        my $key = $row_id;
         $design_details{$key}->{plot_name} = $plot_name;
         $design_details{$key}->{stock_name} = $accession_name;
         $design_details{$key}->{plot_number} = $plot_number;
