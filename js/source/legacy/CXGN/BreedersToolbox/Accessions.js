@@ -175,7 +175,8 @@ jQuery(document).ready(function ($) {
             ajax: '/ajax/manage_accessions/population_members/'+population_id,
             destroy: true,
             columns: [
-                { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
+                { title: "Member Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
+                { title: "Member Type", "data": "stock_type" },
                 { title: "Description", "data": "description" },
                 { title: "Synonyms", "data": "synonyms[, ]" },
                 { title: "Remove From Population", "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },

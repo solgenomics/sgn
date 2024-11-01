@@ -93,7 +93,7 @@ sub get_population_members {
     my $schema = $self->schema();
     my $population_member_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
 
-    my @accessions_in_population;
+    my @members_in_population;
     my $population_members = $schema->resultset("Stock::Stock")->search(
     {
         'object.stock_id'=> $population_stock_id,
@@ -103,11 +103,14 @@ sub get_population_members {
     );
 
     while (my $population_member_row = $population_members->next()) {
-        my %accession_info;
-        $accession_info{'stock_relationship_id'}=$population_member_row->get_column('stock_relationship_id');
-        $accession_info{'name'}=$population_member_row->name();
-        $accession_info{'description'}=$population_member_row->description();
-        $accession_info{'stock_id'}=$population_member_row->stock_id();
+        my %member_info;
+        $member_info{'stock_relationship_id'}=$population_member_row->get_column('stock_relationship_id');
+        $member_info{'name'}=$population_member_row->name();
+        $member_info{'description'}=$population_member_row->description();
+        $member_info{'stock_id'}=$population_member_row->stock_id();
+
+        my $stock_type = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $population_member_row->type_id()})->name();
+        $member_info{'stock_type'}=$stock_type;
         my $synonyms_rs;
         $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => {ilike => '%synonym%' } }, { join => 'type' });
         my @synonyms;
@@ -116,10 +119,10 @@ sub get_population_members {
                 push @synonyms, $synonym_row->value();
             }
         }
-        $accession_info{'synonyms'}=\@synonyms;
-        push @accessions_in_population, \%accession_info;
+        $member_info{'synonyms'}=\@synonyms;
+        push @members_in_population, \%member_info;
     }
-    return \@accessions_in_population;
+    return \@members_in_population;
 }
 
 sub get_possible_seedlots {
