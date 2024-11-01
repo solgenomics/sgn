@@ -113,9 +113,6 @@ sub _validate_with_plugin {
         my $weight_gram_seed_per_plot = $_->{'weight_gram_seed_per_plot'};
         my $entry_number = $_->{'entry_number'};
 
-        # TODO: Remove
-        print STDERR "ROW: $row = $trial_name / $plot_name / $accession_name / $plot_number\n";
-
         # Plot Number: must be a positive number
         if (!($plot_number =~ /^\d+?$/)) {
             push @error_messages, "Row $row: plot number <strong>$plot_number</strong> must be a positive integer.";
@@ -362,7 +359,6 @@ sub _validate_with_plugin {
 
     #now validate again the accession names
     $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
-
     my @accessions_missing = @{$accessions_hashref->{'missing'}};
     my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
@@ -377,7 +373,7 @@ sub _validate_with_plugin {
         push @error_messages, "Accession(s) <strong>".join(',',@msgs)."</strong> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
     }
 
-    # Plot Names: should nnot exist (as any stock)
+    # Plot Names: should not exist (as any stock)
     my $rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => $parsed_values->{'plot_name'} }
@@ -466,341 +462,181 @@ sub _validate_with_plugin {
         return;
     }
 
+    $self->_set_validated_data($parsed);
     return 1; #returns true if validation is passed
 }
 
 
 sub _parse_with_plugin {
-  my $self = shift;
-  my $filename = $self->get_filename();
-  my $schema = $self->get_chado_schema();
+    my $self = shift;
+    my $schema = $self->get_chado_schema();
+    my $parsed = $self->_get_validated_data();
+    my $data = $parsed->{'data'};
+    my $values = $parsed->{'values'};
+    my $treatments = $parsed->{'additional_columns'};
 
-  print STDERR "\n\n\n\n===> PARSE WITH PLUGIN:\n";
+    # Get synonyms for accessions in data
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    my @accessions = @{$values->{'accession_name'}};
+    my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+        'me.is_obsolete' => { '!=' => 't' },
+        'stockprops.value' => { -in => \@accessions},
+        'me.type_id' => $accession_cvterm_id,
+        'stockprops.type_id' => $synonym_cvterm_id
+    },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
 
-  # Match a dot, extension .xls / .xlsx
-  my ($extension) = $filename =~ /(\.[^.]+)$/;
-  my $parser;
-
-  if ($extension eq '.xlsx') {
-    $parser = Spreadsheet::ParseXLSX->new();
-  }
-  else {
-    $parser = Spreadsheet::ParseExcel->new();
-  }
-
-  my $excel_obj;
-  my $worksheet;
-
-  $excel_obj = $parser->parse($filename);
-  if ( !$excel_obj ) {
-    return;
-  }
-
-  $worksheet = ( $excel_obj->worksheets() )[0];
-  my ( $row_min, $row_max ) = $worksheet->row_range();
-
-  my $headers = _parse_headers($worksheet);
-  my %columns = %{$headers->{columns}};
-  my @treatment_names = @{$headers->{treatments}};
-
-  my %seen_accession_names;
-  for my $row ( 1 .. $row_max ) {
-    my $accession_name;
-    if ($worksheet->get_cell($row,$columns{accession_name}->{index})) {
-      $accession_name = $worksheet->get_cell($row,$columns{accession_name}->{index})->value();
-      $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-      $seen_accession_names{$accession_name}++;
-    }
-  }
-  my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-  my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
-
-  my @accessions = keys %seen_accession_names;
-  my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
-    'me.is_obsolete' => { '!=' => 't' },
-    'stockprops.value' => { -in => \@accessions},
-    'me.type_id' => $accession_cvterm_id,
-    'stockprops.type_id' => $synonym_cvterm_id
-  },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
-  my %acc_synonyms_lookup;
-  while (my $r=$acc_synonym_rs->next){
-    $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
-  }
-
-  my %all_designs;
-  my %single_design;
-  my %design_details;
-  my $trial_name = '';
-  my $breeding_program;
-  my $location;
-  my $year;
-  my $design_type;
-  my $description;
-  my @valid_trial_types = CXGN::Trial::get_all_project_types($schema);
-  my %trial_type_map = map { @{$_}[1] => @{$_}[0] } @valid_trial_types;
-  my $trial_type;
-  my $plot_width;
-  my $plot_length;
-  my $field_size;
-  my $planting_date;
-  my $harvest_date;
-  my %seen_entry_numbers;
-
-  for my $row ( 1 .. $row_max ) {
-
-    my $current_trial_name;
-    my $plot_name;
-    my $accession_name;
-    my $plot_number;
-    my $block_number;
-    my $is_a_control;
-    my $rep_number;
-    my $range_number;
-    my $row_number;
-    my $col_number;
-    my $seedlot_name;
-    my $num_seed_per_plot = 0;
-    my $weight_gram_seed_per_plot = 0;
-    my $entry_number;
-
-    if ($worksheet->get_cell($row,$columns{trial_name}->{index})) {
-      $current_trial_name = $worksheet->get_cell($row,$columns{trial_name}->{index})->value();
+    # Create lookup hash for synonym -> uniquename -> stock id
+    my %acc_synonyms_lookup;
+    while (my $r=$acc_synonym_rs->next){
+        $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
     }
 
-    if ($current_trial_name && $current_trial_name ne $trial_name) {
+    # Create map of trial type codes to trial type ids
+    my @valid_trial_types = CXGN::Trial::get_all_project_types($schema);
+    my %trial_type_map = map { @{$_}[1] => @{$_}[0] } @valid_trial_types;
 
-      if ($trial_name) {
-        ## Save old single trial hash in all trials hash; reinitialize temp hashes
-        my %final_design_details = ();
-        my $previous_design_data = $all_designs{$trial_name}{'design_details'};
-        if ($previous_design_data) {
-            %final_design_details = (%design_details, %{$all_designs{$trial_name}{'design_details'}});
+    my %all_designs;
+    my %single_design;
+    my %design_details;
+    my %seen_entry_numbers;
+    my $trial_name = '';
+    for my $row (@$data) {
+        print STDERR Dumper $row;
+
+        my $current_trial_name = $row->{'trial_name'};
+        my $accession_name = $row->{'accession_name'};
+        my $plot_number = $row->{'plot_number'};
+        my $plot_name = $row->{'plot_name'} || _create_plot_name($current_trial_name, $plot_number);
+        my $block_number = $row->{'block_number'};
+        my $is_a_control = $row->{'is_a_control'};
+        my $rep_number = $row->{'rep_number'};
+        my $range_number = $row->{'range_number'};
+        my $row_number = $row->{'row_number'};
+        my $col_number = $row->{'col_number'};
+        my $seedlot_name = $row->{'seedlot_name'};
+        my $num_seed_per_plot = $row->{'num_seed_per_plot'} || 0;
+        my $weight_gram_seed_per_plot = $row->{'weight_gram_seed_per_plot'} || 0;
+        my $entry_number = $row->{'entry_number'};
+
+        if ($current_trial_name && $current_trial_name ne $trial_name) {
+
+            ## Save old single trial hash in all trials hash; reinitialize temp hashes
+            if ($trial_name) {
+                my %final_design_details = ();
+                my $previous_design_data = $all_designs{$trial_name}{'design_details'};
+                if ($previous_design_data) {
+                    %final_design_details = (%design_details, %{$all_designs{$trial_name}{'design_details'}});
+                } else {
+                    %final_design_details = %design_details;
+                }
+                %design_details = ();
+                $single_design{'design_details'} = \%final_design_details;
+                $single_design{'entry_numbers'} = $seen_entry_numbers{$trial_name};
+                my %final_single_design = %single_design;
+                %single_design = ();
+                $all_designs{$trial_name} = \%final_single_design;
+            }
+
+            # Get location and replace codes with names
+            my $location = $row->{'location'};
+            if ( $self->_has_location_code_map() ) {
+                my $location_code_map = $self->_get_location_code_map();
+                if ( exists $location_code_map->{$location} ) {
+                    $location = $location_code_map->{$location};
+                }
+            }
+
+            $single_design{'breeding_program'} = $row->{'breeding_program'};
+            $single_design{'location'} = $location;
+            $single_design{'year'} = $row->{'year'};
+            $single_design{'design_type'} = $row->{'design_type'};
+            $single_design{'description'} = $row->{'description'};
+            $single_design{'plot_width'} = $row->{'plot_width'};
+            $single_design{'plot_length'} = $row->{'plot_length'};
+            $single_design{'field_size'} = $row->{'field_size'};
+            $single_design{'planting_date'} = $row->{'planting_date'};
+            $single_design{'harvest_date'} = $row->{'harvest_date'};
+
+            # for a moment transplanting_date is moves as not required but whole design of that features must be redone
+            # including use cases
+            if ($row->{'transplanting_date'}) {
+                $single_design{'transplanting_date'} = $row->{'transplanting_date'};
+            }
+
+            # get and save trial type cvterm_id using trial type name
+            if ($row->{'trial_type'}) {
+                my $trial_type_id = $trial_type_map{$row->{'trial_type'}};
+                $single_design{'trial_type'} = $trial_type_id;
+            }
+
+            ## Update trial name
+            $trial_name = $current_trial_name;
+        }
+
+        if ($entry_number) {
+            $seen_entry_numbers{$current_trial_name}->{$accession_name} = $entry_number;
+        }
+
+        foreach my $treatment_name (@$treatments){
+            my $treatment_value = $row->{$treatment_name};
+            if ( $treatment_value ) {
+                push @{$design_details{treatments}->{$treatment_name}{new_treatment_stocks}}, $plot_name;
+            }
+        }
+
+        if ($acc_synonyms_lookup{$accession_name}){
+            my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+            if (scalar(@accession_names)>1){
+                print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+            }
+            $accession_name = $accession_names[0];
+        }
+
+        my $key = $row;
+        $design_details{$key}->{plot_name} = $plot_name;
+        $design_details{$key}->{stock_name} = $accession_name;
+        $design_details{$key}->{plot_number} = $plot_number;
+        $design_details{$key}->{block_number} = $block_number;
+        if ($is_a_control) {
+            $design_details{$key}->{is_a_control} = 1;
         } else {
-            %final_design_details = %design_details;
+            $design_details{$key}->{is_a_control} = 0;
         }
-        %design_details = ();
-        $single_design{'design_details'} = \%final_design_details;
-        $single_design{'entry_numbers'} = $seen_entry_numbers{$trial_name};
-        my %final_single_design = %single_design;
-        %single_design = ();
-        $all_designs{$trial_name} = \%final_single_design;
-      }
-
-      # Get location and replace codes with names
-      my $location = $worksheet->get_cell($row,$columns{location}->{index})->value();
-      if ( $self->_has_location_code_map() ) {
-        my $location_code_map = $self->_get_location_code_map();
-        if ( exists $location_code_map->{$location} ) {
-          $location = $location_code_map->{$location};
+        if ($rep_number) {
+            $design_details{$key}->{rep_number} = $rep_number;
         }
-      }
-
-      $single_design{'breeding_program'} = $worksheet->get_cell($row,$columns{breeding_program}->{index})->value();
-      $single_design{'location'} = $location;
-      $single_design{'year'} = $worksheet->get_cell($row,$columns{year}->{index})->value();
-      # $single_design{'transplanting_date'} = $worksheet->get_cell($row,$columns{transplanting_date}->{index})->value();
-      $single_design{'design_type'} = $worksheet->get_cell($row,$columns{design_type}->{index})->value();
-      $single_design{'description'} = $worksheet->get_cell($row,$columns{description}->{index})->value();
-
-
-      # for a moment transplanting_date is moves as not required but whole design of that features must be redone
-      # including use cases
-      if ($worksheet->get_cell($row,$columns{transplanting_date}->{index})) {
-        $single_design{'transplanting_date'} = $worksheet->get_cell($row,$columns{transplanting_date}->{index})->value();
-      }
-
-      if ($worksheet->get_cell($row,$columns{trial_type}->{index})) { # get and save trial type cvterm_id using trial type name
-        my $trial_type_id = $trial_type_map{$worksheet->get_cell($row,$columns{trial_type}->{index})->value()};
-        $single_design{'trial_type'} = $trial_type_id;
-      }
-      if ($worksheet->get_cell($row,$columns{plot_width}->{index})) {
-        $single_design{'plot_width'} = $worksheet->get_cell($row,$columns{plot_width}->{index})->value();
-      }
-      if ($worksheet->get_cell($row,$columns{plot_length}->{index})) {
-        $single_design{'plot_length'} = $worksheet->get_cell($row,$columns{plot_length}->{index})->value();
-      }
-      if ($worksheet->get_cell($row,$columns{field_size}->{index})) {
-        $single_design{'field_size'} = $worksheet->get_cell($row,$columns{field_size}->{index})->value();
-      }
-      if ($worksheet->get_cell($row,$columns{planting_date}->{index})) {
-        $single_design{'planting_date'} = $worksheet->get_cell($row,$columns{planting_date}->{index})->value();
-      }
-      if ($worksheet->get_cell($row,$columns{harvest_date}->{index})) {
-        $single_design{'harvest_date'} = $worksheet->get_cell($row,$columns{harvest_date}->{index})->value();
-      }
-      ## Update trial name
-      $trial_name = $current_trial_name;
-    }
-
-    #skip blank rows
-    my $has_row_value;
-    foreach (keys %columns) {
-      if ( $worksheet->get_cell($row,$columns{$_}->{index})) {
-        if ( $worksheet->get_cell($row,$columns{$_}->{index})->value() ) {
-          $has_row_value = 1;
+        if ($range_number) {
+            $design_details{$key}->{range_number} = $range_number;
         }
-      }
-    }
-    if ( !$has_row_value ) {
-      next;
-    }
-
-    if ($worksheet->get_cell($row,$columns{plot_number}->{index})) {
-      $plot_number = $worksheet->get_cell($row,$columns{plot_number}->{index})->value();
-    }
-    if ($worksheet->get_cell($row,$columns{plot_name}->{index})) {
-      $plot_name = $worksheet->get_cell($row,$columns{plot_name}->{index})->value();
-    }
-    if (!$plot_name || $plot_name eq '') {
-      $plot_name = _create_plot_name($current_trial_name, $plot_number);
-    }
-    $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,$columns{accession_name}->{index})) {
-      $accession_name = $worksheet->get_cell($row,$columns{accession_name}->{index})->value();
-    }
-    $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    if ($worksheet->get_cell($row,$columns{block_number}->{index})) {
-      $block_number =  $worksheet->get_cell($row,$columns{block_number}->{index})->value();
-    }
-    if ($worksheet->get_cell($row,$columns{is_a_control}->{index})) {
-      $is_a_control =  $worksheet->get_cell($row,$columns{is_a_control}->{index})->value();
-    }
-    if ($worksheet->get_cell($row,$columns{rep_number}->{index})) {
-      $rep_number =  $worksheet->get_cell($row,$columns{rep_number}->{index})->value();
-    }
-    if ($worksheet->get_cell($row,$columns{range_number}->{index})) {
-      $range_number =  $worksheet->get_cell($row,$columns{range_number}->{index})->value();
-    }
-    if ($worksheet->get_cell($row,$columns{row_number}->{index})) {
-      $row_number = $worksheet->get_cell($row, $columns{row_number}->{index})->value();
-    }
-    if ($worksheet->get_cell($row,$columns{col_number}->{index})) {
-      $col_number = $worksheet->get_cell($row, $columns{col_number}->{index})->value();
-    }
-    if ($worksheet->get_cell($row,$columns{seedlot_name}->{index})) {
-      $seedlot_name = $worksheet->get_cell($row, $columns{seedlot_name}->{index})->value();
-    }
-    if ($worksheet->get_cell($row,$columns{entry_number}->{index})) {
-      $entry_number = $worksheet->get_cell($row, $columns{entry_number}->{index})->value();
-    }
-
-    if ($seedlot_name){
-      $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-    }
-    if ($worksheet->get_cell($row,$columns{num_seed_per_plot}->{index})) {
-      $num_seed_per_plot = $worksheet->get_cell($row, $columns{num_seed_per_plot}->{index})->value();
-    }
-    if ($worksheet->get_cell($row,$columns{weight_gram_seed_per_plot}->{index})) {
-      $weight_gram_seed_per_plot = $worksheet->get_cell($row, $columns{weight_gram_seed_per_plot}->{index})->value();
-    }
-
-    if ($entry_number) {
-      $seen_entry_numbers{$current_trial_name}->{$accession_name} = $entry_number;
-    }
-
-    foreach my $treatment_name (@treatment_names){
-      my $treatment_col = $columns{$treatment_name}->{index};
-      if($worksheet->get_cell($row,$treatment_col)){
-        if($worksheet->get_cell($row,$treatment_col)->value()){
-          push @{$design_details{treatments}->{$treatment_name}{new_treatment_stocks}}, $plot_name;
+        if ($row_number) {
+            $design_details{$key}->{row_number} = $row_number;
         }
-      }
+        if ($col_number) {
+            $design_details{$key}->{col_number} = $col_number;
+        }
+        if ($seedlot_name){
+            $design_details{$key}->{seedlot_name} = $seedlot_name;
+            $design_details{$key}->{num_seed_per_plot} = $num_seed_per_plot;
+            $design_details{$key}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
+        }
     }
 
-    if ($acc_synonyms_lookup{$accession_name}){
-      my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
-      if (scalar(@accession_names)>1){
-        print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
-      }
-      $accession_name = $accession_names[0];
-    }
-
-    my $key = $row;
-    $design_details{$key}->{plot_name} = $plot_name;
-    $design_details{$key}->{stock_name} = $accession_name;
-    $design_details{$key}->{plot_number} = $plot_number;
-    $design_details{$key}->{block_number} = $block_number;
-    if ($is_a_control) {
-      $design_details{$key}->{is_a_control} = 1;
+    # add last trial design to all_designs and save parsed data, then return
+    my %final_design_details = ();
+    my $previous_design_data = $all_designs{$trial_name}{'design_details'};
+    if ($previous_design_data) {
+        %final_design_details = (%design_details, %{$all_designs{$trial_name}{'design_details'}});
     } else {
-      $design_details{$key}->{is_a_control} = 0;
+        %final_design_details = %design_details;
     }
-    if ($rep_number) {
-      $design_details{$key}->{rep_number} = $rep_number;
-    }
-    if ($range_number) {
-      $design_details{$key}->{range_number} = $range_number;
-    }
-    if ($row_number) {
-      $design_details{$key}->{row_number} = $row_number;
-    }
-    if ($col_number) {
-      $design_details{$key}->{col_number} = $col_number;
-    }
-    if ($seedlot_name){
-      $design_details{$key}->{seedlot_name} = $seedlot_name;
-      $design_details{$key}->{num_seed_per_plot} = $num_seed_per_plot;
-      $design_details{$key}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
-    }
+    $single_design{'design_details'} = \%final_design_details;
+    $single_design{'entry_numbers'} = $seen_entry_numbers{$trial_name};
+    $all_designs{$trial_name} = \%single_design;
 
-  }
-
-  # add last trial design to all_designs and save parsed data, then return
-  my %final_design_details = ();
-  my $previous_design_data = $all_designs{$trial_name}{'design_details'};
-  if ($previous_design_data) {
-    %final_design_details = (%design_details, %{$all_designs{$trial_name}{'design_details'}});
-  } else {
-    %final_design_details = %design_details;
-  }
-  $single_design{'design_details'} = \%final_design_details;
-  $single_design{'entry_numbers'} = $seen_entry_numbers{$trial_name};
-  $all_designs{$trial_name} = \%single_design;
-
-  $self->_set_parsed_data(\%all_designs);
+    $self->_set_parsed_data(\%all_designs);
 
   return 1;
-
-}
-
-sub _parse_headers {
-  my $worksheet = shift;
-  my ( $col_min, $col_max ) = $worksheet->col_range();
-  my %columns;
-  my @treatments;
-  my @errors;
-
-  for ( $col_min .. $col_max ) {
-    if ( $worksheet->get_cell(0,$_) ) {
-      my $header = $worksheet->get_cell(0,$_)->value();
-      $header =~ s/^\s+|\s+$//g;
-      my $is_required = !!grep( /^$header$/, @REQUIRED_COLUMNS );
-      my $is_optional = !!grep( /^$header$/, @OPTIONAL_COLUMNS );
-      my $is_treatment = !grep( /^$header$/, @REQUIRED_COLUMNS ) && !grep( /^$header$/, @OPTIONAL_COLUMNS );
-      $columns{$header} = {
-        header => $header,
-        index => $_,
-        is_required => $is_required,
-        is_optional => $is_optional,
-        is_treatment => $is_treatment
-      };
-      if ( $is_treatment ) {
-        push(@treatments, $header);
-      }
-    }
-  }
-
-  foreach (@REQUIRED_COLUMNS) {
-    if ( !exists $columns{$_} ) {
-      push(@errors, "Required column $_ is missing from the file!");
-    }
-  }
-
-  return {
-    columns => \%columns,
-    treatments => \@treatments,
-    errors => \@errors
-  }
 }
 
 sub _create_plot_name {
