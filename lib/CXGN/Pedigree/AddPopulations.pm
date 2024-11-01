@@ -78,11 +78,13 @@ sub add_population {
     my $error;
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
-    my $member_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property')->cvterm_id();
-
+    my $member_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property');
+    my @stock_types = ($accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id);
     my $population_id;
 
     my $previous_pop_rs = $schema->resultset("Stock::Stock")->search({
@@ -96,7 +98,7 @@ sub add_population {
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
         'me.is_obsolete' => { '!=' => 't' },
         'stockprops.value' => { -in => \@members},
-        'me.type_id' => $accession_cvterm_id,
+        'me.type_id' => { -in => \@stock_types},
         'stockprops.type_id' => $synonym_cvterm_id
     },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
     my %acc_synonyms_lookup;
@@ -112,6 +114,8 @@ sub add_population {
             type_id => $population_cvterm_id,
         });
         $population_id = $pop_rs->stock_id();
+
+        $pop_rs->create_stockprops({$member_type_cvterm->name() => $member_type});
 
         # generate population connections to the members
         foreach my $m (@members) {
