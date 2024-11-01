@@ -150,6 +150,7 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{editable_stock_props_definitions} = \%def_hash;
+    # $c->stash->{email_address} = $c->user->get_object->get_contact_email();
     $c->stash->{show_grafting_interface} = $c->config->{show_grafting_interface};
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 }

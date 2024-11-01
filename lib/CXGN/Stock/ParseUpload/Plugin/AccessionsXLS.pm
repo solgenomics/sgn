@@ -10,6 +10,10 @@ use CXGN::List::Validate;
 use CXGN::BreedersToolbox::StocksFuzzySearch;
 use CXGN::BreedersToolbox::OrganismFuzzySearch;
 
+#
+# DEPRECATED: This plugin has been replaced by the AccessionsGeneric plugin
+#
+
 sub _validate_with_plugin {
     my $self = shift;
 

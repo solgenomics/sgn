@@ -26,7 +26,7 @@ $selection_pop_id => ''
    "statistics.simple_statistics"] &>
 
 
-<input id="check_genetic_gain" class="button" type="button" value="Check Genetic Gain" />
+<input id="check_genetic_gain" class="btn btn-success" type="button" value="Check Genetic Gain" />
 
 <input type="hidden"  id="trait_id" value="<% $trait_id %>" />
 <input type="hidden"  id="training_pop_id" value="<% $training_pop_id %>" /> 

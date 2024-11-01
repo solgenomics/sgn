@@ -96,8 +96,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 #    my $jobid = basename($seqfile);
 
 #    print STDERR "JOB ID CREATED: $jobid\n";
-
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
 
     my %arg_handlers =
 	(
@@ -450,8 +450,8 @@ sub get_result : Path('/tools/blast/result') Args(1) {
 
     # system("ls $blast_tmp_output 2>&1 >/dev/null");
     # system("ls ".($c->config->{cluster_shared_tempdir})." 2>&1 >/dev/null");
-
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
     my $db = $schema->resultset("BlastDb")->find($db_id);
     if (!$db) { die "Can't find database with id $db_id"; }
     my $parser = CXGN::Blast::Parse->new();
@@ -476,7 +476,8 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     my $file = $self->jobid_to_file($c, $jobid.".out");
     my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/cluster";
 
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
     my $bdb = $schema->resultset("BlastDb")->find($db_id);
     if (!$bdb) { die "Can't find database with id $db_id"; }
 
@@ -850,7 +851,8 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
     my $c = shift;
 
     my @ids;
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
     my $params = $c->req->params();
     my $input_string = $params->{blast_desc};
     my $db_id = $params->{database};

@@ -16,7 +16,7 @@
         <a href="http://browsehappy.com" target="_blank" class="footer">
           Please upgrade your browser<br>
           <img src="https://lh3.ggpht.com/O0aW5qsyCkR2i7Bu-jUU1b5BWA_NygJ6ui4MgaAvL7gfqvVWqkOBscDaq4pn-vkwByUx=w300" width="25">
-          <img src="https://mozorg.cdn.mozilla.net/media/img/firefox/desktop/index/animations/firefox-logo.png" width="25">
+          <img src="/documents/img/Firefox_logo_2019.png" width="25">
           <img src="https://km.support.apple.com/kb/image.jsp?productid=PL165" width="25">
           <img src="/documents/img/o-logo.jpg" width="25">
           <img src="https://c.s-microsoft.com/en-us/CMSImages/ie_symbol_clr_56x56.png?version=73aa5bf1-0743-11e7-8f71-718675c983bf" width="25">
@@ -27,7 +27,7 @@
       
         <!-- <a href="http://www.google.com/chrome" target="_blank"><img src="https://lh3.ggpht.com/O0aW5qsyCkR2i7Bu-jUU1b5BWA_NygJ6ui4MgaAvL7gfqvVWqkOBscDaq4pn-vkwByUx=w300" width="25">&nbsp; Google Chrome</a><br/>
         <br/>
-        <a href="http://www.firefox.com/" target="_blank"><img src="https://mozorg.cdn.mozilla.net/media/img/firefox/desktop/index/animations/firefox-logo.png" width="25">&nbsp; Mozilla Firefox</a><br/>
+        <a href="http://www.firefox.com/" target="_blank"><img src="/documents/img/Firefox_logo_2019.png" width="25">&nbsp; Mozilla Firefox</a><br/>
         <br/>
         <a href="http://www.apple.com/safari/" target="_blank"><img src="http://km.support.apple.com/kb/image.jsp?productid=PL165" width="25">&nbsp; Safari</a><br/>
         <br/>

@@ -215,6 +215,15 @@ has 'genotyping_protocols' =>      ( isa => 'Maybe[ArrayRef]',
 		       predicate => 'has_genotyping_protocols',
     );
 
+=head2 genotyping_projects()
+
+=cut
+
+has 'genotyping_projects' =>      ( isa => 'Maybe[ArrayRef]',
+                       is => 'rw',
+                       predicate => 'has_genotyping_projects',
+    );
+
 =head2 trial_types()
 
 =cut
@@ -348,6 +357,7 @@ sub BUILD {
         $self->years($dataset->{categories}->{years});
         $self->breeding_programs($dataset->{categories}->{breeding_programs});
         $self->genotyping_protocols($dataset->{categories}->{genotyping_protocols});
+	$self->genotyping_projects($dataset->{categories}->{genotyping_projects});
         $self->locations($dataset->{categories}->{locations});
         $self->trial_designs($dataset->{categories}->{trial_designs});
         $self->trial_types($dataset->{categories}->{trial_types});
@@ -566,6 +576,7 @@ sub get_dataset_data {
     @{$dataref->{categories}->{years}} = @{$self->years()} if $self->years && scalar(@{$self->years})>0;
     $dataref->{categories}->{breeding_programs} = $self->breeding_programs() if $self->breeding_programs && scalar(@{$self->breeding_programs})>0;
     $dataref->{categories}->{genotyping_protocols} = $self->genotyping_protocols() if $self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0;
+    $dataref->{categories}->{genotyping_projects} = $self->genotyping_projects() if $self->genotyping_projects && scalar(@{$self->genotyping_projects})>0;
     $dataref->{categories}->{trial_designs} = $self->trial_designs() if $self->trial_designs && scalar(@{$self->trial_designs})>0;
     $dataref->{categories}->{trial_types} = $self->trial_types() if $self->trial_types && scalar(@{$self->trial_types})>0;
     $dataref->{categories}->{locations} = $self->locations() if $self->locations && scalar(@{$self->locations})>0;
@@ -587,6 +598,7 @@ sub _get_dataref {
     $dataref->{years} = join(",", map { "'".$_."'" } @{$self->years()}) if $self->years && scalar(@{$self->years})>0;
     $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->breeding_programs && scalar(@{$self->breeding_programs})>0;
     $dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0;
+    $dataref->{genotyping_projects} = join(",", @{$self->genotyping_projects()}) if $self->genotyping_projects && scalar(@{$self->genotyping_projects})>0;
     $dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->trial_designs && scalar(@{$self->trial_designs})>0;
     $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->trial_types && scalar(@{$self->trial_types})>0;
     $dataref->{locations} = join(",", @{$self->locations()}) if $self->locations && scalar(@{$self->locations})>0;
@@ -872,7 +884,7 @@ sub retrieve_high_dimensional_phenotypes_relationship_matrix {
 
 =head2 retrieve_accessions()
 
-retrieves accessions as a listref of listref [stock_id, uniquname]
+retrieves accessions as a listref of listref [stock_id, uniquename]
 
 =cut
 
@@ -1206,6 +1218,9 @@ sub get_dataset_definition  {
     if ($self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0) {
         push @criteria, "genotyping_protocols";
     }
+    if ($self->genotyping_projects && scalar(@{$self->genotyping_projects})>0) {
+        push @criteria, "genotyping_projects";
+    }
     if ($self->trial_types && scalar(@{$self->trial_types})>0) {
         push @criteria, "trial_types";
     }
@@ -1236,20 +1251,37 @@ sub delete {
 
     if (! $row) {
 	return "The specified dataset does not exist";
-    }
-
-    else {
+    } else {
 	eval {
 	    $row->delete();
 	};
 	if ($@) {
 	    return "An error occurred, $@";
-	}
-
-	else {
+        } else {
 	    return undef;
 	}
 
+    }
+}
+
+sub update_description {
+    my $self = shift;
+    my $description = shift;
+    my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+    if (! $row) {
+        return "The specified dataset does not exist";
+    } else {
+        eval {
+            $row->sp_person_id($self->sp_person_id());
+            $row->sp_dataset_id($self->sp_dataset_id());
+            $row->description($description);
+            $row->update();
+        };
+        if ($@) {
+            return "An error occurred, $@";
+        } else {
+            return undef;
+        }
     }
 }
 

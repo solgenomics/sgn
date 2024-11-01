@@ -81,10 +81,13 @@ sub structure_gebvs_result_details {
 	my @accessions = keys %$gebvs;
 
 	my $trait_names		= $self->analysis_traits($c);
-	my $model_details = $self->model_details($c);
+	my $model_details   = $self->model_details($c);
 	my $app_details		= $self->app_details();
-	my $log					 = $self->get_analysis_job_info($c);
-	my $analysis_name = $log->{analysis_name};
+	my $log			    = $self->get_analysis_job_info($c);
+	my $analysis_name   = $log->{analysis_name};
+
+	my $test_trait_names = encode_json($trait_names);
+	my $test_log = encode_json($log);
 
     my $details = {
 		'analysis_to_save_boolean' => 'yes',
@@ -95,7 +98,7 @@ sub structure_gebvs_result_details {
 		'analysis_protocol' => $model_details->{protocol},
 		'analysis_dataset_id' => '',
 		'analysis_accession_names' => encode_json(\@accessions),
-		'analysis_trait_names' =>encode_json($trait_names),
+		'analysis_trait_names' => encode_json($trait_names),
 		'analysis_precomputed_design_optional' =>'',
 		'analysis_result_values' => to_json($gebvs),
 		'analysis_result_values_type' => 'analysis_result_values_match_accession_names',
@@ -317,8 +320,7 @@ sub get_analysis_job_info {
 	my $analysis_page = $c->stash->{analysis_page};
 	my @log;
 
-	foreach my $log_file (@$files)
-	{
+	foreach my $log_file (@$files) {
 		my @logs = read_file($log_file, {binmode => ':utf8'});
 		my ($log) = grep{ $_ =~ /$analysis_page/} @logs;
 
@@ -326,13 +328,10 @@ sub get_analysis_job_info {
 		last if $log;
 	}
 
-	if (@log)
-	{
+	if (@log) {
 		my $analysis_info = decode_json($log[5]);
 		return $analysis_info;
-	}
-	else
-	{
+	} else {
 		return;
 	}
 
@@ -344,9 +343,9 @@ sub all_users_analyses_logs {
 
 	my $dir = $c->stash->{analysis_log_dir};
 	my @files = File::Find::Rule->file()
-                            ->name( '*.txt' )
+                            ->name( 'analysis_log*' )
                             ->in( $dir );
-
+	
 	return \@files;
 
 }

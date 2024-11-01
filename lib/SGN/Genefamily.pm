@@ -20,10 +20,37 @@ Methods in this class include:
 package SGN::Genefamily;
 
 use Moose;
+
+with 'MooseX::Object::Pluggable';
+
 use namespace::autoclean;
+use Data::Dumper;
 use File::Slurp qw/slurp/;
+use File::Spec qw | catfile |;
 use File::Spec::Functions;
 use File::Basename qw/basename/;
+
+=head2 accessors genefamily_method()
+
+=cut
+
+has 'genefamily_format' => (
+    is => 'rw',
+    isa => 'Str',
+    );
+
+has 'genefamily_defs_file' => (
+    is => 'rw',
+    isa => 'Str',
+    default => sub { return 'genefamily_defs.txt' },
+    );
+
+has 'sequence_link' => (
+    is => 'rw',
+    isa => 'Str',
+    default => sub { return '/tools/genefamily/seq/'; }  # add /$build/$family/$seq_id
+    );
+
 
 =head2 accessors name()
 
@@ -39,17 +66,17 @@ has 'name' => (
 #    required => 1,
    );
 
-=head2 members
+# =head2 members
 
- Usage:        my @members = $gf->members()
- Desc:         retrieves the members of a genefamily. Read only.
- Property:     the members of the gene family
- Side Effects:
- Example:
+#  Usage:        my @members = $gf->members()
+#  Desc:         retrieves the members of a genefamily. Read only.
+#  Property:     the members of the gene family
+#  Side Effects:
+#  Example:
 
-=cut
+# =cut
 
-has 'members' => ( is => 'ro', isa => 'ArrayRef', default => sub { [] } );
+# has 'members' => ( is => 'ro', isa => 'ArrayRef', default => sub { [] } );
 
 =head2 files_dir
 
@@ -66,20 +93,20 @@ has 'files_dir' => (
     required => 1,
    );
 
-=head2 dataset
+=head2 build
 
- Usage:        my $d = $gf->dataset()
+ Usage:        my $d = $gf->build()
  Desc:         under the genefamily dir (files_dir), a number of sub-dirs
                should be present, each of which represents a separate
                gene family clustering (for example, based on different
                species or different clustering parameters).
- Property:     the dataset name [string]
+ Property:     the build name [string]
  Side Effects:
  Example:
 
 =cut
 
-has 'dataset' => (
+has 'build' => (
     is       => 'rw',
     required => 1,
    );
@@ -121,6 +148,8 @@ sub get_alignment {
 sub get_fasta {
     my $self = shift;
     my $file = catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
+
+    print STDERR "Retrieving fasta file $file for family ".$self->name()."\n";
     unless( -f $file ) {
         die "The fasta information for family "
           . $self->name()
@@ -180,32 +209,96 @@ sub get_tree {
     return slurp($file);
 }
 
-sub get_member_ids {
-    my $self = shift;
+=head1 get_sequence
 
+=cut
+
+sub get_sequence {
+    my $self = shift;
+    my $sequence = shift;
+
+    my $file = File::Spec->catfile($self->get_path(), 'fasta', $self->name().".fa");
+    
+    my @seqs = ();
+    my $io = Bio::SeqIO->new( -format => 'fasta', -file => $file );
+
+    while (my $seq = $io->next_seq()) {
+	print STDERR "Now checking id ".$seq->id()." against search term $sequence\n";
+        if ($seq->id() eq $sequence) {
+	    return [ $seq->id(), $seq->desc(), $seq->seq() ]
+	}
+    }
+    return [];
 }
 
-=head2 get_available_datasets
 
- Usage:        my @ds = SGN::Genefamily->get_available_datasets($DIR)
- Desc:         a class function that returns the available datasets
- Ret:          a list of dataset names
- Args:         the $DIR where the datasets are located.
+=head1 get_members
+
+=cut
+
+sub get_members {
+    my $self = shift;
+    my $family = shift;
+
+    my $defs = File::Spec->catfile($self->get_path(), $self->genefamily_defs_file());
+
+    print STDERR "Getting member info for family $family from file $defs\n";
+    
+    open(my $F, "<", $defs) || die "Can't open gene families definition file at $defs";
+
+    my @all_members;
+    while(<$F>) {
+	chomp;
+
+	my ($family_name, @members) = split/\t/;
+
+	if ($family_name eq $family) { 
+	    foreach my $m (@members) {
+		
+		my @species_members = split/\,/, $m;
+		foreach my $id (@species_members) {
+		    $id = '<a href="'.$self->sequence_link()."/".$self->build()."/$family/$id".'">'.$id."</a>";
+		}
+		@all_members = (@all_members, @species_members);
+	    }   
+	}
+    }
+    return \@all_members;
+}
+
+=head2 get_available_builds
+
+ Usage:        my @ds = SGN::Genefamily->get_available_builds($DIR)
+ Desc:         a class function that returns the available builds
+ Ret:          a list of build names
+ Args:         the $DIR where the builds are located.
  Side Effects:
  Example:
 
 =cut
 
-sub get_available_datasets {
+sub get_available_builds {
     my $class = shift;
     my $path  = shift;
-    my @dirs  = map { basename($_) } grep -d, glob "$path/*";
+    my @dirs  = map { basename($_) } grep -d, glob $path."/*";
     return @dirs;
 }
 
 sub get_path {
     my $self = shift;
-    return catfile( $self->files_dir(), $self->dataset() );
+    return catfile( $self->files_dir(), $self->build() );
 }
+
+sub table {
+    my $self = shift;
+
+    my $plugin = $self->genefamily_format();
+    $self->load_plugin($plugin);
+    my $table = $self->get_data($self->build());
+
+    return $table;
+}
+
+
 
 1;

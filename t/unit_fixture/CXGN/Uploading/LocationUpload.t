@@ -51,7 +51,7 @@ for my $extension ("xls", "xlsx") {
 
 
     #parse uploaded file with appropriate plugin
-    my $type = 'location excel';
+    my $type = 'location generic';
     my $parser = CXGN::Location::ParseUpload->new();
     my $parse_result = $parser->parse($type, $archived_filename_with_path, $schema);
 
@@ -74,7 +74,7 @@ for my $extension ("xls", "xlsx") {
             'GHCND:USC00300331'
         ]
     ];
-    is_deeply($parse_result->{'success'}, $parsed_data_check, 'check location excel parse data');
+    is_deeply($parse_result->{'success'}, $parsed_data_check, 'check location generic parse data');
 
     foreach my $row (@{$parse_result->{'success'}}) {
         #get data from rows one at a time

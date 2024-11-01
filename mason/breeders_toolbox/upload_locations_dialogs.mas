@@ -12,8 +12,6 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-                <b>Locations may be uploaded in an Excel file (.xls or .xlsx)</b>
-                <br>
                 <b>Header:</b><br>
                 The first row (header) must contain the following:
                 <br>
@@ -28,7 +26,7 @@
                     <td>Type</td>
                     <td>Latitude</td>
                     <td>Longitude</td>
-                    <td>Altitude</td>
+                    <td>Elevation</td>
                     <td>NOAA Station ID</td>
                   </tr>
                   </tbody>
@@ -42,11 +40,11 @@
                 <b>Type:</b> must be one of the following: Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other<br>
                 <b>Latitude:</b> (in degrees) must be a number between 90 and -90.<br>
                 <b>Longitude:</b> (in degrees) must be a number between 180 and -180.<br>
-                <b>Altitude:</b> (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).<br>
+                <b>Elevation:</b> (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).<br>
                 <br><b>Optional values:</b><br>
                 <b>NOAA Station ID:</b> The NOAA Station ID that is nearest and most relevant to the location. <a href="https://www.ncdc.noaa.gov/cdo-web/search" target="_blank">Search Here</a><br>
-                <br>
 
+          <& /help/file_upload_type.mas, type => "Locations" , optional_column => 1 &>
           <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_locations_form" name="upload_locations_form">
     <label for="locations_upload_file" style="display: inline-block;">Location File:</label>
     <input type="file" name="locations_upload_file" id="locations_upload_file" encoding="multipart/form-data" />

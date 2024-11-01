@@ -8,6 +8,10 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
+#
+# DEPRECATED: This plugin has been replaced by the SeedlotFromCrossGeneric plugin
+#
+
 sub _validate_with_plugin {
     my $self = shift;
 

@@ -45,23 +45,22 @@ if (!$data_structure) {
    }
 }
 
-print STDERR "\ndatasettype: $data_set_type\n";
-my $url = $c->req->path;
-my $title;
-my $collapsed = 1;
 
-if ($url =~ /correlation\/analysis/) {
-  $title = 'Select a list or dataset and run Pearson correlation analysis';
-  $collapsed = 0;
-} else {
+my $url = $c->req->path;
+
+my $title; 
+my $collapsed = 0;
+my $collapsible = 0;
+
+if ($url !~ /correlation\/analysis/) {
   $title = 'Phenotypic correlation analysis (Pearson)';
+  $collapsible = 1;
+  $collapsed = 1 if $url =~ /breeders\/trial/;
 }
 
 </%perl>
 
 <& /solgs/tools/base.mas &>
-
-<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>
 
 % if ($url =~ /correlation\/analysis/) {
 
@@ -71,24 +70,24 @@ if ($url =~ /correlation\/analysis/) {
   
 %}
 
-
 <&| /page/info_section.mas,
-  collapsible => 1,
+  collapsible => $collapsible,
   collapsed   => $collapsed,
   title       => $title
-  &>
+&>
 
   <div id='corr_div'>
 
 % if ($url =~ /correlation\/analysis/) {
 
-   <& /solgs/tools/select_menu.mas,
-   analysis_type => 'correlation' &>
+    <& /solgs/tools/login.mas,
+    tool_url => '/correlation/analysis/' ,
+    analysis_type => 'correlation' 
+    &>
 
 %} else {
-    <input id="run_pheno_correlation" class="button" type="button" value="Run Correlation" />
+    <input id="run_correlation" class="btn btn-success" type="button" value="Run Correlation" />
 %}
-
 
 <& plot.mas,
    corr_pop_id => $corr_pop_id,
@@ -100,3 +99,5 @@ if ($url =~ /correlation\/analysis/) {
 
 </div>
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>
