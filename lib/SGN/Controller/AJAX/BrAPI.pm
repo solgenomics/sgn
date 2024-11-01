@@ -362,7 +362,7 @@ POST Response:
      "datafiles": []
    },
    "userDisplayName": "John Smith",
-   "access_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4",
+   "access_token": "..."
    "expires_in": "The lifetime in seconds of the access token"
  }
 
@@ -370,7 +370,7 @@ For Logging out
 DELETE Request:
 
 {
-    "access_token" : "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4" // (optional, text, `R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4`) ... The user access token. Default: current user token.
+    "access_token" : "..." // (optional, text, `R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4`) ... The user access token. Default: current user token.
 }
 
 DELETE Response:
