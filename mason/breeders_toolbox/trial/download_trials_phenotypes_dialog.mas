@@ -35,17 +35,17 @@
 
 <&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
 
-           <div class="form-group">
-	     <label class="col-sm-3 control-label">For repeated measurements, return the </label>
-	     <div class="col-sm-9">
-	       <select class="form-control" id="repetitive_measurements_treatment_option">
-		 <option>first value</option>
-		 <option>last value</option>
-		 <option selected>averaged value</option>
-		 <option>all values</option>
-	       </select>
-	     </div>
-	   </div>
+        	<div class="form-group">
+	    		<label class="col-sm-3 control-label">For repeated measurements, return the </label>
+	    	 	<div class="col-sm-9">
+	    	   		<select class="form-control" id="download_repetitive_measurements_trials_option">
+			 			<option value="first">First value</option>
+			 			<option value="last">Last value</option>
+			 			<option value="average" selected>Averaged value</option>
+			 			<option value="all">All values</option>
+	    	   		</select>
+	    	 	</div>
+	   		</div>
 
 
             <div class="form-group">
@@ -157,7 +157,7 @@ jQuery(document).ready(function() {
         var trial_ids = selected.join(",");
         var trial_id_array = trial_ids.split(",");
         var format = jQuery("#download_trials_phenotypes_format").val();
-	var repetitive_measurements = jQuery("repetitive_measurements_option").val();
+		var repetitive_measurements = jQuery("#download_repetitive_measurements_trials_option").val();
         var timestamp = jQuery("#download_trials_phenotypes_timestamp_option").val();
         var data_level = jQuery("#download_trials_phenotypes_level_option").val();
         var trait_contains = jQuery("#download_trials_phenotype_trait_contains").val();
