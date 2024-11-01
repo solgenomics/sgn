@@ -133,7 +133,8 @@ export function WizardSetup(main_id) {
                     "type": ldata.type_name,
                     "items": !ids.error ? ids.map((ele_id, i) => ({
                         "id": ele_id,
-                        "name": ldata.elements[i][1]
+                        "name": ldata.elements[i][1],
+                        "url": makeURL(ldata.type_name, ele_id)
                     })) : []
                 });
             })

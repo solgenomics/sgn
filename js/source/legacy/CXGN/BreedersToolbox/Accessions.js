@@ -431,11 +431,15 @@ jQuery(document).ready(function ($) {
             }
         },
         complete: function (r) {
-	    //alert("DONE WITH UPLOAD "+r);
-	    var clean_r = r.replace(/^<pre[^>]*>/, '');
-	    clean_r = clean_r.replace('</pre>', '');
-	    response = JSON.parse(clean_r); //decodeURIComponent(clean_r));
-            console.log(response);
+            //alert("DONE WITH UPLOAD "+r);
+            var clean_r = r.replace(/^<pre[^>]*>/, '');
+            clean_r = clean_r.replace('</pre>', '');
+            clean_r = clean_r.trim(); // Removes any leading or trailing whitespace
+            // Remove all remaining HTML tags (if any)
+            clean_r = clean_r.replace(/<[^>]*>/g, '');
+            response = JSON.parse(clean_r); //decodeURIComponent(clean_r));
+            // console.log(response);
+            console.log(JSON.stringify(response, null, 2));
             jQuery('#working_modal').modal("hide");
 
             if (response.error || response.error_string) {
