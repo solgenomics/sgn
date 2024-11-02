@@ -333,9 +333,11 @@ sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
 sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $start_date = shift;
-    my $end_date = shift;
-    my $include_dateless_items = shift;
+    my $start_date = $c->req->param('start_date');
+    my $end_date = $c->req->param('end_date');
+    my $include_dateless_items = $c->req->param('include_dateless_items');
+
+    # print STDERR "trait_phenotypes START DATE $start_date; and the END DATE $end_date\n";
 
     #get userinfo from db
     my $user = $c->user();
@@ -355,10 +357,13 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
         data_level => $display,
         trait_list=> [$trait],
         trial_list => [$c->stash->{trial_id}],
-	start_date => $start_date,
-	end_date => $end_date,
-	include_dateless_items => $include_dateless_items,
+	    start_date => $start_date,
+	    end_date => $end_date,
+	    include_dateless_items => $include_dateless_items,
     );
+
+    # print STDERR "get data \n";
+    
     my @data = $phenotypes_search->get_phenotype_matrix();
     $c->stash->{rest} = {
       status => "success",
@@ -376,12 +381,16 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $trial_id = $c->stash->{trial_id};
     my $display = $c->req->param('display');
     my $trial_stock_type = $c->req->param('trial_stock_type');
+    my $start_date = $c->req->param('start_date');
+    my $end_date = $c->req->param('end_date');
+    my $include_dateless_items = $c->req->param('include_dateless_items');
     my $select_clause_additional = '';
     my $group_by_additional = '';
     my $order_by_additional = '';
     my $stock_type_id;
     my $rel_type_id;
     my $total_complete_number;
+    # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INLCUDE DATELESS $include_dateless_items, DIPLAY = $display\n";
     if ($display eq 'plots') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
