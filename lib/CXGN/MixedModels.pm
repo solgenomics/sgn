@@ -110,6 +110,14 @@ the tempfile that contains the phenotypic information.
 
 has 'tempfile' => (is => 'rw', isa => 'Str|Undef');
 
+=head2 work_dir()
+
+the working directory (must be cluster visible for cluster-enabled installs)
+
+=cut
+
+has 'work_dir' => (is => 'rw', isa => 'Str|Undef', default => '/tmp' );
+
 sub BUILD {
     my $self = shift;
 
@@ -405,7 +413,7 @@ sub run_model {
 	
 	print STDERR "running R command $clean_tempfile...\n";
 	
-	my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host } );
+	my $ctr = CXGN::Tools::Run->new( { backend => $backend, temp_base => $cluster_shared_tempdir."/"."mixedmodels", tempfile => $clean_tempfile,  submit_host => $cluster_host } );
 	
 	
 	$ctr->run_cluster($cmd);

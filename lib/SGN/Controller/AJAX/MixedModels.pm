@@ -6,8 +6,9 @@ use Moose;
 use Data::Dumper;
 use File::Slurp;
 use File::Spec qw | catfile |;
-use JSON::Any;
 use File::Basename qw | basename |;
+use File::Temp qw | tempfile tempdir |;
+use JSON::Any;
 use DateTime;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
@@ -93,13 +94,20 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
         $c->detach;
     }
 
-    $c->tempfiles_subdir("mixedmodels");
+#    $c->tempfiles_subdir("mixedmodels");
 
-    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"mixedmodels/mm_XXXXX");
+ #   my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"mixedmodels/mm_XXXXX");
+    my $tempdir = $c->config->{cluster_shared_tempdir}."/mixedmodels";
+    mkdir($tempdir);
+    print STDERR "CLUSTER TEMPDIR: $tempdir\n";
+    my ($fh, $tempfile) = tempfile("mm_XXXXX", DIR => $tempdir);
 
+    print STDERR "TEMPFILE CREATED: $tempfile\n";
+
+   
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $temppath = $c->config->{basepath}."/".$tempfile;
+    my $temppath = $tempfile;
 
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     $ds->retrieve_phenotypes();
@@ -137,7 +145,8 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
        #$html .= "<script>jQuery(document).ready(function() { jQuery('#html-dependent_variable_select').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
 
         #$c->stash->{rest} = { select => $html };
-
+    print STDERR "PREPARE: TEMPFILE: $tempfile\n";
+    
     $c->stash->{rest} = {
 
 	dependent_variable => $trait_html,
@@ -158,6 +167,9 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $params = $c->req()->params();
     
     my $tempfile = $params->{tempfile};
+
+    print STDERR "TEMPFILE IN MODELS RUN: $tempfile\n";
+    
     my $dependent_variables = $params->{'dependent_variables[]'};
     if (!ref($dependent_variables)) {
 	$dependent_variables = [ $dependent_variables ];
@@ -176,16 +188,18 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $engine = $params->{engine};
     
     print STDERR "ENGINE = $engine\n";
-    
-    my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
+
+    my $tempdir = $c->config->{cluster_shared_tempdir}."/mixedmodels";
+        
+    my $mm = CXGN::MixedModels->new( { tempfile => $tempfile });
     
     $mm->dependent_variables($dependent_variables);
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
     $mm->engine($engine);
-    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models" );
+    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir});
     
-    my $temppath = $c->config->{basepath}."/".$tempfile;
+    my $temppath = $tempfile;
 
     my $adjusted_blups_file = $temppath.".adjustedBLUPs";
     #print STDERR "ADJUSTED BLUP FILES: ".Dumper($adjusted_blups_file);
