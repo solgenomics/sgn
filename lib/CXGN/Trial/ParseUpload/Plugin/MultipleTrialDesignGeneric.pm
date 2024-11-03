@@ -291,7 +291,7 @@ sub _validate_with_plugin {
         }
     }
     if (scalar(@already_used_trial_names) > 0) {
-        push @error_messages, "Trial name(s) <strong>".join(',',@already_used_trial_names)."</strong> are invalid because they are already used in the database.";
+        push @error_messages, "Trial name(s) <strong>".join(', ',@already_used_trial_names)."</strong> are invalid because they are already used in the database.";
     }
 
     # Breeding Program: must already exist in the database
@@ -374,12 +374,16 @@ sub _validate_with_plugin {
     }
 
     # Plot Names: should not exist (as any stock)
+    my @already_used_plot_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => $parsed_values->{'plot_name'} }
     });
     while (my $r=$rs->next) {
-        push @error_messages, "Plot name <strong>".$r->uniquename."</strong> already exists in the database. Each plot must have a new unique name.";
+        push @already_used_plot_names, $r->uniquename();
+    }
+    if (scalar(@already_used_plot_names) > 0) {
+        push @error_messages, "Plot name(s) <strong>".join(', ',@already_used_plot_names)."</strong> are invalid because they are already used in the database.";
     }
 
     # Seedlots: names must exist in the database
