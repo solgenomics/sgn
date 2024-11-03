@@ -129,6 +129,17 @@
 <script>
 
 
+var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+if (require_login === '1'){
+    auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+    if (!auth_token){ alert("Login required to display heritability"); }
+}
+
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('dataset_trait_outliers').checked = true;
+}
 
 jQuery(document).ready(function() {
   if (isLoggedIn()) {
@@ -143,13 +154,14 @@ jQuery(document).ready(function() {
     $('#trait_histogram_plot').html('');
     $('#heritability_output').empty();
   });
-  
+
   jQuery('#selectDataset').click(function() {
     var dataset_id = get_dataset_id();    
     if (!dataset_id) {
       return;
     }
-    var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+
+    dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
     document.getElementById("preview_trait_histogram_btn").disabled = true;  
     document.getElementById("loading-spinner").style.visibility = 'visible'; 
     $.ajax({

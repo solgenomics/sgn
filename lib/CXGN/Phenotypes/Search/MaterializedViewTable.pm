@@ -329,9 +329,15 @@ sub search {
     #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.' && @.value <= '.$self->phenotype_max_value.')\')';
     # }
     #
-    #if ($self->exclude_phenotype_outlier){
-    #    push @where_clause, "observations !@> '[{\"outlier\" : 1}]'";;
-    #}
+    if ($self->exclude_phenotype_outlier){
+        push @where_clause, "NOT EXISTS (
+        SELECT 1
+        FROM phenotypeprop p
+        JOIN nd_experiment_phenotype nep ON p.phenotype_id = nep.phenotype_id
+        JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
+        WHERE nes.stock_id = materialized_phenotype_jsonb_table.observationunit_stock_id
+        )";
+    }
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
     my $or_clause = '';

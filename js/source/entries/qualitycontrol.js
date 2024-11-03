@@ -301,10 +301,9 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
     let allOutliers = [];  // Collect all outliers here
 
     const boxplotData = groupedData.map(group => {
-        const values = group.values.map(d => d[selected_trait]).filter(d => d != null);
+        const values = group.values.map(d => parseFloat(d[selected_trait])).filter(d => d != null && !isNaN(d));
 
         if (values.length < 4) {
-            console.warn(`Not enough valid values to calculate quartiles for group ${group.key}. Values:`, values);
             return {
                 locationDbId: group.key,
                 values: [],
@@ -326,12 +325,14 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
 
         const outliers = values.filter(v => v < lowerBound || v > upperBound);
 
+        console.log(`Group ${group.key} - Q1: ${q1}, Q3: ${q3}, IQR: ${iqr}, Lower Bound: ${lowerBound}, Upper Bound: ${upperBound}`);
+
         // Collect outlier data with relevant information
         if (outliers.length > 0) {
             const groupOutliers = outliers.map(value => ({
                 locationDbId: group.key,
-                locationName: group.values.find(v => v[selected_trait] === value).locationName,
-                plotName: group.values.find(v => v[selected_trait] === value).observationUnitName,
+                locationName: group.values.find(v => parseFloat(v[selected_trait]) === value).locationName,
+                plotName: group.values.find(v => parseFloat(v[selected_trait]) === value).observationUnitName,
                 trait: selected_trait,
                 value: value
             }));
