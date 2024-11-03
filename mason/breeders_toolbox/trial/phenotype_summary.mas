@@ -173,6 +173,7 @@ input[type="text"] {
 
     jQuery(document).ready(function () {
         var type = "<% $trial_stock_type %>";
+        var trial_id = "<% $trial_id %>";
     	jQuery.ajax( {
             url: '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
     	}).done( function(r) {
@@ -326,7 +327,7 @@ input[type="text"] {
             "buttons":  [
                 'pageLength','copy', 'excel', 'csv', 'pdf'
             ],
-            "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+            "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
         });
 
         summary_table.clear().draw();
@@ -368,7 +369,7 @@ input[type="text"] {
         var end_date = jQuery('#summary_end_date').val();
 
         jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
+            url : '/ajax/breeders/trial/'+ trial_id + '/traits_assayed?stock_type='+value,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -388,7 +389,7 @@ input[type="text"] {
                     jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
 
                     jQuery.ajax( {
-                        url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+                        url : '/ajax/breeders/trial/'+ trial_id +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
                         type: 'POST',
                         success: function(response){
                             jQuery("#working_modal").modal("hide");
@@ -460,7 +461,7 @@ input[type="text"] {
     
         // console.log("value",value);
         jQuery.ajax( {
-            url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val()+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+            url : '/ajax/breeders/trial/'+ trial_id +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val()+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
             type: 'POST',
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
