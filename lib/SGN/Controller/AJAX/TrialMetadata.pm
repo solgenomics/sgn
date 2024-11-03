@@ -363,7 +363,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     );
 
     # print STDERR "get data \n";
-    
+
     my @data = $phenotypes_search->get_phenotype_matrix();
     $c->stash->{rest} = {
       status => "success",
@@ -458,7 +458,30 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $trial_stock_type_id = $accesion_type_id;
     }
 
-    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+    my $date_params = "";
+    my @date_placeholders = ();
+    my $datelessq = "";
+
+    if ($include_dateless_items) {
+	$datelessq = " ( collect_date IS NULL) ";
+    }
+    if ($start_date && $end_date) {
+	$start_date =~ s/(.*)[ T]+.*$/$1/g;
+	$end_date =~ s/(.*)[ T]+.*$/$1/g;
+
+	# print STDERR "START DATE $start_date  END DATE: $end_date\n";
+	if ($datelessq) {
+	    $date_params = " AND ( $datelessq OR ( collect_date::date >= ? and collect_date::date <= ?)) ";
+	}
+	else { 
+	    $date_params = " AND ( collect_date::date >= ? and collect_date::date <= ?) ";
+	}
+	@date_placeholders = ($start_date, $end_date);
+    }
+
+    # print STDERR "date params : $date_params\n";
+
+    my $q1 = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value),
         to_char(avg(phenotype.value::real), 'FM999990.990'),
@@ -480,18 +503,26 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
+            $date_params
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
-        $order_by_additional;");
+        $order_by_additional";
+    
+    # print STDERR "run numeric query: $q1\n";
 
+    my $h1 = $dbh->prepare($q1);
+   
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
+
+    # print STDERR "TRIAL ID = ".$c->stash->{trial_id}." REGEX: $numeric_regex REL_TYPE_ID $rel_type_id STOCK TYPE ID $stock_type_id DATE PLACE HOLDERS: ".join(", ", @date_placeholders)."\n";
+
+    $h1->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     my @phenotype_data;
 
     my @numeric_trait_ids;
 
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
+    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h1->fetchrow_array()) {
 
 	push @numeric_trait_ids, $trait_id;
 
@@ -531,10 +562,11 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 	$exclude_numeric_trait_ids = " AND cvterm.cvterm_id NOT IN (".join(",", @numeric_trait_ids).")";
     }
 
+    # print STDERR "run the non-numeric query\n";
     my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value)
-	$select_clause_additional
+	    $select_clause_additional
         FROM cvterm
             JOIN phenotype ON (cvterm_id=cvalue_id)
             JOIN nd_experiment_phenotype USING(phenotype_id)
@@ -548,14 +580,17 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
+            $date_params
 	     	$exclude_numeric_trait_ids
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
         $order_by_additional ";
 
+        # print STDERR "QUERY = $q\n";
+
     my $h = $dbh->prepare($q);
 
-    $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id);
+    $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
 	my @return_array;
@@ -571,8 +606,10 @@ sub trait_histogram : Chained('trial') PathPart('trait_histogram') Args(1) {
     my $c = shift;
     my $trait_id = shift;
     my $stock_type = $c->req->param('stock_type') || 'plot';
+    my $start_date = $c->req->param('start_date');
+    my $end_date = $c->req->param('end_date');
 
-    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, $stock_type);
+    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, $stock_type, $start_date, $end_date);
 
     $c->stash->{rest} = { data => \@data };
 }
@@ -5465,5 +5502,40 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     $c->stash->{rest} = { success => 1 };
 }
 
+sub trial_collect_date_range :Chained('trial') :PathPart('collect_date_range') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $cvterm_id = $c->req->param('cvterm_id');
+
+    my $cvterm_clause = "";
+
+    if ($cvterm_id) {
+	    $cvterm_clause = " and cvterm_id = ?";
+    }
+
+    my $q = "select min(collect_date), max(collect_date), project_id from nd_experiment_project join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) join cvterm on(cvalue_id=cvterm_id) where nd_experiment_project.project_id=?  $cvterm_clause group by nd_experiment_project.project_id"; 
+    my $dbh =  $c->dbc->dbh;
+    my $h = $dbh->prepare($q);
+    if ($cvterm_id) { 
+	    $h->execute($trial_id, $cvterm_id);
+    }
+    else {
+	    $h->execute($trial_id);
+    }
+
+    my ($start_date, $end_date, $project_id) = $h->fetchrow_array();
+
+    if (! $project_id) {
+	    $c->stash->{rest} = { error => "Trial with id $trial_id does not exist" };
+	    return;
+    }
+
+    # print STDERR "collect_date_range: START DATE $start_date, END DATE $end_date\n";
+    $c->stash->{rest} = { trial_id => $trial_id,
+	     start_date => $start_date,
+	     end_date => $end_date,
+    };
+}
 
 1;
