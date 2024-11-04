@@ -117,7 +117,9 @@ $design_types => ()
                                             <br>
                                             <button type="button" class="btn btn-primary" id="multiple_trial_designs_upload_submit" disabled>Upload Trial Designs</button>
                                             <button style="display:none" class="btn btn-primary" id="upload_multiple_trials_success_button">Reload Page</button>
+                                            <br /><br />
                                         </center>
+                                        <& /help/file_upload_type.mas, type => "Trials", optional_column => 1 &>
                                     </div>
 
                                 </div>
@@ -719,7 +721,6 @@ $design_types => ()
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Trials may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
                     <b>Multiple Trial Designs:</b>
                     <br />
@@ -806,7 +807,7 @@ $design_types => ()
                     </ul>
 
                     <hr />
-                    <p>Only the required fields are necessary to include in the upload template.  You may add any additional optional fields.  The fields can be in any order.</p>
+                    <& /help/file_upload_type.mas, type => "Trials", optional_column => 1 &>
 
                 </div>
             </div>
