@@ -1784,29 +1784,27 @@ sub get_shared_trials_GET :Args(1) {
     my @formatted_rows = ();
     my @all_analyses = ();
 
+    my $analysis_q = "select DISTINCT project.project_id FROM nd_experiment_project 
+    JOIN project USING (project_id) 
+    JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id 
+    JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id 
+    WHERE cvterm.name='analysis_experiment';";
+    my $h = $dbh->prepare($analysis_q);
+    $h->execute();
+
+    while (my $analysis_id = $h->fetchrow_array()){
+        push @all_analyses, $analysis_id;
+    }
+
     foreach my $stock_id (@stock_ids) {
 	    my $trials_string ='';
-       my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
-       my $uniquename = $stock->uniquename;
-       $dataref = {
+        my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
+        my $uniquename = $stock->uniquename;
+        $dataref = {
              'trials' => {
                          'accessions' => $stock_id
                        }
                 };
-        my $analysis_q = "SELECT DISTINCT materialized_phenoview.trial_id
-        FROM materialized_phenoview 
-        JOIN nd_experiment_project ON nd_experiment_project.project_id=materialized_phenoview.trial_id 
-        JOIN project ON project.project_id=materialized_phenoview.trial_id 
-        JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id 
-        JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id 
-        WHERE accession_id=? AND cvterm.name='analysis_experiment';";
-        my $h = $dbh->prepare($analysis_q);
-        $h->execute($stock_id);
-        my @analyses;
-        while (my $analysis_id = $h->fetchrow_array()){
-            push @analyses, $analysis_id;
-            push @all_analyses, $analysis_id;
-        }
 
         $trial_query = $bs->metadata_query($criteria_list, $dataref, $queryref);
         my @current_trials = @{$trial_query->{results}};
@@ -1814,8 +1812,8 @@ sub get_shared_trials_GET :Args(1) {
 
         foreach my $t (@current_trials) {
             #print STDERR "t = " . Dumper($t);
-            if (grep {$t->[0] == $_} @analyses){
-                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: gray">'.$t->[1].' (Analysis)'.'</a>,  ';
+            if (grep {$t->[0] == $_} @all_analyses){
+                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: limegreen">'.$t->[1].' (Analysis)'.'</a>,  ';
             } else {
                 $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
             }
@@ -1829,7 +1827,7 @@ sub get_shared_trials_GET :Args(1) {
 	    my $trials_string = '';
 	    foreach my $t (@shared_trials) {
             if (grep {$t->[0] == $_} @all_analyses){
-                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: gray">'.$t->[1].' (Analysis)'.'</a>,  ';
+                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: limegreen">'.$t->[1].' (Analysis)'.'</a>,  ';
             } else {
                 $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
             }
