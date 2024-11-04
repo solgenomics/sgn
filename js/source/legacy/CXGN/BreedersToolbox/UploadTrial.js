@@ -348,10 +348,11 @@ jQuery(document).ready(function ($) {
                 }
                 jQuery("#upload_multiple_trials_error_messages").show();
                 jQuery("#upload_multiple_trials_error_messages").html('<b>Errors found. Fix the following problems and try again.</b><br><br>'+error_html);
+                console.log("check the errors: ", response.errors);
                 return;
             }
             if (response.success) {
-                // console.log("Success!!");
+                console.log("Success!!");
                 refreshTrailJsTree(0);
                 jQuery("#upload_multiple_trials_success_messages").show();
                 jQuery("#upload_multiple_trials_success_messages").html("Success! All trials successfully loaded.");

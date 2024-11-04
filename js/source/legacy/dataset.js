@@ -1,3 +1,5 @@
+/*  used by dataset detail page */
+
 var datasets = new CXGN.Dataset();
 
 function datasetDelete(val) {
