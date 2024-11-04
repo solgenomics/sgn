@@ -12,11 +12,12 @@
     @param {HTMLElement|String} container - the target where the graph should be drawn !!
     @param {Object} [layout] - (OPTIONAL) ab object that that holds all the dimensions properties including length, width, margin etc ... of the line graph !!
     @param {String} trait_name - the trait_name is used for the y-axis label !!
+    @param {string} label_observation_unit_name - since, we have the repetitive values for unique obs_unit_name, therefore, using as the title of the graph !!
     @param {Object} [options] - (OPTIONAL) this is an object holds the properites related to graphs details - x- and y-axis labels, title, and data-points !!
     
     */
 
-    exports.drawLineGraph = function(data, container, layout, trait_name, options) {
+    exports.drawLineGraph = function(data, container, layout, trait_name, label_observation_unit_name, options) {
         // set the default layout for the large graph 
         layout = layout || {
             "width": 800,
@@ -148,6 +149,16 @@
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
             .text(trait_name);
+        }
+
+        if(options.showTitle) {
+            svg.append("text")
+            .attr("x", width / 2)
+            .attr("y", 0 - (margin.top / 4))
+            .attr("text-anchor", "middle")
+            .style("font-size", "16px")
+            //.style("text-decoration", "underline")
+            .text(label_observation_unit_name);
         }
 
     };

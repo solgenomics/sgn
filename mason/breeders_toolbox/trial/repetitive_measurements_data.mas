@@ -4,6 +4,7 @@ $trial_stock_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues'] &>
+
 <style>
 .form-row {
     display: flex;
@@ -351,22 +352,24 @@ jQuery(document).ready(function() {
 		};
 
 		//draw a line graph based on the repetitive_values for each obs_unit_name 
-		lineGraphRepetitiveValues.drawLineGraph(data, container.get(0), small_graph_dim, '', options);
+		lineGraphRepetitiveValues.drawLineGraph(data, container.get(0), small_graph_dim, '', '', options); //since, we are just displaying the trend, therefore, '' strings !
 
 		//add a click event to small_graph to view the graph in the larger appearance
 		container.on('click', function() {
 			var observationUnitKey = container.data('observation');
 			var group = observation_units_map[observationUnitKey];
 			var data = group.values;
+            var label_observation_unit_name = group.observationUnitName;
 			var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
 
-			open_large_graph(data, trait_name);
+			open_large_graph(data, trait_name, label_observation_unit_name);
 		});
 	}
 
-	//here, the larger graph function, it has all thegraph info - titles, axis labels and will open in the new window !!
-	function open_large_graph(data, trait_name) {
+	//here, the larger graph function, it has all the graph info - titles, axis labels and will open in the new window !!
+	function open_large_graph(data, trait_name, label_observation_unit_name) {
 		//use trait_name for the title of the graph 
+        console.log("all values in the data object:", data);
 		jQuery('#title_trait_name').text(trait_name);
 
 		//clear any previous content
@@ -384,7 +387,7 @@ jQuery(document).ready(function() {
 		};
 		
 		//draw the line by connecting all the values for the larger graph
-		lineGraphRepetitiveValues.drawLineGraph(data, "#large_graph_container", null, trait_name, options); 
+		lineGraphRepetitiveValues.drawLineGraph(data, "#large_graph_container", null, trait_name, label_observation_unit_name, options); 
 	}
 });
 </script>
