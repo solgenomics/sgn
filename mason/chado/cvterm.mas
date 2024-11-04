@@ -145,7 +145,7 @@ my $edit_privs = $curator ;
 <b>Obsolete:</b> TRUE <br />
 % }
 
-<br /><b>Synoyms</b><br />
+<br /><b>Synonyms</b><br />
 % foreach my $synonym (@synonyms) {
 <% $synonym %> <br />
 % }
