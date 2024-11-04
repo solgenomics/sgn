@@ -24,7 +24,7 @@ if ($url =~ /solgs/) {
   <p>Please $geno_msg_part</p>";
 } else {
   $geno_msg = "$geno_msg  Therefore, this tool does not function on genotype data in this website.</p>
-  <p>If you intend to use the tool on a genotype data, please $geno_msg_part</p>";
+  <p>If you intend to use the tool on genotype data, please $geno_msg_part</p>";
 }
 
 </%perl>
