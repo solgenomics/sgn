@@ -317,7 +317,6 @@ jQuery(document).ready(function ($) {
         json: true,
         post: function () {
             var uploadedTrialLayoutFile = jQuery("#multiple_trial_designs_upload_file").val();
-            var email_option_enabled = jQuery('#email_option_to_recieve_trial_upload_status').is(':checked') ? 1 : 0;
 
             // Clear existing messages
             jQuery("#upload_multiple_trials_warning_messages").html('');
@@ -328,17 +327,7 @@ jQuery(document).ready(function ($) {
                 alert("No file selected");
                 return;
             }
-
-            if (email_option_enabled === 1) {
-                if (confirm('You will receive an email once the process is complete. Do you want to continue?')) {
-                    jQuery("#upload_trial_dialog").modal('hide');
-                } else {
-                    return;
-                }
-            }
-            else {
-                jQuery('#working_modal').modal("show");
-            }
+            jQuery('#working_modal').modal("show");
         },
         complete: function(response) {
             // console.log(response);
@@ -366,6 +355,13 @@ jQuery(document).ready(function ($) {
                 refreshTrailJsTree(0);
                 jQuery("#upload_multiple_trials_success_messages").show();
                 jQuery("#upload_multiple_trials_success_messages").html("Success! All trials successfully loaded.");
+                jQuery("#multiple_trial_designs_upload_submit").hide();
+                jQuery("#upload_multiple_trials_success_button").show();
+                return;
+            }
+            if (response.background) {
+                jQuery("#upload_multiple_trials_success_messages").show();
+                jQuery("#upload_multiple_trials_success_messages").html("Your file has been uploaded.  You will receive an email once the process is complete.");
                 jQuery("#multiple_trial_designs_upload_submit").hide();
                 jQuery("#upload_multiple_trials_success_button").show();
                 return;
