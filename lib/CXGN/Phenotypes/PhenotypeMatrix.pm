@@ -195,7 +195,7 @@ has 'offset' => (
 has 'repetitive_measurements' => (
     isa => 'Str',
     is => 'rw',
-    default => sub { return 'average'; }, # can be first, last, average, all
+    default => sub { return 'average'; }, # can be first, last, average, all, sum
     );
 
 has 'single_measurements' => (
@@ -432,6 +432,16 @@ sub get_phenotype_matrix {
 					
 		    }
 		    
+            if ($self->repetitive_measurements() eq "sum") {
+                my $sum_all_values = 0;
+                foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
+                    if (defined($v)) {
+                        $sum_all_values += $v;
+                    }
+                }
+                $obsunit_data{$obsunit_id}->{$cvterm} = $sum_all_values;
+            }
+            
 		    if ($self->repetitive_measurements() eq "all") {
 			$obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
 		    }
@@ -660,6 +670,11 @@ sub process_duplicate_measurements {
 	$trait_observations->{squash_method} = "average";
     }
 
+    if ($self->repetitive_measurements() eq "sum") {
+        print STDERR "Summing values ...\n";
+        $trait_observations = $self->average_observations($trait_observations);
+        $trait_observations->{squash_method} = "sum";
+    }
 
     if ($self->repetitive_measurements() eq "all") {
 	print STDERR "Retrieving all values...\n";
