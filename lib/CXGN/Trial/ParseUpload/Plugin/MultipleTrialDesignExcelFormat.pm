@@ -11,6 +11,10 @@ use CXGN::Stock::Seedlot;
 use CXGN::Calendar;
 use CXGN::Trial;
 
+#
+# DEPRECATED: This plugin has been replaced by the MultipleTrialDesignGeneric plugin
+#
+
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
