@@ -10,13 +10,13 @@ load_stock_data.pl -H [dbhost] -D [dbname] [-t] [-s species name ] [-p stock pop
 
 =head1 COMMAND-LINE OPTIONS
 
- -H  host name
- -D  database name
+ -H host name
+ -D database name
  -i infile
  -u username for associating the new stocks 
  -s species name - must be in the database. Can also be read from the input file 
  -p population name - will create a new stock of type 'population' if doesn't exist. 
- -t  Test run . Rolling back at the end.
+ -t Test run . Rolling back at the end.
 
 =head1 DESCRIPTION
 
@@ -28,13 +28,14 @@ if the corresponding stock_property does not exist in the database it will be ad
 
 File format for infile (tab delimited):
 
-accession genus species_name population_name synonyms other_stock_props ...
+accession species_name population_name synonyms description other_stock_props ...
 
 Multiple synonyms can be specified, separated by the | symbol
 
 =head1 AUTHORS
 
 Naama Menda (nm249@cornell.edu) - April 2013
+
 Lukas Mueller (lam87@cornell.edu) - minor edits, November 2022
 
 =cut
@@ -57,20 +58,23 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use Getopt::Long;
 
-my ( $dbhost, $dbname, $file, $population_name, $species,  $username, $test );
+my ( $dbhost, $dbname, $file, $population_name, $species,  $username, $password, $test );
 GetOptions(
     'i=s'        => \$file,
     'p=s'        => \$population_name,
     's=s'        => \$species,
     'u=s'        => \$username,
+    'P=s'        => \$password,
     't'          => \$test,
     'dbname|D=s' => \$dbname,
     'dbhost|H=s' => \$dbhost,
 );
 
 
-my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
+my $dbh = CXGN::DB::Connection->new( { dbhost=>$dbhost,
 				      dbname=>$dbname,
+				      dbuser=>'postgres',
+				      dbpass=>$password,
 				      dbargs => {AutoCommit => 1,
 						 RaiseError => 1}
 				    }
@@ -111,8 +115,6 @@ print STDERR "Stock property CV ID = $stock_property_cv_id\n";
 print "Finding/creating cvterm for population\n";
 my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
 
-
-
 # the cvterm for the accession
 #
 my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
@@ -129,7 +131,9 @@ my @columns = $spreadsheet->column_labels();
 
 my $syn_count;
 
-# accession genus species population_name synonyms
+print STDERR "COLUMN LABELS = ".join(", ", @columns)."\n";
+
+# accession species population_name synonyms
 #
 my $coderef= sub  {
     foreach my $accession (@rows ) {
@@ -144,28 +148,33 @@ my $coderef= sub  {
 	    die "Species $species_name does not exist in the database! " if !$organism_id;
 	}
 	
-	my $population_name  =  $spreadsheet->value_at($accession, "population_name");
+	my $population_names  =  $spreadsheet->value_at($accession, "population_name"); # new: can be more than one, | separated
         my $synonym_string   =  $spreadsheet->value_at($accession, "synonyms");
+	my $description      =  $spreadsheet->value_at($accession, "description");
+	
 	my @synonyms = split /\|/ , $synonym_string;
 
-	my $population;
-	if ($population_name) { 
-	    print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
-	    $population = $stock_rs->find_or_create(
-		{
-		    'me.name'        => $population_name,
-			'me.uniquename'  => $population_name,
-			'me.organism_id' => $organism_id,
-			type_id          => $population_cvterm->cvterm_id,
-		},
-		{ join => 'type' }
-		);
+	my @population_rows;
+	if ($population_names) {
+	    my @populations = split /\|/, $population_names;
+
+	    foreach my $name (@populations) { 
+		print "Creating a stock for population $population_name (cvterm = " . $population_cvterm->name . ")\n";
+		my $row = $stock_rs->find_or_create( {
+		    'me.name'        => $name,
+		    'me.uniquename'  => $name,
+		    'me.organism_id' => $organism_id,
+		    type_id          => $population_cvterm->cvterm_id, }, { join => 'type' }
+		    );
+		push @population_rows, $row;
+	    }
 	}
 	
 	print "Find or create stock for accesssion $accession\n";
 	my $stock = $schema->resultset("Stock::Stock")->find_or_create(
 	    { organism_id => $organism_id,
 	      name  => $accession,
+	      description => $description,
 	      uniquename => $accession,
 	      type_id => $accession_cvterm->cvterm_id(),
 	    });
@@ -180,16 +189,19 @@ my $coderef= sub  {
                 sp_person_id => $sp_person_id,
             });
 
-	# the stock belongs to the population:
-        # add new stock_relationship
+	# the stock belongs to population(s):
+        # add new stock_relationship(s)
 	#
-	if ($population_name) { 
-	    print "Accession $accession is member_of population $population_name \n";
-	    $population->find_or_create_related('stock_relationship_objects', {
-		type_id => $member_of->cvterm_id(),
-		subject_id => $stock->stock_id(),
-						} );
+	if ($population_names) {
+	    foreach my $row (@population_rows) { 
+		print "Accession $accession is member_of population ".$row->uniquename();
+		$row->find_or_create_related('stock_relationship_objects', {
+		    type_id => $member_of->cvterm_id(),
+		    subject_id => $stock->stock_id(),
+                } );
+	    }
 	}
+	
         if ($synonym_string) {print "Adding synonyms #" . scalar(@synonyms) . "\n"; }
 	foreach my $syn (@synonyms) {
 	    if ($syn && defined($syn) && ($syn ne $accession) ) {
