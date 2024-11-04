@@ -343,4 +343,28 @@ jQuery(document).ready( function() {
 
 });
 
+function obsoleteTransformant(transformant_id, transformant_name){
+    var confirmation = confirm('Are you sure you want to obsolete this transformant?' + "  " + transformant_name);
+
+    if (confirmation) {
+        jQuery.ajax ({
+            url : '/stock/obsolete?stock_id='+transformant_id+'&is_obsolete=1',
+            beforeSend : function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                console.log(response);
+                jQuery('#working_modal').modal('hide');
+                alert('Successfully obsoleted!');
+                location.reload();
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert("Error obsoleting accession.");
+            }
+        });
+    }
+}
+
+
 </script>
