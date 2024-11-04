@@ -3,7 +3,7 @@ $trial_id
 $trial_stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'd3.d3v5Min', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min'] &>
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues'] &>
 <style>
 .form-row {
     display: flex;
@@ -21,6 +21,16 @@ $trial_stock_type => undef
   margin-right: 5px;
   white-space: nowrap;
 }
+
+.small-graph svg {
+    display: flex;
+    margin: auto;
+}
+
+.small-graph {
+    cursor: pointer;
+}
+
 </style>
 
 <div class="well well-sm table-responsive">
@@ -75,6 +85,24 @@ $trial_stock_type => undef
     <table id="repetitive_measurement_data_table" style="width:100%">
     </table>
     </form>
+</div>
+
+<div id="large_graph" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Trait Name: <span id="title_trait_name"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <div id="large_graph_container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
@@ -165,8 +193,8 @@ jQuery(document).ready(function() {
         });
     }).fail(function(xhr, status, error) {
         alert('An error occured in the repetitive measurement!' + xhr.responseText);
-        console.error("the status:", xhr.status);
-        console.error("the error:", error);
+        //console.error("the status:", xhr.status);
+        //console.error("the error:", error);
     })
 
     function create_menu_for_repetitive_values($trial_id) {
@@ -218,9 +246,10 @@ jQuery(document).ready(function() {
 		});
     }
 
+	var observation_units_map = {};
     function show_repetitive_measurement_values(result, repetitive_measurement_level) {
         var data = [];
-        var observation_units_map = {};
+        observation_units_map = {};
 
         result.data.forEach(function(item) {
             var unique_key = item.observationUnitName + '|' + item.germplasmName;
@@ -231,13 +260,28 @@ jQuery(document).ready(function() {
                     values: []
                 };
             }
-            observation_units_map[unique_key].values.push(parseFloat(item.value));
+            observation_units_map[unique_key].values.push({
+				value: parseFloat(item.value),
+				date: new Date(item.observationTimeStamp)
+			});
         });
+		
+		var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
+        var start_date = new Date(jQuery('#repetitive_measurement_start_date').val());
+        var end_date = new Date(jQuery('#repetitive_measurement_end_date').val());
+        //console.log("the trait is: ", trait_name);
+        //console.log("the start date of this trait is: ", start_date);
+        //console.log("the end date of this trait is: ", end_date);
 
-        //just a note: you will see the values separated by comma "," based on the option you choose for repetitive_measurement option, only in the UI. However, if you choose to downlaod the phenotype file form the search wizard, it will the values will appear in different rows !!!
+        /*
+		just a note:if you select the 'all values' option in the UI, the ouput values will be separated by commas ",".
+		However, iwhen you download the phenotype file form the search wizard, the values will appear in different rows !!!
+		*/
+
         for (var unique_id in observation_units_map) {
             var group = observation_units_map[unique_id];
-            var values = group.values;
+            var values = group.values.map(d => d.value); //store only the value for each object !!
+			var repetitive_line_graph = [];
             var valueToShow = '';
 
             if (repetitive_measurement_level === 'first') {
@@ -255,7 +299,12 @@ jQuery(document).ready(function() {
             else if(repetitive_measurement_level === 'all') {
                 valueToShow = values.join(', ');
             }
-            data.push([group.observationUnitName, group.germplasmName, valueToShow]);
+
+			var repetitive_line_graph = (repetitive_measurement_level === 'all') ?
+                `<div class="small-graph" data-observation="${unique_id}"></div>`
+                : 'Select "All values" option to view graph';
+
+            data.push([group.observationUnitName, group.germplasmName, valueToShow, repetitive_line_graph]);
         }
 
         jQuery('#repetitive_measurement_data_table').DataTable( {
@@ -264,9 +313,78 @@ jQuery(document).ready(function() {
 		       { title: 'Observation Unit Name'},
 		       { title: 'Accession Name' },
                { title: 'Repetitive Values' },
+			   { title: 'Repetitive line graph'}
 		   ],
-		   'data' : data
+		   'data' : data,
+		   'drawCallback':function(settings) {
+				jQuery('.small-graph').each(function() {
+					var container = jQuery(this);
+					var observationUnitKey = container.data('observation');
+					var group = observation_units_map[observationUnitKey];
+					var data = group.values;
+
+					draw_small_graph(container, data);
+				});
+		   	}
 		});
     }
+
+	/*
+	add an function to draw a small_graph for repetitive_value for unique obs_unit_name
+	here, we ddraw a small graph just to see the trend based on the values from unique Obs_unit_name and unique accession !!
+	*/
+
+	function draw_small_graph(container, data) {
+		//set dimensions
+		var small_graph_dim = {
+			"width": 60,
+			"height": 20,
+			"margin": { "top": 5, "right": 5, "bottom": 5, "left":5}  
+		};
+
+		//we are hiding the axis, legends and all other details for the samll_graph !!!
+		var options = {
+			showXAxis: false, 
+			showYAxis: false, 
+			showDots: false, 
+			showTitle: false
+		};
+
+		//draw a line graph based on the repetitive_values for each obs_unit_name 
+		lineGraphRepetitiveValues.drawLineGraph(data, container.get(0), small_graph_dim, '', options);
+
+		//add a click event to small_graph to view the graph in the larger appearance
+		container.on('click', function() {
+			var observationUnitKey = container.data('observation');
+			var group = observation_units_map[observationUnitKey];
+			var data = group.values;
+			var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
+
+			open_large_graph(data, trait_name);
+		});
+	}
+
+	//here, the larger graph function, it has all thegraph info - titles, axis labels and will open in the new window !!
+	function open_large_graph(data, trait_name) {
+		//use trait_name for the title of the graph 
+		jQuery('#title_trait_name').text(trait_name);
+
+		//clear any previous content
+		jQuery('#large_graph_container').html('');
+
+		//open the modal 
+		jQuery('#large_graph').modal('show');
+
+		//add options to show in the larger graph 
+		var options = {
+			showXAxis:true, 
+			showYAxis:true, 
+			showTitle:true, 
+			showDots: true
+		};
+		
+		//draw the line by connecting all the values for the larger graph
+		lineGraphRepetitiveValues.drawLineGraph(data, "#large_graph_container", null, trait_name, options); 
+	}
 });
 </script>
