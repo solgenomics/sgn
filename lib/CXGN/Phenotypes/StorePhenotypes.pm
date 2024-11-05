@@ -57,6 +57,7 @@ use CXGN::UploadFile;
 use CXGN::List::Transform;
 use CXGN::Stock;
 use CXGN::Tools::Run;
+use CXGN::Phenotype;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -181,16 +182,19 @@ has 'image_zipfile_path' => (
 has 'trait_objs' => (
     isa => "HashRef",
     is => 'rw',
+    default => sub { {} },
 );
 
 has 'unique_value_trait_stock' => (
     isa => "HashRef",
     is => 'rw',
+    default => sub { {} },
 );
 
 has 'unique_trait_stock' => (
     isa => "HashRef",
     is => 'rw',
+    default => sub { {} },
 );
 
 has 'unique_trait_stock_timestamp' => (
@@ -208,6 +212,53 @@ has 'allow_repeat_measures' => (
     isa => "Bool",
     is => 'rw',
     default => 0
+);
+
+has 'check_file_stock_trait_duplicates' => (
+    isa => "HashRef",
+    is => 'rw',
+    default => sub { {} },
+);
+
+has 'same_value_count' => (
+    isa => "Int",
+    is => 'rw',
+);
+
+has 'check_trait_category' => (
+    isa => "HashRef",
+    is => 'rw',
+    default => sub { {} },
+);
+
+has 'check_trait_format' => (
+    isa => "HashRef",
+    is => 'rw',
+    default => sub { {} },
+);
+
+has 'check_trait_min_value' => (
+    isa => "HashRef",
+    is => 'rw',
+    default => sub { {} },
+);
+
+has 'check_trait_max_value' => (
+    isa => "HashRef",
+    is => 'rw',
+    default => sub { {} },
+);
+
+has 'check_trait_repeat_type' => (
+    isa => "HashRef",
+    is => 'rw',
+    default => sub { {} },
+);
+
+has 'image_plot_full_names' => (
+    isa => "HashRef",
+    is => 'rw',
+    default => sub { {} },
 );
 
 #build is used for creating hash lookups in this case
