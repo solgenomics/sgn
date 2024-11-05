@@ -398,11 +398,23 @@ sub verify {
                         }
                     }
                 }
+
                 if (exists($check_trait_category{$trait_cvterm_id})) {
+		    my @check_values;
+
                     my @trait_categories = split /\//, $check_trait_category{$trait_cvterm_id};
                     my %trait_categories_hash;
-                    if ($check_trait_format{$trait_cvterm_id} eq 'Ordinal' || $check_trait_format{$trait_cvterm_id} eq 'Nominal') {
+
+		    if ($check_trait_format{$trait_cvterm_id} eq "Multicat") {
+		        @check_values = split /\:/, $trait_value;
+		    }
+		    else {
+			@check_values = ( $trait_value );
+		    }
+
+                    if ($check_trait_format{$trait_cvterm_id} eq 'Ordinal' || $check_trait_format{$trait_cvterm_id} eq 'Nominal' || $check_trait_format{$trait_cvterm_id} eq 'Multicat') {
                         # Ordinal looks like <value>=<category>
+
                         foreach my $ordinal_category (@trait_categories) {
                             my @split_value = split('=', $ordinal_category);
                             if (scalar(@split_value) >= 1) {
@@ -414,13 +426,15 @@ sub verify {
                         %trait_categories_hash = map { $_ => 1 } @trait_categories;
                     }
 
-                    if ($trait_value ne '' && !exists($trait_categories_hash{$trait_value})) {
-                        my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
-                        $error_message = "<small>This trait value should be one of $valid_values: <br/>Plot Name: $plot_name<br/>Trait Name: $trait_name<br/>Value: $trait_value</small><hr>";
-                        print $error_message;
-                    } else {
-                        print "Trait value is valid $trait_value.\n";
-                    }
+		    foreach my $tw (@check_values) { 
+			if ($tw ne '' && !exists($trait_categories_hash{$tw})) {
+			    my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
+			    $error_message = "<small>This trait value should be one of $valid_values: <br/>Plot Name: $plot_name<br/>Trait Name: $trait_name<br/>Value: $trait_value</small><hr>";
+			    print STDERR $error_message;
+			} else {
+			    print STDERR "Trait value is valid $tw.\n";
+			}
+		    }
                 }
 
                 #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
