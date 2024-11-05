@@ -202,8 +202,8 @@ export function WizardDownloads(main_id,wizard){
 	  var phenotype_start_date = d3.select(".wizard-download-start-date").node().value;
 	  var phenotype_end_date = d3.select(".wizard-download-end-date").node().value;
 
-	  alert('start date = '+phenotype_start_date);
-	  alert('repetitive type = '+repetitive_measurements);
+	  //alert('start date = '+phenotype_start_date);
+	  //alert('repetitive type = '+repetitive_measurements);
 	  
         var url = document.location.origin+'/breeders/trials/phenotype/download';
         openWindowWithPost(url, {
