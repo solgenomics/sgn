@@ -428,7 +428,8 @@ $dataset_id => undef
                   <option value="last">Last value</option>
                   <option value="average" selected>Averaged value</option>
                   <option value="sum">Sum values</option>
-                  <option value="all">All values</option>
+                  <option value="all_values_single_line">All Values Single Line</option>
+                  <option value="all_values_multiple_line">All Values Multiple Line</option>
 		</select>
 	      </td>
 	      <td style="border-top: none; padding-top: 0">

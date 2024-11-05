@@ -42,7 +42,9 @@
 			 			<option value="first">First value</option>
 			 			<option value="last">Last value</option>
 			 			<option value="average" selected>Averaged value</option>
-			 			<option value="all">All values</option>
+                        <option value="sum">Sum values</option>
+			 			<option value="all_values_single_line">All Values in Single Line</option>
+                        <option value="all_values_multiple_line">All Values in Multiple Line</option>
 	    	   		</select>
 	    	 	</div>
 	   		</div>
