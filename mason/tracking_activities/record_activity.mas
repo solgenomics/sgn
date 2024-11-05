@@ -126,43 +126,9 @@ $source_info => undef
 % }
 
 % if ($identifier_id && ($material_type eq 'transformation')) {
-    <&| /page/info_section.mas, title => 'Transformants (Accessions) Derived from this Transformation ', collapsible=>1, collapsed=>0 &>
-        <div class = "well well-sm">
-            <div class = "panel panel-default">
-                <div class = "panel-body">
-                    <div style="overflow:scroll">
-                        <table class="table table-hover table-bordered" id="transformants_table_record_page">
-                        </table>
-                    </div>
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            <&| /page/info_section.mas, title => 'Add transformants (accessions) to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding transformants (accessions) to a new or exisiting list</i>'&>
-                                <br>
-                                <div id="transformant_to_new_list_record_page" style="display:none"></div>
-                                <div id="transformant_add_to_list_record_page"></div>
-                            </&>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </&>
-
-    <&| /page/info_section.mas, title => 'Obsoleted Transformants (Accessions)', collapsible=>1, collapsed=>0 &>
-        <div class = "well well-sm">
-            <div class = "panel panel-default">
-                <div class = "panel-body">
-                    <div style="overflow:scroll">
-                        <table class="table table-hover table-bordered" id="obsoleted_transformants_table_record_page">
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </&>
-
+    <& /transformation/transformants_section.mas, transformation_id => $material_stock_id &>
+    <& /transformation/obsoleted_transformants_section.mas, transformation_id => $material_stock_id &>
 % }
-
 
 <div class="modal fade" id="record_page_saved_dialog_message" name="record_page_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="recordPageSavedDialog">
     <div class="modal-dialog" role="document">
@@ -191,8 +157,8 @@ $source_info => undef
 
 $(window).ready( function() {
 
-    var identifier_id = "<%$identifier_id%>";
-    var date = "<%$date%>";
+    const identifier_id = "<%$identifier_id%>";
+    const date = "<%$date%>";
 
     if (identifier_id) {
         jQuery('#record_page_activity_info_table').DataTable({
@@ -231,7 +197,7 @@ $(window).ready( function() {
 
     jQuery('#record_page_type_select').change(function() {
         jQuery('#record_page_info_input').val('');
-        var input_type = jQuery('#record_page_type_select').val();
+        let input_type = jQuery('#record_page_type_select').val();
         if (input_type.indexOf('date') != -1) {
             jQuery('#record_page_info_input').val(date);
         }
@@ -304,69 +270,6 @@ $(window).ready( function() {
         location.reload();
     });
 
-    var material_type = "<%$material_type%>";
-    var material_stock_id = "<%$material_stock_id%>";
-
-    if (material_type == 'transformation') {
-        var transformants_table = jQuery('#transformants_table_record_page').DataTable({
-            'ajax': '/ajax/transformation/transformants/'+material_stock_id,
-            'autoWidth': false,
-            columns: [
-                { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-                { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteTransformant("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
-            ],
-
-            "fnInitComplete": function(oSettings, json) {
-                if (!isLoggedIn()) {
-                    jQuery('#transformant_add_to_list_record_page').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
-                } else {
-                    var html = "";
-                    for(var i=0; i<json.data.length; i++){
-                        html += json.data[i].transformant_name+"\n";
-                    }
-
-                    jQuery("#transformant_to_new_list_record_page").html(html);
-                    addToListMenu("transformant_add_to_list_record_page", "transformant_to_new_list_record_page", {
-                        selectText: true,
-                        listType: 'accessions',
-                    });
-                }
-            }
-        });
-
-        var obsoleted_transformants_table = jQuery('#obsoleted_transformants_table_record_page').DataTable({
-            'ajax': '/ajax/transformation/obsoleted_transformants/'+material_stock_id,
-            'autoWidth': false,
-            'columns': [
-                { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            ],
-        });
-    }
-
 });
-
-function obsoleteTransformant(transformant_id, transformant_name){
-    var confirmation = confirm('Are you sure you want to obsolete this transformant?' + "  " + transformant_name);
-
-    if (confirmation) {
-        jQuery.ajax ({
-            url : '/stock/obsolete?stock_id='+transformant_id+'&is_obsolete=1',
-            beforeSend : function() {
-                jQuery('#working_modal').modal('show');
-            },
-            success: function(response){
-                console.log(response);
-                jQuery('#working_modal').modal('hide');
-                alert('Successfully obsoleted!');
-                location.reload();
-            },
-            error: function(response){
-                jQuery('#working_modal').modal('hide');
-                alert("Error obsoleting accession.");
-            }
-        });
-    }
-}
-
 
 </script>

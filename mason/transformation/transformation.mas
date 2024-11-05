@@ -54,8 +54,8 @@ $source_info
     </div>
 </&>
 
-<& /transformation/transformants_section.mas, transformation_id => $transformation_id, transformation_name => $transformation_name &>
-<& /transformation/obsoleted_transformants_section.mas, transformation_id => $transformation_id, transformation_name => $transformation_name &>
+<& /transformation/transformants_section.mas, transformation_id => $transformation_id &>
+<& /transformation/obsoleted_transformants_section.mas, transformation_id => $transformation_id &>
 <& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number, name_format => $name_format, program_id => $program_id, program_name => $program_name, source_info => $source_info &>
 <& /transformation/add_transformants_using_list_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, program_name => $program_name &>
 

@@ -1,6 +1,5 @@
 <%args>
 $transformation_id
-$transformation_name
 </%args>
 
 <&| /page/info_section.mas, title => 'Obsoleted Transformants (Accessions)', collapsible=>1, collapsed=>0 &>
