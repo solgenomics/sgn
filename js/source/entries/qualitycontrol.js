@@ -89,16 +89,19 @@ export function init(main_div) {
     });
     
     let outliers = [];
+    var trait_selected;
+    var tempfile;
+    let allData = [];
     $('#selected_variable').on('change', function () {
-        var trait_selected = $('#trait_select').val();  // Get the selected trait from the dropdown
+        trait_selected = $('#trait_select').val();  // Get the selected trait from the dropdown
 
         if (!trait_selected) {
-            $('#trait_histogram').html('Please select a trait to see the boxplot!');
+            $('#trait_boxplot').html('Please select a trait to see the boxplot!');
             return;
         }
 
         // Fetch tempfile value
-        var tempfile = $('#tempfile').html();  
+        tempfile = $('#tempfile').html();  
 
         // Check if tempfile is not empty
         if (!tempfile || tempfile.trim() === '') {
@@ -107,19 +110,26 @@ export function init(main_div) {
 
         var outlierMultiplier = $('#outliers_range').slider("value");
         if (!outlierMultiplier || isNaN(outlierMultiplier)) {
-            outlierMultiplier = 1.5; // Set default value
-        }
+            outlierMultiplier = 1.5;         }
 
         // Proceed with the AJAX call for grabbing data
         $.ajax({
             url: '/ajax/qualitycontrol/grabdata',
-            data: { 'file': tempfile },
+            data: { 'file': tempfile, 'trait': trait_selected },
             success: function (r) {
                 $('#working_modal').modal("hide");
-                const result = drawBoxplot(r.data, trait_selected, outlierMultiplier );
-                outliers = result.outliers;  // Extract the outliers
-                console.log(outliers); 
-                populateOutlierTable(outliers);
+                if (r.message) {
+                    // Display the message to the user and stop further processing
+                    alert(r.message);
+                    return;
+                } else {
+                    const result = drawBoxplot(r.data, trait_selected, outlierMultiplier );
+                    outliers = result.outliers;  // Extract the outliers
+                    allData = r.data;
+                    populateOutlierTable(r.data, trait_selected);
+                    populateCleanTable(r.data, outliers, trait_selected);
+                }
+                
             },
             error: function (e) {
                 alert('Error during AJAX request!');
@@ -127,132 +137,66 @@ export function init(main_div) {
         });
 
     });
-
+    
     $('#store_outliers_button').click(function () {
         $.ajax({
             url: '/ajax/qualitycontrol/storeoutliers',  
             method: "POST",  
-            data: {"outliers": JSON.stringify(uniqueOutliers),
+            data: {"outliers": JSON.stringify(outliers),
             },
             success: function(response) {
-                alert('Outliers saved successfully!');  // Success message
-                console.log(response);  // Log server response
+                alert('Outliers saved successfully!');
+                console.log(response);
             },
             error: function(xhr, status, error) {
-                alert('Error saving outliers: ' + error);  // Error message
-                console.log(xhr, status);  // Log error details
+                alert('Error saving outliers: ' + error);
+                console.log(xhr, status);
             }
         });
     });
 
+    // $('#restore_outliers_button').click(function () {
+    //     $.ajax({
+    //         url: '/ajax/qualitycontrol/datarestore',
+    //         data: { 'file': tempfile, 'trait': trait_selected },
+    //         success: function (r) {
+    //             $('#working_modal').modal("hide");
+    //             if (r.message) {
+    //                 alert(r.message); 
+    //                 return;
+    //             } else {
+    //                 allData = r.data;
+    //                 console.log("Outliers to restore:", allData);
+    //                 $.ajax({
+    //                     url: '/ajax/qualitycontrol/restoreoutliers',
+    //                     method: "POST",
+    //                     contentType: "application/json; charset=UTF-8",  // Explicitly set UTF-8 encoding
+    //                     data: {"outliers": JSON.stringify(allData),
+    //                     }, 
+    //                     success: function (r) {
+    //                         if (r.is_curator === 1) {
+    //                             $('#restore_outliers_button').prop("disabled", false);
+    //                             console.log("Restore successful!");
+    //                         } else {
+    //                             $('#restore_outliers_button').prop("disabled", true);
+    //                             alert("No curator access");
+    //                         }
+    //                     },
+    //                     error: function () {
+    //                         alert('Error during restore!');
+    //                     }
+    //                 });
+    //             }
+    //         },
+    //         error: function () {
+    //             alert('Error during AJAX request!');
+    //         }
+    //     });
+    // });
+
+
 
 }
-
-let currentPage = 1;
-let uniqueOutliers;
-const rowsPerPage = 10;
-
-
-function populateOutlierTable(outliers) {
-    const tableBody = document.querySelector("#outlier_table tbody");
-
-    // Clear the current table body
-    tableBody.innerHTML = '';
-
-    // Ensure outliers is an array to avoid errors
-    if (!Array.isArray(outliers)) {
-        console.warn("Expected an array of outliers, but received:", outliers);
-        return;
-    }
-
-    // Create a Set to track unique identifiers for filtering duplicates
-    const uniqueIdentifiers = new Set();
-    uniqueOutliers = []; // Store unique outliers for pagination
-
-    // Insert rows with outlier data
-    outliers.forEach(outlier => {
-        // Create a unique identifier for the outlier
-        const identifier = `${outlier.locationDbId}-${outlier.plotName}`;
-        
-        // Check if this identifier has already been added to the Set
-        if (!uniqueIdentifiers.has(identifier)) {
-            uniqueIdentifiers.add(identifier); // Mark this identifier as seen
-            uniqueOutliers.push(outlier); // Store unique outliers
-            
-            const row = tableBody.insertRow();
-            const cell1 = row.insertCell(0);
-            const cell2 = row.insertCell(1);
-            const cell3 = row.insertCell(2);
-            const cell4 = row.insertCell(3);
-            const cell5 = row.insertCell(4);
-
-            cell1.innerHTML = outlier.locationDbId || 'N/A';
-            cell2.innerHTML = outlier.locationName || 'N/A';
-            cell3.innerHTML = outlier.plotName || 'N/A';
-            cell4.innerHTML = outlier.trait || 'N/A';
-            cell5.innerHTML = outlier.value || 'N/A';
-        }
-    });
-
-    // Update pagination controls with the count of unique outliers
-    updatePaginationControls(uniqueOutliers.length);
-}
-
-
-function updatePaginationControls(totalItems) {
-    const paginationControls = document.getElementById("pagination_controls");
-    paginationControls.innerHTML = ''; // Clear previous controls
-
-    const totalPages = Math.ceil(totalItems / rowsPerPage);
-
-    // Create Previous button
-    const prevButton = document.createElement('button');
-    prevButton.innerHTML = 'Previous';
-    prevButton.disabled = currentPage === 1; // Disable if on the first page
-    prevButton.addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            populateOutlierTable(outliersGlobal); // Use the global outliers array
-        }
-    });
-    paginationControls.appendChild(prevButton);
-
-    // Display page numbers
-    const pageButtons = [];
-    if (totalPages > 1) {
-        for (let i = 1; i <= Math.min(totalPages, 3); i++) {
-            const pageButton = document.createElement('button');
-            pageButton.innerHTML = i;
-            pageButton.classList.add('page-button');
-            if (i === currentPage) {
-                pageButton.disabled = true; // Disable the current page button
-            }
-            pageButton.addEventListener('click', () => {
-                currentPage = i;
-                populateOutlierTable(outliersGlobal); // Use the global outliers array
-            });
-            paginationControls.appendChild(pageButton);
-            pageButtons.push(pageButton);
-        }
-
-        // Check if there are more pages and add ellipsis if needed
-        if (totalPages > 3) {
-            const ellipsis = document.createElement('span');
-            ellipsis.innerHTML = '...';
-            paginationControls.appendChild(ellipsis);
-
-            // Last page button
-            const lastPageButton = document.createElement('button');
-            lastPageButton.innerHTML = totalPages;
-            lastPageButton.addEventListener('click', () => {
-                currentPage = totalPages;
-                populateOutlierTable(outliersGlobal); // Use the global outliers array
-            });
-            paginationControls.appendChild(lastPageButton);
-        }
-    }
-}
-
 
 function updateBoxplot() {
     // Fetch the selected trait and tempfile
@@ -275,12 +219,8 @@ function updateBoxplot() {
             const boxplotData = response.data || [];  // Adjust based on the actual response structure
             drawBoxplot(boxplotData, trait_selected, outlierMultiplier);
             const result = drawBoxplot(boxplotData, trait_selected, outlierMultiplier);
-
             const outliers = result.outliers || [];
-            console.log("Outliers identified:", outliers);
-
-            populateOutlierTable(outliers);
-
+            populateCleanTable(boxplotData, outliers, trait_selected);
         },
 
         error: function (jqXHR, textStatus, errorThrown) {
@@ -290,6 +230,117 @@ function updateBoxplot() {
     });
 }
 
+function calculateStatistics(values) {
+    if (values.length === 0) return { min: null, max: null, sd: null, cv: null };
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const mean = values.reduce((acc, val) => acc + val, 0) / values.length;
+    const sd = Math.sqrt(values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length);
+    const cv = (sd / mean) * 100;
+
+    return { min, max, sd, cv };
+}
+
+
+function populateOutlierTable(data, trait) {
+    const tableBody = document.querySelector("#outlier_table tbody"); 
+
+    tableBody.innerHTML = ''; // Clear existing table content
+    const groupedData = {};
+
+    data.forEach(item => {
+        const valueStr = item[trait] || '';
+        const value = parseFloat(valueStr.replace(',', '.'));
+
+
+        if (item.locationDbId && item.studyName && !isNaN(value)) {
+            const identifier = `${item.locationDbId}-${item.studyName}`;
+
+            if (!groupedData[identifier]) {
+                groupedData[identifier] = {
+                    locationDbId: item.locationDbId,
+                    studyName: item.studyName,
+                    values: [] 
+                };
+            }
+            groupedData[identifier].values.push(value);
+        }
+    });
+
+
+    for (const key in groupedData) {
+        const dataGroup = groupedData[key];
+        const stats = calculateStatistics(dataGroup.values);
+        const row = tableBody.insertRow();
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+        const cell3 = row.insertCell(2);
+        const cell4 = row.insertCell(3);
+        const cell5 = row.insertCell(4);
+        const cell6 = row.insertCell(5);
+
+        cell1.innerHTML = dataGroup.locationDbId || 'N/A';
+        cell2.innerHTML = dataGroup.studyName || 'N/A';
+        cell3.innerHTML = stats.min !== null ? stats.min.toFixed(2) : 'N/A';
+        cell4.innerHTML = stats.max !== null ? stats.max.toFixed(2) : 'N/A';
+        cell5.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
+        cell6.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
+    }
+}
+
+
+function populateCleanTable(data, outliers, trait) {
+    const tableBody = document.querySelector("#clean_table tbody");
+    tableBody.innerHTML = ''; // Clear existing table content
+
+    // Create a Set of outlier plot names for quick lookup
+    const outlierPlotNames = new Set(outliers.map(outlier => outlier.plotName));
+
+    const groupedData = {};
+
+    data.forEach(item => {
+        if (outlierPlotNames.has(item.observationUnitName)) {
+            return; // Skip this item if it's an outlier
+        }
+
+        // Extract the value from the specified trait
+        const valueStr = item[trait] || ''; 
+        const value = parseFloat(valueStr.replace(',', '.')); 
+
+        if (item.locationDbId && item.studyName && !isNaN(value)) {
+            const identifier = `${item.locationDbId}-${item.studyName}`;
+            if (!groupedData[identifier]) {
+                groupedData[identifier] = {
+                    locationDbId: item.locationDbId,
+                    studyName: item.studyName,
+                    values: []
+                };
+            }
+            groupedData[identifier].values.push(value);
+        }
+    });
+
+    for (const key in groupedData) {
+        const dataGroup = groupedData[key];
+        const stats = calculateStatistics(dataGroup.values); 
+        const row = tableBody.insertRow();
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+        const cell3 = row.insertCell(2);
+        const cell4 = row.insertCell(3);
+        const cell5 = row.insertCell(4);
+        const cell6 = row.insertCell(5);
+
+        // Populate the cells with data, checking for null or undefined values
+        cell1.innerHTML = dataGroup.locationDbId || 'N/A';
+        cell2.innerHTML = dataGroup.studyName || 'N/A';
+        cell3.innerHTML = stats.min !== null ? stats.min.toFixed(2) : 'N/A';
+        cell4.innerHTML = stats.max !== null ? stats.max.toFixed(2) : 'N/A';
+        cell5.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
+        cell6.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
+    }
+}
 
 
 
@@ -325,12 +376,10 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
 
         const outliers = values.filter(v => v < lowerBound || v > upperBound);
 
-        console.log(`Group ${group.key} - Q1: ${q1}, Q3: ${q3}, IQR: ${iqr}, Lower Bound: ${lowerBound}, Upper Bound: ${upperBound}`);
-
-        // Collect outlier data with relevant information
         if (outliers.length > 0) {
             const groupOutliers = outliers.map(value => ({
                 locationDbId: group.key,
+                studyName: group.values.find(v => parseFloat(v[selected_trait]) === value).studyName,
                 locationName: group.values.find(v => parseFloat(v[selected_trait]) === value).locationName,
                 plotName: group.values.find(v => parseFloat(v[selected_trait]) === value).observationUnitName,
                 trait: selected_trait,
@@ -358,9 +407,9 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
           width = 800 - margin.left - margin.right,
           height = 400 - margin.top - margin.bottom;
 
-    d3.select("#trait_histogram").select("svg").remove();
+    d3.select("#trait_boxplot").select("svg").remove();
     
-    const svg = d3.select("#trait_histogram")
+    const svg = d3.select("#trait_boxplot")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -383,47 +432,37 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
     svg.append("g")
         .call(d3.axisLeft(y));
 
-    const boxWidth = y.bandwidth() / 2; // Width of the box
+    const boxWidth = y.bandwidth() / 2; 
 
     const boxplotGroup = svg.selectAll(".boxplot")
         .data(boxplotData)
         .enter().append("g")
         .attr("class", "boxplot")
-        .attr("transform", d => "translate(0," + y(d.locationDbId) + ")");
+        .attr("transform", d => "translate(0," + (y(d.locationDbId) + y.bandwidth() / 2) + ")");
 
     // Draw boxes
     boxplotGroup.append("rect")
-        .attr("x", d => {
-            if (d.q1 !== null && d.q3 !== null) {
-                return x(d.q1);
-            }
-            return 0; // Default to 0 if quartiles are not valid
-        })
-        .attr("y", boxWidth / 2)
-        .attr("height", boxWidth)
-        .attr("width", d => {
-            if (d.q1 !== null && d.q3 !== null) {
-                const width = x(d.q3) - x(d.q1);
-                return Math.max(0, width); // Ensure no negative width
-            }
-            return 0; // Default to 0 if quartiles are not valid
-        })
-        .attr("fill", "lightgray");
+        .attr("x", d => x(d.q1)) // Start of box at Q1
+        .attr("y", -boxWidth / 2) // Center vertically within band
+        .attr("width", d => x(d.q3) - x(d.q1)) // Width based on Q1 to Q3 range
+        .attr("height", boxWidth) // Set box width
+        .attr("stroke", "black")
+        .attr("fill", "#9c9ede");
 
     // Draw median line
     boxplotGroup.append("line")
         .attr("x1", d => x(d.median))
         .attr("x2", d => x(d.median))
-        .attr("y1", 0)
-        .attr("y2", boxWidth)
+        .attr("y1", -boxWidth / 2) // Top of the box
+        .attr("y2", boxWidth / 2) // Bottom of the box
         .attr("stroke", "black");
 
     // Draw whiskers
     boxplotGroup.append("line")
         .attr("x1", d => x(d.min))
         .attr("x2", d => x(d.max))
-        .attr("y1", boxWidth / 2)
-        .attr("y2", boxWidth / 2)
+        .attr("y1", 0) // Center the whiskers vertically in the boxplot group
+        .attr("y2", 0)
         .attr("stroke", "black");
 
     // Draw individual points with jitter
@@ -433,17 +472,38 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
         .attr("class", "point")
         .attr("transform", d => "translate(0," + y(d.locationDbId) + ")");
 
+    // Create a tooltip div
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+
     // Draw circles for all points (including outliers)
     pointGroup.selectAll("circle")
-        .data(d => d.values.map(value => ({
+        .data(d => d.values.map((value, index) => ({
             value: value, 
-            isOutlier: value < d.lowerBound || value > d.upperBound // Check for outliers
+            isOutlier: value < d.lowerBound || value > d.upperBound, // Check for outliers
+            plotName: d.plotName // Ensure this is correct
         }))) 
         .enter().append("circle")
         .attr("cx", d => x(d.value))
-        .attr("cy", d => boxWidth / 2 + (Math.random() - 0.5) * 10) // Add jitter
+        .attr("cy", d => (Math.random() - 0.5) * boxWidth + boxWidth / 2) // Center and add jitter
         .attr("r", 3) // Set a fixed radius for points
-        .attr("fill", d => d.isOutlier ? "#d9534f" : "#5cb85c" ); // Outliers are red, non-outliers are blue
+        .attr("fill", d => d.isOutlier ? "#d9534f" : "#5cb85c") // Outliers are red, non-outliers are green
+        .on("mouseover", function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            tooltip.html(d.plotName) // Display plotName in tooltip
+                .style("left", (event.pageX + 5) + "px") // Position tooltip
+                .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function(d) {
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
+
 
     // Return both the boxplot data and the outliers
     return {

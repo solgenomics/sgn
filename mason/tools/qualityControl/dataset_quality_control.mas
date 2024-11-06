@@ -89,7 +89,7 @@
               <option disabled selected value>Select a trait</option>
           </select>
         </div>
-        <div id="trait_histogram">
+        <div id="trait_boxplot">
         <br>
         </div>
         <div class="col-md-12 well" style="margin-top: 10px;">  
@@ -135,24 +135,36 @@
             </style>
         </div>
         <div id="outlier_table_container">
-          <h3>Outliers Table</h3>
+          <h3>Raw Data Available</h3>
           <table id="outlier_table" class="table table-bordered table-striped">
               <thead>
                   <tr>
                       <th>Location ID</th>
-                      <th>Location Name</th>
-                      <th>Plot Name</th>
-                      <th>Trait Name</th>
-                      <th>Value</th>
-                      <!-- <th>Set Outlier</th> <!-- Checkbox column header --> -->
+                      <th>Trial Name</th>
+                      <th>min</th>
+                      <th>max</th>
+                      <th>SD</th>
+                      <th>CV</th>
                   </tr>
               </thead>
-              <tbody></tbody> <!-- Table body to be populated dynamically -->
+              <tbody></tbody>
+          </table>
+          <div id="cleaned_table_container">
+          <h3>Data After Filtering</h3>
+          <table id="clean_table" class="table table-bordered table-striped">
+              <thead>
+                  <tr>
+                      <th>Location ID</th>
+                      <th>Trial Name</th>
+                      <th>min</th>
+                      <th>max</th>
+                      <th>SD</th>
+                      <th>CV</th>
+                  </tr>
+              </thead>
+              <tbody></tbody>
           </table>
           <br>
-          <button id="download_csv" onclick="downloadCSV()">Download Data as CSV</button>
-          <br>
-          <div id="pagination_controls"></div>
         </div>
           <div style="float:right">
               <button class="btn btn-main" id="qc_choose_variable"  onclick="Workflow.complete(this);">Next step</button>
@@ -161,12 +173,11 @@
 
       <&| /util/workflow.mas:step, title=> "Save Outliers" &>
         <& /page/page_title.mas, title=>"Save Outliers" &>
-
           <div>
           <div style="float:right">
+            <button class="btn btn-main" id="restore_outliers_button"   onclick="Workflow.complete(this);">Restore</button>
             <button class="btn btn-main" id="store_outliers_button"   onclick="Workflow.complete(this);">Save</button>
           </div>
-          <p3>This is a test</p3>
 
       </&>
         <div id="tempfile" style="display:none" >

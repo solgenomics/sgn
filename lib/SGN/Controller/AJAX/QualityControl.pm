@@ -16,6 +16,7 @@ use CXGN::MixedModels;
 use SGN::Controller::AJAX::Dataset;
 use JSON;
 
+
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
@@ -70,6 +71,8 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
 sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
@@ -105,36 +108,164 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
             push @data, \%line;
         }
     }
+    
+    my %unique_names;
+    foreach my $entry (@data) {
+        if (defined $entry->{'studyName'} && $entry->{'studyName'} ne '') {
+            $unique_names{$entry->{'studyName'}} = 1;
+        }
+    }
 
+    # Format the unique project names for the SQL query
+    my $project_names = join(", ", map { "'$_'" } keys %unique_names);
+    
+    my $trait_sql = qq{
+        select project."name" from projectprop
+        join project on project.project_id = projectprop.project_id 
+        where projectprop.type_id = (select cvterm_id from cvterm where cvterm."name" = 'validated_phenotype')
+        and project.name in ($project_names)
+        and projectprop.value = '$trait'
+        group by project."name" , projectprop.value;
+    };
+
+    
+
+    my @validated_projects;
+    eval {
+        # Prepare and execute the query
+        my $sth_trait = $dbh->prepare($trait_sql);
+        $sth_trait->execute();
+
+        # Collect project names from the query result
+        while (my ($project_name) = $sth_trait->fetchrow_array) {
+            push @validated_projects, $project_name;
+        }
+
+        if (@validated_projects) {
+            my $project_names_str = join(", ", @validated_projects);
+            my $message = "Trait $trait is already validated data for trials: $project_names_str";
+            $c->stash->{rest} = { message => $message };
+        } else {
+            $c->stash->{rest} = { data => \@data, trait => $trait};
+        }
+    };
+
+    if ($@) {
+        $c->response->body("Failed to search data: $@");
+            return;
+    }
+}
+
+sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $file = $c->req->param("file");
+    my $trait = $c->req->param("trait");
+
+    $file = basename($file);
+
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol/".$file);
+
+    my $F;
+    if (! open($F, "<", $temppath)) {
+    $c->stash->{rest} = { error => "Can't find data." };
+    return;
+    }
+
+    my $header = <$F>;
+    chomp($header);
+
+    my @keys = split("\t", $header);
+
+    my @data = ();
+
+    while (<$F>) {
+        chomp;
+        my @fields = split "\t";
+        my %line = ();
+        
+        for (my $n = 0; $n < @keys; $n++) {
+            if (exists($fields[$n]) && defined($fields[$n])) {
+                $line{$keys[$n]} = $fields[$n];
+            }
+        }
+        if (defined $line{$trait} && $line{$trait} ne '') {
+            push @data, \%line;
+        }
+    }
+    
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
+
 sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my ($self, $c) = @_;
-
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
- 
+
     # Retrieve and decode the outliers from the request
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++\n");
     my $outliers_string = $c->req->param('outliers');
+    warn "Raw outliers data: $outliers_string";  # Log to the error log
 
-    print STDERR $outliers_string;
+    # Now proceed to decode JSON
+    my $outliers_data;
+    eval {
+        $outliers_data = decode_json($outliers_string);
+    };
 
-
-    my $outliers_data = decode_json($outliers_string);
-    
-    # Map to store trait names and their corresponding cvterm_id
-    my %trait_ids;  # Declare the hash before use
-    foreach my $entry (@$outliers_data) { 
-        my $trait = $entry->{trait};  # Directly use the trait from the entry
-        $trait_ids{$trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait)->cvterm_id;
+    if ($@) {
+        die "Failed to decode JSON: $@";
     }
+
+    print("################################################\n");
+    print STDERR Dumper $outliers_data;
+
+
+    if ($@) {
+        die "Failed to decode JSON due to UTF-8 error: $@";
+    }
+    my %trait_ids;
+    my %study_names;
+    my $trait;
+
+    foreach my $entry (@$outliers_data) { 
+        $trait = $entry->{trait};  # Directly use the trait from the entry
+        $trait_ids{$trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait)->cvterm_id;
+        my $study_name = $entry->{studyName};
+        $study_names{$study_name} = 1 if defined $study_name;
+    }
+
+    # Convert unique study names to a comma-separated list in SQL format
+    my @unique_study_names = keys %study_names;
+    return $c->response->body('No unique study names found.') unless @unique_study_names;
+
+    my $study_names_sql = join(", ", map { $schema->storage->dbh->quote($_) } @unique_study_names);  # Quote each name
+    
+    # Add validated traits to projectprop
+    my $trial_sql = qq{
+        INSERT INTO projectprop (project_id, type_id, value, rank)
+        SELECT 
+            p.project_id,
+            (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'),
+            '$trait',
+            COALESCE(MAX(pp.rank), 0) + 1  -- Increment rank
+        FROM project p
+        LEFT JOIN projectprop pp
+            ON p.project_id = pp.project_id
+            AND pp.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype')
+        WHERE p.name in ($study_names_sql)
+        GROUP BY p.project_id;
+    };
 
     my $experiment_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
     # Extract plot names from the outliers data
     my @plot_names = map { $_->{plotName} } @$outliers_data;
-    
+
     # Ensure plot names and traits are not empty
     if (@plot_names && %trait_ids) {
         # Convert plot names and traits into comma-separated lists for SQL
@@ -161,21 +292,101 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
                 AND phenotypeprop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
             );";
 
-
         # Execute the SQL query
         eval {
-            my $h_outliers = $schema->storage->dbh()->prepare($outlier_data_sql);
-            $h_outliers->execute();
+            my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
+            $sth_trial->execute();
+
+            my $sth_outliers = $schema->storage->dbh->prepare($outlier_data_sql);
+            $sth_outliers->execute();
+            
+            $c->response->body('Data stored successfully');
         };
         if ($@) {
-            $c->response->body("Failed to store outliers: $@");
+            $c->response->body("Failed to store data: $@");
             return;
+        } else {
+            $c->response->body('Outliers stored successfully');
         }
         
-        $c->response->body('Outliers stored successfully');
     } else {
         $c->response->body('No plot names or traits found.');
     }
+}
+
+sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
+
+    my ($self, $c) = @_;
+    my $dbh = $c->dbc->dbh();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my @user_roles = $c->user()->roles;
+    
+    my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
+
+    # Retrieve and decode the outliers from the request
+    my $outliers_string = $c->req->param('outliers');
+
+    my $outliers_data = decode_json($outliers_string);
+
+    print STDERR Dumper $outliers_data;
+    
+    my %trait_ids;  # Declare the hash before use
+    my %study_names;
+    my $trait;
+
+    foreach my $entry (@$outliers_data) { 
+        $trait = $entry->{trait};  # Directly use the trait from the entry
+        $trait_ids{$trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait)->cvterm_id;
+        my $study_name = $entry->{studyName};
+        $study_names{$study_name} = 1 if defined $study_name;
+    }
+
+    # Convert unique study names to a comma-separated list in SQL format
+    my @unique_study_names = keys %study_names;
+    my $study_names_sql = join(", ", map { $schema->storage->dbh->quote($_) } @unique_study_names);
+   
+    my $trial_clean_sql = qq{
+        delete from projectprop where projectprop.type_id = (select cvterm_id from cvterm where name = 'validated_phenotype')
+        and value = '$trait';
+    };
+
+    $trait =~ s/\|.*//;
+
+    my $outliers_clean_sql = qq{
+        select p.phenotype_id, pr.name, ph.observable_id from phenotypeprop p
+        join phenotype ph on ph.phenotype_id = p.phenotype_id 
+        join nd_experiment_phenotype nep on nep.phenotype_id = p.phenotype_id
+        join nd_experiment_project nes on nes.nd_experiment_id = nep.nd_experiment_id 
+        join project pr on pr.project_id = nes.project_id
+        where pr.name = ($study_names_sql) 
+        and ph.observable_id = (select cvterm_id from cvterm where cvterm.name = '$trait') 
+        group by p.phenotype_id, pr.name, ph.observable_id ;
+    };
+    
+    my $response_data = {
+    is_curator => $curator ? 1 : 0,  # 1 if curator, 0 otherwise
+    };
+
+    print("\n####################################\n");
+    print("Person id: $sp_person_id\n");
+    print("Curator: $curator\n");
+    print("Trait: $trait\n");
+    print("trails: $study_names_sql\n");
+
+
+    # Execute the SQL query
+    eval {
+        my $sth_clean = $dbh->prepare($outliers_clean_sql);
+        $sth_clean->execute();
+    };
+    if ($@) {
+        $c->response->body("Failed to store data: $@");
+        return;
+    } else {
+        $c->stash->{rest} = $response_data;
+    }
+
 }
 
 
