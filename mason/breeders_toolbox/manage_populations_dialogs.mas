@@ -64,20 +64,20 @@
     </div>
 </div>
 
-<div class="modal fade" id="manage_populations_add_accessions_dialog" name="manage_populations_add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsToPopulationsDialog" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="manage_populations_add_members_dialog" name="manage_populations_add_members_dialog" tabindex="-1" role="dialog" aria-labelledby="addMembersToPopulationsDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAccessionsToPopulationsDialog">Add Accessions to Population <div id="add_accession_population_name"></div></h4>
+                <h4 class="modal-title" id="addMembersToPopulationsDialog">Add Members to Population <div id="add_member_population_name"></div></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" name="add_accession_to_population_form" id="add_accession_to_population_form">
+                    <form class="form-horizontal" role="form" name="add_member_to_population_form" id="add_member_to_population_form">
                         <div class="form-group">
-                            <label class="col-sm-6 control-label">Choose a List of Accessions to Add: </label>
-                            <div class="col-sm-6" id="add_accession_to_population_list_div" name="list_div">
+                            <label class="col-sm-6 control-label">Choose a List of Members to Add: </label>
+                            <div class="col-sm-6" id="add_member_to_population_list_div" name="list_div">
                             </div>
                         </div>
                     </form>
@@ -86,7 +86,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="add_accessions_to_population_submit" id="add_accessions_to_population_submit">Submit</button>
+                <button type="button" class="btn btn-primary" name="add_members_to_population_submit" id="add_members_to_population_submit">Submit</button>
             </div>
         </div>
     </div>

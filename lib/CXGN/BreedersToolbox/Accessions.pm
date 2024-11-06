@@ -67,6 +67,7 @@ sub get_all_populations {
     my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
 
     my $population_member_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
+    my $member_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property')->cvterm_id();
 
     my $populations_rs = $schema->resultset("Stock::Stock")->search({
         'type_id' => $population_cvterm->cvterm_id(),
@@ -80,6 +81,15 @@ sub get_all_populations {
 	$population_info{'name'}=$population_row->name();
 	$population_info{'description'}=$population_row->description();
 	$population_info{'stock_id'}=$population_row->stock_id();
+
+    my $member_type;
+    my $member_type_row = $schema->resultset("Stock::Stockprop")->find({ stock_id => $population_row->stock_id(), type_id => $member_type_cvterm_id });
+    if($member_type_row) {
+        $member_type = $member_type_row->value();
+    } else {
+        $member_type = 'accessions';
+    }
+    $population_info{'member_type'} = $member_type;
 
 	push @accessions_by_population, \%population_info;
     }
