@@ -204,11 +204,18 @@ jQuery(document).ready(function ($) {
     var member_type;
 
     jQuery(document).on("click", "a[name='manage_populations_add_members']", function(){
+
         population_id = jQuery(this).data('population_id');
         population_name = jQuery(this).data('population_name');
         member_type = jQuery(this).data('member_type');
-        jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", [member_type], undefined, undefined, undefined));
-        jQuery('#add_accession_population_name').html(population_name);
+        if (member_type == 'plots') {
+            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['plots'], 'select a list of plots', undefined, undefined));
+        } else if (member_type == 'plants') {
+            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['plants'], 'select a list of plants', undefined, undefined));
+        } else {
+            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['accessions'], 'select a list of accessions', undefined, undefined));
+        }
+        jQuery('#add_member_population_name').html(population_name);
         jQuery('#manage_populations_add_members_dialog').modal('show');
     });
 
@@ -228,6 +235,45 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery("#add_members_to_population_submit").click(function(){
+        const lo = new CXGN.List();
+        let list_validation = 1;
+        const member_list_id = jQuery('#add_member_to_population_list_div_list_select').val();
+
+        if (member_type == 'plots') {
+            if (!member_list_id) {
+                alert ("A list of plots is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(member_list_id, 'plots', true);
+                if (list_validation != 1) {
+                    alert("The plot list did not pass validation. Names in the list must be in the database");
+                    return;
+                }
+            }
+        } else if (member_type == 'plants') {
+            if (!member_list_id) {
+                alert ("A list of plants is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(member_list_id, 'plants', true);
+                if (list_validation != 1) {
+                    alert("The plant list did not pass validation. Names in the list must be  in the database");
+                    return;
+                }
+            }
+        } else {
+            if (!member_list_id) {
+                alert ("A list of accessions is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(member_list_id, 'accessions', true);
+                if (list_validation != 1) {
+                    alert("The accession list did not pass validation. Names in the list must be  in the database");
+                    return;
+                }
+            }
+        }
+
         jQuery.ajax({
             type: 'POST',
             url: '/ajax/population/add_accessions',
