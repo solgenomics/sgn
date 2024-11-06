@@ -501,7 +501,8 @@ sub associate_ontology_POST :Args(0) {
     my $evidence_description = $c->req->param('evidence_description') || undef; # a cvterm_id
     my $evidence_with  = $c->req->param('evidence_with') || undef; # a dbxref_id (type='evidence_with' value = 'dbxref_id'
     my $logged_user = $c->user;
-    my $logged_person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $logged_person_id;
+    $logged_person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
 
     my $reference = $c->req->param('reference'); # a pub_id
 
@@ -673,7 +674,8 @@ sub toggle_obsolete_annotation_POST :Args(0) {
     if ($stock_cvterm_id && $c->user ) {
         my $stock_cvterm = $schema->resultset("Stock::StockCvterm")->find( { stock_cvterm_id => $stock_cvterm_id } );
         if ($stock_cvterm) {
-            my ($prop) = $stock_cvterm->stock_cvtermprops( { type_id => $obsolete_cvterm->cvterm_id } ) if $obsolete_cvterm;
+            my $prop;
+            $prop = $stock_cvterm->stock_cvtermprops( { type_id => $obsolete_cvterm->cvterm_id } ) if $obsolete_cvterm;
             if ($prop) {
                 $prop->update( { value => $obsolete } ) ;
             } else {
