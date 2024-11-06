@@ -1620,15 +1620,24 @@ function changeListType(html_select_id, list_id) {
 */
 
 function validateList(list_id, list_type, html_select_id) {
-    jQuery('#working_modal').modal('show');
-    var lo = new CXGN.List();
     if (!list_type) {
         list_type = jQuery('#'+html_select_id).val();
     }
+    if ( !list_type || list_type === '' || list_type === '(none)' ) {
+        alert("You must select the list type before validating");
+        return;
+    }
+
+    jQuery('#working_modal').modal('show');
+    var lo = new CXGN.List();
     var validate = lo.validate(list_id, list_type);
     validate.then(function(response) {
-	//alert("That's the response : "+JSON.stringify(response));
         jQuery('#working_modal').modal('hide');
+    }).catch(function(err) {
+        jQuery('#working_modal').modal('hide');
+        let msg = "There was an error validating your list.";
+        if ( err && err.responseText ) msg += `\n\n${err.responseText}`;
+        alert(msg);
     });
 }
 
