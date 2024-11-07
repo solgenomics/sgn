@@ -395,8 +395,10 @@ sub display_ontologies_GET  {
                 'type.name' => 'obsolete',
             },
             { join =>  'type' } , );
+        my $unobsolete;
+        my $obsolete_link;
         if ($obsolete_prop) {
-            my $unobsolete =  qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value = "unobsolete" /> | if $privileged ;
+            $unobsolete =  qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value = "unobsolete" /> | if $privileged ;
 
             # generate the list of obsolete annotations
             push @obs_annot,
@@ -408,7 +410,7 @@ sub display_ontologies_GET  {
             my $ontology_details = $rel_name
                 . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
             # build the obsolete link if the user has  editing privileges
-            my $obsolete_link =  qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value ="delete" /> | if $privileged ;
+            $obsolete_link =  qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value ="delete" /> | if $privileged ;
 
             my ($ev_with) = $props->search( {'type.name' => 'evidence_with'} , { join => 'type'  } )->single;
             my $ev_with_dbxref = $ev_with ? $schema->resultset("General::Dbxref")->find( { dbxref_id=> $ev_with->value } ) : undef;
@@ -1744,11 +1746,11 @@ sub get_stock_stored_analyses :Chained('/stock/get_stock') PathPart('datatables/
 
 sub get_shared_trials :Path('/stock/get_shared_trials') : ActionClass('REST'){
 
-sub get_shared_trials_POST :Args(1) {
+my sub get_shared_trials_POST :Args(1) {
     my ($self, $c) = @_;
     $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
 }
-sub get_shared_trials_GET :Args(1) {
+my sub get_shared_trials_GET :Args(1) {
 
     my $self = shift;
     my $c = shift;
