@@ -6,6 +6,7 @@ use Moose;
 use Data::Dumper;
 use File::Slurp;
 use File::Spec qw | catfile |;
+use File::Path qw(rmtree);
 use JSON::Any;
 use File::Basename qw | basename |;
 use DateTime;
@@ -80,7 +81,6 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     $file = basename($file);
 
     my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol/".$file);
-
     my $F;
     if (! open($F, "<", $temppath)) {
     $c->stash->{rest} = { error => "Can't find data." };
@@ -117,18 +117,19 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     }
 
     # Format the unique project names for the SQL query
-    my $project_names = join(", ", map { "'$_'" } keys %unique_names);
+    # my $trait_query = $trait;
+    # $trait_query =~ s/\|.*//;
     
+    my $project_names = join(", ", map { "'$_'" } keys %unique_names);
+
     my $trait_sql = qq{
         select project."name" from projectprop
         join project on project.project_id = projectprop.project_id 
         where projectprop.type_id = (select cvterm_id from cvterm where cvterm."name" = 'validated_phenotype')
         and project.name in ($project_names)
         and projectprop.value = '$trait'
-        group by project."name" , projectprop.value;
+        group by project."name";
     };
-
-    
 
     my @validated_projects;
     eval {
@@ -139,9 +140,12 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
         # Collect project names from the query result
         while (my ($project_name) = $sth_trait->fetchrow_array) {
             push @validated_projects, $project_name;
+
         }
 
-        if (@validated_projects) {
+        # print STDERR Dumper \@validated_projects;
+
+        if (scalar(@validated_projects) > 0) {
             my $project_names_str = join(", ", @validated_projects);
             my $message = "Trait $trait is already validated data for trials: $project_names_str";
             $c->stash->{rest} = { message => $message };
@@ -196,8 +200,18 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
             push @data, \%line;
         }
     }
+
+    my %unique_names;
+    foreach my $entry (@data) {
+        if (defined $entry->{'studyName'} && $entry->{'studyName'} ne '') {
+            $unique_names{$entry->{'studyName'}} = 1;
+        }
+    }
+
+    # Format the unique project names for the SQL query
+    my $project_names = join(", ", map { "'$_'" } keys %unique_names);
     
-    $c->stash->{rest} = { data => \@data, trait => $trait};
+    $c->stash->{rest} = { data => $project_names, trait => $trait};
 }
 
 
@@ -207,27 +221,13 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     # Retrieve and decode the outliers from the request
-    print("+++++++++++++++++++++++++++++++++++++++++++++++++\n");
+   
     my $outliers_string = $c->req->param('outliers');
-    warn "Raw outliers data: $outliers_string";  # Log to the error log
-
+    
     # Now proceed to decode JSON
     my $outliers_data;
-    eval {
-        $outliers_data = decode_json($outliers_string);
-    };
+    $outliers_data = decode_json($outliers_string);
 
-    if ($@) {
-        die "Failed to decode JSON: $@";
-    }
-
-    print("################################################\n");
-    print STDERR Dumper $outliers_data;
-
-
-    if ($@) {
-        die "Failed to decode JSON due to UTF-8 error: $@";
-    }
     my %trait_ids;
     my %study_names;
     my $trait;
@@ -312,6 +312,8 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     } else {
         $c->response->body('No plot names or traits found.');
     }
+    ## celaning tempfiles
+    rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 }
 
 sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
@@ -326,57 +328,55 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
 
     # Retrieve and decode the outliers from the request
     my $outliers_string = $c->req->param('outliers');
-
-    my $outliers_data = decode_json($outliers_string);
-
-    print STDERR Dumper $outliers_data;
+    my $outlier_trials;
+    $outlier_trials = decode_json($outliers_string);
+    
+    # getting trait name
+    my $trait = $c->req->param('trait');
+    
     
     my %trait_ids;  # Declare the hash before use
     my %study_names;
-    my $trait;
-
-    foreach my $entry (@$outliers_data) { 
-        $trait = $entry->{trait};  # Directly use the trait from the entry
-        $trait_ids{$trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait)->cvterm_id;
-        my $study_name = $entry->{studyName};
-        $study_names{$study_name} = 1 if defined $study_name;
-    }
-
-    # Convert unique study names to a comma-separated list in SQL format
-    my @unique_study_names = keys %study_names;
-    my $study_names_sql = join(", ", map { $schema->storage->dbh->quote($_) } @unique_study_names);
    
     my $trial_clean_sql = qq{
-        delete from projectprop where projectprop.type_id = (select cvterm_id from cvterm where name = 'validated_phenotype')
-        and value = '$trait';
+        DELETE FROM projectprop
+        WHERE projectprop.project_id IN (
+            SELECT projectprop.project_id 
+            FROM projectprop
+            JOIN project ON project.project_id = projectprop.project_id 
+            WHERE project."name" in ($outlier_trials)
+            and projectprop.value = '$trait'
+        );
     };
 
     $trait =~ s/\|.*//;
 
     my $outliers_clean_sql = qq{
-        select p.phenotype_id, pr.name, ph.observable_id from phenotypeprop p
-        join phenotype ph on ph.phenotype_id = p.phenotype_id 
-        join nd_experiment_phenotype nep on nep.phenotype_id = p.phenotype_id
-        join nd_experiment_project nes on nes.nd_experiment_id = nep.nd_experiment_id 
-        join project pr on pr.project_id = nes.project_id
-        where pr.name = ($study_names_sql) 
-        and ph.observable_id = (select cvterm_id from cvterm where cvterm.name = '$trait') 
-        group by p.phenotype_id, pr.name, ph.observable_id ;
+        DELETE FROM phenotypeprop
+        WHERE phenotypeprop.phenotype_id IN (
+            SELECT phenotypeprop.phenotype_id
+            FROM phenotypeprop
+            JOIN phenotype ph ON phenotypeprop.phenotype_id = ph.phenotype_id
+            JOIN nd_experiment_phenotype nep ON nep.phenotype_id = phenotypeprop.phenotype_id
+            JOIN nd_experiment_project nes ON nes.nd_experiment_id = nep.nd_experiment_id
+            JOIN project pr ON pr.project_id = nes.project_id
+            WHERE ph.observable_id = (
+                SELECT cvterm_id FROM cvterm WHERE cvterm.name = '$trait'
+            )
+            AND pr.name IN ($outlier_trials)
+        );
     };
     
     my $response_data = {
     is_curator => $curator ? 1 : 0,  # 1 if curator, 0 otherwise
     };
 
-    print("\n####################################\n");
-    print("Person id: $sp_person_id\n");
-    print("Curator: $curator\n");
-    print("Trait: $trait\n");
-    print("trails: $study_names_sql\n");
-
-
     # Execute the SQL query
     eval {
+
+        my $sth_trial = $dbh->prepare($trial_clean_sql);
+        $sth_trial->execute();
+
         my $sth_clean = $dbh->prepare($outliers_clean_sql);
         $sth_clean->execute();
     };
@@ -386,6 +386,8 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     } else {
         $c->stash->{rest} = $response_data;
     }
+    ## celaning tempfiles
+    rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 
 }
 

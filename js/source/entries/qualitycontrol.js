@@ -155,44 +155,44 @@ export function init(main_div) {
         });
     });
 
-    // $('#restore_outliers_button').click(function () {
-    //     $.ajax({
-    //         url: '/ajax/qualitycontrol/datarestore',
-    //         data: { 'file': tempfile, 'trait': trait_selected },
-    //         success: function (r) {
-    //             $('#working_modal').modal("hide");
-    //             if (r.message) {
-    //                 alert(r.message); 
-    //                 return;
-    //             } else {
-    //                 allData = r.data;
-    //                 console.log("Outliers to restore:", allData);
-    //                 $.ajax({
-    //                     url: '/ajax/qualitycontrol/restoreoutliers',
-    //                     method: "POST",
-    //                     contentType: "application/json; charset=UTF-8",  // Explicitly set UTF-8 encoding
-    //                     data: {"outliers": JSON.stringify(allData),
-    //                     }, 
-    //                     success: function (r) {
-    //                         if (r.is_curator === 1) {
-    //                             $('#restore_outliers_button').prop("disabled", false);
-    //                             console.log("Restore successful!");
-    //                         } else {
-    //                             $('#restore_outliers_button').prop("disabled", true);
-    //                             alert("No curator access");
-    //                         }
-    //                     },
-    //                     error: function () {
-    //                         alert('Error during restore!');
-    //                     }
-    //                 });
-    //             }
-    //         },
-    //         error: function () {
-    //             alert('Error during AJAX request!');
-    //         }
-    //     });
-    // });
+    $('#restore_outliers_button').click(function () {
+        $.ajax({
+            url: '/ajax/qualitycontrol/datarestore',
+            data: { 'file': tempfile, 'trait': trait_selected },
+            success: function (r) {
+                $('#working_modal').modal("hide");
+                if (r.message) {
+                    alert(r.message); 
+                    return;
+                } else {
+                    var trialNames = r.data;
+                    console.log("Outliers to restore:", trialNames);
+                    $.ajax({
+                        url: '/ajax/qualitycontrol/restoreoutliers',
+                        method: "POST",
+                        data: {"outliers": JSON.stringify(trialNames), "trait":trait_selected,
+                        },
+                        success: function (r) {
+                            console.log("The curator is:", r.is_curator);
+                            if (r.is_curator === 1) {
+                                $('#restore_outliers_button').prop("disabled", false);
+                                console.log("Restore successful!");
+                            } else {
+                                $('#restore_outliers_button').prop("disabled", true);
+                                alert("No curator access");
+                            }
+                        },
+                        error: function () {
+                            alert('Error during restore!');
+                        }
+                    });
+                }
+            },
+            error: function () {
+                alert('Error during AJAX request!');
+            }
+        });
+    });
 
 
 
