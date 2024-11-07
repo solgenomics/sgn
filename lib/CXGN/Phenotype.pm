@@ -200,3 +200,5 @@ sub store_additional_info {
     my $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
     return $additional_info_stored;
 }
+
+1;
