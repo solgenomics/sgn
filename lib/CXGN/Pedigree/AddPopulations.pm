@@ -155,7 +155,7 @@ sub add_population {
     return { success => "Success! Population $population_name created", population_id=>$population_id };
 }
 
-sub add_accessions {
+sub add_members {
     my $self = shift;
     my $schema = $self->get_schema();
     my $population_name = $self->get_name();
@@ -184,11 +184,11 @@ sub add_accessions {
         $error =  $_;
     };
     if ($error) {
-        print STDERR "Error adding accessions to population $population_name: $error\n";
-        return { error => "Error adding accessions to population $population_name: $error" };
+        print STDERR "Error adding members to population $population_name: $error\n";
+        return { error => "Error adding members to population $population_name: $error" };
     } else {
-        print STDERR "Accession added to population $population_name successfully\n";
-        return { success => "Accession added to population $population_name successfully!" };
+        print STDERR "Member added to population $population_name successfully\n";
+        return { success => "Member added to population $population_name successfully!" };
     }
 }
 

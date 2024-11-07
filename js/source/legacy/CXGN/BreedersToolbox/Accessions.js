@@ -276,11 +276,11 @@ jQuery(document).ready(function ($) {
 
         jQuery.ajax({
             type: 'POST',
-            url: '/ajax/population/add_accessions',
+            url: '/ajax/population/add_members',
             dataType: "json",
             data: {
                 'population_name': population_name,
-                'accession_list_id': jQuery('#add_member_to_population_list_div_list_select').val(),
+                'list_id': jQuery('#add_member_to_population_list_div_list_select').val(),
             },
             beforeSend: function(){
                 disable_ui();
