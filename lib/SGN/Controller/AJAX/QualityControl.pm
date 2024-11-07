@@ -143,11 +143,12 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
 
         }
 
-        # print STDERR Dumper \@validated_projects;
+        #print STDERR Dumper \@validated_projects;
+        my $list_projects = join(", ", @validated_projects);
 
         if (scalar(@validated_projects) > 0) {
             my $project_names_str = join(", ", @validated_projects);
-            my $message = "Trait $trait is already validated data for trials: $project_names_str";
+            my $message = "Trait $trait is already validated data for trials: $list_projects";
             $c->stash->{rest} = { message => $message };
         } else {
             $c->stash->{rest} = { data => \@data, trait => $trait};
@@ -345,7 +346,6 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
             FROM projectprop
             JOIN project ON project.project_id = projectprop.project_id 
             WHERE project.name in ($outlier_trials)
-            and project.type_id = (select cvterm_id from cvterm where cvterm.name = 'validated_phenotype')
             and projectprop.value = '$trait'
         );
     };

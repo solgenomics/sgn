@@ -465,6 +465,24 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
         .attr("y2", 0)
         .attr("stroke", "black");
 
+    // Label X-axis label 
+    svg.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "middle")
+        .attr("x", width / 2) 
+        .attr("y", height + 40) 
+        .text(selected_trait);
+
+    // Append Y-axis label
+    svg.append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "middle")
+        .attr("x", -height / 2) 
+        .attr("y", -50) 
+        .attr("transform", "rotate(-90)") 
+        .text("Location ID");
+
+
     // Draw individual points with jitter
     const pointGroup = svg.selectAll(".point")
         .data(boxplotData)
