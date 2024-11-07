@@ -14,7 +14,7 @@
 <p>This table displays all trials that have been filtered and validated using the Quality Control Tool.</p>
 <br>
 <div>
-    <input type="text" id="searchBox" placeholder="Search projects..." onkeyup="filterTable()">
+    <input type="text" id="searchBox" placeholder="Search tool..." onkeyup="filterTable()">
     <br>
 </div>
 <div id="validated_trials_tool">
