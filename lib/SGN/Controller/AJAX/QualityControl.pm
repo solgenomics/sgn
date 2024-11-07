@@ -344,7 +344,8 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
             SELECT projectprop.project_id 
             FROM projectprop
             JOIN project ON project.project_id = projectprop.project_id 
-            WHERE project."name" in ($outlier_trials)
+            WHERE project.name in ($outlier_trials)
+            and project.type_id = (select cvterm_id from cvterm where cvterm.name = 'validated_phenotype')
             and projectprop.value = '$trait'
         );
     };

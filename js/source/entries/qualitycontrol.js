@@ -179,7 +179,7 @@ export function init(main_div) {
                                 console.log("Restore successful!");
                             } else {
                                 $('#restore_outliers_button').prop("disabled", true);
-                                alert("No curator access");
+                                alert("Only curators are allowed undo validated trial. Please contact a curator.");
                             }
                         },
                         error: function () {

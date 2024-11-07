@@ -173,16 +173,16 @@
 
       <&| /util/workflow.mas:step, title=> "Save Outliers" &>
         <& /page/page_title.mas, title=>"Save Outliers" &>
-          <div>
-          <div style="float:right">
-            <button class="btn btn-main" id="restore_outliers_button"   onclick="Workflow.complete(this);">Restore</button>
-            <button class="btn btn-main" id="store_outliers_button"   onclick="Workflow.complete(this);">Save</button>
-          </div>
-
-      </&>
-        <div id="tempfile" style="display:none" >
+      <div>
+        <div style="text-align: center;">
+          <p>This is the validation process. Trials cleaned of outliers can be used in downstream analysis.</p>
+          <p>Only <b>CURATORS</b> are allowed to restore all original data.</p>
+          <button class="btn btn-main" id="restore_outliers_button"   onclick="Workflow.complete(this);">Restore</button>
+          <button class="btn btn-main" id="store_outliers_button"   onclick="Workflow.complete(this);">Validate</button>
         </div>
-    </div>
+      </&>
+        <div id="tempfile" style="display:none"></div>
+      </div>
   </div>
 </div>
 

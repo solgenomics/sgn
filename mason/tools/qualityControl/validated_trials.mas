@@ -1,0 +1,197 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['validatedtrials' ] &>
+
+<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
+
+<& /page/page_title.mas, title=>"Validated Trials" &>
+
+<p>This table displays all trials that have been filtered and validated using the Quality Control Tool.</p>
+<br>
+<div>
+    <input type="text" id="searchBox" placeholder="Search projects..." onkeyup="filterTable()">
+    <br>
+</div>
+<div id="validated_trials_tool">
+  <div>
+    <br>
+    <table id="projectDataTable" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Project Name</th>
+                <th>Project Location</th>
+                <th>Trait Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+<div id="paginationControls">
+    <button id="prevPageBtn" onclick="changePage(-1)">Previous</button>
+    <span id="currentPageLabel">Page 1</span>
+    <button id="nextPageBtn" onclick="changePage(1)">Next</button>
+</div>
+
+<!-- Items per page control -->
+<div>
+    <label for="itemsPerPage">Items per page:</label>
+    <select id="itemsPerPage" onchange="setItemsPerPage()">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+    </select>
+</div>
+
+</div>
+
+<script>
+let currentPage = 1;   
+let itemsPerPage = 10; 
+let allData = [];      
+
+$(document).ready(function() {
+    fetchProjectData();
+
+    // Set items per page from localStorage if previously selected
+    const storedItemsPerPage = localStorage.getItem("itemsPerPage");
+    if (storedItemsPerPage) {
+        itemsPerPage = parseInt(storedItemsPerPage);
+        $("#itemsPerPage").val(itemsPerPage);
+    }
+});
+
+function filterTable() {
+    const query = document.getElementById("searchBox").value.toLowerCase();
+    const filteredData = allData.filter(project => {
+        return project.name.toLowerCase().includes(query) ||
+               project.project_location.toLowerCase().includes(query) ||
+               project.validated_trait.toLowerCase().includes(query);
+    });
+    displayData(filteredData);
+    updatePaginationControls(filteredData);
+}
+
+function changePage(offset) {
+    currentPage += offset;
+    displayData(allData);
+    updatePaginationControls(allData);
+}
+
+function updatePaginationControls(data) {
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+    currentPage = Math.min(Math.max(1, currentPage), totalPages); 
+
+    // Enable/disable the buttons based on the current page
+    document.getElementById("prevPageBtn").disabled = currentPage === 1;
+    document.getElementById("nextPageBtn").disabled = currentPage === totalPages;
+    
+    document.getElementById("currentPageLabel").textContent = `Page ${currentPage} of ${totalPages}`;
+}
+
+function displayData(data) {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const pagedData = data.slice(startIndex, startIndex + itemsPerPage);
+
+    // Clear the existing table rows
+    $('#projectDataTable tbody').empty();
+
+    // Populate the table with paged data
+    pagedData.forEach(function(project) {
+        $('#projectDataTable tbody').append(
+            `<tr>
+                <td>${project.name}</td>
+                <td>${project.project_location}</td>
+                <td>${project.validated_trait}</td>
+            </tr>`
+        );
+    });
+}
+
+function setItemsPerPage() {
+    itemsPerPage = parseInt(document.getElementById("itemsPerPage").value);
+    localStorage.setItem("itemsPerPage", itemsPerPage);
+    displayData(allData);
+    updatePaginationControls(allData);
+}
+
+function fetchProjectData() {
+    $.ajax({
+        url: '/ajax/validatedtrials/grabdata', 
+        method: "GET",
+        dataType: "json",
+        success: function(response) {
+            if (response && response.data && Array.isArray(response.data)) {
+                allData = response.data; 
+                displayData(allData); 
+                updatePaginationControls(allData);
+            } else {
+                alert("No valid data found or data format issue");
+            }
+        },
+        error: function() {
+            alert("An error occurred while fetching project data.");
+        }
+    });
+}
+
+</script>
+
+
+<style>
+  .search-container {
+  text-align: right;
+  margin: 10px;
+  }
+
+  #searchBox {
+    padding: 5px;
+    width: 200px; /* Adjust the width as needed */
+  }
+
+  .factor {
+  z-index:4;
+  border-style:solid;
+  border-radius:8px;
+  width:200px;
+  height:100;
+  border-color:#337ab7;
+  background-color:#337ab7;
+  color:white;
+  margin:4px
+  }
+  .factor_panel {
+  min-height:100px;
+  height:auto;
+  margin-top:0px;
+  border-style:dotted;
+  border-width:5px;
+  color:grey;
+  background-color:lightyellow;
+  }
+  .factor_interaction_panel {
+  border-style:dotted;
+  border-width:0px;
+  margin-top:20px;
+  height:auto;
+  z-index:1;
+  }
+  .model_bg {
+  margin-left:30px;
+  margin-right:30px;
+  background-color:#DDEEEE;
+  min-height:80px;
+  padding-top:10px;
+  padding-left:10px;
+  padding-bottom:10px;
+  border-radius:8px;
+  }
+</style>
