@@ -1,6 +1,4 @@
 
-package CXGN::Trial::Download;
-
 =head1 NAME
 
 CXGN::Trial::Download
@@ -68,7 +66,7 @@ my $download = CXGN::Trial::Download->new({
     phenotype_max_value => $phenotype_max_value,
     has_header=>$has_header,
     include_pedigree_parents=>$include_pedigree_parents
-});
+}); 
 my $error = $download->download();
 my $file_name = "phenotype.$format";
 $c->res->content_type('Application/'.$format);
@@ -106,9 +104,11 @@ information, mapping to treatment_project_ids and trait_list.
 These keys can be ignored if you don't need them in the layout.
 
 As a XLS:
+
 my $plugin = "TrialLayoutExcel";
 
 As a CSV:
+
 my $plugin = "TrialLayoutCSV";
 
 my $download = CXGN::Trial::Download->new({
@@ -127,7 +127,6 @@ $c->res->content_type('Application/'.$format);
 $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 my $output = read_file($tempfile);
 $c->res->body($output);
-
 ------------------------------------------------------------------------------
 
 For downloading the IGD sequencing facility spreadsheet (as used from
@@ -154,8 +153,11 @@ $c->res->body($output);
 
 =head1 AUTHORS
 
+Nick Morales
+
 =cut
 
+package CXGN::Trial::Download;
 
 use Moose;
 use Moose::Util::TypeConstraints;
