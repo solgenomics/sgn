@@ -86,7 +86,7 @@
 	      </div>
 	      <br />
         <input type="checkbox" id="dataset_trait_outliers" />
-        <label>Exclude dataset outliers &nbsp; </label>          
+        <label>Use validated trials &nbsp; </label>          
         <br>
 	      <br />
 

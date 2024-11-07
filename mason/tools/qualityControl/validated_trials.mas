@@ -4,9 +4,14 @@
 
 <& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['validatedtrials' ] &>
 
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
 
 
 <& /page/page_title.mas, title=>"Validated Trials" &>
@@ -52,6 +57,7 @@
 </div>
 
 </div>
+<div id="map"></div>
 
 <script>
 let currentPage = 1;   
@@ -143,55 +149,102 @@ function fetchProjectData() {
     });
 }
 
+// Initialize the map
+var map = L.map('map').setView([0, 0], 2);  // Default view set to the whole world
+
+// Add OpenStreetMap tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+// Define sample locations (replace with your own data)
+var locations = [
+    { name: "Montividiu, GO", lat: -17.4439, lon: -51.1728 },
+    { name: "Rio Verde, GO", lat: -17.7923, lon: -50.9192 },
+    { name: "Santa Juliana, MG", lat: -19.3122, lon: -47.5327 }
+];
+
+// Add markers for each location
+locations.forEach(function(location) {
+    L.marker([location.lat, location.lon])
+        .addTo(map)
+        .bindPopup(location.name);
+});
+
+// Ensure map resizes properly when zooming
+map.on('resize', function() {
+    map.invalidateSize();
+});
+
+// Optional: Trigger invalidateSize() if the map is not resizing correctly
+window.addEventListener('load', function() {
+    map.invalidateSize();
+});
+
+// Trigger invalidateSize on window resize to ensure the map fits properly
+window.addEventListener('resize', function() {
+    map.invalidateSize();
+});
+
 </script>
 
 
 <style>
-  .search-container {
-  text-align: right;
-  margin: 10px;
-  }
 
-  #searchBox {
-    padding: 5px;
-    width: 200px; /* Adjust the width as needed */
-  }
+html, body {
+        height: 100%;
+        margin: 0;
+    }
 
-  .factor {
-  z-index:4;
-  border-style:solid;
-  border-radius:8px;
-  width:200px;
-  height:100;
-  border-color:#337ab7;
-  background-color:#337ab7;
-  color:white;
-  margin:4px
-  }
-  .factor_panel {
-  min-height:100px;
-  height:auto;
-  margin-top:0px;
-  border-style:dotted;
-  border-width:5px;
-  color:grey;
-  background-color:lightyellow;
-  }
-  .factor_interaction_panel {
-  border-style:dotted;
-  border-width:0px;
-  margin-top:20px;
-  height:auto;
-  z-index:1;
-  }
-  .model_bg {
-  margin-left:30px;
-  margin-right:30px;
-  background-color:#DDEEEE;
-  min-height:80px;
-  padding-top:10px;
-  padding-left:10px;
-  padding-bottom:10px;
-  border-radius:8px;
-  }
+#map { height: 500px;
+width: 100%;
+margin-top: 20px; }
+
+.search-container {
+text-align: right;
+margin: 10px;
+}
+
+#searchBox {
+padding: 5px;
+width: 200px; /* Adjust the width as needed */
+}
+
+.factor {
+z-index:4;
+border-style:solid;
+border-radius:8px;
+width:200px;
+height:100;
+border-color:#337ab7;
+background-color:#337ab7;
+color:white;
+margin:4px
+}
+.factor_panel {
+min-height:100px;
+height:auto;
+margin-top:0px;
+border-style:dotted;
+border-width:5px;
+color:grey;
+background-color:lightyellow;
+}
+.factor_interaction_panel {
+border-style:dotted;
+border-width:0px;
+margin-top:20px;
+height:auto;
+z-index:1;
+}
+.model_bg {
+margin-left:30px;
+margin-right:30px;
+background-color:#DDEEEE;
+min-height:80px;
+padding-top:10px;
+padding-left:10px;
+padding-bottom:10px;
+border-radius:8px;
+}
 </style>

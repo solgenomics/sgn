@@ -260,6 +260,7 @@ function populateOutlierTable(data, trait) {
             if (!groupedData[identifier]) {
                 groupedData[identifier] = {
                     locationDbId: item.locationDbId,
+                    locationName: item.locationName,
                     studyName: item.studyName,
                     values: [] 
                 };
@@ -271,7 +272,7 @@ function populateOutlierTable(data, trait) {
 
     for (const key in groupedData) {
         const dataGroup = groupedData[key];
-        const stats = calculateStatistics(dataGroup.values);
+        const stats = calculateStatistics(dataGroup.values); 
         const row = tableBody.insertRow();
         const cell1 = row.insertCell(0);
         const cell2 = row.insertCell(1);
@@ -279,13 +280,16 @@ function populateOutlierTable(data, trait) {
         const cell4 = row.insertCell(3);
         const cell5 = row.insertCell(4);
         const cell6 = row.insertCell(5);
+        const cell7 = row.insertCell(6);
 
+        // Populate the cells with data, checking for null or undefined values
         cell1.innerHTML = dataGroup.locationDbId || 'N/A';
-        cell2.innerHTML = dataGroup.studyName || 'N/A';
-        cell3.innerHTML = stats.min !== null ? stats.min.toFixed(2) : 'N/A';
-        cell4.innerHTML = stats.max !== null ? stats.max.toFixed(2) : 'N/A';
-        cell5.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
-        cell6.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
+        cell2.innerHTML = dataGroup.locationName || 'N/A';
+        cell3.innerHTML = dataGroup.studyName || 'N/A';
+        cell4.innerHTML = stats.min !== null ? stats.min.toFixed(2) : 'N/A';
+        cell5.innerHTML = stats.max !== null ? stats.max.toFixed(2) : 'N/A';
+        cell6.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
+        cell7.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
     }
 }
 
@@ -313,6 +317,7 @@ function populateCleanTable(data, outliers, trait) {
             if (!groupedData[identifier]) {
                 groupedData[identifier] = {
                     locationDbId: item.locationDbId,
+                    locationName: item.locationName,
                     studyName: item.studyName,
                     values: []
                 };
@@ -331,14 +336,16 @@ function populateCleanTable(data, outliers, trait) {
         const cell4 = row.insertCell(3);
         const cell5 = row.insertCell(4);
         const cell6 = row.insertCell(5);
+        const cell7 = row.insertCell(6);
 
         // Populate the cells with data, checking for null or undefined values
         cell1.innerHTML = dataGroup.locationDbId || 'N/A';
-        cell2.innerHTML = dataGroup.studyName || 'N/A';
-        cell3.innerHTML = stats.min !== null ? stats.min.toFixed(2) : 'N/A';
-        cell4.innerHTML = stats.max !== null ? stats.max.toFixed(2) : 'N/A';
-        cell5.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
-        cell6.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
+        cell2.innerHTML = dataGroup.locationName || 'N/A';
+        cell3.innerHTML = dataGroup.studyName || 'N/A';
+        cell4.innerHTML = stats.min !== null ? stats.min.toFixed(2) : 'N/A';
+        cell5.innerHTML = stats.max !== null ? stats.max.toFixed(2) : 'N/A';
+        cell6.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
+        cell7.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
     }
 }
 
