@@ -83,33 +83,34 @@ sub _validate_with_plugin {
     ## These are checks on the individual plot-level data
     ##
     foreach (@$parsed_data) {
-        my $row = $_->{'_row'};
-        my $trial_name = $_->{'trial_name'};
-        my $breeding_program = $_->{'breeding_program'};
-        my $location = $_->{'location'};
-        my $year = $_->{'year'};
-        my $design_type = $_->{'design_type'};
-        my $description = $_->{'description'};
-        my $accession_name = $_->{'accession_name'};
-        my $plot_number = $_->{'plot_number'};
-        my $block_number = $_->{'block_number'};
-        my $plot_name = $_->{'plot_name'};
-        my $trial_type = $_->{'trial_type'};
-        my $plot_width = $_->{'plot_width'};
-        my $plot_length = $_->{'plot_length'};
-        my $field_size = $_->{'field_size'};
-        my $planting_date = $_->{'planting_date'};
-        my $transplanting_date = $_->{'transplanting_date'};
-        my $harvest_date = $_->{'harvest_date'};
-        my $is_a_control = $_->{'is_a_control'};
-        my $rep_number = $_->{'rep_number'};
-        my $range_number = $_->{'range_number'};
-        my $row_number = $_->{'row_number'};
-        my $col_number = $_->{'col_number'};
-        my $seedlot_name = $_->{'seedlot_name'};
-        my $num_seed_per_plot = $_->{'num_seed_per_plot'};
-        my $weight_gram_seed_per_plot = $_->{'weight_gram_seed_per_plot'};
-        my $entry_number = $_->{'entry_number'};
+        my $data = $_;
+        my $row = $data->{'_row'};
+        my $trial_name = $data->{'trial_name'};
+        my $breeding_program = $data->{'breeding_program'};
+        my $location = $data->{'location'};
+        my $year = $data->{'year'};
+        my $design_type = $data->{'design_type'};
+        my $description = $data->{'description'};
+        my $accession_name = $data->{'accession_name'};
+        my $plot_number = $data->{'plot_number'};
+        my $block_number = $data->{'block_number'};
+        my $plot_name = $data->{'plot_name'};
+        my $trial_type = $data->{'trial_type'};
+        my $plot_width = $data->{'plot_width'};
+        my $plot_length = $data->{'plot_length'};
+        my $field_size = $data->{'field_size'};
+        my $planting_date = $data->{'planting_date'};
+        my $transplanting_date = $data->{'transplanting_date'};
+        my $harvest_date = $data->{'harvest_date'};
+        my $is_a_control = $data->{'is_a_control'};
+        my $rep_number = $data->{'rep_number'};
+        my $range_number = $data->{'range_number'};
+        my $row_number = $data->{'row_number'};
+        my $col_number = $data->{'col_number'};
+        my $seedlot_name = $data->{'seedlot_name'};
+        my $num_seed_per_plot = $data->{'num_seed_per_plot'};
+        my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
+        my $entry_number = $data->{'entry_number'};
 
         # Plot Number: must be a positive number
         if (!($plot_number =~ /^\d+?$/)) {
@@ -195,7 +196,7 @@ sub _validate_with_plugin {
 
         # Treatment Values: must be either blank, 0, or 1
         foreach my $treatment (@$treatments) {
-            my $treatment_value = $row->{$treatment};
+            my $treatment_value = $data->{$treatment};
             print STDERR "Row $row: $treatment = $treatment_value\n";
             if ( $treatment_value && $treatment_value ne '' && $treatment_value ne '0' && $treatment_value ne '1' ) {
                 push @error_messages, "Row $row: Treatment value for treatment <strong>$treatment</strong> should be either 1 (applied) or empty (not applied).";
