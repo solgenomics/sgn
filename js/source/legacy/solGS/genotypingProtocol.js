@@ -155,6 +155,10 @@ solGS.genotypingProtocol = {
   },
 
 
+  formatId: function (divPlace) {
+    divPlace = divPlace ? "#" + divPlace : "";
+    return divPlace;
+  },
 
   getGenotypingProtocolName: function () {
     return  jQuery("#genotyping_protocol_name").val();
@@ -240,6 +244,7 @@ jQuery(document).ready(function () {
         protocolId = selectedId;
         protocolName = selectedName;      
       }
+
     divPlace = solGS.genotypingProtocol.formatId(divPlace);
 	  solGS.genotypingProtocol.setGenotypingProtocol(divPlace, selectedId);
 
