@@ -76,7 +76,7 @@ for my $extension ("xlsx", "xls") {
 
     #parse uploaded file with appropriate plugin
     my $parser  = CXGN::Trial::ParseUpload->new(chado_schema=> $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('MultipleTrialDesignExcelFormat');
+    $parser->load_plugin('MultipleTrialDesignGeneric');
     my $parsed_data = $parser->parse();
 	print STDERR "Parsed data: " . Dumper($parsed_data);
     ok(!$parsed_data->{error}, 'check if parse validate igd file fails for excel file');
