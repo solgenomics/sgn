@@ -132,8 +132,62 @@ jQuery(document).ready(function ($) {
         jQuery("#upload_multiple_trials_warning_messages").html('');
         jQuery("#upload_multiple_trials_error_messages").html('');
         jQuery("#upload_multiple_trials_success_messages").html('');
-        jQuery('#upload_multiple_trial_designs_form').attr("action", "/ajax/trial/upload_multiple_trial_designs_file");
-        jQuery("#upload_multiple_trial_designs_form").submit();
+
+        var uploadedTrialLayoutFile = jQuery("#multiple_trial_designs_upload_file").val();
+        if ( !uploadedTrialLayoutFile || uploadedTrialLayoutFile === '' ) {
+            alert("No file selected");
+            return;
+        }
+
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: '/ajax/trial/upload_multiple_trial_designs_file',
+            type: 'POST',
+            data: new FormData(jQuery("#upload_multiple_trial_designs_form")[0]),
+            processData: false,
+            contentType: false,
+            success : function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.warnings) {
+                    warnings = response.warnings;
+                    warning_html = "<li>"+warnings.join("</li><li>")+"</li>"
+                    jQuery("#upload_multiple_trials_warning_messages").show();
+                    jQuery("#upload_multiple_trials_warning_messages").html('<b>Warnings. Fix or ignore the following warnings and try again.</b><br><br>'+warning_html);
+                    return;
+                }
+                if (response.errors) {
+                    errors = response.errors;
+                    if (Array.isArray(errors)) {
+                        error_html = "<li>"+errors.join("</li><li>")+"</li>";
+                    } else {
+                        error_html = "<li>"+errors+"</li>";
+                    }
+                    jQuery("#upload_multiple_trials_error_messages").show();
+                    jQuery("#upload_multiple_trials_error_messages").html('<b>Errors found. Fix the following problems and try again.</b><br><br>'+error_html);
+                    return;
+                }
+                if (response.success) {
+                    refreshTrailJsTree(0);
+                    jQuery("#upload_multiple_trials_success_messages").show();
+                    jQuery("#upload_multiple_trials_success_messages").html("Success! All trials successfully loaded.");
+                    jQuery("#multiple_trial_designs_upload_submit").hide();
+                    jQuery("#upload_multiple_trials_success_button").show();
+                    return;
+                }
+                if (response.background) {
+                    jQuery("#upload_multiple_trials_success_messages").show();
+                    jQuery("#upload_multiple_trials_success_messages").html("Your file has been uploaded.  You will receive an email once the process is complete.");
+                    jQuery("#multiple_trial_designs_upload_submit").hide();
+                    jQuery("#upload_multiple_trials_success_button").show();
+                    return;
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                jQuery("#upload_multiple_trials_error_messages").html("An error occurred while trying to upload this file. Please check the formatting and try again");
+                return;
+            }
+        });
     }
 
 
@@ -198,7 +252,6 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#multiple_trial_designs_upload_submit').click(function () {
-      console.log("Registered click on multiple_trial_designs_upload_submit button");
         upload_multiple_trial_designs_file();
     });
 
@@ -312,70 +365,6 @@ jQuery(document).ready(function ($) {
     jQuery('#email_option_to_recieve_trial_upload_status').on('change', toggleEmailField);
     // Call the function initially in case the checkbox is already checked
     toggleEmailField();
-
-    jQuery('#upload_multiple_trial_designs_form').iframePostForm({
-        json: true,
-        post: function () {
-            var uploadedTrialLayoutFile = jQuery("#multiple_trial_designs_upload_file").val();
-
-            // Clear existing messages
-            jQuery("#upload_multiple_trials_warning_messages").html('');
-            jQuery("#upload_multiple_trials_error_messages").html('');
-            jQuery("#upload_multiple_trials_success_messages").html('');
-
-            if (uploadedTrialLayoutFile === '') {
-                alert("No file selected");
-                return;
-            }
-            jQuery('#working_modal').modal("show");
-        },
-        complete: function(response) {
-            // console.log(response);
-            jQuery('#working_modal').modal("hide");
-            if (response.warnings) {
-                warnings = response.warnings;
-                warning_html = "<li>"+warnings.join("</li><li>")+"</li>"
-                jQuery("#upload_multiple_trials_warning_messages").show();
-                jQuery("#upload_multiple_trials_warning_messages").html('<b>Warnings. Fix or ignore the following warnings and try again.</b><br><br>'+warning_html);
-                return;
-            }
-            if (response.errors) {
-                errors = response.errors;
-                if (Array.isArray(errors)) {
-                    error_html = "<li>"+errors.join("</li><li>")+"</li>";
-                } else {
-                    error_html = "<li>"+errors+"</li>";
-                }
-                jQuery("#upload_multiple_trials_error_messages").show();
-                jQuery("#upload_multiple_trials_error_messages").html('<b>Errors found. Fix the following problems and try again.</b><br><br>'+error_html);
-                console.log("check the errors: ", response.errors);
-                return;
-            }
-            if (response.success) {
-                console.log("Success!!");
-                refreshTrailJsTree(0);
-                jQuery("#upload_multiple_trials_success_messages").show();
-                jQuery("#upload_multiple_trials_success_messages").html("Success! All trials successfully loaded.");
-                jQuery("#multiple_trial_designs_upload_submit").hide();
-                jQuery("#upload_multiple_trials_success_button").show();
-                return;
-            }
-            if (response.background) {
-                jQuery("#upload_multiple_trials_success_messages").show();
-                jQuery("#upload_multiple_trials_success_messages").html("Your file has been uploaded.  You will receive an email once the process is complete.");
-                jQuery("#multiple_trial_designs_upload_submit").hide();
-                jQuery("#upload_multiple_trials_success_button").show();
-                return;
-            }
-        },
-        error: function(response) {
-            if (!jQuery('#email_option_to_recieve_trial_upload_status').is(':checked')) {
-                jQuery("#working_modal").modal("hide");
-                jQuery("#upload_multiple_trials_error_messages").html("An error occurred while trying to upload this file. Please check the formatting and try again");
-                return;
-            }
-        }
-    });
 
     jQuery('#upload_multiple_trials_success_button').on('click', function(){
         //alert('Trial was saved in the database');
