@@ -25,7 +25,7 @@ use Text::CSV;
 
 my $f = SGN::Test::Fixture->new();
 
-for my $extension ("xlsx", "xls") {
+for my $extension ("xlsx", "xls", "csv") {
 
     my $c = SimulateC->new({
 		dbh 			=> $f->dbh(),
