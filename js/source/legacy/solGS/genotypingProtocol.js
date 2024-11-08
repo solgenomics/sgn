@@ -7,22 +7,23 @@
 var solGS = solGS || function solGS() {};
 
 solGS.genotypingProtocol = {
-  setGenotypingProtocol: function (divPlace, arg) {
-    var msg = "You are using genotyping protocol: <b>" + arg.name + "</b>.";
+  setGenotypingProtocol: function (divPlace, protocol) {
+    var msg = "You are using genotyping protocol: <b>" + protocol.name + "</b>.";
 
     if (divPlace) {
       divPlace = divPlace + " ";
     }
 
     jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_message").val(
-      arg.protocol_id
+      protocol.protocol_id
     );
     jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_message").html(
       msg
     );
     jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_id").val(
-      arg.protocol_id
+      protocol.protocol_id
     );
+
   },
 
   getAllProtocols: function () {
@@ -164,18 +165,18 @@ jQuery(document).ready(function () {
 
   jQuery("#genotyping_protocol #genotyping_protocols_list_select").change(
     function () {
-      var selectedId = jQuery(this).find("option:selected").val();
-      var selectedName = jQuery(this).find("option:selected").text();
+      var selectedProtocolId = jQuery(this).find("option:selected").val();
+      var selectedProtocolName = jQuery(this).find("option:selected").text();
 
-      var selected = {
-        protocol_id: selectedId,
-        name: selectedName,
+      var selectedProtocol = {
+        protocol_id: selectedProtocolId,
+        name: selectedProtocolName,
       };
 
       var divPlace = jQuery(this).parent().parent().parent().attr("id");
 
       divPlace = solGS.genotypingProtocol.formatId(divPlace);
-      solGS.genotypingProtocol.setGenotypingProtocol(divPlace, selected);
+      solGS.genotypingProtocol.setGenotypingProtocol(divPlace, selectedProtocol);
 
       jQuery(
         divPlace + " #genotyping_protocol #genotyping_protocols_list_div"
@@ -187,6 +188,10 @@ jQuery(document).ready(function () {
       jQuery(
         divPlace + " #genotyping_protocol #genotyping_protocols_change"
       ).show();
+
+      if (selectedProtocolId) {
+        jQuery("#genotype_missing_message").hide();
+      }
     }
   );
 });
