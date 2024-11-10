@@ -38,7 +38,7 @@ my $outfile = $file.".obo";
 
 open(my $F, ">", $outfile) || die "Can't open file $outfile\n";
 
-my @col_headers = ("Variable"," Trait name", "Trait class", "Trait description", "Trait synonyms", "Main trait abbreviation", "Entity", "Attribute", "Method Name", "Method class", "Method description", "Method Abbreviation", "Formula", "Scale name", "Scale abbreviation", "Scale class", "Category 1", "Category 2", "Category 3", "Category 4", "Category 5", "Category 6", "Category 7", "Category 8", "Category 9", "Category 10", "Category 11", "Category 12" );
+my @col_headers = ("Variable"," Term Name - BB", "Trait class", "Term Definition", "Trait synonyms", "Main trait abbreviation", "Entity", "Attribute", "Method Name", "Method class", "Method description", "Method Abbreviation", "Formula", "Scale name", "Scale abbreviation", "Scale class", "Category 1", "Category 2", "Category 3", "Category 4", "Category 5", "Category 6", "Category 7", "Category 8", "Category 9", "Category 10", "Category 11", "Category 12" );
 
 my $parser = CXGN::File::Parse->new( file => $file );
 
@@ -62,13 +62,13 @@ foreach my $d (@$data) {
 print STDERR "TRAIT CLASSES: ".Dumper(\%trait_classes);
 
 foreach my $d (@$data) {
-    my $trait_name = $d->{'Trait name'};
+    my $trait_name = $d->{'Term Name - BB'};
     $traits{$trait_name}->{count}++;
     $traits{$trait_name}->{'Trait class'} = $d->{'Trait class'};
 
     print STDERR "TRAIT NAME $trait_name has TRAIT CLASS $d->{'Trait class'}\n";
     
-    $traits{$trait_name}->{'Trait description'} = $d->{'Trait description'};
+    $traits{$trait_name}->{'Term Definition'} = $d->{'Term Definition'};
     $traits{$trait_name}->{'Trait synonyms'} = $d->{'Trait synonyms'};
     $traits{$trait_name}->{'Trait abbreviation'} = $d->{'Main trait abbreviation'};
 }
@@ -78,8 +78,8 @@ print STDERR "TRAITS: ".Dumper(\%traits);
 
 foreach my $d (@$data) {
     $variables{$d->{'Variable'}}->{count}++;
-    $variables{$d->{'Variable'}}->{'Trait name'} = $d->{'Trait name'};
-    $variables{$d->{'Variable'}}->{'Trait description'} = $d->{'Trait description'};
+    $variables{$d->{'Variable'}}->{'Term Name - BB'} = $d->{'Term Name - BB'};
+    $variables{$d->{'Variable'}}->{'Term Definition'} = $d->{'Term Definition'};
     $variables{$d->{'Variable'}}->{'Entity'} = $d->{'Entity'};
     $variables{$d->{'Variable'}}->{'Attribute'} = $d->{'Attribute'};
     $variables{$d->{'Variable'}}->{'Method Name'} = $d->{'Method Name'};
@@ -178,11 +178,11 @@ foreach my $k (keys %variables) {
     print format_variable(
 	$ontology_name,
 	$count,
-	$variables{$k}->{'Trait name'}.", ".$variables{$k}->{'Method Name'}.", ".$variables{$k}->{'Scale name'},
+	$variables{$k}->{'Term Name - BB'}.", ".$variables{$k}->{'Method Name'}.", ".$variables{$k}->{'Scale name'},
 	join(" - ", $variables{$k}->{'Trait description'}, $variables{$k}->{'Method Name'}, $variables{$k}->{'Scale name'}),
 	$k, #$variables{$k}->{'synonyms'},
-	$traits{$variables{$k}->{'Trait name'}}->{acc},
-	$variables{$k}->{'Trait name'},
+	$traits{$variables{$k}->{'Term Name - BB'}}->{acc},
+	$variables{$k}->{'Term Name - BB'},
 	
 	)."\n";
 
