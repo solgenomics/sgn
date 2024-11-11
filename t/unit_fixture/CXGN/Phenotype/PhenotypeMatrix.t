@@ -78,10 +78,10 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     );
 
 
-my @results = ( '2.25', '1.5|3.0', '1.5', '3.0' );
+my @results = ( '2.25', '1.5|3.0', '1.5', '3.0', '4.5' );
 
 my $search_type = 'MaterializedViewTable';
-foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
+foreach my $repetitive_measurements ('average', 'all_values_single_line', 'first', 'last', 'sum') {
     
     $phenotypes_search->search_type($search_type);
     $phenotypes_search->repetitive_measurements($repetitive_measurements);
@@ -90,24 +90,21 @@ foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
     my @data = $phenotypes_search->get_phenotype_matrix();
     
     foreach my $d (@data) { 
-	if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
-	    my $result = shift(@results);
-	    print STDERR "$search_type, $repetitive_measurements, GOT: $d->[39], EXPECTED: $result\n";
-	    
-	    is( $d->[39], $result, "test $result" );
-	    print STDERR "MATCHED: ".Dumper($d);
-	}
-    }
+	    if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
+	        my $result = shift(@results);
+	        print STDERR "$search_type, $repetitive_measurements, GOT: $d->[39], EXPECTED: $result\n";
     
-    
-    
+	        is( $d->[39], $result, "test $result" );
+	        print STDERR "MATCHED: ".Dumper($d);
+	    }
+    }  
 }
 
 
-@results = ( '2.25', '1.5|3.0', '1.5', '3.0' );
+@results = ( '2.25', '1.5|3.0', '1.5', '3.0', '4.5');
 $search_type = "Native";
 
-foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
+foreach my $repetitive_measurements ('average', 'all_values_single_line', 'first', 'last', 'sum') {
     
     $phenotypes_search->search_type($search_type);
     $phenotypes_search->repetitive_measurements($repetitive_measurements);
@@ -116,21 +113,15 @@ foreach my $repetitive_measurements ('average', 'all', 'first', 'last') {
     my @data = $phenotypes_search->get_phenotype_matrix();
     
     foreach my $d (@data) { 
-	if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
-	    my $result = shift(@results);
-	    print STDERR "$search_type, $repetitive_measurements, GOT: $d->[30], EXPECTED: $result\n";
-	    
-	    is( $d->[30], $result, "test $result" );
-	    print STDERR "MATCHED: ".Dumper($d);
-	}
-    }
+	    if (my @out = grep( /KASESE_TP2013_1619/, @$d )) {
+	        my $result = shift(@results);
+	        print STDERR "$search_type, $repetitive_measurements, GOT: $d->[30], EXPECTED: $result\n";
     
-    
-    
+	        is( $d->[30], $result, "test $result" );
+	        print STDERR "MATCHED: ".Dumper($d);
+	    }
+    }  
 }
 
 
 done_testing();
-
-
-
