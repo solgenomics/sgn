@@ -556,6 +556,10 @@ sub store {
             if ($design{$key}->{is_a_control}) {
                 $is_a_control = $design{$key}->{is_a_control};
             }
+            my $is_a_filler;
+            if ($design{$key}->{is_a_filler}) {
+                $is_a_filler = $design{$key}->{is_a_filler};
+            }
             my $row_number;
             if ($design{$key}->{row_number}) {
                 $row_number = $design{$key}->{row_number};
@@ -642,6 +646,9 @@ sub store {
                 );
                 if ($is_a_control) {
                     push @plot_stock_props, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
+                }
+                if ($is_a_filler) {
+                    push @plot_stock_props, { type_id => $self->get_is_filler_cvterm_id, value => $is_a_filler };
                 }
                 if ($range_number) {
                     push @plot_stock_props, { type_id => $self->get_range_cvterm_id, value => $range_number };
@@ -833,6 +840,9 @@ sub store {
                     if ($is_a_control) {
                         push @plant_stock_props, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                     }
+                    if ($is_a_filler) {
+                        push @plant_stock_props, { type_id => $self->get_is_filler_cvterm_id, value => $is_a_filler };
+                    }
                     if ($range_number) {
                         push @plant_stock_props, { type_id => $self->get_range_cvterm_id, value => $range_number };
                     }
@@ -889,6 +899,10 @@ sub store {
                     );
                     if ($is_a_control) {
                         push @subplot_stockprops, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
+                    }
+                    if ($is_a_filler) {
+                        my $filler_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is a filler', 'stock_property')->cvterm_id();
+                        push @subplot_stockprops, { type_id => $filler_cvterm_id, value => $is_a_filler };
                     }
                     if ($range_number) {
                         push @subplot_stockprops, { type_id => $self->get_range_cvterm_id, value => $range_number };

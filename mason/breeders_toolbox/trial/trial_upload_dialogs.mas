@@ -596,6 +596,7 @@ $design_types => ()
                                         <td>plot_number</td>
                                         <td>block_number</td>
                                         <td>is_a_control</td>
+                                        <td>is_a_filler</td>
                                         <td>rep_number</td>
                                         <td>range_number</td>
                                         <td>row_number</td>
@@ -608,7 +609,7 @@ $design_types => ()
                                 </tbody>
                             </table>
                             <b>Header as a string:</b><br/>
-                            <p>plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
+                            <p>plot_name,accession_name,plot_number,block_number,is_a_control,is_a_filler,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
                         </div>
                     </&>
 
@@ -627,6 +628,7 @@ $design_types => ()
                                         <td>plot_number</td>
                                         <td>block_number</td>
                                         <td>is_a_control</td>
+                                        <td>is_a_filler</td>
                                         <td>rep_number</td>
                                         <td>range_number</td>
                                         <td>row_number</td>
@@ -639,7 +641,7 @@ $design_types => ()
                                 </tbody>
                             </table>
                             <b>Header as a string:</b><br/>
-                            <p>plot_name,cross_unique_id,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
+                            <p>plot_name,cross_unique_id,plot_number,block_number,is_a_control,is_a_filler,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
                         </div>
                     </&>
 
@@ -658,6 +660,7 @@ $design_types => ()
                                         <td>plot_number</td>
                                         <td>block_number</td>
                                         <td>is_a_control</td>
+                                        <td>is_a_filler</td>
                                         <td>rep_number</td>
                                         <td>range_number</td>
                                         <td>row_number</td>
@@ -670,7 +673,7 @@ $design_types => ()
                                 </tbody>
                             </table>
                             <b>Header as a string:</b><br/>
-                            <p>plot_name,family_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
+                            <p>plot_name,family_name,plot_number,block_number,is_a_control,is_a_filler,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
                         </div>
                     </&>
 
@@ -752,6 +755,7 @@ $design_types => ()
                                 <td>plot_number</td>
                                 <td>block_number</td>
                                 <td>is_a_control</td>
+                                <td>is_a_filler</td>
                                 <td>rep_number</td>
                                 <td>range_number</td>
                                 <td>row_number</td>
@@ -765,7 +769,7 @@ $design_types => ()
                     </table>
 
                     <b>Header as a string:</b><br/>
-                    <p>trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
+                    <p>trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,is_a_filler,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
 
                     <b> Required fields:</b>
                     <ul>

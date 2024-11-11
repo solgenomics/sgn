@@ -198,7 +198,7 @@ sub get_phenotype_matrix {
     my $include_timestamp = $self->include_timestamp;
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
 
-    print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
+    print STDERR "GET PHENOMATRIX PORRA!! ".$self->search_type."\n";
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         $self->search_type,
@@ -235,7 +235,8 @@ sub get_phenotype_matrix {
 
     if ($self->search_type eq 'MaterializedViewTable'){
         ($data, $unique_traits) = $phenotypes_search->search();        
-        print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
+
+        # print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
         my @line = @metadata_headers;
@@ -271,7 +272,14 @@ sub get_phenotype_matrix {
         push @info, \@line;
 
         foreach my $obs_unit (@$data){
-            my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
+            my $entry_type;
+            if ($obs_unit->{obsunit_is_a_filler}) {
+                $entry_type = 'filler';
+            } elsif ($obs_unit->{obsunit_is_a_control}) {
+                $entry_type = 'check';
+            } else {
+                $entry_type = 'test';
+            }
             my $synonyms = $obs_unit->{germplasm_synonyms};
             my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
             my $available_germplasm_seedlots = $obs_unit->{available_germplasm_seedlots};
@@ -347,13 +355,14 @@ sub get_phenotype_matrix {
         }
     } else {
         $data = $phenotypes_search->search();
-        #print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
+
+        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;
 
-        print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
-        print STDERR "Construct Pheno Matrix Start:".localtime."\n";
+        print STDERR "Esa aqui No of lines retrieved: ".scalar(@$data)."\n";
+        print STDERR "Essa aqui Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
         my %seen_obsunits;        
 
@@ -378,7 +387,25 @@ sub get_phenotype_matrix {
 
                 my $synonyms = $d->{synonyms};
                 my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-                my $entry_type = $d->{is_a_control} ? 'check' : 'test';
+                # my $entry_type = $d->{is_a_control} ? 'check' : 'test';
+
+
+                print("\n\n######################################################\n");
+                my $tf = $d->{is_a_filler} ? 'filler' : 'test';
+                my $tc = $d->{is_a_control} ? 'check' : 'test';
+                
+                print("Filler: $tf \n");
+                print("Check: $tc \n");
+                
+
+                my $entry_type;
+                if ($d->{is_a_filler}) {
+                    $entry_type = 'filler';
+                } elsif ($d->{is_a_control}) {
+                    $entry_type = 'check';
+                } else {
+                    $entry_type = 'test';
+                }
 
                 my $trial_name = $d->{trial_name};
                 my $trial_desc = $d->{trial_description};

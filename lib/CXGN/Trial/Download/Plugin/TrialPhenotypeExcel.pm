@@ -127,7 +127,7 @@ sub download {
     }
     #print STDERR Dumper \@data;
 
-    print STDERR "Print Excel Start:".localtime."\n";
+    print STDERR "Print Excel Start Esse aqui:".localtime."\n";
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $self->filename() =~ /(\.[^.]+)$/;
@@ -171,7 +171,7 @@ sub download {
         $ws->write_row($line+$header_offset, 0, $columns);
     }
     $ss ->close();
-    print STDERR "Print Excel End:".localtime."\n";
+    print STDERR "Print Excel End Esse tambem:".localtime."\n";
 }
 
 1;

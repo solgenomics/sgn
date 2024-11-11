@@ -12,7 +12,7 @@ use CXGN::Calendar;
 use CXGN::Trial;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
-my @OPTIONAL_COLUMNS = qw|plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+my @OPTIONAL_COLUMNS = qw|plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control is_a_filler rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
 sub _validate_with_plugin {
@@ -118,6 +118,7 @@ sub _validate_with_plugin {
     my $plot_number;
     my $block_number;
     my $is_a_control;
+    my $is_a_filler;
     my $rep_number;
     my $range_number;
     my $row_number;
@@ -237,6 +238,9 @@ sub _validate_with_plugin {
     }
     if ($worksheet->get_cell($row,$columns{is_a_control}->{index})) {
       $is_a_control =  $worksheet->get_cell($row,$columns{is_a_control}->{index})->value();
+    }
+    if ($worksheet->get_cell($row,$columns{is_a_filler}->{index})) {
+      $is_a_filler =  $worksheet->get_cell($row,$columns{is_a_filler}->{index})->value();
     }
     if ($worksheet->get_cell($row,$columns{rep_number}->{index})) {
       $rep_number =  $worksheet->get_cell($row,$columns{rep_number}->{index})->value();
@@ -433,6 +437,13 @@ sub _validate_with_plugin {
     if ($is_a_control) {
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
         push @error_messages, "Row $row_name: is_a_control <b>$is_a_control</b> is not either yes, no 1, 0, or blank.";
+      }
+    }
+
+    ## IS A FILLER
+    if ($is_a_filler) {
+      if (!($is_a_filler eq "yes" || $is_a_filler eq "no" || $is_a_filler eq "1" ||$is_a_filler eq "0" || $is_a_filler eq '')) {
+          push @error_messages, "Cell R$row_name: is_a_filler <b>$is_a_filler</b> is not either yes, no 1, 0, or blank.";
       }
     }
 
@@ -761,6 +772,7 @@ sub _parse_with_plugin {
     my $plot_number;
     my $block_number;
     my $is_a_control;
+    my $is_a_filler;
     my $rep_number;
     my $range_number;
     my $row_number;
@@ -872,6 +884,9 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,$columns{is_a_control}->{index})) {
       $is_a_control =  $worksheet->get_cell($row,$columns{is_a_control}->{index})->value();
     }
+    if ($worksheet->get_cell($row,$columns{is_a_filler}->{index})) {
+      $is_a_filler =  $worksheet->get_cell($row,$columns{is_a_filler}->{index})->value();
+    }
     if ($worksheet->get_cell($row,$columns{rep_number}->{index})) {
       $rep_number =  $worksheet->get_cell($row,$columns{rep_number}->{index})->value();
     }
@@ -931,6 +946,11 @@ sub _parse_with_plugin {
       $design_details{$key}->{is_a_control} = 1;
     } else {
       $design_details{$key}->{is_a_control} = 0;
+    }
+    if ($is_a_filler) {
+      $design_details{$key}->{is_a_filler} = 1;
+    } else {
+      $design_details{$key}->{is_a_filler} = 0;
     }
     if ($rep_number) {
       $design_details{$key}->{rep_number} = $rep_number;
