@@ -245,7 +245,7 @@
 
 <script>
 
-var check_outliers = "<% defined $c->get_conf('exclude_phenotype_outliers') ? $c->get_conf('exclude_phenotype_outliers') : 0 %>";
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
 
 if (parseInt(check_outliers) === 1) {
     document.getElementById('dataset_trait_outliers').checked = true;
