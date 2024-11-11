@@ -144,7 +144,7 @@ if (require_login === '1'){
     if (!auth_token){ alert("Login required to display heritability"); }
 }
 
-var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') %>";
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
 
 if (parseInt(check_outliers) === 1) {
     document.getElementById('dataset_trait_outliers').checked = true;
