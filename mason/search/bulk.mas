@@ -44,7 +44,13 @@
         </tr>
     </table>
 
+    <!-- Add existing items to List -->
     <br />
+<&| /page/info_section.mas, title => 'Copy Existing Items to a List', collapsible=>1, collapsed=>0, subtitle=>''&>
+    <div style="text-align:right" id="list_menu_existing"></div>
+    <div id="list_item_names_existing" style="display: none;"></div>
+</&>
+    <br /><br />
 
     <h3>Missing Items</h3>
 
@@ -54,6 +60,13 @@
         </tr>
     </table>
 
+    <!-- Add missing items to List -->
+    <br />
+<&| /page/info_section.mas, title => 'Copy Missing Items to a List', collapsible=>1, collapsed=>1, subtitle=>''&>
+    <div style="text-align:right" id="list_menu_missing"></div>
+    <div id="list_item_names_missing" style="display: none;"></div>
+</&>
+    <br /><br />
     <br /><br />
 
     <button id="bulk_search_back" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Back to Search</button>
@@ -166,7 +179,7 @@ function bulkSearch() {
         },
         success: function(data) {
             jQuery('#bulk_search_start').html('Search').attr('disabled', false);
-            displayResults(data);
+            displayResults(data, type_name);
         },
         error: function() {
             alert("Could not run bulk search!");
@@ -179,8 +192,9 @@ function bulkSearch() {
 /**
  * Display the results of the bulk search
  * @param {Object} data JSON response from server
+ * @param {String} type List type name
  */
-function displayResults(data) {
+function displayResults(data, type) {
     let dte = jQuery('#bulk_search_existing').DataTable();
     let dtm = jQuery('#bulk_search_missing').DataTable();
     dte.clear();
@@ -191,6 +205,18 @@ function displayResults(data) {
             alert(data.error);
         }
         else if ( data.existing && data.missing ) {
+
+            // Setup data for adding to list
+            jQuery('#list_item_names_existing').html(data.existing ? data.existing.join("\n") : "");
+            addToListMenu('list_menu_existing', 'list_item_names_existing', {
+                listType: type
+            });
+            jQuery('#list_item_names_missing').html(data.missing ? data.missing.join("\n") : "");
+            addToListMenu('list_menu_missing', 'list_item_names_missing', {
+                listType: type
+            });
+
+            // Setup data for data tables
             let e = [];
             while(data.existing.length) e.push(data.existing.splice(0,1));
             let m = [];
