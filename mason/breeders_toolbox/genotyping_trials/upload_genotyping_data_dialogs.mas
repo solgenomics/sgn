@@ -1088,6 +1088,7 @@ $facilities
                             <tbody>
                             <tr>
                                 <td>Locus</td>
+                                <td>Description</td>
                                 <td>Category</td>
                                 <td>Allele 1</td>
                                 <td>Allele 2</td>
@@ -1100,6 +1101,7 @@ $facilities
                             <b>Allele 1:</b> the name of a possible allele value for this Locus<br>
                             <b>Allele 2:</b> the name of another possible allele value for this Locus (add as many Allele columns as necessary)<br>
                             <br /><b>Optional values:</b><br>
+                            <b>Description:</b> a description of the major locus (its associated phenotype, etc)<br>
                             <b>Category:</b> the name of the trait category that the Major Locus belongs to<br>
 
                             <& /help/file_upload_type.mas, type => "Major Loci Alleles" &>
@@ -1474,36 +1476,32 @@ jQuery(document).ready(function(){
 
         jQuery('#upload_mla_errors').hide();
         jQuery('#upload_mla_success').hide();
-        jQuery('#upload_mla_form').attr("action", `/ajax/genotyping_protocol/add_major_loci_alleles/${genoProtocolId}`);
-        jQuery("#upload_mla_form").submit();
-    });
+        jQuery("#working_modal").modal("show");
 
-    jQuery('#upload_mla_form').iframePostForm({
-        json: false,
-        post: function () {
-            var uploadFile = jQuery("#upload_mla_file").val();
-            jQuery('#working_modal').modal("show");
-            if (uploadFile === '') {
-                jQuery('#working_modal').modal("hide");
-            }
-        },
-        complete: function (r) {
-            var clean_r = r.replace(/^<pre[^>]*>/, '');
-            clean_r = clean_r.replace('</pre>', '');
-            response = JSON.parse(clean_r); //decodeURIComponent(clean_r));
-            console.log(response);
-            jQuery('#working_modal').modal("hide");
-
-            if ( response.success ) {
-                jQuery('#upload_mla_success').html(`<strong>Major Loci Alleles successfully stored in the database!`);
-                jQuery('#upload_mla_success').show();
-            }
-            else {
-                const errors = (response.error_string || "An unknown error occurred.  Please try again later or contact us for more help.").replaceAll('\n', '<br />');
-                jQuery('#upload_mla_errors').html(`<strong>Major Loci Alleles NOT stored due to the following errors:</strong><br /><br />${errors}`);
+        jQuery.ajax({
+            url: `/ajax/genotyping_protocol/add_major_loci_alleles/${genoProtocolId}`,
+            type: 'POST',
+            data: new FormData(jQuery("#upload_mla_form")[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if ( response.success ) {
+                    jQuery('#upload_mla_success').html(`<strong>Major Loci Alleles successfully stored in the database!`);
+                    jQuery('#upload_mla_success').show();
+                }
+                else {
+                    const errors = (response.error_string || "An unknown error occurred.  Please try again later or contact us for more help.").replaceAll('\n', '<br />');
+                    jQuery('#upload_mla_errors').html(`<strong>Major Loci Alleles NOT stored due to the following errors:</strong><br /><br />${errors}`);
+                    jQuery('#upload_mla_errors').show();
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                jQuery('#upload_mla_errors').html(`<strong>Major Loci Alleles NOT stored due to a server error.</strong>`);
                 jQuery('#upload_mla_errors').show();
             }
-        }
+        });
     });
 
 

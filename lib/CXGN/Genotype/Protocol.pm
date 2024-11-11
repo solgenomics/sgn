@@ -460,13 +460,13 @@ sub set_description {
 
 #
 # Set allele values for the markers in this protocol
-# @param alleles = a hashref of allele values, 
+# @param param_data = a hashref of major loci data,
 #   where the key is the marker/locus name
-#   and the value is an arrayref of allowed allele values for that marker
+#   and the value is a hashref of marker details (locus, description, alleles)
 #
 sub set_alleles {
     my $self = shift;
-    my $alleles = shift;
+    my $parsed_data = shift;
     my $schema = $self->bcs_schema();
     my $dbh = $schema->storage->dbh();
     my $species = $self->species_name();
@@ -478,15 +478,18 @@ sub set_alleles {
     $sths->execute();
     my ($common_name_id) = $sths->fetchrow_array();
 
-    foreach my $locus (keys %$alleles) {
+    foreach my $name (keys %$parsed_data) {
+        my $ml = $parsed_data->{$name};
+        my $locus = $ml->{'locus'};
+        my $locus_description = $ml->{'description'};
+        my $allele_values = $ml->{'alleles'};
         my $unique_locus_name = $protocol_id . '|' . $locus;
-        my $allele_values = $alleles->{$locus};
         my $locus_symbol = $unique_locus_name;
 
         # Add the Major Locus to the phenome.locus table
-        my $q = "INSERT INTO phenome.locus (locus_name, locus_symbol, common_name_id) VALUES (?,?,?) RETURNING locus_id";
+        my $q = "INSERT INTO phenome.locus (locus_name, locus_symbol, description, common_name_id) VALUES (?,?,?,?) RETURNING locus_id";
         my $sth = $dbh->prepare($q);
-        $sth->execute($unique_locus_name, $locus_symbol, $common_name_id || 1);
+        $sth->execute($unique_locus_name, $locus_symbol, $locus_description, $common_name_id || 1);
         my ($locus_id) = $sth->fetchrow_array();
 
         # Add each allele value for the locus

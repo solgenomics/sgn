@@ -77,17 +77,25 @@ sub _parse_with_plugin {
     my $allele_columns = $parsed->{additional_columns};
 
     # Aggregate allele values by locus name
-    my %alleles;
+    my %major_loci;
     foreach my $row (@$parsed_data) {
+        my $locus = $row->{'Locus'};
+        my $description = $row->{'Description'};
+
         my @a;
         foreach my $col (@$allele_columns) {
             push(@a, $row->{$col}) if $row->{$col};
         }
-        $alleles{$row->{'Locus'}} = \@a;
+
+        $major_loci{$locus} = {
+            locus => $locus,
+            description => $description,
+            alleles => \@a
+        };
     }
 
     # Set parsed data
-    $self->_set_parsed_data(\%alleles);
+    $self->_set_parsed_data(\%major_loci);
 }
 
 1;
