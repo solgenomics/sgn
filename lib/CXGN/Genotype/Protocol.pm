@@ -481,8 +481,7 @@ sub set_alleles {
     foreach my $locus (keys %$alleles) {
         my $unique_locus_name = $protocol_id . '|' . $locus;
         my $allele_values = $alleles->{$locus};
-        my $locus_symbol = uc($unique_locus_name);
-        $locus_symbol =~ s/\s//g;
+        my $locus_symbol = $unique_locus_name;
 
         # Add the Major Locus to the phenome.locus table
         my $q = "INSERT INTO phenome.locus (locus_name, locus_symbol, common_name_id) VALUES (?,?,?) RETURNING locus_id";
