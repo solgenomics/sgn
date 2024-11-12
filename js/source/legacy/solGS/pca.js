@@ -426,6 +426,8 @@ solGS.pca = {
     var pcaPlotLink =
       `<a href='#'  onclick='event.preventDefault();' id='${pcaDownloadLinkId}'>PCA plot</a>`;
 
+    var savePcs = `<button id="save_pcs_btn" class="btn btn-success">Save PCs</button>`;
+
     var downloadLinks =
       screePlotLink +
       " | " +
@@ -435,7 +437,9 @@ solGS.pca = {
       " | " +
       loadingsLink +
       " | " +
-      pcaPlotLink;
+      pcaPlotLink +
+      " | " +
+      savePcs;
 
     return downloadLinks;
   },
@@ -755,7 +759,9 @@ solGS.pca = {
     var dld = "Download PCA " + popName + ": ";
 
     if (downloadLinks) {
-      jQuery(pcaPlotDivId).append('<p style="margin-left: 40px">' + dld + downloadLinks + "</p>");
+      jQuery(pcaPlotDivId).append(`<p style="margin-left: 40px">${dld} ${downloadLinks}</p>`);
+      jQuery(pcaPlotDivId).append(`<div id="pcs_save_message" class="message"></div>`).show();
+
     }
 
     if (trialsNames && Object.keys(trialsNames).length > 1) {
