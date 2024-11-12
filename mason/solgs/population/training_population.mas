@@ -68,7 +68,7 @@ $training_pop_id = $pop_id;
 <&| /page/info_section.mas,
       collapsible => 1,
       collapsed   => 0,
-      title       => "Train model"
+      title       => "Model training"
 &>
 
 <& /solgs/population/traits_list.mas,

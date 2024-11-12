@@ -102,7 +102,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(3);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(130);
@@ -213,7 +213,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(10);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(15);
