@@ -86,7 +86,7 @@ if ($url !~ /correlation\/analysis/) {
     &>
 
 %} else {
-    <input id="run_correlation" class="btn btn-success" type="button" value="Run Correlation" />
+    <input id="run_correlation" class="btn btn-success" type="button" value="Run correlation" />
 %}
 
 <& plot.mas,
