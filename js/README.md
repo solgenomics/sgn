@@ -15,13 +15,13 @@ The most obvious JavaScript on the site is directly within a `<script>` tag in a
 #### `legacy`
 Legacy JavaScript is, for our purposes, all JavaScript files which are managed by the `JSAN.use("")` dependency system. This means all JavaScript files previously stored in the `js/` directory. Because of important global side-effects cause by the common use of global scope definitions in these files, it is very difficult (likely impossible) to automatically convert them to a state such that Webpack is able to properly handle their interdependence (and the On-Page JavaScript which depends on their globally defined variables). As such, legacy code has been "quarantined" in the `js/source/legacy` folder. Any code in this folder continues to behave exactly as it would have before the addition of the Webpack system. As such, **legacy code is executed in the global scope, and adding to it should be avoided.** Legacy JavaScript is minified using a  _legacy minifier_ and like On-Page JavaScript, is not transpiled, this means that the author of said code MUST be careful to use only ES2015 JavaScript functionality. Failing to do so may break the minification step, or lead to incompatibilities with users' browsers. To include legacy JS on a page, one should use the following pattern:
 
-| File Paths | Mason Pattern |
+| File Paths | Mason Pattern | 
 | --------- | ------------- |
 | `js/source/legacy/CXGN/Effects.js`, `js/source/legacy/CXGN.Phenome/Locus.js`, `js/source/legacy/MochiKit/DOM.js` | `<& /util/import_javascript, legacy => [ "CXGN.Effects", "CXGN.Phenome.Locus", "MochiKit.DOM" ] &>` |
 
 
 ## Modern JavaScript
-Modern JavaScript is defined in this documentation as source for the webpack pre-compiler. Modern JavaScript is transpiled and polyfilled to allow for the use of newer JavaScript features without worrying as much about reverse compatibility. Having added a transpilation step, we can take advantage of this existing overhead by also using Webpack to resolve and bundle dependencies. This allows us to use ES6 module imports and exports. Because webpack relies on an "Entry" model, we have two main folders of Modern JavaScript files.
+Modern JavaScript is defined in this documentation as source for the webpack pre-comiler. Modern JavaScript is transpiled and polyfilled to allow for the use of newer JavaScript features without worrying as much about reverse compatibility. Having added a transpilation step, we can take advantage of this existing overhead by also using Webpack to resolve and bundle dependencies. This allows us to use ES6 module imports and exports. Because webpack relies on an "Entry" model, we have two main folders of Modern JavaScript files. 
 
 #### `entries`
 
@@ -86,7 +86,7 @@ export var someVar = myVar;
 
 ## Combining Legacy and Modern JS
 
-Legacy JS cannot import or depend on Modern JS and is always executed first. Modern JS can import legacy code for global effects (aka side-effects) by specifying the relative path to the file (e.g. `import "../legacy/CXGN/Phenome/Locus.js";`). JSAN dependencies declared in legacy code _will_ be resolved.
+Legacy JS cannot import or depend on Modern JS and is always executed first. Modern JS can import legacy code for global effects (aka side-effects) by specifying the relative path to the file (e.g. `import "../legacy/CXGN/Phenome/Locus.js";`). JSAN dependencies declared in legacy code _will_ be resolved. 
 
 `/util/import_javascript` can also import legacy code and entry modules in one statement. `<& /import_javascript, entries => [], legacy => [] &>`
 
@@ -94,17 +94,17 @@ Legacy JS cannot import or depend on Modern JS and is always executed first. Mod
 
 #### `tests`
 
-Tests are run via `node js/run-tests.js`. This script outputs TAP in stdout and other test script JS console output as stderr. Each file in the `js/test` directory is run in a separate virtual DOM. The tests are run using [jsdom](https://github.com/jsdom/jsdom), [tape](https://github.com/substack/tape), and [nock](https://github.com/nock/nock).
+Tests are run via `node js/run-tests.js`. This script outputs TAP in stdout and other test script JS console output as stderr. Each file in the `js/test` directory is run in a separate virtual DOM. The tests are run using [jsdom](https://github.com/jsdom/jsdom), [tape](https://github.com/substack/tape), and [nock](https://github.com/nock/nock). 
 
 #### [jsdom](https://github.com/jsdom/jsdom)
 Provides the virtual DOM that tests run within. This enables tests to act as though they are running in a browser, without requiring the overhead of a system like selenium. However, there is no _rendering_– only the DOM is managed. Typical global browser variables such as `window` and `browser` are available. If you are only adding tests, you shouldn't need to interact with JSDOM functionality in any direct way.
 
 #### [tape](https://github.com/substack/tape)
-The test harness used is [tape](https://github.com/substack/tape). It was chosen due to its extraordinary flexibility. The [tape documentation](https://github.com/substack/tape) goes over much of the functionality.
+The test harness used is [tape](https://github.com/substack/tape). It was chosen due to its extraordinary flexibility. The [tape documentation](https://github.com/substack/tape) goes over much of the functionality. 
 
 #### Putting tape and jsdom Together
 
-- Files to be tested should be imported as one would in a source file:
+- Files to be tested should be imported as one would in a source file: 
   ```js
   // test/example.test.js[0:1]
   import * as Boxplotter from '../source/entries/boxplotter.js';
@@ -126,7 +126,7 @@ The test harness used is [tape](https://github.com/substack/tape). It was chosen
   ```
 
 #### [nock](https://github.com/nock/nock)
-[nock](https://github.com/nock/nock) provides server mocking for testing JS with web requests. By default, test scripts cannot make web requests. You have two options to fix this.
+[nock](https://github.com/nock/nock) provides server mocking for testing JS with web requests. By default, test scripts cannot make web requests. You have two options to fix this. 
 - Create a [nock interceptor](https://github.com/nock/nock#read-this---about-interceptors) like so:
   ```js
   var scope = nock(document.location.origin);
