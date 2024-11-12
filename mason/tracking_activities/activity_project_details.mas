@@ -18,7 +18,7 @@ $activity_type
 
 
 <div class="row">
-    <div class="col-sm-8">
+    <div class="col-sm-12">
 
         <table class="table table-hover table-bordered" >
 
@@ -123,11 +123,6 @@ $activity_type
             </tr>
         </table>
 
-    </div>
-    <div class="col-sm-4">
-        <div class="well well-sm">
-            <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
-        </div>
     </div>
 </div>
 % if (!$vendor_id && !$parent_project_id) {
