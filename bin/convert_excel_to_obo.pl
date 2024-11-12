@@ -19,6 +19,7 @@ October 2024
 
 use strict;
 
+use utf8;
 use Getopt::Std;
 use Data::Dumper;
 use CXGN::File::Parse;
@@ -35,10 +36,12 @@ if (!$file) {
 }
 
 my $outfile = $file.".obo";
+my $cvpropfile = $file.".props";
 
 open(my $F, ">", $outfile) || die "Can't open file $outfile\n";
+open(my $G, ">", $cvpropfile) || die "Can't open cvprop file $cvpropfile for writing";
 
-my @col_headers = ("Variable"," Term Name - BB", "Trait class", "Term Definition", "Trait synonyms", "Main trait abbreviation", "Entity", "Attribute", "Method Name", "Method class", "Method description", "Method Abbreviation", "Formula", "Scale name", "Scale abbreviation", "Scale class", "Category 1", "Category 2", "Category 3", "Category 4", "Category 5", "Category 6", "Category 7", "Category 8", "Category 9", "Category 10", "Category 11", "Category 12" );
+my @col_headers = ("Variable"," Term Name - BB", "Trait class", "Term Definition", "Variable Full Name", "Synonyms", "Trait - CO", "Main trait abbreviation", "Entity", "Attribute", "Method Name", "Method class", "Method description", "Method Abbreviation", "Formula", "Scale name", "Scale abbreviation", "Scale class", "Category 1", "Category 2", "Category 3", "Category 4", "Category 5", "Category 6", "Category 7", "Category 8", "Category 9", "Category 10", "Category 11", "Category 12" );
 
 my $parser = CXGN::File::Parse->new( file => $file );
 
@@ -62,30 +65,32 @@ foreach my $d (@$data) {
 print STDERR "TRAIT CLASSES: ".Dumper(\%trait_classes);
 
 foreach my $d (@$data) {
-    my $trait_name = $d->{'Term Name - BB'};
+    my $trait_name = $d->{'Term Name - CO'};
     $traits{$trait_name}->{count}++;
     $traits{$trait_name}->{'Trait class'} = $d->{'Trait class'};
 
     print STDERR "TRAIT NAME $trait_name has TRAIT CLASS $d->{'Trait class'}\n";
     
     $traits{$trait_name}->{'Term Definition'} = $d->{'Term Definition'};
-    $traits{$trait_name}->{'Trait synonyms'} = $d->{'Trait synonyms'};
-    $traits{$trait_name}->{'Trait abbreviation'} = $d->{'Main trait abbreviation'};
 }
 print STDERR "TRAITS: ".Dumper(\%traits);
 
 
 
 foreach my $d (@$data) {
-    $variables{$d->{'Variable'}}->{count}++;
-    $variables{$d->{'Variable'}}->{'Term Name - BB'} = $d->{'Term Name - BB'};
-    $variables{$d->{'Variable'}}->{'Term Definition'} = $d->{'Term Definition'};
-    $variables{$d->{'Variable'}}->{'Entity'} = $d->{'Entity'};
-    $variables{$d->{'Variable'}}->{'Attribute'} = $d->{'Attribute'};
-    $variables{$d->{'Variable'}}->{'Method Name'} = $d->{'Method Name'};
-    $variables{$d->{'Variable'}}->{'Scale abbreviation'} = $d->{'Scale abbreviation'};
-    $variables{$d->{'Variable'}}->{'Variable'} = $d->{'Variable'};
-    $variables{$d->{'Variable'}}->{'Scale name'} = $d->{'Scale name'};
+    my $variable_name = $d->{'Variable Full Name'};
+    $variables{$variable_name}->{count}++;
+    $variables{$variable_name}->{'Synonym'};
+    $variables{$variable_name}->{'Term Name - BB'} = $d->{'Term Name - BB'};
+    $variables{$variable_name}->{'Term Definition'} = $d->{'Term Definition'};
+    $variables{$variable_name}->{'Entity'} = $d->{'Entity'};
+    $variables{$variable_name}->{'Attribute'} = $d->{'Attribute'};
+    $variables{$variable_name}->{'Method Name'} = $d->{'Method Name'};
+    $variables{$variable_name}->{'Scale abbreviation'} = $d->{'Scale abbreviation'};
+    $variables{$variable_name}->{'Variable'} = $d->{'Variable'};
+    $variables{$variable_name}->{'Scale name'} = $d->{'Scale name'};
+    $variables{$variable_name}->{'Scale class'} = $d->{'Scale class'};
+    $variables{$variable_name}->{'Categories'} = $d->{'Categories'};
 }
 print STDERR "VARIABLES: ".Dumper(\%variables);
 
@@ -96,9 +101,9 @@ my $acc = sprintf "%07d", $count; # the number after the ontology name and a col
 
 print STDERR "Starting at term $ontology_name:$acc ...\n";
 
-# write header
+# write obo header
 #
-print <<HEADER;
+print $F <<HEADER;
 format-version: 1.2
 date: 10:03:2024 17:10
 saved-by: Lukas_Mueller
@@ -107,6 +112,11 @@ ontology: CO_365
 
 HEADER
 
+# write cvprops header
+#
+print $G join("\t", "trait_name", "trait_format", "trait_default_value", "trait_minimum", "trait_maximum", "trait_categories", "trait_details")."\n";
+
+
 # read header
 #
 my $header = <$F>;
@@ -114,7 +124,7 @@ my $header = <$F>;
 my $root_acc = $acc;
 my $root_name = "ROOT";
 
-print <<TERM;
+print $F <<TERM;
 
 [Term]
 id: $ontology_name:$acc
@@ -128,7 +138,7 @@ $count++;
 
 foreach my $k (keys %trait_classes) {
 
-    print format_trait(
+    print $F format_trait(
 	$ontology_name,
 	$count,
 	$k,
@@ -146,7 +156,7 @@ foreach my $k (keys %trait_classes) {
 }
 
 foreach my $k (keys %traits) {
-    print format_trait(
+    print $F format_trait(
 	$ontology_name,
 	$count,
 	$k,
@@ -164,33 +174,50 @@ foreach my $k (keys %traits) {
 
 
 foreach my $k (keys %variables) { 
-    # print format_trait(
-    # 	$opt_n,
-    # 	$count,
-    # 	$k,
-    # 	$variables{ $k }->{Trait synonyms},
-    # 	$trait_classes{ $k->{'Trait class'} }->{id},
-    # 	$trait_classes{ $k->{'Trait class'} }->{name},
-    # 	);
-    
-    # $count++;
 
-    print format_variable(
+    print $F format_variable(
 	$ontology_name,
 	$count,
-	$variables{$k}->{'Term Name - BB'}.", ".$variables{$k}->{'Method Name'}.", ".$variables{$k}->{'Scale name'},
-	join(" - ", $variables{$k}->{'Trait description'}, $variables{$k}->{'Method Name'}, $variables{$k}->{'Scale name'}),
-	$k, #$variables{$k}->{'synonyms'},
-	$traits{$variables{$k}->{'Term Name - BB'}}->{acc},
+	$k, ###$variables{$k}->{'Variable Full Name'},
+	join(" - ", $variables{$k}->{'Term Definition'}),
+	$variables{$k}->{'Synonym'},
+	$traits{$variables{$k}->{'name'}}->{acc},
 	$variables{$k}->{'Term Name - BB'},
 	
 	)."\n";
 
+    print $G format_props(
+	$ontology_name,
+	$count,
+	$variables{$k}->{'Scale Class'},
+	$variables{$k}->{Categories},
+	);
+    
     $count++;
 	
 }
 
+close($F);
+close($G);
 
+print STDERR "Script completed.\n";
+
+sub format_props {
+    my $ontology_name = shift;
+    my $count = shift;
+    my $trait_format = shift;
+    my $categories = shift;
+
+    my $trait_default_value = shift;
+    my $trait_minimum = shift;
+    my $trait_maximum = shift;
+    my $trait_details = shift;
+
+    return join ("\t", format_ontology_id($ontology_name, $count), $trait_format, $trait_default_value, $trait_minimum, $trait_maximum, $categories, $trait_details)."\n";
+
+
+}
+	
 
 sub format_ontology_id {
     my $ontology_name = shift;
@@ -221,12 +248,14 @@ sub format_trait {
 	"is_a:" => "$parent_trait_id ! $parent_trait",
 	);
 
+    my $data = "";
     foreach my $k ("[Term]", "id:", "name:", "def:", "synonym:", "namespace:", "is_a:") {
 	if (defined($record{$k})) {
-	    print "$k $record{$k}\n";
+	    $data .= "$k $record{$k}\n";
 	}
     }
 
+    return $data;
 }
 
 
@@ -252,11 +281,13 @@ sub format_variable {
 	"namespace:" => $ontology_name,
 	"relationship:" => "variable_of $parent_trait_id ! $parent_trait_name",
 	);
-    
+
+    my $data = "";
     foreach my $k ("[Term]", "id:", "name:", "def:", "synonym:", "namespace:", "relationship:") {
 	if (defined($record{$k})) {
-	    print "$k $record{$k}\n";
+	    $data .= "$k $record{$k}\n";
 	}
     }
-       
+
+    return $data;
 }
