@@ -294,11 +294,13 @@ sub create_hash_lookups {
     
         my $trait_min_value_props = $self->get_trait_props($trait_cvterm_id, 'trait_minimum');
         # print STDERR "Trait min value props: ".Dumper($trait_min_value_props);
+
         $self->check_trait_min_value($trait_min_value_props);
         # print STDERR "Trait min value hash: ".Dumper($self->check_trait_min_value);
     
         my $trait_max_value_props = $self->get_trait_props($trait_cvterm_id, 'trait_maximum');
         # print STDERR "Trait max value props: ".Dumper($trait_max_value_props);
+
         $self->check_trait_max_value($trait_max_value_props);
         # print STDERR "Trait max value hash: ".Dumper($self->check_trait_max_value);
     
@@ -444,8 +446,10 @@ sub verify {
 
     # print STDERR "values hash = ".Dumper($self->values_hash());
 
-    foreach my $plot_name (@plot_list) {
-        foreach my $trait_name (@trait_list) {
+    # foreach my $plot_name (@plot_list) {
+        # foreach my $trait_name (@trait_list) {
+    foreach my $plot_name (keys %{$self->values_hash()}) {
+        foreach my $trait_name (keys %{$self->values_hash()->{$plot_name}}) {
             my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
 
 	        if (ref($measurements_array->[0]) eq 'ARRAY') {   ### we have a list of measurements, not just a trait_value timestamp pair
@@ -501,8 +505,8 @@ sub check_measurement {
                 my $trait_min = defined $self->check_trait_min_value->{$trait_cvterm_id} ? $self->check_trait_min_value->{$trait_cvterm_id} : undef;
                 my $trait_max = defined $self->check_trait_max_value->{$trait_cvterm_id} ? $self->check_trait_max_value->{$trait_cvterm_id} : undef;
 
-                # print STDERR "the trait minimum: Trait Minimum for trait $trait_name: ", (defined $trait_min ? $trait_min : undef), "\n";
-                # print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
+                print STDERR "the trait minimum: Trait Minimum for trait $trait_name: ", (defined $trait_min ? $trait_min : undef), "\n";
+                print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
 
                 if (defined $trait_min && $trait_value < $trait_min) {
                     $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, $trait_min.</small><hr>";
@@ -654,6 +658,7 @@ sub check_measurement {
     # print STDERR "warnings : $warning_message, Errors: $error_message\n";
     return ($warning_message, $error_message);
 }
+
 sub store {
     my $self = shift;
     # print STDERR "CXGN::Phenotypes::StorePhenotypes store\n";
@@ -724,7 +729,8 @@ sub store {
         my $remove_count = 0;
 
 	    # print STDERR "(store) values hash ".Dumper($self->values_hash());
-        foreach my $plot_name (@plot_list) {
+        # foreach my $plot_name (@plot_list) {
+        foreach my $plot_name (keys %{$self->values_hash()}) {
 	    
             my $stock_id = $data{$plot_name}[0];
             my $location_id = $data{$plot_name}[1];
@@ -769,7 +775,9 @@ sub store {
                 $new_count++;
             }
 	    
-            foreach my $trait_name (@trait_list) {	
+            # foreach my $trait_name (@trait_list) {
+            foreach my $trait_name (keys %{$self->values_hash()->{$plot_name}}) {
+                my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
                 #print STDERR "trait: $trait_name\n";
                 my $trait_cvterm = $self->trait_objs->{$trait_name};
 		
@@ -819,7 +827,8 @@ sub store {
 		            $operator = $value_array->[2] ? $value_array->[2] : $operator;
 		            $phenotype_object->operator($operator); 
 		            my $observation = $value_array->[3];
-                    print STDERR "the observation in the phenotype object: $observation\n";
+                    # print STDERR "the value array: " . Dumper ($value_array) . "\n";
+                    # print STDERR "the observation in the phenotype object: " . Dumper($observation) . "\n";
 		            if ($observation eq "") { $observation = undef; } # special case, not sure where it comes from
 		            $phenotype_object->phenotype_id($observation);
 		            my $image_id = $value_array->[4];
@@ -856,7 +865,8 @@ sub store {
 		        	$trait_cvterm->name .
 		        	", date: $unique_time" .
 		        	", operator: $operator" .
-		        	", count: $value_count";
+		        	", count: $value_count" .
+                    ", observation: $observation";
 
 		            print STDERR "phenotype uniquename: $plot_trait_uniquename\n";
 
@@ -891,14 +901,15 @@ sub store {
 		            }
 
 		            if ( !length($trait_value) && !$remove_values && $existing_trait_value ne "" ) {
-		        	$skip_count++;	
+		        	    $skip_count++;
+                        next;
 		            }
 
 		            $phenotype_object->store();
 
 		            $experiment_ids{$experiment->nd_experiment_id()} = 1;
 		            if ($image_id) {
-		        	$nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
+		        	    $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
 		            }
 
 		            my $additional_info_stored;
@@ -931,19 +942,19 @@ sub store {
 		            my $observationVariableDbId = $trait_cvterm->cvterm_id;
 		            my $observation_id = $phenotype_object->phenotype_id;
 		            my %details = (
-		        	"germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
-		        	"germplasmName"=> $linked_data{$plot_name}->{germplasmName},
-		        	"observationDbId"=> qq|$observation_id|,
-		        	"observationLevel"=> $linked_data{$plot_name}->{observationLevel},
-		        	"observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
-		        	"observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
-		        	"observationVariableDbId"=> qq|$observationVariableDbId|,
-		        	"observationVariableName"=> $trait_cvterm->name,
-		        	"studyDbId"=> qq|$project_id|,
-		        	"uploadedBy"=> $operator ? $operator : "",
-		        	"additionalInfo" => $additional_info_stored,
-		        	"externalReferences" => $external_references_stored,
-		        	"value" => $trait_value
+		        	    "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
+		        	    "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
+		        	    "observationDbId"=> qq|$observation_id|,
+		        	    "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
+		        	    "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
+		        	    "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
+		        	    "observationVariableDbId"=> qq|$observationVariableDbId|,
+		        	    "observationVariableName"=> $trait_cvterm->name,
+		        	    "studyDbId"=> qq|$project_id|,
+		        	    "uploadedBy"=> $operator ? $operator : "",
+		        	    "additionalInfo" => $additional_info_stored,
+		        	    "externalReferences" => $external_references_stored,
+		        	    "value" => $trait_value
 		        	);
 
 		            if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
