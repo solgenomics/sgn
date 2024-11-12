@@ -359,8 +359,8 @@ CXGN.List.prototype = {
             html += '<td>'+lists[i][7]+'</td>';
             html += '<td>'+lists[i][8]+'</td>';
             html += '<td>'+lists[i][3]+'</td>';
-            html += '<td>'+lists[i][9]+'</td>';
-            html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
+            html += '<td id=list_'+lists[i][0]+'_current_type type='+lists[i][5]+'>'+lists[i][9]+'</td>';
+            html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',jQuery(\'#list_'+lists[i][0]+'_current_type\').attr(\'type\'))"><span class="glyphicon glyphicon-ok"></span></a></td>';
             html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></span></td>';
             html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
             html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
@@ -1610,7 +1610,7 @@ function addNewList(div_id) {
 }
 
 function changeListType(html_select_id, list_id) {
-    var type = jQuery('#'+html_select_id).val();
+    var type = jQuery('#'+html_select_id+' option:selected').attr("name");
     var l = new CXGN.List();
     l.setListType(list_id, type);
     l.renderLists('list_dialog');
@@ -1626,8 +1626,8 @@ function changeListType(html_select_id, list_id) {
 */
 
 function validateList(list_id, list_type, html_select_id) {
-    if (!list_type) {
-        list_type = jQuery('#'+html_select_id).val();
+    if (!list_type || html_select_id) {
+        list_type = jQuery('#'+html_select_id+' option:selected').attr("name");
     }
     if ( !list_type || list_type === '' || list_type === '(none)' || list_type == null || list_type === 'null') {
         alert("You must select the list type before validating");
