@@ -452,7 +452,7 @@ sub verify {
         foreach my $trait_name (keys %{$self->values_hash()->{$plot_name}}) {
             my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
 
-	        if (ref($measurements_array->[0]) eq 'ARRAY') {   ### we have a list of measurements, not just a trait_value timestamp pair
+	        if ( (ref($measurements_array) eq "ARRAY") && ref($measurements_array->[0]) eq 'ARRAY') {   ### we have a list of measurements, not just a trait_value timestamp pair
             # print STDERR "Trait name = $trait_name\n";
                 foreach my $value_array (@$measurements_array) {
                     # print STDERR "Value array = ".Dumper($value_array)."\n";
@@ -479,11 +479,26 @@ sub check_measurement {
     my $error_message = "";
     my $warning_message = "";
     #print STDERR Dumper $value_array;
-    my $trait_value = $value_array->[0];
-    my $timestamp = $value_array->[1];
+    my ($trait_value, $timestamp);
+    if (ref($value_array) eq 'ARRAY') {
+	# the entry represents trait + timestamp
+	#
+	$trait_value = $value_array->[0];
+	$timestamp = $value_array->[1];
+    }
+    elsif (ref($value_array) eq "HASH") {
+	# the trait is a high dimensional trait - we can't check
+	print STDERR "TRAIT VALUE IS HIGH DIMENSIONAL - skipping.\n";
+	return (undef, undef);
+    }
+    else {
+	# it's a scalar
+	#
+	$trait_value = $value_array;
+    }
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
     if ( defined($trait_value) ) {
-	    # print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
+	    print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
 	    my $trait_cvterm = $self->trait_objs->{$trait_name};
 	    my $trait_cvterm_id = $trait_cvterm->cvterm_id();
         # print STDERR "the trait cvterm id of this trait is: " . $trait_cvterm_id . "\n";
@@ -784,7 +799,7 @@ sub store {
                 my $measurements_array = $self->values_hash->{$plot_name}->{$trait_name};
 		        # print STDERR "measurement array : ".Dumper($measurements_array);
 		        # print STDERR "reference measurement array = ".ref($measurements_array->[0])."\n";
-		        if (ref($measurements_array->[0]) ne "ARRAY") {
+		        if ( (ref($measurements_array) eq "ARRAY") && ref($measurements_array->[0]) ne "ARRAY") {
 		            ## multiple measurements, have structure  [ [ value, timestamp ], [ value, timestamp ]... ] instead of just [ value, timestamp ] for single measurements
 		            # print STDERR "Adding to sub array...\n";
 		            $measurements_array = [ $measurements_array ];
@@ -793,7 +808,8 @@ sub store {
                 # print STDERR "MEASUREMENT ARRAY ".Dumper($measurements_array);
 
                 my $value_count = 0;
-		        foreach my $value_array(@$measurements_array) { 
+		if (ref($measurements_array) eq "ARRAY") { 
+		foreach my $value_array(@$measurements_array) { 
 		            # print STDERR "CHECKING $plot_name, $trait_name, ".Dumper($value_array)."\n";
 
 		            # this should not give any $errors now
@@ -963,7 +979,8 @@ sub store {
 		            push @stored_details, \%details;
 
 		            $value_count++;
-		        }
+		     }
+		}
 	        }
 	    }
         
