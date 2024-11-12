@@ -92,7 +92,7 @@ jQuery(document).ready(function($) {
             $("#get_bulk_open_maternal_population").toggle($("#cross_type").val() == "bulk_open");
             $("#get_bulk_open_paternal_population").toggle($("#cross_type").val() == "bulk_open");
             $("#get_doubled_haploid_parent").toggle($("#cross_type").val() == "doubled_haploid");
-	    $("#get_dihaploid_induction_parent").toggle($("#cross_type").val() == "dihaploid_induction");
+            $("#get_dihaploid_induction_parent").toggle($("#cross_type").val() == "dihaploid_induction");
             $("#polycross_accessions").toggle($("#cross_type").val() == "polycross");
             $("#reciprocal_accessions").toggle($("#cross_type").val() == "reciprocal");
             $("#maternal_accessions").toggle($("#cross_type").val() == "multicross");
