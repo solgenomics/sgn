@@ -5021,8 +5021,9 @@ sub update_trial_design_type_POST : Args(0) {
         return;
     }
     my $user_id;
+    my $curator;
     $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $curator = $c->user()->check_roles('curator') if $user_id;
+    $curator = $c->user()->check_roles('curator') if $user_id;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
