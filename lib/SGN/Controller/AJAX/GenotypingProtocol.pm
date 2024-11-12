@@ -383,7 +383,7 @@ sub genotyping_protocol_get_mla_GET : Args(1) {
     });
     my $alleles = $protocol->get_alleles($marker_name);
 
-    $c->stash->{rest} = $alleles || [];
+    $c->stash->{rest} = $alleles || {};
     return;
 }
 

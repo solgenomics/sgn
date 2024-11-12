@@ -1,15 +1,57 @@
 <%args>
-$protocol_id
+    $protocol_id
 </%args>
 
-<p id="major_loci_alleles_loading">Loading...</p>
+<div id="major_loci_alleles_loading">
+    <p>Loading...</p>
+</div>
 
 <div id="major_loci_alleles_table" style="display:none">
 
 </div>
 
 <div id="major_loci_alleles_upload" style="display:none">
-
+    <p>Upload information goes here</p>
 </div>
 
-<!-- TODO: Make AJAX request to get major loci alleles and populate DataTables with results -->
+<script type="text/javascript">
+    jQuery(window).ready(() => {
+        jQuery.ajax({
+            url: '/ajax/genotyping_protocol/get_major_loci_alleles/<% $protocol_id %>',
+            method: 'GET',
+            success: displayAlleles,
+            error: displayError
+        });
+    });
+
+    function displayAlleles(response) {
+        console.log(response);
+        let html = "";
+
+        // Allele values found, generate table...
+        if ( response && Object.keys(response).length > 0 ) {
+            html = "Results go here";
+            jQuery("#major_loci_alleles_upload").hide();
+        }
+
+        // No Allele values found, show upload information...
+        else {
+            html = "<p style='font-style: italic; padding-bottom: 10px'>There are no allele values set for the markers in this protocol.</p>";
+            jQuery("#major_loci_alleles_upload").show();
+        }
+
+        jQuery("#major_loci_alleles_table").html(html);
+        jQuery("#major_loci_alleles_loading").hide();
+        jQuery("#major_loci_alleles_table").show();
+
+    }
+
+    function displayError() {
+        let html = "<p><strong>ERROR:</strong> There was an error getting the major loci allele values for this protocol.</p>";
+        jQuery("#major_loci_alleles_table").html(html);
+
+        jQuery("#major_loci_alleles_loading").hide();
+        jQuery("#major_loci_alleles_table").show();
+        jQuery("#major_loci_alleles_upload").hide();
+    }
+</script>

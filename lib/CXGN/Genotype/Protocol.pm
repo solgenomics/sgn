@@ -520,7 +520,7 @@ sub get_alleles {
     my $dbh = $schema->storage->dbh();
     my $protocol_id = $self->nd_protocol_id;
 
-    my $q = "SELECT nd_protocol_id, locus.locus_id, marker_name, allele.allele_id, allele_name ";
+    my $q = "SELECT nd_protocol_id, locus.locus_id, locus.locus_name, marker_name, locus.description, allele.allele_id, allele_name ";
     $q .= "FROM phenome.locus_geno_marker ";
     $q .= "LEFT JOIN phenome.locus ON (locus_geno_marker.locus_id = locus.locus_id) ";
     $q .= "LEFT JOIN phenome.allele ON (allele.locus_id = locus.locus_id) ";
@@ -535,18 +535,25 @@ sub get_alleles {
         $sth->execute($protocol_id);
     }
 
-    my @alleles;
-    while (my ($nd_protocol_id, $locus_id, $marker_name, $allele_id, $allele_name) = $sth->fetchrow_array()) {
-        push @alleles, { 
-            nd_protocol_id => $nd_protocol_id,
-            locus_id => $locus_id,
-            marker_name => $marker_name,
+    my %alleles;
+    while (my ($nd_protocol_id, $locus_id, $locus_name, $marker_name, $locus_description, $allele_id, $allele_name) = $sth->fetchrow_array()) {
+        if ( ! exists($alleles{$locus_name}) ) {
+            $alleles{$locus_name} = {
+                nd_protocol_id => $nd_protocol_id,
+                locus_id => $locus_id,
+                locus_name => $marker_name,
+                locus_description => $locus_description,
+                alleles => []
+            };
+        }
+
+        push @{$alleles{$locus_name}->{'alleles'}}, { 
             allele_id => $allele_id,
             allele_name => $allele_name
         };
     }
 
-    return \@alleles;
+    return \%alleles;
 }
 
 
