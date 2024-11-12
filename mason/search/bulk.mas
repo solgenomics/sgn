@@ -139,12 +139,18 @@ function updateDataTypes() {
         success: function(data) {
             if ( data && data.length > 0 ) {
                 let html = "";
-                data.sort((a,b) => a[1].toUpperCase().localeCompare(b[1].toUpperCase())); 
+                data.sort((a,b) => a[2].localeCompare(b[2]));
+                const query = (element) => element[2] === 'odk_ona_forms';
+                var oof_index = data.findIndex(query);
+                var odk_ona_forms = data[oof_index];
+                data = data.slice(0, oof_index).concat(data.slice(oof_index + 1));
+                data.push(odk_ona_forms);
                 for ( let i = 0; i < data.length; i++ ) {
                     let id = data[i][0];
                     let name = data[i][1];
+                    let readable_name = data[i][2];
                     let selected = parseInt(id) === parseInt(type_id) || name === type_name ? 'selected' : '';
-                    html += "<option value='" + id + "' " + selected + ">" + name + "</option>";
+                    html += "<option value='" + id + "' name='"+name+"'"+ selected + ">" + readable_name + "</option>";
                 }
                 jQuery('#bulk_search_type').html(html).attr('disabled', false);
             }
@@ -162,7 +168,7 @@ function updateDataTypes() {
  */
 function bulkSearch() {
     let type_id = jQuery('#bulk_search_type').val();
-    let type_name = jQuery("#bulk_search_type option:selected").text();
+    let type_name = jQuery("#bulk_search_type option:selected").attr('name');
     let names = jQuery('#bulk_search_items').val().split('\n');
     names = names.filter(function(str) {
         return /\S/.test(str);

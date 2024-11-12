@@ -171,7 +171,12 @@ CXGN.List.prototype = {
                 }
             }
         });
-        types.sort((a,b) => a[1].toUpperCase().localeCompare(b[1].toUpperCase())); //alphabetize list type options
+        types.sort((a,b) => a[2].localeCompare(b[2])); //alphabetize list type options
+        const query = (element) => element[2] === 'odk_ona_forms';
+        var oof_index = types.findIndex(query);
+        var odk_ona_forms = types[oof_index];
+        types = types.slice(0, oof_index).concat(types.slice(oof_index + 1));
+        types.push(odk_ona_forms);
         return types;
     },
 
@@ -181,10 +186,10 @@ CXGN.List.prototype = {
         html += '<option name="null">(none)</option>';
         for (var i=0; i<types.length; i++) {
             var selected_html = '';
-            if (types[i][1] == selected) {
+            if (types[i][2] == selected) {
                 selected_html = ' selected="selected" ';
             }
-            html += '<option name="'+types[i][1]+'"'+selected_html+'>'+types[i][1]+'</option>';
+            html += '<option name="'+types[i][1]+'"'+selected_html+'>'+types[i][2]+'</option>';
         }
         html += '</select>';
         return html;
@@ -354,7 +359,7 @@ CXGN.List.prototype = {
             html += '<td>'+lists[i][7]+'</td>';
             html += '<td>'+lists[i][8]+'</td>';
             html += '<td>'+lists[i][3]+'</td>';
-            html += '<td>'+lists[i][5]+'</td>';
+            html += '<td>'+lists[i][9]+'</td>';
             html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
             html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></span></td>';
             html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
@@ -467,6 +472,7 @@ CXGN.List.prototype = {
         var list_description = list_data.description;
         var items = list_data.elements;
         var list_type = list_data.type_name;
+        var readable_list_type = list_data.readable_type_name;
         var list_name = this.listNameById(list_id);
         var type_select_id = 'type_select';
         var html = '';
@@ -499,7 +505,7 @@ CXGN.List.prototype = {
         html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
         html += '<tr><td>Description:<br/><input type="button" class="btn btn-primary btn-xs" id="updateListDescButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateListDescField" size="10" value="'+list_description+'" /></td></tr>';
-        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+','+undefined+',\''+type_select_id+'\')" title="Validate list. Checks if elements exist with the selected type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\''+list_type+'\',\''+type_select_id+'\')" title="Validate list. Checks if elements exist with the selected type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', readable_list_type)+'</td></tr>';
         html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea></td></tr></table>';
 
         html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div></div></div>';
@@ -1623,7 +1629,7 @@ function validateList(list_id, list_type, html_select_id) {
     if (!list_type) {
         list_type = jQuery('#'+html_select_id).val();
     }
-    if ( !list_type || list_type === '' || list_type === '(none)' ) {
+    if ( !list_type || list_type === '' || list_type === '(none)' || list_type == null || list_type === 'null') {
         alert("You must select the list type before validating");
         return;
     }

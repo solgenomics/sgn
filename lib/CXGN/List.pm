@@ -107,16 +107,42 @@ sub create_list {
     return $new_list_id;
 }
 
+# Class method; converts cvterm table list types to user-friendly list types
+sub type_to_readable {
+    my $typestr = shift;
+
+    if (!$typestr){
+        return "(none)";
+    }
+
+    if ($typestr eq 'odk_ona_forms'){
+        return $typestr;
+    } elsif ($typestr eq "unigene_ids") {
+        return "Unigene IDs";
+    } elsif ($typestr eq "identifier_generation") {
+        return "Generation identifiers";
+    } elsif ($typestr eq "list_additional_info") {
+        return "Additional list info";
+    } elsif ($typestr eq "locus_ids") {
+        return "Locus names";
+    } else {
+        $typestr =~ s/_/ /g;
+        $typestr = ucfirst($typestr);
+        return $typestr;
+    }
+}
+
 # class method! see above
 sub all_types {
     my $dbh = shift;
-    my $q = "SELECT cvterm_id, cvterm.name FROM cvterm JOIN cv USING(cv_id) WHERE cv.name = 'list_types' ";
+    my $q = "SELECT cvterm_id, cvterm.name FROM cvterm JOIN cv USING(cv_id) WHERE cv.name = 'list_types'";
     my $h = $dbh->prepare($q);
     $h->execute();
     my @all_types = ();
+
     while (my ($id, $name) = $h->fetchrow_array()) {
         if ($name ne 'catalog_items') {
-            push @all_types, [ $id, $name ];
+            push @all_types, [ $id, $name, type_to_readable($name)];
         }
     }
     return \@all_types;
@@ -138,11 +164,11 @@ sub available_lists {
     while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
 	if ($requested_type) {
 	    if ($type && ($type eq $requested_type)) {
-		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
+		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp, type_to_readable($type) ];
 	    }
 	}
 	else {
-	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
+	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp, type_to_readable($type) ];
 	}
     }
     return \@lists;
@@ -160,11 +186,11 @@ sub available_public_lists {
     while (my ($id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
         if ($requested_type) {
             if ($type && ($type eq $requested_type)) {
-                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp];
+                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp, type_to_readable($type)];
             }
         }
         else {
-            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp];
+            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp, type_to_readable($type)];
         }
     }
     return \@lists;
@@ -190,11 +216,11 @@ sub all_lists {
     while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp) = $h->fetchrow_array()) {
         if ($requested_type) {
             if ($type && ($type eq $requested_type)) {
-                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
+                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp, type_to_readable($type) ];
             }
         }
         else {
-            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp ];
+            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $timestamp, $modify_timestamp, type_to_readable($type) ];
         }
     }
     return \@lists;

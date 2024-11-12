@@ -72,7 +72,8 @@ sub get_list_data_action :Path('/list/data') Args(0) {
     $c->stash->{rest} = {
         list_id     => $list_id,
         type_id     => $metadata->{type_id},
-        type_name   => $metadata->{list_type},
+        type_name => $metadata->{list_type},
+        readable_type_name   => type_to_readable($metadata->{list_type}),
         elements    => $list,
         description => $description
     };
@@ -1393,7 +1394,26 @@ sub download_list_details : Path('/list/download_details') {
     $c->res->body($output);
 }
 
+# Class method; converts cvterm table list types to user-friendly list types
+sub type_to_readable {
+    my $typestr = shift;
 
+    if ($typestr eq 'odk_ona_forms'){
+        return "ODK/ONA forms";
+    } elsif ($typestr eq "unigene_ids") {
+        return "Unigene IDs";
+    } elsif ($typestr eq "identifier_generation") {
+        return "Generation identifier";
+    } elsif ($typestr eq "list_additional_info") {
+        return "Additional list info";
+    } elsif ($typestr eq "locus_ids") {
+        return "Locus names";
+    } else {
+        $typestr =~ s/_/ /g;
+        $typestr = ucfirst($typestr);
+        return $typestr;
+    }
+}
 
 #########
 1;
