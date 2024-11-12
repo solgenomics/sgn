@@ -151,12 +151,14 @@ sub _search {
 
         if ($c->config->{brapi_treatments_no_management_factor}) {
             my $treatments = $obs_unit->{treatments};
-            while (my ($factor, $modality) = each %$treatments) {
-                my $modality = $modality ? $modality : undef;
-                push @brapi_treatments, {
-                    factor   => $factor,
-                    modality => $modality,
-                };
+            foreach my $treatment (@$treatments) {
+                while (my ($factor, $modality) = each %$treatment) {
+                    my $modality = $modality ? $modality : undef;
+                    push @brapi_treatments, {
+                        factor   => $factor,
+                        modality => $modality,
+                    };
+                }
             }
         }
 
