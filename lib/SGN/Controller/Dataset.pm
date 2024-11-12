@@ -16,11 +16,21 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $html = "";
     
-    my $dataset = CXGN::Dataset->new({
-        schema => $schema,
-        people_schema => $people_schema,
-        sp_dataset_id => $dataset_id
-    });
+    my $dataset;
+
+    eval {
+        $dataset = CXGN::Dataset->new({
+            schema => $schema,
+            people_schema => $people_schema,
+            sp_dataset_id => $dataset_id
+        });
+    };
+    if ($@) {
+        $c->stash->{template} = 'generic_message.mas';
+	    $c->stash->{message} = "The requested dataset does not exist or has been deleted.";
+	    return;
+    }
+    
     my $info = $dataset->get_dataset_data();
 
     my $dataset_info = {
