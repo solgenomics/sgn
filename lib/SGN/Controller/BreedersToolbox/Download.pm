@@ -419,9 +419,9 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         phenotype_max_value => $phenotype_max_value,
         has_header => $has_header,
         search_type => $search_type,
-	repetitive_measurements => $repetitive_measurements,
-	phenotype_start_date => $phenotype_start_date,
-	phenotype_end_date => $phenotype_end_date,
+	    repetitive_measurements => $repetitive_measurements,
+	    phenotype_start_date => $phenotype_start_date,
+	    phenotype_end_date => $phenotype_end_date,
     });
 
     # print STDERR "Repetitive_measurements option recieved" .$repetitive_measurements  ."\n";

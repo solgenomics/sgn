@@ -484,20 +484,20 @@ sub check_measurement {
     #print STDERR Dumper $value_array;
     my ($trait_value, $timestamp);
     if (ref($value_array) eq 'ARRAY') {
-	# the entry represents trait + timestamp
-	#
-	$trait_value = $value_array->[0];
-	$timestamp = $value_array->[1];
+	    # the entry represents trait + timestamp
+	    #
+	    $trait_value = $value_array->[0];
+	    $timestamp = $value_array->[1];
     }
     elsif (ref($value_array) eq "HASH") {
-	# the trait is a high dimensional trait - we can't check
-	print STDERR "TRAIT VALUE IS HIGH DIMENSIONAL - skipping.\n";
-	return (undef, undef);
+	    # the trait is a high dimensional trait - we can't check
+	    print STDERR "TRAIT VALUE IS HIGH DIMENSIONAL - skipping.\n";
+	    return (undef, undef);
     }
     else {
-	# it's a scalar
-	#
-	$trait_value = $value_array;
+	    # it's a scalar
+	    #
+	    $trait_value = $value_array;
     }
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
     if ( defined($trait_value) && $trait_name ne "notes" ) {
@@ -811,179 +811,179 @@ sub store {
                 # print STDERR "MEASUREMENT ARRAY ".Dumper($measurements_array);
 
                 my $value_count = 0;
-		if (ref($measurements_array) eq "ARRAY") { 
-		foreach my $value_array(@$measurements_array) { 
-		            # print STDERR "CHECKING $plot_name, $trait_name, ".Dumper($value_array)."\n";
+		        if (ref($measurements_array) eq "ARRAY") { 
+		            foreach my $value_array(@$measurements_array) { 
+		                # print STDERR "CHECKING $plot_name, $trait_name, ".Dumper($value_array)."\n";
 
-		            # this should not give any $errors now
-		            my ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
+		                # this should not give any $errors now
+		                my ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
 
-		            if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }
+		                if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }
 
-		            # convert to array or array format for single array values to accept old format inputs without refactoring
-		            #if (ref($value_array->[0]) ne 'ARRAY') {
-		            #	push @values, $value_array;
-		            #   } else {
-		            #	@values = @{$value_array};
-		            #   }
+		                # convert to array or array format for single array values to accept old format inputs without refactoring
+		                #if (ref($value_array->[0]) ne 'ARRAY') {
+		                #	push @values, $value_array;
+		                #   } else {
+		                #	@values = @{$value_array};
+		                #   }
 
-                    # print STDERR "VALUE ARRAY: ".Dumper($value_array);
+                        # print STDERR "VALUE ARRAY: ".Dumper($value_array);
 
-                    #foreach my $value (@$value_array) {
+                        #foreach my $value (@$value_array) {
 
-		            my $phenotype_object = CXGN::Phenotype->new( { schema => $schema });
-                    # print STDERR "complete phenotype_object: ".Dumper($phenotype_object)."\n";
-		            # perl doesn't have a problem attempting to access possibly non existing indices
-		            my $trait_value = $value_array->[0];
-                    # print STDERR "the trait value in the phenotype object: $trait_value\n";
-		            $phenotype_object->value($trait_value);
-		            my $timestamp = $value_array->[1];
-                    # print STDERR "the timestamp in the phenotype object: $timestamp\n";
+		                my $phenotype_object = CXGN::Phenotype->new( { schema => $schema });
+                        # print STDERR "complete phenotype_object: ".Dumper($phenotype_object)."\n";
+		                # perl doesn't have a problem attempting to access possibly non existing indices
+		                my $trait_value = $value_array->[0];
+                        # print STDERR "the trait value in the phenotype object: $trait_value\n";
+		                $phenotype_object->value($trait_value);
+		                my $timestamp = $value_array->[1];
+                        # print STDERR "the timestamp in the phenotype object: $timestamp\n";
 
-                    if ($timestamp eq "") { $timestamp = undef; }
-		            $phenotype_object->collect_date($timestamp);
-                    # print STDERR "the collect date in the phenotype object: $timestamp\n";
-		            $operator = $value_array->[2] ? $value_array->[2] : $operator;
-		            $phenotype_object->operator($operator); 
-		            my $observation = $value_array->[3];
-                    # print STDERR "the value array: " . Dumper ($value_array) . "\n";
-                    # print STDERR "the observation in the phenotype object: " . Dumper($observation) . "\n";
-		            if ($observation eq "") { $observation = undef; } # special case, not sure where it comes from
-		            $phenotype_object->phenotype_id($observation);
-		            my $image_id = $value_array->[4];
+                        if ($timestamp eq "") { $timestamp = undef; }
+		                $phenotype_object->collect_date($timestamp);
+                        # print STDERR "the collect date in the phenotype object: $timestamp\n";
+		                $operator = $value_array->[2] ? $value_array->[2] : $operator;
+		                $phenotype_object->operator($operator); 
+		                my $observation = $value_array->[3];
+                        # print STDERR "the value array: " . Dumper ($value_array) . "\n";
+                        # print STDERR "the observation in the phenotype object: " . Dumper($observation) . "\n";
+		                if ($observation eq "") { $observation = undef; } # special case, not sure where it comes from
+		                $phenotype_object->phenotype_id($observation);
+		                my $image_id = $value_array->[4];
 
-                    if (defined($image_id) && ($image_id eq "")) { $image_id = undef; }
+                        if (defined($image_id) && ($image_id eq "")) { $image_id = undef; }
 
-                    $phenotype_object->image_id($image_id);
-		            my $additional_info = $value_array->[5] || undef;
-		            my $external_references = $value_array->[6] || undef;
+                        $phenotype_object->image_id($image_id);
+		                my $additional_info = $value_array->[5] || undef;
+		                my $external_references = $value_array->[6] || undef;
 
-                    my $unique_time = $timestamp && defined($timestamp) ? $timestamp : undef; ####$upload_date;
-                    # print STDERR "the unique time in the phenotype object: $unique_time\n";
-                    $phenotype_object->unique_time($unique_time);
-		            my $existing_trait_value = $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id};
-                    $phenotype_object->existing_trait_value($existing_trait_value);
+                        my $unique_time = $timestamp && defined($timestamp) ? $timestamp : undef; ####$upload_date;
+                        # print STDERR "the unique time in the phenotype object: $unique_time\n";
+                        $phenotype_object->unique_time($unique_time);
+		                my $existing_trait_value = $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id};
+                        $phenotype_object->existing_trait_value($existing_trait_value);
 
-                    $phenotype_object->cvterm_name($trait_cvterm->name());
-		            $phenotype_object->cvterm_id($trait_cvterm->cvterm_id());
-		            $phenotype_object->experiment($experiment);
-		            # print STDERR "Existing value $existing_trait_value. New value: ".$phenotype_object->value()."\n";
+                        $phenotype_object->cvterm_name($trait_cvterm->name());
+		                $phenotype_object->cvterm_id($trait_cvterm->cvterm_id());
+		                $phenotype_object->experiment($experiment);
+		                # print STDERR "Existing value $existing_trait_value. New value: ".$phenotype_object->value()."\n";
 
-		            if (defined($trait_value) && (length($trait_value) || $remove_values)) {
-		        	    if ($ignore_new_values) {
-		        	        # print STDERR "ignoring new vlaues ...\n";
-		        	        if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
-		        	    	    $skip_count++;
-		        	    	    next;
-		        	        }
-		        	    }
+		                if (defined($trait_value) && (length($trait_value) || $remove_values)) {
+		            	    if ($ignore_new_values) {
+		            	        # print STDERR "ignoring new vlaues ...\n";
+		            	        if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
+		            	    	    $skip_count++;
+		            	    	    next;
+		            	        }
+		            	    }
+		                }
+
+                        my $plot_trait_uniquename = "stock: " .
+		            	$stock_id . ", trait: " .
+		            	$trait_cvterm->name .
+		            	", date: $unique_time" .
+		            	", operator: $operator" .
+		            	", count: $value_count" .
+                        ", observation: $observation";
+
+		                print STDERR "phenotype uniquename: $plot_trait_uniquename\n";
+
+		                $phenotype_object->uniquename($plot_trait_uniquename);
+
+		                # Remove previous phenotype values for a given stock and trait if $overwrite values is checked, otherwise skip to next
+		                if ($overwrite_values) {
+		            	    if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
+		            	        #skip when observation is provided since overwriting doesn't create records it updates observations.
+		            	        if (!$observation) {
+		            	    	    push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+		            	    	    push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+		            	        }
+		            	            $plot_trait_uniquename .= ", overwritten: $upload_date";
+		            	        if ( defined($trait_value) && length($trait_value) ) {
+		            	    	    $overwrite_count++;
+		            	        }elsif ( $existing_trait_value ne "" ) {
+		            	    	    $remove_count++;
+		            	        }
+		            	    } elsif ( length($trait_value) ) {
+		            	        $new_count++;
+		            	    }
+		            	    $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id} = 1;
+		                } else {
+		            	    if (!$allow_repeat_measures && exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
+		            	        # print STDERR "skipping this value because (NO REPEAT MEASURES!)\n";
+		            	        $skip_count++;
+		            	        next;
+		            	    } else {
+		            	        $new_count++;
+		            	    }
+		                }
+
+		                if ( !length($trait_value) && !$remove_values && $existing_trait_value ne "" ) {
+		            	    $skip_count++;
+                            next;
+		                }
+
+		                $phenotype_object->store();
+
+		                $experiment_ids{$experiment->nd_experiment_id()} = 1;
+		                if ($image_id) {
+		            	    $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
+		                }
+
+		                my $additional_info_stored;
+		                if($additional_info){
+		            	    # my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
+		            	    #     phenotype_id => $phenotype->phenotype_id,
+		            	    #     type_id       => $phenotype_addtional_info_type_id,
+		            	    # 											   });
+		            	    # $pheno_additional_info = $pheno_additional_info->update({
+		            	    #     value => encode_json $additional_info,
+		            	    # 							});
+		            	    # $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
+		            	    $additional_info_stored = $phenotype_object->store_additional_info($additional_info);
+		                }
+		                my $external_references_stored;
+
+		                # print STDERR "external references from phenotype package: ".Dumper($external_references);
+
+		                if ($external_references) {
+		            	    # my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
+		            	    #     phenotype_id => $phenotype->phenotype_id,
+		            	    #     type_id      => $external_references_type_id,
+		            	    # 												   });
+		            	    # $phenotype_external_references = $phenotype_external_references->update({
+		            	    #     value => encode_json $external_references,
+		            	    # 									});
+		            	    $external_references_stored = $phenotype_object->store_external_references($external_references);
+		                }
+
+		                my $observationVariableDbId = $trait_cvterm->cvterm_id;
+		                my $observation_id = $phenotype_object->phenotype_id;
+		                my %details = (
+		            	    "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
+		            	    "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
+		            	    "observationDbId"=> qq|$observation_id|,
+		            	    "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
+		            	    "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
+		            	    "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
+		            	    "observationVariableDbId"=> qq|$observationVariableDbId|,
+		            	    "observationVariableName"=> $trait_cvterm->name,
+		            	    "studyDbId"=> qq|$project_id|,
+		            	    "uploadedBy"=> $operator ? $operator : "",
+		            	    "additionalInfo" => $additional_info_stored,
+		            	    "externalReferences" => $external_references_stored,
+		            	    "value" => $trait_value
+		            	);
+
+		                if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
+		                if ($operator) { $details{'collector'} = $operator};
+
+		                push @stored_details, \%details;
+
+		                $value_count++;
 		            }
-
-                    my $plot_trait_uniquename = "stock: " .
-		        	$stock_id . ", trait: " .
-		        	$trait_cvterm->name .
-		        	", date: $unique_time" .
-		        	", operator: $operator" .
-		        	", count: $value_count" .
-                    ", observation: $observation";
-
-		            print STDERR "phenotype uniquename: $plot_trait_uniquename\n";
-
-		            $phenotype_object->uniquename($plot_trait_uniquename);
-
-		            # Remove previous phenotype values for a given stock and trait if $overwrite values is checked, otherwise skip to next
-		            if ($overwrite_values) {
-		        	    if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
-		        	        #skip when observation is provided since overwriting doesn't create records it updates observations.
-		        	        if (!$observation) {
-		        	    	    push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-		        	    	    push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
-		        	        }
-		        	            $plot_trait_uniquename .= ", overwritten: $upload_date";
-		        	        if ( defined($trait_value) && length($trait_value) ) {
-		        	    	    $overwrite_count++;
-		        	        }elsif ( $existing_trait_value ne "" ) {
-		        	    	    $remove_count++;
-		        	        }
-		        	    } elsif ( length($trait_value) ) {
-		        	        $new_count++;
-		        	    }
-		        	    $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-		            } else {
-		        	    if (!$allow_repeat_measures && exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
-		        	        # print STDERR "skipping this value because (NO REPEAT MEASURES!)\n";
-		        	        $skip_count++;
-		        	        next;
-		        	    } else {
-		        	        $new_count++;
-		        	    }
-		            }
-
-		            if ( !length($trait_value) && !$remove_values && $existing_trait_value ne "" ) {
-		        	    $skip_count++;
-                        next;
-		            }
-
-		            $phenotype_object->store();
-
-		            $experiment_ids{$experiment->nd_experiment_id()} = 1;
-		            if ($image_id) {
-		        	    $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
-		            }
-
-		            my $additional_info_stored;
-		            if($additional_info){
-		        	    # my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
-		        	    #     phenotype_id => $phenotype->phenotype_id,
-		        	    #     type_id       => $phenotype_addtional_info_type_id,
-		        	    # 											   });
-		        	    # $pheno_additional_info = $pheno_additional_info->update({
-		        	    #     value => encode_json $additional_info,
-		        	    # 							});
-		        	    # $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
-		        	    $additional_info_stored = $phenotype_object->store_additional_info($additional_info);
-		            }
-		            my $external_references_stored;
-
-		            # print STDERR "external references from phenotype package: ".Dumper($external_references);
-
-		            if ($external_references) {
-		        	    # my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
-		        	    #     phenotype_id => $phenotype->phenotype_id,
-		        	    #     type_id      => $external_references_type_id,
-		        	    # 												   });
-		        	    # $phenotype_external_references = $phenotype_external_references->update({
-		        	    #     value => encode_json $external_references,
-		        	    # 									});
-		        	    $external_references_stored = $phenotype_object->store_external_references($external_references);
-		            }
-
-		            my $observationVariableDbId = $trait_cvterm->cvterm_id;
-		            my $observation_id = $phenotype_object->phenotype_id;
-		            my %details = (
-		        	    "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
-		        	    "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
-		        	    "observationDbId"=> qq|$observation_id|,
-		        	    "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
-		        	    "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
-		        	    "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
-		        	    "observationVariableDbId"=> qq|$observationVariableDbId|,
-		        	    "observationVariableName"=> $trait_cvterm->name,
-		        	    "studyDbId"=> qq|$project_id|,
-		        	    "uploadedBy"=> $operator ? $operator : "",
-		        	    "additionalInfo" => $additional_info_stored,
-		        	    "externalReferences" => $external_references_stored,
-		        	    "value" => $trait_value
-		        	);
-
-		            if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
-		            if ($operator) { $details{'collector'} = $operator};
-
-		            push @stored_details, \%details;
-
-		            $value_count++;
-		     }
-		}
+		        }
 	        }
 	    }
         
