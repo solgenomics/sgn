@@ -825,7 +825,7 @@ jQuery('input[title="phenotype_end_date"]').daterangepicker(
        "singleDatePicker": true,
        "showDropdowns": true,
        "autoUpdateInput": true,
-       "startDate": "1960-01-01",
+       //"startDate": "1960-01-01",
        "yearSelect" : true,
        "minDate": "1960-01-01",
        "maxDate": "2030-12-31",
