@@ -33,8 +33,8 @@ sub validate {
     $q = "SELECT locus_id from phenome.locus where locus_name = ?";
     $h = $schema->storage->dbh()->prepare($q);
 
-    foreach $term (@$list) {
-        foreach $locus ( $term ) {
+    foreach my $term (@$list) {
+        foreach my $locus ( $term ) {
 	   $h->execute($locus);
 	    if (@row = $h->fetchrow_array()) {
 	    } else {

@@ -32,9 +32,9 @@ sub validate {
     my ($type_id) = $h->fetchrow_array(); 
 
     #if protocol_id found get data from nd_protocolprop
-    foreach $term (@$list) {
+    foreach my $term (@$list) {
         eval {$str = decode_json $term;};
-	foreach $key ( keys %$str ) {
+	foreach my $key ( keys %$str ) {
             if ($key eq "genotyping_protocol_id") {
                 $protocol_id = $str->{$key};
                 $q = "SELECT value from nd_protocolprop where type_id = ? AND nd_protocol_id = ?";
@@ -52,12 +52,12 @@ sub validate {
     $q = "SELECT nd_protocol_id from materialized_markerview where marker_name = ?";
     $h = $schema->storage->dbh()->prepare($q);
 
-    foreach $term (@$list) {
+    foreach my $term (@$list) {
 	eval {$str = decode_json $term;};
         if ($@) {			#simple list
             print STDERR "error, should be a json object\n";
         } else {			#json list
-	    foreach $key ( keys %$str ) {
+	    foreach my $key ( keys %$str ) {
 	        if ($key eq "marker_name") {
 		    $marker = $str->{$key};
 		    $found = 0;
