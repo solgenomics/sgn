@@ -478,6 +478,9 @@ sub check_measurement {
     
     my $error_message = "";
     my $warning_message = "";
+
+    print STDERR "check_measurement for trait $trait_name and values ".Dumper($value_array)."\n";
+    
     #print STDERR Dumper $value_array;
     my ($trait_value, $timestamp);
     if (ref($value_array) eq 'ARRAY') {
@@ -497,7 +500,7 @@ sub check_measurement {
 	$trait_value = $value_array;
     }
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
-    if ( defined($trait_value) ) {
+    if ( defined($trait_value) && $trait_name ne "notes" ) {
 	    print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
 	    my $trait_cvterm = $self->trait_objs->{$trait_name};
 	    my $trait_cvterm_id = $trait_cvterm->cvterm_id();
