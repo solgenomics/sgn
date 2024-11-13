@@ -5247,7 +5247,6 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     # Return the generated file
     $c->res->content_type('text/csv');
     $c->res->headers->push_header("Content-disposition", "attachment; filename=\"$filename\"");
-#    $c->res->body( join("\n", map { $_ = join(",", @{$_}) } @data) );
     $c->res->body($all_lines_string);
 
     return;
