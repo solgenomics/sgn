@@ -796,7 +796,13 @@ sub store {
             # foreach my $trait_name (@trait_list) {
             foreach my $trait_name (keys %{$self->values_hash()->{$plot_name}}) {
                 my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
-                #print STDERR "trait: $trait_name\n";
+		print STDERR "TRAIT: $trait_name\n";
+
+		if ($trait_name eq "notes") {
+		    # we already dealt with notes, which are stored as stockprops...
+		    print STDERR "skipping notes trait (already stored as stockprop)...\n";
+		    next;
+		}
                 my $trait_cvterm = $self->trait_objs->{$trait_name};
 		
                 my $measurements_array = $self->values_hash->{$plot_name}->{$trait_name};
@@ -816,6 +822,9 @@ sub store {
 		                # print STDERR "CHECKING $plot_name, $trait_name, ".Dumper($value_array)."\n";
 
 		                # this should not give any $errors now
+
+
+				
 		                my ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
 
 		                if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }
@@ -853,12 +862,12 @@ sub store {
 		                my $image_id = $value_array->[4];
 
                         if (defined($image_id) && ($image_id eq "")) { $image_id = undef; }
-
-                        $phenotype_object->image_id($image_id);
+				
+				$phenotype_object->image_id($image_id);
 		                my $additional_info = $value_array->[5] || undef;
 		                my $external_references = $value_array->[6] || undef;
 
-                        my $unique_time = $timestamp && defined($timestamp) ? $timestamp : undef; ####$upload_date;
+                        my $unique_time = $timestamp && defined($timestamp) ? $timestamp : $upload_date;
                         # print STDERR "the unique time in the phenotype object: $unique_time\n";
                         $phenotype_object->unique_time($unique_time);
 		                my $existing_trait_value = $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id};
