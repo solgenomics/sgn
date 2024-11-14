@@ -60,7 +60,6 @@ sub _validate_with_plugin {
     my @fields;
 
     open($F, "<", $filename) || die "Can't open file $filename\n";
-
     my @header_info;
 
     my $chroms;
@@ -180,8 +179,7 @@ sub _validate_with_plugin {
     #print STDERR "Scanning file for observation unit names... \n";
     my $lines = 0;
     while (<$F>) {
-	chomp;
-
+        s/[\r\n]//sg;
 	my @fields = split /\t/;
 	#print "Parsing line $fields[0]\n";
 	push @observation_unit_names, $fields[0];
@@ -204,12 +202,12 @@ sub _validate_with_plugin {
         }
     } else {
         foreach (@observation_unit_names) {
+	    s/[\r\n]//sg;
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
             push @observation_units_names_trim, $observation_unit_name;
         }
     }
     my $observation_unit_names = \@observation_units_names_trim;
-
     my $organism_id = $self->get_organism_id;
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
@@ -351,21 +349,31 @@ sub next_genotype {
         chomp($line);
 
         LABEL: if ($line =~ m/^\#/) {
-            #print STDERR "Skipping header line: $line\n";
+	    #print STDERR "Skipping header line: $line\n";
             $line = <$F>;
             goto LABEL;
         }
 
         if ($self->_is_first_line()) {
-            print STDERR "Skipping 8 more lines... ";
-            for (0..7) {
-                $line = <$F>;
-                # print STDERR Dumper $line;
+            print STDERR "Skipping non data lines\n";
+
+	    # Check if the first line matches the pattern
+	    if ($line !~ m/\d[\/\|]\d/) {
+		$line = substr($line,0,20);
+		print STDERR "Skipping $line\n";
+
+		# Enter loop to skip lines until a matching line is found
+	        while ($line = <$F>) {
+	            if ($line =~ m/\d[\/\|]\d/) {
+	                last;
+		    } else {
+			$line = substr($line,0,20);
+                        print STDERR "Skipping $line\n";
+		    }
+		}
             }
         }
-	$line =~ s/\r//g;
-        chomp($line);
-
+        $line =~ s/[\r\n]//sg;
         my @fields = split /\t/, $line;
         #print STDERR Dumper \@fields;
 
