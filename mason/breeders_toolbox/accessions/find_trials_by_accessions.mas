@@ -112,6 +112,7 @@ jQuery('#shared_trials_2_lists').hide();
 				data: {stock_ids: stock_ids}
 			}).done(function(data) {
 			jQuery('#trial_summary_data').DataTable({  //populate datatable
+				'destroy': true,
 				data: data.data,
 				"autoWidth": false
 			});

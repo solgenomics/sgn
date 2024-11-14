@@ -301,7 +301,7 @@ function jqueryStuff() {
 % }
 
 % if ($type_name eq 'accession'){
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Experiment Usage</h4>", info_section_subtitle => 'View experiments that this stock has been used in.', icon_class => "glyphicon glyphicon-leaf", info_section_id => "stock_trials_section" &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, info_section_title => "<h4 style='display:inline'>Experiment Usage</h4>", info_section_subtitle => 'View experiments that this stock has been used in.', icon_class => "glyphicon glyphicon-leaf", info_section_id => "stock_trials_section" &>
 %    my $trait_assayed_buttons = $type_name eq 'plot' ? "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>" : "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link";
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Traits Assayed</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stock_traits_section", buttons_html => $trait_assayed_buttons &>
 % }
