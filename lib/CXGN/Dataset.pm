@@ -54,6 +54,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use Data::Dumper;
 use JSON::Any;
+use JSON::XS;
 use CXGN::BreederSearch;
 use CXGN::People::Schema;
 use CXGN::Phenotypes::PhenotypeMatrix;
@@ -1283,6 +1284,50 @@ sub update_description {
             return undef;
         }
     }
+}
+
+=head2 get_child_analyses()
+
+# Retrieves the list of analyses that use this dataset. 
+
+=cut
+
+sub get_child_analyses {
+    my $self = shift;
+    my $dataset_id = $self->sp_dataset_id();
+
+    my $dbh = $self->schema->storage->dbh();
+
+    my @all_analyses = ();
+
+    my $analysis_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
+
+    my $analysis_q = "select DISTINCT project.name, project.project_id, analysisinfo.value FROM nd_experiment_project 
+    JOIN project USING (project_id) 
+    JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id
+    JOIN projectprop AS analysisinfo ON (project.project_id=analysisinfo.project_id)
+    JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id 
+    WHERE cvterm.name='analysis_experiment' AND analysisinfo.type_id=$analysis_info_type_id;";
+    my $h = $dbh->prepare($analysis_q);
+    $h->execute();
+
+    while (my ($analysis_name, $analysis_id, $metadata_json) = $h->fetchrow_array()){
+        my $analysis_metadata = decode_json($metadata_json);
+        push @all_analyses, [
+            $analysis_name, 
+            $analysis_id,
+            $analysis_metadata->{dataset_id}
+        ];
+    }
+
+    my @html = ();
+
+    foreach my $row (@all_analyses) {
+        if ($dataset_id == $row->[2]){
+            push @html, "<a href=/analyses/".$row->[1].">".$row->[0]."</a>";
+        }
+    }
+    return join(" | ", @html);
 }
 
 
