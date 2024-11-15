@@ -124,7 +124,7 @@ try {
 };
 
 # Check for parsed data
-finish("There is parsed data from the input file!") if !$parsed_data;
+finish("There is no parsed data from the input file!") if !$parsed_data;
 
 # Get User ID
 my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $username);
