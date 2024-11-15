@@ -126,7 +126,7 @@ sub trial_autocomplete_GET :Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $trial_design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), "design", "project_property")->cvterm_id();
     my @response_list;
-    my $q = "select distinct(name) from project join projectprop using(project_id) where project.name ilike ? and projectprop.type_id = ? ORDER BY name";
+    my $q = "select distinct(name) from project join projectprop using(project_id) where project.name ilike ? and projectprop.type_id = ? and projectprop.value not in ('genotyping_plate', 'genotype_data_project', 'pcr_genotype_data_project') ORDER BY name";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%', $trial_design_cvterm_id);
     while (my ($project_name) = $sth->fetchrow_array) {
