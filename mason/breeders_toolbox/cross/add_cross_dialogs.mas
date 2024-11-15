@@ -475,7 +475,7 @@ jQuery.noConflict();
 jQuery(document).ready(function($) {
 
     jQuery("#field_trial").autocomplete({
-        source:'/ajax/stock/project_autocomplete',
+        source: '/ajax/trials/trial_autocomplete',
     });
 
     $("#search_plots").click(function(e){
