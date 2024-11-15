@@ -88,7 +88,7 @@ for my $extension ("xls", "xlsx") {
 
 	#parse uploaded file with appropriate plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
-	$parser->load_plugin('TrialExcelFormat');
+	$parser->load_plugin('TrialGeneric');
 	$parsed_data = $parser->parse()->{'design'};
 	ok($parsed_data, "Check if parse validate excel file works");
 	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
@@ -269,7 +269,7 @@ for my $extension ("xls", "xlsx") {
 	$file_name = 't/data/genotype_trial_upload/CASSAVA_GS_74Template.csv';
 	#parse uploaded file with wrong plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $file_name);
-	$parser->load_plugin('TrialExcelFormat');
+	$parser->load_plugin('TrialGeneric');
 	my $rtn = $parser->parse();
 	$parsed_data = $rtn->{'design'};
 	ok(!$parsed_data, "Check if parse validate excel fails for igd parser");
@@ -549,7 +549,7 @@ for my $extension ("xls", "xlsx") {
 
 	#parse uploaded file with appropriate plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
-	$parser->load_plugin('TrialExcelFormat');
+	$parser->load_plugin('TrialGeneric');
 	$rtn = $parser->parse();
 	$parsed_data = $rtn->{'design'};
 	ok($parsed_data, "Check if parse validate excel file works");
@@ -1248,7 +1248,7 @@ for my $extension ("xls", "xlsx") {
 	ok($md5_management_factor);
 
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $management_factor_archived_filename_with_path);
-	$parser->load_plugin('TrialExcelFormat');
+	$parser->load_plugin('TrialGeneric');
 	$rtn = $parser->parse();
 	$parsed_data = $rtn->{'design'};
 	ok($parsed_data, "Check if parse validate excel file works");
@@ -1475,7 +1475,7 @@ for my $extension ("xls", "xlsx") {
 
 	#parse uploaded file with appropriate plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path, trial_name => $trial_name);
-	$parser->load_plugin('TrialExcelFormat');
+	$parser->load_plugin('TrialGeneric');
 	my $p = $parser->parse();
 	$parsed_data = $p->{'design'};
 	my $entry_numbers = $p->{'entry_numbers'};
