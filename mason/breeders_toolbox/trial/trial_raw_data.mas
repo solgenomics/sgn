@@ -265,15 +265,33 @@ $trial_id
 
 
     function displayRawObservations(result) {
-		var data = new Array();
-		//alert(result);
-		for (var i=0; i<result.data.length; i++) {
-			var observationDate = new Date(result.data[i].observationTimeStamp);
-			//the date should be in YYYY-MM-DD format 
-			var formatDate = observationDate.getFullYear() + '-' +
-			('0' + (observationDate.getMonth() + 1)).slice(-2)+ '-' +
-			('0' + observationDate.getDate()).slice(-2)
-		    data.push( [ result.data[i].observationDbId, result.data[i].observationUnitName, result.data[i].observationVariableName, result.data[i].value, result.data[i].collector ]);
+  		var data = [];
+
+    	for (var i = 0; i < result.data.length; i++) {
+    	    var observationDate = result.data[i].observationTimeStamp;
+    	    var formattedDate = "";
+
+    	    // Check if the timestamp exists
+    	    if (observationDate) {
+    	        try {
+    	            // format the date (YYYY-MM-DD)
+    	            formattedDate = new Date(observationDate).toISOString().split('T')[0];
+    	        } catch (e) {
+    	            formattedDate = "";
+    	        }
+    	    }
+
+    	    //combine the value and timestamp in the single column with comma sep !! 
+    	    var value_with_timestamp = result.data[i].value + (formattedDate ? ", " + formattedDate : "");
+
+		    data.push( [ 
+				result.data[i].observationDbId, 
+				result.data[i].observationUnitName, 
+				result.data[i].observationVariableName, 
+				value_with_timestamp, 
+				formattedDate, // this column is just used to sort all the columns based on the date in ascending order !!
+				result.data[i].collector 
+			]);
 		}
 
 		jQuery('#raw_trait_data_table').DataTable( {
@@ -282,10 +300,12 @@ $trial_id
 		    { title: 'observation id'},
 		    { title: 'observation unit' },
 		    { title: 'observation variable' },
-		    { title: 'value' },
+		    { title: 'value, timestamp' },
+			{ title: 'Sort Date', visible: false },//this column will be hidden !!!
 		    { title: 'collector' }
 		    ],
-		   'data' : data
+		   'data' : data,
+		   'order': [[4, 'asc']] 
 		});
     }
 });
