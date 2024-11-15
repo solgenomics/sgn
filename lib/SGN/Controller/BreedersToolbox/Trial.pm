@@ -38,13 +38,30 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     $c->stash->{schema} = $schema;
     my $trial;
     eval {
-	$trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+	    $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     };
     if ($@) {
-	$c->stash->{template} = 'system_message.txt';
-	$c->stash->{message} = "The requested trial ($trial_id) does not exist";
-	return;
+	    $c->stash->{template} = 'system_message.txt';
+	    $c->stash->{message} = "The requested trial ($trial_id) does not exist";
+	    return;
     }
+
+    # Do a database query to see if this is actually an analysis. Redirect if it is
+    my $dbh = $c->dbc->dbh();
+    my $q = "SELECT cvterm.name FROM project
+        JOIN nd_experiment_project USING (project_id)
+        JOIN nd_experiment USING (nd_experiment_id)
+        JOIN cvterm ON (nd_experiment.type_id=cvterm.cvterm_id)
+        WHERE project.project_id=?;";
+
+    my $h = $dbh->prepare($q);
+    $h->execute($trial_id);
+
+    my $trial_type = $h->fetchrow_array();
+    if ($trial_type eq "analysis_experiment"){
+        $c->response->redirect($c->uri_for("/analyses/$trial_id"));
+    } 
+    
     $c->stash->{trial} = $trial;
 }
 

@@ -909,6 +909,14 @@ solGS.checkPageType = function () {
   return pageType;
 };
 
+
+solGS.blockSolgsSearchInterface = function () {
+
+	jQuery("#solgs_search_interfaces").hide();
+
+};
+
+
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function (a, b) {
   return this.each(function () {

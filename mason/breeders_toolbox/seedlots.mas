@@ -125,23 +125,39 @@ $user_role => undef
             </div>
         </div>
 
-	<!-- div class="form-group form-group-sm">
-	  <label class="col-sm-3 control-label"></label>
-          <div class="col-sm-9" >
-	    <input id="search_seedlot_form_only_good_quality_checkbox" type="checkbox" /> Only show seedlots without quality issues
-          </div>
+        <!-- div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label"></label>
+            <div class="col-sm-9" >
+                <input id="search_seedlot_form_only_good_quality_checkbox" type="checkbox" /> Only show seedlots without quality issues
+            </div>
         </div  -->
 
-	<div class="form-group form-group-sm">
+        <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Quality: </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_quality" type="text" />
             </div>
         </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Trial Usage: </label>
+            <div class="col-sm-9">
+                <div class="col-sm-5" style="padding-left: 0; padding-right: 5px">
+                    <input class="form-control" id="search_seedlot_form_trial_name" type="text" placeholder="Trial Name" />
+                </div>
+                <div class="col-sm-7" style="padding-left: 5px; padding-right: 0">
+                    <select class="form-control" id="search_seedlot_form_trial_usage">
+                        <option value="">Select trial / seedlot usage...</option>
+                        <option value="source">Trial --> Seedlot: Find seedlots that are derived from this trial</option>
+                        <option value="sink">Seedlot --> Trial: Find seedlots that provided seed to this trial</option>
+                        <option value="source|sink">Either of the above</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
     </form>
     <center>
-    <button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
+        <button class="btn btn-primary" id="submit_seedlot_search">Search</button>
     </center>
 </div>
 </&>
@@ -218,6 +234,9 @@ jQuery(document).ready(function(){
     jQuery("#search_seedlot_form_seedlot_name").autocomplete({
        source: '/ajax/stock/seedlot_name_autocomplete',
     });
+    jQuery("#search_seedlot_form_trial_name").autocomplete({
+        source: '/ajax/trials/trial_autocomplete'
+    });
 
     var seedlots_table;
 
@@ -259,6 +278,8 @@ jQuery(document).ready(function(){
                     d.exact_cross = jQuery('#exact_cross').is(":checked") ? 1 : 0;
                     d.quality = jQuery('#search_seedlot_form_quality').val();
                     d.only_good_quality = jQuery('#search_seedlot_form_only_good_quality_checkbox').is(":checked") ? 1 : 0;
+                    d.trial_name = jQuery('#search_seedlot_form_trial_name').val();
+                    d.trial_usage = jQuery('#search_seedlot_form_trial_usage').val();
                 }
             },
         });

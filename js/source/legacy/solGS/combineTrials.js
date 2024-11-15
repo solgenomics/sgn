@@ -13,9 +13,7 @@ var solGS = solGS || function solGS () {};
 solGS.combinedTrials = {
 
      getPopIds: function () {
-
-	 var searchedPopsList = jQuery("#searched_trials_table tr").length;
-
+		var searchedPopsList = jQuery("#searched_trials_table tr").length;
 	 var tableId;
 
 	 if (searchedPopsList) {
@@ -23,6 +21,10 @@ solGS.combinedTrials = {
 	 } else {
 	     tableId = 'all_trials_table';
 	 }
+
+	
+	 jQuery("#trial_search_result_select").show();
+	
 
 	 jQuery('#' +tableId + ' tr')
 	     .filter(':has(:checkbox:checked)')
@@ -50,10 +52,10 @@ solGS.combinedTrials = {
 
 
     hideTrialsList: function() {
-	jQuery("#all_trials_div").empty();
-	jQuery("#searched_trials_div").empty();
-	jQuery("#select_trials_div").hide();
-	jQuery("#all_trials_search_message").hide();
+	jQuery("#trial_search_result").empty();
+	// jQuery("#trial_search_result").empty();
+	jQuery("#trial_search_result_select").hide();
+	jQuery("#trial_search_result_message").hide();
 
     },
 
@@ -62,16 +64,16 @@ solGS.combinedTrials = {
 
 	jQuery("#selected_trials_table tr").on("change", function() {
 
-            jQuery(this).remove();
+        jQuery(this).remove();
 
-            if (jQuery("#selected_trials_table td").length == 0) {
+        if (jQuery("#selected_trials_table td").length == 0) {
 		jQuery("#selected_trials").hide();
 		jQuery("#combine_trials_div").hide();
 		jQuery("#search_again_div").hide();
 		jQuery("#select_trials_btn").val('Select');
 
 		//  searchAgain();
-            }
+        }
 	});
 
     },
@@ -88,11 +90,11 @@ solGS.combinedTrials = {
 	    url = '/solgs/search/trials/';
 	}
 
-	jQuery('#all_trials_div').empty();
-	jQuery("#searched_trials_div").empty();
+	// jQuery('#trial_search_result').empty();
+	jQuery("#trial_search_result").empty();
 	searchAllTrials(url);
-	jQuery("#all_trials_search_message").show();
-	jQuery("#select_trials_div").show();
+	jQuery("#trial_search_result_message").show();
+	jQuery("#trial_search_result_select").show();
 	jQuery("#select_trials_btn").val('Select');
 
     },
@@ -119,8 +121,8 @@ solGS.combinedTrials = {
 
 		if (res.status) {
 
-                    var comboPopsId = res.combo_pops_id;
-                    var newUrl = '/solgs/model/combined/trials/' + comboPopsId + '/trait/' + trId  + '/gp/' + protocolId;;
+            var comboPopsId = res.combo_pops_id;
+            var newUrl = '/solgs/model/combined/trials/' + comboPopsId + '/trait/' + trId  + '/gp/' + protocolId;;
 
 		    if (comboPopsId) {
 			window.location.href = newUrl;
@@ -452,3 +454,18 @@ jQuery(document).ready(function() {
 //     });
 
 // });
+
+jQuery(document).ready(function() {
+
+var tableId = "#searched_trials_table";
+var table = document.querySelector(tableId);
+
+if (table) {
+  var rowsCount = table.rows.length;
+
+  if (rowsCount > 1) {
+	jQuery("#trial_search_result_select").show();
+  }
+}
+
+});
