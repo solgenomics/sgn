@@ -595,20 +595,23 @@ sub check_measurement {
     
 	    my $repeat_type = "single";
 	    if (exists($self->check_trait_repeat_type->{$trait_cvterm_id})) {
-	        my $repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id}; 
 	        if (grep /$repeat_type/, ("single", "multiple", "time_series")) {
 	    	    $repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id};
+                # print STDERR "Trait repeat type: $repeat_type\n";
 	        }else {
 	    	    print STDERR "the trait repeat type of $self->check_trait_repeat_type->{$trait_cvterm_id} has no meaning. Assuming 'single'.\n";
 	        }
 	    }
     
 	    if ($repeat_type eq "multiple" or $repeat_type eq "time_series") {
-	        if (!defined($timestamp)) {
+            # print STDERR "Trait repeat type: $repeat_type\n";
+	        if (!$timestamp) {
+                # print STDERR "trait name : $trait_name is multiple without timestamp \n";
 	    	    $error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
 	        }
 	        if (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
-	    	    $error_message .= "<small>For the multiple measurement trait $trait_name the observation unit $plot_name already has a value associated with it at exactly the same time";
+	    	    # print STDERR "trait name : $trait_name  with timestamp \n";
+                $error_message .= "<small>For the multiple measurement trait $trait_name the observation unit $plot_name already has a value associated with it at exactly the same time";
 	        }
 	    }
 
