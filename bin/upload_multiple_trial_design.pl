@@ -89,33 +89,42 @@ else {
 my $chado_schema = Bio::Chado::Schema->connect(sub { $dbh },  { on_connect_do => ['SET search_path TO  public, sgn, metadata, phenome;'] });
 print STDOUT "Database connection ok!\n";
 
-# Parse uploaded file with appropriate plugin
-my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $infile);
-$parser->load_plugin('MultipleTrialDesignGeneric');
-my $parsed_data = $parser->parse();
+my $parsed_data;
+my $validation_coderef = sub {
+    # Parse uploaded file with appropriate plugin
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $infile);
+    $parser->load_plugin('MultipleTrialDesignGeneric');
+    $parsed_data = $parser->parse();
 
-# Parser has errors, print error messages and quit
-if ($parser->has_parse_errors()) {
-    my $errors = $parser->get_parse_errors();
-    foreach (@{$errors->{'error_messages'}}) {
-        push @errors, $_;
-    }
-    finish();
-}
-
-# Parser has warnings, print warning messages and quit unless we're ignoring warnings
-if ($parser->has_parse_warnings()) {
-    unless ($ignore_warnings) {
-        my $warnings = $parser->get_parse_warnings();
-        foreach (@{$warnings->{'warning_messages'}}) {
-            push @warnings, $_;
+    # Parser has errors, print error messages and quit
+    if ($parser->has_parse_errors()) {
+        my $errors = $parser->get_parse_errors();
+        foreach (@{$errors->{'error_messages'}}) {
+            push @errors, $_;
         }
         finish();
     }
-}
+
+    # Parser has warnings, print warning messages and quit unless we're ignoring warnings
+    if ($parser->has_parse_warnings()) {
+        unless ($ignore_warnings) {
+            my $warnings = $parser->get_parse_warnings();
+            foreach (@{$warnings->{'warning_messages'}}) {
+                push @warnings, $_;
+            }
+            finish();
+        }
+    }
+};
+
+try {
+    $chado_schema->txn_do($validation_coderef);
+} catch {
+    push @errors, $_;
+};
 
 # Check for parsed data
-finish("There is no parsed data!") if !$parsed_data;
+finish("There is parsed data from the input file!") if !$parsed_data;
 
 # Get User ID
 my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $username);
