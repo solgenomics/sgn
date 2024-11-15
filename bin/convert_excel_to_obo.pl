@@ -65,7 +65,9 @@ foreach my $d (@$data) {
 print STDERR "TRAIT CLASSES: ".Dumper(\%trait_classes);
 
 foreach my $d (@$data) {
-    my $trait_name = $d->{'Term Name - CO'};
+    my $trait_name = $d->{'Trait - CO'};
+    print STDERR "Parsing TRAIT NAME $trait_name\n";
+    if (! $trait_name) { next; }
     $traits{$trait_name}->{count}++;
     $traits{$trait_name}->{'Trait class'} = $d->{'Trait class'};
 
@@ -79,6 +81,7 @@ print STDERR "TRAITS: ".Dumper(\%traits);
 
 foreach my $d (@$data) {
     my $variable_name = $d->{'Variable Full Name'};
+    if (! $variable_name) { next; }
     $variables{$variable_name}->{count}++;
     $variables{$variable_name}->{'Synonym'};
     $variables{$variable_name}->{'Term Name - BB'} = $d->{'Term Name - BB'};
@@ -91,6 +94,8 @@ foreach my $d (@$data) {
     $variables{$variable_name}->{'Scale name'} = $d->{'Scale name'};
     $variables{$variable_name}->{'Scale class'} = $d->{'Scale class'};
     $variables{$variable_name}->{'Categories'} = $d->{'Categories'};
+    print STDERR "TERM NAME - CO IN variable = $d->{'Term Name - CO'}\n";
+    $variables{$variable_name}->{'Trait - CO'} = $d->{'Trait - CO'};
 }
 print STDERR "VARIABLES: ".Dumper(\%variables);
 
@@ -161,9 +166,9 @@ foreach my $k (keys %traits) {
 	$count,
 	$k,
 	$traits{$k}->{'Trait description'},
-	$traits{$k}->{'Trait synonym'},
-	$trait_classes{ $traits{$k}->{'Trait class'} }->{acc},
-	$traits{$k}->{'Trait class'},
+	$traits{$k}->{'Trait synonym'},     
+	$trait_classes{ $traits{$k}->{'Trait class'} }->{acc},  # parent id
+	$traits{$k}->{'Trait class'}, # parent trait
 	)."\n";
     
     $traits{$k}->{name} = $k;
@@ -175,14 +180,20 @@ foreach my $k (keys %traits) {
 
 foreach my $k (keys %variables) { 
 
+    my $parent_trait = $variables{$k}->{'Trait - CO'};
+    my $parent_trait_id = $traits{$variables{$k}->{'Trait - CO'}}->{acc};
+    my $parent_trait_name = $traits{ $variables{$k}->{'Trait -CO'}}->{name};
+
+    print STDERR "VARIABLE: $k. PARENT TRAIT: $parent_trait\n";
+    
     print $F format_variable(
 	$ontology_name,
 	$count,
 	$k, ###$variables{$k}->{'Variable Full Name'},
 	join(" - ", $variables{$k}->{'Term Definition'}),
 	$variables{$k}->{'Synonym'},
-	$traits{$variables{$k}->{'name'}}->{acc},
-	$variables{$k}->{'Term Name - BB'},
+	$traits{$variables{$k}->{'Trait - CO'}}->{acc}, # parent trait id
+	$traits{$variables{$k}->{'Trait - CO'}}->{name}, # parent trait
 	
 	)."\n";
 
