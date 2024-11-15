@@ -65,7 +65,6 @@ sub _validate_with_plugin {
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => $seen_transformation_identifiers }
     });
     while (my $r=$rs->next){

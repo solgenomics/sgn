@@ -206,7 +206,7 @@ sub get_transformation_info {
     while (my ($plant_id, $plant_name, $vector_id, $vector_name, $notes, $updated_status) = $h->fetchrow_array()){
         push @transformation_info, [$plant_id, $plant_name, $vector_id, $vector_name, $notes, $updated_status]
     }
-    print STDERR "TRANSFORMATION INFO =".Dumper(\@transformation_info)."\n";
+
     return \@transformation_info;
 
 }
