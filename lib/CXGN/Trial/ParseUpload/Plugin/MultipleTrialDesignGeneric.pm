@@ -94,7 +94,7 @@ sub _validate_with_plugin {
         my $accession_name = $data->{'accession_name'};
         my $plot_number = $data->{'plot_number'};
         my $block_number = $data->{'block_number'};
-        my $plot_name = $data->{'plot_name'};
+        my $plot_name = $data->{'plot_name'} || _create_plot_name($trial_name, $plot_number);
         my $trial_type = $data->{'trial_type'};
         my $plot_width = $data->{'plot_width'};
         my $plot_length = $data->{'plot_length'};
@@ -197,7 +197,6 @@ sub _validate_with_plugin {
         # Treatment Values: must be either blank, 0, or 1
         foreach my $treatment (@$treatments) {
             my $treatment_value = $data->{$treatment};
-            print STDERR "Row $row: $treatment = $treatment_value\n";
             if ( $treatment_value && $treatment_value ne '' && $treatment_value ne '0' && $treatment_value ne '1' ) {
                 push @error_messages, "Row $row: Treatment value for treatment <strong>$treatment</strong> should be either 1 (applied) or empty (not applied).";
             }
@@ -373,12 +372,13 @@ sub _validate_with_plugin {
     }
 
     # Plot Names: should not exist (as any stock)
+    my @plot_names = keys %seen_plot_names;
     my @already_used_plot_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => $parsed_values->{'plot_name'} }
+        'uniquename' => { -in => \@plot_names }
     });
-    while (my $r=$rs->next) {
+    foreach my $r ($rs->all()) {
         push @already_used_plot_names, $r->uniquename();
     }
     if (scalar(@already_used_plot_names) > 0) {
@@ -388,14 +388,14 @@ sub _validate_with_plugin {
     # Seedlots: names must exist in the database
     my @seedlots_missing = @{$validator->validate($schema,'seedlots',$parsed_values->{'seedlot_name'})->{'missing'}};
     if (scalar(@seedlots_missing) > 0) {
-      push @error_messages, "Seedlot(s) <strong>".join(',',@seedlots_missing)."</strong> are not in the database.  To use a seedlot as a seed source for a plot, the seedlot must already exist in the database.";
+        push @error_messages, "Seedlot(s) <strong>".join(',',@seedlots_missing)."</strong> are not in the database.  To use a seedlot as a seed source for a plot, the seedlot must already exist in the database.";
     }
 
     # Verify seedlot pairs: accession name of plot must match seedlot contents
     if ( scalar(@seedlot_pairs) > 0 ) {
         my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_pairs);
-        if (exists($return->{error})){
-        push @error_messages, $return->{error};
+        if (exists($return->{error})) {
+            push @error_messages, $return->{error};
         }
     }
 
