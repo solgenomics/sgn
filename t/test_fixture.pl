@@ -193,7 +193,6 @@ else {
 		print STDERR "# [ --noserver option: No logfile to remove]\n";
 	    }
 	    else {
-		print STDERR "# Delete server logfile... ";
 		close($logfile);
 		unlink $logfile;
 		print STDERR "Done.\n";
@@ -245,7 +244,14 @@ unless( $prove_pid ) {
         '-lr'.$v,
         ( map { -I => $_ } @INC ),
         @prove_args
-        );
+        );    
+
+    if (!$nocleanup) {
+	close($logfile);
+	unlink $logfile;
+	print STDERR "Done.\n";
+    }
+	
     exit( $app->run ? 0 : 1 );
 }
 
@@ -277,10 +283,10 @@ if (!$nocleanup) {
 	print STDERR "# [ --noserver option: No logfile to remove]\n";
     }
     else {
-	# print STDERR "# Delete server logfile... ";
-	# close($logfile);
-	# unlink $logfile;
-	# print STDERR "Done.\n";
+	print STDERR "# Delete server logfile... \n";
+	close($logfile);
+	unlink $logfile;
+	
 
 	print STDERR "# Delete fixture conf file... ";
 	unlink "sgn_fixture.conf";
