@@ -230,7 +230,7 @@ $locations
                                         <label class="col-sm-2 control-label">Field Trial: </label>
                                         <div class="col-sm-10">
                                             <div class="input-group">
-                                                <input type ="text" class ="form-control" id="parents_field_trial' name="field_trial" placeholder="Enter trial name">
+                                                <input type ="text" class ="form-control" id="parents_field_trial' name="parents_field_trial" placeholder="Enter trial name">
                                                 <div class ="input-group-btn">
                                                     <button class = "btn btn-info" id="search_parents_plots" name="search_plots"></i>Search Plots</button>
                                                 </div>
@@ -261,7 +261,7 @@ $locations
                                         <label class="col-sm-2 control-label">Field Trial: </label>
                                         <div class="col-sm-10">
                                             <div class="input-group">
-                                                <input type ="text" class ="form-control" id="female_field_trial" name ="field_trial" placeholder="Enter trial name">
+                                                <input type ="text" class ="form-control" id="female_field_trial" name ="female_field_trial" placeholder="Enter trial name">
                                                 <div class ="input-group-btn">
                                                     <button class = "btn btn-info" id="search_female_plots" name="search_plots"></i>Search Plots</button>
                                                 </div>
@@ -271,7 +271,7 @@ $locations
                                     <div class="form-group">
                                         <label class="col-sm-2 control-label">Female Plot: </label>
                                         <div class="col-sm-10">
-                                            <select class="form-control" id="female_plot" name="female_plot">
+                                            <select class="form-control" id="open_female_plot" name="open_female_plot">
                                                 <option value="">Enter trial name first</option>
                                             </select>
                                         </div>
@@ -450,7 +450,7 @@ $locations
                     <p><b>bulk selfed:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</p>
                     <p><b>bulk and open pollinated:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</p>
                     <p><b>doubled haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</p>
-		    <p><b>dihaploid induction:</b> Plants derived from a chromosome reduction from tetraploid to diploid</p>
+                    <p><b>dihaploid induction:</b> Plants derived from a chromosome reduction from tetraploid to diploid</p>
                     <br>
 
                     <h2>
@@ -501,10 +501,20 @@ jQuery(document).ready(function($) {
         source: '/ajax/trials/trial_autocomplete',
     });
 
-    $("#search_plots").click(function(e){
+    jQuery("[name='search_plots']").click(function(e){
         e.preventDefault();
-
+        var field_trial;
         var maternal_parent;
+        var crossType = jQuery("#cross_type").val();
+        alert(crossType);
+        alert(jQuery("#parents_field_trial").val());
+        if (crossType == 'open') {
+            field_trial = jQuery("#female_field_trial").val();
+        } else if (crossType == 'biparental') {
+            field_trial = jQuery("#parents_field_trial").val();
+        }
+        alert(field_trial);
+
         if ($('#maternal_parent').val() != ''){
             maternal_parent = $('#maternal_parent').val();
         }
@@ -516,17 +526,22 @@ jQuery(document).ready(function($) {
         if ($('#open_maternal_parent').val() != ''){
             maternal_parent = $('#open_maternal_parent').val();
         }
-
         console.log(maternal_parent);
 
         jQuery.ajax({
             url:'/ajax/breeders/get_accession_plots',
-            data:{'field_trial':$('#field_trial').val(),
+            data:{'field_trial':field_trial,
                   'parent_accession':maternal_parent,
                   },
             success: function(response){
             console.log(response);
-            var html = '<select id = "female_plot" >';
+
+            var html;
+            if (crossType == 'open') {
+                html = '<select id = "open_female_plot" >';
+            } else {
+                html = '<select id = "female_plot" >';
+            }
             for (var i=0; i<response.data.length; i++) {
             html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
             }
@@ -538,7 +553,12 @@ jQuery(document).ready(function($) {
             return;
             }
 
-            jQuery('#female_plot').html(html);
+            if ($('#open_maternal_parent').val() != ''){
+                jQuery('#open_female_plot').html(html);
+            } else {
+                jQuery('#female_plot').html(html);
+            }
+
 
             },
             error:function(response){
@@ -556,29 +576,30 @@ jQuery(document).ready(function($) {
         paternal_parent = $('#selfed_parent').val();
         }
 
-        jQuery.ajax({
-            url:'/ajax/breeders/get_accession_plots',
-            data:{'field_trial':$('#field_trial').val(),
-                  'parent_accession':paternal_parent,
-                  },
-            success: function(response){
-            console.log(response);
-            var html = '<select id = "male_plot" >';
-            for (var i=0; i<response.data.length; i++) {
-            html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
-            }
-            html = html + "</select>";
-            console.log(html);
+        if (paternal_parent) {
+            jQuery.ajax({
+                url:'/ajax/breeders/get_accession_plots',
+                data:{'field_trial':$('#field_trial').val(),
+                    'parent_accession':paternal_parent,
+                },
+                success: function(response){
+                    console.log(response);
+                    var html = '<select id = "male_plot" >';
+                    for (var i=0; i<response.data.length; i++) {
+                        html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
+                    }
+                    html = html + "</select>";
+                    console.log(html);
 
-            if(i ==''){
-            alert("No male plot");
-            return;
-            }
+                    if(i ==''){
+                        alert("No male plot");
+                        return;
+                    }
 
-            jQuery('#male_plot').html(html);
-
-            },
-        });
+                    jQuery('#male_plot').html(html);
+                },
+            });
+        }
     });
 });
 

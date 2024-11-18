@@ -253,6 +253,8 @@ sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {
     my $c = shift;
     my $field_trial = $c->req->param("field_trial");
     my $parent_accession = $c->req->param("parent_accession");
+    print STDERR "TRIAL NAME =".Dumper($field_trial)."\n";
+    print STDERR "ACCESSION NAME =".Dumper($parent_accession)."\n";
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
@@ -280,7 +282,7 @@ sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {
 
       push @plots, [$plot_id, $plot_name];
     }
-    #print STDERR Dumper \@plots;
+    print STDERR "PLOTS =".Dumper(\@plots)."\n";
     $c->stash->{rest} = {data=>\@plots};
 
 }
