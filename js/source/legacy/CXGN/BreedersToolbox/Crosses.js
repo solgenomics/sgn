@@ -83,6 +83,7 @@ jQuery(document).ready(function($) {
             $("#get_maternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross") || ($("#cross_type").val() == "sib"));
             $("#get_paternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross") || ($("#cross_type").val() == "sib"));
             $("#exact_parents").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross") || ($("#cross_type").val() == "sib"));
+            $("#exact_female").toggle($("#cross_type").val() == "open");
             $("#get_selfed_parent").toggle($("#cross_type").val() == "self");
             $("#get_open_maternal_parent").toggle($("#cross_type").val() == "open");
             $("#get_open_paternal_population").toggle($("#cross_type").val() == "open");

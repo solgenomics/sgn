@@ -112,7 +112,7 @@ $locations
                                             <option value="bulk_self">bulk selfed</option>
                                             <option value="bulk_open">bulk and open pollinated</option>
                                             <option value="doubled_haploid">doubled haploid</option>
-					    <option value="dihaploid_induction">dihaploid induction</option>
+                                            <option value="dihaploid_induction">dihaploid induction</option>
                                             <option value="polycross">polycross</option>
                                             <option value="reciprocal">reciprocal</option>
                                             <option value="multicross">multicross</option>
@@ -230,9 +230,9 @@ $locations
                                         <label class="col-sm-2 control-label">Field Trial: </label>
                                         <div class="col-sm-10">
                                             <div class="input-group">
-                                                <input type ="text" class ="form-control" id ="field_trial" placeholder="Enter trial name">
+                                                <input type ="text" class ="form-control" id="parents_field_trial' name="field_trial" placeholder="Enter trial name">
                                                 <div class ="input-group-btn">
-                                                    <button class = "btn btn-info" id ="search_plots"></i>Search Plots</button>
+                                                    <button class = "btn btn-info" id="search_parents_plots" name="search_plots"></i>Search Plots</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -249,6 +249,29 @@ $locations
                                         <label class="col-sm-2 control-label">Male Plot: </label>
                                         <div class="col-sm-10">
                                             <select class="form-control" id="male_plot" name="male_plot">
+                                                <option value="">Enter trial name first</option>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="exact_female" style="display: none">
+                                    <& /page/page_title.mas, title=>"Optional: If you choose to record exact cross female parent, you can do so." &>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Field Trial: </label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <input type ="text" class ="form-control" id="female_field_trial" name ="field_trial" placeholder="Enter trial name">
+                                                <div class ="input-group-btn">
+                                                    <button class = "btn btn-info" id="search_female_plots" name="search_plots"></i>Search Plots</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Female Plot: </label>
+                                        <div class="col-sm-10">
+                                            <select class="form-control" id="female_plot" name="female_plot">
                                                 <option value="">Enter trial name first</option>
                                             </select>
                                         </div>
@@ -474,7 +497,7 @@ jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    jQuery("#field_trial").autocomplete({
+    jQuery("[name='field_trial']").autocomplete({
         source: '/ajax/trials/trial_autocomplete',
     });
 
