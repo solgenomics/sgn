@@ -118,7 +118,7 @@ sub _validate_with_plugin {
             push @error_messages, "Row $row: plot_width <strong>$field_size</strong> must be a positive number.";
         }
 
-         # Is A Control: must be blank, 0, or 1, if provided
+        # Is A Control: must be blank, 0, or 1, if provided
         if ( $is_a_control && $is_a_control ne '' && $is_a_control ne '0' && $is_a_control ne '1' ) {
             push @error_messages, "Row $row: is_a_control value of <strong>$is_a_control</strong> is invalid.  It must be blank (not a control), 0 (not a control), or 1 (is a control).";
         }
