@@ -556,6 +556,7 @@ $design_types => ()
                                     <li>You an add phenotypes for the plots or plants in this trial now.</li>
                                 </ul>
                                 <br/>
+                                <div name="upload_trial_completed_message"></div>
                                 <!--center>
                                 <button class="btn btn-primary" id="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
                                 </center-->
