@@ -166,7 +166,12 @@ jQuery(document).ready(function($) {
         }
 
         var visibleToRole = $("#visible_to_role").val();
-        var female_plot = $("#female_plot").val();
+        let female_plot;
+        if (crossType == 'open') {
+            female_plot = jQuery("#open_female_plot").val();
+        } else {
+            female_plot = jQuery("#female_plot").val();
+        }
         var male_plot = $("#male_plot").val();
         var cross_combination = $("#dialog_cross_combination").val();
 
@@ -369,7 +374,7 @@ jQuery(document).ready(function($) {
                 maternal = doubledHaploidParent;
                 paternal = doubledHaploidParent;
                 break;
-	    case 'dihaploid_induction':
+            case 'dihaploid_induction':
                 var dihaploidInductionParent = $("#dihaploid_induction_parent").val();
                 maternal = dihaploidInductionParent;
                 paternal = dihaploidInductionParent;
