@@ -54,7 +54,7 @@
         });
 
         // sort the datA BY date in ascending order  
-        data.sort((a, b) => d3.ascending(a.date, b.date));
+        //data.sort((a, b) => d3.ascending(a.date, b.date));
 
         // Set the x-axis scale
         var xExtent = d3.extent(data, d => d.date);
