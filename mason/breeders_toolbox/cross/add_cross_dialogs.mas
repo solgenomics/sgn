@@ -230,7 +230,7 @@ $locations
                                         <label class="col-sm-2 control-label">Field Trial: </label>
                                         <div class="col-sm-10">
                                             <div class="input-group">
-                                                <input type ="text" class ="form-control" id="parents_field_trial' name="parents_field_trial" placeholder="Enter trial name">
+                                                <input type ="text" class ="form-control" id="parents_field_trial" name="parents_field_trial" placeholder="Enter trial name">
                                                 <div class ="input-group-btn">
                                                     <button class = "btn btn-info" id="search_parents_plots" name="search_plots"></i>Search Plots</button>
                                                 </div>
@@ -497,36 +497,36 @@ jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    jQuery("[name='field_trial']").autocomplete({
-        source: '/ajax/trials/trial_autocomplete',
+    jQuery('input[id*="_field_trial"]').autocomplete({
+        source: '/ajax/trials/trial_autocomplete'
     });
 
     jQuery("[name='search_plots']").click(function(e){
         e.preventDefault();
-        var field_trial;
+
+        let field_trial;
         var maternal_parent;
-        var crossType = jQuery("#cross_type").val();
-        alert(crossType);
-        alert(jQuery("#parents_field_trial").val());
+        const crossType = jQuery("#cross_type").val();
+
         if (crossType == 'open') {
             field_trial = jQuery("#female_field_trial").val();
-        } else if (crossType == 'biparental') {
+        } else  {
             field_trial = jQuery("#parents_field_trial").val();
         }
-        alert(field_trial);
 
-        if ($('#maternal_parent').val() != ''){
-            maternal_parent = $('#maternal_parent').val();
+        if (jQuery('#maternal_parent').val() != ''){
+            maternal_parent = jQuery('#maternal_parent').val();
         }
 
-        if ($('#selfed_parent').val() != ''){
-            maternal_parent = $('#selfed_parent').val();
+        if (jQuery('#selfed_parent').val() != ''){
+            maternal_parent = jQuery('#selfed_parent').val();
         }
 
-        if ($('#open_maternal_parent').val() != ''){
-            maternal_parent = $('#open_maternal_parent').val();
+        if (jQuery('#open_maternal_parent').val() != ''){
+            maternal_parent = jQuery('#open_maternal_parent').val();
         }
         console.log(maternal_parent);
+        console.log(field_trial);
 
         jQuery.ajax({
             url:'/ajax/breeders/get_accession_plots',
@@ -534,57 +534,56 @@ jQuery(document).ready(function($) {
                   'parent_accession':maternal_parent,
                   },
             success: function(response){
-            console.log(response);
+                console.log(response);
 
-            var html;
-            if (crossType == 'open') {
-                html = '<select id = "open_female_plot" >';
-            } else {
-                html = '<select id = "female_plot" >';
-            }
-            for (var i=0; i<response.data.length; i++) {
-            html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
-            }
-            html = html + "</select>";
-            console.log(html);
+                var html;
+                if (crossType == 'open') {
+                    html = '<select id = "open_female_plot" >';
+                } else {
+                    html = '<select id = "female_plot" >';
+                }
+                for (var i=0; i<response.data.length; i++) {
+                    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
+                }
+                html = html + "</select>";
+                console.log(html);
 
-            if(i ==''){
-            alert("No female plot");
-            return;
-            }
+                if(i ==''){
+                    alert("No female plot");
+                    return;
+                }
 
-            if ($('#open_maternal_parent').val() != ''){
-                jQuery('#open_female_plot').html(html);
-            } else {
-                jQuery('#female_plot').html(html);
-            }
-
-
+                if (jQuery('#open_maternal_parent').val() != ''){
+                    jQuery('#open_female_plot').html(html);
+                } else {
+                    jQuery('#female_plot').html(html);
+                }
             },
+
             error:function(response){
-            alert("An error occurred getting female plots.");
+                alert("An error occurred getting female plots.");
             }
         });
 
-        var paternal_parent;
+        let paternal_parent;
 
-        if ($('#paternal_parent').val() != ''){
-        paternal_parent = $('#paternal_parent').val();
+        if (jQuery('#paternal_parent').val() != ''){
+            paternal_parent = jQuery('#paternal_parent').val();
         }
 
-        if ($('#selfed_parent').val() != ''){
-        paternal_parent = $('#selfed_parent').val();
+        if (jQuery('#selfed_parent').val() != ''){
+            paternal_parent = jQuery('#selfed_parent').val();
         }
 
         if (paternal_parent) {
             jQuery.ajax({
                 url:'/ajax/breeders/get_accession_plots',
-                data:{'field_trial':$('#field_trial').val(),
+                data:{'field_trial': field_trial,
                     'parent_accession':paternal_parent,
                 },
                 success: function(response){
                     console.log(response);
-                    var html = '<select id = "male_plot" >';
+                    let html = '<select id = "male_plot" >';
                     for (var i=0; i<response.data.length; i++) {
                         html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
                     }
