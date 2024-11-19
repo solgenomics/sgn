@@ -1300,7 +1300,7 @@ sub get_child_analyses {
 
     my $analysis_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
 
-    my $analysis_q = "select DISTINCT project.name, project.project_id, analysisinfo.value::json->>'dataset_id' FROM nd_experiment_project 
+    my $analysis_q = "select DISTINCT project.name, project.project_id FROM nd_experiment_project 
     JOIN project USING (project_id) 
     JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id
     JOIN projectprop AS analysisinfo ON (project.project_id=analysisinfo.project_id)
@@ -1313,10 +1313,8 @@ sub get_child_analyses {
 
     my @html = ();
 
-    while (my ($analysis_name, $analysis_id, $analysis_ds_id) = $h->fetchrow_array()){
-        if ($dataset_id == $analysis_ds_id){
-            push @html, "<a href=/analyses/".$analysis_id.">".$analysis_name."</a>";
-        }
+    while (my ($analysis_name, $analysis_id) = $h->fetchrow_array()){
+        push @html, "<a href=/analyses/".$analysis_id.">".$analysis_name."</a>";
     }
 
     return join(" | ", @html);
