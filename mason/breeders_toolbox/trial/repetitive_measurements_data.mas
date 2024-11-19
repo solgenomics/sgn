@@ -124,7 +124,14 @@ jQuery(document).ready(function() {
         event.preventDefault();
         var repetitive_trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
         var repetitive_start_date = jQuery('#repetitive_measurement_start_date').val();
-        var repetitive_end_date = jQuery('#repetitive_measurement_end_date').val();
+        var end_date = jQuery('#repetitive_measurement_end_date').val();
+        
+        //add an extra day to make all the range inclusive !!!
+        var repetitive_endDate = new Date(end_date);
+        repetitive_endDate.setDate(repetitive_endDate.getDate() + 1);
+        //Format the new end date to YYYY-MM-DD
+        var repetitive_end_date = repetitive_endDate.toISOString().split('T')[0];
+
         var repetitive_observation_level = jQuery('#repetitive_measurement_observation_level').find(":selected").val();
         var repetitive_measurement_level = jQuery('#repetitive_measurements_level').find(":selected").val();
 
@@ -157,6 +164,8 @@ jQuery(document).ready(function() {
             },function (start) {
                 var new_start_date = new Date(start).getTime();
                 var new_end_date = new Date(jQuery('#repetitive_measurement_end_date').val()).getTime();
+                alert("the start date is : new_start_date");
+                alert("the end date is: new_end_date");
                 jQuery('#repetitive_slider_range').slider('values', [new_start_date, new_end_date]);
             });
         });
@@ -175,6 +184,8 @@ jQuery(document).ready(function() {
             }, function (end) {
                 var new_start_date = new Date(jQuery('#repetitive_measurement_start_date').val()).getTime();
                 var new_end_date = new Date(end).getTime();
+                console.log("the start date in the end_date section is : new_start_date");
+                console.log("the end date  in the  end_date section is: new_end_date");
                 jQuery('#repetitive_slider_range').slider('values', [new_start_date, new_end_date]);
             });
         });
@@ -270,17 +281,19 @@ jQuery(document).ready(function() {
 		var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
         var start_date = new Date(jQuery('#repetitive_measurement_start_date').val());
         var end_date = new Date(jQuery('#repetitive_measurement_end_date').val());
-        //console.log("the trait is: ", trait_name);
-        //console.log("the start date of this trait is: ", start_date);
-        //console.log("the end date of this trait is: ", end_date);
+        console.log("the trait is: ", trait_name);
+        console.log("the start date of this trait is: ", start_date);
+        console.log("the end date of this trait is: ", end_date);
 
         /*
-		just a note:if you select the 'all values' option in the UI, the ouput values will be separated by commas ",".
-		However, iwhen you download the phenotype file form the search wizard, the values will appear in different rows !!!
+		just a note:if user select the 'all values' option in the UI, the output values will be separated by comma ",".
+		However, when user download the phenotype file form the search wizard, the values will appear in different rows !!!
 		*/
 
         for (var unique_id in observation_units_map) {
             var group = observation_units_map[unique_id];
+            //sort the repetitive values arrray by collect_date!!
+            group.values.sort((a, b) => a.date - b.date);
             var values = group.values.map(d => d.value); //store only the value for each object !!
 			var repetitive_line_graph = [];
             var valueToShow = '';
