@@ -248,13 +248,11 @@ sub get_all_trial_types : Path('/ajax/breeders/trial/alltypes') Args(0) {
 }
 
 
-sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {
+sub get_accession_plots_plants :Path('/ajax/breeders/get_accession_plots_plants') Args(0) {
     my $self = shift;
     my $c = shift;
     my $field_trial = $c->req->param("field_trial");
     my $parent_accession = $c->req->param("parent_accession");
-    print STDERR "TRIAL NAME =".Dumper($field_trial)."\n";
-    print STDERR "ACCESSION NAME =".Dumper($parent_accession)."\n";
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);

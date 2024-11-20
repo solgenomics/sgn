@@ -232,23 +232,23 @@ $locations
                                             <div class="input-group">
                                                 <input type ="text" class ="form-control" id="parents_field_trial" name="parents_field_trial" placeholder="Enter trial name">
                                                 <div class ="input-group-btn">
-                                                    <button class = "btn btn-info" id="search_parents_plots" name="search_plots"></i>Search Plots</button>
+                                                    <button class = "btn btn-info" id="search_parents_plots_plants" name="search_plots_plants"></i>Search Plots/Plants</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Female Plot: </label>
+                                        <label class="col-sm-2 control-label">Female Plot/Plant: </label>
                                         <div class="col-sm-10">
-                                            <select class="form-control" id="female_plot" name="female_plot">
+                                            <select class="form-control" id="female_plot_plant" name="female_plot_plant">
                                                 <option value="">Enter trial name first</option>
                                             </select>
                                         </div>
                                     </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Male Plot: </label>
+                                        <label class="col-sm-2 control-label">Male Plot/Plant: </label>
                                         <div class="col-sm-10">
-                                            <select class="form-control" id="male_plot" name="male_plot">
+                                            <select class="form-control" id="male_plot_plant" name="male_plot_plant">
                                                 <option value="">Enter trial name first</option>
                                             </select>
                                         </div>
@@ -263,15 +263,15 @@ $locations
                                             <div class="input-group">
                                                 <input type ="text" class ="form-control" id="female_field_trial" name ="female_field_trial" placeholder="Enter trial name">
                                                 <div class ="input-group-btn">
-                                                    <button class = "btn btn-info" id="search_female_plots" name="search_plots"></i>Search Plots</button>
+                                                    <button class = "btn btn-info" id="search_female_plots_plants" name="search_plots_plants"></i>Search Plots/Plants</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Female Plot: </label>
+                                        <label class="col-sm-2 control-label">Female Plot/Plant: </label>
                                         <div class="col-sm-10">
-                                            <select class="form-control" id="open_female_plot" name="open_female_plot">
+                                            <select class="form-control" id="open_female_plot_plant" name="open_female_plot_plant">
                                                 <option value="">Enter trial name first</option>
                                             </select>
                                         </div>
@@ -501,7 +501,7 @@ jQuery(document).ready(function($) {
         source: '/ajax/trials/trial_autocomplete'
     });
 
-    jQuery("[name='search_plots']").click(function(e){
+    jQuery("[name='search_plots_plants']").click(function(e){
         e.preventDefault();
 
         let field_trial;
@@ -529,7 +529,7 @@ jQuery(document).ready(function($) {
         console.log(field_trial);
 
         jQuery.ajax({
-            url:'/ajax/breeders/get_accession_plots',
+            url:'/ajax/breeders/get_accession_plots_plants',
             data:{'field_trial':field_trial,
                   'parent_accession':maternal_parent,
                   },
@@ -538,9 +538,9 @@ jQuery(document).ready(function($) {
 
                 var html;
                 if (crossType == 'open') {
-                    html = '<select id = "open_female_plot" >';
+                    html = '<select id = "open_female_plot_plant" >';
                 } else {
-                    html = '<select id = "female_plot" >';
+                    html = '<select id = "female_plot_plant" >';
                 }
                 for (var i=0; i<response.data.length; i++) {
                     html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
@@ -554,14 +554,14 @@ jQuery(document).ready(function($) {
                 }
 
                 if (jQuery('#open_maternal_parent').val() != ''){
-                    jQuery('#open_female_plot').html(html);
+                    jQuery('#open_female_plot_plant').html(html);
                 } else {
-                    jQuery('#female_plot').html(html);
+                    jQuery('#female_plot_plant').html(html);
                 }
             },
 
             error:function(response){
-                alert("An error occurred getting female plots.");
+                alert("An error occurred getting female plots or plants.");
             }
         });
 
@@ -577,7 +577,7 @@ jQuery(document).ready(function($) {
 
         if (paternal_parent) {
             jQuery.ajax({
-                url:'/ajax/breeders/get_accession_plots',
+                url:'/ajax/breeders/get_accession_plots_plants',
                 data:{'field_trial': field_trial,
                     'parent_accession':paternal_parent,
                 },
@@ -595,7 +595,7 @@ jQuery(document).ready(function($) {
                         return;
                     }
 
-                    jQuery('#male_plot').html(html);
+                    jQuery('#male_plot_plant').html(html);
                 },
             });
         }

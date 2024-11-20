@@ -166,16 +166,16 @@ jQuery(document).ready(function($) {
         }
 
         var visibleToRole = $("#visible_to_role").val();
-        let female_plot;
+        let female_plot_plant;
         if (crossType == 'open') {
-            female_plot = jQuery("#open_female_plot").val();
+            female_plot_plant = jQuery("#open_female_plot_plant").val();
         } else {
-            female_plot = jQuery("#female_plot").val();
+            female_plot_plant = jQuery("#female_plot_plant").val();
         }
-        var male_plot = $("#male_plot").val();
+        var male_plot_plant = $("#male_plot_plant").val();
         var cross_combination = $("#dialog_cross_combination").val();
 
-        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination);
+        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot_plant, male_plot_plant, cross_combination);
 
     });
 
@@ -326,7 +326,7 @@ jQuery(document).ready(function($) {
     });
 
 
-    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination) {
+    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot_plant, male_plot_plant, cross_combination) {
 
         var progenyNumber = $("#progeny_number").val();
         var prefix = $("#prefix").val();
@@ -337,7 +337,7 @@ jQuery(document).ready(function($) {
         var paternal_parents;
         var maternal_parents_string;
         var paternal_parents_string;
-
+        
         switch (crossType) {
             case 'biparental':
                 maternal = $("#maternal_parent").val();
@@ -425,8 +425,8 @@ jQuery(document).ready(function($) {
                 'suffix': suffix,
                 'visible_to_role': visibleToRole,
                 'crossing_trial_id': crossing_trial_id,
-                'female_plot': female_plot,
-                'male_plot': male_plot,
+                'female_plot_plant': female_plot_plant,
+                'male_plot_plant': male_plot_plant,
                 'cross_combination': cross_combination,
             },
             beforeSend: function() {

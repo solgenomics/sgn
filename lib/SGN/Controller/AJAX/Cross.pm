@@ -274,8 +274,8 @@ sub add_cross_POST :Args(0) {
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
     my $crossing_trial_id = $c->req->param('crossing_trial_id');
-    my $female_plot_plant_id = $c->req->param('female_plot');
-    my $male_plot_plant_id = $c->req->param('male_plot');
+    my $female_plot_plant_id = $c->req->param('female_plot_plant');
+    my $male_plot_plant_id = $c->req->param('male_plot_plant');
     my $cross_combination = $c->req->param('cross_combination');
     $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
 
