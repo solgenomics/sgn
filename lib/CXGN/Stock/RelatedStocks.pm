@@ -5,15 +5,24 @@ use strict;
 use warnings;
 use Moose;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
-has 'dbic_schema' => (isa => 'Bio::Chado::Schema',
-        is => 'rw',
-        required => 1,
+has 'dbic_schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
 );
 
-has 'stock_id' => (isa => 'Maybe[Int]',
-        is => 'rw',
+has 'stock_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
 );
+
+has 'trial_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
+);
+
 
 
 sub get_trial_related_stock {
@@ -248,6 +257,36 @@ sub get_vector_related_stocks {
     return \@related_stocks;
 
 }
+
+
+sub get_plots_and_plants {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $trial_id = $self->trial_id;
+    my $schema = $self->dbic_schema();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $field_layout_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "field_layout", "experiment_type")->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM nd_experiment_project join nd_experiment on (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) AND nd_experiment.type_id= ?
+        JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship on (nd_experiment_stock.stock_id = stock_relationship.subject_id) AND stock_relationship.object_id = ?
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id) AND stock.type_id IN (?,?)
+        WHERE nd_experiment_project.project_id= ? ";
+
+    my $h = $schema->storage->dbh->prepare($q);
+
+    $h->execute($field_layout_typeid, $stock_id, $plot_type_id, $plant_type_id, $trial_id, );
+
+    my @related_stocks = ();
+    while(my ($stock_id, $stock_name) = $h->fetchrow_array()){
+        push @related_stocks, [$stock_id, $stock_name];
+    }
+
+    return\@related_stocks;
+}
+
 
 
 
