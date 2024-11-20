@@ -182,7 +182,7 @@ else {
 
 	if (!$verbose) {
 	    print STDERR "# [Server logfile at $logfile]\n";
-	    open (STDERR, ">$logfile") || die "can't open logfile.";
+	    open (STDERR, ">", $logfile) || die "can't open logfile.";
 	}
 	Catalyst::ScriptRunner->run('SGN', 'Server');
 
