@@ -141,7 +141,7 @@ TERM
 
 $count++;
 
-foreach my $k (keys %trait_classes) {
+foreach my $k (sort keys %trait_classes) {
 
     print $F format_trait(
 	$ontology_name,
@@ -160,7 +160,7 @@ foreach my $k (keys %trait_classes) {
     
 }
 
-foreach my $k (keys %traits) {
+foreach my $k (sort keys %traits) {
     print $F format_trait(
 	$ontology_name,
 	$count,
@@ -178,7 +178,7 @@ foreach my $k (keys %traits) {
     
 
 
-foreach my $k (keys %variables) { 
+foreach my $k (sort keys %variables) { 
 
     my $parent_trait = $variables{$k}->{'Trait - CO'};
     my $parent_trait_id = $traits{$variables{$k}->{'Trait - CO'}}->{acc};
@@ -198,9 +198,10 @@ foreach my $k (keys %variables) {
 	)."\n";
 
     print $G format_props(
+	$k, # variable name
 	$ontology_name,
 	$count,
-	$variables{$k}->{'Scale Class'},
+	$variables{$k}->{'Scale class'},
 	$variables{$k}->{Categories},
 	);
     
@@ -214,6 +215,7 @@ close($G);
 print STDERR "Script completed.\n";
 
 sub format_props {
+    my $trait_name = shift;
     my $ontology_name = shift;
     my $count = shift;
     my $trait_format = shift;
@@ -224,7 +226,7 @@ sub format_props {
     my $trait_maximum = shift;
     my $trait_details = shift;
 
-    return join ("\t", format_ontology_id($ontology_name, $count), $trait_format, $trait_default_value, $trait_minimum, $trait_maximum, $categories, $trait_details)."\n";
+    return join ("\t", $trait_name."|".format_ontology_id($ontology_name, $count), $trait_format, $trait_default_value, $trait_minimum, $trait_maximum, $categories, $trait_details)."\n";
 
 
 }
