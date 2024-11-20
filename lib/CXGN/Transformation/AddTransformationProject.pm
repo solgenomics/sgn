@@ -103,8 +103,8 @@ sub save_transformation_project {
     $transformation_project->set_year($self->get_year());
     $transformation_project->set_breeding_program($self->get_breeding_program_id);
     $transformation_project->set_trial_owner($self->get_owner_id);
-	print STDERR "TRANSFORMATION PROJECT ID =".Dumper($transformation_project->get_trial_id)."\n";
-    return {success=>1, trial_id=>$transformation_project->get_trial_id};
+	
+    return {success=>1, project_id=>$transformation_project->get_trial_id};
 
 }
 

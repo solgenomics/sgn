@@ -1,6 +1,7 @@
 <%args>
 
 $trial_name
+$breeding_program_name
 
 </%args>
 
@@ -128,6 +129,7 @@ jQuery(document).ready(function(){
 
     var lo = new CXGN.List();
     var project_name = "<%$trial_name%>";
+    var program_name = "<%$breeding_program_name%>";
 
     jQuery("#generate_identifiers_link").click(function(){
         jQuery("#generate_tracking_identifiers_dialog").modal("show");
@@ -167,6 +169,7 @@ jQuery(document).ready(function(){
             data : {
                 'list_id' : item_list_id,
                 'project_name': project_name,
+                'program_name': program_name,
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -177,8 +180,8 @@ jQuery(document).ready(function(){
                     jQuery("#generate_tracking_identifiers_dialog").modal("hide");
                     jQuery("#tracking_identifiers_saved_dialog_message").modal("show");
                 }
-                if (response.error_string) {
-                    alert(response.error_string);
+                if (response.error) {
+                    alert(response.error);
                 }
             },
             error: function(response){
