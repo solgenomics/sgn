@@ -157,6 +157,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     elsif ($datatype eq 'genotyping_project') {
         $error = $c->stash->{trial}->delete_empty_genotyping_project();
     }
+    elsif ($datatype eq 'transformation_project') {
+        $error = $c->stash->{trial}->delete_empty_transformation_project();
+    }
     else {
         $c->stash->{rest} = { error => "unknown delete action for $datatype" };
         return;
@@ -5017,8 +5020,10 @@ sub update_trial_design_type_POST : Args(0) {
         $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
         return;
     }
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $curator     = $c->user()->check_roles('curator') if $user_id;
+    my $user_id;
+    my $curator;
+    $user_id = $c->user()->get_object()->get_sp_person_id();
+    $curator = $c->user()->check_roles('curator') if $user_id;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
@@ -5231,10 +5236,19 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
 
     }
 
+    my @all_lines = ();
+    foreach my $each_line (@data) {
+        my $each_line_string = join(",", @$each_line);
+        push @all_lines, $each_line_string;
+    }
+
+    my $all_lines_string = join("\n", @all_lines);
+
     # Return the generated file
     $c->res->content_type('text/csv');
     $c->res->headers->push_header("Content-disposition", "attachment; filename=\"$filename\"");
-    $c->res->body( join("\n", map { $_ = join(",", @{$_}) } @data) );
+    $c->res->body($all_lines_string);
+
     return;
 }
 

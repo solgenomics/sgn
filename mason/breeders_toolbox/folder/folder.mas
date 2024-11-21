@@ -31,6 +31,7 @@ $folder_for_crosses
 $folder_for_genotyping_trials
 $folder_for_genotyping_projects
 $folder_for_tracking_activities
+$folder_for_transformations
 $has_child_folders => undef
 </%args>
 
@@ -40,10 +41,10 @@ $has_child_folders => undef
 
 <& /page/page_title.mas, title=>"Folder detail for ".$folder_name &>
 
-<& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name(), folder_for_trials => $folder_for_trials, folder_for_crosses => $folder_for_crosses, folder_for_genotyping_trials => $folder_for_genotyping_trials, folder_for_genotyping_projects => $folder_for_genotyping_projects , folder_for_tracking_activities => $folder_for_tracking_activities &>
+<& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name(), folder_for_trials => $folder_for_trials, folder_for_crosses => $folder_for_crosses, folder_for_genotyping_trials => $folder_for_genotyping_trials, folder_for_genotyping_projects => $folder_for_genotyping_projects , folder_for_tracking_activities => $folder_for_tracking_activities, folder_for_transformations => $folder_for_transformations &>
 <& /breeders_toolbox/folder/folder_move.mas, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name()   &>
 <& /breeders_toolbox/folder/edit_folder_name.mas, trial_id=>$folder_id, trial_name=>$folder_name, trial_type=>"Folder" &>
-<& /breeders_toolbox/folder/folder_category_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, folder_for_trials=>$folder_for_trials, folder_for_crosses=>$folder_for_crosses, folder_for_genotyping_trials=>$folder_for_genotyping_trials, folder_for_genotyping_projects=>$folder_for_genotyping_projects , folder_for_tracking_activities=>$folder_for_tracking_activities&>
+<& /breeders_toolbox/folder/folder_category_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, folder_for_trials=>$folder_for_trials, folder_for_crosses=>$folder_for_crosses, folder_for_genotyping_trials=>$folder_for_genotyping_trials, folder_for_genotyping_projects=>$folder_for_genotyping_projects , folder_for_tracking_activities=>$folder_for_tracking_activities, folder_for_transformations=>$folder_for_transformations&>
 
 <div>
 
@@ -244,6 +245,14 @@ $has_child_folders => undef
                     <tr>
                         <td><h5>Folder For Tracking Activities</h5></td>
 % if($folder_for_tracking_activities){
+                        <td><h4><span class="glyphicon glyphicon-ok"></span></h4></td>
+% } else {
+                        <td><h4><span class="glyphicon glyphicon-remove"></span></h4></td>
+% }
+                    </tr>
+                    <tr>
+                        <td><h5>Folder For Transformation Projects</h5></td>
+% if($folder_for_transformations){
                         <td><h4><span class="glyphicon glyphicon-ok"></span></h4></td>
 % } else {
                         <td><h4><span class="glyphicon glyphicon-remove"></span></h4></td>
