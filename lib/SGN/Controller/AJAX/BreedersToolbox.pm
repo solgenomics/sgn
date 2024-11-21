@@ -265,8 +265,11 @@ sub get_accession_plots_plants :Path('/ajax/breeders/get_accession_plots_plants'
 
     my $accession_related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$accession_id, trial_id => $trial_id});
     my $plots_and_plants = $accession_related_stocks->get_plots_and_plants();
+    my @results = @$plots_and_plants;
+    my @blank = ('' , 'Please select a plot or plant');
+    unshift @results, [@blank];
 
-    $c->stash->{rest} = {data => $plots_and_plants};
+    $c->stash->{rest} = {data => \@results};
 
 }
 
