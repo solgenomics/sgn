@@ -405,27 +405,44 @@ sub get_phenotype_matrix {
                 # }
 
 		        if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq "ARRAY") {
-                
+                    print STDERR "the the obsunit_data : " . Dumper($obsunit_data{$obsunit_id}->{$cvterm});
+                    my @sorted_measurements = @{$obsunit_data{$obsunit_id}->{$cvterm}};
+                    #sort the measurements by timestamp
+                    @sorted_measurements = sort {
+                        my ($value_a, $timestamp_a) = split(',', $a);
+                        my ($value_b, $timestamp_b) = split(',', $b);
+                        ($timestamp_a || '') cmp ($timestamp_b || '')
+                    } @sorted_measurements;
+
 		            if ($self->repetitive_measurements() eq "first") {
-                        $obsunit_data{$obsunit_id}->{$cvterm} = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});		
+                        # $obsunit_data{$obsunit_id}->{$cvterm} = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[0];		
 		            }
 
 		            if ($self->repetitive_measurements() eq "last") {
-		        	    $obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+		        	    # $obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                        $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[-1];
 		            }
 
 		            if ($self->repetitive_measurements() eq "average") {
 		        	    my $count = 0;
-		        	    my $sum = undef;
+		        	    my $sum = 0;
 		        	    foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
-		        	        if (defined($v)) {   
-		        	    	$sum += $v;
-		        	    	$count++;
+                            # print STDERR "the value of v  in the average = $v\n";
+                            my ($value, $timestamp) = split(',', $v);
+		        	        if (defined($value)) {   
+		        	    	    $sum += $value;
+		        	    	    $count++;
 		        	        }
 		        	    }
-		        	    if (defined($sum) && ($count > 0) ) {
-		        	        $obsunit_data{$obsunit_id}->{$cvterm} = $sum/$count;
-		        	    }
+                        if($count >0) {
+                            my $averaged_values = $sum/$count;
+                            #  the timestamp for the average values, will be the latest (or the last measurement, timestamp). Therefore, am retreving the timestamp of the last measurement !!
+                            my $last_measurement = $sorted_measurements[-1];
+                            # since, the values are stored with the timestamp, need to split them to get the timestamp of the last_measurment !!
+                            my ($last_value, $last_timestamp) = split(',', $last_measurement); 
+                            $obsunit_data{$obsunit_id}->{$cvterm} = "$averaged_values, $last_timestamp";
+                        }
 		        	    else {
 		        	        $obsunit_data{$obsunit_id}->{$cvterm} = undef;
 		        	    }
@@ -435,11 +452,17 @@ sub get_phenotype_matrix {
                     if ($self->repetitive_measurements() eq "sum") {
                         my $sum_all_values = 0;
                         foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
-                            if (defined($v)) {
-                                $sum_all_values += $v;
+                            # print STDERR "the value of v in the sum = $v\n";
+                            my ($value, $timestamp) = split(',', $v);
+                            if (defined($value)) {
+                                $sum_all_values += $value;
                             }
                         }
-                        $obsunit_data{$obsunit_id}->{$cvterm} = $sum_all_values;
+                        # here, too same as in the average above, retrieve the last_measurement timestamp !!
+                        my $last_measurement = $sorted_measurements[-1];
+                        my ($last_value, $last_timestamp) = split(',', $last_measurement);
+                        # here, am storing the sum of all values, with the last_measurement timestamp !!
+                        $obsunit_data{$obsunit_id}->{$cvterm} = "$sum_all_values, $last_timestamp";
                     }
 
 		            if ($self->repetitive_measurements() eq "all_values_single_line") {
@@ -653,21 +676,21 @@ sub process_duplicate_measurements {
     #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
     
     if ($self->repetitive_measurements() eq "first") {
-	print STDERR "Retrieving first value...\n";
-	$trait_observations =  $trait_observations->[0];
-	$trait_observations->{squash_method} = "first";
+	    print STDERR "Retrieving first value...\n";
+	    $trait_observations =  $trait_observations->[0];
+	    $trait_observations->{squash_method} = "first";
     }
 
     if ($self->repetitive_measurements() eq "last") {
-	print STDERR "Retrieving last value...\n";
-	$trait_observations = $trait_observations->[-1] ;
-	$trait_observations->{squash_method} = "last";
+	    print STDERR "Retrieving last value...\n";
+	    $trait_observations = $trait_observations->[-1] ;
+	    $trait_observations->{squash_method} = "last";
     }
 
     if ($self->repetitive_measurements() eq "average") {
-	print STDERR "Averaging values ...\n";
-	$trait_observations = $self->average_observations($trait_observations);
-	$trait_observations->{squash_method} = "average";
+	    print STDERR "Averaging values ...\n";
+	    $trait_observations = $self->average_observations($trait_observations);
+	    $trait_observations->{squash_method} = "average";
     }
 
     if ($self->repetitive_measurements() eq "sum") {
@@ -677,16 +700,16 @@ sub process_duplicate_measurements {
     }
 
     if ($self->repetitive_measurements() eq "all_values_single_line") {
-	print STDERR "Retrieving all values...\n";
-	my $collated_multiple_observation = $trait_observations->[0];
-	my @trait_values;
-	foreach my $o (@$trait_observations) {
-	    push @trait_values, $o->{value};
-	}
+	    print STDERR "Retrieving all values...\n";
+	    my $collated_multiple_observation = $trait_observations->[0];
+	    my @trait_values;
+	    foreach my $o (@$trait_observations) {
+	        push @trait_values, $o->{value};
+	    }
 
-	$collated_multiple_observation->{value} = \@trait_values;
-	$collated_multiple_observation->{squash_method} = $self->repetitive_measurements();
-	$trait_observations = $collated_multiple_observation;
+	    $collated_multiple_observation->{value} = \@trait_values;
+	    $collated_multiple_observation->{squash_method} = $self->repetitive_measurements();
+	    $trait_observations = $collated_multiple_observation;
     }
 
     #print STDERR "DONE WITH DUPLICATES, NOW: ".Dumper($trait_observations);
