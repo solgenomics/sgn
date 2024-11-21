@@ -12,11 +12,13 @@ $folder_id
 $identifier_prefix
 $trial_owner
 $vendor_id
+$parent_project_id
+$activity_type
 </%args>
 
 
 <div class="row">
-    <div class="col-sm-8">
+    <div class="col-sm-12">
 
         <table class="table table-hover table-bordered" >
 
@@ -28,6 +30,21 @@ $vendor_id
 %   print "$trial_name";
 % } else {
 %   print "<span class='text-danger'>[No Tracking Activity Project Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Record Type</b></td>
+                <td>
+                    <div id="activity_type">
+% if ($activity_type eq 'transformation') {
+%     print 'Transformation';
+% } elsif ($activity_type eq 'tissue_culture') {
+%     print 'Tissue Culture';
+% } else {
+%   print "<span class='text-danger'>[No Record Type]</span>";
 % }
                     </div>
                 </td>
@@ -75,13 +92,11 @@ $vendor_id
 
             <tr><td><b>Description</b></td>
                 <td>
-                    <div id="trial_description">
 % if ($trial_description) {
-%  print "$trial_description";
+%  print "<div id='trial_description' style='white-space: pre-wrap;'>$trial_description</div>";
 % } else {
-%  print "<span class='text-danger'>[No Description]</span>";
+%  print "<div id='trial_description'><span class='text-danger'>[No Description]</span></div>";
 % }
-                    </div>
                 </td>
             </tr>
 
@@ -109,14 +124,17 @@ $vendor_id
         </table>
 
     </div>
-    <div class="col-sm-4">
-        <div class="well well-sm">
-            <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
-        </div>
-    </div>
 </div>
-% if (!$vendor_id) {
+% if (!$vendor_id && !$parent_project_id) {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="generate_identifiers_link">Generate Tracking Identifiers</button>
 % }
+</br>
+</br>
+% if ($parent_project_id) {
+    <td>
+        <a href='/breeders/trial/<%$parent_project_id%>'><p>Go to Transformation Page</p></a>
+    </td>
+% }
 
-<& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name &>
+
+<& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name, breeding_program_name => $breeding_program_name &>

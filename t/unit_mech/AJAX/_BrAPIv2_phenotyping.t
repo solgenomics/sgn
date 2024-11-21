@@ -114,12 +114,6 @@ $response = decode_json $mech->content;
 
 #print STDERR "\n\nOBSERVATIONS RESPONSE: " . Dumper $response;
 
-open(my $F, ">", "observations_out_$$") || die "Cannot open file.\n";
-
-print $F Dumper($response);
-
-close($F);
-
 #15
 
 my $expected = { 'metadata' => { 'status' => [ { 'message' => 'BrAPI base call found with page=0, pageSize=2', 'messageType' => 'INFO' }, { 'message' => 'Loading CXGN::BrAPI::v2::Observations', 'messageType' => 'INFO' }, { 'message' => 'Observations result constructed', 'messageType' => 'INFO' } ], 'pagination' => { 'totalCount' => 2781, 'pageSize' => 2, 'totalPages' => 1391, 'currentPage' => 0 }, 'datafiles' => [] }, 'result' => { 'data' => [ { 'observationVariableDbId' => '70773', 'collector' => undef, 'studyDbId' => '139', 'germplasmDbId' => '38981', 'observationUnitDbId' => '39819', 'observationVariableName' => 'fresh shoot weight measurement in kg|CO_334:0000016', 'value' => '3', 'observationTimeStamp' => undef, 'additionalInfo' => undef, 'season' => { 'seasonDbId' => '2014', 'season' => '2014', 'year' => '2014' }, 'uploadedBy' => undef, 'externalReferences' => undef, 'germplasmName' => 'UG120120', 'observationUnitName' => 'KASESE_TP2013_1002', 'observationDbId' => '737974' }, { 'season' => { 'seasonDbId' => '2014', 'season' => '2014', 'year' => '2014' }, 'additionalInfo' => undef, 'observationTimeStamp' => undef, 'value' => '30.1', 'observationVariableName' => 'dry matter content percentage|CO_334:0000092', 'observationUnitDbId' => '39819', 'germplasmDbId' => '38981', 'studyDbId' => '139', 'collector' => undef, 'observationVariableDbId' => '70741', 'observationDbId' => '737975', 'observationUnitName' => 'KASESE_TP2013_1002', 'germplasmName' => 'UG120120', 'uploadedBy' => undef, 'externalReferences' => undef } ] }};
