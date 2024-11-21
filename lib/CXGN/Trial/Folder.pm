@@ -695,7 +695,7 @@ sub _jstree_li_html {
     my $type = shift;
     my $id = shift;
     my $name = shift;
-    print STDERR "TYPE =".Dumper($type)."\n";
+    # print STDERR "TYPE =".Dumper($type)."\n";
 
     my $url = '#';
     if ($type eq 'trial' || $type eq 'genotyping_trial' || $type eq 'sampling_trial') {
