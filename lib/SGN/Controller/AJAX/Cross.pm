@@ -82,29 +82,13 @@ sub upload_cross_file_POST : Args(0) {
     } elsif ($experiment_page_crossing_experiment_id) {
         $crossing_trial_id = $experiment_page_crossing_experiment_id;
     }
-    my $crosses_simple_upload = $c->req->upload('xls_crosses_simple_file');
-    my $crosses_plots_upload = $c->req->upload('xls_crosses_plots_file');
-    my $crosses_plants_upload = $c->req->upload('xls_crosses_plants_file');
-    my $crosses_simplified_parents_upload = $c->req->upload('xls_crosses_simplified_parents_file');
+    my $crosses_upload = $c->req->upload('upload_crosses_file');
 
     my $upload;
     my $upload_type;
-    if ($crosses_plots_upload) {
-        $upload = $crosses_plots_upload;
-        $upload_type = 'CrossesExcelFormat';
-    }
-    if ($crosses_plants_upload) {
-        $upload = $crosses_plants_upload;
-        $upload_type = 'CrossesExcelFormat';
-    }
 
-    if ($crosses_simple_upload) {
-        $upload = $crosses_simple_upload;
-        $upload_type = 'CrossesSimpleExcel';
-    }
-
-    if ($crosses_simplified_parents_upload) {
-        $upload = $crosses_simplified_parents_upload;
+    if ($crosses_upload) {
+        $upload = $crosses_upload;
         $upload_type = 'CrossesSimplifiedParentInfoExcel';
     }
 

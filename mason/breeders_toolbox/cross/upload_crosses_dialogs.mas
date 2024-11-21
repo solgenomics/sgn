@@ -79,7 +79,6 @@ $trial_name => undef
                         </&>
                         <&| /util/workflow.mas:step, title=> "Upload your crosses" &>
                             <& /page/page_title.mas, title=>"Enter basic information about the crosses and upload your file" &>
-
                             <br/>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
                                 <div id="manage_page_section_2" style="display:none">
@@ -109,27 +108,25 @@ $trial_name => undef
                                         </div>
                                     </div>
                                 </div>
-                                <div id="xls_cross_simplified_section">
-                                    <div class="well well-sm">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <&| /page/explanation.mas, title=>'Template information' &>
-                                                    <p>
-                                                        <b>File format information</b>
-                                                        <br>
-                                                        <a id="cross_simplified_parent_info_format">Spreadsheet format</a>
-                                                    </p>
-                                                </&>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <br/>
-                                                <div class="panel panel-default">
-                                                    <div class="panel-body">
-                                                        <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
-                                                            <div class="col-sm-6">
-                                                                <input type="file" name="xls_crosses_simplified_parents_file" id="xls_crosses_simplified_parents_file" encoding="multipart/form-data" />
-                                                            </div>
+                                <div class="well well-sm">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="upload_crosses_spreadsheet_format_info">Spreadsheet format</a>
+                                                </p>
+                                            </&>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <br/>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Upload File: </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="upload_crosses_file" id="upload_crosses_file" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -262,12 +259,6 @@ $trial_name => undef
                             <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
                             <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from 4 to 2.</li>
                         </ul>
-                    </ul>
-                    <ul id = "accession_parent_info" style="display:none">
-                        <li><b>female_parent:</b> Accession names (for biparental, self, open, sib, polycross, doubled_haploid cross types) or population names (for bulk, bulk_self and bulk_open cross types) or cross unique ids (for backcross cross type) must exist as <b>uniquenames</b> in the database.</li>
-                        <li><b>male_parent:</b> Required in the header, but value may be left blank for open cross type. Must be specified for biparental, sib, polycross, bulk, backcross, doubled_haploid and dihaploid_induction cross types. When specified, accession names or population names must exist as <b>uniquenames</b> in the database.</li>
-                    </ul>
-                    <ul id = "any_parent_info" style="display:none">
                         <li><b>female_parent:</b> Female parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
                         <li><b>male_parent:</b> Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
                     </ul>
