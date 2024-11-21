@@ -1,0 +1,126 @@
+<%args>
+$project_id
+$breeding_program_name
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="modal fade" id="set_default_plant_material_dialog" tabindex="-1" role="dialog" aria-labelledby="setDefaultPlantMaterialDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="reset" class="close" id="set_default_plant_material_dismiss_button_1" name="set_default_plant_material_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="setDefaultPlantMaterialDialog">Set Default Plant Material for Transformation</h4>
+            </div>
+            <div class="modal-body" id="set_default_plant_material_body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label" >Plant Material (accession name): </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" type="text" id="default_plant_material_input" name="default_plant_material_input"  />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="set_default_plant_material_dismiss_button_2" name="set_default_plant_material_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="set_default_plant_material_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="default_plant_material_saved_dialog_message" name="default_plant_material_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="defaultPlantMaterialSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="defaultPlantMaterialSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The default plant material was set successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_default_plant_material_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#set_plant_material_link').click(function() {
+        jQuery("#set_default_plant_material_dialog").modal("show");
+    });
+
+    var transformation_project_id = "<%$project_id%>";
+    var program_name = "<%$breeding_program_name%>";
+
+    jQuery("#default_plant_material_input").autocomplete({
+        source: '/ajax/stock/only_accession_autocomplete',
+    });
+
+
+    jQuery('#set_default_plant_material_submit').click(function() {
+
+        var default_plant_material = jQuery("#default_plant_material_input").val();
+        if (!default_plant_material) {
+            alert("Plant material is required");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/transformation/set_default_plant_material',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'default_plant_material': default_plant_material,
+                'transformation_project_id': transformation_project_id,
+                'program_name': program_name
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#set_default_plant_material_dialog').modal('hide');
+                    jQuery('#default_plant_material_saved_dialog_message').modal("show");
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred saving default plant material');
+            }
+        });
+
+    });
+
+    jQuery("[name='set_default_plant_material_dismiss_button']").click(function() {
+        jQuery('#set_default_plant_material_dialog').modal('hide');
+        jQuery('#default_plant_material').val('');
+    });
+
+    jQuery("#dismiss_default_plant_material_saved_dialog").click(function(){
+        jQuery('#default_plant_material_input').val('');
+        location.reload();
+    });
+
+});
+
+
+</script>
