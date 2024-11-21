@@ -22,7 +22,7 @@ $locations
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="reset" class="close" id="new_cross_close_modal_1" name="new_cross_close_modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="createNewCrosses">Add New Cross</h4>
             </div>
             <div class="modal-body">
@@ -422,7 +422,7 @@ $locations
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="new_cross_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="new_cross_close_modal" name="new_cross_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -505,34 +505,41 @@ jQuery(document).ready(function($) {
         e.preventDefault();
 
         let field_trial;
-        var maternal_parent;
+        let maternal_parent;
+        let paternal_parent;
         const crossType = jQuery("#cross_type").val();
 
         if (crossType == 'open') {
             field_trial = jQuery("#female_field_trial").val();
+            maternal_parent = jQuery('#open_maternal_parent').val();
         } else  {
             field_trial = jQuery("#parents_field_trial").val();
-        }
-
-        if (jQuery('#maternal_parent').val() != ''){
             maternal_parent = jQuery('#maternal_parent').val();
         }
 
-        if (jQuery('#selfed_parent').val() != ''){
-            maternal_parent = jQuery('#selfed_parent').val();
+        if (!field_trial) {
+            alert("Please provide trial name");
+            return;
         }
 
-        if (jQuery('#open_maternal_parent').val() != ''){
-            maternal_parent = jQuery('#open_maternal_parent').val();
+        if (!maternal_parent) {
+            alert("Please provide female parent name");
+            return;
         }
-        console.log(maternal_parent);
-        console.log(field_trial);
+
+        if ((crossType == 'biparental') || (crossType == 'backcross') || (crossType == 'sib')) {
+            paternal_parent = jQuery('#paternal_parent').val();
+            if (!paternal_parent) {
+                alert("Please provide male parent name");
+                return;
+             }
+        }
 
         jQuery.ajax({
             url:'/ajax/breeders/get_accession_plots_plants',
             data:{'field_trial':field_trial,
                   'parent_accession':maternal_parent,
-                  },
+                },
             success: function(response){
                 console.log(response);
 
@@ -565,16 +572,6 @@ jQuery(document).ready(function($) {
             }
         });
 
-        let paternal_parent;
-
-        if (jQuery('#paternal_parent').val() != ''){
-            paternal_parent = jQuery('#paternal_parent').val();
-        }
-
-        if (jQuery('#selfed_parent').val() != ''){
-            paternal_parent = jQuery('#selfed_parent').val();
-        }
-
         if (paternal_parent) {
             jQuery.ajax({
                 url:'/ajax/breeders/get_accession_plots_plants',
@@ -600,6 +597,30 @@ jQuery(document).ready(function($) {
             });
         }
     });
+
+    jQuery("[name='new_cross_close_modal']").click(function() {
+        jQuery('#create_cross').modal('hide');
+        jQuery('#cross_name').val('');
+        jQuery('#dialog_cross_combination').val('');
+        jQuery('#cross_type').val('');
+        jQuery('#maternal_parent').val('');
+        jQuery('#paternal_parent').val('');
+        jQuery('#selfed_parent').val('');
+        jQuery('#open_maternal_parent').val('');
+        jQuery('#open_paternal_population').val('');
+        jQuery('#bulk_maternal_population').val('');
+        jQuery('#bulk_paternal_parent').val('');
+        jQuery('#bulk_selfed_population').val('');
+        jQuery('#bulk_open_maternal_population').val('');
+        jQuery('#doubled_haploid_parent').val('');
+        jQuery('#dihaploid_induction_parent').val('');
+        jQuery('#parents_field_trial').val('');
+        jQuery('#female_field_trial').val('');
+        location.reload();
+    });
+
+
+
 });
 
 </script>
