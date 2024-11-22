@@ -67,7 +67,7 @@ jQuery(document).ready(function ($) {
             } else {
                 list_validation = lo.legacy_validate(list_id, 'accessions', true);
                 if (list_validation != 1) {
-                    alert("The accession list did not pass validation. Names in the list must be uniquenames in the database");
+                    alert("The accession list did not pass validation. Names in the list must be uniquenames with accession stock type in the database");
                     return;
                 }
             }
@@ -79,7 +79,7 @@ jQuery(document).ready(function ($) {
             } else {
                 list_validation = lo.legacy_validate(list_id, 'plots', true);
                 if (list_validation != 1) {
-                    alert("The plot list did not pass validation. Names in the list must be uniquenames in the database");
+                    alert("The plot list did not pass validation. Names in the list must be uniquenames with plot stock type in the database");
                     return;
                 }
             }
@@ -91,7 +91,7 @@ jQuery(document).ready(function ($) {
             } else {
                 list_validation = lo.legacy_validate(list_id, 'plants', true);
                 if (list_validation != 1) {
-                    alert("The plant list did not pass validation. Names in the list must be uniquenames in the database");
+                    alert("The plant list did not pass validation. Names in the list must be uniquenames with plant stock type in the database");
                     return;
                 }
             }
@@ -239,14 +239,25 @@ jQuery(document).ready(function ($) {
         let list_validation = 1;
         const member_list_id = jQuery('#add_member_to_population_list_div_list_select').val();
 
-        if (member_type == 'plots') {
+        if (member_type == 'accessions') {
+            if (!member_list_id) {
+                alert ("A list of accessions is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(member_list_id, 'accessions', true);
+                if (list_validation != 1) {
+                    alert("The accession list did not pass validation. Names in the list must be uniquenames with accession stock type in the database");
+                    return;
+                }
+            }
+        } else if (member_type == 'plots') {
             if (!member_list_id) {
                 alert ("A list of plots is required");
                 return;
             } else {
                 list_validation = lo.legacy_validate(member_list_id, 'plots', true);
                 if (list_validation != 1) {
-                    alert("The plot list did not pass validation. Names in the list must be in the database");
+                    alert("The plot list did not pass validation. Names in the list must be uniquenames with plot stock type in the database");
                     return;
                 }
             }
@@ -257,7 +268,7 @@ jQuery(document).ready(function ($) {
             } else {
                 list_validation = lo.legacy_validate(member_list_id, 'plants', true);
                 if (list_validation != 1) {
-                    alert("The plant list did not pass validation. Names in the list must be  in the database");
+                    alert("The plant list did not pass validation. Names in the list must be uniquenames with plant stock type in the database");
                     return;
                 }
             }
