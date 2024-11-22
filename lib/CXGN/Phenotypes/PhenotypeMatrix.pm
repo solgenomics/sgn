@@ -405,7 +405,7 @@ sub get_phenotype_matrix {
                 # }
 
 		        if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq "ARRAY") {
-                    print STDERR "the the obsunit_data : " . Dumper($obsunit_data{$obsunit_id}->{$cvterm});
+                    # print STDERR "the the obsunit_data : " . Dumper($obsunit_data{$obsunit_id}->{$cvterm});
                     my @sorted_measurements = @{$obsunit_data{$obsunit_id}->{$cvterm}};
                     #sort the measurements by timestamp
                     @sorted_measurements = sort {
@@ -430,6 +430,8 @@ sub get_phenotype_matrix {
 		        	    foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
                             # print STDERR "the value of v  in the average = $v\n";
                             my ($value, $timestamp) = split(',', $v);
+                            #if timestamp is undefined, $v is the last measurement
+                            $value = $v unless defined $timestamp;
 		        	        if (defined($value)) {   
 		        	    	    $sum += $value;
 		        	    	    $count++;
@@ -441,7 +443,13 @@ sub get_phenotype_matrix {
                             my $last_measurement = $sorted_measurements[-1];
                             # since, the values are stored with the timestamp, need to split them to get the timestamp of the last_measurment !!
                             my ($last_value, $last_timestamp) = split(',', $last_measurement); 
-                            $obsunit_data{$obsunit_id}->{$cvterm} = "$averaged_values, $last_timestamp";
+                            $last_value = $last_measurement unless defined $last_timestamp;
+                            # conditionally include, if the timestamp !!
+                            if ($include_timestamp && defined $last_timestamp) {
+                                $obsunit_data{$obsunit_id}->{$cvterm} = "$averaged_values, $last_timestamp";
+                            } else {
+                                $obsunit_data{$obsunit_id}->{$cvterm} = $averaged_values;
+                            }
                         }
 		        	    else {
 		        	        $obsunit_data{$obsunit_id}->{$cvterm} = undef;
@@ -458,11 +466,17 @@ sub get_phenotype_matrix {
                                 $sum_all_values += $value;
                             }
                         }
-                        # here, too same as in the average above, retrieve the last_measurement timestamp !!
+                        # It's same as in the average above, retrieve the last_measurement timestamp !!
                         my $last_measurement = $sorted_measurements[-1];
                         my ($last_value, $last_timestamp) = split(',', $last_measurement);
-                        # here, am storing the sum of all values, with the last_measurement timestamp !!
-                        $obsunit_data{$obsunit_id}->{$cvterm} = "$sum_all_values, $last_timestamp";
+                        $last_value = $last_measurement unless defined $last_timestamp;
+                        # Store the sum of all values, with the last_measurement timestamp !!
+                        # Conditionally include the timestamp
+                        if ($include_timestamp && defined $last_timestamp) {
+                            $obsunit_data{$obsunit_id}->{$cvterm} = "$sum_all_values, $last_timestamp";
+                        } else {
+                            $obsunit_data{$obsunit_id}->{$cvterm} = $sum_all_values;
+                        }
                     }
 
 		            if ($self->repetitive_measurements() eq "all_values_single_line") {
