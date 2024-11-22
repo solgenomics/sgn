@@ -154,7 +154,7 @@ $trial_name => undef
                                 </div>
                                 -->
                             </form>
-                            <div id="submit_button_section" style="display:none">
+                            <div id="submit_button_section">
                                 <center>
                                     <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
                                 </center>

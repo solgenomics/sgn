@@ -89,7 +89,7 @@ sub upload_cross_file_POST : Args(0) {
 
     if ($crosses_upload) {
         $upload = $crosses_upload;
-        $upload_type = 'CrossesSimplifiedParentInfoExcel';
+        $upload_type = 'CrossesGeneric';
     }
 
     my $parser;

@@ -16,11 +16,13 @@ sub _validate_with_plugin {
 
     my @error_messages;
     my %errors;
+    my @optional_columns = ('male_parent', 'cross_combination');
+    push @optional_columns, @$cross_additional_info;
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'cross_unique_id', 'cross_type', 'female_parent'],
-        optional_columns => ['male_parent', 'cross_combination', $cross_additional_info],
+        optional_columns => \@optional_columns,
         column_aliases => {
             'cross_unique_id' => ['cross unique id'],
             'cross_type' => ['cross type', 'type'],
@@ -52,6 +54,7 @@ sub _validate_with_plugin {
     }
 
     #currently supported cross types
+    my %supported_cross_types;
     $supported_cross_types{'biparental'} = 1; #both parents required
     $supported_cross_types{'self'} = 1; #only female parent required
     $supported_cross_types{'open'} = 1; #only female parent required
@@ -106,26 +109,26 @@ sub _validate_with_plugin {
                 push @error_messages, "Female parent and male parent are the same on line $line_number, but cross type is not self, sib, doubled_haploid or dihaploid_induction.";
             }
         }
-        if (($female && !$male) && ($cross_type ne 'open')) {
+        if (($female_parent && !$male_parent) && ($cross_type ne 'open')) {
             push @error_messages, "For $cross_name on line number $line_number no male parent specified and cross_type is not open...";
         }
         if ($cross_type eq 'biparental') {
-            if (!$male){
+            if (!$male_parent){
                 push @error_messages, "For $cross_name on line number $line_number, Cross Type is biparental, but no male parent given";
             }
         }
         if($cross_type eq 'backcross') {
-            if (!$male){
+            if (!$male_parent){
                 push @error_messages, "For $cross_name on line number $line_number, Cross Type is backcross, but no male parent given";
             }
         }
         elsif($cross_type eq "sib") {
-            if (!$male){
+            if (!$male_parent){
                 push @error_messages, "For $cross_name on line number $line_number, Cross Type is sib, but no male parent given";
             }
         }
         elsif($cross_type eq "polycross") {
-            if (!$male){
+            if (!$male_parent){
                 push @error_messages, "For $cross_name on line number $line_number, Cross Type is polycross, but no male parent given";
             }
         }
@@ -147,7 +150,10 @@ sub _parse_with_plugin {
     my $schema = $self->get_chado_schema();
     my $parsed = $self->_parsed_data();
     my $parsed_data = $parsed->{data};
-    my $cross_additional_info = $self->get_cross_additional_info();
+    my $cross_additional_info_headers = $self->get_cross_additional_info();
+    my %cross_additional_info_hash;
+    my @pedigrees;
+    my %parsed_result;
 
     my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -160,6 +166,7 @@ sub _parse_with_plugin {
         my $female_parent = $row->{'female_parent'};
         my $male_parent = $row->{'male_parent'};
         my $cross_type = $row->{'cross_type'};
+        my $cross_combination = $row->{'cross_combination'};
 
         my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type, cross_combination=>$cross_combination);
 
@@ -213,7 +220,14 @@ sub _parse_with_plugin {
 
         push @pedigrees, $pedigree;
 
+        foreach my $additional_info (@$cross_additional_info_headers) {
+            if ($row->{$additional_info}) {
+                $cross_additional_info_hash{$cross_name}{$additional_info} = $row->{$additional_info};
+            }
+        }
     }
+
+    $parsed_result{'additional_info'} = \%cross_additional_info_hash;
 
     $parsed_result{'crosses'} = \@pedigrees;
 
