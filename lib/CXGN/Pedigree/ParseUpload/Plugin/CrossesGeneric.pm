@@ -109,9 +109,6 @@ sub _validate_with_plugin {
                 push @error_messages, "Female parent and male parent are the same on line $line_number, but cross type is not self, sib, doubled_haploid or dihaploid_induction.";
             }
         }
-        if (($female_parent && !$male_parent) && ($cross_type ne 'open')) {
-            push @error_messages, "For $cross_name on line number $line_number no male parent specified and cross_type is not open...";
-        }
         if ($cross_type eq 'biparental') {
             if (!$male_parent){
                 push @error_messages, "For $cross_name on line number $line_number, Cross Type is biparental, but no male parent given";
@@ -122,16 +119,21 @@ sub _validate_with_plugin {
                 push @error_messages, "For $cross_name on line number $line_number, Cross Type is backcross, but no male parent given";
             }
         }
-        elsif($cross_type eq "sib") {
+        if($cross_type eq "sib") {
             if (!$male_parent){
                 push @error_messages, "For $cross_name on line number $line_number, Cross Type is sib, but no male parent given";
             }
         }
-        elsif($cross_type eq "polycross") {
+        if($cross_type eq "polycross") {
             if (!$male_parent){
                 push @error_messages, "For $cross_name on line number $line_number, Cross Type is polycross, but no male parent given";
             }
         }
+        if($cross_type eq "bulk") {
+            if (!$male_parent){
+                push @error_messages, "For $cross_name on line number $line_number, Cross Type is bulk, but no male parent given";
+            }
+        }        
     }
 
     if (scalar(@error_messages) >= 1) {

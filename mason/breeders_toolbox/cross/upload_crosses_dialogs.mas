@@ -260,7 +260,7 @@ $trial_name => undef
                             <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from 4 to 2.</li>
                         </ul>
                         <li><b>female_parent:</b> Female parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
-                        <li><b>male_parent:</b> Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
+                        <li><b>male_parent:</b> Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, backcross, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
                     </ul>
                     <b>Optional columns (additional parent info):</b> You can add additional parent info after male_plant column by using one or more of these column headers.
                     <ul>
@@ -305,7 +305,7 @@ jQuery(document).ready(function(){
         jQuery('#upload_crosses_dialog').modal('hide');
         jQuery('#upload_crosses_breeding_program_select_div').val('');
         jQuery('#upload_crosses_crossing_experiment_select_div').val('');
-        jQuery('#xls_crosses_simplified_parents_file').val('');
+        jQuery('#upload_crosses_file').val('');
         location.reload();
     });
 
