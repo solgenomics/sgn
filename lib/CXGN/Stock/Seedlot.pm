@@ -444,7 +444,7 @@ sub list_seedlots {
         $q .= " WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'seed transaction')";
 
         # Subquery to get stocks (plots, etc) in requested trial
-        my $sq = "SELECT DISTINCT(stock_id) FROM public.materialized_phenoview WHERE trial_id = (SELECT project_id FROM public.project WHERE name = ?)";
+        my $sq = "SELECT DISTINCT(observationunit_stock_id) FROM public.materialized_phenotype_jsonb_table WHERE trial_name = ?";
         my @filters;
 
         # Add source transaction (plot --> seedlot)
