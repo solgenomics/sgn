@@ -7,33 +7,31 @@
 var solGS = solGS || function solGS() {};
 
 solGS.save = {
-  checkStoredAnalysis: function () {
-    var args = this.saveGebvsArgs();
-    var checkArgs = JSON.stringify(args);
+  checkStoredAnalysis: function (analysisArgs) {
+    analysisArgs = JSON.stringify(analysisArgs);
     var stored = jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: {'arguments': checkArgs},
+      data: {'arguments': args},
       url: "/solgs/check/stored/analysis/",
     });
 
     return stored;
   },
 
-  getResultDetails: function () {
-    var args = this.saveGebvsArgs();
-    var resultArgs = JSON.stringify(args);
+  getResultDetails: function (analysisArgs) {
+    analysisArgs = JSON.stringify(analysisArgs);
     var details = jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: {'arguments': resultArgs},
+      data: {'arguments': analysisArgs},
       url: "/solgs/analysis/result/details",
     });
 
     return details;
   },
 
-  saveGebvs: function (args) {
+  storeAnalysisResults: function (args) {
     var save = jQuery.ajax({
       dataType: "json",
       type: "POST",
@@ -67,7 +65,8 @@ solGS.save = {
 };
 
 jQuery(document).ready(function () {
-  solGS.save.checkStoredAnalysis().done(function (res) {
+  var analysisArgs = solGS.save.saveGebvsArgs();
+  solGS.save.checkStoredAnalysis(analysisArgs).done(function (res) {
     if (res.analysis_id) {
       jQuery("#save_gebvs").hide();
       var link = '<a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a>';
@@ -93,7 +92,7 @@ jQuery(document).ready(function () {
       solGS.alertMessage("Error occured checking for user status");
     });
 
-    solGS.save.getResultDetails().done(function (res) {
+    solGS.save.getResultDetails(analysisArgs).done(function (res) {
 
       if (res.error) {
         jQuery("#gebvs_output .multi-spinner-container").hide();
@@ -104,7 +103,7 @@ jQuery(document).ready(function () {
 
         jQuery("#save_gebvs").show();
       } else {
-        var save = solGS.save.saveGebvs(res.analysis_details);
+        var save = solGS.save.storeAnalysisResults(res.analysis_details);
 
         save.done(function (res) {
           jQuery("#gebvs_output .multi-spinner-container").hide();
