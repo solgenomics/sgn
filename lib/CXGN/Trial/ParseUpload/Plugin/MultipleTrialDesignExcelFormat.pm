@@ -11,6 +11,10 @@ use CXGN::Stock::Seedlot;
 use CXGN::Calendar;
 use CXGN::Trial;
 
+#
+# DEPRECATED: This plugin has been replaced by the MultipleTrialDesignGeneric plugin
+#
+
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
@@ -280,10 +284,10 @@ sub _validate_with_plugin {
     if ($working_on_new_trial) {
 
       ## PLOT NUMBER CHECK FOR PREVIOUS TRIAL
-      foreach $plot_number ( keys %seen_plot_numbers ) {
-        my $count = $seen_plot_numbers{$plot_number};
+      foreach my $pn ( keys %seen_plot_numbers ) {
+        my $count = $seen_plot_numbers{$pn};
         if ($count > 1) {
-          push @error_messages, "Plot number <b>$plot_number</b> must be unique within the trial. You used this plot number more than once in trial $trial_name";
+          push @error_messages, "Plot number <b>$pn</b> must be unique within the trial. You used this plot number more than once in trial $trial_name";
         }
       }
       ## reset counting hash
@@ -560,6 +564,7 @@ sub _validate_with_plugin {
     "greenhouse" => 1,
     "p-rep" => 1,
     "splitplot" => 1,
+    "stripplot" => 1,
     "Westcott" => 1,
     "Analysis" => 1
   );

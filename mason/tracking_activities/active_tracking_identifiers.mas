@@ -1,5 +1,7 @@
 <%args>
 $trial_id
+$field_headers
+$activity_type
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -10,12 +12,14 @@ $trial_id
         <thead>
             <tr>
                 <th>Tracking Identifier</th>
-                <th>Material</th>
-% my $tracking_activities = $c->config->{tracking_activities_header};
-% my @column_header = split ',',$tracking_activities;
-% foreach my $column_header(@column_header){
+% if ($activity_type eq 'transformation') {
+                <th>Transformation ID</th>
+% } elsif ($activity_type eq 'tissue_culture') {
+                <th>Accession</th>
+% }
+% foreach my $column_header(@$field_headers){
                 <th><%$column_header%></th>
-%}
+% }
             </tr>
         </thead>
     </table>
@@ -23,7 +27,7 @@ $trial_id
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Add Identifiers to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Adding identifiers in this project to a new or exisiting list</i>'&>
+        <&| /page/info_section.mas, title => 'Add Identifiers to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding identifiers in this project to a new or exisiting list</i>'&>
         <br>
         <div id="identifiers_to_new_list" style="display:none"></div>
         <div id="identifiers_add_to_list"></div>

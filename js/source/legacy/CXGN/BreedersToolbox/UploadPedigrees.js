@@ -91,6 +91,7 @@ jQuery(document).ready(function ($) {
     jQuery('#upload_pedigrees_store').click(function(){
         jQuery.ajax( {
             url: '/ajax/pedigrees/upload_store',
+	    type: 'POST',
             data: {
                 'pedigree_data':pedigree_data,
                 'overwrite_pedigrees':jQuery('#pedigree_upload_overwrite_pedigrees').is(":checked")
