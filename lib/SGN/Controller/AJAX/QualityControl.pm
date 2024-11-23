@@ -117,8 +117,9 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     }
 
     # Format the unique project names for the SQL query
-    # my $trait_query = $trait;
-    # $trait_query =~ s/\|.*//;
+    
+    $trait =~ s/\|.*//;
+    my $trait_ilike = $trait . '%';
     
     my $project_names = join(", ", map { "'$_'" } keys %unique_names);
 
@@ -127,7 +128,7 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
         join project on project.project_id = projectprop.project_id 
         where projectprop.type_id = (select cvterm_id from cvterm where cvterm."name" = 'validated_phenotype')
         and project.name in ($project_names)
-        and projectprop.value = '$trait'
+        and projectprop.value ilike '$trait_ilike'
         group by project."name";
     };
 
@@ -219,6 +220,8 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
 sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my ($self, $c) = @_;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $operator = $c->user()->get_object()->get_first_name()." ".$c->user()->get_object()->get_last_name();
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     # Retrieve and decode the outliers from the request
@@ -233,12 +236,17 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my %study_names;
     my $trait;
 
+    # print STDERR Dumper \$outliers_data;
+
     foreach my $entry (@$outliers_data) { 
         $trait = $entry->{trait};  # Directly use the trait from the entry
         $trait_ids{$trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait)->cvterm_id;
         my $study_name = $entry->{studyName};
         $study_names{$study_name} = 1 if defined $study_name;
     }
+
+    $trait =~ s/\|.*//;
+    my $trait_operator = $trait."|".$operator;
 
     # Convert unique study names to a comma-separated list in SQL format
     my @unique_study_names = keys %study_names;
@@ -252,7 +260,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
         SELECT 
             p.project_id,
             (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'),
-            '$trait',
+            '$trait_operator',
             COALESCE(MAX(pp.rank), 0) + 1  -- Increment rank
         FROM project p
         LEFT JOIN projectprop pp
@@ -266,12 +274,21 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
 
     # Extract plot names from the outliers data
     my @plot_names = map { $_->{plotName} } @$outliers_data;
+    my @plot_values = map { $_->{value} } @$outliers_data;
+
+    my %seen;
+    @plot_names = grep { !$seen{$_}++ } @plot_names;
+
+    my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
+    my $trait_ids_sql = join(", ", @unique_trait_ids);
 
     # Ensure plot names and traits are not empty
+    
+    print("Plot names:\n");
     if (@plot_names && %trait_ids) {
+        print STDERR Dumper \@plot_names;
         # Convert plot names and traits into comma-separated lists for SQL
         my $plot_names_sql = join(", ", map { $schema->storage->dbh()->quote($_) } @plot_names);
-        my $trait_ids_sql = join(", ", values %trait_ids); # Use trait IDs from the hash
 
         # Build the SQL query
         my $outlier_data_sql = "
@@ -334,10 +351,9 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     
     # getting trait name
     my $trait = $c->req->param('trait');
-    
-    
-    my %trait_ids;  # Declare the hash before use
-    my %study_names;
+    $trait =~ s/\|.*//;
+
+    my $trait_like = $trait . '%';
    
     my $trial_clean_sql = qq{
         DELETE FROM projectprop
@@ -346,11 +362,11 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
             FROM projectprop
             JOIN project ON project.project_id = projectprop.project_id 
             WHERE project.name in ($outlier_trials)
-            and projectprop.value = '$trait'
+            and projectprop.value like '$trait_like'
         );
     };
 
-    $trait =~ s/\|.*//;
+    
 
     my $outliers_clean_sql = qq{
         DELETE FROM phenotypeprop
@@ -362,7 +378,7 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
             JOIN nd_experiment_project nes ON nes.nd_experiment_id = nep.nd_experiment_id
             JOIN project pr ON pr.project_id = nes.project_id
             WHERE ph.observable_id = (
-                SELECT cvterm_id FROM cvterm WHERE cvterm.name = '$trait'
+                SELECT cvterm_id FROM cvterm WHERE cvterm.name like '$trait_like'
             )
             AND pr.name IN ($outlier_trials)
         );

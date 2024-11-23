@@ -17,6 +17,11 @@ export function init(main_div) {
         get_model_string();
     });
 
+    let outliers = [];
+    var trait_selected;
+    var tempfile;
+    let allData = [];
+
     $('#qc_analysis_prepare_button').click(function () {
         dataset_id = get_dataset_id();
         if (dataset_id != false) {
@@ -88,10 +93,6 @@ export function init(main_div) {
         }
     });
     
-    let outliers = [];
-    var trait_selected;
-    var tempfile;
-    let allData = [];
     $('#selected_variable').on('change', function () {
         trait_selected = $('#trait_select').val();  // Get the selected trait from the dropdown
 
@@ -126,6 +127,7 @@ export function init(main_div) {
                     const result = drawBoxplot(r.data, trait_selected, outlierMultiplier );
                     outliers = result.outliers;  // Extract the outliers
                     allData = r.data;
+                    console.log("here outliers", outliers);
                     populateOutlierTable(r.data, trait_selected);
                     populateCleanTable(r.data, outliers, trait_selected);
                 }
@@ -239,7 +241,7 @@ function calculateStatistics(values) {
     const sd = Math.sqrt(values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length);
     const cv = (sd / mean) * 100;
 
-    return { min, max, sd, cv };
+    return { min, max, mean, sd, cv };
 }
 
 
@@ -281,6 +283,7 @@ function populateOutlierTable(data, trait) {
         const cell5 = row.insertCell(4);
         const cell6 = row.insertCell(5);
         const cell7 = row.insertCell(6);
+        const cell8 = row.insertCell(7);
 
         // Populate the cells with data, checking for null or undefined values
         cell1.innerHTML = dataGroup.locationDbId || 'N/A';
@@ -288,8 +291,9 @@ function populateOutlierTable(data, trait) {
         cell3.innerHTML = dataGroup.studyName || 'N/A';
         cell4.innerHTML = stats.min !== null ? stats.min.toFixed(2) : 'N/A';
         cell5.innerHTML = stats.max !== null ? stats.max.toFixed(2) : 'N/A';
-        cell6.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
-        cell7.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
+        cell6.innerHTML = stats.mean !== null ? stats.mean.toFixed(2) : 'N/A';
+        cell7.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
+        cell8.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
     }
 }
 
@@ -300,7 +304,6 @@ function populateCleanTable(data, outliers, trait) {
 
     // Create a Set of outlier plot names for quick lookup
     const outlierPlotNames = new Set(outliers.map(outlier => outlier.plotName));
-
     const groupedData = {};
 
     data.forEach(item => {
@@ -312,7 +315,7 @@ function populateCleanTable(data, outliers, trait) {
         const valueStr = item[trait] || ''; 
         const value = parseFloat(valueStr.replace(',', '.')); 
 
-        if (item.locationDbId && item.studyName && !isNaN(value)) {
+        if (item.locationDbId && item.studyName) {
             const identifier = `${item.locationDbId}-${item.studyName}`;
             if (!groupedData[identifier]) {
                 groupedData[identifier] = {
@@ -337,6 +340,7 @@ function populateCleanTable(data, outliers, trait) {
         const cell5 = row.insertCell(4);
         const cell6 = row.insertCell(5);
         const cell7 = row.insertCell(6);
+        const cell8 = row.insertCell(7);
 
         // Populate the cells with data, checking for null or undefined values
         cell1.innerHTML = dataGroup.locationDbId || 'N/A';
@@ -344,8 +348,9 @@ function populateCleanTable(data, outliers, trait) {
         cell3.innerHTML = dataGroup.studyName || 'N/A';
         cell4.innerHTML = stats.min !== null ? stats.min.toFixed(2) : 'N/A';
         cell5.innerHTML = stats.max !== null ? stats.max.toFixed(2) : 'N/A';
-        cell6.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
-        cell7.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
+        cell6.innerHTML = stats.mean !== null ? stats.mean.toFixed(2) : 'N/A';
+        cell7.innerHTML = stats.sd !== null && !isNaN(stats.sd) ? stats.sd.toFixed(2) : 'N/A';
+        cell8.innerHTML = stats.cv !== null && !isNaN(stats.cv) ? stats.cv.toFixed(2) + '%' : 'N/A';
     }
 }
 
@@ -370,7 +375,10 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
                 q3: null,
                 iqr: null,
                 lowerBound: null,
-                upperBound: null
+                upperBound: null,
+                min: null,
+                max: null,
+                median: null
             };
         }
 
@@ -380,32 +388,37 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
         const iqr = Math.max(0, q3 - q1);
         const lowerBound = q1 - outlierMultiplier * iqr;
         const upperBound = q3 + outlierMultiplier * iqr;
+        const median = d3.quantile(values, 0.5);
 
         const outliers = values.filter(v => v < lowerBound || v > upperBound);
 
-        if (outliers.length > 0) {
-            const groupOutliers = outliers.map(value => ({
-                locationDbId: group.key,
-                studyName: group.values.find(v => parseFloat(v[selected_trait]) === value).studyName,
-                locationName: group.values.find(v => parseFloat(v[selected_trait]) === value).locationName,
-                plotName: group.values.find(v => parseFloat(v[selected_trait]) === value).observationUnitName,
-                trait: selected_trait,
-                value: value
-            }));
-            allOutliers = allOutliers.concat(groupOutliers);
-        }
+        const groupOutliers = outliers.flatMap(value => {
+            return group.values
+                .filter(v => parseFloat(v[selected_trait]) === value)
+                .map(match => ({
+                    locationDbId: group.key,
+                    studyName: match.studyName,
+                    locationName: match.locationName,
+                    plotName: match.observationUnitName,
+                    trait: selected_trait,
+                    value: value
+                }));
+        });
+
+        allOutliers = allOutliers.concat(groupOutliers);
 
         return {
             locationDbId: group.key,
-            values: values,
-            min: d3.min(values),
-            q1: q1,
-            median: d3.median(values),
-            q3: q3,
-            max: d3.max(values),
-            lowerBound: lowerBound,
-            upperBound: upperBound,
-            outliers: outliers
+            values, // Include all data points
+            outliers,
+            q1,
+            q3,
+            iqr,
+            lowerBound,
+            upperBound,
+            min: d3.min(values), // Minimum value
+            max: d3.max(values), // Maximum value
+            median // Median value
         };
     });
 
@@ -424,35 +437,28 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     const x = d3.scaleLinear()
-        .domain([d3.min(boxplotData, d => d.min), d3.max(boxplotData, d => d.max)])
-        .range([0, width]);
+    .domain([d3.min(boxplotData, d => d.min), d3.max(boxplotData, d => d.max)])
+    .range([0, width]);
 
     const y = d3.scaleBand()
         .domain(boxplotData.map(d => d.locationDbId))
         .range([0, height])
         .padding(0.1);
 
-    svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
-
-    svg.append("g")
-        .call(d3.axisLeft(y));
-
     const boxWidth = y.bandwidth() / 2; 
 
     const boxplotGroup = svg.selectAll(".boxplot")
-        .data(boxplotData)
+        .data(boxplotData.filter(d => d.values.length > 0)) // Skip empty groups
         .enter().append("g")
         .attr("class", "boxplot")
         .attr("transform", d => "translate(0," + (y(d.locationDbId) + y.bandwidth() / 2) + ")");
 
     // Draw boxes
     boxplotGroup.append("rect")
-        .attr("x", d => x(d.q1)) // Start of box at Q1
-        .attr("y", -boxWidth / 2) // Center vertically within band
-        .attr("width", d => x(d.q3) - x(d.q1)) // Width based on Q1 to Q3 range
-        .attr("height", boxWidth) // Set box width
+        .attr("x", d => x(d.q1))
+        .attr("y", -boxWidth / 2)
+        .attr("width", d => x(d.q3) - x(d.q1))
+        .attr("height", boxWidth)
         .attr("stroke", "black")
         .attr("fill", "#9c9ede");
 
@@ -460,39 +466,51 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
     boxplotGroup.append("line")
         .attr("x1", d => x(d.median))
         .attr("x2", d => x(d.median))
-        .attr("y1", -boxWidth / 2) // Top of the box
-        .attr("y2", boxWidth / 2) // Bottom of the box
+        .attr("y1", -boxWidth / 2)
+        .attr("y2", boxWidth / 2)
         .attr("stroke", "black");
 
     // Draw whiskers
     boxplotGroup.append("line")
         .attr("x1", d => x(d.min))
         .attr("x2", d => x(d.max))
-        .attr("y1", 0) // Center the whiskers vertically in the boxplot group
+        .attr("y1", 0)
         .attr("y2", 0)
         .attr("stroke", "black");
 
-    // Label X-axis label 
-    svg.append("text")
-        .attr("class", "x label")
-        .attr("text-anchor", "middle")
-        .attr("x", width / 2) 
-        .attr("y", height + 40) 
-        .text(selected_trait);
+    // X-axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`) // Position at the bottom
+        .call(d3.axisBottom(x))
+        .selectAll("text") // Add rotation if labels overlap
+        .attr("transform", "translate(0,5)")
+        .style("text-anchor", "middle");
 
-    // Append Y-axis label
+    // X-axis label
     svg.append("text")
-        .attr("class", "y label")
+        .attr("class", "x-label")
         .attr("text-anchor", "middle")
-        .attr("x", -height / 2) 
-        .attr("y", -50) 
-        .attr("transform", "rotate(-90)") 
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom - 10) // Ensure it's visible within margins
+        .text(selected_trait); // Add trait name
+
+    // Y-axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Y-axis label
+    svg.append("text")
+        .attr("class", "y-label")
+        .attr("text-anchor", "middle")
+        .attr("x", -height / 2) // Position in the center of the Y-axis
+        .attr("y", -margin.left + 10) // Ensure it's within margins
+        .attr("transform", "rotate(-90)") // Rotate to match Y-axis orientation
         .text("Location ID");
 
 
     // Draw individual points with jitter
     const pointGroup = svg.selectAll(".point")
-        .data(boxplotData)
+        .data(boxplotData.filter(d => d.values.length > 0)) // Skip empty groups
         .enter().append("g")
         .attr("class", "point")
         .attr("transform", d => "translate(0," + y(d.locationDbId) + ")");
@@ -500,16 +518,21 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
     // Create a tooltip div
     const tooltip = d3.select("body").append("div")
         .attr("class", "tooltip")
-        .style("opacity", 0);
-
+        .style("opacity", 0)
+        .style("position", "absolute") // Ensure it's positioned relative to the cursor
+        .style("background", "#fff") // Tooltip background color
+        .style("border", "1px solid #ccc") // Border for better visibility
+        .style("border-radius", "4px")
+        .style("padding", "5px") // Add padding for text readability
+        .style("pointer-events", "none"); // Prevent mouse interaction with the tooltip
 
     // Draw circles for all points (including outliers)
     pointGroup.selectAll("circle")
         .data(d => d.values.map((value, index) => ({
-            value: value, 
+            value: value,
             isOutlier: value < d.lowerBound || value > d.upperBound, // Check for outliers
             plotName: d.plotName // Ensure this is correct
-        }))) 
+        })))
         .enter().append("circle")
         .attr("cx", d => x(d.value))
         .attr("cy", d => (Math.random() - 0.5) * boxWidth + boxWidth / 2) // Center and add jitter
@@ -518,16 +541,20 @@ function drawBoxplot(data, selected_trait, outlierMultiplier) {
         .on("mouseover", function(event, d) {
             tooltip.transition()
                 .duration(200)
-                .style("opacity", .9);
-            tooltip.html(d.plotName) // Display plotName in tooltip
-                .style("left", (event.pageX + 5) + "px") // Position tooltip
+                .style("opacity", .9); // Fade in the tooltip
+
+            // Add plotName and value to the tooltip content
+            tooltip.html(`<strong>Plot:</strong> ${d.plotName}<br><strong>Value:</strong> ${d.value}`)
+                .style("left", (event.pageX + 10) + "px") // Position tooltip near the cursor
                 .style("top", (event.pageY - 28) + "px");
         })
         .on("mouseout", function(d) {
             tooltip.transition()
                 .duration(500)
-                .style("opacity", 0);
+                .style("opacity", 0); // Fade out the tooltip
         });
+
+
 
 
     // Return both the boxplot data and the outliers

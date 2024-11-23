@@ -56,17 +56,23 @@ sub grab_data :Path('/ajax/validatedtrials/grabdata') Args(0) {
         $sth_trial->execute();
 
         # Collect project names from the query result
-        while (my ($project_name, $project_location, $validated_trait ) = $sth_trial->fetchrow_array) {
+        while (my ($project_name, $project_location, $validated_trait) = $sth_trial->fetchrow_array) {
+            # Split the validated_trait into two parts using '|' as the separator
+            my ($trait, $username) = split(/\|/, $validated_trait, 2);
+
             # Store each row's data in a hash reference
             my $project_data = {
                 name => $project_name,
                 project_location => $project_location,
-                validated_trait => $validated_trait,
+                validated_trait => $trait,  # First part
+                username => $username,     # Second part
             };
+
             # Push the hash reference into the array
             push @validated_projects, $project_data;
         }
-
+        
+        print("*************************************************************\n");
         print STDERR Dumper \@validated_projects;
 
     };

@@ -31,6 +31,7 @@
                 <th>Project Name</th>
                 <th>Project Location</th>
                 <th>Trait Name</th>
+                <th>Validated By</th>
             </tr>
         </thead>
         <tbody>
@@ -117,6 +118,7 @@ function displayData(data) {
                 <td>${project.name}</td>
                 <td>${project.project_location}</td>
                 <td>${project.validated_trait}</td>
+                <td>${project.username}</td>
             </tr>`
         );
     });
@@ -137,6 +139,7 @@ function fetchProjectData() {
         success: function(response) {
             if (response && response.data && Array.isArray(response.data)) {
                 allData = response.data; 
+                console.log("This is the data:", allData);
                 displayData(allData); 
                 updatePaginationControls(allData);
             } else {

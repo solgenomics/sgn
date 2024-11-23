@@ -142,8 +142,9 @@
                       <th>Location ID</th>
                       <th>Location Name</th>
                       <th>Trial Name</th>
-                      <th>min</th>
-                      <th>max</th>
+                      <th>Min</th>
+                      <th>Max</th>
+                      <th>Mean</th>
                       <th>SD</th>
                       <th>CV</th>
                   </tr>
@@ -158,8 +159,9 @@
                       <th>Location ID</th>
                       <th>Location Name</th>
                       <th>Trial Name</th>
-                      <th>min</th>
-                      <th>max</th>
+                      <th>Min</th>
+                      <th>Max</th>
+                      <th>Mean</th>
                       <th>SD</th>
                       <th>CV</th>
                   </tr>
