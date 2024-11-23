@@ -354,19 +354,23 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     $trait =~ s/\|.*//;
 
     my $trait_like = $trait . '%';
+
+    print("******************************************************************\n");
+    print($trait_like);
    
     my $trial_clean_sql = qq{
         DELETE FROM projectprop
         WHERE projectprop.project_id IN (
-            SELECT projectprop.project_id 
+            SELECT projectprop.project_id
             FROM projectprop
-            JOIN project ON project.project_id = projectprop.project_id 
-            WHERE project.name in ($outlier_trials)
-            and projectprop.value like '$trait_like'
+            JOIN project ON project.project_id = projectprop.project_id
+            WHERE project.name IN ($outlier_trials)
+        )
+        AND projectprop.value LIKE '$trait_like'
+        AND projectprop.type_id = (
+            SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'
         );
     };
-
-    
 
     my $outliers_clean_sql = qq{
         DELETE FROM phenotypeprop

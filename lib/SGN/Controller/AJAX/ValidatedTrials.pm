@@ -72,8 +72,7 @@ sub grab_data :Path('/ajax/validatedtrials/grabdata') Args(0) {
             push @validated_projects, $project_data;
         }
         
-        print("*************************************************************\n");
-        print STDERR Dumper \@validated_projects;
+        # print STDERR Dumper \@validated_projects;
 
     };
 
