@@ -25,7 +25,7 @@ use Text::CSV;
 
 my $f = SGN::Test::Fixture->new();
 
-for my $extension ("xlsx", "xls") {
+for my $extension ("xlsx", "xls", "csv") {
 
     my $c = SimulateC->new({
 		dbh 			=> $f->dbh(),
@@ -76,7 +76,7 @@ for my $extension ("xlsx", "xls") {
 
     #parse uploaded file with appropriate plugin
     my $parser  = CXGN::Trial::ParseUpload->new(chado_schema=> $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('MultipleTrialDesignExcelFormat');
+    $parser->load_plugin('MultipleTrialDesignGeneric');
     my $parsed_data = $parser->parse();
 	print STDERR "Parsed data: " . Dumper($parsed_data);
     ok(!$parsed_data->{error}, 'check if parse validate igd file fails for excel file');
@@ -92,7 +92,7 @@ for my $extension ("xlsx", "xls") {
             'description'   => 'EPR',
             'entry_numbers' => undef,
             'design_details'=> {
-                '15' => {
+                '16' => {
                     'plot_name'    => '198667HBEPR_popa_rep1_BRA33_9',
                     'range_number' => '6',
                     'is_a_control' => 1,
@@ -103,7 +103,7 @@ for my $extension ("xlsx", "xls") {
                     'row_number'   => '9',
                     'col_number'   => '3'
                 },
-                '14' => {
+                '15' => {
                     'is_a_control' => 1,
                     'plot_number'  => '8',
                     'stock_name'   => 'UG120021',
@@ -118,7 +118,7 @@ for my $extension ("xlsx", "xls") {
                     'col_number'   => '3',
                     'block_number' => '1'
                 },
-                '13' => {
+                '14' => {
                     'stock_name'    => 'UG120019',
                     'rep_number'    => '1',
                     'plot_number'   => '7',
@@ -129,7 +129,7 @@ for my $extension ("xlsx", "xls") {
                     'row_number'    => '7',
                     'block_number'  => '1'
                 },
-                '11' => {
+                '12' => {
                     'plot_name'     => '198667HBEPR_popa_rep1_BRA128_5',
                     'range_number'  => '6',
                     'is_a_control'  => 1,
@@ -140,7 +140,7 @@ for my $extension ("xlsx", "xls") {
                     'row_number'    => '5',
                     'col_number'    => '3'
                 },
-                '12' => {
+                '13' => {
                     'range_number' => '6',
                     'plot_name'    => '198667HBEPR_popa_rep1_BRA28_6',
                     'rep_number'   => '2',
@@ -166,7 +166,7 @@ for my $extension ("xlsx", "xls") {
             'entry_numbers'    => undef,
             'location'         => 'test_location',
             'design_details'   => {
-                '19' => {
+                '20' => {
                     'row_number'   => '33',
                     'col_number'   => '2',
                     'block_number' => '1',
@@ -177,7 +177,7 @@ for my $extension ("xlsx", "xls") {
                     'plot_name'    => '199275HBEPR_stom_rep1_CG1420-1_33',
                     'range_number' => '6'
                 },
-                '17' => {
+                '18' => {
                     'range_number' => '6',
                     'plot_name'    => '199275HBEPR_stom_rep1_SOLITA_31',
                     'rep_number'   => '1',
@@ -188,7 +188,7 @@ for my $extension ("xlsx", "xls") {
                     'col_number'   => '2',
                     'row_number'   => '31'
                 },
-                '20' => {
+                '21' => {
                     'stock_name'   => 'XG120073',
                     'rep_number'   => '1',
                     'is_a_control' => 1,
@@ -199,7 +199,7 @@ for my $extension ("xlsx", "xls") {
                     'row_number'   => '34',
                     'block_number' => '1'
                 },
-                '18' => {
+                '19' => {
                     'row_number'    => '32',
                     'col_number'    => '3',
                     'block_number'  => '1',
@@ -210,7 +210,7 @@ for my $extension ("xlsx", "xls") {
                     'plot_name'     => '199275HBEPR_stom_rep1_CG917-5_32',
                     'range_number'  => '6'
                 },
-                '16' => {
+                '17' => {
                     'block_number'  => '1',
                     'col_number'    => '2',
                     'row_number'    => '30',
@@ -234,7 +234,7 @@ for my $extension ("xlsx", "xls") {
             'trial_type'     => 76515,
             'location'       => 'test_location',
             'design_details' => {
-                '3' => {
+                '4' => {
                     'col_number'   => '3',
                     'row_number'   => '30',
                     'block_number' => '1',
@@ -245,7 +245,7 @@ for my $extension ("xlsx", "xls") {
                     'range_number' => '4',
                     'plot_name'    => '199934HBEPR_cara_rep1_UG120006_3'
                 },
-                '4' => {
+                '5' => {
                     'block_number' => '2',
                     'row_number'   => '40',
                     'col_number'   => '4',
@@ -256,7 +256,7 @@ for my $extension ("xlsx", "xls") {
                     'rep_number'   => '2',
                     'stock_name'   => 'UG120008'
                 },
-                '5' => {
+                '6' => {
                     'col_number'   => '5',
                     'row_number'   => '50',
                     'block_number' => '2',
@@ -267,7 +267,7 @@ for my $extension ("xlsx", "xls") {
                     'range_number' => '5',
                     'plot_name'    => '199934HBEPR_cara_rep1_UG120009_5'
                 },
-                '1' => {
+                '2' => {
                     'stock_name'   => 'UG120002',
                     'rep_number'   => '2',
                     'is_a_control' => 1,
@@ -278,7 +278,7 @@ for my $extension ("xlsx", "xls") {
                     'row_number'   => '10',
                     'block_number' => '1'
                 },
-                '2' => {
+                '3' => {
                     'rep_number'   => '2',
                     'stock_name'   => 'UG120004',
                     'is_a_control' => 1,
@@ -311,7 +311,7 @@ for my $extension ("xlsx", "xls") {
             'breeding_program' => 'test',
             'entry_numbers' => undef,
             'design_details'=> {
-                '7' => {
+                '8' => {
                     'col_number'    => '6',
                     'row_number'    => '60',
                     'block_number'  => '1',
@@ -322,7 +322,7 @@ for my $extension ("xlsx", "xls") {
                     'range_number'  => '6',
                     'plot_name'     => '199947HBEPR_mora_rep1_UG120158_2'
                 },
-                '9' => {
+                '10' => {
                     'block_number' => '1',
                     'row_number'   => '80',
                     'col_number'   => '8',
@@ -333,7 +333,7 @@ for my $extension ("xlsx", "xls") {
                     'rep_number'   => '2',
                     'stock_name'   => 'UG120160'
                 },
-                '8' => {
+                '9' => {
                     'row_number'   => '70',
                     'col_number'   => '7',
                     'block_number' => '1',
@@ -344,7 +344,7 @@ for my $extension ("xlsx", "xls") {
                     'plot_name'    => '199947HBEPR_mora_rep1_UG120159_3',
                     'range_number' => '7'
                 },
-                '6' => {
+                '7' => {
                     'plot_name'    => '199947HBEPR_mora_rep1_UG120157_1',
                     'range_number' => '6',
                     'plot_number'  => '1',
@@ -355,7 +355,7 @@ for my $extension ("xlsx", "xls") {
                     'row_number'   => '50',
                     'col_number'   => '5'
                 },
-                '10' => {
+                '11' => {
                     'range_number' => '8',
                     'plot_name'    => '199947HBEPR_mora_rep1_UG120161_5',
                     'rep_number'   => '2',

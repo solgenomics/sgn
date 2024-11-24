@@ -1175,7 +1175,11 @@ sub get_trials {
     }
 
     my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'project location', 'project_property')->cvterm_id();
-    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on (accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id) where projectprop.type_id=$geolocation_type_id AND accession.stock_id=?;";
+    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on 
+	(accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) 
+	JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id) 
+	JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id) 
+	where projectprop.type_id=$geolocation_type_id AND accession.stock_id=?;";
 
     my $h = $dbh->prepare($q);
     $h->execute($self->stock_id());
@@ -1613,18 +1617,23 @@ sub _store_population_relationship {
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
 
-    print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
-    my $population = $schema->resultset("Stock::Stock")->find_or_create({
-        uniquename => $self->population_name(),
-        name => $self->population_name(),
-        organism_id => $self->organism_id(),
-        type_id => $population_cvterm_id,
-    });
-    $self->stock->find_or_create_related('stock_relationship_subjects', {
-        type_id => $population_member_cvterm_id,
-        object_id => $population->stock_id(),
-        subject_id => $self->stock_id(),
-    });
+    my @populations = split /\|/, $self->population_name();
+
+    foreach my $population_name (@populations) { 
+    
+	print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
+	my $population_row = $schema->resultset("Stock::Stock")->find_or_create({
+	    uniquename => $population_name,
+	    name => $population_name,
+	    organism_id => $self->organism_id(),
+	    type_id => $population_cvterm_id,
+        });
+	$self->stock->find_or_create_related('stock_relationship_subjects', {
+	    type_id => $population_member_cvterm_id,
+	    object_id => $population_row->stock_id(),
+	    subject_id => $self->stock_id(),
+        });
+    }
 }
 
 ##Move to a population child object##
