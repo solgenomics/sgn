@@ -504,11 +504,15 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $transaction->factor(1);
         $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
         $transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
-        if ($amount){
+        if (defined($amount) && length($amount)){
             $transaction->amount($amount);
+        } else {
+            $transaction->amount('NA');
         }
-        if ($weight){
+        if (defined($weight) && length($weight)){
             $transaction->weight_gram($weight);
+        } else {
+            $transaction->weight_gram('NA');
         }
         $transaction->timestamp($timestamp);
         $transaction->description($transaction_description);
