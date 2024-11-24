@@ -180,7 +180,8 @@
       <div>
         <div style="text-align: center;">
           <p>This is the validation process. Trials cleaned of outliers can be used in downstream analysis.</p>
-          <p>Only <b>CURATORS</b> are allowed to restore all original data.</p>
+          <p>To validate a dataset you will need privilieges as <b>CURATOR</b> or <b>BREEDER</b>.</p>
+          <p>Only <b>CURATORS</b> are allowed to restore the dataset to original values.</p>
           <button class="btn btn-main" id="restore_outliers_button"   onclick="Workflow.complete(this);">Restore</button>
           <button class="btn btn-main" id="store_outliers_button"   onclick="Workflow.complete(this);">Validate</button>
         </div>

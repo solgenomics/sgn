@@ -78,7 +78,6 @@ export function init(main_div) {
                         console.log("AJAX response:", r);  // Log full response for debugging
 
                         if (r.selected_variable) {
-                            console.log("Selected Variable HTML:", r.selected_variable);  // Debugging log
                             populateTraitDropdown(r.selected_variable);  // Populate dropdown with traits
                         }
                         if (r.tempfile) {
@@ -127,7 +126,6 @@ export function init(main_div) {
                     const result = drawBoxplot(r.data, trait_selected, outlierMultiplier );
                     outliers = result.outliers;  // Extract the outliers
                     allData = r.data;
-                    console.log("here outliers", outliers);
                     populateOutlierTable(r.data, trait_selected);
                     populateCleanTable(r.data, outliers, trait_selected);
                 }
@@ -147,8 +145,15 @@ export function init(main_div) {
             data: {"outliers": JSON.stringify(outliers),
             },
             success: function(response) {
-                alert('Outliers saved successfully!');
-                console.log(response);
+                if(response.is_curator === 1) {
+                    $('#store_outliers_button').prop("disabled", false);
+                    alert('Outliers successfully stored!');
+                } else {
+                    $('#store_outliers_button').prop("disabled", true);
+                    alert("Only curators or breeders are allowed to validated trials. Please contact a curator.", response.is_curator);
+                }
+                
+
             },
             error: function(xhr, status, error) {
                 alert('Error saving outliers: ' + error);
@@ -168,17 +173,15 @@ export function init(main_div) {
                     return;
                 } else {
                     var trialNames = r.data;
-                    console.log("Outliers to restore:", trialNames);
                     $.ajax({
                         url: '/ajax/qualitycontrol/restoreoutliers',
                         method: "POST",
                         data: {"outliers": JSON.stringify(trialNames), "trait":trait_selected,
                         },
                         success: function (r) {
-                            console.log("The curator is:", r.is_curator);
                             if (r.is_curator === 1) {
                                 $('#restore_outliers_button').prop("disabled", false);
-                                console.log("Restore successful!");
+                                alert("Data successfully restored!");
                             } else {
                                 $('#restore_outliers_button').prop("disabled", true);
                                 alert("Only curators are allowed undo validated trial. Please contact a curator.");

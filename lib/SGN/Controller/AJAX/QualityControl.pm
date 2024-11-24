@@ -224,8 +224,15 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
+    my @user_roles = $c->user()->roles;
+    my $curator = (grep { $_ eq 'curator' || $_ eq 'breeder' } @user_roles) ? 1 : 0;
+
+    my $response_data = {
+    is_curator => $curator ? 1 : 0,  # 1 if curator, 0 otherwise
+    };
+
+
     # Retrieve and decode the outliers from the request
-   
     my $outliers_string = $c->req->param('outliers');
     
     # Now proceed to decode JSON
@@ -282,11 +289,9 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
     my $trait_ids_sql = join(", ", @unique_trait_ids);
 
-    # Ensure plot names and traits are not empty
     
-    print("Plot names:\n");
     if (@plot_names && %trait_ids) {
-        print STDERR Dumper \@plot_names;
+        # print STDERR Dumper \@plot_names;
         # Convert plot names and traits into comma-separated lists for SQL
         my $plot_names_sql = join(", ", map { $schema->storage->dbh()->quote($_) } @plot_names);
 
@@ -310,26 +315,26 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
                 AND phenotypeprop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
             );";
 
-        # Execute the SQL query
-        eval {
-            my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
-            $sth_trial->execute();
+        if($curator == 1){
+            # Execute the SQL query
+            eval {
+                my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
+                $sth_trial->execute();
 
-            my $sth_outliers = $schema->storage->dbh->prepare($outlier_data_sql);
-            $sth_outliers->execute();
-            
-            $c->response->body('Data stored successfully');
-        };
-        if ($@) {
-            $c->response->body("Failed to store data: $@");
-            return;
+                my $sth_outliers = $schema->storage->dbh->prepare($outlier_data_sql);
+                $sth_outliers->execute();
+                
+                $c->stash->{rest} = $response_data;
+            };
         } else {
-            $c->response->body('Outliers stored successfully');
+            $c->stash->{rest} = $response_data;
+            
         }
-        
     } else {
         $c->response->body('No plot names or traits found.');
     }
+
+    
     ## celaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 }
@@ -343,6 +348,7 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     my @user_roles = $c->user()->roles;
     
     my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
+    
 
     # Retrieve and decode the outliers from the request
     my $outliers_string = $c->req->param('outliers');
@@ -355,9 +361,10 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
 
     my $trait_like = $trait . '%';
 
-    print("******************************************************************\n");
-    print($trait_like);
-   
+    my $response_data = {
+    is_curator => $curator ? 1 : 0,  # 1 if curator, 0 otherwise
+    };
+
     my $trial_clean_sql = qq{
         DELETE FROM projectprop
         WHERE projectprop.project_id IN (
@@ -388,25 +395,28 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
         );
     };
     
-    my $response_data = {
-    is_curator => $curator ? 1 : 0,  # 1 if curator, 0 otherwise
-    };
+    
 
     # Execute the SQL query
-    eval {
+    if ($curator eq 'curator'){
+        eval {
+            my $sth_trial = $dbh->prepare($trial_clean_sql);
+            $sth_trial->execute();
 
-        my $sth_trial = $dbh->prepare($trial_clean_sql);
-        $sth_trial->execute();
+            my $sth_clean = $dbh->prepare($outliers_clean_sql);
+            $sth_clean->execute();
+        };
 
-        my $sth_clean = $dbh->prepare($outliers_clean_sql);
-        $sth_clean->execute();
-    };
-    if ($@) {
-        $c->response->body("Failed to store data: $@");
-        return;
+        if ($@) {
+            $c->response->body("Failed to store data: $@");
+            return;
+        } else {
+            $c->stash->{rest} = $response_data;
+        }
     } else {
         $c->stash->{rest} = $response_data;
     }
+
     ## celaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 
