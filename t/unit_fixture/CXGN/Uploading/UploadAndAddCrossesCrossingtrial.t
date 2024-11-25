@@ -124,7 +124,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_simple_file"               => [
+            "upload_crosses_file" => [
                 $file,
                 "backcross_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -150,7 +150,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_simple_file"               => [
+            "upload_crosses_file" => [
                 $file,
                 "crosses_simple_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -190,7 +190,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_plots_file"                => [
+            "upload_crosses_file" => [
                 $file,
                 "crosses_plots_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -233,7 +233,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_plants_file"               => [
+            "upload_crosses_file" => [
                 $file,
                 "crosses_plants_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -264,7 +264,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_simplified_parents_file" => [
+            "upload_crosses_file" => [
                 $file,
                 "crosses_simplified_parents_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
