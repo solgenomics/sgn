@@ -61,12 +61,12 @@ for my $extension ("xls", "xlsx") {
     is($response->{'success'}, '1');
 
     #create populations for testing bulk and bulk_open cross types
-    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_A', "accessions[]"=> ['UG120001', 'UG120002'] ]);
+    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_A', "member_type"=>'accessions', "accessions[]"=> ['UG120001', 'UG120002'] ]);
     $response = decode_json $mech->content;
     is($response->{'success'}, "Success! Population test_population_A created");
     my $population_A_id = $response->{'population_id'};
 
-    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_B', "accessions[]"=> ['UG120003', 'UG120004'] ]);
+    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_B', "member_type"=>'accessions', "accessions[]"=> ['UG120003', 'UG120004'] ]);
     $response = decode_json $mech->content;
     is($response->{'success'}, "Success! Population test_population_B created");
     my $population_B_id = $response->{'population_id'};
@@ -87,7 +87,7 @@ for my $extension ("xls", "xlsx") {
     my $before_adding_cross_in_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
     my $before_adding_cross_in_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
 
-    $mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'cross_name' => 'test_add_cross', 'cross_combination' => 'UG120001xUG120002', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot' => $female_plot_id, 'male_plot' => $male_plot_id ]);
+    $mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'cross_name' => 'test_add_cross', 'cross_combination' => 'UG120001xUG120002', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot_plant' => $female_plot_id, 'male_plot_plant' => $male_plot_id ]);
 
     $response = decode_json $mech->content;
     is($response->{'success'}, '1');
