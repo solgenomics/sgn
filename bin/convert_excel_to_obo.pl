@@ -80,10 +80,10 @@ print STDERR "TRAITS: ".Dumper(\%traits);
 
 
 foreach my $d (@$data) {
-    my $variable_name = $d->{'Variable Full Name'};
+    my $variable_name = $d->{'variable_name'};
     if (! $variable_name) { next; }
     $variables{$variable_name}->{count}++;
-    $variables{$variable_name}->{'Synonym'};
+    $variables{$variable_name}->{'Synonym'} = $d->{'Synonym'};
     $variables{$variable_name}->{'Term Name - BB'} = $d->{'Term Name - BB'};
     $variables{$variable_name}->{'Term Definition'} = $d->{'Term Definition'};
     $variables{$variable_name}->{'Entity'} = $d->{'Entity'};
@@ -290,7 +290,7 @@ sub format_variable {
 	"id:" =>  $variable_id,
 	"name:" => $name,
 	"def:"=> "\"$description\" []",
-	"synonym:" =>  $synonyms,
+	"synonym:" =>  '"'.$synonyms.'" EXACT []',
 	"namespace:" => $ontology_name,
 	"relationship:" => "variable_of $parent_trait_id ! $parent_trait_name",
 	);
