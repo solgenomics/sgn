@@ -82,10 +82,10 @@ sub _validate_with_plugin {
     }
 
     my $parent_validator = CXGN::List::Validate->new();
-    my @parents_missing = @{$parent_validator->validate($schema,'accessions_or_populations_or_plots_or_plants',\@all_parents)->{'missing'}};
+    my @parents_missing = @{$parent_validator->validate($schema,'accessions_or_populations_or_crosses_or_plots_or_plants',\@all_parents)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as accession names, plot names or plant names: ".join(',',@parents_missing);
+        push @error_messages, "The following parents are not in the database, or are not in the database as accession names, cross names, plot names or plant names: ".join(',',@parents_missing);
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
@@ -133,7 +133,7 @@ sub _validate_with_plugin {
             if (!$male_parent){
                 push @error_messages, "For $cross_name on line number $line_number, Cross Type is bulk, but no male parent given";
             }
-        }        
+        }
     }
 
     if (scalar(@error_messages) >= 1) {
