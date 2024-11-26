@@ -85,7 +85,7 @@ sub _validate_with_plugin {
     my @parents_missing = @{$parent_validator->validate($schema,'accessions_or_populations_or_crosses_or_plots_or_plants',\@all_parents)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as accession names, cross names, plot names or plant names: ".join(',',@parents_missing);
+        push @error_messages, "The following parents are not in the database, or are not in the database as accession names, population names, cross unique ids, plot names or plant names: ".join(',',@parents_missing);
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
