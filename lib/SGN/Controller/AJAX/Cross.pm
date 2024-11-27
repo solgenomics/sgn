@@ -928,6 +928,7 @@ sub add_crossingtrial_POST :Args(0){
     my $dbh = $c->dbc->dbh;
     my $crossingtrial_name = $c->req->param('crossingtrial_name');
     my $breeding_program_id = $c->req->param('crossingtrial_program_id');
+    my $program_name = $schema->resultset('Project::Project')->find({project_id => $breeding_program_id})->name();
     my $location = $c->req->param('crossingtrial_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
@@ -938,9 +939,14 @@ sub add_crossingtrial_POST :Args(0){
         return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        print STDERR "User does not have sufficient privileges.\n";
+    my @user_roles = $c->user->roles();
+    my $check_roles = CXGN::People::Roles->new({bcs_schema => $schema});
+    my $invalid_roles = $check_roles->check_sp_roles(\@user_roles, $program_name);
+    if ($invalid_roles->{'invalid_role'}) {
         $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossing experiment." };
+        return;
+    } elsif ($invalid_roles->{'invalid_program'}) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add new crossing experiment." };
         return;
     }
 
