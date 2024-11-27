@@ -373,32 +373,28 @@ jQuery(document).ready(function($) {
     }
 
     function upload_crosses_file() {
-        var crossing_trial_id = $("#upload_crosses_crossing_experiment_id").val();
-        var experiment_id = $("#experiment_id").val();
+        const breeding_program = jQuery("#upload_crosses_breeding_program_id").val();
+        if (!breeding_program) {
+            alert("Please select your breeding program");
+            return;
+        }
 
+        const crossing_trial_id = jQuery("#upload_crosses_crossing_experiment_id").val();
+        const experiment_id = jQuery("#experiment_id").val();
         if (!crossing_trial_id && !experiment_id) {
             alert("A crossing experiment is required");
             return;
         }
 
-        var uploadFileXlsSimple = $("#xls_crosses_simple_file").val();
-        if (uploadFileXlsSimple === ''){
-            var uploadFileXlsPlots = $("#xls_crosses_plots_file").val();
-            if (uploadFileXlsPlots === ''){
-                var uploadFileXlsPlants = $("#xls_crosses_plants_file").val();
-                if (uploadFileXlsPlants === '') {
-                    var uploadFileXlsSimplifiedParents = $("#xls_crosses_simplified_parents_file").val();
-                    if (uploadFileXlsSimplifiedParents === ''){
-                        alert("Please select a file");
-                        return;
-                    }
-                }
-            }
+        const uploadFile = jQuery("#upload_crosses_file").val();
+        if (!uploadFile) {
+            alert("Please select a file");
+            return;
         }
 
-        $('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
+        jQuery('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
 
-        $("#upload_crosses_form").submit();
+        jQuery("#upload_crosses_form").submit();
     }
 
     function get_accession_names(accession_select_id) {
