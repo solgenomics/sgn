@@ -1,4 +1,4 @@
-package CXGN::List::Validate::Plugin::AccessionsOrPopulationsOrPlotsOrPlants;
+package CXGN::List::Validate::Plugin::AccessionsOrPopulationsOrCrossesOrPlotsOrPlants;
 
 use Moose;
 
