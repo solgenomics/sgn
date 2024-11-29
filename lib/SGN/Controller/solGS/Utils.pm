@@ -49,12 +49,13 @@ sub read_file_data {
 
 
 sub read_file_data_cols {
-    my ($self, $file, $cols) = @_;
+    my ($self, $file, $cols, $include_rownames) = @_;
 
     my @lines = read_file($file, {binmode => ':utf8'});
     my @headers =  split(/\t/, shift(@lines));
     my @h_indices;
-    foreach my  $col (@$cols)
+
+    foreach my $col (@$cols)
     {
         my $index = first_index { $_ eq $col } @headers;
         push @h_indices, $index;
@@ -65,11 +66,14 @@ sub read_file_data_cols {
     my @data;
     foreach my $line (@lines) {
         my @vals = split(/\t/, $line);
-
-        push @data, [@vals[@h_indices]];
+        if ($include_rownames) {
+            push @data, [@vals[0], @vals[@h_indices]];
+        } else {
+            push @data, [@vals[@h_indices]];
+        }
 
     }
-
+    
     return \@data;
 
 }
