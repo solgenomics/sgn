@@ -5,19 +5,6 @@
  * requires solGS.analysisSave
  */
 
-solGS.pca.save = {
- savePcaScores: function (args) {
-        var saveReq = jQuery.ajax({
-          dataType: "json",
-          type: "POST",
-          data: args,
-          url: "/ajax/analysis/store/json",
-        });
-    
-        return saveReq;
-      },
-};
-
 jQuery(document).ready(function () {
   jQuery('body').on("click", ".download_pca_output", function (e) {
     var elemId = e.target.id;
@@ -63,7 +50,7 @@ jQuery(document).ready(function () {
                         .fadeOut(50000);
                         jQuery(`#${elemId}`).show();
                     } else {
-                        solGS.pca.save.savePcaScores(res.analysis_details).done(function (res) {
+                        solGS.save.storeAnalysisResults(res.analysis_details).done(function (res) {
                             console.log(`savePcaScores: res -- ${JSON.stringify(res)} `)
 
                             jQuery("#download_pca_output .multi-spinner-container").hide();
