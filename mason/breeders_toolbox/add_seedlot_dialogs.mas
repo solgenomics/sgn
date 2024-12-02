@@ -197,8 +197,8 @@ jQuery(document).ready(function(){
         var population_name = jQuery('#seedlot_population_name').val();
         var organization = jQuery('#seedlot_organization').val();
         var source = jQuery("#seedlot_source").val();
-        var amount = jQuery('#seedlot_amount').val();
-        var weight = jQuery('#seedlot_weight').val();
+        var amount = jQuery('#seedlot_amount').val().trim();
+        var weight = jQuery('#seedlot_weight').val().trim();
         var timestamp = jQuery('#seedlot_timestamp').val();
         var transaction_description = jQuery('#seedlot_transaction_description').val();
         var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
