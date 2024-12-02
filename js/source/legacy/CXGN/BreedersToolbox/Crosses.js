@@ -172,8 +172,8 @@ jQuery(document).ready(function($) {
         } else {
             female_plot_plant = jQuery("#female_plot_plant").val();
         }
-        var male_plot_plant = $("#male_plot_plant").val();
-        var cross_combination = $("#dialog_cross_combination").val();
+        const male_plot_plant = $("#male_plot_plant").val();
+        const cross_combination = $("#dialog_cross_combination").val();
 
         add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot_plant, male_plot_plant, cross_combination);
 
