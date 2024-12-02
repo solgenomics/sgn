@@ -236,8 +236,6 @@ sub store {
     my $transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seed transaction", "stock_relationship")->cvterm_id();
     my $amount = defined($self->amount()) && length($self->amount()) ? $self->amount() : 'NA';
     my $weight = defined($self->weight_gram()) && length($self->weight_gram()) ? $self->weight_gram() : 'NA';
-    print STDERR "Amount to be store: " . Dumper($amount) . "\n";
-    print STDERR "weight to be store: " . Dumper($weight) . "\n";
     my $value = {
         amount => $amount,
         weight_gram => $weight,

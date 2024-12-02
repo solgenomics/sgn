@@ -1303,7 +1303,6 @@ sub current_count {
     my $na_amount_counter = 0;
     foreach my $t (@$transactions) {
         if ($t->amount() ne 'NA'){
-            print STDERR "Count tr. value: " . Dumper($t->amount()) . "\n";
             $count += $t->amount() * $t->factor();
         } else {
             $na_amount_counter += 1;
@@ -1375,7 +1374,6 @@ sub current_weight {
     my $na_weight_counter = 0;
     foreach my $t (@$transactions) {
         if ($t->weight_gram() ne 'NA' && length($t->weight_gram)){
-            print STDERR "Weight tr. value: " . Dumper($t->amount()) . "\n";
             $weight += $t->weight_gram() * $t->factor();
         } else {
             $na_weight_counter += 1;
