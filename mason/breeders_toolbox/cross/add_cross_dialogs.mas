@@ -78,7 +78,7 @@ $locations
                                         <div id="add_cross_breeding_program_select_div" name="add_cross_breeding_program_select_div">
                                         </div>
                                     </div>
-                                </div><br/><br/><br/>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Crossing Experiment: </label>
                                     <div class="col-sm-9">

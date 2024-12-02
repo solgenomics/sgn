@@ -88,7 +88,7 @@ $trial_name => undef
                                             <div id="upload_crosses_breeding_program_select_div">
                                             </div>
                                         </div>
-                                    </div>
+                                    </div><br/>
                                     <div id="manage_page_crossing_experiment" style="display:none">
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Crossing Experiment: </label>
@@ -124,8 +124,8 @@ $trial_name => undef
                                             <div class="panel panel-default">
                                                 <div class="panel-body">
                                                     <div class="form-group">
-                                                        <label class="col-sm-6 control-label">Upload File: </label>
-                                                        <div class="col-sm-6">
+                                                        <label class="col-sm-5 control-label">Upload File: </label>
+                                                        <div class="col-sm-7">
                                                             <input type="file" name="upload_crosses_file" id="upload_crosses_file" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
@@ -154,6 +154,9 @@ $trial_name => undef
                                 </div>
                                 -->
                             </form>
+
+                            <& /help/file_upload_type.mas, type => "Crosses", optional_column => 0 &>
+
                             <div id="submit_button_section">
                                 <center>
                                     <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
@@ -220,7 +223,6 @@ $trial_name => undef
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
                     <b>Header:</b>
                     <br>
