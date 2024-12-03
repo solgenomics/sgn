@@ -195,7 +195,7 @@ has 'offset' => (
 has 'repetitive_measurements' => (
     isa => 'Str',
     is => 'rw',
-    default => sub { return 'average'; }, # can be first, last, average, all_values_single_line, sum
+    default => sub { return 'average'; }, # can be first, last, average, all_values_single_line, sum, all_values_multiple_line
     );
 
 has 'single_measurements' => (
@@ -483,14 +483,6 @@ sub get_phenotype_matrix {
 		        	    $obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
                         # print STDERR "ALL VALUES SINGLE LINE = ".Dumper $obsunit_data{$obsunit_id}->{$cvterm};
 		            }
-
-                    # if ($self->repetitive_measurements() eq "all_values_multiple_line") {
-                        # my $all_multi_line =[];
-                        # foreach my $multi_value (@{$obsunit_data{$obsunit_id}->{$cvterm}}) {
-                            # push @$all_multi_line, {$cvterm => $multi_value};
-                        # }
-                        # $obsunit_data{$obsunit_id}->{$cvterm} = $all_multi_line;
-		            # }
 		        }
 
                 $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
@@ -568,22 +560,74 @@ sub get_phenotype_matrix {
         push @info, \@line;
 
         foreach my $p (@unique_obsunit_list) {
-            my @line = @{$obsunit_data{$p}->{metadata}};
+            my @metadata = @{$obsunit_data{$p}->{metadata}};
+            my $notes = $obsunit_data{$p}->{'notes'};
 
-            foreach my $trait (@sorted_traits) {
-                push @line, $obsunit_data{$p}->{$trait};
-            }
-            push @line,  $obsunit_data{$p}->{'notes'};
+            if ($self->repetitive_measurements() eq "all_values_multiple_line") { ##this block is only for when repetitive_measurement option is "all_values_multiple_line" !!!
+                # check how many values for each trait are recorded !!!
+                my $max_measurements = 0;
+                foreach my $trait (@sorted_traits) {
+                    my $trait_values = $obsunit_data{$p}->{$trait};
+                    if (ref($trait_values) eq 'ARRAY') {
+                        my $count = scalar(@$trait_values);
+                        $max_measurements = $count if $count > $max_measurements;
+                    } else {
+                        $max_measurements = 1 if $max_measurements < 1;
+                    }
+                }
 
-            # add treatment values to each obsunit line
-            my %unit_treatments;
-            if ($treatment_details->{$p}) {
-                %unit_treatments = %{$treatment_details->{$p}};
-            };
-            foreach my $name (@$treatment_names) {
-                push @line, $unit_treatments{$name};
+                ## store the values in separate row 
+                for (my $multi_line = 0; $multi_line < $max_measurements; $multi_line++) {
+                    my @line = @metadata;
+
+                    foreach my $trait (@sorted_traits) {
+                        my $trait_values = $obsunit_data{$p}->{$trait};
+
+                        if (ref($trait_values) eq 'ARRAY') {
+                            # Get the ith value if it exists, else undef
+                            my $value = $trait_values->[$multi_line];
+                            push @line, $value;
+                        } else {
+                            # Single value
+                            push @line, $multi_line == 0 ? $trait_values : undef;
+                        }
+                    }
+
+                    push @line, $multi_line == 0 ? $notes : undef;
+
+                    # Add treatment values only once
+                    if ($multi_line == 0) {
+                        my %unit_treatments = $treatment_details->{$p} ? %{$treatment_details->{$p}} : ();
+                        foreach my $name (@$treatment_names) {
+                            push @line, $unit_treatments{$name};
+                        }
+                    } else {
+                        # Fill with undef or empty strings
+                        foreach my $name (@$treatment_names) {
+                            push @line, undef;
+                        }
+                    }
+
+                    push @info, \@line;
+                }
+            }else{#this block is for all other repetitive options including - first, last, average, sum, and all values_in_single_line !!
+                my @line = @{$obsunit_data{$p}->{metadata}};
+
+                foreach my $trait (@sorted_traits) {
+                    push @line, $obsunit_data{$p}->{$trait};
+                }
+                push @line,  $obsunit_data{$p}->{'notes'};
+
+                # add treatment values to each obsunit line
+                my %unit_treatments;
+                if ($treatment_details->{$p}) {
+                    %unit_treatments = %{$treatment_details->{$p}};
+                };
+                foreach my $name (@$treatment_names) {
+                    push @line, $unit_treatments{$name};
+                }
+                push @info, \@line;
             }
-            push @info, \@line;
         }
     }
 
@@ -724,6 +768,13 @@ sub process_duplicate_measurements {
 	    $collated_multiple_observation->{value} = \@trait_values;
 	    $collated_multiple_observation->{squash_method} = $self->repetitive_measurements();
 	    $trait_observations = $collated_multiple_observation;
+    }
+
+    if ($self->repetitive_measurements() eq "all_values_multiple_line") {
+        foreach my $value (@$trait_observations) {
+            $value->{squash_method} = $self->repetitive_measurements();
+            # print STDERR "the all values in multiple line is : " . Dumper($value) . "\n";
+        }
     }
 
     #print STDERR "DONE WITH DUPLICATES, NOW: ".Dumper($trait_observations);
