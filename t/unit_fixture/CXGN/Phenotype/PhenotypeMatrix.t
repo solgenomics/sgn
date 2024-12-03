@@ -123,5 +123,6 @@ foreach my $repetitive_measurements ('average', 'all_values_single_line', 'first
     }  
 }
 
+$f->clean_up_db();
 
 done_testing();
