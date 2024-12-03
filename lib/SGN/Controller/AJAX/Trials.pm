@@ -157,7 +157,8 @@ sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
         { 'name' => $trial_name, 'projectprops.type_id' => $trial_type_id },
         { join => 'projectprops' }
     );
-    my $trial_id = $rs->project_id() if $rs;
+    my $trial_id;
+    $trial_id = $rs->project_id() if $rs;
 
     # Trial not found
     if ( !$trial_id || $trial_id eq '' ) {
