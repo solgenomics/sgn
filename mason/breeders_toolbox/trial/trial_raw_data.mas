@@ -24,7 +24,7 @@ $trial_id
 </style>
 
 <div class="well well-sm" id="phenotypes_recorded_observation_level">
-	<center><h4>Phenotypes recorded across observation levels</h4></center></hr>
+	<center><h4>Traits recorded across observation levels</h4></center></hr>
 	<div id="phenotypes_measured_per_observation_level">
 		<div class="row">
 			<div class="col-sm-8">
@@ -33,7 +33,7 @@ $trial_id
 					<thead>
 						<tr>
 							<th>Observation Level </th>
-							<th>Number of Phenotypes Measured</th>
+							<th>Number of Traits Measured</th>
 						</tr>
 					</thead>
 					<tbody>
