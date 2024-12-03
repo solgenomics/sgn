@@ -771,6 +771,7 @@ sub store {
 	    
             # Check if there is a note for this plot, If so add it using dedicated function
             my $note_array = $self->values_hash->{$plot_name}->{'notes'};
+            print STDERR "check note array is defined: " . Dumper($note_array) . "\n";
             if (defined $note_array) {
                 $self->store_stock_note($stock_id, $note_array, $operator);
             }
@@ -1048,16 +1049,33 @@ sub store_stock_note {
     my $self = shift;
     my $stock_id = shift;
     my $note_array = shift;
+    # print STDERR "the note array is: " . Dumper($note_array) . "\n";
     my $operator = shift;
-    my $note = $note_array->[0];
-    my $timestamp = $note_array->[1];
-    $operator = $note_array->[2] ? $note_array->[2] : $operator;
 
-    # print STDERR "Stock_id is $stock_id and note in sub is $note, timestamp is $timestamp, operator is $operator\n";
+    if (ref($note_array->[0]) eq 'ARRAY'){ #this block will execute, if there a multiple notes, this is in the case of repetitive values for the same observationUnitName!!
+        foreach my $note_entry (@$note_array) {
+            my ($note, $timestamp, $notes_operator) = @$note_entry;
+            $notes_operator = defined $notes_operator ? $notes_operator : $operator;
+            # print STDERR "multiple notes value: $note, timestamp: $timestamp, operator: $notes_operator\n";
 
-    $note = $note ." (Operator: $operator, Time: $timestamp)";
-    my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-    $stock->create_stockprops( { 'notes' => $note } );
+            #the note with operator and timestamp
+            my $full_note = $note ."(Operator: $notes_operator, Time: $timestamp)";
+
+            my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({ stock_id => $stock_id });
+            $stock->create_stockprops({ 'notes' => $full_note });
+            # print STDERR "multiple notes : $full_note\n";
+        }
+    }else{ #this will execute if there is a single notes !!
+        my ($note, $timestamp, $notes_operator) = @$note_array;
+        $notes_operator = defined $notes_operator ? $notes_operator : $operator;
+        # print STDERR "single notes values $note, timestamp: $timestamp, operator: $notes_operator\n";
+
+        $note = $note ." (Operator: $notes_operator, Time: $timestamp)";
+
+        my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+        $stock->create_stockprops( { 'notes' => $note } );
+        # print STDERR "Stored note for a single notes: $note\n";
+    }
 }
 
 
