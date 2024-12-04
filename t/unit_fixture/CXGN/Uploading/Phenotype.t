@@ -404,8 +404,10 @@ for my $extension ("xls", "xlsx") {
 
 
 	$f->dbh()->rollback();
-	$f->clean_up_db();
+
 }
+
+$f->clean_up_db();
 
 done_testing();
 #exit(0);
