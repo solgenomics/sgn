@@ -375,7 +375,9 @@ sub get_phenotype_matrix {
 
 	    foreach my $d (@$data) {
 	        my $value = "";
-	        if ($include_timestamp && exists($d->{timestamp})) {
+		$d->{timestamp} =~ s/^\s+|\s+$//g;
+		
+	        if ($include_timestamp && exists($d->{timestamp}) && $d->{timestamp}) {
 	    	    $value = "$d->{phenotype_value},$d->{timestamp}";
                 # print STDERR "value with phenotypes and timestamp: $value\n";
 	        }
@@ -655,26 +657,34 @@ sub format_observations {
         print STDERR "OBSERVATION = ".Dumper($observation);
 	    my $collect_date = $observation->{collect_date};
         # print STDERR "OBSERVATION = ". Dumper($observation);
-	    my $timestamp = $observation->{timestamp};
-    
+	my $timestamp = $observation->{timestamp};
+	$timestamp =~ s/^\s+|\s+$//g;
+	$collect_date =~ s/^s+|\s+$//g;
+	
 	    if ($include_timestamp && $timestamp) {
 
 	        if (ref($observation->{value})) {
 	    	    $observation->{value} = join("|", map { $_->{value}.",".$timestamp}  @$observation);
 	        }
-	        $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
+		else {
+		    $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
+		}
 	    }
 	    elsif ($include_timestamp && $collect_date) {
 	        if (ref($observation->{value})) {
 	    	    $observation->{value} = join("|", map {$_->{value}.",".$collect_date} @$observation);
 	        }
-	        $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
+		else {
+		    $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
+		}
 	    }
 	    else {
 	        if (ref($observation->{value})) {
-	    	$observation->{value} = join("|", @{$observation->{value}});
+		    $observation->{value} = join("|", @{$observation->{value}});
 	        }
-	        $trait_observations{$observation->{trait_name}} = $observation->{value};
+		else { 
+		    $trait_observations{$observation->{trait_name}} = $observation->{value};
+		}
 	    }
 
 	    ### FOR debugging only:
