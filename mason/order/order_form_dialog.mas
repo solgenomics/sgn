@@ -1,0 +1,88 @@
+<%args>
+$timestamp => localtime()
+</%args>
+
+<div class="modal fade" id="order_form_dialog" name="order_form_dialog" tabindex="-1" role="dialog" aria-labelledby="orderFormDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="orderFormDialog">Order Form</h4>
+            </div>
+            <div class="modal-body" id = "form_dialog">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="order_form" name="order_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Source Type: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="source_type">
+                                    <option value="">Please select a type</option>
+                                    <option value="accession">Accession</option>
+                                    <option value="plot">Plot</option>
+                                    <option value="plant">Plant</option>
+                                    <option value="seedlot">Seedlot</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id = "get_source_name">
+                            <label class="col-sm-3 control-label">Source Name: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" type="text" id="source_name" name="source_name" placeholder="source name must be in the database">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Additional Info: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="source_name_additional_info" placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Send Order To: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="send_order_to" placeholder="Please select">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="reset" id="close_order_form_dialog" name="close_order_form_dialog" class="btn btn-default" >Close</button>
+                    <button id="submit_order" type="button" class="btn btn-primary" >Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="order_form_dialog_message" name="order_form_dialog_message" tabindex="-1" role="dialog" aria-labelledby="orderFormSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="orderFormSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The order was sent successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_order_form_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery("#order_form_link").click( function() {
+        jQuery('#order_form_dialog').modal('show');
+
+    });
+
+});
+
+</script>

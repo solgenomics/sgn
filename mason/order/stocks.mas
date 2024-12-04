@@ -21,7 +21,11 @@ $user_id
 <td>
     <a href="/catalog/view"><p>Go to Catalog Page</p></a>
 </td>
-
+<td>
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="order_form_link">Order Form</button>
+</td>
+<br/>
+<br/>
 <br/>
 % if ($check_vendor_role == 1) {
     <&| /page/info_section.mas, title => 'Manage Current Orders', collapsible=>1, collapsed=>0 &>
@@ -204,6 +208,7 @@ $user_id
 <& /order/create_item_file_dialog.mas&>
 <& /order/create_ontology_file_dialog.mas &>
 <& /order/generate_identifier_barcode_dialog.mas, identifier => "", user_id => $user_id &>
+<& /order/order_form_dialog.mas &>
 
 <script>
 
