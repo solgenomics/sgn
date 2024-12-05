@@ -40,6 +40,8 @@ use Math::Round;
 use URI::Encode qw(uri_encode uri_decode);
 use Array::Utils qw(:all);
 use CXGN::Genotype::GenotypingProject;
+use CXGN::People::Schema;
+use CXGN::People::Roles;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -2379,6 +2381,54 @@ sub get_related_attributes_select : Path('/ajax/html/select/related_attributes')
     );
     $c->stash->{rest} = { select => $html };
 }
+
+
+sub get_vendors_select : Path('/ajax/html/select/vendors') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "vendors";
+    my $name = $c->req->param("name") || "vendors";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
+    my $schema = $c->dbic_schema("CXGN::People::Schema");
+
+    my %roles;
+    my $rs1 = $schema->resultset("SpRole")->search( { } );
+    while (my $row = $rs1->next()) {
+        $roles{$row->sp_role_id} = $row->name();
+    }
+
+    my $rs2 = $schema->resultset("SpPerson")->search (
+        { censor => 0, disabled => undef },
+        { join => 'sp_person_roles', '+select' => ['sp_person_roles.sp_role_id', 'sp_person_roles.sp_person_role_id' ],
+            '+as' => ['sp_role_id', 'sp_person_role_id' ],
+            order_by => 'sp_role_id'
+        }
+    );
+
+    my @vendors;
+    while (my $row = $rs2->next()) {
+        my $person_name = $row->first_name." ".$row->last_name();
+        my $vendor_id = $row->sp_person_id();
+        my $role_name = $roles{$row->get_column('sp_role_id')};
+        if ($role_name eq 'vendor') {
+            push @vendors, [$vendor_id, $person_name];
+        }
+    }
+    unshift @vendors, [ "", "Please select a person" ];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@vendors,
+    );
+
+    $c->stash->{rest} = { select => $html };
+
+}
+
 
 
 1;

@@ -38,13 +38,14 @@ $timestamp => localtime()
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Send Order To: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="send_order_to" placeholder="Please select">
+                                <div id="vendors_div"></div>
                             </div>
                         </div>
+
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="reset" id="close_order_form_dialog" name="close_order_form_dialog" class="btn btn-default" >Close</button>
+                    <button type="reset" id="dismiss_order_form_dialog" name="dismiss_order_form_dialog" class="btn btn-default" >Close</button>
                     <button id="submit_order" type="button" class="btn btn-primary" >Submit</button>
                 </div>
             </form>
@@ -79,9 +80,16 @@ $timestamp => localtime()
 jQuery(document).ready(function(){
 
     jQuery("#order_form_link").click( function() {
+        get_select_box('vendors', 'vendors_div', { 'name' : 'vendor_id', 'id' : 'vendor_id' });
+
         jQuery('#order_form_dialog').modal('show');
 
     });
+
+    jQuery("#dismiss_order_form_dialog").click(function(){
+        location.reload();
+    });
+
 
 });
 
