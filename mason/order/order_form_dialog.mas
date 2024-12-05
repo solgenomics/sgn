@@ -91,21 +91,25 @@ jQuery(document).ready(function(){
         } else if (jQuery(this).val() == 'accession') {
             jQuery("#source_name").autocomplete ({
                 source:'/ajax/stock/only_accession_autocomplete',
+                appendTo:"#order_form_dialog"
             });
             jQuery("#info_section").show();
         } else if (jQuery(this).val() == 'plot') {
             jQuery("#source_name").autocomplete ({
                 source:'/ajax/stock/plot_autocomplete',
+                appendTo:"#order_form_dialog"
             });
             jQuery("#info_section").show();
         } else if (jQuery(this).val() == 'plant') {
             jQuery("#source_name").autocomplete ({
                 source:'/ajax/stock/plant_autocomplete',
+                appendTo:"#order_form_dialog"
             });
             jQuery("#info_section").show();
         } else if (jQuery(this).val() == 'seedlot') {
             jQuery("#source_name").autocomplete ({
                 source:'/ajax/stock/seedlot_name_autocomplete',
+                appendTo:"#order_form_dialog"
             });
             jQuery("#info_section").show();
         }
