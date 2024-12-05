@@ -1379,6 +1379,72 @@ sub vector_construct_autocomplete_GET :Args(0) {
 }
 
 
+=head2 plot_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub plot_autocomplete : Local : ActionClass('REST') { }
+
+sub plot_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='plot' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 plant_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub plant_autocomplete : Local : ActionClass('REST') { }
+
+sub plant_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='plant' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    $c->stash->{rest} = \@response_list;
+}
+
+
 sub parents : Local : ActionClass('REST') {}
 
 sub parents_GET : Path('/ajax/stock/parents') Args(0) {
@@ -1788,10 +1854,10 @@ my sub get_shared_trials_GET :Args(1) {
     my @formatted_rows = ();
     my @all_analyses = ();
 
-    my $analysis_q = "select DISTINCT project.project_id FROM nd_experiment_project 
-    JOIN project USING (project_id) 
-    JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id 
-    JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id 
+    my $analysis_q = "select DISTINCT project.project_id FROM nd_experiment_project
+    JOIN project USING (project_id)
+    JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id
+    JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id
     WHERE cvterm.name='analysis_experiment';";
     my $h = $dbh->prepare($analysis_q);
     $h->execute();

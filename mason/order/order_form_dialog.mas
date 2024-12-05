@@ -23,25 +23,26 @@ $timestamp => localtime()
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group" id = "get_source_name">
-                            <label class="col-sm-3 control-label">Source Name: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" type="text" id="source_name" name="source_name" placeholder="source name must be in the database">
+                        <div id = "info_section" style="display:none">
+                            <div class="form-group" >
+                                <label class="col-sm-3 control-label">Source Name: </label>
+                                <div class="col-sm-9">
+                                    <input type ="text" class ="form-control" id ="source_name" placeholder="Name must be in the database">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Additional Info: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="source_name_additional_info" placeholder="">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Send Order To: </label>
+                                <div class="col-sm-9" >
+                                    <div id="vendors_div"></div>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Additional Info: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="source_name_additional_info" placeholder="">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Send Order To: </label>
-                            <div class="col-sm-9" >
-                                <div id="vendors_div"></div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -81,9 +82,33 @@ jQuery(document).ready(function(){
 
     jQuery("#order_form_link").click( function() {
         get_select_box('vendors', 'vendors_div', { 'name' : 'vendor_id', 'id' : 'vendor_id' });
-
         jQuery('#order_form_dialog').modal('show');
+    });
 
+    jQuery("#source_type").change(function() {
+        if (jQuery(this).val() == '') {
+            jQuery("#info_section").hide();
+        } else if (jQuery(this).val() == 'accession') {
+            jQuery("#source_name").autocomplete ({
+                source:'/ajax/stock/only_accession_autocomplete',
+            });
+            jQuery("#info_section").show();
+        } else if (jQuery(this).val() == 'plot') {
+            jQuery("#source_name").autocomplete ({
+                source:'/ajax/stock/plot_autocomplete',
+            });
+            jQuery("#info_section").show();
+        } else if (jQuery(this).val() == 'plant') {
+            jQuery("#source_name").autocomplete ({
+                source:'/ajax/stock/plant_autocomplete',
+            });
+            jQuery("#info_section").show();
+        } else if (jQuery(this).val() == 'seedlot') {
+            jQuery("#source_name").autocomplete ({
+                source:'/ajax/stock/seedlot_name_autocomplete',
+            });
+            jQuery("#info_section").show();
+        }
     });
 
     jQuery("#dismiss_order_form_dialog").click(function(){
