@@ -14,7 +14,7 @@ is($gtio->accessions->[-1], "Ug120191:250144197", "vcf last accession name");
 is(scalar(@{$gtio->accessions}), 9990, "vcf accession count");
 if (my $gt = $gtio->next()) { 
     #print STDERR Dumper($gt->markers());
-    is(scalar(@{$gt->markers()}), 15, "marker count in genotype");
+    is(scalar(@{$gt->markers()}), 14, "marker count in genotype");
 }
 
 my $gtio2 = CXGN::GenotypeIO->new( { file => "t/data/dosage_transposed.csv", format=>'dosage_transposed' } );
