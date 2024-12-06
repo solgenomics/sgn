@@ -84,10 +84,10 @@ ok($md5, "check md5sum");
 # Now parse phenotyping spreadsheet file using correct parser
 #
 my $parser = CXGN::Phenotypes::ParseUpload->new();
-my $validate_file = $parser->validate('phenotype spreadsheet simple', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+my $validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+my $parsed_file = $parser->parse('phenotype spreadsheet simple generic', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 print STDERR "PARSED FILE: ".Dumper $parsed_file;
@@ -162,10 +162,10 @@ ok($md5, "check md5sum");
 # Now parse phenotyping spreadsheet file using correct parser
 #
 $parser = CXGN::Phenotypes::ParseUpload->new();
-$validate_file = $parser->validate('phenotype spreadsheet simple', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+$validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-$parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+$parsed_file = $parser->parse('phenotype spreadsheet simple generic', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 print STDERR "PARSED FILE: ".Dumper $parsed_file;

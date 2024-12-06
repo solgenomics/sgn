@@ -994,7 +994,7 @@ sub upload_trial_file_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type, trial_name => $trial_name);
-    $parser->load_plugin('TrialExcelFormat');
+    $parser->load_plugin('TrialGeneric');
     $parsed_data = $parser->parse();
 
     if (!$parsed_data) {
