@@ -147,7 +147,7 @@ jQuery(document).ready(function ($) {
             var population_id = populations[i].stock_id;
             var accessions = populations[i].members;
             var member_type = populations[i].member_type
-            var table_id = name+i+"_pop_table";
+            var table_id = population_id+i+"_pop_table";
 
             var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" >';
             section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'" data-population_name="'+name+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>[Go To Population Page]</small></a></div><div class="col-sm-3"><a name="manage_populations_add_members" data-population_id="'+population_id+'" data-population_name="'+name+'" data-member_type="'+member_type+'"><small>[Add Members To Population]</small></a><br/><a name="manage_populations_delete_population" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Delete Population]</small></a></div></div></div></div>';
