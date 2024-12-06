@@ -31,15 +31,21 @@ $timestamp => localtime()
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Additional Info: </label>
+                                <label class="col-sm-3 control-label">Info 1: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="source_name_additional_info" placeholder="">
+                                    <input class="form-control" id="order_info_1" placeholder="">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Info 2: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="order_info_2" placeholder="">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Send Order To: </label>
                                 <div class="col-sm-9" >
-                                    <div id="vendors_div"></div>
+                                    <div id="contact_persons_div"></div>
                                 </div>
                             </div>
                         </div>
@@ -81,7 +87,7 @@ $timestamp => localtime()
 jQuery(document).ready(function(){
 
     jQuery("#order_form_link").click( function() {
-        get_select_box('vendors', 'vendors_div', { 'name' : 'vendor_id', 'id' : 'vendor_id' });
+        get_select_box('vendors', 'contact_persons_div', { 'name' : 'contact_person_id', 'id' : 'contact_person_id' });
         jQuery('#order_form_dialog').modal('show');
     });
 
@@ -117,6 +123,47 @@ jQuery(document).ready(function(){
 
     jQuery("#dismiss_order_form_dialog").click(function(){
         location.reload();
+    });
+
+    jQuery('#submit_order').click(function(){
+        const source_type = jQuery('#source_type').val();
+        const source_name = jQuery('#source_name').val();
+        const contact_person_id = jQuery('#contact_person_id').val();
+
+        let order_details = {};
+        order_details['order_info_1'] = jQuery('#order_info_1').val();
+        order_details['order_info_2'] = jQuery('#order_info_2').val();
+
+        jQuery.ajax({
+            url: '/ajax/order/order_submission',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'source_type' : source_type,
+                'source_name' : source_name,
+                'contact_person_id' : contact_person_id,
+                'order_details': JSON.stringify(order_details),
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success) {
+                    jQuery('#order_form_response_div').html(response.success);
+
+                    jQuery('#order_form_response_dialog').modal('show');
+                    jQuery('#order_form_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred saving your request');
+            }
+        });
     });
 
 
