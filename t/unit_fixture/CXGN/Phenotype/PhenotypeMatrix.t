@@ -86,7 +86,6 @@ foreach my $repetitive_measurements ('average', 'all_values_single_line', 'first
     $phenotypes_search->search_type($search_type);
     $phenotypes_search->repetitive_measurements($repetitive_measurements);
     
-    
     my @data = $phenotypes_search->get_phenotype_matrix();
     
     foreach my $d (@data) { 
@@ -95,7 +94,7 @@ foreach my $repetitive_measurements ('average', 'all_values_single_line', 'first
 	        print STDERR "$search_type, $repetitive_measurements, GOT: $d->[39], EXPECTED: $result\n";
     
 	        is( $d->[39], $result, "test $result" );
-	        print STDERR "MATCHED: ".Dumper($d);
+	        #print STDERR "MATCHED: ".Dumper($d);
 	    }
     }  
 }
@@ -118,11 +117,14 @@ foreach my $repetitive_measurements ('average', 'all_values_single_line', 'first
 	        print STDERR "$search_type, $repetitive_measurements, GOT: $d->[30], EXPECTED: $result\n";
     
 	        is( $d->[30], $result, "test $result" );
-	        print STDERR "MATCHED: ".Dumper($d);
+	        #print STDERR "MATCHED: ".Dumper($d);
 	    }
     }  
 }
 
 $f->clean_up_db();
+
+system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $dbpass -m phenotypes");
+    
 
 done_testing();

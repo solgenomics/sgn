@@ -330,7 +330,7 @@ sub get_phenotype_matrix {
 		    %trait_observations = $self->format_observations($observations);
 	        }
     
-	        print STDERR "FORMATTED OBSERVATIONS =".Dumper(\%trait_observations)."\n";
+	    #print STDERR "FORMATTED OBSERVATIONS =".Dumper(\%trait_observations)."\n";
     
 	        if ($include_phenotype_primary_key) {
 		    foreach my $observation (@$observations) {
@@ -363,7 +363,7 @@ sub get_phenotype_matrix {
     else {  ### NATIVE ??!!
 	
         $data = $phenotypes_search->search();
-        print STDERR "the download data structure =". Dumper($data)."\n";
+        #print STDERR "the download data structure =". Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;
@@ -375,15 +375,17 @@ sub get_phenotype_matrix {
 
 	    foreach my $d (@$data) {
 	        my $value = "";
-		$d->{timestamp} =~ s/^\s+|\s+$//g;
+
+		my $timestamp = $d->{timestamp};
+		if ($timestamp) { $timestamp =~ s/^\s+|\s+$//g; }
 		
-	        if ($include_timestamp && exists($d->{timestamp}) && $d->{timestamp}) {
+	        if ($include_timestamp && $timestamp) {
 	    	    $value = "$d->{phenotype_value},$d->{timestamp}";
-                # print STDERR "value with phenotypes and timestamp: $value\n";
+		    # print STDERR "value with phenotypes and timestamp: $value\n";
 	        }
 	        else {
 	    	    $value = $d->{phenotype_value};
-                # print STDERR "value only with phenotypes: $value\n";
+		    # print STDERR "value only with phenotypes: $value\n";
 	        }
 	        push @{ $obsunit_data{$d->{obsunit_stock_id}}->{$d->{trait_name} } }, $value;
 	    }
@@ -431,7 +433,10 @@ sub get_phenotype_matrix {
 		        	    my $sum = 0;
 		        	    foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
                             # print STDERR "the value of v  in the average = $v\n";
-                            my ($value, $timestamp) = split(',', $v);
+					my ($value, $timestamp);
+					if (defined($v)) { 
+					    ($value, $timestamp) = split(',', $v);
+					}
                             #if timestamp is undefined, $v is the last measurement
                             $value = $v unless defined $timestamp;
 		        	        if (defined($value)) {   
@@ -463,15 +468,25 @@ sub get_phenotype_matrix {
                         my $sum_all_values = 0;
                         foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
                             # print STDERR "the value of v in the sum = $v\n";
-                            my ($value, $timestamp) = split(',', $v);
+			    my ($value, $timestamp);
+			    if (defined($v)) { 
+				($value, $timestamp) = split(',', $v);
+			    }
                             if (defined($value)) {
                                 $sum_all_values += $value;
                             }
                         }
                         # It's same as in the average above, retrieve the last_measurement timestamp !!
                         my $last_measurement = $sorted_measurements[-1];
-                        my ($last_value, $last_timestamp) = split(',', $last_measurement);
-                        $last_value = $last_measurement unless defined $last_timestamp;
+
+			my ($last_value, $last_timestamp) = (undef, undef);
+
+			if ($last_measurement) {
+			    ($last_value, $last_timestamp) = split(',', $last_measurement);
+			}
+			
+                        #$last_value = $last_measurement unless defined $last_timestamp;
+			
                         # Store the sum of all values, with the last_measurement timestamp !!
                         # Conditionally include the timestamp
                         if ($include_timestamp && defined $last_timestamp) {
@@ -481,7 +496,8 @@ sub get_phenotype_matrix {
                         }
                     }
 
-		            if ($self->repetitive_measurements() eq "all_values_single_line") {
+		    if ($self->repetitive_measurements() eq "all_values_single_line") {
+			no warnings;
 		        	    $obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
                         # print STDERR "ALL VALUES SINGLE LINE = ".Dumper $obsunit_data{$obsunit_id}->{$cvterm};
 		            }
@@ -535,7 +551,7 @@ sub get_phenotype_matrix {
             }
         }
         #print STDERR "PLOT DATA = ".Dumper \%plot_data;
-        print STDERR "TRAITS = ".Dumper \%traits;
+        #print STDERR "TRAITS = ".Dumper \%traits;
 
         # retrieve treatments
         my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
@@ -652,37 +668,44 @@ sub format_observations {
     my $dataset_excluded_outliers_ref = $self->dataset_excluded_outliers;
 
     my $de_duplicated_observations = $self->detect_multiple_measurements($observations);
-    print STDERR "DE-DUPLICATED OBSERVATIONS = ".Dumper($de_duplicated_observations);
+    #print STDERR "DE-DUPLICATED OBSERVATIONS = ".Dumper($de_duplicated_observations);
     foreach my $observation (@$de_duplicated_observations){
-        print STDERR "OBSERVATION = ".Dumper($observation);
-	    my $collect_date = $observation->{collect_date};
-        # print STDERR "OBSERVATION = ". Dumper($observation);
+        #print STDERR "OBSERVATION = ".Dumper($observation);
+	my $collect_date = $observation->{collect_date};
+        #print STDERR "OBSERVATION = ". Dumper($observation);
 	my $timestamp = $observation->{timestamp};
-	$timestamp =~ s/^\s+|\s+$//g;
-	$collect_date =~ s/^s+|\s+$//g;
-	
+	if (defined($timestamp)) { $timestamp =~ s/^\s+|\s+$//g; }
+	if (defined($collect_date)) { $collect_date =~ s/^s+|\s+$//g; }
+
 	    if ($include_timestamp && $timestamp) {
 
-	        if (ref($observation->{value})) {
+	        if (ref($observation->{value}) eq 'ARRAY') {
+		    #print STDERR "processing OBSERVATION with timestamp: "; #.Dumper($observation);
 	    	    $observation->{value} = join("|", map { $_->{value}.",".$timestamp}  @$observation);
+		    $trait_observations{$observation->{trait_name}} = $observation->{value};
 	        }
 		else {
 		    $trait_observations{$observation->{trait_name}} = "$observation->{value},$timestamp";
 		}
 	    }
 	    elsif ($include_timestamp && $collect_date) {
-	        if (ref($observation->{value})) {
+	        if (ref($observation->{value}) eq 'ARRAY') {
+		    #print STDERR "processing OBSERVATION with collect_date: "; #Dumper($observation);
 	    	    $observation->{value} = join("|", map {$_->{value}.",".$collect_date} @$observation);
+		    $trait_observations{$observation->{trait_name}} = $$observation->{value};
 	        }
 		else {
 		    $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";
 		}
 	    }
-	    else {
-	        if (ref($observation->{value})) {
-		    $observation->{value} = join("|", @{$observation->{value}});
+	else {
+	        if (ref($observation->{value}) eq 'ARRAY') {
+		    #print STDERR "Processing observation alone\n";
+		    $observation->{value} =   join("|", @{$observation->{value}});
+		    $trait_observations{$observation->{trait_name}} = $observation->{value};
 	        }
-		else { 
+	    else {
+		#print STDERR "Single value processing ($observation->{value})!\n";
 		    $trait_observations{$observation->{trait_name}} = $observation->{value};
 		}
 	    }
