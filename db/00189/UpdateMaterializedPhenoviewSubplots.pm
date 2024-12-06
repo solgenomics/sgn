@@ -88,8 +88,7 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
   ORDER BY breeding_program_id, location_id, trial_id, accession_id, seedlot_id, stock.stock_id, phenotype_id, trait_id
 WITH DATA;
 CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(stock_id,phenotype_id,trait_id) WITH (fillfactor=100);
-
-REFRESH MATERIALIZED VIEW public.materialized_phenoview;
+ALTER MATERIALIZED VIEW materialized_phenoview OWNER TO web_usr;
 
 -- drop and recreate genoview with new column for genotype project id
 
