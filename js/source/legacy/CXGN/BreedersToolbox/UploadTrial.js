@@ -393,4 +393,10 @@ jQuery(document).ready(function ($) {
         location.reload();
     });
 
+    jQuery('[name="update_trial_link"]').click(function() {
+        jQuery('#upload_trial_metadata_dialog').modal("show");
+    });
+    jQuery('#trial_metadata_upload_spreadsheet_format_info').click(function() {
+        jQuery('#trial_metadata_upload_spreadsheet_format_modal').modal("show");
+    });
 });
