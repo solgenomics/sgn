@@ -2417,7 +2417,7 @@ sub get_vendors_select : Path('/ajax/html/select/vendors') Args(0) {
             push @vendors, [$vendor_id, $person_name];
         }
     }
-    unshift @vendors, [ "", "Please select a person" ];
+    unshift @vendors, [ "", "Please select a contact person" ];
 
     my $html = simple_selectbox_html(
         name => $name,

@@ -60,23 +60,20 @@ $timestamp => localtime()
     </div>
 </div>
 
-<div class="modal fade" id="order_form_dialog_message" name="order_form_dialog_message" tabindex="-1" role="dialog" aria-labelledby="orderFormSavedDialog">
+<div class="modal fade" id="order_form_response_dialog" name="order_form_response_dialog" tabindex="-1" role="dialog" aria-labelledby="orderFormResponseDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="orderFormSavedDialog">Success</h4>
+                <h4 class="modal-title" id="orderFormResponseDialog">Your Order</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The order was sent successfully.
-                    </p>
+                    <div id="order_form_response_div"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_order_form_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_order_form_response_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -127,8 +124,22 @@ jQuery(document).ready(function(){
 
     jQuery('#submit_order').click(function(){
         const source_type = jQuery('#source_type').val();
+        if (!source_type) {
+            alert("Please select a source type");
+            return;
+        }
+
         const source_name = jQuery('#source_name').val();
+        if (!source_name) {
+            alert("Please provide a source name");
+            return;
+        }
+
         const contact_person_id = jQuery('#contact_person_id').val();
+        if (!contact_person_id) {
+            alert("Please select a contact person");
+            return;
+        }
 
         let order_details = {};
         order_details['order_info_1'] = jQuery('#order_info_1').val();
@@ -164,6 +175,10 @@ jQuery(document).ready(function(){
                 alert('An error occurred saving your request');
             }
         });
+    });
+
+    jQuery("#dismiss_order_form_response_dialog").click(function(){
+        location.reload();
     });
 
 

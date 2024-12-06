@@ -877,7 +877,6 @@ sub order_submission_POST : Args(0) {
     my $order_details = decode_json ($c->req->param('order_details'));
     my %details;
     my @item_list;
-    print STDERR "DETAILS =".Dumper($order_details)."\n";
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
         $c->stash->{rest} = {error_string => "You must be logged in to submit your order." };
