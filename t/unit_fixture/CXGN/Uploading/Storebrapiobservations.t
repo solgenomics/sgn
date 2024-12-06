@@ -127,6 +127,22 @@ is_deeply($response, {
                                             {
                                               'observationLevel' => 'plot',
                                               'observationTimeStamp' => '2015-06-16T00:53:26Z',
+                                              'germplasmName' => 'test_accession4',
+                                              'observationUnitName' => 'test_trial214',
+                                              'uploadedBy' => 'collector1',
+                                              'collector' => 'collector1',
+                                              'germplasmDbId' => 38843,
+                                              'observationUnitDbId' => 38870,
+                                              'value' => '110',
+                                              'observationVariableDbId' => '70773',
+                                              'observationVariableName' => 'fresh shoot weight measurement in kg',
+                                              'studyDbId' => 137,
+                                              'externalReferences' => undef,
+                                              'additionalInfo' => undef,
+                                            },
+					    {
+                                              'observationLevel' => 'plot',
+                                              'observationTimeStamp' => '2015-06-16T00:53:26Z',
                                               'germplasmName' => 'test_accession3',
                                               'observationUnitName' => 'test_trial210',
                                               'uploadedBy' => 'collector1',
@@ -140,22 +156,7 @@ is_deeply($response, {
                                               'externalReferences' => undef,
                                               'additionalInfo' => undef,
                                             },
-                                            {
-                                              'observationLevel' => 'plot',
-                                              'observationTimeStamp' => '2015-06-16T00:53:26Z',
-                                              'germplasmName' => 'test_accession4',
-                                              'observationUnitName' => 'test_trial214',
-                                              'uploadedBy' => 'collector1',
-                                              'collector' => 'collector1',
-                                              'germplasmDbId' => 38843,
-                                              'observationUnitDbId' => 38870,
-                                              'value' => '110',
-                                              'observationVariableDbId' => '70773',
-                                              'observationVariableName' => 'fresh shoot weight measurement in kg',
-                                              'studyDbId' => 137,
-                                              'externalReferences' => undef,
-                                              'additionalInfo' => undef,
-                                            }
+					    
                                           ]
                       },
           'metadata' => {
