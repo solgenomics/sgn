@@ -46,6 +46,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $exact_cross = $params->{exact_cross};
     my $quality = $params->{quality};
     my $only_good_quality = $params->{only_good_quality};
+    my $trial_name = $params->{trial_name};
+    my $trial_usage = $params->{trial_usage};
 
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
@@ -83,7 +85,10 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         undef,
         $quality,
         $only_good_quality,
-        $box_name
+        $box_name,
+        undef,
+        $trial_name,
+        $trial_usage,
     );
     my @seedlots;
     foreach my $sl (@$list) {

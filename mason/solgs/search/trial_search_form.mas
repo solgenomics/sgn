@@ -28,9 +28,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <input  type="text"
 	    class="form-control"
 	    placeholder="search for a trial"
-	    size="50" id="population_search_entry"/>
+	    size="50" id="trial_search_box"/>
 
-    <button type="submit" class="btn btn-success" id="search_training_pop">
+    <button type="submit" class="btn btn-success" id="search_trial">
       <span class="glyphicon glyphicon-search"></span>
     </button>
 
@@ -40,8 +40,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <div style="color:red" id="form-feedback-search-trials"> </div>
   </div>
 </div>
-  <div id="searched_trials_message"  class="message"></div>
-  <div id="searched_trials_div" style="display:none;"></div>
+  <div id="trial_search_progress_message"  class="message"></div>
+<!--    <div id="trial_search_result" style="display:none;"></div> -->
  <br />
 
 <& /solgs/search/trials_search_result.mas &>
