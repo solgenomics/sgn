@@ -121,9 +121,33 @@ foreach (@{$response->{result}->{observations}}){
     delete $_->{observationDbId};
 }
 
+# the problem here is that the has is in random order, so to check
+# we need to sort the observations for something more stable
+#
+my @sorted_observations = sort { $a->{germplasmName} cmp $b->{germplasmName} } @{ $response->{result}->{observations} };
+
+$response->{result}->{observations} = \@sorted_observations;
+
 is_deeply($response, {
           'result' => {
-                        'observations' => [
+	      'observations' => [
+		                           {
+		                              'observationLevel' => 'plot',
+                                              'observationTimeStamp' => '2015-06-16T00:53:26Z',
+                                              'germplasmName' => 'test_accession3',
+                                              'observationUnitName' => 'test_trial210',
+                                              'uploadedBy' => 'collector1',
+                                              'collector' => 'collector1',
+                                              'germplasmDbId' => 38842,
+                                              'observationUnitDbId' => 38866,
+                                              'value' => '11',
+                                              'observationVariableName' => 'dry matter content percentage',
+                                              'observationVariableDbId' => '70741',
+                                              'studyDbId' => 137,
+                                              'externalReferences' => undef,
+                                              'additionalInfo' => undef,
+                                            },
+
                                             {
                                               'observationLevel' => 'plot',
                                               'observationTimeStamp' => '2015-06-16T00:53:26Z',
@@ -136,22 +160,6 @@ is_deeply($response, {
                                               'value' => '110',
                                               'observationVariableDbId' => '70773',
                                               'observationVariableName' => 'fresh shoot weight measurement in kg',
-                                              'studyDbId' => 137,
-                                              'externalReferences' => undef,
-                                              'additionalInfo' => undef,
-                                            },
-					    {
-                                              'observationLevel' => 'plot',
-                                              'observationTimeStamp' => '2015-06-16T00:53:26Z',
-                                              'germplasmName' => 'test_accession3',
-                                              'observationUnitName' => 'test_trial210',
-                                              'uploadedBy' => 'collector1',
-                                              'collector' => 'collector1',
-                                              'germplasmDbId' => 38842,
-                                              'observationUnitDbId' => 38866,
-                                              'value' => '11',
-                                              'observationVariableName' => 'dry matter content percentage',
-                                              'observationVariableDbId' => '70741',
                                               'studyDbId' => 137,
                                               'externalReferences' => undef,
                                               'additionalInfo' => undef,
