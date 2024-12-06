@@ -197,8 +197,8 @@ jQuery(document).ready(function(){
         var population_name = jQuery('#seedlot_population_name').val();
         var organization = jQuery('#seedlot_organization').val();
         var source = jQuery("#seedlot_source").val();
-        var amount = jQuery('#seedlot_amount').val();
-        var weight = jQuery('#seedlot_weight').val();
+        var amount = jQuery('#seedlot_amount').val().trim();
+        var weight = jQuery('#seedlot_weight').val().trim();
         var timestamp = jQuery('#seedlot_timestamp').val();
         var transaction_description = jQuery('#seedlot_transaction_description').val();
         var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
@@ -207,7 +207,7 @@ jQuery(document).ready(function(){
         if (name == '') { alert("Please provide a name"); return; }
         else if (location == '') { alert("Please provide a location"); return; }
         else if (box_name == '') { alert("Please provide a box name"); return; }
-        else if (amount == '' && weight == '') { alert("Please provide a seed count amount or a weight in grams!"); return; }
+        else if (amount.trim().length == 0 && weight.trim().length == 0) { alert("Please provide a seed count amount or a weight in grams!"); return; }
         else if (isNaN(amount)) { alert("If inputting a seed count amount, it must be a numeric value."); return; }
         else if (isNaN(weight)) { alert("If inputting a weight, it must be a numeric value."); return; }
         else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
