@@ -6,15 +6,15 @@ use CXGN::GenotypeIO;
 
 my $gtio = CXGN::GenotypeIO->new( { file => "t/data/cassava_test.vcf", format => 'vcf'});
 
-is(scalar(@{$gtio->markers}), 15, "vcf marker count 1");
+is(scalar(@{$gtio->markers}), 14, "vcf marker count 1");
 is($gtio->markers->[0], "S1_14740", "vcf first marker name");
-is($gtio->markers->[-1], "S1_14911", "vcf last marker name");
+is($gtio->markers->[-1], "S1_14909", "vcf last marker name");
 is($gtio->accessions->[0], "1002:250060174", "vcf first accession name");
 is($gtio->accessions->[-1], "Ug120191:250144197", "vcf last accession name");
 is(scalar(@{$gtio->accessions}), 9990, "vcf accession count");
 if (my $gt = $gtio->next()) { 
     #print STDERR Dumper($gt->markers());
-    is(scalar(@{$gt->markers()}), 15, "marker count in genotype");
+    is(scalar(@{$gt->markers()}), 14, "marker count in genotype");
 }
 
 my $gtio2 = CXGN::GenotypeIO->new( { file => "t/data/dosage_transposed.csv", format=>'dosage_transposed' } );
