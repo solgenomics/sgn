@@ -1264,6 +1264,66 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 }
 
 
+sub upload_trial_metadata_file : Path('/ajax/trial/upload_trial_metadata_file') : ActionClass('REST') { }
+
+sub upload_trial_metadata_file_POST : Args(0) {
+    my ($self, $c)                 = @_;
+    my $upload                     = $c->req->upload('trial_metadata_upload_file');
+
+    my $dbhost                     = $c->config->{dbhost};
+    my $dbname                     = $c->config->{dbname};
+    my $dbpass                     = $c->config->{dbpass};
+    my $basepath                   = $c->config->{basepath};
+    my $dbuser                     = $c->config->{dbuser};
+    my $time                       = DateTime->now();
+    my $timestamp                  = $time->ymd()."_".$time->hms();
+    my $upload_original_name       = $upload->filename();
+    my $upload_tempfile            = $upload->tempname;
+    my $subdirectory               = "trial_metadata";
+    my $archive_filename           = $timestamp . "_" . $upload_original_name;
+
+    # Check if user is logged in and has curator or submitter privileges
+    if (!$c->user()) {
+        print STDERR "User not logged in... not uploading a trial.\n";
+        $c->stash->{rest} = {errors => "You need to be logged in to update a trial." };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
+        $c->stash->{rest} = {errors =>  "You have insufficient privileges to update a trial." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $username = $c->user()->get_object()->get_username();
+
+    # Check filename for spaces and/or slashes
+    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+        print STDERR "File name must not have spaces or slashes.\n";
+        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
+        return;
+    }
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user->get_object->get_user_type()
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $c->stash->{rest} = {errors => 'NOT IMPLEMENTED'};
+    return;
+}
+
+
 sub upload_soil_data : Path('/ajax/trial/upload_soil_data') : ActionClass('REST') { }
 
 sub upload_soil_data_POST : Args(0) {

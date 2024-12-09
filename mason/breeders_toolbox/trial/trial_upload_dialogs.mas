@@ -848,6 +848,10 @@ $design_types => ()
                         <input type="file" name="trial_metadata_upload_file" id="trial_metadata_upload_file" encoding="multipart/form-data" />
                     </form>
 
+                    <div style="display:none; margin: 15px; padding: 15px" id="upload_trial_metadata_warning_messages" class="alert-warning" role="alert"></div>
+                    <div style="display:none; margin: 15px; padding: 15px" id="upload_trial_metadata_error_messages" class="alert-danger" role="alert"></div>
+                    <div style="display:none; margin: 15px; padding: 15px" id="upload_trial_metadata_success_messages" class="alert-success" role="alert"></div>
+
                     <& /help/file_upload_type.mas, type => "Trial Metadata" , optional_column => 1 &>
                 </div>
             </div>
