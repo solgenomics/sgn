@@ -874,6 +874,7 @@ sub order_submission_POST : Args(0) {
     my $source_type = $c->req->param('source_type');
     my $source_name = $c->req->param('source_name');
     my $contact_person_id = $c->req->param('contact_person_id');
+    my $tracking_id = $c->req->param('tracking_id');
     my $order_details = decode_json ($c->req->param('order_details'));
     print STDERR "ORDER DETAILS =".Dumper($order_details)."\n";
     my %details;
@@ -889,6 +890,20 @@ sub order_submission_POST : Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
+
+    my $source_name_rs = $schema->resultset("Stock::Stock")->find({uniquename => $source_name});
+    if (!$source_name_rs) {
+        $c->stash->{rest} = {error_string => "Source name is not in the database." };
+        return;
+    }
+
+    if ($tracking_id) {
+        my $tracking_id_rs = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_id});
+        if ($tracking_id_rs) {
+            $c->stash->{rest} = {error_string => "Your tracking ID has already been used. Please use another tracking ID." };
+            return;
+        }
+    }
 
     $details{$source_name} = $order_details;
     push @item_list, \%details;

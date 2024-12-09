@@ -41,6 +41,12 @@ $order_properties_dialog
                                     <div id="contact_persons_div"></div>
                                 </div>
                             </div>
+                            <div class="form-group" >
+                                <label class="col-sm-3 control-label">Tracking ID: </label>
+                                <div class="col-sm-9">
+                                    <input type ="text" class ="form-control" id ="tracking_id" placeholder="Must be globally unique">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -124,6 +130,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#dismiss_order_form_dialog").click(function(){
+        jQuery('#source_type').val('');
         location.reload();
     });
 
@@ -146,9 +153,11 @@ jQuery(document).ready(function(){
             return;
         }
 
+        const tracking_id = jQuery('#tracking_id').val();
+
         let order_details = {};
-        for(var i=0; i<properties.length; i++){
-            var each_value = jQuery('#'+ properties[i] +'').val();
+        for(let i=0; i<properties.length; i++){
+            let each_value = jQuery('#'+ properties[i] +'').val();
             order_details[properties[i]] = each_value;
         }
 
@@ -161,6 +170,7 @@ jQuery(document).ready(function(){
                 'source_name' : source_name,
                 'contact_person_id' : contact_person_id,
                 'order_details': JSON.stringify(order_details),
+                'tracking_id' : tracking_id,
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -185,6 +195,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#dismiss_order_form_response_dialog").click(function(){
+        jQuery('#source_type').val('');
         location.reload();
     });
 
