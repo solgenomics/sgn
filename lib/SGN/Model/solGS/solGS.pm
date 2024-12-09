@@ -389,8 +389,6 @@ sub get_trial_accessions {
 
 sub get_trial_id_by_accession {
     my ($self, $accession_id) = @_;
-
-    print STDERR "\nMODEL: get_trial_id_by_accession accession_id: $accession_id\n";
     
     my $q = "SELECT trial_id FROM accessionsXtrials WHERE accession_id = ?";
 
