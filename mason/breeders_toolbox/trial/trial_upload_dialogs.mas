@@ -827,7 +827,7 @@ $design_types => ()
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>This upload can be used to update the metadata of trials that have <strong>already been added to the database</strong></p>
-                    <p>Any metadata in the upload file will replace any existing metadata.  Blank values will leave the existing metadata.</p>
+                    <p>Any metadata provided in the upload file will replace any existing metadata.  Blank values in the upload file will leave the existing metadata unchanged.</p>
 
                     <&| /page/explanation.mas, title=>'Template information' &>
                         <p>
