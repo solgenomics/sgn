@@ -901,10 +901,12 @@ jQuery(document).ready(function () {
   jQuery("#pca_div").on("click", function (e) {
     var runPcaBtnId = e.target.id;
     if (runPcaBtnId.match(/run_pca/)) {
-      var pcaArgs = solGS.pca.getPcaArgs();
-      var pcaPopId = pcaArgs.pca_pop_id;
-      if (!pcaPopId) {
+    
+      var  pcaArgs;
+      if (document.URL.match(/pca\/analysis\//)) {
         pcaArgs = solGS.pca.getSelectedPopPcaArgs(runPcaBtnId);
+      } else {
+        pcaArgs = solGS.pca.getPcaArgs();
       }
 
       pcaPopId = pcaArgs.pca_pop_id;
@@ -912,7 +914,6 @@ jQuery(document).ready(function () {
       var pcaMsgDiv = solGS.pca.pcaMsgDiv;
       var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
       pcaArgs["analysis_page"] = pcaUrl;
-
 
       solGS.pca
         .checkCachedPca(pcaArgs)

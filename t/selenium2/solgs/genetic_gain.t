@@ -22,9 +22,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->get('/solgs', 'solgs home page');
     sleep(4);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(3);
@@ -38,9 +38,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(10);
@@ -67,7 +67,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(10);
@@ -130,7 +130,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(20);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(5);

@@ -53,15 +53,15 @@ print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs home page');
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(1);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
 
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
@@ -84,15 +84,15 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(3);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
 
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
@@ -173,7 +173,7 @@ $d->while_logged_in_as("submitter", sub {
 
 	my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
 	my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
-	$d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+	$d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
 	sleep(5);
 	$d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
 	sleep(100);
@@ -317,7 +317,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(5);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(5);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(20);

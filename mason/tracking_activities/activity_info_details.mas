@@ -2,13 +2,23 @@
 <%args>
 $identifier_name
 $identifier_id
-$breeding_program => undef
+$program_name
 $user_id => undef
 $identifier_prefix => ''
 $type_select_options => undef
 $activity_headers
 $timestamp => undef
+$date => undef
 $material_name
+$material_id
+$material_type
+$updated_status_type => undef
+$updated_status_string => undef
+$status_display => undef
+$user_role
+$project_id
+$activity_type
+$source_info => undef
 
 </%args>
 
@@ -23,6 +33,17 @@ $material_name
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+% if ($updated_status_type) {
+    <div class="modal-header" style="text-align: center">
+        <h4 class="modal-title" ><%$status_display%></h4>
+        <h4><%$updated_status_string%></h4>
+    </div>
+% }
+
+<td>
+    <a href='/breeders/trial/<%$project_id%>'><p>Go to Project Page</p></a>
+</td>
+
 <&| /page/info_section.mas, title => 'Record', collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class="well ">
         <form class="form-horizontal" >
@@ -32,8 +53,9 @@ $material_name
                     <input class="form-control" id="material_info" name="material_info" type="text" disabled value="<%$material_name%>">
                 </div>
             </div>
+% if (!$updated_status_type) {
             <div class="form-group">
-                <label class="col-sm-3 control-label">Type: </label>
+                <label class="col-sm-3 control-label">Input Type: </label>
                 <div class="col-sm-5">
 % if ($type_select_options) {
                     <select id="type_select">
@@ -57,7 +79,7 @@ $material_name
                     <textarea class="form-control" id="selected_type_notes" name="selected_type_notes" ></textarea>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="display:none">
                 <label class="col-sm-3 control-label">Timestamp: </label>
                 <div class="col-sm-5">
                     <input class="form-control" id="record_timestamp" name="record_timestamp" type="text" disabled value="<%$timestamp%>">
@@ -66,6 +88,7 @@ $material_name
             <center>
                 <button id="activity_info_submit" name="activity_info_submit" class="btn btn-primary">Save</button>
             </center>
+% }
         </form>
     </div>
 </&>
@@ -132,12 +155,38 @@ $material_name
     </div>
 </div>
 
+% if ($material_type eq 'transformation') {
+    <& /transformation/transformants_section.mas, transformation_id => $material_id &>
+    <& /transformation/obsoleted_transformants_section.mas, transformation_id => $material_id &>
+% }
+
+
+<&| /page/info_section.mas, title=>"Update Status",  collapsible => 1, collapsed=>1 &>
+% if ($user_role eq "curator" ) {
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+% if ($updated_status_type) {
+    <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link" name = "update_status_usage_link">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="reverse_status_link">Reverse Status</button>
+% } else {
+    <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link" name = "update_status_usage_link">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="update_status_link">Update Status</button>
+% }
+            </div>
+        </div>
+    </div>
+% } else {
+    You need to be logged in or you do not have sufficient privileges to update status of this tracking identifier.
+% }
+</&>
+
+<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id, material_id => $material_id, updated_status_type => $updated_status_type, material_id => $material_id, program_name => $program_name &>
 
 <script>
 
 jQuery(document).ready( function() {
 
     var identifier_id = "<%$identifier_id%>";
+    var date = "<%$date%>";
 
     jQuery('#activity_info_table').DataTable({
         'autoWidth': false,
@@ -153,6 +202,14 @@ jQuery(document).ready( function() {
         'paging': false,
         'info': false,
         'ajax': '/ajax/tracking_activity/summary/'+identifier_id,
+    });
+
+    jQuery('#type_select').change(function() {
+        jQuery('#selected_type_input').val('');
+        var input_type = jQuery('#type_select').val();
+        if (input_type.indexOf('date') != -1) {
+            jQuery('#selected_type_input').val(date);
+        }
     });
 
     jQuery('#activity_info_submit').click( function(e) {
@@ -176,11 +233,15 @@ jQuery(document).ready( function() {
             dataType: "json",
             type: 'POST',
             data : {
-                'tracking_identifier' : "<%$identifier_name%>",
+                'tracking_identifier_name' : "<%$identifier_name%>",
+                'tracking_identifier_id' : "<%$identifier_id%>",
                 'selected_type': selected_type,
                 'input': input,
                 'record_timestamp': record_timestamp,
-                'notes': notes
+                'notes': notes,
+                'activity_type': "<%$activity_type%>",
+                'program_name': "<%$program_name%>",
+                'source_info': '<%$source_info%>'
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

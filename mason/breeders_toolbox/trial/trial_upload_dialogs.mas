@@ -66,6 +66,8 @@ $design_types => ()
                                             </&>
                                             <button id="next_step_file_formatting_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                         </center>
+                                        <br /><br />
+                                        <& /help/file_upload_type.mas, type => "Single Trial Designs", optional_column => 1 &>
                                     </div>
 
                                     <div id="multiple_tab" class="tab-pane fade">
@@ -117,7 +119,9 @@ $design_types => ()
                                             <br>
                                             <button type="button" class="btn btn-primary" id="multiple_trial_designs_upload_submit" disabled>Upload Trial Designs</button>
                                             <button style="display:none" class="btn btn-primary" id="upload_multiple_trials_success_button">Reload Page</button>
+                                            <br /><br />
                                         </center>
+                                        <& /help/file_upload_type.mas, type => "Multiple Trial Designs", optional_column => 1 &>
                                     </div>
 
                                 </div>
@@ -349,6 +353,8 @@ $design_types => ()
 %        $method = 'greenhouse';
 %    } elsif ($type eq 'Split Plot'){
 %        $method = 'splitplot';
+%    } elsif ($type eq 'Strip Plot'){
+%        $method = 'stripplot';
 %    } elsif ($type eq 'Partially Replicated'){
 %        $method = 'p-rep';
 %    } else {
@@ -552,6 +558,7 @@ $design_types => ()
                                     <li>You an add phenotypes for the plots or plants in this trial now.</li>
                                 </ul>
                                 <br/>
+                                <div name="upload_trial_completed_message"></div>
                                 <!--center>
                                 <button class="btn btn-primary" id="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
                                 </center-->
@@ -685,8 +692,8 @@ $design_types => ()
                     <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions/cross unique ids/family names that are controls, so you should indicate the plots of those accessions/cross unique ids/family names as a control.)</li>
                     <li>rep_number (replicate number, numeric)</li>
                     <li>range_number (range number. often synonymous with col_number, numeric)</li>
-                    <li>row_number (row number. If the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot should be row 1, column 1)</li>
-                    <li>col_number (column number. If the field is a grid, this represents the x coordinate. Sometimes called range_number, numeric, required for field map generation. the top left plot should be row 1, column 1)</li>
+                    <li>row_number (row number. If the field is a grid, this represents the y coordinate, numeric, required for field map generation.)</li>
+                    <li>col_number (column number. If the field is a grid, this represents the x coordinate. Sometimes called range_number, numeric, required for field map generation.)</li>
                     <li>seedlot_name (the seedlot from where the planted seed originated. Must exist in the database)</li>
                     <li>num_seed_per_plot (number seeds per plot. Seed is transferred from seedlot mentioned in seedlot_name. Numeric)</li>
                     <li>weight_gram_seed_per_plot (weight in gram of seeds in plot. seed is transferred from seedlot mentioned in seedlot name. Numeric)</li>
@@ -719,7 +726,6 @@ $design_types => ()
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Trials may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
                     <b>Multiple Trial Designs:</b>
                     <br />
@@ -772,7 +778,7 @@ $design_types => ()
                     <li>location (The <strong>name</strong> or <strong>abbreviation</strong> of the location where the trial was held, must exist in the database.)</li>
                     <li>year (The year the trial was held.)</li>
 
-                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
+                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), stripplot (Strip Plot / Split Block), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
                     <li>description (Additional text with any other relevant information about the trial.)</li>
                     <li>accession_name (The accession being tested in the plot, must exist in the database.)</li>
                     <li>plot_number (A sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). These numbers should be unique for the trial.)</li>
@@ -792,8 +798,8 @@ $design_types => ()
                     <li>is_a_control (type 1 in this field if the plot is a control, otherwise 0 or leave blank. generally you will have accessions that are controls, so you should indicate the plots that that accession is in as a control.)</li>
                     <li>rep_number (replicate number, must be numeric)</li>
                     <li>range_number (range number. often synonymous with col_number, must be numeric)</li>
-                    <li>row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
-                    <li>col_number (column number. if the field is a grid, this represents the x coordinate. sometimes called range_number, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
+                    <li>row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation.)</li>
+                    <li>col_number (column number. if the field is a grid, this represents the x coordinate. sometimes called range_number, numeric, required for field map generation.)</li>
                     <li>seedlot_name (the seedlot from where the planted seed originated. must exist in the database)</li>
                     <li>num_seed_per_plot (number seeds per plot. seed is transferred from seedlot mentioned in seedlot_name. numeric)</li>
                     <li>weight_gram_seed_per_plot (weight in gram of seeds in plot. seed is transferred from seedlot mentioned in seedlot name. numeric)</li>
@@ -806,7 +812,7 @@ $design_types => ()
                     </ul>
 
                     <hr />
-                    <p>Only the required fields are necessary to include in the upload template.  You may add any additional optional fields.  The fields can be in any order.</p>
+                    <& /help/file_upload_type.mas, type => "Trials", optional_column => 1 &>
 
                 </div>
             </div>

@@ -46,6 +46,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $exact_cross = $params->{exact_cross};
     my $quality = $params->{quality};
     my $only_good_quality = $params->{only_good_quality};
+    my $trial_name = $params->{trial_name};
+    my $trial_usage = $params->{trial_usage};
 
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
@@ -83,7 +85,10 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         undef,
         $quality,
         $only_good_quality,
-        $box_name
+        $box_name,
+        undef,
+        $trial_name,
+        $trial_usage,
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -467,11 +472,6 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $transaction_description = $c->req->param("seedlot_transaction_description");
     my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
-    if (!$weight && !$amount){
-        $c->stash->{rest} = {error=>'A seedlot must have either a weight or an amount.'};
-        $c->detach();
-    }
-
     if (!$timestamp){
         $c->stash->{rest} = {error=>'A seedlot must have a timestamp for the transaction.'};
         $c->detach();
@@ -509,11 +509,15 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $transaction->factor(1);
         $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
         $transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
-        if ($amount){
+        if (defined($amount) && length($amount)){
             $transaction->amount($amount);
+        } else {
+            $transaction->amount('NA');
         }
-        if ($weight){
+        if (defined($weight) && length($weight)){
             $transaction->weight_gram($weight);
+        } else {
+            $transaction->weight_gram('NA');
         }
         $transaction->timestamp($timestamp);
         $transaction->description($transaction_description);
