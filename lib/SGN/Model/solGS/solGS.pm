@@ -387,6 +387,25 @@ sub get_trial_accessions {
 
 }
 
+sub get_trial_id_by_accession {
+    my ($self, $accession_id) = @_;
+
+    print STDERR "\nMODEL: get_trial_id_by_accession accession_id: $accession_id\n";
+    
+    my $q = "SELECT trial_id FROM accessionsXtrials WHERE accession_id = ?";
+
+    my $sth = $self->schema->storage->dbh->prepare($q);
+    $sth->execute($accession_id);
+
+    my @trials_ids;
+    while (my $trial_id = $sth->fetchrow_array()) {
+        push @trials_ids, $trial_id;
+    }
+
+    return \@trials_ids;
+
+}
+
 
 sub has_phenotype {
     my ( $self, $pr_id ) = @_;
