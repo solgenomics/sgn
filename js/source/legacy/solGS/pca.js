@@ -20,13 +20,14 @@ solGS.pca = {
   },
 
   getPcaAnalysisArgs: function(pcaAnalysisElemId) {
-    var pcaArgs = {}
+    var pcaArgs;
     if (pcaAnalysisElemId != 'undefined') {
       pcaArgs = solGS.pca.getSelectedPopPcaArgs(pcaAnalysisElemId);  
     } 
 
     if (!pcaArgs) {
       var url = location.pathname;
+
       if (url.match(/pca\/analysis/)) {
         pcaArgs = this.getArgsFromPcaUrl();
       } else {
@@ -110,9 +111,9 @@ solGS.pca = {
 
       var dataType;
       if (protocolId) {
-        dataType = "genotype";
+        dataType = "Genotype";
       } else {
-        dataType = "phenotype";
+        dataType = "Phenotype";
       }
 
       var dataStr;
@@ -135,7 +136,8 @@ solGS.pca = {
         data_structure: dataStr,
         data_type: dataType,
         genotyping_protocol_id: protocolId,
-        analysis_type: 'pca analysis'
+        analysis_type: 'pca analysis',
+        analysis_page: page,
       };
 
       var reg = /\d+-+\d+/;
@@ -158,22 +160,26 @@ solGS.pca = {
     }
   },
 
-
   getSelectedPopPcaArgs: function (runPcaElemId) {
     var pcaArgs;
     var selectedPopDiv = document.getElementById(runPcaElemId);
-
+  
     if (selectedPopDiv) {
+
       var selectedPopData = selectedPopDiv.dataset;
       var selectedPop = JSON.parse(selectedPopData.selectedPop);
-      pcaPopId = selectedPop.pca_pop_id;      
-      var dataType = this.getSelectedDataType(pcaPopId);
-      var pcaUrl = this.generatePcaUrl(pcaPopId);
+      pcaPopId = selectedPop.pca_pop_id;   
 
       var pcaArgs = selectedPopData.selectedPop;
       pcaArgs = JSON.parse(pcaArgs);
-      pcaArgs["data_type"] = dataType;
-      pcaArgs["analysis_page"] = pcaUrl;
+
+      if (!selectedPop.data_type) {
+        pcaArgs["data_type"] = this.getSelectedDataType(pcaPopId);
+      }
+
+      if (!runPcaElemId.match(/save_pcs/)) {
+        pcaArgs["analysis_page"] = this.generatePcaUrl(pcaPopId);
+      }
     }
 
     return pcaArgs;
@@ -444,7 +450,6 @@ solGS.pca = {
     
     pcaArgs['file_id'] = res.file_id;
     pcaArgs = JSON.stringify(pcaArgs);
-
     var savePcs = `<button id="save_pcs_btn_${res.file_id}" class="btn btn-success" data-selected-pop='${pcaArgs}'>Save PCs</button>`;
 
     var downloadLinks =`<div class="download_pca_output">` +
