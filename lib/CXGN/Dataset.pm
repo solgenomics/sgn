@@ -1300,13 +1300,9 @@ sub get_child_analyses {
 
     my $analysis_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
 
-    my $analysis_q = "select DISTINCT project.name, project.project_id FROM nd_experiment_project 
+    my $analysis_q = "select DISTINCT project.name, project.project_id FROM projectprop 
     JOIN project USING (project_id) 
-    JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id
-    JOIN projectprop AS analysisinfo ON (project.project_id=analysisinfo.project_id)
-    JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id 
-    WHERE cvterm.name='analysis_experiment' 
-        AND analysisinfo.type_id=$analysis_info_type_id 
+    WHERE projectprop.type_id=$analysis_info_type_id 
         AND analysisinfo.value::json->>'dataset_id'=?;";
     my $h = $dbh->prepare($analysis_q);
     $h->execute($dataset_id);
