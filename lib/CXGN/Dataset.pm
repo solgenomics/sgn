@@ -50,6 +50,7 @@ Lukas Mueller <lam87@cornell.edu>
 
 package CXGN::Dataset;
 
+use List::Util 'sum';
 use Moose;
 use Moose::Util::TypeConstraints;
 use Data::Dumper;
@@ -330,6 +331,16 @@ has 'include_phenotype_primary_key' => (
     default => 0
 );
 
+=head2 tool_compatibility()
+
+=cut
+
+has 'tool_compatibility' => (
+    isa => 'Maybe[String]',
+    is => 'rw',
+    # default => ""
+);
+
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
 sub BUILD {
@@ -357,11 +368,12 @@ sub BUILD {
         $self->years($dataset->{categories}->{years});
         $self->breeding_programs($dataset->{categories}->{breeding_programs});
         $self->genotyping_protocols($dataset->{categories}->{genotyping_protocols});
-	$self->genotyping_projects($dataset->{categories}->{genotyping_projects});
+	    $self->genotyping_projects($dataset->{categories}->{genotyping_projects});
         $self->locations($dataset->{categories}->{locations});
         $self->trial_designs($dataset->{categories}->{trial_designs});
         $self->trial_types($dataset->{categories}->{trial_types});
         $self->category_order($dataset->{category_order});
+        $self->tool_compatibility($dataset->{tool_compatibility});
         $self->is_live($dataset->{is_live});
         $self->is_public($dataset->{is_public}); 
         if ($args->{outliers}) { $self->outliers($args->{outliers})} else { $self->outliers($dataset->{outliers}); }
@@ -583,6 +595,7 @@ sub get_dataset_data {
     $dataref->{category_order} = $self->category_order();
     $dataref->{outliers} = $self->outliers() if $self->outliers;
     $dataref->{outlier_cutoffs} = $self->outlier_cutoffs() if $self->outliers;
+    $dataref->{tool_compatibility} = $self->tool_compatibility() if $self->tool_compatibility;
     return $dataref;
 }
 
@@ -602,6 +615,7 @@ sub _get_dataref {
     $dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->trial_designs && scalar(@{$self->trial_designs})>0;
     $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->trial_types && scalar(@{$self->trial_types})>0;
     $dataref->{locations} = join(",", @{$self->locations()}) if $self->locations && scalar(@{$self->locations})>0;
+    $dataref->{tool_compatibility} = $self->tool_compatibility() if $self->tool_compatibility;
     return $dataref;
 }
 
@@ -1185,6 +1199,181 @@ sub retrieve_trial_types {
         }
     }
     return \@trial_types;
+}
+
+=head2 retrieve_tool_compatibility
+
+Returns precalculated tool compatibility as a JSON string, if any. 
+
+=cut
+
+sub retrieve_tool_compatibility {
+    my $self = shift;
+
+    if ($self->tool_compatibility) {
+        return $self->tool_compatibility
+    } else {
+        return "(not calculated)";
+    }
+}
+
+=head2 store_tool_compatibility
+
+Uploads a JSON of analysis tools that this dataset can be used with. For example, a dataset with genotype data but no trait phenotypes cannot be used with GWAS.
+Note that this function should only ever be called once for a dataset and have the data stored as part of the dataset definition JSON, since retrieving high dimensional phenotype and genotype
+data can be time consuming. 
+Tools that use datasets: 
+    solGS - genotyping data and phenotyping data
+    PCA - genotyping data
+    Cluster Analysis - genotyping data and/or phenotyping data
+    Kinship & Inbreeding - genotyping data
+    Stability - trials and observed traits, trials must have multiple locations. Traits and accessions need to be represented in all locations, with replicates. Some missing data allowed. 
+    Heritability - trial(s) w/ different designs and observed traits. 
+    Mixed Models - observed traits, fairly flexible
+    Boxplots - observed traits
+    GWAS - at least one trial, a genotyping protocol, and observed traits
+
+=cut
+
+sub store_tool_compatibility {
+    my $self = shift;
+
+    my $tool_compatibility = {
+        'Boxplotter' => {
+            'url' => '/tools/boxplotter',
+            'compatible' => 0
+        },
+        'Population Structure' => {
+            'url' => '/pca/analysis',
+            'compatible' => 0
+        },
+        'Clustering' => {
+            'url' => '/cluster/analysis',
+            'types' => [],
+            'compatible' => 0
+        },
+        'Kinship & Inbreeding' => {
+            'url' => '/kinship/analysis',
+            'compatible' => 0
+        },
+        'Mixed Models' => {
+            'url' => '/tools/mixedmodels',
+            'compatible' => 0
+        },
+        'Stability' => {
+            'url' => '/tools/stability',
+            'traits' => [],
+            'compatible' => 0
+        }, 
+        'Heritability' => {
+            'url' => '/tools/heritability',
+            'traits' => [],
+            'compatible' => 0
+        },
+        'solGS' => {
+            'url' => '/solgs',
+            'traits' => [],
+            'compatible' => 0
+        },
+        'GWAS' => {
+            'url' => '/tools/solgwas',
+            'traits' => [],
+            'compatible' => 0
+        }
+    };
+
+    my $trials = $self->retrieve_trials(); # faster and easier than pulling it out of the phenotypes_ref
+        # listref of listrefs, first index is trialID, second is trial name
+    my $locations = $self->retrieve_locations(); # faster and easier than pulling it out of the phenotypes_ref
+        # listref of listrefs, first index is locationID, second is location name
+    my $genotypes = $self->retrieve_genotypes(); # Give it at least 15 seconds!
+        # listref of hashrefs. Each hashref should describe a stock (accession) genotype measurement, with a list of SNPs/genotypes.
+        # Relevant hash keys: stock_id, germplasmName, analysisMethod, selected_genotype_hash
+    my ($phenotypes, undef) = $self->retrieve_phenotypes_ref(); # Unique traits are included in this, so we don't need a call to retrieve_traits
+        # Returns data as a listref with two hashrefs. First hashref is a list of all phenotypes in this dataset, which is an observational unit w/ a list 
+        # of trait observations. Each OU is a stock (plot, accession, etc). Second hashref has all unique traits in the phenotype list. 
+        # Relevant hash keys: observations, trial_id, trial_location_id, germplasm_stock_id, trait_id, trait_name, value
+
+    my $geno_represented_accessions = {};
+    foreach my $genotype (@{$genotypes}) {
+        $geno_represented_accessions->{$genotype->{'stock_id'}} = 1;
+    }
+    my $num_genotyped_accessions = scalar(%{$geno_represented_accessions});
+
+    my $num_markers = [map {$_->{'resultCount'}} @{$genotypes}];
+    $num_markers = sum(@{$num_markers}) / scalar @{$num_markers}; #average marker size should be large enough to do a GWAS. There is no set minimum since it depends on LD scores but I will say they need at least 100
+
+    my $obs_by_trait = {};
+    my $pheno_represented_accessions = {};
+
+    foreach my $observation (@{$phenotypes}){ # hash map of count of every trait observation at every location
+        my $location = $observation->{'trial_location_id'};
+        $pheno_represented_accessions->{$observation->{'germplasm_stock_id'}} = 1;
+        my @traits = map {$_->{'trait_id'}} @{$observation->{'observations'}};
+        foreach my $trait (@traits) {
+            if (!exists($obs_by_trait->{$trait}->{$location})){
+                $obs_by_trait->{$trait}->{$location} = 1;
+            } else {
+                $obs_by_trait->{$trait}->{$location} += 1;
+            }
+        }
+    }
+    my $num_phenotyped_accessions = scalar(%{$pheno_represented_accessions});
+
+    my $num_typed_accessions = scalar( grep {exists($geno_represented_accessions->{$_})} keys(%{$pheno_represented_accessions}) ); # number of accessions with both geno and pheno data
+
+    if (scalar @{$phenotypes}) {
+        $tool_compatibility->{'Boxplotter'}->{'compatible'} = 1;
+    }
+
+    if ($num_genotyped_accessions > 1) {
+        $tool_compatibility->{'Population Structure'}->{'compatible'} = 1;
+        $tool_compatibility->{'Kinship & Inbreeding'}->{'compatible'} = 1;
+        $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
+        push @{$tool_compatibility->{'Clustering'}->{'types'}}, 'Genotype'
+    }
+
+    if ($num_phenotyped_accessions > 1) { #dont need to go trait by trait for clustering, just need plenty of trait measurements
+        $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
+        push @{$tool_compatibility->{'Clustering'}->{'types'}}, 'Phenotype';
+        
+        if(@{$self->retrieve_trial_designs()}) {
+            $tool_compatibility->{'Mixed Models'}->{'compatible'} = 1;
+        }
+        if ($num_typed_accessions > 1) {
+            $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
+            push @{$tool_compatibility->{'Clustering'}->{'types'}}, 'GEBV'
+        }
+    }
+
+    foreach my $trait (@{$self->retrieve_traits()}){ # For each trait, we need to check for number of observations (plus locations for stability)
+        my $sum = 0;
+        my @location_counts = ();
+        foreach my $location (@{$locations}){
+            $sum += $obs_by_trait->{$trait->[0]}->{$location->[0]};
+            push @location_counts, $obs_by_trait->{$trait->[0]}->{$location->[0]};
+        }
+
+        if ($sum > 0) { # This trait was measured
+            if (@{$self->trial_designs()}){
+                $tool_compatibility->{'Heritability'}->{'compatible'} = 1;
+                push @{$tool_compatibility->{'Heritability'}->{'traits'}}, $trait->[1];
+            }
+            if (scalar(grep {$_ > 0} @location_counts) > 1) { # More than one location had measurements
+                $tool_compatibility->{'Stability'}->{'compatible'} = 1;
+                push @{$tool_compatibility->{'Stability'}->{'traits'}}, $trait->[1];
+            }
+        }
+
+        if ($sum > 100 && $num_markers > 100 && $num_typed_accessions > 50) { # If lots of markers, lots of accessions, and lots of phenotype measurements, then you can do genomic modeling
+            $tool_compatibility->{'GWAS'}->{'compatible'} = 1;
+            push @{$tool_compatibility->{'GWAS'}->{'traits'}}, $trait->[1];
+            $tool_compatibility->{'solGS'}->{'compatible'} = 1;
+            push @{$tool_compatibility->{'solGS'}->{'traits'}}, $trait->[1];
+        }
+    }
+
+    return JSON::Any->encode($tool_compatibility);
 }
 
 sub get_dataset_definition  {
