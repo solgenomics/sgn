@@ -206,6 +206,19 @@ sub get_genotypes_list_details {
 
 }
 
+sub get_list_breeding_program {
+  my ($self, $c) = @_;
+
+  $self->get_genotypes_list_details($c);
+  my $accessions_ids = $c->stash->{genotypes_ids};
+  
+  my $trials_ids = $c->controller('solGS::Search')->model($c)->get_trial_id_by_accession($accessions_ids->[0]);
+  my $program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trials_ids->[0]);
+
+  return $program_id;
+
+}
+
 sub create_list_pop_data_files {
     my ( $self, $c ) = @_;
 

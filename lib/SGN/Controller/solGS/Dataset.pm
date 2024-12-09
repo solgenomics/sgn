@@ -4,6 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use Carp qw/ carp confess croak /;
+use CXGN::Dataset;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 use POSIX qw(strftime);
@@ -199,6 +200,15 @@ sub create_dataset_pheno_data_query_jobs {
     }
 }
 
+sub get_dataset_breeding_program {
+    my ($self, $c) = @_;
+
+	my $trials_ids = $c->controller('solGS::Dataset')->get_dataset_trials_ids($c);
+	my $program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trials_ids->[0]);
+
+    return $program_id;
+
+}
 
 sub create_dataset_geno_data_query_jobs {
     my ($self, $c) = @_;
