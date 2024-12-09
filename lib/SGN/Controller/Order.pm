@@ -29,6 +29,11 @@ sub order_stocks :Path('/order/stocks/view') :Args(0) {
     my $tracking_order_activity = $c->config->{tracking_order_activity};
     $c->stash->{tracking_order_activity} = $tracking_order_activity;
 
+    my $order_properties = $c->config->{order_properties};
+    my $order_properties_dialog = $c->config->{order_properties_dialog};
+    $c->stash->{order_properties} = $order_properties;
+    $c->stash->{order_properties_dialog} = $order_properties_dialog;
+
     $c->stash->{template} = '/order/stocks.mas';
 
 }

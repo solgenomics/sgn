@@ -4,6 +4,8 @@ $role => "stock_orderer"
 $check_vendor_role => undef
 $tracking_order_activity => undef
 $user_id
+$order_properties => undef
+$order_properties_dialog => undef
 
 </%args>
 
@@ -208,7 +210,7 @@ $user_id
 <& /order/create_item_file_dialog.mas&>
 <& /order/create_ontology_file_dialog.mas &>
 <& /order/generate_identifier_barcode_dialog.mas, identifier => "", user_id => $user_id &>
-<& /order/order_form_dialog.mas &>
+<& /order/order_form_dialog.mas, order_properties => $order_properties, order_properties_dialog => $order_properties_dialog &>
 
 <script>
 

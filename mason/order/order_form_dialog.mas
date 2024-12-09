@@ -1,5 +1,7 @@
 <%args>
 $timestamp => localtime()
+$order_properties
+$order_properties_dialog
 </%args>
 
 <div class="modal fade" id="order_form_dialog" name="order_form_dialog" tabindex="-1" role="dialog" aria-labelledby="orderFormDialog">
@@ -30,18 +32,9 @@ $timestamp => localtime()
                                     <input type ="text" class ="form-control" id ="source_name" placeholder="Name must be in the database">
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Info 1: </label>
-                                <div class="col-sm-9" >
-                                    <input class="form-control" id="order_info_1" placeholder="">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Info 2: </label>
-                                <div class="col-sm-9" >
-                                    <input class="form-control" id="order_info_2" placeholder="">
-                                </div>
-                            </div>
+
+                            <div id="order_properties_div"></div>
+
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Send Order To: </label>
                                 <div class="col-sm-9" >
@@ -83,9 +76,21 @@ $timestamp => localtime()
 <script>
 jQuery(document).ready(function(){
 
+    const order_properties = "<% $order_properties %>";
+    const properties = order_properties.split(",");
+    const order_properties_dialog = "<% $order_properties_dialog %>";
+    const properties_dialog = order_properties_dialog.split(",");
+
+
     jQuery("#order_form_link").click( function() {
         get_select_box('vendors', 'contact_persons_div', { 'name' : 'contact_person_id', 'id' : 'contact_person_id' });
         jQuery('#order_form_dialog').modal('show');
+
+        var html = '';
+        for(var i=0; i<properties_dialog.length; i++){
+            html = html + '<label class="col-sm-3 control-label">'+ properties_dialog[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ properties[i] +' name= '+ properties[i] +' placeholder=""></div><br><br>';
+        }
+        jQuery('#order_properties_div').html(html);
     });
 
     jQuery("#source_type").change(function() {
@@ -142,8 +147,10 @@ jQuery(document).ready(function(){
         }
 
         let order_details = {};
-        order_details['order_info_1'] = jQuery('#order_info_1').val();
-        order_details['order_info_2'] = jQuery('#order_info_2').val();
+        for(var i=0; i<properties.length; i++){
+            var each_value = jQuery('#'+ properties[i] +'').val();
+            order_details[properties[i]] = each_value;
+        }
 
         jQuery.ajax({
             url: '/ajax/order/order_submission',

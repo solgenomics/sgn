@@ -875,6 +875,7 @@ sub order_submission_POST : Args(0) {
     my $source_name = $c->req->param('source_name');
     my $contact_person_id = $c->req->param('contact_person_id');
     my $order_details = decode_json ($c->req->param('order_details'));
+    print STDERR "ORDER DETAILS =".Dumper($order_details)."\n";
     my %details;
     my @item_list;
     if (!$c->user()) {
