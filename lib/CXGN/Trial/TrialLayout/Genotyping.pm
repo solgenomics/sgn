@@ -47,7 +47,7 @@ sub retrieve_plot_info {
      if (! $plot_number) { print STDERR "NO PLOT NUMBER AVAILABLE!!!!\n"; }
 
      my $project = $self->get_project();
-     my $genotyping_user_id;
+     my $genotyping_user_id = "unknown";
      my $genotyping_project_name;
 
      my $genotyping_user_id_row = $project
@@ -55,7 +55,9 @@ sub retrieve_plot_info {
 	 ->search_related("nd_experiment")
 	 ->search_related("nd_experimentprops")
 	 ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
-     $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
+     if ($genotyping_user_id_row) { 
+	 $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
+     }
 
 #     my $genotyping_project_name_row = $project
 #	 ->search_related("nd_experiment_projects")
