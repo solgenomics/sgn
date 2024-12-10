@@ -81,8 +81,7 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
     $html .= "</table>";
 
     # print STDERR "=============================\n";
-    # my ($phenodata, $unique_traits) = $dataset->retrieve_phenotypes_ref();
-    # print STDERR reftype($phenodata);
+    # print STDERR Dumper $dataset->store_tool_compatibility();
     # print STDERR "\n=============================\n";
 
     $c->stash->{dataset_name} = $dataset->name();
