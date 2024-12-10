@@ -1270,6 +1270,7 @@ sub upload_trial_metadata_file_POST : Args(0) {
     my ($self, $c)                 = @_;
     my $upload                     = $c->req->upload('trial_metadata_upload_file');
 
+    my $chado_schema               = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbhost                     = $c->config->{dbhost};
     my $dbname                     = $c->config->{dbname};
     my $dbpass                     = $c->config->{dbpass};
@@ -1319,6 +1320,32 @@ sub upload_trial_metadata_file_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    # parse uploaded file with trial metadata plugin
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, user_id => $user_id);
+    $parser->load_plugin('TrialMetadataGeneric');
+    my $parsed_data = $parser->parse();
+
+    my @errors;
+    my @warnings;
+    if (!$parsed_data) {
+        my $parse_errors = $parser->get_parse_errors();
+        $c->stash->{rest} = { errors => $parse_errors ? $parse_errors->{'error_messages'} : ['No data returned'] };
+        return;
+    }
+
+    if ($parser->has_parse_warnings()) {
+        my $warnings = $parser->get_parse_warnings();
+        $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
+        return;
+    }
+
+    print STDERR "\n\n\n\nRETURNED PARSED DATA:\n";
+    print STDERR Dumper $parsed_data;
+
+
+    # TODO: Store the updated trial metadata
+
+    # TODO: RETURN SUCCESS WHEN COMPLETE
     $c->stash->{rest} = {errors => 'NOT IMPLEMENTED'};
     return;
 }
