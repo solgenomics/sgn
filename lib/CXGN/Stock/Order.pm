@@ -125,9 +125,12 @@ sub get_orders_from_person_id {
 sub get_orders_to_person_id {
     my $self = shift;
     my $schema = $self->bcs_schema();
+    my $dbh = $self->dbh();
     my $people_schema = $self->people_schema();
     my $person_id = $self->order_to_id();
-    my $dbh = $self->dbh();
+    my $person_name = CXGN::People::Person->new($dbh, $person_id);
+    my $order_to_name = $person_name->get_first_name()." ".$person_name->get_last_name();
+
     my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
 
     my $order_rs = $people_schema->resultset('SpOrder')->search( { order_to_id => $person_id } );
@@ -155,6 +158,7 @@ sub get_orders_to_person_id {
         push @orders, {
             order_id => $order_id,
             order_from_name => $order_from_name,
+            order_to_name => $order_to_name,
             create_date => $create_date,
             clone_list => $all_items,
             order_status => $order_status,

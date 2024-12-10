@@ -6,6 +6,7 @@ $tracking_order_activity => undef
 $user_id
 $order_properties => undef
 $order_properties_dialog => undef
+$user_name
 
 </%args>
 
@@ -13,10 +14,10 @@ $order_properties_dialog => undef
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
 
 % if ($check_vendor_role == 1) {
-    <&| /page/page_title.mas, title => "Manage Orders for Vendor" &>
+    <&| /page/page_title.mas, title => "Manage Orders for $user_name" &>
     </&>
 % } else {
-    <&| /page/page_title.mas, title => "Your Orders" &>
+    <&| /page/page_title.mas, title => "Your Submitted Orders" &>
     </&>
 %}
 
@@ -231,7 +232,8 @@ $(window).ready( function() {
         'ajax': '/ajax/order/vendor_current_orders',
         columns: [
             { title: "Order Number", "data": null, "render": function ( data, type, row ) { return "<a href='/order/details/view/"+row.order_id+"'>"+row.order_id+"</a>"; } },
-            { title: "Ordered by", "data": "order_from_name" },
+            { title: "Submitted by", "data": "order_from_name" },
+            { title: "Sent to", "data": "order_to_name" },
             { title: "Submitted Date", "data": "create_date" },
             { title: "Order Details", "data": "order_details" },
             { title: "Status", "data": "order_status" },
@@ -245,7 +247,8 @@ $(window).ready( function() {
         'ajax': '/ajax/order/vendor_completed_orders',
         columns: [
             { title: "Order Number", "data": null, "render": function ( data, type, row ) { return "<a href='/order/details/view/"+row.order_id+"'>"+row.order_id+"</a>"; } },
-            { title: "Ordered by", "data": "order_from_name" },
+            { title: "Submitted by", "data": "order_from_name" },
+            { title: "Sent to", "data": "order_to_name" },            
             { title: "Submitted Date", "data": "create_date" },
             { title: "Order Details", "data": "order_details" },
             { title: "Status", "data": "order_status" },

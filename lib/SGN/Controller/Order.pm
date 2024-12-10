@@ -13,6 +13,8 @@ BEGIN { extends 'Catalyst::Controller'; }
 sub order_stocks :Path('/order/stocks/view') :Args(0) {
     my $self = shift;
     my $c = shift;
+    my $dbh = $c->dbc->dbh;
+    my $user_id;
 
     if (! $c->user()) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -22,9 +24,13 @@ sub order_stocks :Path('/order/stocks/view') :Args(0) {
     if ($c->user) {
         my $check_vendor_role = $c->user->check_roles('vendor');
         $c->stash->{check_vendor_role} = $check_vendor_role;
-        my $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_id = $c->user()->get_object()->get_sp_person_id();
         $c->stash->{user_id} = $user_id;
     }
+
+    my $person_name_obj = CXGN::People::Person->new($dbh, $user_id);
+    my $user_name = $person_name_obj->get_first_name()." ".$person_name_obj->get_last_name();
+    $c->stash->{user_name} = $user_name;
 
     my $tracking_order_activity = $c->config->{tracking_order_activity};
     $c->stash->{tracking_order_activity} = $tracking_order_activity;
