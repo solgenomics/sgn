@@ -47,6 +47,12 @@ $order_properties_dialog
                                     <input type ="text" class ="form-control" id ="tracking_id" placeholder="Must be globally unique">
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Breeding Program: </label>
+                                <div class="col-sm-9" >
+                                    <div id="order_breeding_program_div"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -90,6 +96,7 @@ jQuery(document).ready(function(){
 
     jQuery("#order_form_link").click( function() {
         get_select_box('vendors', 'contact_persons_div', { 'name' : 'contact_person_id', 'id' : 'contact_person_id' });
+        get_select_box('breeding_programs', 'order_breeding_program_div', { 'name' : 'order_breeding_program_id', 'id' : 'order_breeding_program_id', 'empty': 1 });
         jQuery('#order_form_dialog').modal('show');
 
         var html = '';
@@ -153,6 +160,12 @@ jQuery(document).ready(function(){
             return;
         }
 
+        const order_breeding_program_id = jQuery('#order_breeding_program_id').val();
+        if (!order_breeding_program_id) {
+            alert("Please select a breeding program");
+            return;
+        }
+
         const tracking_id = jQuery('#tracking_id').val();
 
         let order_details = {};
@@ -171,6 +184,7 @@ jQuery(document).ready(function(){
                 'contact_person_id' : contact_person_id,
                 'order_details': JSON.stringify(order_details),
                 'tracking_id' : tracking_id,
+                'order_breeding_program_id': order_breeding_program_id
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

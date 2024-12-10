@@ -874,8 +874,11 @@ sub order_submission_POST : Args(0) {
     my $source_type = $c->req->param('source_type');
     my $source_name = $c->req->param('source_name');
     my $contact_person_id = $c->req->param('contact_person_id');
-    my $tracking_id = $c->req->param('tracking_id');
+    my $tracking_identifier = $c->req->param('tracking_id');
+    my $order_breeding_program_id = $c->req->param('order_breeding_program_id');
     my $order_details = decode_json ($c->req->param('order_details'));
+    my $tracking_activity = $c->config->{tracking_order_activity};
+
     print STDERR "ORDER DETAILS =".Dumper($order_details)."\n";
     my %details;
     my @item_list;
@@ -890,6 +893,7 @@ sub order_submission_POST : Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
 
     my $source_name_rs = $schema->resultset("Stock::Stock")->find({uniquename => $source_name});
     if (!$source_name_rs) {
@@ -897,9 +901,9 @@ sub order_submission_POST : Args(0) {
         return;
     }
 
-    if ($tracking_id) {
-        my $tracking_id_rs = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_id});
-        if ($tracking_id_rs) {
+    if ($tracking_identifier) {
+        my $tracking_identifier_rs = $schema->resultset("Stock::Stock")->find({uniquename => $tracking_identifier});
+        if ($tracking_identifier_rs) {
             $c->stash->{rest} = {error_string => "Your tracking ID has already been used. Please use another tracking ID." };
             return;
         }
@@ -937,6 +941,79 @@ sub order_submission_POST : Args(0) {
     if (!$order_prop_id){
         $c->stash->{rest} = {error_string => "Error saving your order",};
         return;
+    }
+
+    if ($tracking_activity) {
+        my $name = CXGN::People::Person->new($dbh, $contact_person_id);
+        my $contact_person_name = $name->get_first_name()." ".$name->get_last_name();
+        my $activity_project_id;
+        my $activity_project_name = $contact_person_name."_"."Order_Progress";
+        my $activity_project_rs = $schema->resultset('Project::Project')->find({name=>$activity_project_name});
+        if ($activity_project_rs) {
+            $activity_project_id = $activity_project_rs->project_id();
+        } else {
+            my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
+            $geolocation_lookup->set_location_name('[Computation]');
+            if (!$geolocation_lookup->get_geolocation()){
+                $c->stash->{rest}={error => "Location not found"};
+                return;
+            }
+
+            my $add_activity_project = CXGN::TrackingActivity::AddActivityProject->new ({
+                bcs_schema => $schema,
+                dbh => $dbh,
+                breeding_program_id => $order_breeding_program_id,
+                year => '2024',
+                project_description => 'Tracking order progress',
+                activity_project_name => $activity_project_name,
+                activity_type => 'propagation',
+                nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
+                owner_id => $contact_person_id,
+                project_vendor => $contact_person_id
+            });
+
+            my $return = $add_activity_project->save_activity_project();
+            if ($return->{error}) {
+                my $error = $return->{error};
+                $c->stash->{rest} = {error_string => $error};
+                return;
+            } else {
+                $activity_project_id = $return->{project_id};
+            }
+        }
+
+        my $tracking_stock_id;
+        my $tracking_obj = CXGN::TrackingActivity::AddTrackingIdentifier->new({
+            schema => $schema,
+            phenome_schema => $phenome_schema,
+            tracking_identifier => $tracking_identifier,
+            material => $source_name,
+            project_id => $activity_project_id,
+            user_id => $contact_person_id
+         });
+        my $return = $tracking_obj->store();
+        if (!$return) {
+            $c->stash->{rest} = {error_string => "Error storing tracking identifier"};
+            return;
+        } elsif ($return->{error}) {
+            my $error = $return->{error};
+            $c->stash->{rest} = {error_string => $error};
+            return;
+        } else {
+            $tracking_stock_id = $return->{tracking_id};
+        }
+
+        my @identifier_stock_ids = ($tracking_stock_id);
+        my $order_tracking_identifier_prop = CXGN::Stock::OrderTrackingIdentifier->new({ bcs_schema => $schema, people_schema => $people_schema});
+        $order_tracking_identifier_prop->tracking_identifiers(\@identifier_stock_ids);
+        $order_tracking_identifier_prop->parent_id($order_id);
+        my $prop_id = $order_tracking_identifier_prop->store_sp_orderprop();
+
+        if (!$prop_id){
+            $c->stash->{rest} = {error_string => "Error saving your tracking identifiers",};
+            return;
+        }
+
     }
 
     my $contact_person = CXGN::People::Person -> new($dbh, $contact_person_id);
