@@ -16,6 +16,8 @@ $activity_type
                 <th>Transformation ID</th>
 % } elsif ($activity_type eq 'tissue_culture') {
                 <th>Accession</th>
+% } elsif ($activity_type eq 'propagation') {
+                <th>Source Name</th>
 % }
 % foreach my $column_header(@$field_headers){
                 <th><%$column_header%></th>

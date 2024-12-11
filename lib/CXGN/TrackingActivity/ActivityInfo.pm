@@ -92,6 +92,8 @@ sub add_info {
             $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_tissue_culture_json', 'stock_property');
         } elsif ($activity_type eq 'transformation') {
             $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_transformation_json', 'stock_property');
+        } elsif ($activity_type eq 'propagation') {
+            $tracking_info_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_propagation_json', 'stock_property');
         }
 
         my $tracking_identifier_stock = $self->_get_tracking_identifier($tracking_identifier);

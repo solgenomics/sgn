@@ -61,8 +61,8 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     my $trial_type = $h->fetchrow_array();
     if ($trial_type eq "analysis_experiment"){
         $c->response->redirect($c->uri_for("/analyses/$trial_id"));
-    } 
-    
+    }
+
     $c->stash->{trial} = $trial;
 }
 
@@ -332,7 +332,10 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             $input_field_headers = $c->config->{tracking_tissue_culture_info_header};
         } elsif ($activity_type eq 'transformation') {
             $input_field_headers = $c->config->{tracking_transformation_info_header};
+        } elsif ($activity_type eq 'propagation') {
+            $input_field_headers = $c->config->{tracking_propagation_info_header};
         }
+        
         my @field_headers = split ',',$input_field_headers;
         $c->stash->{field_headers} = \@field_headers;
 

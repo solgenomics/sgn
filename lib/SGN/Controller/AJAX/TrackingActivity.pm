@@ -373,6 +373,8 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
         $tracking_activities = $c->config->{tracking_tissue_culture_info};
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
+    } elsif ($activity_type eq 'propagation') {
+        $tracking_activities = $c->config->{tracking_propagation_info};
     }
 
     my @details;
@@ -456,6 +458,8 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
         $tracking_activities = $c->config->{tracking_tissue_culture_info};
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
+    } elsif ($activity_type eq 'propagation') {
+        $tracking_activities = $c->config->{tracking_propagation_info};
     }
 
     my @summary = ();
@@ -544,6 +548,8 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
         $tracking_activities = $c->config->{tracking_tissue_culture_info};
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
+    } elsif ($activity_type eq 'propagation') {
+        $tracking_activities = $c->config->{tracking_propagation_info};
     }
 
     my @activity_types = split ',',$tracking_activities;
@@ -800,6 +806,8 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
         $tracking_activities = $c->config->{tracking_tissue_culture_info};
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
+    } elsif ($activity_type eq 'propagation') {
+        $tracking_activities = $c->config->{tracking_propagation_info};
     }
 
     my @activity_types = split ',',$tracking_activities;

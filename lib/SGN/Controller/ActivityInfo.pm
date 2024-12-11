@@ -63,6 +63,9 @@ sub activity_details :Path('/activity/details') : Args(1) {
     } elsif ($activity_type eq 'transformation') {
         $types = $c->config->{tracking_transformation_info};
         $activity_type_header = $c->config->{tracking_transformation_info_header};
+    } elsif ($activity_type eq 'propagation') {
+        $types = $c->config->{tracking_propagation_info};
+        $activity_type_header = $c->config->{tracking_propagation_info_header};
     }
 
     my @type_select_options = split ',',$types;
@@ -124,7 +127,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{project_id} = $tracking_project_id;
     $c->stash->{activity_type} = $activity_type;
     $c->stash->{program_name} = $program_name;
-    $c->stash->{source_info} = $source_info_string;    
+    $c->stash->{source_info} = $source_info_string;
     $c->stash->{template} = '/tracking_activities/activity_info_details.mas';
 
 }
@@ -204,6 +207,9 @@ sub record_activity :Path('/activity/record') :Args(0) {
         } elsif ($activity_type eq 'transformation') {
             $types = $c->config->{tracking_transformation_info};
             $activity_type_header = $c->config->{tracking_transformation_info_header};
+        } elsif ($activity_type eq 'propagation') {
+            $types = $c->config->{tracking_propagation_info};
+            $activity_type_header = $c->config->{tracking_propagation_info_header};
         }
 
         my @type_select_options = split ',',$types;
