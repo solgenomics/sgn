@@ -24,7 +24,7 @@ $type_name
 % if ($type_name eq "accession") {
 <div class="panel panel-default">
 	<div class="panel-body panel-body-sm">
-		<b> Analyses </b>
+		<b> Stored Analyses </b>
 		<br/> <br/>
 		<table class="table table-hover table-bordered" id="analysis_usage_data">
 			<thead>

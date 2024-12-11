@@ -60,6 +60,10 @@
 
                 <div id="upload_phenotype_spreadsheet_verify_status"></div>
                 </div>
+
+                <div id="upload_phenotype_spreadsheet_info" style="display: none">
+                    <& /help/file_upload_type.mas, type => "Simple Phenotype Spreadsheets" &>
+                </div>
             </form><br/>
 
         </div>

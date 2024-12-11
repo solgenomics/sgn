@@ -66,6 +66,8 @@ $design_types => ()
                                             </&>
                                             <button id="next_step_file_formatting_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                         </center>
+                                        <br /><br />
+                                        <& /help/file_upload_type.mas, type => "Single Trial Designs", optional_column => 1 &>
                                     </div>
 
                                     <div id="multiple_tab" class="tab-pane fade">
@@ -119,7 +121,7 @@ $design_types => ()
                                             <button style="display:none" class="btn btn-primary" id="upload_multiple_trials_success_button">Reload Page</button>
                                             <br /><br />
                                         </center>
-                                        <& /help/file_upload_type.mas, type => "Trials", optional_column => 1 &>
+                                        <& /help/file_upload_type.mas, type => "Multiple Trial Designs", optional_column => 1 &>
                                     </div>
 
                                 </div>
@@ -556,6 +558,7 @@ $design_types => ()
                                     <li>You an add phenotypes for the plots or plants in this trial now.</li>
                                 </ul>
                                 <br/>
+                                <div name="upload_trial_completed_message"></div>
                                 <!--center>
                                 <button class="btn btn-primary" id="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
                                 </center-->

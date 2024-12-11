@@ -606,8 +606,8 @@ $user_role => undef
                 }
             }
         }
-        var amount = jQuery('#seedlot_transaction_amount').val();
-        var weight = jQuery('#seedlot_transaction_weight').val();
+        var amount = jQuery('#seedlot_transaction_amount').val().trim();
+        var weight = jQuery('#seedlot_transaction_weight').val().trim();
         var timestamp = jQuery('#seedlot_transaction_timestamp').val();
         var transaction_description = jQuery('#seedlot_transaction_description').val();
 
