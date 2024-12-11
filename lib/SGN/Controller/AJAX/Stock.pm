@@ -1744,13 +1744,7 @@ sub get_stock_stored_analyses :Chained('/stock/get_stock') PathPart('datatables/
 
 =cut
 
-sub get_shared_trials :Path('/stock/get_shared_trials') : ActionClass('REST'){
-
-my sub get_shared_trials_POST :Args(1) {
-    my ($self, $c) = @_;
-    $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
-}
-my sub get_shared_trials_GET :Args(1) {
+sub get_shared_trials :Path('/stock/get_shared_trials'){
 
     my $self = shift;
     my $c = shift;
@@ -1843,7 +1837,6 @@ my sub get_shared_trials_GET :Args(1) {
     }
 
     $c->stash->{rest} = { data => \@formatted_rows, shared_trials => \@shared_trials };
-  }
 }
 
 =head2 action get_stock_trait_list()
