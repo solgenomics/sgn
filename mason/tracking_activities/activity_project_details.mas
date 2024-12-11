@@ -43,6 +43,8 @@ $activity_type
 %     print 'Transformation';
 % } elsif ($activity_type eq 'tissue_culture') {
 %     print 'Tissue Culture';
+% } elsif ($activity_type eq 'propagation') {
+%     print 'Propagation';
 % } else {
 %   print "<span class='text-danger'>[No Record Type]</span>";
 % }
