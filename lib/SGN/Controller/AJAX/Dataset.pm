@@ -389,6 +389,35 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
     };
 }
 
+sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $include_phenotype_primary_key = $c->req->param('include_phenotype_primary_key');
+
+    my $dataset = CXGN::Dataset->new(
+	{
+	    schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
+	    sp_dataset_id=> $dataset_id,
+        include_phenotype_primary_key => $include_phenotype_primary_key,
+	});
+
+    my $tool_compatibility;
+    eval {
+        $tool_compatibility = $dataset->store_tool_compatibility();
+    };
+    if ($@){
+        $c->stash->{rest} = {
+            error => "Error calculating tool compatibility:\n$@"
+        };
+    } else {
+         $c->stash->{rest} = {
+            tool_compatibility => $tool_compatibility
+        };
+    }
+}
+
 sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
     my $self = shift;
     my $c = shift;

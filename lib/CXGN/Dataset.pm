@@ -1211,7 +1211,7 @@ sub retrieve_tool_compatibility {
     my $self = shift;
 
     if ($self->tool_compatibility) {
-        return $self->tool_compatibility
+        return JSON::Any->encode($self->tool_compatibility);
     } else {
         return "(not calculated)";
     }
@@ -1238,51 +1238,7 @@ Tools that use datasets:
 sub store_tool_compatibility {
     my $self = shift;
 
-    my $tool_compatibility = {
-        'Boxplotter' => {
-            'url' => '/tools/boxplotter',
-            'compatible' => 0,
-            'traits' => []
-        },
-        'Population Structure' => {
-            'url' => '/pca/analysis',
-            'compatible' => 0
-        },
-        'Clustering' => {
-            'url' => '/cluster/analysis',
-            'types' => {}, #gets converted to listref later
-            'compatible' => 0
-        },
-        'Kinship & Inbreeding' => {
-            'url' => '/kinship/analysis',
-            'compatible' => 0
-        },
-        'Mixed Models' => {
-            'url' => '/tools/mixedmodels',
-            'compatible' => 0,
-            'traits' => []
-        },
-        'Stability' => {
-            'url' => '/tools/stability',
-            'traits' => [],
-            'compatible' => 0
-        }, 
-        'Heritability' => {
-            'url' => '/tools/heritability',
-            'traits' => [],
-            'compatible' => 0
-        },
-        'solGS' => {
-            'url' => '/solgs',
-            'traits' => [],
-            'compatible' => 0
-        },
-        'GWAS' => {
-            'url' => '/tools/solgwas',
-            'traits' => [],
-            'compatible' => 0
-        }
-    };
+    my $tool_compatibility = {};
 
     my $trials = $self->retrieve_trials(); # faster and easier than pulling it out of the phenotypes_ref
         # listref of listrefs, first index is trialID, second is trial name
@@ -1331,26 +1287,25 @@ sub store_tool_compatibility {
         $geno_represented_accessions->{$method->[0]}->{'avg_marker_count'} = $num_markers;
 
         if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) > 1) {
-            $tool_compatibility->{'Population Structure'}->{'compatible'} = 1;
-            $tool_compatibility->{'Kinship & Inbreeding'}->{'compatible'} = 1;
-            $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
-            $tool_compatibility->{'Clustering'}->{'types'}->{'Genotype'} = 1;
+            $tool_compatibility->{'Population Structure'} = "";
+            $tool_compatibility->{'Kinship & Inbreeding'} = "";
+            $tool_compatibility->{'Clustering'}->{'types'}->{'Genotype'} = "";
         }
     }
 
     # my $num_typed_accessions = scalar( grep {exists($geno_represented_accessions->{$_})} keys(%{$pheno_represented_accessions}) ); # number of accessions with both pheno and geno data (and the same geno method)
 
     if ($num_phenotyped_accessions > 1 && scalar(@{$traits}) > 1) { #dont need to go trait by trait for clustering, since all traits are combined to eigenvectors. just need plenty of trait measurements
-        $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
-        $tool_compatibility->{'Clustering'}->{'types'}->{'Phenotype'} = 1;
+        $tool_compatibility->{'Clustering'}->{'types'}->{'Phenotype'} = "";
         foreach my $method (@{$genotyping_methods}){
             if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) > 1) { # for GEBV clustering, there needs to be enough accessions using the same geno method and which have lots of trait measurements
-                $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
-                $tool_compatibility->{'Clustering'}->{'types'}->{'GEBV'} = 1;
+                $tool_compatibility->{'Clustering'}->{'types'}->{'GEBV'} = "";
             }
         }
     }
-    $tool_compatibility->{'Clustering'}->{'types'} = [keys(%{$tool_compatibility->{'Clustering'}->{'types'}})]; #catches edge case where multiple genotype entries were made for multiple genotype protocols
+    if (exists $tool_compatibility->{'Clustering'}->{'types'}) {
+        $tool_compatibility->{'Clustering'}->{'types'} = [keys(%{$tool_compatibility->{'Clustering'}->{'types'}})];
+    }
 
     foreach my $trait (@{$traits}){ # For each trait, we need to check for number of observations (plus locations for stability)
         my $total_obs = 0;
@@ -1363,19 +1318,15 @@ sub store_tool_compatibility {
         my $num_accessions_phenotyped_for_this_trait = scalar(keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}));
         if ($total_obs > 0) { # This trait was measured
 
-            $tool_compatibility->{'Boxplotter'}->{'compatible'} = 1;
             push @{$tool_compatibility->{'Boxplotter'}->{'traits'}}, $trait->[1];
 
             if (scalar(@{$trial_designs}) > 0 && $num_accessions_phenotyped_for_this_trait > 1){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
-                $tool_compatibility->{'Heritability'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Heritability'}->{'traits'}}, $trait->[1];
             }
             if (scalar(grep {$_ > 0} @location_counts) > 1 && $num_accessions_phenotyped_for_this_trait > 1) { # More than one location had measurements, and more than one accession was measured
-                $tool_compatibility->{'Stability'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Stability'}->{'traits'}}, $trait->[1];
             }
             if(scalar(@{$trial_designs}) > 0 && $num_accessions_phenotyped_for_this_trait > 1) {
-                $tool_compatibility->{'Mixed Models'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Mixed Models'}->{'traits'}}, $trait->[1];
             }
         }
@@ -1383,17 +1334,13 @@ sub store_tool_compatibility {
         foreach my $method (@{$genotyping_methods}){ # There needs to be consistent genotyping protocol for genomic modeling
             my $num_accessions_typed_for_this_trait = scalar( grep {exists($geno_represented_accessions->{$method->[0]}->{'accessions'}->{$_})} keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}) );
             if ($total_obs > 100 && $geno_represented_accessions->{$method->[0]}->{'avg_marker_count'} > 100 && $num_accessions_typed_for_this_trait > 50) { # If lots of markers, lots of accessions, and lots of phenotype measurements, then you can do genomic modeling
-                $tool_compatibility->{'GWAS'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'GWAS'}->{'traits'}}, $trait->[1];
-                $tool_compatibility->{'solGS'}->{'compatible'} = 1;
-                push @{$tool_compatibility->{'solGS'}->{'traits'}}, $trait->[1];
+                # push @{$tool_compatibility->{'solGS'}->{'traits'}}, $trait->[1];
             }
         }
     }
 
     $self->tool_compatibility($tool_compatibility);
-
-    #return $tool_compatibility;
 
     my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
     if (! $row) {
@@ -1405,12 +1352,11 @@ sub store_tool_compatibility {
             $row->dataset(JSON::Any->encode($self->to_hashref()->{dataset}));
             $row->sp_person_id($self->sp_person_id());
             $row->update();
-            return $row->sp_dataset_id();
         };
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return JSON::Any->encode($tool_compatibility);
         }
     }
 }
