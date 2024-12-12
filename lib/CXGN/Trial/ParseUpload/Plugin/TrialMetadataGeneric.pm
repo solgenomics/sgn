@@ -168,7 +168,7 @@ sub _validate_with_plugin {
     }
 
     # Trial Type: must be a valid / supported trial type
-    foreach (@{$parsed_values->{'trial_type'}}) {
+    foreach (@{$parsed_values->{'type'}}) {
         if ( !exists $valid_trial_types{$_} ) {
             push @error_messages, "trial_type <strong>$_</strong> is not supported. Supported trial types: " . join(', ', keys(%valid_trial_types)) . ".";
         }

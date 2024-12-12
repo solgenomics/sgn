@@ -388,14 +388,20 @@ jQuery(document).ready(function ($) {
     });
 
 
-    jQuery('#upload_trial_metadata_dialog_submit').click(function () {
+    jQuery('#upload_trial_metadata_dialog_submit').click(function() {
         upload_trial_metadata_file();
+    });
+
+    jQuery('#upload_trial_metadata_success_button').click(function() {
+        jQuery('#upload_trial_metadata_dialog').modal('hide');
+        location.reload();
     });
 
     function upload_trial_metadata_file() {
         jQuery("#upload_trial_metadata_warning_messages").html('');
         jQuery("#upload_trial_metadata_error_messages").html('');
         jQuery("#upload_trial_metadata_success_messages").html('');
+        jQuery("#upload_trial_metadata_success_button").hide();
 
         var uploadTrialMetadataFile = jQuery("#trial_metadata_upload_file").val();
         if ( !uploadTrialMetadataFile || uploadTrialMetadataFile === '' ) {
@@ -432,6 +438,7 @@ jQuery(document).ready(function ($) {
                     refreshTrailJsTree(0);
                     jQuery("#upload_trial_metadata_success_messages").show();
                     jQuery("#upload_trial_metadata_success_messages").html("Success! All trials successfully updated.");
+                    jQuery("#upload_trial_metadata_success_button").show();
                 }
             },
             error: function() {

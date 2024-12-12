@@ -852,6 +852,10 @@ $design_types => ()
                     <div style="display:none; margin: 15px; padding: 15px" id="upload_trial_metadata_error_messages" class="alert-danger" role="alert"></div>
                     <div style="display:none; margin: 15px; padding: 15px" id="upload_trial_metadata_success_messages" class="alert-success" role="alert"></div>
 
+                    <div style="margin: 15px; text-align: center">
+                        <button style="display:none" class="btn btn-primary" id="upload_trial_metadata_success_button">Reload Page</button>
+                    </div>
+
                     <& /help/file_upload_type.mas, type => "Trial Metadata" , optional_column => 1 &>
                 </div>
             </div>
