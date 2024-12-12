@@ -61,12 +61,12 @@ for my $extension ("xls", "xlsx") {
     is($response->{'success'}, '1');
 
     #create populations for testing bulk and bulk_open cross types
-    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_A', "accessions[]"=> ['UG120001', 'UG120002'] ]);
+    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_A', "member_type"=>'accessions', "accessions[]"=> ['UG120001', 'UG120002'] ]);
     $response = decode_json $mech->content;
     is($response->{'success'}, "Success! Population test_population_A created");
     my $population_A_id = $response->{'population_id'};
 
-    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_B', "accessions[]"=> ['UG120003', 'UG120004'] ]);
+    $mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_B', "member_type"=>'accessions', "accessions[]"=> ['UG120003', 'UG120004'] ]);
     $response = decode_json $mech->content;
     is($response->{'success'}, "Success! Population test_population_B created");
     my $population_B_id = $response->{'population_id'};
@@ -87,7 +87,7 @@ for my $extension ("xls", "xlsx") {
     my $before_adding_cross_in_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
     my $before_adding_cross_in_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
 
-    $mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'cross_name' => 'test_add_cross', 'cross_combination' => 'UG120001xUG120002', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot' => $female_plot_id, 'male_plot' => $male_plot_id ]);
+    $mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'cross_name' => 'test_add_cross', 'cross_combination' => 'UG120001xUG120002', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot_plant' => $female_plot_id, 'male_plot_plant' => $male_plot_id ]);
 
     $response = decode_json $mech->content;
     is($response->{'success'}, '1');
@@ -124,7 +124,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_simple_file"               => [
+            "upload_crosses_file" => [
                 $file,
                 "backcross_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -150,7 +150,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_simple_file"               => [
+            "upload_crosses_file" => [
                 $file,
                 "crosses_simple_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -190,7 +190,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_plots_file"                => [
+            "upload_crosses_file" => [
                 $file,
                 "crosses_plots_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -210,10 +210,10 @@ for my $extension ("xls", "xlsx") {
     my $after_uploading_relationship_femaleplot = $schema->resultset("Stock::StockRelationship")->search({ type_id => $female_plot_type_id })->count();
     my $after_uploading_relationship_maleplot = $schema->resultset("Stock::StockRelationship")->search({ type_id => $male_plot_type_id })->count();
 
-    is($after_uploading_relationship_all, $before_uploading_relationship_all + 8);
-    is($after_uploading_relationship_female, $before_uploading_relationship_female + 2);
+    is($after_uploading_relationship_all, $before_uploading_relationship_all + 10);
+    is($after_uploading_relationship_female, $before_uploading_relationship_female + 3);
     is($after_uploading_relationship_male, $before_uploading_relationship_male + 2);
-    is($after_uploading_relationship_femaleplot, $before_uploading_relationship_femaleplot + 2);
+    is($after_uploading_relationship_femaleplot, $before_uploading_relationship_femaleplot + 3);
     is($after_uploading_relationship_maleplot, $before_uploading_relationship_maleplot + 2);
 
     #add plants for testing (a total of 38 entries)
@@ -233,7 +233,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_plants_file"               => [
+            "upload_crosses_file" => [
                 $file,
                 "crosses_plants_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -250,7 +250,7 @@ for my $extension ("xls", "xlsx") {
     my $after_uploading_relationship_femaleplant = $schema->resultset("Stock::StockRelationship")->search({ type_id => $female_plant_type_id })->count();
     my $after_uploading_relationship_maleplant = $schema->resultset("Stock::StockRelationship")->search({ type_id => $male_plant_type_id })->count();
 
-    is($after_uploading_relationship_femaleplant, $before_uploading_relationship_femaleplant + 2);
+    is($after_uploading_relationship_femaleplant, $before_uploading_relationship_femaleplant + 3);
     is($after_uploading_relationship_maleplant, $before_uploading_relationship_maleplant + 2);
 
     # test uploading crosses with simplified parent info format
@@ -264,7 +264,7 @@ for my $extension ("xls", "xlsx") {
         'http://localhost:3010/ajax/cross/upload_crosses_file',
         Content_Type => 'form-data',
         Content      => [
-            "xls_crosses_simplified_parents_file" => [
+            "upload_crosses_file" => [
                 $file,
                 "crosses_simplified_parents_upload.$extension",
                 Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -645,7 +645,7 @@ for my $extension ("xls", "xlsx") {
     my %data1 = %$response;
     my $result1 = $data1{data};
     my $number_of_result1 = @$result1;
-    is($number_of_result1, 3);
+    is($number_of_result1, 4);
 
     #test search crosses using both female and male parents
     $mech->post_ok('http://localhost:3010/ajax/search/crosses', [ 'female_parent' => 'TMEB419', 'male_parent' => 'TMEB693' ]);
@@ -696,8 +696,10 @@ for my $extension ("xls", "xlsx") {
         'test_bulk_open_cross',
         'test_cross_upload3',
         'test_cross_upload4',
+        'test_open_upload',
         'test_cross_upload5',
         'test_cross_upload6',
+        'test_open_plant_upload',
         'test_cross_simplified_parents_1',
         'test_cross_simplified_parents_2',
         'test_cross_simplified_parents_3',
@@ -716,8 +718,10 @@ for my $extension ("xls", "xlsx") {
         'bulk_open',
         'biparental',
         'self',
+        'open',
         'biparental',
         'self',
+        'open',
         'biparental',
         'biparental',
         'biparental',
@@ -736,6 +740,8 @@ for my $extension ("xls", "xlsx") {
         'test_population_A',
         'UG120001',
         'UG120001',
+        'UG120001',
+        'TMEB419',
         'TMEB419',
         'TMEB419',
         'UG120001',
@@ -750,7 +756,7 @@ for my $extension ("xls", "xlsx") {
     my $result = $crosses->get_all_cross_entries();
     my @all_cross_entries = @$result;
     my $first_cross = $all_cross_entries[0];
-    is(scalar @all_cross_entries, 16);
+    is(scalar @all_cross_entries, 18);
     is($first_cross->[1], 'test_add_cross');
     is($first_cross->[2], 'biparental');
     is($first_cross->[4], 'UG120001');

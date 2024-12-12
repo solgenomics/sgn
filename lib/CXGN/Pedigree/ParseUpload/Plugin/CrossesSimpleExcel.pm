@@ -8,6 +8,8 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
+# DEPRECATED: This plugin has been replaced by the CrossesGeneric plugin
+
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
@@ -170,7 +172,7 @@ sub _validate_with_plugin {
 
 	$female_parent =~ s/^\s+|\s+$//g;
 	$male_parent =~ s/^\s+|\s+$//g;
-	
+
         #cross name must not be blank
         if (!$cross_name || $cross_name eq '') {
             push @error_messages, "Cell A$row_name: cross unique id missing";
@@ -188,9 +190,9 @@ sub _validate_with_plugin {
 		push @error_messages, "For double haploid, dihaploid_induction, and self, female parent needs to be identical to male parent in row $row_name";
 	    }
 	}
-		
 
-	
+
+
         #cross type must not be blank
         if (!$cross_type || $cross_type eq '') {
             push @error_messages, "Cell C$row_name: cross type missing";
@@ -214,7 +216,7 @@ sub _validate_with_plugin {
             $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
-	
+
 
         if (($cross_type eq 'bulk') || ($cross_type eq 'bulk_self') || ($cross_type eq 'bulk_open')) {
             #$female_parent =~ s/^\s+|\s+$//g;
