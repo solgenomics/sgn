@@ -24,6 +24,28 @@ $transformation_id
     </div>
 </&>
 
+<div class="modal fade" id="obsolete_transformant_dialog" name="obsolete_transformant_dialog" tabindex="-1" role="dialog" aria-labelledby="obsoleteTransformantDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="obsoleteTransformantDialog">Obsolete Transformant</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="obsolete_transformant_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="obsolete_transformant_button" type="button" class="btn btn-primary" >Obsolete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
 jQuery(document).ready(function(){
@@ -34,7 +56,7 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteTransformant("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
+            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteTransformantDialog("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
         ],
 
         "fnInitComplete": function(oSettings, json) {
@@ -81,5 +103,19 @@ function obsoleteTransformant(transformant_id, transformant_name){
         });
     }
 }
+
+
+function obsoleteTransformantDialog(transformant_id, transformant_name){
+
+    var html = '';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">Accession Name: </label><div class="col-sm-8" ><input class="form-control" id="obsolete_transformant_name" name="obsolete_transformant_name" value="'+transformant_name+'" disabled></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Comments: </label><div class="col-sm-8" ><input class="form-control" id="obsolete_transformant_comments" name="obsolete_transformant_comments" placeholder=""></div></div></form>';
+
+    jQuery('#obsolete_transformant_div').html(html);
+    jQuery('#obsolete_transformant_dialog').modal('show');
+
+}
+
+
 
 </script>
