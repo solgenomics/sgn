@@ -5464,6 +5464,59 @@ sub transformation_id_count {
 
 
 
+=head2 function update_metadata()
+
+ Usage:         $trial->update_metadata(\%details);
+ Desc:          Update the trial metadata details using the provided hashref of properties
+ Ret:           An error message if an error was encountered
+ Args:          details = a hashref of trial metadata properties
+ Side Effects:
+ Example:       my %details = ( location => 'New Location, ST', planting_date => '2024-01-01' );
+                $trial->update_metadata(\%details);
+
+=cut
+
+sub update_metadata {
+    my $self = shift;
+    my $details = shift;
+
+    eval {
+        if ($details->{name}) { $self->set_name($details->{name}); }
+        if ($details->{breeding_program}) { $self->set_breeding_program($details->{breeding_program}); }
+        if ($details->{location}) { $self->set_location($details->{location}); }
+        if ($details->{year}) { $self->set_year($details->{year}); }
+        if ($details->{type}) { $self->set_project_type($details->{type}); }
+        if ($details->{planting_date}) {
+            if ($details->{planting_date} eq 'remove') { $self->remove_planting_date($self->get_planting_date()); }
+            else { $self->set_planting_date($details->{planting_date}); }
+        }
+        if ($details->{transplanting_date}) {
+            if ($details->{transplanting_date} eq 'remove') { $self->remove_transplanting_date($self->get_transplanting_date()); }
+            else { $self->set_transplanting_date($details->{transplanting_date}); }
+        }
+        if ($details->{harvest_date}) {
+            if ($details->{harvest_date} eq 'remove') { $self->remove_harvest_date($self->get_harvest_date()); }
+            else { $self->set_harvest_date($details->{harvest_date}); }
+        }
+        if ($details->{description}) { $self->set_description($details->{description}); }
+        if ($details->{field_size}) { $self->set_field_size($details->{field_size}); }
+        if ($details->{plot_width}) { $self->set_plot_width($details->{plot_width}); }
+        if ($details->{plot_length}) { $self->set_plot_length($details->{plot_length}); }
+        if ($details->{plan_to_genotype}) { $self->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
+        if ($details->{plan_to_cross}) { $self->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
+        if ($details->{plate_format}) { $self->set_genotyping_plate_format($details->{plate_format}); }
+        if ($details->{plate_sample_type}) { $self->set_genotyping_plate_sample_type($details->{plate_sample_type}); }
+        if ($details->{facility}) { $self->set_genotyping_facility($details->{facility}); }
+        if ($details->{facility_submitted}) { $self->set_genotyping_facility_submitted($details->{facility_submitted}); }
+        if ($details->{facility_status}) { $self->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
+        if ($details->{raw_data_link}) { $self->set_raw_data_link($details->{raw_data_link}); }
+    };
+    if ($@) {
+        return "An error occurred setting the new trial details: $@";
+    }
+}
+
+
 
 1;
 
