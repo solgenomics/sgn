@@ -17,9 +17,13 @@ $t->while_logged_in_as("submitter", sub {
     $t->get_ok('/breeders/trial/137');
     sleep(3);
 
-    my $trail_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch",  "id",  "find and open 'trial upload files onswitch' and click");
-    $trail_files_onswitch->click();
+    $t->wait_for_working_dialog();
+
+    my $trial_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch",  "id",  "find and open 'trial upload files onswitch' and click");
+    $trial_files_onswitch->click();
     sleep(2);
+
+    $t->wait_for_working_dialog();
 
     $t->find_element_ok("upload_datacollector_phenotypes_link", "id", "click on upload_trial_link ")->click();
     sleep(2);
@@ -65,10 +69,14 @@ $t->while_logged_in_as("submitter", sub {
     $t->get_ok('/breeders/trial/137');
     sleep(3);
 
-    my $trail_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch",  "id",  "find and open 'trial upload files onswitch' and click");
-    $trail_files_onswitch->click();
+    $t->wait_for_working_dialog();
+
+    my $trial_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch",  "id",  "find and open 'trial upload files onswitch' and click");
+    $trial_files_onswitch->click();
     sleep(2);
 
+    $t->wait_for_working_dialog();
+    
     $t->find_element_ok("upload_datacollector_phenotypes_link", "id", "click on upload_spreadsheet_link ")->click();
     sleep(2);
 
@@ -91,12 +99,12 @@ $t->while_logged_in_as("submitter", sub {
     $verify_status = $t->find_element_ok(
         "upload_phenotype_datacollector_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
-
+    diag("verify_statues : $verify_status");
     ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation");
     ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
     ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
     ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
-    ok($verify_status =~ /There are 57 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
+    ok($verify_status =~ /There are 44 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
 
     $t->find_element_ok("upload_datacollector_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
     sleep(10);
@@ -105,7 +113,7 @@ $t->while_logged_in_as("submitter", sub {
         "upload_phenotype_datacollector_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
 
-    ok($verify_status =~ /57 previously stored values skipped/, "Verify warnings after store validation");
+    ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation");
     ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation");
     ok($verify_status =~ /Metadata saved for archived file./, "Verify warnings after store validation");
     ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation");

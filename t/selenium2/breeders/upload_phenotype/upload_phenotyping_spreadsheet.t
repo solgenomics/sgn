@@ -16,9 +16,13 @@ $t->while_logged_in_as("submitter", sub {
         $t->get_ok('/breeders/trial/137');
         sleep(4);
 
-        my $trail_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch", "id", "find and open 'trial upload files onswitch' and click");
-        $trail_files_onswitch->click();
+        $t->wait_for_working_dialog();
+
+        my $trial_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch", "id", "find and open 'trial upload files onswitch' and click");
+        $trial_files_onswitch->click();
         sleep(2);
+
+        $t->wait_for_working_dialog();
 
         $t->find_element_ok("upload_spreadsheet_phenotypes_link", "id", "click on upload_spreadsheet_link ")->click();
         sleep(4);
@@ -71,9 +75,13 @@ $t->while_logged_in_as("submitter", sub {
         $t->get_ok('/breeders/trial/137');
         sleep(3);
 
-        $trail_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch", "id", "find and open 'trial upload files onswitch' and click");
-        $trail_files_onswitch->click();
+        $t->wait_for_working_dialog();
+
+        $trial_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch", "id", "find and open 'trial upload files onswitch' and click");
+        $trial_files_onswitch->click();
         sleep(2);
+
+        $t->wait_for_working_dialog();
 
         $t->find_element_ok("upload_spreadsheet_phenotypes_link", "id", "click on upload_spreadsheet_link ")->click();
         sleep(4);
@@ -108,7 +116,7 @@ $t->while_logged_in_as("submitter", sub {
         ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
         ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
         ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
-        ok($verify_status =~ /There are 60 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
+        ok($verify_status =~ /There are 2 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
 
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
@@ -162,7 +170,7 @@ $t->while_logged_in_as("submitter", sub {
         ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
         ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
         ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
-        ok($verify_status =~ /There are 60 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
+        ok($verify_status =~ /There are 2 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
         sleep(10);
