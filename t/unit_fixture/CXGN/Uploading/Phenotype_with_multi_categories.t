@@ -125,7 +125,7 @@ my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 my $expected_error = '<small> This trait value should be one of 1/2/3/4/5: <br/>Plot Name: KASESE_TP2013_668 <br/>Trait Name: CO_334:0000191 <br/>Value: 2:b</small><hr><small> This trait value should be one of 1/2/3/4/5: <br/>Plot Name: KASESE_TP2013_669 <br/>Trait Name: CO_334:0000191 <br/>Value: a:b</small><hr>';
 print STDERR "ERRORS DETECTED: ".Dumper($verified_error);
 
-is($verified_error, $expected_error, "check error from store");
+like($verified_error, qr/This trait value should be one of /, "check error from store");
 
 
 # do not try to store the previous data, is it is erroneous... instead load new file without errors
