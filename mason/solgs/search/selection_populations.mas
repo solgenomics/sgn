@@ -45,8 +45,8 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     <div id="search_div" class="form-inline">
     <input  type="text"
 	    class="form-control"
-	    placeholder="search for a selection population"
-	    size="30" id="population_search_entry"/>
+	    placeholder="search for a trial"
+	    size="30" id="trial_search_box"/>
 
     <button type="submit"
 	    class="btn btn-success"

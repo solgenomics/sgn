@@ -1,18 +1,18 @@
 <%doc>
 
-a general format for projects details presentation.
+solGS trials search results table.
 
 </%doc>
 
 
-<div id="all_trials_div" style="display:none;"></div>
-<div id="all_trials_search_message" class="message">
+<div id="trial_search_result" style="display:none;">
+<div id="trial_search_result_message" class="message">
  <!-- Searching for GS trials...  -->
 </div>
-
-
-<div id="done_selecting_div" style="display:none;">
-  <input  class="button" type="button" id="done_selecting"  value="Select"/>
 </div>
 
-<input type="hidden" id="genotyping_protocol_id" value="" />
+<div id="trial_search_result_select" style="display:none;">
+  <input  class="button" type="button" id="select_trials_btn"  value="Select"/>
+</div>
+
+

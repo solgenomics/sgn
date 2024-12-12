@@ -26,7 +26,7 @@ jQuery(document).ready(function(){
     var project_id = "<% $trial_id %>";
 
     var transformation_table = jQuery('#transformations_in_project_table').DataTable({
-        'ajax': '/ajax/transformation/transformations_in_project/'+project_id,
+        'ajax': '/ajax/transformation/active_transformations_in_project/'+project_id,
         'autoWidth': false,
     });
 

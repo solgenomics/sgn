@@ -430,12 +430,18 @@ sub search {
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
         $using_stockprop_filter = 1;
         #print STDERR Dumper $self->stockprops_values;
+        my @stockprop_joins;
         my @stockprop_wheres;
+        my $index=0;
         foreach my $term_name (keys %{$self->stockprops_values}){
             my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
             if ($property_term){
+                $index++;
+                my $type_id = $property_term->cvterm_id();
                 my $matchtype = $self->stockprops_values->{$term_name}->{'matchtype'};
                 my $value = $self->stockprops_values->{$term_name}->{'value'};
+
+                push @stockprop_joins, "LEFT JOIN public.stockprop AS sp$index ON (stock.stock_id = sp$index.stock_id) AND sp$index.type_id = $type_id";
 
                 my $start = '%';
                 my $end = '%';
@@ -454,25 +460,21 @@ sub search {
 
                 if ( $matchtype eq 'one of' ) {
                     my @values = split ',', $value;
+                    s{^\s+|\s+$}{}g foreach @values;
                     my $search_vals_sql = "'".join ("','" , @values)."'";
-                    my $stockprop_list_search_sql = "stock_id in " .
-                        "(" .
-                            "select id from (" .
-	                            "select jsonb_object_keys(\"$term_name\") as accession_number_key, stock_id as id from materialized_stockprop" .
-                            ") as json_return where json_return.accession_number_key in ($search_vals_sql)" .
-                        ")";
-                    push @stockprop_wheres, $stockprop_list_search_sql;
+                    push @stockprop_wheres, "sp$index.value IN ($search_vals_sql)";
                 } else {
-                    push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
+                    push @stockprop_wheres, "sp$index.value ilike $search";
                 }
 
             } else {
                 print STDERR "Stockprop $term_name is not in this database! Only use stock_property in system_cvterms.txt!\n";
             }
         }
+        my $stockprop_join = join ' ', @stockprop_joins;
         my $stockprop_where = 'WHERE ' . join ' AND ', @stockprop_wheres;
+        my $stockprop_query = "SELECT stock.stock_id FROM public.stock $stockprop_join $stockprop_where;";
 
-        my $stockprop_query = "SELECT stock_id FROM materialized_stockprop $stockprop_where;";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my $stock_id = $h->fetchrow_array()) {
@@ -705,7 +707,7 @@ ORDER BY organism_id ASC;";
 
         while (my ($uniquename, $info) = each %result_hash){
             foreach (@stockprop_view){
-                if (!$info->{$_}){
+                if (!defined($info->{$_})){
                     $info->{$_} = '';
                 }
             }

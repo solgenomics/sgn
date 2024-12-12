@@ -90,19 +90,14 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(90);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
             $sel_pops );
         sleep(90);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-'
-              . $accessions_list_id
-              . '-genotype-k-4-gp-1"]',
-            'xpath',
-            'check k-means plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check accessions list geno  kmeans cluster plot');
+    sleep(5);
         sleep(5);
 
         $d->driver->refresh();
@@ -128,17 +123,15 @@ $d->while_logged_in_as(
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(140);
+        sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
             $sel_pops );
         sleep(5);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-' . $plots_list_id . '-phenotype-k-4"]',
-            'xpath', 'check k-means plot' )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check plots phenotype kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -166,19 +159,13 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
             $sel_pops );
         sleep(5);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-'
-              . $trials_list_id
-              . '-genotype-k-4-gp-1"]',
-            'xpath',
-            'check k-means plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trials list  geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -206,14 +193,13 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
 
-        my $sel_pops = $d->find_element('//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
             $sel_pops );
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-' . $trials_list_id . '-phenotype-k-4"]',
-            'xpath', 'check k-means plot' )->click();
+        sleep(5);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trials list geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -276,17 +262,14 @@ $d->while_logged_in_as(
         # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
         # sleep(250);
 
-        my $sel_pops = $d->find_element('//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
             $sel_pops );
         sleep(5);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-' . $trials_list_id . '-phenotype-k-4"]',
-            'xpath', 'check k-means plot' )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trials list pheno kmeans cluster plot');
         sleep(5);
-
 
         $d->driver->refresh();
         sleep(3);
@@ -313,17 +296,13 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, 500);",
             $sel_pops );
         sleep(2);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-' . $trials_dt_id . '-genotype-k-4-gp-1"]',
-            'xpath',
-            'plot displayed'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trials dataset geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -351,15 +330,13 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
 
-        my $sel_pops = $d->find_element( '//*[contains(text(), "Cluster Analysis")]',
+        my $sel_pops = $d->find_element( '//*[contains(text(), "Clustering")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, 500);",
             $sel_pops );
         sleep(5);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-' . $trials_dt_id . '-phenotype-k-4"]',
-            'xpath', 'check kmeans plot' )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trials dataset pheno kmeans cluster plot');
         sleep(5);
 
 
@@ -408,8 +385,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok( '//img[@id="k-means-plot-139-phenotype-k-4"]',
-            'xpath', 'plot displayed' )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trial detail page pheno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -452,9 +428,8 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok( '//img[@id="k-means-plot-139-genotype-k-4-gp-1"]',
-            'xpath', 'check k-means plot' )->click();
-        sleep(2);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trials detail page geno kmeans cluster plot');
+        sleep(5);
 
         ############## solGS #####################
         `rm -r $cache_dir`;
@@ -462,7 +437,7 @@ $d->while_logged_in_as(
         $d->get_ok( '/solgs', 'solgs homepage' );
         sleep(4);
 
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'population search form' )->send_keys('Kasese solgs trial');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
@@ -485,7 +460,7 @@ $d->while_logged_in_as(
           ->click();
         sleep(3);
 
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'population search form' )->send_keys('Kasese solgs trial');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
@@ -534,7 +509,7 @@ $d->while_logged_in_as(
 # # sleep(15);
 # #####################################################################
 
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'population search form' )->send_keys('trial2 NaCRRI');
         sleep(2);
         $d->find_element_ok( 'search_selection_pop', 'id',
@@ -643,14 +618,8 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-139-'
-              . $accessions_list_id
-              . '-traits-1971973596-gebv-k-4"]',
-            'xpath',
-            'check k-means plot'
-        )->click();
-        sleep(3);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs acccessions list gebvs kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(3);
@@ -705,14 +674,8 @@ $d->while_logged_in_as(
             "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);",
             $clustering );
         sleep(5);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-139-'
-              . $accessions_dt_id
-              . '-traits-1971973596-genotype-k-4-gp-1"]',
-            'xpath',
-            'check k-means plot'
-        )->click();
-        sleep(3);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs accessions dataset geno kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(3);
@@ -760,14 +723,8 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-139-'
-              . $accessions_dt_id
-              . '-traits-1971973596-gebv-k-4"]',
-            'xpath',
-            'check k-means plot'
-        )->click();
-        sleep(3);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs accessions dataset gebvs kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(3);
@@ -805,9 +762,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-139-traits-1971973596-phenotype-k-4"]',
-            'xpath', 'check k-means plot' )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs tr pop pheno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -847,10 +802,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-139-traits-1971973596-genotype-k-4-gp-1"]',
-            'xpath', 'check k-means plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check tr pop geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -888,9 +840,8 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-139-traits-1971973596-gebv-k-4"]',
-            'xpath', 'check k-means plot' )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs tr pop gebvs kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(3);
@@ -956,10 +907,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-139-139-DMCP-3-FRW-5-genotype-k-4-gp-1-sp-15"]',
-            'xpath', 'plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs SIndex geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -1003,10 +951,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id',
             'no job queueing -- trial2 NaCRRI  geno cluster' )->click();
         sleep(250);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-139-141-traits-1971973596-genotype-k-4-gp-1"]',
-            'xpath', 'check trial2 NaCRRI  geno k-means plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs sel pop geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -1044,10 +989,8 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-139-141-traits-1971973596-gebv-k-4"]',
-            'xpath', 'check k-means plot' )->click();
-        sleep(3);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check sel pop gebv kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(3);
@@ -1143,11 +1086,8 @@ $d->while_logged_in_as(
         $d->find_element_ok( '//*[starts-with(@id, "run_cluster")]',
             'xpath', 'run cluster' )->click();
         sleep(20);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-139-141-traits-1971973596-genotype-k-4-gp-1"]',
-            'xpath', 'check k-means plot'
-        )->click();
-        sleep(3);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs sel pop geno kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(3);
@@ -1231,10 +1171,8 @@ $d->while_logged_in_as(
         $d->find_element_ok( '//*[starts-with(@id, "run_cluster")]',
             'xpath', 'run cluster' )->click();
         sleep(10);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-139-141-traits-1971973596-gebv-k-4"]',
-            'xpath', 'check k-means plot' )->click();
-        sleep(3);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs trial sel pop gebv kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(3);
@@ -1370,10 +1308,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( '//*[starts-with(@id, "run_cluster")]',
             'xpath', 'run cluster' )->click();
         sleep(140);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-139-139-DMCP-3-FRW-5-genotype-k-4-gp-1-sp-15"]',
-            'xpath', 'plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs SI geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -1421,10 +1356,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id',
             'wait to finish clustering trial2 NaCRRI genotype' )->click();
         sleep(250);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-139-141-traits-1971973596-genotype-k-4-gp-1"]',
-            'xpath', 'check k-means plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs sel pop geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -1474,9 +1406,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id',
             'wait to finish clustering in single trial model page' )->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-139-70666-genotype-k-4-gp-1"]',
-            'xpath', 'check k-means plot' )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs tr pop trait geno kmeans cluster plot');
         sleep(5);
 
 # #    #  #$d->get_ok('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'open combined trials model page');
@@ -1485,16 +1415,16 @@ $d->while_logged_in_as(
 
         $d->get_ok( '/solgs', 'solgs home page' );
         sleep(2);
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'population search form' )->send_keys('Kasese solgs trial');
         sleep(2);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
         sleep(1);
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'population search form' )->clear();
         sleep(2);
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'population search form' )->send_keys('trial2 nacrri');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
@@ -1509,7 +1439,7 @@ $d->while_logged_in_as(
             '//table[@id="searched_trials_table"]//input[@value="141"]',
             'xpath', 'select trial nacrri' )->click();
         sleep(2);
-        $d->find_element_ok( 'done_selecting', 'id', 'done selecting' )
+        $d->find_element_ok( 'select_trials_btn', 'id', 'done selecting' )
           ->click();
         sleep(2);
         $d->find_element_ok( 'combine_trait_trials', 'id', 'combine trials' )
@@ -1537,16 +1467,16 @@ $d->while_logged_in_as(
         $d->get_ok( '/solgs', 'solgs homepage' );
         sleep(2);
 
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'population search form' )->send_keys('Kasese solgs trial');
         sleep(2);
         $d->find_element_ok( 'search_training_pop', 'id',
             'search for training pop' )->click();
         sleep(1);
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'population search form' )->clear();
         sleep(2);
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'population search form' )->send_keys('trial2 nacrri');
         sleep(5);
         $d->find_element_ok( 'search_training_pop', 'id',
@@ -1561,7 +1491,7 @@ $d->while_logged_in_as(
             '//table[@id="searched_trials_table"]//input[@value="141"]',
             'xpath', 'select trial nacrri' )->click();
         sleep(2);
-        $d->find_element_ok( 'done_selecting', 'id', 'done selecting' )
+        $d->find_element_ok( 'select_trials_btn', 'id', 'done selecting' )
           ->click();
         sleep(2);
         $d->find_element_ok( 'combine_trait_trials', 'id', 'combine trials' )
@@ -1612,7 +1542,7 @@ $d->while_logged_in_as(
             ' go to combined trials multi models page' )->click();
         sleep(10);
 
-        $d->find_element_ok( 'population_search_entry', 'id',
+        $d->find_element_ok( 'trial_search_box', 'id',
             'combo trials models sel population search form' )
           ->send_keys('trial2 NaCRRI');
         sleep(5);
@@ -1709,10 +1639,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-2804608595-traits-1971973596-phenotype-k-4"]',
-            'xpath', 'check k-means plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs tr combo trials pheno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -1749,9 +1676,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing -- GEBV' )
           ->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-2804608595-traits-1971973596-gebv-k-4"]',
-            'xpath', 'check k-means plot' )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check combo trials accessions list pheno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -1792,10 +1717,7 @@ $d->while_logged_in_as(
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing-- Genotype' )
           ->click();
         sleep(250);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-2804608595-traits-1971973596-genotype-k-4-gp-1"]',
-            'xpath', 'plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check combo trials tr pop geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -1860,10 +1782,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(140);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-2804608595-2804608595-DMCP-3-FRW-5-genotype-k-4-gp-1-sp-15"]',
-            'xpath', 'plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check combo triasl tr pop SIndex geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -1915,14 +1834,8 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-2804608595-'
-              . $accessions_dt_id
-              . '-traits-1971973596-gebv-k-4"]',
-            'xpath',
-            'check k-means plot'
-        )->click();
-        sleep(3);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check combo trials accessions dataset gebv kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(5);
@@ -1969,14 +1882,8 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(180);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-2804608595-'
-              . $accessions_list_id
-              . '-traits-1971973596-gebv-k-4"]',
-            'xpath',
-            'check k-means plot'
-        )->click();
-        sleep(3);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check combo triasl tr pop accessions list gebv kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(3);
@@ -2015,10 +1922,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-2804608595-141-traits-1971973596-genotype-k-4-gp-1"]',
-            'xpath', 'check k-means plot'
-        )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check combo trials tr pop trial sel pop geno kmeans cluster plot');
         sleep(5);
 
         $d->driver->refresh();
@@ -2057,11 +1961,8 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(140);
-        $d->find_element_ok(
-'//img[@id="k-means-plot-2804608595-141-traits-1971973596-gebv-k-4"]',
-            'xpath', 'check k-means plot'
-        )->click();
-        sleep(3);
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check combo trials tr pop trial gebv kmeans cluster plot');
+        sleep(5);
 
         $d->driver->refresh();
         sleep(3);
@@ -2107,9 +2008,7 @@ $d->while_logged_in_as(
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
         sleep(250);
-        $d->find_element_ok(
-            '//img[@id="k-means-plot-2804608595-70741-genotype-k-4-gp-1"]',
-            'xpath', 'check k-means plot' )->click();
+        $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check combo trials tr pop trait model geno kmeans cluster plot');
         sleep(5);
 
         foreach my $list_id ( $trials_list_id, $accessions_list_id, $plots_list_id ) {
