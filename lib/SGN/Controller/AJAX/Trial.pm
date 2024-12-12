@@ -1285,16 +1285,20 @@ sub upload_trial_metadata_file_POST : Args(0) {
 
     # Check if user is logged in and has curator or submitter privileges
     if (!$c->user()) {
-        print STDERR "User not logged in... not uploading a trial.\n";
         $c->stash->{rest} = {errors => "You need to be logged in to update a trial." };
-        return;
-    }
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
-        $c->stash->{rest} = {errors =>  "You have insufficient privileges to update a trial." };
         return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $username = $c->user()->get_object()->get_username();
+    my @user_roles = $c->user()->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    # User must be a curator or submitter
+    if ( !(exists($has_roles{'submitter'}) || exists($has_roles{'curator'}) ) ) {
+        $c->stash->{rest} = {errors =>  "You must be a curator or submitter to update a trial." };
+        return;
+    }
 
     # Check filename for spaces and/or slashes
     if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
@@ -1339,14 +1343,38 @@ sub upload_trial_metadata_file_POST : Args(0) {
         return;
     }
 
-    print STDERR "\n\n\n\nRETURNED PARSED DATA:\n";
-    print STDERR Dumper $parsed_data;
+    # Check breeding program permissions, if not a curator
+    if ( ! exists($has_roles{'curator'}) ) {
+        my $breeding_programs = $parsed_data->{'breeding_programs'};
+        my @missing_breeding_programs;
+        foreach my $breeding_program (@$breeding_programs) {
+            if ( ! exists($has_roles{$breeding_program}) ) {
+                push @missing_breeding_programs, $breeding_program;
+            }
+        }
+        if ( scalar(@missing_breeding_programs) > 0 ) {
+            $c->stash->{rest} = { errors => "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s)." };
+            return;
+        }
+    }
 
+    # Update each trial
+    eval {
+        my $trial_data = $parsed_data->{'trial_data'};
+        foreach my $trial_id (keys %$trial_data) {
+            my $details = $trial_data->{$trial_id};
+            my $trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $trial_id });
+            my $error = $trial->update_metadata($details);
+            die $error if $error;
+        }
+    };
+    if ($@) {
+        $c->stash->{rest} = { errors => "There was an error updating one or more trials: $@" };
+        return;
+    };
 
-    # TODO: Store the updated trial metadata
-
-    # TODO: RETURN SUCCESS WHEN COMPLETE
-    $c->stash->{rest} = {errors => 'NOT IMPLEMENTED'};
+    # All Done
+    $c->stash->{rest} = { success => 1 };
     return;
 }
 

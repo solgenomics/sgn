@@ -907,9 +907,9 @@ $design_types => ()
                         <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
                         <li>location (The <strong>name</strong> or <strong>abbreviation</strong> of the location where the trial was held, must exist in the database.)</li>
                         <li>year (The year the trial was held.)</li>
-                        <li>transplanting_date(The transplanting_date of the trial was conducted. Date in YYYY-MM-DD format)</li>
-                        <li>planting_date (Date of Planting in YYYY-MM-DD format)</li>
-                        <li>harvest_date (Date of Harvest in YYYY-MM-DD format)</li>
+                        <li>transplanting_date (The transplanting_date of the trial was conducted. Date in YYYY-MM-DD format or 'remove' to remove the date)</li>
+                        <li>planting_date (Date of Planting in YYYY-MM-DD format or 'remove' to remove the date)</li>
+                        <li>harvest_date (Date of Harvest in YYYY-MM-DD format or 'remove' to remove the date)</li>
                         <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
                         <li>description (Additional text with any other relevant information about the trial.)</li>
                         <li>trial_type (The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>

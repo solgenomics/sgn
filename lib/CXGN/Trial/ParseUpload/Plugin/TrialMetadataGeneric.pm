@@ -9,7 +9,7 @@ use CXGN::Stock::Seedlot;
 use CXGN::Trial;
 
 my @REQUIRED_COLUMNS = qw|trial_name|;
-my @OPTIONAL_COLUMNS = qw|breeding_program location year transplanting_date planting_date harvest_date design_type description trial_type plot_width plot_length field_size|;
+my @OPTIONAL_COLUMNS = qw|name breeding_program location year transplanting_date planting_date harvest_date design_type description type plot_width plot_length field_size|;
 # Any additional columns are unsupported and will return an error
 
 # VALID DESIGN TYPES
@@ -55,7 +55,11 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new(
         file => $filename,
         required_columns => \@REQUIRED_COLUMNS,
-        optional_columns => \@OPTIONAL_COLUMNS
+        optional_columns => \@OPTIONAL_COLUMNS,
+        column_aliases => {
+            'name' => [ 'new_trial_name' ],
+            'type' => [ 'trial_type' ]
+        }
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{'errors'};
@@ -90,13 +94,13 @@ sub _validate_with_plugin {
         my $field_size = $data->{'field_size'};
 
         # Transplanting / Planting / Harvest Dates: must be YYYY-MM-DD format, if provided
-        if ($transplanting_date && !$calendar_funcs->check_value_format($transplanting_date)) {
+        if ($transplanting_date && $transplanting_date ne 'remove' && !$calendar_funcs->check_value_format($transplanting_date)) {
             push @error_messages, "Row $row: transplanting_date <strong>$transplanting_date</strong> must be in the format YYYY-MM-DD.";
         }
-        if ($planting_date && !$calendar_funcs->check_value_format($planting_date)) {
+        if ($planting_date && $planting_date ne 'remove' && !$calendar_funcs->check_value_format($planting_date)) {
             push @error_messages, "Row $row: planting_date <strong>$planting_date</strong> must be in the format YYYY-MM-DD.";
         }
-        if ($harvest_date && !$calendar_funcs->check_value_format($harvest_date)) {
+        if ($harvest_date && $harvest_date ne 'remove' && !$calendar_funcs->check_value_format($harvest_date)) {
             push @error_messages, "Row $row: harvest_date <strong>$harvest_date</strong> must be in the format YYYY-MM-DD.";
         }
 
@@ -117,7 +121,8 @@ sub _validate_with_plugin {
     ##
 
     # Trial Name: must already exist in the database
-    my @missing_trial_names = @{$validator->validate($schema,'trials',$parsed_values->{'trial_name'})->{'missing'}};
+    my $trial_validation = $validator->validate($schema,'trials',$parsed_values->{'trial_name'});
+    my @missing_trial_names = @{$trial_validation->{'missing'}};
     if (scalar(@missing_trial_names) > 0) {
         push @error_messages, "Trial name(s) <strong>".join(', ',@missing_trial_names)."</strong> do not exist in the database.";
     }
@@ -126,7 +131,7 @@ sub _validate_with_plugin {
     my $breeding_programs_missing = $validator->validate($schema,'breeding_programs',$parsed_values->{'breeding_program'})->{'missing'};
     my @breeding_programs_missing = @{$breeding_programs_missing};
     if (scalar(@breeding_programs_missing) > 0) {
-        push @error_messages, "Breeding program(s) <strong>".join(',',@breeding_programs_missing)."</strong> are not in the database.";
+        push @error_messages, "Breeding program(s) <strong>".join(', ',@breeding_programs_missing)."</strong> are not in the database.";
     }
 
     # Location: Transform location abbreviations/codes to full names
@@ -137,7 +142,7 @@ sub _validate_with_plugin {
         my $location_code = $code->[0];
         my $found_location_name = $code->[1];
         $location_code_map{$location_code} = $found_location_name;
-        push @warning_messages, "File location <strong>$location_code</strong> matches the code for the location named <strong>$found_location_name</strong> and will be substituted if you ignore warnings.";
+        # push @warning_messages, "File location <strong>$location_code</strong> matches the code for the location named <strong>$found_location_name</strong> and will be substituted if you ignore warnings.";
     }
     $self->_set_location_code_map(\%location_code_map);
 
@@ -145,7 +150,7 @@ sub _validate_with_plugin {
     my @locations_missing = @{$locations_hashref->{'missing'}};
     my @locations_missing_no_codes = grep { !exists $location_code_map{$_} } @locations_missing;
     if (scalar(@locations_missing_no_codes) > 0) {
-        push @error_messages, "Location(s) <strong>".join(',',@locations_missing_no_codes)."</strong> are not in the database.";
+        push @error_messages, "Location(s) <strong>".join(', ',@locations_missing_no_codes)."</strong> are not in the database.";
     }
 
     # Year: must be a 4 digit integer
@@ -192,23 +197,58 @@ sub _parse_with_plugin {
     my $parsed = $self->_get_validated_data();
     my $data = $parsed->{'data'};
 
-    my %parsed_data;
+    # Valid Trial Types
+    my @valid_trial_types = CXGN::Trial::get_all_project_types($schema);
+    my %valid_trial_types = map { @{$_}[1] => @{$_}[0] } @valid_trial_types;
+
+    my %trial_data;
+    my %breeding_programs;
     foreach my $d (@$data) {
         my $trial_name = $d->{'trial_name'};
         my $location = $d->{'location'};
+        my $breeding_program = $d->{'breeding_program'};
+        my $trial_type = $d->{'type'};
 
-        # Get location and replace codes with names
-        if ( $self->_has_location_code_map() ) {
-            my $location_code_map = $self->_get_location_code_map();
-            if ( exists $location_code_map->{$location} ) {
-                $d->{'location'} = $location_code_map->{$location};
-            }
+        # Get trial id
+        my $rs = $schema->resultset("Project::Project")->search({ name => $trial_name });
+        my $trial_id = $rs->first->project_id;
+
+        # Add breeding program name(s)
+        my $trial = CXGN::Project->new({ bcs_schema => $schema, trial_id => $trial_id });
+        my $original_breeding_program = $trial->get_breeding_program();
+        $breeding_programs{$original_breeding_program} = 1;
+        $breeding_programs{$breeding_program} = 1 if $breeding_program;
+
+        # Replace breeding program name with ID
+        if ( $breeding_program ) {
+            my $brs = $schema->resultset("Project::Project")->search({ name => $breeding_program });
+            $d->{'breeding_program'} = $brs->first->project_id;
         }
 
-        $parsed_data{$trial_name} = $d;
+        # Replace location codes and names with ID
+        if ( $location ) {
+            if ( $self->_has_location_code_map() ) {
+                my $location_code_map = $self->_get_location_code_map();
+                if ( exists $location_code_map->{$location} ) {
+                    $location = $location_code_map->{$location};
+                }
+            }
+            my $lrs = $schema->resultset("NaturalDiversity::NdGeolocation")->search({ description => $location });
+            $d->{'location'} = $lrs->first->nd_geolocation_id;
+        }
+
+        # Replace trial type with cvterm ID
+        if ( $trial_type ) {
+            $d->{'type'} = $valid_trial_types{$trial_type};
+        }
+
+        $trial_data{$trial_id} = $d;
     }
 
-    $self->_set_parsed_data(\%parsed_data);
+    # Return parsed data and breeding programs
+    my @bp = keys %breeding_programs;
+    my %rtn = ( trial_data => \%trial_data, breeding_programs => \@bp );
+    $self->_set_parsed_data(\%rtn);
     return 1;
 }
 

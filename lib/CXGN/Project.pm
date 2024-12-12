@@ -5480,6 +5480,10 @@ sub update_metadata {
     my $self = shift;
     my $details = shift;
 
+    use Data::Dumper;
+    print STDERR "\n\n\n\n===> UPDATING TRIAL: " . $self->get_name() . "\n";
+    print STDERR Dumper $details;
+
     eval {
         if ($details->{name}) { $self->set_name($details->{name}); }
         if ($details->{breeding_program}) { $self->set_breeding_program($details->{breeding_program}); }
@@ -5512,7 +5516,7 @@ sub update_metadata {
         if ($details->{raw_data_link}) { $self->set_raw_data_link($details->{raw_data_link}); }
     };
     if ($@) {
-        return "An error occurred setting the new trial details: $@";
+        return "An error occurred setting the new trial details of trial " . $self->get_name() . ": $@";
     }
 }
 
