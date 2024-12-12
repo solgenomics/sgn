@@ -1,6 +1,6 @@
-use lib 't/lib';
 use strict;
 use warnings;
+use lib 't/lib';
 use Test::More 'tests' => 57;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;

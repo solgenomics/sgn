@@ -185,7 +185,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 sub _parse_list_from_json {
     my $list_json = shift;
 #    print STDERR "LIST JSON: ". Dumper $list_json;
-    my $json = new JSON;
+    my $json = JSON->new();
     if ($list_json) {
        # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
         my $decoded_list = decode_json($list_json);
