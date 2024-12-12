@@ -78,8 +78,55 @@ jQuery(document).ready(function(){
         }
     });
 
-});
+    jQuery('#obsolete_transformant_button').click( function() {
 
+        const comments = jQuery('#obsolete_transformant_comments').val();
+        if (!comments) {
+            alert ("Please provide reason for obsoleting this transformant");
+            return;
+        }
+
+        const transformant_id = jQuery('#obsolete_transformant_id').val();
+        if (!transformant_id) {
+            alert ("Error retrieving transformant stock id");
+            return;
+        }
+
+        const transformant_name = jQuery('#obsolete_transformant_name').val();
+        if (!transformant_name) {
+            alert ("Error retrieving transformant name");
+            return;
+        }
+
+        const confirmation = confirm('Are you sure you want to obsolete this transformant?' + "  " + transformant_name);
+
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/stock/obsolete',
+                data : {
+                    'stock_id' : transformant_id,
+                    'is_obsolete': 1,
+                    'comments':comments,
+                },
+                beforeSend: function(response){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery('#working_modal').modal('hide');
+                    jQuery('#obsolete_transformant_dialog').modal('hide');                    
+                    alert('Successfully obsoleted!');
+                    location.reload();
+                },
+                error: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    alert("Error obsoleting transformants.");
+                }
+            });
+        }
+    });
+
+});
 
 function obsoleteTransformant(transformant_id, transformant_name){
     const confirmation = confirm('Are you sure you want to obsolete this transformant?' + "  " + transformant_name);
@@ -104,12 +151,12 @@ function obsoleteTransformant(transformant_id, transformant_name){
     }
 }
 
-
 function obsoleteTransformantDialog(transformant_id, transformant_name){
 
     var html = '';
     html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">Accession Name: </label><div class="col-sm-8" ><input class="form-control" id="obsolete_transformant_name" name="obsolete_transformant_name" value="'+transformant_name+'" disabled></div></div>';
     html = html + '<div class="form-group"><label class="col-sm-4 control-label">Comments: </label><div class="col-sm-8" ><input class="form-control" id="obsolete_transformant_comments" name="obsolete_transformant_comments" placeholder=""></div></div></form>';
+    html = html + '<div class="form-group"><input id="obsolete_transformant_id" type="hidden" value="'+transformant_id+'"/>';
 
     jQuery('#obsolete_transformant_div').html(html);
     jQuery('#obsolete_transformant_dialog').modal('show');

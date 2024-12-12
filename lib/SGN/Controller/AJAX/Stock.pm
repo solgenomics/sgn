@@ -1782,10 +1782,10 @@ sub get_shared_trials :Path('/stock/get_shared_trials'){
     my @formatted_rows = ();
     my @all_analyses = ();
 
-    my $analysis_q = "select DISTINCT project.project_id FROM nd_experiment_project 
-    JOIN project USING (project_id) 
-    JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id 
-    JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id 
+    my $analysis_q = "select DISTINCT project.project_id FROM nd_experiment_project
+    JOIN project USING (project_id)
+    JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id
+    JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id
     WHERE cvterm.name='analysis_experiment';";
     my $h = $dbh->prepare($analysis_q);
     $h->execute();
@@ -2357,6 +2357,7 @@ sub stock_obsolete_GET {
 
     my $stock_id = $c->req->param('stock_id');
     my $is_obsolete  = $c->req->param('is_obsolete');
+    my $comments  = $c->req->param('comments');
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
@@ -2370,7 +2371,8 @@ sub stock_obsolete_GET {
                 sp_person_id => $c->user()->get_object()->get_sp_person_id(),
                 user_name => $c->user()->get_object()->get_username(),
                 modification_note => "Obsolete at ".localtime,
-                is_obsolete => $is_obsolete
+                is_obsolete => $is_obsolete,
+                description => $comments
             });
             my $saved_stock_id = $stock->store();
 
