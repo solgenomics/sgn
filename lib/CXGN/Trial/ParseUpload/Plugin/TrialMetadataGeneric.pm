@@ -127,6 +127,23 @@ sub _validate_with_plugin {
         push @error_messages, "Trial name(s) <strong>".join(', ',@missing_trial_names)."</strong> do not exist in the database.";
     }
 
+    # New Trial Names: must NOT already exist in the database, cannot contains spaces
+    my @already_used_new_trial_names;
+    my @missing_new_trial_names = @{$validator->validate($schema,'trials',$parsed_values->{'name'})->{'missing'}};
+    my %unused_new_trial_names = map { $missing_new_trial_names[$_] => $_ } 0..$#missing_new_trial_names;
+    foreach (@{$parsed_values->{'name'}}) {
+        push(@already_used_new_trial_names, $_) unless exists $unused_new_trial_names{$_};
+        if ($_ =~ /\s/) {
+            push @error_messages, "new_trial_name <strong>$_</strong> must not contain spaces.";
+        }
+        # if ($_ =~ /\// || $_ =~ /\\/) {
+        #     push @warning_messages, "trial_name <strong>$_</strong> contains slashes. Note that slashes can cause problems for third-party applications; however, trial names can be saved with slashes if you ignore warnings.";
+        # }
+    }
+    if (scalar(@already_used_new_trial_names) > 0) {
+        push @error_messages, "New Trial Name(s) <strong>".join(', ',@already_used_new_trial_names)."</strong> are invalid because they are already used in the database.";
+    }
+
     # Breeding Program: must already exist in the database
     my $breeding_programs_missing = $validator->validate($schema,'breeding_programs',$parsed_values->{'breeding_program'})->{'missing'};
     my @breeding_programs_missing = @{$breeding_programs_missing};

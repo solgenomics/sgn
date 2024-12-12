@@ -904,10 +904,11 @@ $design_types => ()
 
                     <b>Required Fields:</b>
                     <ul>
-                        <li><b>trial_name:</b> the name of the trial (must already exist in the database)<br></li>
+                        <li><b>trial_name:</b> the name of the trial (must already exist in the database)</li>
                     </ul>
                     <br><b>Optional values:</b><br>
                     <ul>
+                        <li>new_trial_name (A new name for the trial, must not already exist in the database)</li>
                         <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
                         <li>location (The <strong>name</strong> or <strong>abbreviation</strong> of the location where the trial was held, must exist in the database.)</li>
                         <li>year (The year the trial was held.)</li>
