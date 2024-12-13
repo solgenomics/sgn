@@ -215,3 +215,68 @@ is_a: SGNSTAT:0000000
 id: SGNSTAT:0000042
 name: Phenotypic BLUEs using Sommer R
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000043
+name: Principal component analysis using prcomp from base R package
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000044
+name: Principal component 1 (PC1) scores
+definition: values for the first principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000045
+name: Principal component 2 (PC2) scores
+definition: values for the second principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000046
+name: Principal component 3 (PC3) scores
+definition: values for the third principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000047
+name: Principal component 4 (PC4) scores
+definition: values for the fourth principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000048
+name: Principal component 5 (PC5) scores
+definition: values for the fifth principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000049
+name: Principal component 6 (PC6) scores 
+definition: values for the sixth principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000050
+name: Principal component 7 (PC7) scores
+definition: values for the seventh principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000051
+name: Principal component 8 (PC8) scores
+definition: values for the eighth principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000052
+name: Principal component 9 (PC9) scores
+definition: values for the nineth principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000053
+name: Principal component 10 (PC10) scores
+definition: values for the tenth principal component derived from a linear combination of variables with quantitative values
+relationship: variable_of SGNSTAT:0000043
