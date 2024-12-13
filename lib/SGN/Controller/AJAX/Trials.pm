@@ -168,3 +168,34 @@ sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
 
     $c->stash->{rest} = { trial_id => $trial_id };
 }
+
+sub get_recent_trials : Path('/ajax/breeders/recent_trials') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $interval = shift; # 1 day, week, month, or year
+
+    my $t = CXGN::Project->new();
+
+    my @trials = $t->get_recent_trials($interval);
+
+    
+
+
+}
+
+
+sub get_recently_modified_trials : Path('/ajax/breeders/recently_modified_trials') Args(1) {
+    my $self = shift;
+    my $c = shift;
+
+
+
+}
+
+
+sub get_recently_created_accessions : Path('/ajax/breeders/recently_created_accessions') Args(1) {
+    my $self = shift;
+    my $c = shift;
+
+
+}
