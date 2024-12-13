@@ -19,13 +19,25 @@ solGS.save = {
     return stored;
   },
 
-  getResultDetails: function (analysisArgs) {
+  getGebvsResultDetails: function (analysisArgs) {
     analysisArgs = JSON.stringify(analysisArgs);
     var details = jQuery.ajax({
       dataType: "json",
       type: "POST",
       data: {'arguments': analysisArgs},
-      url: "/solgs/analysis/result/details",
+      url: "/solgs/gebvs/result/details",
+    });
+
+    return details;
+  },
+
+  getPcaResultDetails: function (analysisArgs) {
+    analysisArgs = JSON.stringify(analysisArgs);
+    var details = jQuery.ajax({
+      dataType: "json",
+      type: "POST",
+      data: {'arguments': analysisArgs},
+      url: "/solgs/pca/result/details",
     });
 
     return details;
