@@ -1,0 +1,42 @@
+
+<%args>
+
+$schema
+$static_content_path
+$username
+$first_name
+$last_name
+$sp_person_id
+
+</%args>
+
+<center>
+
+<h3>Welcome back <% $first_name %> !</h3>
+
+Recently created trials:
+
+
+
+<br />
+<br />
+
+Recently modified trials:
+
+
+
+<br />
+<br />
+
+
+Recently added accessions:
+
+
+<br />
+<br />
+
+
+
+
+
+</center>
