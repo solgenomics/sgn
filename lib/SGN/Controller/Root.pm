@@ -89,9 +89,21 @@ sub index :Path :Args(0) {
     my @design_types = split ',',$design_type_string;
     $c->stash->{design_types} = \@design_types;
 
-    $c->stash->{template} = '/index.mas';
     $c->stash->{schema}   = $c->dbic_schema('SGN::Schema');
     $c->stash->{static_content_path} = $c->config->{static_content_path};
+
+    if ($c->user()) {
+	my $user = $c->user()->get_object();
+	$c->stash->{username} = $user->get_username();
+	$c->stash->{first_name} = $user->get_first_name();
+	$c->stash->{last_name} = $user->get_last_name();
+	$c->stash->{sp_person_id} = $user->get_sp_person_id();
+	$c->stash->{template} = '/index_logged_in_user.mas';
+    }
+    else { 
+	$c->stash->{template} = '/index.mas';
+    }
+ 
 }
 
 =head2 default
