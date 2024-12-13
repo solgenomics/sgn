@@ -117,14 +117,17 @@ for my $extension ("xls", "xlsx", "csv") {
         harvest_date => "2017-07-21",
         design_type => "CRD",
         description => "test trial",
-        type => "Preliminary Yield Trial",
+        type => 76515,
         plot_width => undef,
         plot_length => undef,
         field_size => undef
     );
 
-    $t1->update_metadata(\%original_t1_metadata);
-    $t2->update_metadata(\%original_t2_metadata);
+    my $e1 = $t1->update_metadata(\%original_t1_metadata);
+    my $e2 = $t2->update_metadata(\%original_t2_metadata);
+    is($e1, "", "trial 1 restore metadata");
+    is($e2, "", "trial 2 restore metadata");
+
     $f->clean_up_db();
 
 }
