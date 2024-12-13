@@ -634,26 +634,26 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         if ($format eq ".csv") {
 
             #build csv with column names
-            open(CSV, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
-                my @header = @{$data[0]};
-                my $num_col = scalar(@header);
-                for (my $line =0; $line< @data; $line++) {
-                    my @columns = @{$data[$line]};
-                    my $step = 1;
-                    for(my $i=0; $i<$num_col; $i++) {
-                        if (defined($columns[$i])) {
-                            print CSV "\"$columns[$i]\"";
-                        } else {
-                            print CSV "\"\"";
-                        }
-                        if ($step < $num_col) {
-                            print CSV ",";
-                        }
-                        $step++;
+            open(my $csv_fh, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
+            my @header = @{$data[0]};
+            my $num_col = scalar(@header);
+            for (my $line =0; $line< @data; $line++) {
+                my @columns = @{$data[$line]};
+                my $step = 1;
+                for(my $i=0; $i<$num_col; $i++) {
+                    if (defined($columns[$i])) {
+                        print $csv_fh "\"$columns[$i]\"";
+                    } else {
+                        print $csv_fh "\"\"";
                     }
-                    print CSV "\n";
+                    if ($step < $num_col) {
+                        print $csv_fh ",";
+                    }
+                    $step++;
                 }
-            close CSV;
+                print $csv_fh "\n";
+            }
+            close $csv_fh;
 
         } else {
             my $ss = Excel::Writer::XLSX->new($tempfile);
@@ -769,7 +769,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         my $file_name = basename($file_path);
 
         # Write to csv file
-        open(CSV, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
+        open(my $csv_fh, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
         my @header =  @{$rows->[0]};
         my $num_col = scalar(@header);
 
@@ -778,18 +778,18 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
             my $step = 1;
             for ( my $i = 0; $i < $num_col; $i++ ) {
                 if ($columns->[$i]) {
-                    print CSV "\"$columns->[$i]\"";
+                    print $csv_fh "\"$columns->[$i]\"";
                 } else {
-                    print CSV "\"\"";
+                    print $csv_fh "\"\"";
                 }
                 if ($step < $num_col) {
-                    print CSV ",";
+                    print $csv_fh ",";
                 }
                 $step++;
             }
-            print CSV "\n";
+            print $csv_fh "\n";
         }
-        close CSV;
+        close $csv_fh;
 
         # Return the csv file
         $c->res->content_type('text/csv');

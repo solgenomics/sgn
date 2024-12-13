@@ -163,7 +163,11 @@ sub download {
         my $num_col = scalar(@$header);
         for (my $line =0; $line< @data; $line++) {
             my $columns = $data[$line];
-            print $F join ',', map { $_ =~ s/"/""/g; qq!"$_"! } @$columns;
+            print $F join ',', map {
+                my $field = $_;
+                $field =~ s/"/""/g;
+                qq!"$field"!;
+            } @$columns;
             print $F "\n";
         }
     close($F);

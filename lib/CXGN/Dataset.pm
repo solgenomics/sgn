@@ -448,7 +448,7 @@ sub set_dataset_public {
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return;
         }
     }
 }
@@ -474,7 +474,7 @@ sub set_dataset_private {
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return;
         }
     }
 }
@@ -1258,7 +1258,7 @@ sub delete {
 	if ($@) {
 	    return "An error occurred, $@";
         } else {
-	    return undef;
+	    return;
 	}
 
     }
@@ -1280,7 +1280,7 @@ sub update_description {
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return;
         }
     }
 }
