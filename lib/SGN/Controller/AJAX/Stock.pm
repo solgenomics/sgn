@@ -2372,7 +2372,7 @@ sub stock_obsolete_GET {
                 user_name => $c->user()->get_object()->get_username(),
                 modification_note => "Obsolete at ".localtime,
                 is_obsolete => $is_obsolete,
-                description => $comments
+                obsolete_note => $comments,
             });
             my $saved_stock_id = $stock->store();
 
