@@ -35,8 +35,7 @@ sub check_analysis_result :Path('/solgs/check/stored/analysis/') Args() {
     my $analysis_id = $self->check_stored_analysis($c);
 	$c->stash->{rest} {analysis_id} = $analysis_id;
 
-	if ($analysis_id)
-	{
+	if ($analysis_id) {
     	$c->stash->{rest}{error} = "The results of this analysis are already in the database.";
 	} 
 		
@@ -153,7 +152,7 @@ sub analysis_breeding_prog {
 
 	my $log = $self->get_analysis_job_info($c);
 	my $trial_id = $log->{training_pop_id}[0];
-	
+
 	if ($log->{data_set_type} =~ /combined/) {
 		my $trials_ids = $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $trial_id);
 		$trial_id = $trials_ids->[0];
@@ -253,13 +252,11 @@ sub check_stored_analysis {
 	my $analysis_name = $log->{analysis_name};
 
 	my $analysis_id;
-	if ($analysis_name)
-	{
+	if ($analysis_name) {
 		my $schema = $self->schema($c);
         my $analysis = $schema->resultset("Project::Project")->find({ name => $analysis_name });
 	    
-		if ($analysis)
-		{
+		if ($analysis) {
 			$analysis_id = $analysis->project_id;
 	 	} 
 	}
@@ -298,12 +295,10 @@ sub gebvs_values {
 	$analysis_page = $c->controller('solGS::Path')->page_type($c, $analysis_page);
 
 	my $gebvs_file;
-	if ($analysis_page =~ /training_model/)
-	{
+	if ($analysis_page =~ /training_model/) {
 		$gebvs_file = $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
 	}
-	elsif ($analysis_page =~ /selection_prediction/)
-	{
+	elsif ($analysis_page =~ /selection_prediction/) {
 		$gebvs_file = $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 	}
 
@@ -331,8 +326,7 @@ sub structure_gebvs_values {
 
 	my @accessions = keys %$gebvs_ref;
 
-	foreach my $accession (@accessions)
-	{
+	foreach my $accession (@accessions) {
 		$gebvs_hash{$accession} = {
 			$trait_name => [$gebvs_ref->{$accession}, $timestamp, $user_name, "", ""]
 		};
