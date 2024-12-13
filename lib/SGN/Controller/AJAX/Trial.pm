@@ -1325,7 +1325,7 @@ sub upload_trial_metadata_file_POST : Args(0) {
     unlink $upload_tempfile;
 
     # parse uploaded file with trial metadata plugin
-    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, user_id => $user_id);
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin('TrialMetadataGeneric');
     my $parsed_data = $parser->parse();
 

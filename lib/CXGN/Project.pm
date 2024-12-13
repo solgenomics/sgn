@@ -5486,6 +5486,7 @@ sub update_metadata {
         if ($details->{location}) { $self->set_location($details->{location}); }
         if ($details->{year}) { $self->set_year($details->{year}); }
         if ($details->{type}) { $self->set_project_type($details->{type}); }
+        if ($details->{design_type}) { $self->set_design_type($details->{design_type}); }
         if ($details->{planting_date}) {
             if ($details->{planting_date} eq 'remove') { $self->remove_planting_date($self->get_planting_date()); }
             else { $self->set_planting_date($details->{planting_date}); }
