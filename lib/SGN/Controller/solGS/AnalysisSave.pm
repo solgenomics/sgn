@@ -12,6 +12,7 @@ use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use Scalar::Util 'reftype';
+use SGN::Model::Cvterm;
 use Storable qw/ nstore retrieve /;
 use Try::Tiny;
 use URI;
@@ -36,7 +37,7 @@ sub check_analysis_result :Path('/solgs/check/stored/analysis/') Args() {
 
 	if ($analysis_id)
 	{
-    	$c->stash->{rest}{error} = "This model GEBVs are already in the database.";
+    	$c->stash->{rest}{error} = "The results of this analysis are already in the database.";
 	} 
 		
 }
@@ -50,24 +51,23 @@ sub result_details :Path('/solgs/analysis/result/details') Args() {
 
 	my $stored = $self->check_stored_analysis($c);
 
-	if (!$stored)
-	{
+	if (!$stored) {
 		my $params = decode_json($args);
 		my $analysis_details;
 
-		eval
-		{
-			$analysis_details = $self->structure_gebvs_result_details($c, $params);
+		eval {
+			if ($c->stash->{analysis_type} =~ /pca/) {
+				$analysis_details = $self->structure_pca_result_details($c);
+			} else {
+				$analysis_details = $self->structure_gebvs_result_details($c, $params);
+			}
 		};
 
-		if ($@)
-		{
+		if ($@) {
 			print STDERR "\n$@\n";
 			$c->stash->{rest}{error} = 'Something went wrong structuring the analysis result';
-		}
-		else
-		{
-		$c->stash->{rest}{analysis_details} = $analysis_details;
+		} else {
+			$c->stash->{rest}{analysis_details} = $analysis_details;
 		}
 	}
 
@@ -86,9 +86,6 @@ sub structure_gebvs_result_details {
 	my $log			    = $self->get_analysis_job_info($c);
 	my $analysis_name   = $log->{analysis_name};
 
-	my $test_trait_names = encode_json($trait_names);
-	my $test_log = encode_json($log);
-
     my $details = {
 		'analysis_to_save_boolean' => 'yes',
 		'analysis_name' => $log->{analysis_name},
@@ -96,7 +93,7 @@ sub structure_gebvs_result_details {
 		'analysis_year' => $self->analysis_year($c),
 		'analysis_breeding_program_id' => $self->analysis_breeding_prog($c),
 		'analysis_protocol' => $model_details->{protocol},
-		'analysis_dataset_id' => '',
+		'analysis_dataset_id' => $log->{dataset_id},
 		'analysis_accession_names' => encode_json(\@accessions),
 		'analysis_trait_names' => encode_json($trait_names),
 		'analysis_precomputed_design_optional' =>'',
@@ -155,29 +152,61 @@ sub analysis_breeding_prog {
 	my ($self, $c) = @_;
 
 	my $log = $self->get_analysis_job_info($c);
-
 	my $trial_id = $log->{training_pop_id}[0];
-	if ($log->{data_set_type} =~ /combined/)
-	{
+	
+	if ($log->{data_set_type} =~ /combined/) {
 		my $trials_ids = $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $trial_id);
 		$trial_id = $trials_ids->[0];
 	}
 
-	if ($trial_id =~ /list/)
-	{
+	if ($trial_id =~ /list/) {
 		$trial_id = $c->controller('solGS::List')->get_trial_id_plots_list($c, $trial_id);
 	}
 
 	my $program_id;
-	if ($trial_id =~ /^\d+$/)
-	{
+	if ($trial_id =~ /^\d+$/) {
 		$program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trial_id);
 	}
 
+	if (!$program_id) {
+		my $data_type = $log->{data_type};
+		my $data_str = $log->{data_structure};
+		
+		if ($data_str =~ /dataset/) {
+			$c->stash->{dataset_id} = $log->{dataset_id};
+			$program_id = $c->controller('solGS::Dataset')->get_dataset_breeding_program($c);
+
+		} elsif ($data_str =~ /list/) {
+			$c->stash->{list_id} = $log->{list_id};
+			$program_id = $c->controller('solGS::List')->get_list_breeding_program($c);
+		}
+	}
+	
 	return $program_id;
 
 }
 
+sub pca_details {
+	my ($self, $c) = @_;
+
+	my $model_type = 'prcomp';
+	my $stat_ont_term = 'Principal component analysis using prcomp from base R package|SGNSTAT:0000043';
+	my $protocol = "prcomp method from base R Package";
+	my $log = $self->get_analysis_job_info($c);
+	my $model_page = $log->{analysis_page};
+	my $model_desc = qq | <a href="$model_page">Go to PCA detail page</a>|;
+
+	my $details = {
+		'model_type' => $model_type,
+		'model_page' => $model_page,
+		'model_desc' => $model_desc,
+		'model_lang' => 'R',
+		'stat_ont_term' => $stat_ont_term,
+		'protocol' => $protocol
+	};
+
+	return $details;
+}
 
 sub model_details {
 	my ($self, $c) = @_;
@@ -222,6 +251,7 @@ sub check_stored_analysis {
 
 	my $log = $self->get_analysis_job_info($c);
 	my $analysis_name = $log->{analysis_name};
+
 	my $analysis_id;
 	if ($analysis_name)
 	{
@@ -313,11 +343,127 @@ sub structure_gebvs_values {
 }
 
 
+sub get_pca_scores {
+	my ($self, $c) = @_;
+
+    $c->controller('solGS::pca')->pca_scores_file($c);
+	my $scores_file     = $c->stash->{pca_scores_file};
+	my @cols = $c->controller('solGS::Utils')->get_data_col_headers($scores_file);
+	my @pc_cols = grep(/PC/i, @cols);
+
+	my $include_rownames = 'TRUE';
+	my $scores = $c->controller('solGS::Utils')->read_file_data_cols($scores_file, \@pc_cols, $include_rownames);
+	
+	#remove the first array with col headers
+	shift(@$scores);
+
+	return $scores;
+
+}
+
+
+sub structure_pca_scores {
+	my ($self, $c) = @_;
+
+	my $pcs_names = $self->get_pcs_names($c);
+	my $scores = $self->get_pca_scores($c);
+	my $scores_ref = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($scores);
+	
+	my %scores_hash;
+	my $now = DateTime->now();
+	my $timestamp = $now->ymd()."T".$now->hms();
+
+	my $user = $c->controller('solGS::AnalysisQueue')->get_user_detail($c);
+	my $user_name = $user->{user_name};
+
+	my @accessions = keys %$scores_ref;
+	
+		foreach my $accession (@accessions) { 
+			for (my $i=0;  $i < scalar(@$pcs_names);  $i++) {
+				my $pc = $pcs_names->[$i];
+		
+				$scores_hash{$accession}{$pc} = 
+					[$scores_ref->{$accession}->[$i], $timestamp, $user_name, "", ""];
+			}
+		}
+
+	return \%scores_hash;
+
+}
+
+sub get_pcs_names {
+	my ($self, $c) = @_;
+
+	$c->controller('solGS::pca')->pca_scores_file($c);
+	my $scores_file     = $c->stash->{pca_scores_file};
+	my @cols = $c->controller('solGS::Utils')->get_data_col_headers($scores_file);
+	my @pc_cols = grep(/PC/i, @cols);
+
+	my $cv_name = "SGNStatistics_ontology";
+	my $schema = $self->schema($c);
+	my @extended_pc_names;
+
+	foreach my $pc (@pc_cols) {
+		my ($num) = $pc =~ /(\d+)/;
+		my $cvterm_name = 'Principal component '   . $num . ' (PC' . $num . ') scores';
+		my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, $cv_name)->cvterm_id();
+		my $extended_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $cvterm_id, 'extended');
+		
+		push @extended_pc_names, $extended_name;
+	}
+
+	return \@extended_pc_names;
+
+}
+
+sub structure_pca_result_details {
+	my ($self, $c) = @_;
+
+	my $scores = $self->structure_pca_scores($c);
+	my @accessions = keys %$scores;
+
+	my $pcs_names		= $self->get_pcs_names($c);
+	my $model_details   = $self->pca_details($c);
+	my $app_details		= $self->app_details();
+	my $log			    = $self->get_analysis_job_info($c);
+	my $analysis_name   = $log->{analysis_name};
+
+    my $details = {
+		'analysis_to_save_boolean' => 'yes',
+		'analysis_name' => $log->{analysis_name},
+		'analysis_description' => $log->{pca_desc} || 'test pca load',
+		'analysis_year' => $self->analysis_year($c),
+		'analysis_breeding_program_id' => $self->analysis_breeding_prog($c),
+		'analysis_protocol' => $model_details->{protocol},
+		'analysis_dataset_id' => $log->{dataset_id},
+		'analysis_accession_names' => encode_json(\@accessions),
+		'analysis_trait_names' => encode_json($pcs_names),
+		'analysis_precomputed_design_optional' =>'',
+		'analysis_result_values' => to_json($scores),
+		'analysis_result_values_type' => 'analysis_result_values_match_accession_names',
+		'analysis_result_summary' => '',
+		'analysis_result_trait_compose_info' =>  "",
+		'analysis_statistical_ontology_term' =>  $model_details->{stat_ont_term},
+		'analysis_model_application_version' => $app_details->{version},
+		'analysis_model_application_name' => $app_details->{name},
+		'analysis_model_language' => $model_details->{model_lang},
+		'analysis_model_is_public' => 'yes',
+		'analysis_model_description' =>  $model_details->{model_desc},
+		'analysis_model_name' => $log->{analysis_name},
+		'analysis_model_type' => $model_details->{model_type},
+	};
+
+	return $details;
+
+}
+
 sub get_analysis_job_info {
 	my ($self, $c) = @_;
 
 	my $files = $self->all_users_analyses_logs($c);
 	my $analysis_page = $c->stash->{analysis_page};
+	my $analysis_name = $c->stash->{analysis_name};
+	
 	my @log;
 
 	foreach my $log_file (@$files) {
