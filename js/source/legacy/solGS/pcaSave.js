@@ -34,7 +34,7 @@ jQuery(document).ready(function () {
                     solGS.alertMessage("Error occured checking for user status");
                 });
 
-                solGS.save.getResultDetails(pcaArgs).done(function (res) {
+                solGS.save.getPcaResultDetails(pcaArgs).done(function (res) {
                     if (res.error) {
                         jQuery("#download_pca_output .multi-spinner-container").hide();
                         jQuery(pcaSaveMsgDiv)

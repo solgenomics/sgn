@@ -26,7 +26,7 @@ jQuery(document).ready(function () {
         solGS.alertMessage("Error occured checking for user status");
       });
   
-      solGS.save.getResultDetails(analysisArgs).done(function (res) {
+      solGS.save.getGebvsResultDetails(analysisArgs).done(function (res) {
   
         if (res.error) {
           jQuery("#gebvs_output .multi-spinner-container").hide();

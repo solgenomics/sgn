@@ -154,7 +154,7 @@ sub structure_pca_result_details {
 	my @accessions = keys %$scores;
 
 	my $pcs_names		= $self->get_pcs_names($c);
-	my $pca_details   = $self->pca_details($c);
+	my $pca_details     = $self->pca_details($c);
 	my $app_details		= $c->controller('solGS::AnalysisSave')->app_details();
     my $analysis_year   = $c->controller('solGS::AnalysisSave')->analysis_year($c);
     my $breeding_prog_id = $c->controller('solGS::AnalysisSave')->analysis_breeding_prog($c);
