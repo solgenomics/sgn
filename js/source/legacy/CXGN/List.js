@@ -395,7 +395,9 @@ CXGN.List.prototype = {
                 html += '<td><input type="checkbox" id="list_select_checkbox_'+lists[i][0]+'" name="list_select_checkbox" value="'+lists[i][0]+'"/></td></tr>';
             }
         }
-        html = html + '</tbody></table></div>';
+        html += '</tbody></table>';
+        html += '<p style="color: #999; margin-top: 15px;">Select multiple lists by checking them in the <strong>Group</strong> column to delete them all, make them all public/private, or combine the list items into a new list.</p>';
+        html += '</div>';
         html += '<div id="list_group_select_action"></div>';
 
         jQuery('#'+div+'_div').html(html);
@@ -432,13 +434,32 @@ CXGN.List.prototype = {
                     selected.push(jQuery(this).attr('value'));
                 });
 
-                list_group_select_action_html = '<hr><div class="row well well-sm"><div class="col-sm-4">For Selected Lists:</div><div class="col-sm-8">';
-                if (total == 1) {
+                list_group_select_action_html = '<hr><div class="well well-sm" style="padding: 20px">';
+                if (total > 0) {
+                    list_group_select_action_html += '<div class="row">';
+                    list_group_select_action_html += '<div class="col-sm-4"><p><strong>Modify Selected Lists:</strong></p></div>';
+                    list_group_select_action_html += '<div class="col-sm-8">';
                     list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';
-                } else if (total > 1) {
-                    list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a><br/><br/><div class="input-group input-group-sm"><input type="text" class="form-control" id="new_combined_list_name" placeholder="New List Name"><span class="input-group-btn"><a id="combine_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:combineSelectedListGroup(['+selected+'])">Combine</a></span></div>';
+                    list_group_select_action_html += '</div>';  // end column
+                    list_group_select_action_html += '</div>';  // end row
                 }
-                list_group_select_action_html += '</div></div>';
+                if (total > 1) {
+                    var unionIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 256 256"><path fill="currentColor" d="M172.91 83.09a78 78 0 1 0-89.82 89.82a78 78 0 1 0 89.82-89.82M226 160a65 65 0 0 1-.62 8.9l-53.76-53.77A77.8 77.8 0 0 0 174 96v-.49A66.1 66.1 0 0 1 226 160M45.31 53.79l55.5 55.5a77.9 77.9 0 0 0-12 19L34 73.48a66 66 0 0 1 11.31-19.69m88.92 96l-28-28a66.5 66.5 0 0 1 15.52-15.52l28 28a66.5 66.5 0 0 1-15.52 15.48ZM162 96a65.6 65.6 0 0 1-6 27.49L132.51 100A65.6 65.6 0 0 1 160 94h1.95c.05.7.05 1.35.05 2m-52.71 4.81l-55.5-55.5A66 66 0 0 1 73.48 34l54.8 54.81a77.9 77.9 0 0 0-18.99 12M94 160a65.6 65.6 0 0 1 6-27.49L123.49 156A65.6 65.6 0 0 1 96 162c-.65 0-1.3 0-2-.05zm52.71-4.81l55.5 55.5A66 66 0 0 1 182.52 222l-54.8-54.81a77.9 77.9 0 0 0 18.99-12m8.48-8.48a77.9 77.9 0 0 0 12-19L222 182.52a66 66 0 0 1-11.35 19.69Zm5.3-64.7H160a77.8 77.8 0 0 0-19.13 2.38L87.1 30.62A65 65 0 0 1 96 30a66.1 66.1 0 0 1 64.49 52ZM30 96a65 65 0 0 1 .62-8.9l53.76 53.77A77.8 77.8 0 0 0 82 160v.49A66.1 66.1 0 0 1 30 96m65.51 78H96a77.8 77.8 0 0 0 19.13-2.38l53.77 53.76a65 65 0 0 1-8.9.62a66.1 66.1 0 0 1-64.49-52"/></svg>';
+                    var intersectionIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 256 256"><path fill="currentColor" d="M174.63 81.37a80 80 0 1 0-93.26 93.26a80 80 0 1 0 93.26-93.26M100.69 136L120 155.31A63.5 63.5 0 0 1 96 160a63.5 63.5 0 0 1 4.69-24m33.75 11.13l-25.57-25.57a64.7 64.7 0 0 1 12.69-12.69l25.57 25.57a64.7 64.7 0 0 1-12.69 12.69M155.31 120L136 100.69A63.5 63.5 0 0 1 160 96a63.5 63.5 0 0 1-4.69 24M32 96a64 64 0 0 1 126-16a80.08 80.08 0 0 0-77.95 78A64.11 64.11 0 0 1 32 96m128 128a64.11 64.11 0 0 1-62-48a80.08 80.08 0 0 0 78-78a64 64 0 0 1-16 126"/></svg>';
+
+                    list_group_select_action_html += '<div class="row" style="margin-top: 15px">';
+                    list_group_select_action_html += '<div class="col-sm-4"><p><strong>Combine List Items From Selected Lists to a New List:</strong></p></div>';
+                    list_group_select_action_html += '<div class="col-sm-8">';
+                    list_group_select_action_html += '<div class="input-group input-group-sm">'
+                    list_group_select_action_html += '<input type="text" class="form-control" id="new_combined_list_name" placeholder="New List Name"><span class="input-group-btn">';
+                    list_group_select_action_html += '<button id="combine_selected_list_group" class="btn btn-primary btn-sm" style="color:white; display: inline-flex; align-items: center; gap: 5px;" onclick="javascript:combineSelectedListGroup(['+selected+'], \'union\')">' + unionIcon + 'Union</button>';
+                    list_group_select_action_html += '<button id="combine_selected_list_group" class="btn btn-primary btn-sm" style="color:white; display: inline-flex; align-items: center; gap: 5px;" onclick="javascript:combineSelectedListGroup(['+selected+'], \'intersection\')">' + intersectionIcon + 'Intersection</button>';
+                    list_group_select_action_html += '</input></span>';
+                    list_group_select_action_html += '</div>';  // End input group
+                    list_group_select_action_html += '</div>';  // end column
+                    list_group_select_action_html += '</div>';  // end row
+                }
+                list_group_select_action_html += '</div>'; // End well
             }
             jQuery("#list_group_select_action").html(list_group_select_action_html);
         });
@@ -1755,36 +1776,68 @@ function makePrivateSelectedListGroup(list_ids) {
     }
 }
 
-function combineSelectedListGroup(list_ids) {
+/**
+ * Combine the items from the selected lists and create a new list
+ * The items can be combined either using a union method or intersection method
+ * @param {Array[Integer]} list_ids Array of List IDs of Lists to combine
+ * @param {String} type Method of combining lists (either 'union' or 'intersection', union is default)
+ */
+function combineSelectedListGroup(list_ids, type = 'union') {
     var arrayLength = list_ids.length;
     var list_name = jQuery('#new_combined_list_name').val();
-    if (confirm('Combine selected lists into a new list called '+list_name+'?')) {
-        var arrayItems = [];
+    if ( !list_name || list_name === '' ) return alert("You must enter a new list name first");
+
+    if ( confirm('Combine selected lists into a new list called '+list_name+'?') ) {
         var lo = new CXGN.List();
-        var first_list_type = lo.getListType(list_ids[0]);
-        var same_list_types = true;
-        for (var i=0; i<arrayLength; i++) {
+
+        // Check if the selected lists are the same list type
+        var list_types = [];
+        for ( var i=0; i<arrayLength; i++ ) {
             var list_type = lo.getListType(list_ids[i]);
-            if (list_type != first_list_type) {
-                same_list_types = false;
-                if (!confirm('Are you sure you want to combine these list types: '+first_list_type+' and '+list_type)) {
-                    return;
+            if ( !list_types.includes(list_type) ) list_types.push(list_type);
+        }
+        if ( list_types.length > 1 && !confirm('Are you sure you want to combine these list types: ' + list_types.join(', ')) ) return;
+
+        // Create new list
+        var new_list_id = lo.newList(list_name);
+        if ( list_types.length === 1 ) {
+            lo.setListType(new_list_id, list_types[0]);
+        }
+
+        // Combine list items
+        var arrayItems = [];
+
+        // INTERSECTION
+        if ( type === 'intersection' ) {
+            var allListItems = [];
+            for ( var i=0; i<arrayLength; i++ ) {
+                list = lo.getListData(list_ids[i]);
+                var listItems = [];
+                for ( var j=0; j<list.elements.length; j++ ) {
+                    listItems.push(list.elements[j][1]);
+                }
+                allListItems.push(listItems);
+            }
+            arrayItems = allListItems.reduce((result, array) => result.filter(value => array.includes(value)));
+        }
+
+        // UNION
+        else {
+            for ( var i=0; i<arrayLength; i++ ) {
+                list = lo.getListData(list_ids[i]);
+                for ( var j=0; j<list.elements.length; j++ ) {
+                    arrayItems.push(list.elements[j][1]);
                 }
             }
         }
-        var new_list_id = lo.newList(list_name);
-        if (same_list_types == true) {
-            lo.setListType(new_list_id, first_list_type);
-        }
-        for (var i=0; i<arrayLength; i++) {
-            list = lo.getListData(list_ids[i]);
-            var numElements = list.elements.length;
-            for (var j=0; j<numElements; j++) {
-                arrayItems.push(list.elements[j][1]);
-            }
-        }
+
+        // Get unique set of items
+        arrayItems = [...new Set(arrayItems)];
+
+        // Add combined items to new list
         lo.addBulk(new_list_id, arrayItems);
         lo.renderLists('list_dialog');
+        alert("Added " + arrayItems.length + " items to the new List " + list_name);
     }
 }
 
