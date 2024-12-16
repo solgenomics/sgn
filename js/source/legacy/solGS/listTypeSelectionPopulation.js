@@ -358,6 +358,6 @@ jQuery(document).ready(function () {
 
   jQuery("#lists_datasets_message").hide();
   jQuery("#lists_datasets_progress .multi-spinner-container").hide();
-  jQuery("#add_new_pops").show();
+  jQuery("#create_new_list_dataset").show();
 
 });

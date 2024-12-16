@@ -37,8 +37,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
 
     $d->get_ok('/correlation/analysis', 'correlation home page');
-    sleep(5);
-
+    sleep(50);
     $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');

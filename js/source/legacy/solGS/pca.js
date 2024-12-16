@@ -245,8 +245,12 @@ solGS.pca = {
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
     }
+
+    var trId = `${dataStr}_${popId}`;
+
+    console.log(`rowid: ${trId}`)
     var rowData = [popName,
-      dataStr, pcaPop.owner, dataTypeOpts, runPcaBtn, `${dataStr}_${popId}`];
+      dataStr, pcaPop.owner, dataTypeOpts, runPcaBtn, trId];
 
     return rowData;
   },
@@ -1079,7 +1083,7 @@ jQuery(document).ready(function () {
 
     solGS.pca.displayPcaPopsTable(tableId, pcaPopsRows);
 
-    jQuery("#add_new_pops").show();
+    jQuery("#create_new_list_dataset").show();
 
   }
 });
