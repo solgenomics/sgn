@@ -13,9 +13,12 @@ sub convert_arrayref_to_hashref {
 
     my %hash_var = ();
 
-    foreach my $dt (@$array_ref)
-    {
-        $hash_var{$dt->[0]} = $dt->[1];
+    foreach my $dt (@$array_ref) {
+        my $rowname = $dt->[0];
+        shift(@$dt);
+        # for (my $i=1; $i < scalar(@$dt); $i++) {
+        $hash_var{$rowname} = $dt;
+        # }
     }
     return \%hash_var;
 }
@@ -48,11 +51,22 @@ sub read_file_data {
 }
 
 
+sub get_data_col_headers {
+    my ($self, $file) = @_;
+
+    my @lines = read_file($file, {binmode => ':utf8'});
+    my @headers =  split(/\t/, shift(@lines));
+
+    return @headers;
+}
+
 sub read_file_data_cols {
     my ($self, $file, $cols, $include_rownames) = @_;
 
     my @lines = read_file($file, {binmode => ':utf8'});
-    my @headers =  split(/\t/, shift(@lines));
+    # my @headers =  split(/\t/, shift(@lines));
+    my @headers = $self->get_data_col_headers($file);
+
     my @h_indices;
 
     foreach my $col (@$cols)
