@@ -54,6 +54,8 @@ CXGN.List = function () {
 
 
 
+// User preference for displaying autocreated lists
+const default_render_lists_autocreated = localStorage.getItem("render_lists_autocreated") === 'true';
 
 
 CXGN.List.prototype = {
@@ -335,7 +337,7 @@ CXGN.List.prototype = {
         });
     },
 
-    renderLists: function(div, { type, autocreated = true } = {}) {
+    renderLists: function(div, { type, autocreated = default_render_lists_autocreated } = {}) {
         var lists = this.availableLists();
         var types = this.allListTypes();
 
@@ -351,20 +353,30 @@ CXGN.List.prototype = {
         // Add list type filter
         html += "<div class='well'>";
         html += "<div style='display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 15px; margin-bottom: 15px'>";
+
+        // Filter by List Type
         html += "<p style='white-space: nowrap'><strong>Filter Lists by Type</strong>:</p>";
-        html += "<select id='render_lists_type' class='form-control' style='max-width: 200px'>";
+        html += "<select id='render_lists_type' class='render_lists_filter form-control' style='max-width: 200px'>";
         html += "<option value=''>Any</option>";
         for ( let i = 0; i < types.length; i++ ) {
             let selected = type && type === types[i][1] ? 'selected' : '';
             html += "<option value='" + types[i][1] + "' " + selected + ">"+types[i][1]+"</option>";
         }
         html += "</select>";
+
+        html += "<div style='width: 30px'></div>";
+
+        // Autocreated filter
+        html += "<p style='white-space: nowrap'><strong>Include Autocreated Lists</strong>:</p>";
+        let checked = autocreated ? 'checked' : ''
+        html += "<input id='render_lists_autocreated' class='render_lists_filter' type='checkbox' " + checked + " />";
+
         html += "</div>";
 
         html += '<table id="private_list_data_table" class="table table-hover table-condensed">';
         html += '<thead><tr><th>List Name</th><th>Description</th><th>Date Created</th><th>Date Modified</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
-            if ( !type || type === lists[i][5] ) {
+            if ( (!type || type === lists[i][5]) && (autocreated || !(lists[i][2] || '').startsWith("Autocreated")) ) {
                 html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
                 html += '<td>'+lists[i][2]+'</td>';
                 html += '<td>'+lists[i][7]+'</td>';
@@ -431,10 +443,12 @@ CXGN.List.prototype = {
             jQuery("#list_group_select_action").html(list_group_select_action_html);
         });
 
-        jQuery("#render_lists_type").on("change", function() {
-            var type = $(this).val();
+        jQuery(".render_lists_filter").on("change", function() {
+            var type = jQuery('#render_lists_type').val();
+            var autocreated = jQuery("#render_lists_autocreated").is(":checked");
+            localStorage?.setItem("render_lists_autocreated", autocreated);
             var lo = new CXGN.List();
-            lo.renderLists('list_dialog', { type });
+            lo.renderLists('list_dialog', { type, autocreated });
         });
     },
 
