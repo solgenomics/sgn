@@ -10,7 +10,13 @@ use SGN::Test::solGSData;
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
-my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
+my $solgs_data = SGN::Test::solGSData->new({
+    'fixture' => $f, 
+    'accessions_list_subset' => 60, 
+    'plots_list_subset' => 60
+    'user_id' => 40,
+});
+
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
 
 my $accessions_list =  $solgs_data->load_accessions_list();

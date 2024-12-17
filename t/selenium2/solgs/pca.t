@@ -12,13 +12,12 @@ use SGN::Test::solGSData;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
-my $solgs_data = SGN::Test::solGSData->new(
-    {
-        'fixture'                => $f,
-        'accessions_list_subset' => 60,
-        'plots_list_subset'      => 60
-    }
-);
+my $solgs_data = SGN::Test::solGSData->new({
+    'fixture'                => $f,
+    'accessions_list_subset' => 60,
+    'plots_list_subset'      => 60,
+    'user_id' => 40,
+});
 
 my $cache_dir    = $solgs_data->site_cluster_shared_dir();
 my $protocol_dir = $solgs_data->default_protocol_dir();
@@ -82,7 +81,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/pca/analysis', 'pca home page');
     sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
-    sleep(2);
+    sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
