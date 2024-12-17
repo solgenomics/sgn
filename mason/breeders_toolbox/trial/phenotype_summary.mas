@@ -234,7 +234,7 @@ input[type="text"] {
                     //console.log("Slided moved Start_date in Pheno summ :", raw_phenotype_startDate);
                     //console.log("Slided moved End Date in pheno Summ :", raw_phenotype_endDate);
 
-                    var html = setup_tables();
+                    var html = setup_tables(type);
                     jQuery('#pheno_summary_table_div').empty().html(html);
                     datatables_display_phenosummary(type);
                 }
@@ -246,14 +246,14 @@ input[type="text"] {
         });
 	    jQuery("#summary_start_date").change( function() {
 	        //datatables_display_phenosummary(type);
-            var html = setup_tables();
+            var html = setup_tables(type);
             jQuery('#pheno_summary_table_div').empty().html(html);
             datatables_display_phenosummary(type);
         });
     
         jQuery('#summary_end_date').change( function() {
 	        //datatables_display_phenosummary(type);
-	        var html = setup_tables();
+	        var html = setup_tables(type);
             jQuery('#pheno_summary_table_div').empty().html(html);
             datatables_display_phenosummary(type);
         });
@@ -428,14 +428,14 @@ input[type="text"] {
         // get the earliest and last measurement date in the trial
     
         jQuery(document).on('change', '#display_trial_phenosummary', function() {
-            var html = setup_tables();
+            var html = setup_tables(type);
             jQuery('#pheno_summary_table_div').empty().html(html);
             datatables_display_phenosummary(type);
         });
         //catch( function(r) { alert('An error occurred :-( '); )});
     }
 
-    function setup_tables() {
+    function setup_tables(type) {
         var html = '';
         var display = jQuery('#display_trial_phenosummary').val();
         if (display == 'plots' || display == 'plants' || display == 'subplots' || display == 'tissue_samples') {
