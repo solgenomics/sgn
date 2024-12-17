@@ -73,7 +73,7 @@ $trial_stock_type => undef
             <select class="form-control" id="repetitive_measurements_level">
                 <option value="first">First value</option>
                 <option value="last">Last value</option>
-                <option value="average">Average value</option>
+                <option value="average" selected>Average value</option>
                 <option value="sum">Sum values</option>
                 <option value="all">All values</option>
             </select>
