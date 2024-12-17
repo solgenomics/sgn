@@ -112,9 +112,15 @@ $trial_stock_type => undef
 
 jQuery(document).ready(function() {
     var trial_id = '<% $trial_id %>';
+    let selectedTraitId = '';
+
+    jQuery(document).on('change', '#selectRawDataTrait', function() {
+        selectedTraitId = jQuery(this).val();
+        //console.log("Trait ID updated to:", selectedTraitId);
+    });
 
     jQuery('#repetitive_measurements_data_onswitch').click(function() {
-        create_menu_for_repetitive_values(<% $trial_id %>)
+        create_menu_for_repetitive_values(trial_id)
         .then((result) => fetch_repetitive_measurement_traits(result.result.searchResultsDbId))
         .then((result) => repetitive_build_menu(result.result))
         .then((final) => {});
@@ -122,7 +128,12 @@ jQuery(document).ready(function() {
 
     jQuery('#repetitive_measurement_select_button').click(function(event) {
         event.preventDefault();
-        var repetitive_trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
+
+        if (!selectedTraitId) { 
+            selectedTraitId = jQuery('#selectRawDataTrait option:selected').val();
+        }
+
+        //console.log("check updated trait ID:", selectedTraitId);
         var repetitive_start_date = jQuery('#repetitive_measurement_start_date').val();
         var end_date = jQuery('#repetitive_measurement_end_date').val();
         
@@ -134,9 +145,8 @@ jQuery(document).ready(function() {
 
         var repetitive_observation_level = jQuery('#repetitive_measurement_observation_level').find(":selected").val();
         var repetitive_measurement_level = jQuery('#repetitive_measurements_level').find(":selected").val();
-
         //alert("now fetching repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level")
-        get_repetitive_measurement_data(<% $trial_id %>, repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
+        get_repetitive_measurement_data(trial_id, selectedTraitId, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
         .then((result) => fetch_repetitive_measurement_dataTable(result.result.searchResultsDbId))
         .then((result) => show_repetitive_measurement_values(result.result, repetitive_measurement_level))
         .then((final) => {});
@@ -209,7 +219,7 @@ jQuery(document).ready(function() {
         //console.error("the error:", error);
     })
 
-    function create_menu_for_repetitive_values($trial_id) {
+    function create_menu_for_repetitive_values(trial_id) {
         return jQuery.ajax({
             'url':"/brapi/v2/search/variables",
             'data': {'studyDbIds': [ trial_id ], 'pageSize': 10000},
@@ -232,6 +242,8 @@ jQuery(document).ready(function() {
         }
         menu += '</select>';
         jQuery('#select_trait_for_repetitive_data_and_plot').html(menu);
+        selectedTraitId = jQuery('#selectRawDataTrait option:first').val();
+        //console.log("first trait ID selected:", selectedTraitId);
     }
 
     function get_repetitive_measurement_data(trial_id, trait_id, start_date, end_date, observation_level) {
