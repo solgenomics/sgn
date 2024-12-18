@@ -54,8 +54,9 @@ CXGN.List = function () {
 
 
 
-// User preference for displaying autocreated lists
-const default_render_lists_autocreated = localStorage.getItem("render_lists_autocreated") === 'true';
+// Keep track of the rendered lists page number and sort column between refreshes
+var render_lists_page = 0;  // first page
+var render_lists_order = [[0, "asc"]];  // sort by list name, ascending
 
 
 CXGN.List.prototype = {
@@ -337,7 +338,9 @@ CXGN.List.prototype = {
         });
     },
 
-    renderLists: function(div, { type, autocreated = default_render_lists_autocreated } = {}) {
+    renderLists: function(div) {
+        var type = jQuery('#render_lists_type').val();
+        var autocreated = jQuery("#render_lists_autocreated").is(":checked");
         var lists = this.availableLists();
         var types = this.allListTypes();
 
@@ -377,12 +380,13 @@ CXGN.List.prototype = {
         html += '<thead><tr><th>List Name</th><th>Description</th><th>Date Created</th><th>Date Modified</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
             if ( (!type || type === lists[i][5]) && (autocreated || !(lists[i][2] || '').startsWith("Autocreated")) ) {
+                console.log(lists[i][2]);
                 html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
-                html += '<td>'+lists[i][2]+'</td>';
-                html += '<td>'+lists[i][7]+'</td>';
-                html += '<td>'+lists[i][8]+'</td>';
-                html += '<td>'+lists[i][3]+'</td>';
-                html += '<td>'+lists[i][5]+'</td>';
+                html += '<td>'+(lists[i][2] ? lists[i][2] : '')+'</td>';
+                html += '<td>'+(lists[i][7] ? new Date(lists[i][7]).toLocaleString() : '')+'</td>';
+                html += '<td>'+(lists[i][8] ? new Date(lists[i][8]).toLocaleString() : '')+'</td>';
+                html += '<td>'+(lists[i][3] ? lists[i][3] : '0')+'</td>';
+                html += '<td>'+(lists[i][5] ? lists[i][5] : '&lt;NOT SET&gt;')+'</td>';
                 html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
                 html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></span></td>';
                 html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
@@ -402,10 +406,14 @@ CXGN.List.prototype = {
 
         jQuery('#'+div+'_div').html(html);
 
-        jQuery('#private_list_data_table').DataTable({
+        var table = jQuery('#private_list_data_table').DataTable({
             "destroy": true,
-            "columnDefs": [   { "orderable": false, "targets": [4,5,6,7,8] }  ]
+            "columnDefs": [{ "orderable": false, "targets": [6,7,8,9,10,11] }],
+            "order": render_lists_order
         });
+        table.page(render_lists_page).draw('page');
+        table.on('order', () => render_lists_order = table.order());
+        table.on('page', () => render_lists_page = table.page.info().page);
 
         jQuery('#add_list_button').click(function() {
             var lo = new CXGN.List();
@@ -465,11 +473,9 @@ CXGN.List.prototype = {
         });
 
         jQuery(".render_lists_filter").on("change", function() {
-            var type = jQuery('#render_lists_type').val();
-            var autocreated = jQuery("#render_lists_autocreated").is(":checked");
-            localStorage?.setItem("render_lists_autocreated", autocreated);
+            render_lists_page = 0;
             var lo = new CXGN.List();
-            lo.renderLists('list_dialog', { type, autocreated });
+            lo.renderLists('list_dialog');
         });
     },
 
