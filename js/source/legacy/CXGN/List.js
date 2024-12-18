@@ -383,8 +383,8 @@ CXGN.List.prototype = {
                 console.log(lists[i][2]);
                 html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
                 html += '<td>'+(lists[i][2] ? lists[i][2] : '')+'</td>';
-                html += '<td>'+(lists[i][7] ? new Date(lists[i][7]).toLocaleString() : '')+'</td>';
-                html += '<td>'+(lists[i][8] ? new Date(lists[i][8]).toLocaleString() : '')+'</td>';
+                html += '<td>'+(lists[i][7] ? new Date(lists[i][7]).toLocaleDateString() : '')+'</td>';
+                html += '<td>'+(lists[i][8] ? new Date(lists[i][8]).toLocaleDateString() : '')+'</td>';
                 html += '<td>'+(lists[i][3] ? lists[i][3] : '0')+'</td>';
                 html += '<td>'+(lists[i][5] ? lists[i][5] : '&lt;NOT SET&gt;')+'</td>';
                 html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
@@ -431,7 +431,7 @@ CXGN.List.prototype = {
             lo.renderPublicLists('public_list_dialog_div');
         });
 
-        jQuery("input[name='list_select_checkbox']").click(function() {
+        jQuery('body').on("click", "input[name='list_select_checkbox']", function() {
             var total=jQuery("input[name='list_select_checkbox']:checked").length;
             var list_group_select_action_html='';
             if (total == 0) {
