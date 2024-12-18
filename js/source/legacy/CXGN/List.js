@@ -380,7 +380,6 @@ CXGN.List.prototype = {
         html += '<thead><tr><th>List Name</th><th>Description</th><th>Date Created</th><th>Date Modified</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
             if ( (!type || type === lists[i][5]) && (autocreated || !(lists[i][2] || '').startsWith("Autocreated")) ) {
-                console.log(lists[i][2]);
                 html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
                 html += '<td>'+(lists[i][2] ? lists[i][2] : '')+'</td>';
                 html += '<td>'+(lists[i][7] ? new Date(lists[i][7]).toLocaleDateString() : '')+'</td>';
