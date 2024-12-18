@@ -54,6 +54,14 @@ solGS.save = {
     return save;
   },
 
+  checkUserStatus: function () {
+    return jQuery.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "/solgs/check/user/login/",
+    });
+  },
+
   saveGebvsArgs: function () {
     
     var analysisArgs = solGS.getSelectionPopArgs();
@@ -62,17 +70,13 @@ solGS.save = {
   
     return analysisArgs;
   },
-
+  
   analysisResultType: function () {
     return jQuery('#analysis_type').val();
   },
-
-  checkUserStatus: function () {
-    return jQuery.ajax({
-      type: "POST",
-      dataType: "json",
-      url: "/solgs/check/user/login/",
-    });
-  },
+  
 };
+
+
+
 
