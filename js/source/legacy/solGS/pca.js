@@ -21,18 +21,19 @@ solGS.pca = {
 
   getPcaAnalysisArgs: function(pcaAnalysisElemId) {
     var pcaArgs;
-    if (pcaAnalysisElemId != 'undefined') {
-      pcaArgs = solGS.pca.getSelectedPopPcaArgs(pcaAnalysisElemId);  
-    } 
+  
+    var url = location.pathname;
 
-    if (!pcaArgs) {
-      var url = location.pathname;
-
-      if (url.match(/pca\/analysis/)) {
-        pcaArgs = this.getArgsFromPcaUrl();
-      } else {
-        pcaArgs = this.getArgsFromOtherUrls();
+    if (url.match(/pca\/analysis/)) {
+      if (pcaAnalysisElemId != 'undefined') {    
+        pcaArgs = solGS.pca.getSelectedPopPcaArgs(pcaAnalysisElemId);  
       }
+      
+      if (!pcaArgs) {
+        pcaArgs = this.getArgsFromPcaUrl();
+      }
+    } else {
+        pcaArgs = this.getArgsFromOtherUrls();
     }
 
     return pcaArgs;
@@ -69,6 +70,8 @@ solGS.pca = {
         var dataSetType = "combined_populations";
       }
     }
+
+    var dataType = this.getSelectedDataType(pcaPopId);
 
     pcaArgs = {
       pca_pop_id: pcaPopId,
@@ -246,9 +249,7 @@ solGS.pca = {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
     }
 
-    var trId = `${dataStr}_${popId}`;
-
-    console.log(`rowid: ${trId}`)
+    var trId = pcaPopId;
     var rowData = [popName,
       dataStr, pcaPop.owner, dataTypeOpts, runPcaBtn, trId];
 
@@ -296,6 +297,7 @@ solGS.pca = {
     lists = list.addDataStrAttr(lists);
     lists = list.addDataTypeAttr(lists);
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+
     datasets = solGS.dataset.addDataTypeAttr(datasets);
     var pcaPops = [lists, datasets];
 
@@ -451,7 +453,6 @@ solGS.pca = {
 
     var runPcaBtnId = this.getRunPcaId(res.pca_pop_id);
     var pcaArgs = this.getPcaAnalysisArgs(runPcaBtnId);
-    
     pcaArgs['file_id'] = res.file_id;
     pcaArgs = JSON.stringify(pcaArgs);
     var savePcs = `<button id="save_pcs_btn_${res.file_id}" class="btn btn-success" data-selected-pop='${pcaArgs}'>Save PCs</button>`;
