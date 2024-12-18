@@ -72,7 +72,7 @@ solGS.pca = {
     }
 
     var dataType = this.getSelectedDataType(pcaPopId);
-
+    var analysisPage = this.generatePcaUrl(pcaPopId);
     pcaArgs = {
       pca_pop_id: pcaPopId,
       training_pop_id: trainingPopId,
@@ -83,6 +83,7 @@ solGS.pca = {
       data_set_type: dataSetType,
       genotyping_protocol_id: protocolId,
       trait_id: traitId,
+      analysis_page: analysisPage,
       analysis_type: "pca analysis",
     };
   
