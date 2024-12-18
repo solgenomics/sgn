@@ -77,8 +77,14 @@ sub analysis_breeding_prog {
 	my ($self, $c) = @_;
 
 	my $log = $self->get_analysis_job_info($c);
-	my $trial_id = $log->{training_pop_id}[0];
 
+	my $trial_id;
+	if (ref $log->{training_pop_id} eq 'ARRAY') {
+ 		$trial_id = $log->{training_pop_id}[0];
+	} else {
+ 		$trial_id = $log->{training_pop_id};
+	}
+	
 	if ($log->{data_set_type} =~ /combined/) {
 		my $trials_ids = $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $trial_id);
 		$trial_id = $trials_ids->[0];
@@ -170,7 +176,7 @@ sub get_analysis_job_info {
 
 	foreach my $log_file (@$files) {
 		my @logs = read_file($log_file, {binmode => ':utf8'});
-		my ($log) = grep{ $_ =~ /$analysis_page/} @logs;
+		my ($log) = grep{ $_ =~ /$analysis_page\s+/} @logs;
 
 		@log = split(/\t/, $log);
 		last if $log;
