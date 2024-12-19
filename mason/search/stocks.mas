@@ -300,7 +300,6 @@ my $breeding_programs_select = simple_selectbox_html(
 <script>
 
 var stock_table;
-var stock_table_all_names = [];
 
 jQuery(document).ready(function () {
 
