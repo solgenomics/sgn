@@ -280,7 +280,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the stock names currently showing in the search results table to a new or exisiting list</i>'&>
+            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the stock names currently showing in the search results table to a new or exisiting list. Use "Show All entries" to capture all results.</i>'&>
             <br>
             <div style="text-align:right" id="results_to_list_menu"></div>
             <div id="search_result_names" style="display: none;"></div>
@@ -455,9 +455,6 @@ jQuery(document).ready(function () {
       addToListMenu('results_to_list_menu', 'search_result_names', {
         listType: jQuery('#stock_type_select option:selected').text()+'s' || 'null'
       });
-
-      // jQuery('#stock_search_results').children('tbody').css('height','250px');
-      // jQuery('#stock_search_results').children('tbody').css('overflow-y','scroll');
     });
 
    jQuery('#submit_stock_search').click( function() {
