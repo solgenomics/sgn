@@ -443,8 +443,7 @@ jQuery(document).ready(function () {
     parseArgs(editable_stockprops_search);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
-      //CHANGE THIS LINE
-      var name_links = stock_table.column(0).data();//***//
+      var name_links = stock_table.column(0).data();
       var names = [];
 
       for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
