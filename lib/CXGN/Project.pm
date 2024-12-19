@@ -1084,6 +1084,40 @@ sub set_breeding_program {
 	return {};
 }
 
+=head2 accessors get_breeding_program_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_breeding_program_id {
+
+    my $self = shift;
+
+    my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search({
+        subject_project_id => $self->get_trial_id(),
+        type_id => $self->get_breeding_program_trial_relationship_cvterm_id(),
+    });
+    if ($rs->count() == 0) {
+        return;
+    }
+
+    my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search({
+        project_id => $rs->first()->object_project_id()
+    });
+    if ($bp_rs->count > 0) {
+        return $bp_rs->first()->project_id();
+    }
+
+    return;
+}
+
+
 
 =head2 accessors get_name(), set_name()
 
@@ -5434,6 +5468,16 @@ sub delete_empty_transformation_project {
     }
 }
 
+sub get_create_date {
+    my $self = shift;
+    my $q = "select create_date from project where project_id=?";
+    my $h = $self->bcs_schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+
+    my ($create_date) = $h->fetchrow_array();
+    return $create_date;
+}
+
 =head2 function transformation_id_count()
 
  Usage:
@@ -5462,8 +5506,95 @@ sub transformation_id_count {
     return $count;
 }
 
+=head2 class function get_recently_added_trials()
 
+ Usage:   my @trials = $p->get_recently_added_trials()
+ Params:  $interval - one of day, week, month, year
+ Returns: a list of trials, consisting of listrefs listing
+          trial_name (with link), trial_type, breeding program 
+          (with link)
 
+=cut
+
+sub get_recently_added_trials {
+    my $bcs_schema = shift;
+    my $interval = shift;
+
+    print STDERR "INTERVAL is $interval\n";
+    my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc";
+    
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute();
+    
+    my @recent_trials = ();
+    while (my ($trial_id) = $h->fetchrow_array()) {
+	print STDERR "Formatting entry with trial id $trial_id...\n";
+	my $t = CXGN::Trial->new( { bcs_schema => $bcs_schema, trial_id => $trial_id });
+	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
+	my $trial_type = ref($t);
+	$trial_type =~ s/^CXGN\:\://g;
+	
+	my $breeding_program = $t->get_breeding_program();
+	my $breeding_program_id = $t->get_breeding_program_id();
+	my $create_date = $t->get_create_date();
+	my $breeding_program_link = "<a href=\"/breeders/program/".$breeding_program_id."\">$breeding_program</a>";
+       push @recent_trials, [ $trial_link, $trial_type, $breeding_program_link, $create_date ];
+    }
+    return \@recent_trials;
+}
+
+sub get_recently_modified_trials {
+    my $bcs_schema = shift;
+    my $interval = shift;
+
+    print STDERR "INTERVAL is $interval\n";
+    my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc";
+    
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute();
+    
+    my @recent_trials;
+    while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
+	print STDERR "Formatting entry with trial id $trial_id...\n";
+	my $t = CXGN::Trial->new( { bcs_schema => $bcs_schema, trial_id => $trial_id });
+	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
+	my $trial_type = ref($t);
+	$trial_type =~ s/^CXGN\:\://g;
+	
+	my $breeding_program = $t->get_breeding_program();
+	my $breeding_program_id = $t->get_breeding_program_id();
+	my $create_date = $t->get_create_date();
+	my $breeding_program_link = "<a href=\"/breeders/program/".$breeding_program_id."\">$breeding_program</a>";
+       push @recent_trials, [ $trial_link, $trial_type, $breeding_program_link, $create_date ];
+    }
+    return \@recent_trials;
+}
+
+sub get_recently_added_accessions {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $interval = shift;
+
+    my $q = "select stock.stock_id from stock where create_date + interval '1 $interval' > current_date order by create_date desc";
+
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute();
+
+    my @stock_table;
+    while (my ($stock_id) = $h->fetchrow_array()) {
+	my $s = CXGN::Stock->new( { schema => $bcs_schema, stock_id => $stock_id });
+	my $uniquename = $s->uniquename();
+	my $create_date = $s->create_date();
+
+	push @stock_table, [ $uniquename, $create_date ];
+    }
+
+    return \@stock_table;
+    
+}
 
 1;
 
