@@ -459,8 +459,8 @@ CXGN.List.prototype = {
                     list_group_select_action_html += '<div class="col-sm-8">';
                     list_group_select_action_html += '<div class="input-group input-group-sm">'
                     list_group_select_action_html += '<input type="text" class="form-control" id="new_combined_list_name" placeholder="New List Name"><span class="input-group-btn">';
-                    list_group_select_action_html += '<button id="combine_selected_list_group" class="btn btn-primary btn-sm" style="color:white; display: inline-flex; align-items: center; gap: 5px;" onclick="javascript:combineSelectedListGroup(['+selected+'], \'union\')">' + unionIcon + 'Union</button>';
-                    list_group_select_action_html += '<button id="combine_selected_list_group" class="btn btn-primary btn-sm" style="color:white; display: inline-flex; align-items: center; gap: 5px;" onclick="javascript:combineSelectedListGroup(['+selected+'], \'intersection\')">' + intersectionIcon + 'Intersection</button>';
+                    list_group_select_action_html += '<button id="combine_selected_list_group_union" class="btn btn-primary btn-sm" style="color:white; display: inline-flex; align-items: center; gap: 5px;" onclick="javascript:combineSelectedListGroup(['+selected+'], \'union\')">' + unionIcon + 'Union</button>';
+                    list_group_select_action_html += '<button id="combine_selected_list_group_intersection" class="btn btn-primary btn-sm" style="color:white; display: inline-flex; align-items: center; gap: 5px;" onclick="javascript:combineSelectedListGroup(['+selected+'], \'intersection\')">' + intersectionIcon + 'Intersection</button>';
                     list_group_select_action_html += '</input></span>';
                     list_group_select_action_html += '</div>';  // End input group
                     list_group_select_action_html += '</div>';  // end column
