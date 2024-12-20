@@ -488,6 +488,12 @@ has 'modification_note' => (
     is => 'rw',
 );
 
+has 'create_date' => (
+    isa => 'Str',
+    is => 'rw',
+    );
+
+
 has 'objects' => (
     isa => 'Maybe[Ref]',
     is => 'rw',
@@ -516,6 +522,7 @@ sub BUILD {
 	}
 	else {
 	    $self->stock($stock);
+	    $self->create_date($stock->create_date());
 	    $self->stock_id($stock->stock_id);
 	}
     }
