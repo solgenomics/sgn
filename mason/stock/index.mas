@@ -248,9 +248,26 @@ function jqueryStuff() {
 
 
                 </div>
+                <%doc>
                 <div class="col-sm-6">
                     <br /><br />
                     <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &>
+                    <br /><br />
+                </div>
+                </%doc>
+
+                <div class="col-sm-6">
+                    <br /><br />
+                    <div style="display: flex; justify-content: center; align-items; height: 100%; margin-top: 20px;">
+                        <%perl>
+                        use SGN::Image;
+                        my $image_id = $stockref->{image_ids}->[0]->[0];
+                        my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+                        my $image_url = $image->get_image_url('small');
+                        </%perl>
+
+                        <img src="<% $image_url %>" alt="Stock Image" class="img-responsive" style="max-width: 100%; height: auto;" />
+                    </div>
                     <br /><br />
                 </div>
             </div>
