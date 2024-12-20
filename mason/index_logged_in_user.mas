@@ -14,29 +14,67 @@ $sp_person_id
 
 <h3>Welcome back <% $first_name %> !</h3>
 
-Recently created trials:
+Interval:&nbsp;
+<select id="interval">
+    <option>day</option>
+    <option>week</option>
+    <option>month</option>
+    <option>year</option>
+</select>
 
+<h3>Recently created trials:</h3>
+
+<table id="recently_created_trial_table">
+<thead>
+<tr><th>Trial</th><th>Trial Type</th><th>Breeding Program</th><th>Create date</th></tr>
+</thead>
+</table>
 
 
 <br />
 <br />
 
-Recently modified trials:
+<h3>Recently modified trials:</h3>
 
-
-
-<br />
-<br />
-
-
-Recently added accessions:
-
+<table id="recently_modified_trial_table">
+<thead>
+<tr><th>Trial</th><th>Trial Type</th><th>Breeding Program</th><th>Create date</th></tr>
+</thead>
+</table>
 
 <br />
 <br />
 
 
+<h3>Recently added accessions:</h3>
 
+<table id="recently_added_accessions_table">
+<thead>
+<tr><th>Accession</th><th>Create date</th></tr>
+</thead>
+</table>
 
+<br />
+<br />
 
 </center>
+
+
+<script>
+    var interval = jQuery('#interval').val()	
+
+    jQuery('#recently_created_trial_table').DataTable({
+        'ajax':'/ajax/breeders/recent_trials/'+interval,
+        'order': [[ 3, 'desc']]
+    });
+
+    jQuery('#recently_modified_trial_table').DataTable({
+        'ajax':'/ajax/breeders/recently_modified_trials/'+interval,
+    });
+
+    jQuery('#recently_added_accessions_table').DataTable({
+        'ajax':'/ajax/breeders/recently_added_accessions/'+interval,
+    });
+
+   
+</script>
