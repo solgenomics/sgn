@@ -1238,7 +1238,35 @@ Tools that use datasets:
 sub store_tool_compatibility {
     my $self = shift;
 
-    my $tool_compatibility = {};
+    my $tool_compatibility = {
+        'GWAS' => {
+            'compatible' => 0
+        },
+        # 'solGS' => {
+        #     'compatible' => 0
+        # },
+        'Population Structure' => {
+            'compatible' => 0
+        },
+        'Clustering' => {
+            'compatible' => 0
+        },
+        'Kinship & Inbreeding' => {
+            'compatible' => 0
+        },
+        'Stability' => {
+            'compatible' => 0
+        },
+        'Heritability' => {
+            'compatible' => 0
+        },
+        'Mixed Models' => {
+            'compatible' => 0
+        },
+        'Boxplotter' => {
+            'compatible' => 0
+        }
+    };
 
     my $trials = $self->retrieve_trials(); # faster and easier than pulling it out of the phenotypes_ref
         # listref of listrefs, first index is trialID, second is trial name
@@ -1287,8 +1315,14 @@ sub store_tool_compatibility {
         $geno_represented_accessions->{$method->[0]}->{'avg_marker_count'} = $num_markers;
 
         if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) > 1) {
-            $tool_compatibility->{'Population Structure'} = "";
-            $tool_compatibility->{'Kinship & Inbreeding'} = "";
+            if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) < 30) {
+                $tool_compatibility->{'Population Structure'}->{'warn'}->{"You may not have enough accessions for strong results."} = "";
+                $tool_compatibility->{'Kinship & Inbreeding'}->{'warn'}->{"You may not have enough accessions for strong results."} = "";
+                $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotyped accessions for strong genotype clustering."} = "";
+            }
+            $tool_compatibility->{'Population Structure'}->{'compatible'} = 1;
+            $tool_compatibility->{'Kinship & Inbreeding'}->{'compatible'} = 1;
+            $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
             $tool_compatibility->{'Clustering'}->{'types'}->{'Genotype'} = "";
         }
     }
@@ -1296,13 +1330,21 @@ sub store_tool_compatibility {
     # my $num_typed_accessions = scalar( grep {exists($geno_represented_accessions->{$_})} keys(%{$pheno_represented_accessions}) ); # number of accessions with both pheno and geno data (and the same geno method)
 
     if ($num_phenotyped_accessions > 1 && scalar(@{$traits}) > 1) { #dont need to go trait by trait for clustering, since all traits are combined to eigenvectors. just need plenty of trait measurements
+        if ($num_phenotyped_accessions > 1 && scalar(@{$traits}) < 30) {
+            $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough trait measurements for strong phenotype clustering."} = "";
+        }
+        $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
         $tool_compatibility->{'Clustering'}->{'types'}->{'Phenotype'} = "";
         foreach my $method (@{$genotyping_methods}){
             if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) > 1) { # for GEBV clustering, there needs to be enough accessions using the same geno method and which have lots of trait measurements
+                if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) < 30) {
+                    $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotyped accessions for strong GEBV clustering."} = "";
+                }
                 $tool_compatibility->{'Clustering'}->{'types'}->{'GEBV'} = "";
             }
         }
     }
+
     if (exists $tool_compatibility->{'Clustering'}->{'types'}) {
         $tool_compatibility->{'Clustering'}->{'types'} = [keys(%{$tool_compatibility->{'Clustering'}->{'types'}})];
     }
@@ -1318,15 +1360,31 @@ sub store_tool_compatibility {
         my $num_accessions_phenotyped_for_this_trait = scalar(keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}));
         if ($total_obs > 0) { # This trait was measured
 
+            if ($total_obs < 0) {
+                $tool_compatibility->{'Boxplotter'}->{'warn'}->{"There may not be enough observations of ". $trait->[1]." to get meaningful data."} = "";
+            }
+            $tool_compatibility->{'Boxplotter'}->{'compatible'} = 1;
             push @{$tool_compatibility->{'Boxplotter'}->{'traits'}}, $trait->[1];
 
             if (scalar(@{$trial_designs}) > 0 && $num_accessions_phenotyped_for_this_trait > 1){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
+                if ($num_accessions_phenotyped_for_this_trait < 30) {
+                    $tool_compatibility->{'Heritability'}->{'warn'}->{"There may not be enough accessions phenotyped for ".$trait->[1]." to get strong results."} = "";
+                }
+                $tool_compatibility->{'Heritability'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Heritability'}->{'traits'}}, $trait->[1];
             }
             if (scalar(grep {$_ > 0} @location_counts) > 1 && $num_accessions_phenotyped_for_this_trait > 1) { # More than one location had measurements, and more than one accession was measured
+                if ($num_accessions_phenotyped_for_this_trait < 30) {
+                    $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough accessions phenotyped for ".$trait->[1]." to get strong results."} = "";
+                }
+                $tool_compatibility->{'Stability'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Stability'}->{'traits'}}, $trait->[1];
             }
             if(scalar(@{$trial_designs}) > 0 && $num_accessions_phenotyped_for_this_trait > 1) {
+                if ($num_accessions_phenotyped_for_this_trait < 30) {
+                    $tool_compatibility->{'Mixed Models'}->{'warn'}->{"There may not be enough accessions phenotyped for ".$trait->[1]." to build a strong model."} = "";
+                }
+                $tool_compatibility->{'Mixed Models'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Mixed Models'}->{'traits'}}, $trait->[1];
             }
         }
@@ -1334,9 +1392,25 @@ sub store_tool_compatibility {
         foreach my $method (@{$genotyping_methods}){ # There needs to be consistent genotyping protocol for genomic modeling
             my $num_accessions_typed_for_this_trait = scalar( grep {exists($geno_represented_accessions->{$method->[0]}->{'accessions'}->{$_})} keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}) );
             if ($total_obs > 100 && $geno_represented_accessions->{$method->[0]}->{'avg_marker_count'} > 100 && $num_accessions_typed_for_this_trait > 50) { # If lots of markers, lots of accessions, and lots of phenotype measurements, then you can do genomic modeling
+                if ($total_obs < 300) {
+                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough observations of ".$trait->[1]." to identify associated loci."} = "";
+                }
+                if ($geno_represented_accessions->{$method->[0]}->{'avg_marker_count'} < 2500) {
+                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough SNPs genotyped for method ".$method->[1]." to identify associated loci."} = "";
+                }
+                if ($num_accessions_typed_for_this_trait < 300) {
+                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough accessions both genotyped and assayed for ".$trait->[1]." to identify associated loci."} = "";
+                }
                 push @{$tool_compatibility->{'GWAS'}->{'traits'}}, $trait->[1];
+                $tool_compatibility->{'GWAS'}->{'compatible'} = 1;
                 # push @{$tool_compatibility->{'solGS'}->{'traits'}}, $trait->[1];
             }
+        }
+    }
+
+    foreach my $tool (keys(%{$tool_compatibility})) {
+        if (exists($tool_compatibility->{$tool}->{"warn"})){
+            $tool_compatibility->{$tool}->{"warn"} = join("\n", keys(%{$tool_compatibility->{$tool}->{"warn"}}));
         }
     }
 
