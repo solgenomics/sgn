@@ -5573,7 +5573,6 @@ sub get_recently_modified_trials {
 }
 
 sub get_recently_added_accessions {
-    my $class = shift;
     my $bcs_schema = shift;
     my $interval = shift;
 
