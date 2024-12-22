@@ -217,7 +217,7 @@ sub get_recently_modified_trials : Path('/ajax/breeders/recently_modified_trials
      
 =cut
 
-sub get_recently_created_accessions : Path('/ajax/breeders/recently_created_accessions') Args(1) {
+sub get_recently_created_accessions : Path('/ajax/breeders/recently_added_accessions') Args(1) {
     my $self = shift;
     my $c = shift;
     my $interval = shift;

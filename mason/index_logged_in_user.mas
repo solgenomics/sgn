@@ -12,7 +12,8 @@ $sp_person_id
 
 <center>
 
-<h3>Welcome back <% $first_name %> !</h3>
+<h3>Welcome back <% $first_name %>!</h3>
+
 
 Interval:&nbsp;
 <select id="interval">
@@ -21,6 +22,7 @@ Interval:&nbsp;
     <option>month</option>
     <option>year</option>
 </select>
+<h4>Continue where you left off:</h4>
 
 <h3>Recently created trials:</h3>
 
