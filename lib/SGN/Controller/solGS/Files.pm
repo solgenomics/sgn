@@ -879,17 +879,6 @@ sub create_file_id {
 	    $file_id = $training_pop_id || $cluster_pop_id || $pca_pop_id;
     }
 
-    if ($c->req->referer =~ /cluster|pca|kinship/)
-    {
-        if ($data_structure =~ /list/)
-        {
-    	$file_id = "list_${list_id}" if $list_id;
-        }
-        elsif ($data_structure =~ /dataset/)
-        {
-    	$file_id = "dataset_${dataset_id}" if $dataset_id;
-        }
-    }
 
     if ($sindex_name)
     {
