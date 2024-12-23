@@ -7,7 +7,6 @@ use File::Slurp qw /write_file read_file edit_file/;
 use JSON;
 use List::MoreUtils qw(first_index);
 
-
 sub convert_arrayref_to_hashref {
     my ($self, $array_ref) = @_;
 
@@ -311,6 +310,7 @@ sub stash_json_args {
 
     my $json = JSON->new();
     my $args_hash = $json->decode($args_json);
+
     my $data_set_type = $args_hash->{'data_set_type'};
     my $data_str = $args_hash->{'data_structure'};
 
@@ -351,7 +351,7 @@ sub stash_json_args {
             if ($data_str =~ /dataset|list/  && $key =~ /(cluster|kinship|pca|corr)_pop_id/)
             {
                 my $name = "${data_str }_id";
-                $val =~ s/\w+_//g;
+                $val =~ s/\d+-\w+_|\w+_//g;
                 $c->stash->{$name } = $val;
             }
         }
