@@ -38,6 +38,7 @@ sub run_pca_analysis : Path('/run/pca/analysis') Args() {
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     $c->stash->{file_id} = $file_id;
 
+
     my $list_id = $c->stash->{list_id};
     if ($list_id) {
         $c->controller('solGS::List')
@@ -441,11 +442,12 @@ sub pca_geno_input_files {
 sub training_selection_geno_files {
     my ( $self, $c ) = @_;
 
-    my $tr_pop  = $c->stash->{training_pop_id};
-    my $sel_pop = $c->stash->{selection_pop_id};
+    my $tr_pop_id  = $c->stash->{training_pop_id};
+    $tr_pop_id =~ s/-\d+//;
+    my $sel_pop_id = $c->stash->{selection_pop_id};
 
     my @files;
-    foreach my $id ( ( $tr_pop, $sel_pop ) ) {
+    foreach my $id ( ( $tr_pop_id, $sel_pop_id ) ) {
         $c->controller('solGS::Files')->genotype_file_name( $c, $id );
         push @files, $c->stash->{genotype_file_name};
     }
