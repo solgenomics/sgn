@@ -41,11 +41,10 @@ solGS.pca = {
 
   getArgsFromOtherUrls: function () {
     var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
-    var dataType = this.getSelectedDataType();
 
     var pcaPopId;
     var selectionPopId;
-    var trainingPopId;  
+    var trainingPopId;
     var dataStr;
 
     var page = location.pathname;
@@ -55,8 +54,22 @@ solGS.pca = {
         trainingPopId = jQuery("#trial_id").val();
       }
       pcaPopId = trainingPopId;
+      if (trainingPopId.match(/list/)) {
+        dataStr = 'list'
+      } else if (pcaPopId.match(/dataset/)) {
+        dataStr = 'dataset'
+      }
+
     } else if (page.match(/\/selection\/|\/prediction\//)) {
-      pcaPopId = jQuery("#selection_pop_id").val();
+      selectionPopId = jQuery("#selection_pop_id").val();
+      pcaPopId = selectionPopId;
+      trainingPopId = jQuery("#training_pop_id").val();
+      pcaPopId = `${trainingPopId}-${selectionPopId}`; 
+      if (selectionPopId.match(/list/)) {
+        dataStr = 'list'
+      } else if (pcaPopId.match(/dataset/)) {
+        dataStr = 'dataset'
+      }
     } else if (page.match(/solgs\/traits\/all\/population\/|models\/combined\/trials\//)) {
       pcaPopId = trainingPopId;
     }
@@ -126,10 +139,10 @@ solGS.pca = {
 
       if (pcaPopId.match(/dataset/)) {
         dataStr = "dataset";
-        datasetId = pcaPopId.replace(/dataset_/, "");
+        datasetId = pcaPopId.replace(/\d+-\w+_|w+_/g, "");
       } else if (pcaPopId.match(/list/)) {
         dataStr = "list";
-        listId = pcaPopId.replace(/list_/, "");
+        listId = pcaPopId.replace(/\d+-\w+_|\w+_/, "");
       }
 
       var args = {
@@ -150,7 +163,9 @@ solGS.pca = {
         args["training_pop_id"] = ids[0];
         args["selection_pop_id"] = ids[1];
       }
+      
       return args;
+
     } else {
       return {};
     }
@@ -327,6 +342,7 @@ solGS.pca = {
         jQuery(this.pcaMsgDiv).prependTo(jQuery(this.canvas)).html(message).show().fadeOut(9400);
       }
     }
+
     var page = pcaArgs.analysis_page;
     pcaArgs = JSON.stringify(pcaArgs);
 
@@ -385,7 +401,7 @@ solGS.pca = {
     var msg;
 
     if (dataStr && dataStr.match("list")) {
-      var listId = pcaPopId.replace(/\w+_/, "");
+      var listId = pcaPopId.replace(/\d+-\w+_|\w+_/g, "");
       var list = new CXGN.List();
       var listType = list.getListType(listId);
 
@@ -898,8 +914,10 @@ jQuery(document).ready(function () {
       if (pcaArgs.data_structure && !pcaPopId.match(/list|dataset/)) {
         pcaArgs["pca_pop_id"] = pcaArgs.data_structure + "_" + pcaPopId;
       }
-      pcaArgs["analysis_page"] = url
-      solGS.pca.checkCachedPca(pcaArgs).done(function (res) {      
+
+      pcaArgs["analysis_page"] = url;
+
+      solGS.pca.checkCachedPca(pcaArgs).done(function (res) {             
         if (res.scores) {
           var plotData = solGS.pca.structurePlotData(res);
           var downloadLinks = solGS.pca.pcaDownloadLinks(res)          
