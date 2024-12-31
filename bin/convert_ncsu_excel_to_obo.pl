@@ -35,6 +35,8 @@ if (!$file) {
     die "Please privde a file using the -i parameter.";
 }
 
+print STDERR "ONTOLOGY NAME: $ontology_name\n";
+
 my $outfile = $file.".obo";
 my $cvpropfile = $file.".props";
 
@@ -126,6 +128,7 @@ foreach my $d (@$data) {
     $variables{$vn}->{$categories} = $d->{$categories};
     print STDERR "TERM NAME - CO IN variable = $d->{$trait_name}\n";
     $variables{$vn}->{$trait_name} = $d->{$trait_name};
+    $variables{$vn}->{$trait_id} = $d->{$trait_id};
 }
 print STDERR "VARIABLES: ".Dumper(\%variables);
 
@@ -156,7 +159,7 @@ print $G join("\t", "trait_name", "trait_format", "trait_default_value", "trait_
 #
 my $header = <$F>;
 
-my $root_acc = $acc;
+my $root_acc = $ontology_name.":".$acc;
 my $root_name = "ROOT";
 
 print $F <<TERM;
@@ -175,16 +178,16 @@ foreach my $k (sort keys %trait_classes) {
 
     print $F format_trait(
 	$ontology_name,
-	$class_id,
-	$class_name,
-	$class_name,
+	$traits{$k}->{$class_id},
+	$traits{$k}->{$class_name},
+	$traits{$k}->{$class_name},
 	undef,
-	$ontology_name,
+	$root_acc,
 	$root_name,
 	)."\n";
 
     $trait_classes{$k}->{acc} = $class_id;
-    #$trait_classes{$k}->{name} = $k;
+#    $trait_classes{$k}->{name} = $k;
     
     $count++;
     
@@ -194,10 +197,10 @@ foreach my $k (sort keys %traits) {
     print $F format_trait(
 	$ontology_name,
 	$traits{$k}->{$trait_id},
-	$traits{$k}->{$variable_name},
+	$traits{$k}->{$trait_name},
 	$traits{$k}->{$trait_definition},
 	$traits{$k}->{$trait_synonyms},     
-	$trait_classes{ $traits{$k}->{$trait_class} }->{acc},  # parent id
+	$traits{$k}->{$trait_id},
 	$traits{$k}->{$trait_class}, # parent trait
 	)."\n";
     
@@ -218,12 +221,15 @@ foreach my $k (sort keys %variables) {
     
     print $F format_variable(
 	$ontology_name,
-	$count,
+	$variables{$k}->{$variable_id},
 	$k, ###$variables{$k}->{'Variable Full Name'},
-	join(" - ", $variables{$k}->{'Term Definition'}),
-	$variables{$k}->{'Synonym'},
-	$traits{$variables{$k}->{'Trait - CO'}}->{acc}, # parent trait id
-	$traits{$variables{$k}->{'Trait - CO'}}->{name}, # parent trait
+	join(" - ", $variables{$k}->{$trait_definition}),
+	$variables{$k}->{$trait_synonyms},
+	$variables{$k}->{$trait_id},
+	$variables{$k}->{$trait_name},
+	
+	#$traits{$variables{$k}->{'Trait - CO'}}->{acc}, # parent trait id
+	#$traits{$variables{$k}->{'Trait - CO'}}->{name}, # parent trait
 	
 	)."\n";
 
@@ -231,8 +237,8 @@ foreach my $k (sort keys %variables) {
 	$k, # variable name
 	$ontology_name,
 	$count,
-	$variables{$k}->{'Scale class'},
-	$variables{$k}->{Categories},
+	$variables{$k}->{$scale_class},
+	$variables{$k}->{$categories},
 	);
     
     $count++;
@@ -278,17 +284,14 @@ sub format_trait {
     my $parent_class_id = shift;
     my $parent_trait = shift;
     
-    my $trait_id = format_ontology_id($ontology_code, $id);
-    my $parent_trait_id = format_ontology_id($ontology_code, $parent_class_id);
-
     my %record = (
 	"[Term]" => "",
-	"id:" =>  $trait_id,
+	"id:" =>  $id,
 	"name:" =>  $name,
 	"def:" => "\"$description\" []",
 	"synonym:" => $synonyms,
-	"namespace:" => $ontology_name,
-	"is_a:" => "$parent_trait_id ! $parent_trait",
+	"namespace:" => $ontology_code,
+	"is_a:" => "$parent_class_id ! $parent_trait",
 	);
 
     my $data = "";
@@ -303,7 +306,7 @@ sub format_trait {
 
 
 sub format_variable {
-    my $ontology_code = shift;
+    my $ontology_name = shift;
     my $id = shift;
     my $name = shift;
     my $description = shift;
@@ -313,11 +316,11 @@ sub format_variable {
 
     #print STDERR "Parent trait name: $parent_trait_name\n";
 
-    my $variable_id = format_ontology_id($ontology_code, $id);
-    my $parent_trait_id = format_ontology_id($ontology_code, $parent_trait_id);
+#    my $variable_id = format_ontology_id($ontology_code, $id);
+#    my $parent_trait_id = format_ontology_id($ontology_code, $parent_trait_id);
     my %record = (
 	"[Term]"  => "", 
-	"id:" =>  $variable_id,
+	"id:" =>  $id,
 	"name:" => $name,
 	"def:"=> "\"$description\" []",
 	"synonym:" =>  $synonyms,
