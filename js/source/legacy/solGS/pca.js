@@ -472,7 +472,11 @@ solGS.pca = {
     var pcaArgs = this.getPcaAnalysisArgs(runPcaBtnId);
     pcaArgs['file_id'] = res.file_id;
     pcaArgs = JSON.stringify(pcaArgs);
-    var savePcs = `<button id="save_pcs_btn_${res.file_id}" class="btn btn-success" data-selected-pop='${pcaArgs}'>Save PCs</button>`;
+  
+    var savePcs;
+    if(res.analysis_id) {
+     savePcs= `<button id="save_pcs_btn_${res.file_id}" class="btn btn-success" data-selected-pop='${pcaArgs}'>Save PCs</button>`;
+    }
 
     var downloadLinks =`<div class="download_pca_output">` +
       screePlotLink +
@@ -483,10 +487,13 @@ solGS.pca = {
       " | " +
       loadingsLink +
       " | " +
-      pcaPlotLink +
-      " | " +
-      savePcs +
-      "</div>";
+      pcaPlotLink;
+      
+      if (savePcs) {
+       downloadLinks += " | " + savePcs 
+      }
+
+    downloadLinks += "</div>";
 
     return downloadLinks;
   },
