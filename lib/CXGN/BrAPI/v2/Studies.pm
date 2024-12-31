@@ -180,7 +180,7 @@ sub store {
 	    my $trial_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
 	    my $trial_year = $params->{seasons} ? $params->{seasons}->[0] : undef;
 		my $trial_location_id = $params->{locationDbId} ? $params->{locationDbId} : undef;
-	    my $trial_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
+	    my $trial_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, splitplot, or stripplot;
 	    my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
 	    my $study_type = $params->{studyType} ? $params->{studyType} : undef;
 	    my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
@@ -199,9 +199,9 @@ sub store {
 		}
 
 		# Check that a supported study design type was passed
-		my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","greenhouse","Westcott","Analysis");
+		my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","stripplot","greenhouse","Westcott","Analysis");
 		if (!exists($supported_methods{$trial_design_method})) {
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $trial_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','greenhouse','Westcott','Analysis'.", 400);
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $trial_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','stripplot', 'greenhouse','Westcott','Analysis'.", 400);
 		}
 
 		# Check the trial exists
@@ -348,9 +348,9 @@ sub store {
 	$page_size = scalar(@study_dbids);
 	$page = 0;
 	if (scalar(@study_dbids)>0){
-		my $dbh = $c->dbc->dbh();
-		my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-		my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+		# my $dbh = $c->dbc->dbh();
+		# my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+		# my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
 		my $supported_crop = $c->config->{"supportedCrop"};
 
@@ -405,7 +405,7 @@ sub update {
 	my $study_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
 	my $study_year = $params->{seasons} ? $params->{seasons}->[0] : undef;
 	my $study_location = $params->{locationDbId} ? $params->{locationDbId} : undef;
-	my $study_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
+	my $study_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, splitplot, or stripplot;
 	my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
 	my $study_t = $params->{studyType} ? $params->{studyType} : undef;
 	my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
@@ -425,9 +425,9 @@ sub update {
 	my $harvest_date = $params->{endDate} ? $params->{endDate} : undef;
 
 	# Check that a supported study design type was passed
-	my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","greenhouse","Westcott","Analysis");
+	my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","stripplot","greenhouse","Westcott","Analysis");
 	if (!exists($supported_methods{$study_design_method})) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $study_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','greenhouse','Westcott','Analysis'.", 400);
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $study_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','stripplot','greenhouse','Westcott','Analysis'.", 400);
 	}
 
 	# Check the brapi trial exists
@@ -556,6 +556,32 @@ sub _search {
 	my $externalReferenceSources = shift;
 	my $sort_by = shift;
 	my $sort_order = shift;
+
+	if($sort_order){
+		if(lc $sort_order eq "asc"){
+			$sort_order = ' ASC'
+		} elsif (lc $sort_order eq "desc"){
+			$sort_order = ' DESC';
+		} else{
+			$sort_order = undef;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortOrder valid values are: asc or desc", 400);
+		}
+	}
+
+	if($sort_by){
+		my %sort_by_items = (
+			"locationDbId" => " location.value ",
+			"studyDbId" => " study.project_id ",
+			"studyName" => " study.name",
+			"trialDbId" => " folder.project_id ",
+			"trialName" => " folder.name "
+		);
+		if ($sort_by_items{$sort_by}){
+			$sort_by = " ORDER BY " . $sort_by_items{$sort_by} ;
+		} else {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortBy valid values are only: locationDbId, studyDbId, studyName, trialDbId or trialName at the moment.", 400);
+		}
+	}
 
 	# my $c = shift;
 	my $page_obj = CXGN::Page->new();
@@ -691,7 +717,7 @@ sub _search {
 		my $external_references = $references->search();
 		my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
 
-
+ 
 		my %data_obj = (
 			active                      => JSON::true,
 			additionalInfo              => $additional_info,

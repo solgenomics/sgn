@@ -13,14 +13,171 @@ __PACKAGE__->config(
         map       => { 'application/json' => 'JSON' },
 );
 
-sub trial_types : Path('/ajax/dbstats/trial_types') Args(0) { 
+
+# Functions for the page /dbstats/recent_activity
+#
+sub trial_count_by_breeding_program :Path('/ajax/dbstats/trials_by_breeding_program') Args(0) { 
+    my $self = shift;   
+    my $c = shift;
+
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    my $include_dateless_items = $c->req->param("include_dateless_items") eq "true" ? 1 : 0;
+
+    print STDERR "start: $start_date, end: $end_date, include: $include_dateless_items\n";
+    my $dbh = $c->dbc->dbh();
+    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
+
+    my $data = $dbstats->trial_count_by_breeding_program($start_date, $end_date, $include_dateless_items);
+
+    
+    print STDERR "trial data: ". Dumper($data);
+    $c->stash->{rest} = { data => $data };
+}
+
+sub accession_count_by_breeding_program :Path('/ajax/dbstats/accessions_by_breeding_program') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    my $include_dateless_items = $c->req->param("include_dateless_items") eq "true" ? 1 : 0;
+    
     my $dbh = $c->dbc->dbh();
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
     
-    my $trial_types = $dbstats->trial_types();
+    my $data = $dbstats->accession_count_by_breeding_program($start_date, $end_date, $include_dateless_items);
+    print STDERR "accession data: ". Dumper($data);
+    $c->stash->{rest} = { data => $data };
+}
+
+sub plot_count_breeding_program :Path('/ajax/dbstats/plots_by_breeding_program') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    my $include_dateless_items = $c->req->param("include_dateless_items")  eq "true" ? 1 : 0;
+
+    
+    my $dbh = $c->dbc->dbh();
+    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
+    
+    my $data = $dbstats->plot_count_by_breeding_program($start_date, $end_date, $include_dateless_items);
+
+    print STDERR "plot data: ". Dumper($data);
+    $c->stash->{rest} = { data => $data };
+}
+
+
+
+sub phenotype_count_by_breeding_program :Path('/ajax/dbstats/phenotypes_by_breeding_program') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    my $include_dateless_items = $c->req->param("include_dateless_items")  eq "true" ? 1 : 0 ;
+    
+    my $dbh = $c->dbc->dbh();
+    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
+    
+    my $data = $dbstats->phenotype_count_by_breeding_program($start_date, $end_date, $include_dateless_items);
+
+    #print STDERR "phenotype data: ". Dumper($data);
+    $c->stash->{rest} = { data => $data };
+    
+
+}
+
+
+# Functions to retrieve data for the charts on the /breeders/dbstats page
+#
+
+sub trials_by_breeding_program_chart :Path('/ajax/dbstats/trials_by_breeding_program_chart') Args(0) { 
+    my $self = shift;   
+    my $c = shift;
+
+    print STDERR "Trials by breeding program chart...\n";
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    my $include_dateless_items = $c->req->param("include_dateless_items") eq "true" ? 1 : 0;
+    
+    my $dbh = $c->dbc->dbh();
+    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
+    
+    my $tbbp = $dbstats->trial_count_by_breeding_program($start_date, $end_date, $include_dateless_items);
+
+    my $total_trials = 0;
+    foreach my $t (@$tbbp) { $total_trials += $t->[1]; }
+    
+    my %response = $self->format_response( { title => "Trials by Breeding Program", subtitle => "Showing $total_trials Total Trials", data => $tbbp });
+ 
+#    print STDERR Dumper(\%response);
+    $c->stash->{rest} = \%response;   
+}
+
+
+sub stocks_chart : Path('/ajax/dbstats/stocks_chart') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    my $include_dateless_items = $c->req->param("include_dateless_items") eq "true" ? 1 : 0;
+    
+    my $dbh = $c->dbc->dbh();
+    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
+ 
+    my $stocks = $dbstats->stocks($start_date, $end_date, $include_dateless_items);
+
+    my $stock_count = 0;
+    foreach my $s (@$stocks) { $stock_count += $s->[1]; }
+
+    my %response =  $self->format_response( { title => "Stock Types", subtitle => "Showing total of $stock_count stocks", data => $stocks });
+    $c->stash->{rest} = \%response;
+}
+
+sub traits_measured_chart :Path('/ajax/dbstats/traits_chart') Args(0)  { 
+    my $self = shift;
+    my $c = shift;
+
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    my $include_dateless_items = $c->req->param("include_dateless_items") eq "true" ? 1 : 0;
+    
+    my $dbh = $c->dbc->dbh();
+    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
+
+    print STDERR "TRAITS CHART: start date : $start_date, end date $end_date, and $include_dateless_items\n";
+    my $traits = $dbstats->traits($start_date, $end_date, $include_dateless_items);
+    
+    my $total_traits = 0;
+    foreach my $t (@$traits) { $total_traits += $t->[1]; }
+
+    my %response = $self->format_response( { title => "Traits", subtitle => "Total trait measurements: $total_traits", data => $traits });
+ 
+    #print STDERR Dumper(\%response);
+    $c->stash->{rest} = \%response;   
+
+#   my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id) 
+# group by cvterm.name order by count(*) desc";
+
+}
+
+sub trial_types_chart : Path('/ajax/dbstats/trial_types_chart') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
+    my $include_dateless_items = $c->req->param("include_dateless_items") eq "true" ? 1 : 0;
+
+    print STDERR "TRIAL TYPES: start date : $start_date, end date $end_date, and $include_dateless_items\n";
+    my $dbh = $c->dbc->dbh();
+    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
+    
+    my $trial_types = $dbstats->trial_types($start_date, $end_date, $include_dateless_items);
 
     my $total_trials = 0;
     foreach my $t (@$trial_types) { $total_trials += $t->[1]; }
@@ -31,75 +188,8 @@ sub trial_types : Path('/ajax/dbstats/trial_types') Args(0) {
     $c->stash->{rest} = \%response;   
 }
 
-sub traits_measured :Path('/ajax/dbstats/traits') Args(0)  { 
-    my $self = shift;
-    my $c = shift;
-
-    my $dbh = $c->dbc->dbh();
-    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
-    
-    my $traits = $dbstats->traits();
-    my $total_traits = 0;
-    foreach my $t (@$traits) { $total_traits += $t->[1]; }
-
-    my %response = $self->format_response( { title => "Traits", subtitle => "Total trait measurements: $total_traits", data => $traits });
- 
-    print STDERR Dumper(\%response);
-    $c->stash->{rest} = \%response;   
-
-#   my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id) 
-# group by cvterm.name order by count(*) desc";
-
-}
-
-sub trials_by_breeding_program :Path('/ajax/dbstats/trials_by_breeding_program') Args(0) { 
-    my $self = shift;   
-    my $c = shift;
-
-    my $dbh = $c->dbc->dbh();
-    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
-    
-    my $tbbp = $dbstats->trials_by_breeding_program();
-
-    my $total_trials = 0;
-    foreach my $t (@$tbbp) { $total_trials += $t->[1]; }
-    
-    my %response = $self->format_response( { title => "Trials by Breeding Program", subtitle => "Showing $total_trials Total Trials", data => $tbbp });
- 
-    print STDERR Dumper(\%response);
-    $c->stash->{rest} = \%response;   
-}
-
-sub stocks : Path('/ajax/dbstats/stocks') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-
-    my $dbh = $c->dbc->dbh();
-    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
- 
-    my $stocks = $dbstats->stocks();
-
-    my $stock_count = 0;
-    foreach my $s (@$stocks) { $stock_count += $s->[1]; }
-
-    my %response =  $self->format_response( { title => "Stock Types", subtitle => "Showing total of $stock_count stocks", data => $stocks });
-    $c->stash->{rest} = \%response;
-}
-
-
-sub basic_stats : Path('/ajax/dbstats/basic') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-
-    my $dbh = $c->dbc->dbh();
-    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
- 
-    my $basic = $dbstats->basic();
-
-    return $basic;
-
-}
-
+# plot of activity per week for a year
+#
 sub activity_stats : Path('/ajax/dbstats/activity') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -180,7 +270,7 @@ sub format_response {
 	      }
 	  }
 	);
-    print STDERR Dumper(\%response);
+    #print STDERR Dumper(\%response);
     my $n = 0;
     foreach my $d (@{$args->{data}}) { 
 	my ($term, $count) = @$d;

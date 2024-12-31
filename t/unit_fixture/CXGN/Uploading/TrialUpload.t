@@ -25,7 +25,7 @@ use Text::CSV;
 
 my $f = SGN::Test::Fixture->new();
 
-for my $extension ("xls", "xlsx") {
+for my $extension ("xls", "xlsx", "csv") {
 
 	my $c = SimulateC->new({ dbh => $f->dbh(),
 		bcs_schema               => $f->bcs_schema(),
@@ -88,15 +88,15 @@ for my $extension ("xls", "xlsx") {
 
 	#parse uploaded file with appropriate plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
-	$parser->load_plugin('TrialExcelFormat');
-	$parsed_data = $parser->parse();
+	$parser->load_plugin('TrialGeneric');
+	$parsed_data = $parser->parse()->{'design'};
 	ok($parsed_data, "Check if parse validate excel file works");
 	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
 	#print STDERR Dumper $parsed_data;
 
 	my $parsed_data_check = {
-		'1' => {
+		'2' => {
 			'plot_name'    => 'plot_name1',
 			'stock_name'   => 'test_accession1',
 			'col_number'   => '1',
@@ -107,7 +107,7 @@ for my $extension ("xls", "xlsx") {
 			'row_number'   => '1',
 			'plot_number'  => '1'
 		},
-		'6' => {
+		'7' => {
 			'rep_number'   => '2',
 			'is_a_control' => 0,
 			'block_number' => '2',
@@ -118,7 +118,7 @@ for my $extension ("xls", "xlsx") {
 			'row_number'   => '2',
 			'plot_number'  => '6'
 		},
-		'7' => {
+		'8' => {
 			'range_number' => '2',
 			'row_number'   => '3',
 			'plot_number'  => '7',
@@ -129,7 +129,7 @@ for my $extension ("xls", "xlsx") {
 			'is_a_control' => 0,
 			'block_number' => '2'
 		},
-		'4' => {
+		'5' => {
 			'range_number' => '1',
 			'plot_number'  => '4',
 			'row_number'   => '4',
@@ -140,7 +140,7 @@ for my $extension ("xls", "xlsx") {
 			'col_number'   => '1',
 			'stock_name'   => 'test_accession2'
 		},
-		'8' => {
+		'9' => {
 			'range_number' => '2',
 			'row_number'   => '4',
 			'plot_number'  => '8',
@@ -151,7 +151,7 @@ for my $extension ("xls", "xlsx") {
 			'is_a_control' => 0,
 			'block_number' => '2'
 		},
-		'2' => {
+		'3' => {
 			'range_number' => '1',
 			'plot_number'  => '2',
 			'row_number'   => '2',
@@ -162,7 +162,7 @@ for my $extension ("xls", "xlsx") {
 			'rep_number'   => '2',
 			'block_number' => '1'
 		},
-		'5' => {
+		'6' => {
 			'range_number' => '2',
 			'row_number'   => '1',
 			'plot_number'  => '5',
@@ -173,7 +173,7 @@ for my $extension ("xls", "xlsx") {
 			'rep_number'   => '1',
 			'block_number' => '2'
 		},
-		'3' => {
+		'4' => {
 			'stock_name'   => 'test_accession2',
 			'col_number'   => '1',
 			'plot_name'    => 'plot_name3',
@@ -269,8 +269,9 @@ for my $extension ("xls", "xlsx") {
 	$file_name = 't/data/genotype_trial_upload/CASSAVA_GS_74Template.csv';
 	#parse uploaded file with wrong plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $file_name);
-	$parser->load_plugin('TrialExcelFormat');
-	$parsed_data = $parser->parse();
+	$parser->load_plugin('TrialGeneric');
+	my $rtn = $parser->parse();
+	$parsed_data = $rtn->{'design'};
 	ok(!$parsed_data, "Check if parse validate excel fails for igd parser");
 	ok($parser->has_parse_errors(), "Check that parser errors occur");
 
@@ -548,15 +549,16 @@ for my $extension ("xls", "xlsx") {
 
 	#parse uploaded file with appropriate plugin
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
-	$parser->load_plugin('TrialExcelFormat');
-	$parsed_data = $parser->parse();
+	$parser->load_plugin('TrialGeneric');
+	$rtn = $parser->parse();
+	$parsed_data = $rtn->{'design'};
 	ok($parsed_data, "Check if parse validate excel file works");
 	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
 	#print STDERR Dumper $parsed_data;
 
 	my $parsed_data_check = {
-		'7' => {
+		'8' => {
 			'is_a_control'              => 0,
 			'num_seed_per_plot'         => '12',
 			'block_number'              => '2',
@@ -570,7 +572,7 @@ for my $extension ("xls", "xlsx") {
 			'weight_gram_seed_per_plot' => 0,
 			'row_number'                => '3'
 		},
-		'4' => {
+		'5' => {
 			'row_number'                => '4',
 			'weight_gram_seed_per_plot' => '5',
 			'range_number'              => '1',
@@ -584,7 +586,7 @@ for my $extension ("xls", "xlsx") {
 			'plot_name'                 => 'plot_with_seedlot_name4',
 			'col_number'                => '1'
 		},
-		'1' => {
+		'2' => {
 			'row_number'                => '1',
 			'weight_gram_seed_per_plot' => 0,
 			'range_number'              => '1',
@@ -598,7 +600,7 @@ for my $extension ("xls", "xlsx") {
 			'plot_name'                 => 'plot_with_seedlot_name1',
 			'col_number'                => '1'
 		},
-		'5' => {
+		'6' => {
 			'range_number'              => '2',
 			'row_number'                => '1',
 			'weight_gram_seed_per_plot' => 0,
@@ -612,7 +614,7 @@ for my $extension ("xls", "xlsx") {
 			'num_seed_per_plot'         => '12',
 			'block_number'              => '2'
 		},
-		'2' => {
+		'3' => {
 			'block_number'              => '1',
 			'num_seed_per_plot'         => '12',
 			'is_a_control'              => 0,
@@ -626,7 +628,7 @@ for my $extension ("xls", "xlsx") {
 			'weight_gram_seed_per_plot' => 0,
 			'range_number'              => '1'
 		},
-		'3' => {
+		'4' => {
 			'weight_gram_seed_per_plot' => '4',
 			'row_number'                => '3',
 			'range_number'              => '1',
@@ -640,7 +642,7 @@ for my $extension ("xls", "xlsx") {
 			'plot_name'                 => 'plot_with_seedlot_name3',
 			'col_number'                => '1'
 		},
-		'6' => {
+		'7' => {
 			'col_number'                => '2',
 			'plot_name'                 => 'plot_with_seedlot_name6',
 			'stock_name'                => 'test_accession3',
@@ -654,7 +656,7 @@ for my $extension ("xls", "xlsx") {
 			'row_number'                => '2',
 			'weight_gram_seed_per_plot' => 0
 		},
-		'8' => {
+		'9' => {
 			'seedlot_name'              => 'test_accession4_001',
 			'plot_number'               => '8',
 			'weight_gram_seed_per_plot' => 0,
@@ -772,100 +774,103 @@ for my $extension ("xls", "xlsx") {
 	my $sgn_session_id = $response->{access_token};
 	print STDERR $sgn_session_id . "\n";
 
-	my $file = $f->config->{basepath} . "/t/data/genotype_trial_upload/genotype_trial_upload.$extension";
-	my $ua = LWP::UserAgent->new;
-	$response = $ua->post(
-		'http://localhost:3010/ajax/breeders/parsegenotypetrial',
-		Content_Type => 'form-data',
-		Content      => [
-			genotyping_trial_layout_upload => [
-				$file,
-				"genotype_trial_upload.$extension",
-				Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-			],
-			"sgn_session_id"               => $sgn_session_id,
-			"genotyping_trial_name"        => '2018TestPlate02'
-		]
-	);
+	# Genotype trial upload does not yet support CSV files
+	if ( $extension ne 'csv' ) {
+		my $file = $f->config->{basepath} . "/t/data/genotype_trial_upload/genotype_trial_upload.$extension";
+		my $ua = LWP::UserAgent->new;
+		$response = $ua->post(
+			'http://localhost:3010/ajax/breeders/parsegenotypetrial',
+			Content_Type => 'form-data',
+			Content      => [
+				genotyping_trial_layout_upload => [
+					$file,
+					"genotype_trial_upload.$extension",
+					Content_Type => ($extension eq "xls") ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+				],
+				"sgn_session_id"               => $sgn_session_id,
+				"genotyping_trial_name"        => '2018TestPlate02'
+			]
+		);
 
-	ok($response->is_success);
-	my $message = $response->decoded_content;
-	my $message_hash = decode_json $message;
+		ok($response->is_success);
+		my $message = $response->decoded_content;
+		my $message_hash = decode_json $message;
 
-	is_deeply($message_hash, {
-		'success' => '1',
-		'design'  => {
-			'A01' => {
-				'concentration'       => '5',
-				'acquisition_date'    => '2018/02/16',
-				'dna_person'          => 'nmorales',
-				'volume'              => '10',
-				'col_number'          => '1',
-				'plot_name'           => '2018TestPlate02_A01',
-				'ncbi_taxonomy_id'    => '9001',
-				'stock_name'          => 'KASESE_TP2013_885',
-				'notes'               => 'test well A01',
-				'is_blank'            => 0,
-				'extraction'          => 'CTAB',
-				'plot_number'         => 'A01',
-				'row_number'          => 'A',
-				'tissue_type'         => 'leaf',
-				'facility_identifier' => undef
-			},
-			'A03' => {
-				'notes'               => 'test well A03',
-				'is_blank'            => 0,
-				'stock_name'          => 'KASESE_TP2013_1671',
-				'ncbi_taxonomy_id'    => '9001',
-				'plot_name'           => '2018TestPlate02_A03',
-				'tissue_type'         => 'leaf',
-				'row_number'          => 'A',
-				'plot_number'         => 'A03',
-				'extraction'          => 'CTAB',
-				'volume'              => '10',
-				'dna_person'          => 'nmorales',
-				'concentration'       => '5',
-				'acquisition_date'    => '2018/02/16',
-				'col_number'          => '3',
-				'facility_identifier' => undef
-			},
-			'A02' => {
-				'extraction'          => undef,
-				'plot_number'         => 'A02',
-				'row_number'          => 'A',
-				'tissue_type'         => 'stem',
-				'stock_name'          => 'BLANK',
-				'notes'               => 'test blank',
-				'is_blank'            => 1,
-				'ncbi_taxonomy_id'    => undef,
-				'plot_name'           => '2018TestPlate02_A02',
-				'col_number'          => '2',
-				'volume'              => undef,
-				'acquisition_date'    => '2018/02/16',
-				'concentration'       => undef,
-				'dna_person'          => 'nmorales',
-				'facility_identifier' => undef
+		is_deeply($message_hash, {
+			'success' => '1',
+			'design'  => {
+				'A01' => {
+					'concentration'       => '5',
+					'acquisition_date'    => '2018/02/16',
+					'dna_person'          => 'nmorales',
+					'volume'              => '10',
+					'col_number'          => '1',
+					'plot_name'           => '2018TestPlate02_A01',
+					'ncbi_taxonomy_id'    => '9001',
+					'stock_name'          => 'KASESE_TP2013_885',
+					'notes'               => 'test well A01',
+					'is_blank'            => 0,
+					'extraction'          => 'CTAB',
+					'plot_number'         => 'A01',
+					'row_number'          => 'A',
+					'tissue_type'         => 'leaf',
+					'facility_identifier' => undef
+				},
+				'A03' => {
+					'notes'               => 'test well A03',
+					'is_blank'            => 0,
+					'stock_name'          => 'KASESE_TP2013_1671',
+					'ncbi_taxonomy_id'    => '9001',
+					'plot_name'           => '2018TestPlate02_A03',
+					'tissue_type'         => 'leaf',
+					'row_number'          => 'A',
+					'plot_number'         => 'A03',
+					'extraction'          => 'CTAB',
+					'volume'              => '10',
+					'dna_person'          => 'nmorales',
+					'concentration'       => '5',
+					'acquisition_date'    => '2018/02/16',
+					'col_number'          => '3',
+					'facility_identifier' => undef
+				},
+				'A02' => {
+					'extraction'          => undef,
+					'plot_number'         => 'A02',
+					'row_number'          => 'A',
+					'tissue_type'         => 'stem',
+					'stock_name'          => 'BLANK',
+					'notes'               => 'test blank',
+					'is_blank'            => 1,
+					'ncbi_taxonomy_id'    => undef,
+					'plot_name'           => '2018TestPlate02_A02',
+					'col_number'          => '2',
+					'volume'              => undef,
+					'acquisition_date'    => '2018/02/16',
+					'concentration'       => undef,
+					'dna_person'          => 'nmorales',
+					'facility_identifier' => undef
+				}
 			}
-		}
-	});
+		});
 
-	my $project = $c->bcs_schema()->resultset("Project::Project")->find({ name => 'test' });
-	my $location = $c->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find({ description => 'test_location' });
+		my $project = $c->bcs_schema()->resultset("Project::Project")->find({ name => 'test' });
+		my $location = $c->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find({ description => 'test_location' });
 
-	my $plate_data = {
-		design                     => $message_hash->{design},
-		genotyping_facility_submit => 'yes',
-		name                       => 'test_genotype_upload_trial1',
-		genotyping_project_id      => $genotyping_project_id_2,
-		sample_type                => 'DNA',
-		plate_format               => '96'
-	};
+		my $plate_data = {
+			design                     => $message_hash->{design},
+			genotyping_facility_submit => 'yes',
+			name                       => 'test_genotype_upload_trial1',
+			genotyping_project_id      => $genotyping_project_id_2,
+			sample_type                => 'DNA',
+			plate_format               => '96'
+		};
 
-	$mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id" => $sgn_session_id, plate_data => encode_json($plate_data) ]);
-	$response = decode_json $mech->content;
-	#print STDERR Dumper $response;
+		$mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id" => $sgn_session_id, plate_data => encode_json($plate_data) ]);
+		$response = decode_json $mech->content;
+		#print STDERR Dumper $response;
 
-	ok($response->{trial_id});
+		ok($response->{trial_id});
+	}
 
 	my $file = $f->config->{basepath} . "/t/data/genotype_trial_upload/CoordinateTemplate.csv";
 	my $ua = LWP::UserAgent->new;
@@ -1246,15 +1251,16 @@ for my $extension ("xls", "xlsx") {
 	ok($md5_management_factor);
 
 	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $management_factor_archived_filename_with_path);
-	$parser->load_plugin('TrialExcelFormat');
-	$parsed_data = $parser->parse();
+	$parser->load_plugin('TrialGeneric');
+	$rtn = $parser->parse();
+	$parsed_data = $rtn->{'design'};
 	ok($parsed_data, "Check if parse validate excel file works");
 	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
 	#print STDERR Dumper $parsed_data;
 
 	my $parsed_data_check_with_management_factor = {
-		'7'          => {
+		'8'          => {
 			'plot_number'  => '7',
 			'col_number'   => '2',
 			'block_number' => '2',
@@ -1265,7 +1271,7 @@ for my $extension ("xls", "xlsx") {
 			'range_number' => '2',
 			'plot_name'    => 'trial_management_factor_plot_name7'
 		},
-		'5'          => {
+		'6'          => {
 			'col_number'   => '2',
 			'plot_number'  => '5',
 			'rep_number'   => '1',
@@ -1276,7 +1282,7 @@ for my $extension ("xls", "xlsx") {
 			'range_number' => '2',
 			'plot_name'    => 'trial_management_factor_plot_name5'
 		},
-		'3'          => {
+		'4'          => {
 			'block_number' => '1',
 			'rep_number'   => '1',
 			'plot_number'  => '3',
@@ -1287,7 +1293,7 @@ for my $extension ("xls", "xlsx") {
 			'stock_name'   => 'test_accession2',
 			'is_a_control' => 0
 		},
-		'4'          => {
+		'5'          => {
 			'stock_name'   => 'test_accession2',
 			'is_a_control' => 0,
 			'row_number'   => '4',
@@ -1298,7 +1304,7 @@ for my $extension ("xls", "xlsx") {
 			'block_number' => '1',
 			'rep_number'   => '2'
 		},
-		'8'          => {
+		'9'          => {
 			'rep_number'   => '2',
 			'block_number' => '2',
 			'plot_number'  => '8',
@@ -1309,7 +1315,7 @@ for my $extension ("xls", "xlsx") {
 			'stock_name'   => 'test_accession4',
 			'is_a_control' => 0
 		},
-		'1'          => {
+		'2'          => {
 			'block_number' => '1',
 			'rep_number'   => '1',
 			'plot_number'  => '1',
@@ -1320,7 +1326,7 @@ for my $extension ("xls", "xlsx") {
 			'range_number' => '1',
 			'row_number'   => '1'
 		},
-		'2'          => {
+		'3'          => {
 			'plot_name'    => 'trial_management_factor_plot_name2',
 			'range_number' => '1',
 			'row_number'   => '2',
@@ -1350,7 +1356,7 @@ for my $extension ("xls", "xlsx") {
 				]
 			}
 		},
-		'6'          => {
+		'7'          => {
 			'row_number'   => '2',
 			'range_number' => '2',
 			'plot_name'    => 'trial_management_factor_plot_name6',
@@ -1439,6 +1445,170 @@ for my $extension ("xls", "xlsx") {
 	my $after_deleting_empty_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
 	#deleting 2 associated genotyping plates and genotyping project
 	is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project - 3);
+
+
+	#Upload Trial with flexible column headers, entry Numbers, and auto generating plot names
+	my %upload_metadata;
+	my $file_name = "t/data/trial/trial_layout_example_flexible.$extension";
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd() . "_" . $time->hms();
+	my $trial_name = "Trial_upload_test_flexible";
+
+	#Test archive upload file
+	my $uploader = CXGN::UploadFile->new({
+		tempfile         => $file_name,
+		subdirectory     => 'temp_trial_upload',
+		archive_path     => '/tmp',
+		archive_filename => "trial_layout_example_flexible.$extension",
+		timestamp        => $timestamp,
+		user_id          => 41, #janedoe in fixture
+		user_role        => 'curator'
+	});
+
+	## Store uploaded temporary file in archive
+	my $archived_filename_with_path = $uploader->archive();
+	my $md5 = $uploader->get_md5($archived_filename_with_path);
+	ok($archived_filename_with_path);
+	ok($md5);
+
+	$upload_metadata{'archived_file'} = $archived_filename_with_path;
+	$upload_metadata{'archived_file_type'} = "trial upload file";
+	$upload_metadata{'user_id'} = $c->sp_person_id;
+	$upload_metadata{'date'} = "2014-02-14_09:10:11";
+
+	#parse uploaded file with appropriate plugin
+	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path, trial_name => $trial_name);
+	$parser->load_plugin('TrialGeneric');
+	my $p = $parser->parse();
+	$parsed_data = $p->{'design'};
+	my $entry_numbers = $p->{'entry_numbers'};
+	ok($parsed_data, "Check if parse validate excel file works");
+	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
+
+	my $parsed_data_check = {
+		'2' => {
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_1',
+			'stock_name'   => 'test_accession1',
+			'col_number'   => '1',
+			'is_a_control' => 0,
+			'rep_number'   => '1',
+			'block_number' => '1',
+			'range_number' => '1',
+			'row_number'   => '1',
+			'plot_number'  => '1'
+		},
+		'7' => {
+			'rep_number'   => '2',
+			'is_a_control' => 0,
+			'block_number' => '2',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_6',
+			'stock_name'   => 'test_accession3',
+			'col_number'   => '2',
+			'range_number' => '2',
+			'row_number'   => '2',
+			'plot_number'  => '6'
+		},
+		'8' => {
+			'range_number' => '2',
+			'row_number'   => '3',
+			'plot_number'  => '7',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_7',
+			'stock_name'   => 'test_accession4',
+			'col_number'   => '2',
+			'rep_number'   => '1',
+			'is_a_control' => 0,
+			'block_number' => '2'
+		},
+		'5' => {
+			'range_number' => '1',
+			'plot_number'  => '4',
+			'row_number'   => '4',
+			'is_a_control' => 0,
+			'rep_number'   => '2',
+			'block_number' => '1',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_4',
+			'col_number'   => '1',
+			'stock_name'   => 'test_accession2'
+		},
+		'9' => {
+			'range_number' => '2',
+			'row_number'   => '4',
+			'plot_number'  => '8',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_8',
+			'stock_name'   => 'test_accession4',
+			'col_number'   => '2',
+			'rep_number'   => '2',
+			'is_a_control' => 0,
+			'block_number' => '2'
+		},
+		'3' => {
+			'range_number' => '1',
+			'plot_number'  => '2',
+			'row_number'   => '2',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_2',
+			'col_number'   => '1',
+			'stock_name'   => 'test_accession1',
+			'is_a_control' => 0,
+			'rep_number'   => '2',
+			'block_number' => '1'
+		},
+		'6' => {
+			'range_number' => '2',
+			'row_number'   => '1',
+			'plot_number'  => '5',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_5',
+			'stock_name'   => 'test_accession3',
+			'col_number'   => '2',
+			'is_a_control' => 0,
+			'rep_number'   => '1',
+			'block_number' => '2'
+		},
+		'4' => {
+			'stock_name'   => 'test_accession2',
+			'col_number'   => '1',
+			'plot_name'    => 'Trial_upload_test_flexible-PLOT_3',
+			'block_number' => '1',
+			'is_a_control' => 0,
+			'rep_number'   => '1',
+			'row_number'   => '3',
+			'plot_number'  => '3',
+			'range_number' => '1'
+		}
+	};
+	my $entry_numbers_check = {
+		'test_accession4' => '4',
+		'test_accession2' => '2',
+		'test_accession3' => '3',
+		'test_accession1' => '1'
+	};
+
+	is_deeply($parsed_data, $parsed_data_check, 'check trial excel parse data');
+	is_deeply($entry_numbers, $entry_numbers_check, 'check trial excel entry numbers');
+
+	my $trial_create = CXGN::Trial::TrialCreate
+		->new({
+		chado_schema      => $c->bcs_schema(),
+		dbh               => $c->dbh(),
+		owner_id          => 41,
+		trial_year        => "2016",
+		trial_description => "Trial Upload Test Flexible",
+		trial_location    => "test_location",
+		trial_name        => $trial_name,
+		design_type       => "RCBD",
+		design            => $parsed_data,
+		program           => "test",
+		upload_trial_file => $archived_filename_with_path,
+		operator          => "janedoe"
+	});
+
+	my $save = $trial_create->save_trial();
+
+	ok($save->{'trial_id'}, "check that trial_create worked");
+	my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->name();
+	ok($project_name == $trial_name, "check that trial_create really worked");
+
+	my $project_desc = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->description();
+	ok($project_desc == "Trial Upload Test Flexible", "check that trial_create really worked");
 
 	$f->clean_up_db();
 }

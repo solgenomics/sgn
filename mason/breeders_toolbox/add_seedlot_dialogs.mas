@@ -111,6 +111,14 @@ $cross_uniquename => ''
                 </div>
 
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Source: </label>
+                    <div class="col-sm-9">
+                        <input class="form-control" id="seedlot_source" placeholder="Optional">
+                        <span style="font-size: 80; color: #666">Seedlot/Plot/Subplot/Plant name to be used as the source for the first transaction</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Amount (number of seeds): </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_amount" placeholder="Amount OR Weight(g) Required">
@@ -170,6 +178,9 @@ jQuery(document).ready(function(){
     jQuery("#seedlot_cross_uniquename").autocomplete({
        source: '/ajax/stock/cross_autocomplete',
     });
+    jQuery("#seedlot_source").autocomplete({
+        source: '/ajax/stock/seedlot_source_autocomplete'
+    });
 
     jQuery('[name="add_seedlot_button"]').click( function() {
         jQuery('#add_seedlot_dialog').modal('show');
@@ -185,8 +196,9 @@ jQuery(document).ready(function(){
         var cross_uniquename = jQuery('#seedlot_cross_uniquename').val();
         var population_name = jQuery('#seedlot_population_name').val();
         var organization = jQuery('#seedlot_organization').val();
-        var amount = jQuery('#seedlot_amount').val();
-        var weight = jQuery('#seedlot_weight').val();
+        var source = jQuery("#seedlot_source").val();
+        var amount = jQuery('#seedlot_amount').val().trim();
+        var weight = jQuery('#seedlot_weight').val().trim();
         var timestamp = jQuery('#seedlot_timestamp').val();
         var transaction_description = jQuery('#seedlot_transaction_description').val();
         var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
@@ -195,7 +207,9 @@ jQuery(document).ready(function(){
         if (name == '') { alert("Please provide a name"); return; }
         else if (location == '') { alert("Please provide a location"); return; }
         else if (box_name == '') { alert("Please provide a box name"); return; }
-        else if (amount == '' && weight == '') { alert("Please provide an seed count amount or a weight in grams!"); return; }
+        else if (amount.trim().length == 0 && weight.trim().length == 0) { alert("Please provide a seed count amount or a weight in grams!"); return; }
+        else if (isNaN(amount)) { alert("If inputting a seed count amount, it must be a numeric value."); return; }
+        else if (isNaN(weight)) { alert("If inputting a weight, it must be a numeric value."); return; }
         else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
         else if (accession_uniquename == '' && cross_uniquename == '') {
             alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
@@ -216,6 +230,7 @@ jQuery(document).ready(function(){
                     'seedlot_cross_uniquename': cross_uniquename,
                     'seedlot_organization': organization,
                     'seedlot_population_name': population_name,
+                    'seedlot_source': source,
                     'seedlot_amount':amount,
                     'seedlot_weight':weight,
                     'seedlot_timestamp':timestamp,

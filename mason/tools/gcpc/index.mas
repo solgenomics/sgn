@@ -19,21 +19,40 @@
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
 
-<!-- temporarily comment out <& /page/page_title.mas, title=>"Genomic Prediction of Cross Performance (GCPC)" &> -->
-  <h2 style="text-align: center;font-size:20px;"> Genomic Prediction of Cross Performance (GCPC)</h2>
+      
+
+<!-- temporarily comment out <& /page/page_title.mas, title=>"Genomic Prediction of Cross Performance (GPCP)" &> -->
+  <h2 style="text-align: center;font-size:20px;"> Genomic Prediction of Cross Performance (GPCP)</h2>
  <br>
 
  <b style="font-size:15px; color: #254117">Select a Genotyped Dataset</b>
 <br>
 
-    <&| /page/info_section.mas, id=>"input_dataset_section", title=>"Available Datasets", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+    <&| /page/info_section.mas, id=>"input_dataset_section", title=>"Available Datasets", collapsible=>1, collapsed=>0 &>
       <input type="hidden" name="outformat" value="0" />
 
 
-      <div class="form-group form-inline">
-	<div id="dataset_select"></div>
-	<br>
+    <div class="form-group form-inline">
+	  <div id="dataset_select"></div>
+	  <br>
 
+      <div style="border-top: 1px solid #DEDEDE;">
+          <h4>Choose Selection Index values</h4>
+          <i style="font-size:13px">This is a drop-down menu showing your pre-constructed selection indices.</i>
+          <div style= "display: flex;flex-direction: row;">
+            <div id="sin_list"></div>
+              <p style="margin-left: 30px;margin-right: 30px;">OR</p>
+              <button class="btn btn-success" >
+              <a href="http://localhost:8080/selection/index" target="_blank" rel="noopener noreferrer" style="color: white">Create a new one here</a>
+              </button>
+          </div>
+          
+      </div>
+
+      <br>
+      <br>
+  <div style="border-top: 1px solid #DEDEDE;">
+  <br>
 	<button class="btn btn-success" id="select_dataset" type="submit" name="select_dataset" value="select_dataset">Proceed to Factor Selection</button>
 	<br>
 	<br>
@@ -44,29 +63,17 @@
         <div class="text-center">Factors will appear here..</div>
 
       </div>
-
       <br>
-      <br>
-      <br>
-      <br>
-
-      <div>
-
-      <div id="sin_list">
-      </div>
-      <i style="font-size:13px">This is a drop-down menu showing your pre-constructed selection indices. Select one and proceed to run the model.</i>
-      </div>
-
+    </div>
+    
       <center>
 	<div id="trait_histogram_plot">
 	</div>
       </center>
 
-      <br>
-      <br>
-      <br>
+      
       <div style="text-align: center">
-	<button class="btn btn-success" id="runGCPC" type="submit" name="runGCPC" value="runGCPC">Run GCPC</button>
+	<button class="btn btn-success" id="runGCPC" type="submit" name="runGCPC" value="runGCPC">Run GPCP</button>
       </div>
       <br />
 
@@ -74,14 +81,25 @@
       </div>
 </&>
 
+  
+  <div style= "display: flex;justify-content: space-evenly;align-items: center;">
+    <div id="cross_predicted_merit_histogram" ></div>
+    <div id="gcpc_results_download_link"></div>
+  </div>
 
-<div id="gcpc_results_download_link"></div>
-
-<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
-      <div> <p> Plant Sex info: 1= Male, 2=Female, 3= Monoecious male (m>f) and 4= Monoecious female(f>m)</p> </div>
+<&| /page/info_section.mas, title=>"", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+      <div id="plant_sex_legend"></div>
+      
       <table id="gcpc_output">
 
       </table>
+      <script  src="https://cdn.datatables.net/buttons/2.3.2/js/dataTables.buttons.min.js"></script>
+      <script  src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.print.min.js"></script>
+      <script  src="https://cdn.datatables.net/select/1.5.0/js/dataTables.select.min.js"></script>
+      <script  src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+      <script  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+      <script  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+      <script  src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.html5.min.js"></script>
 
   <center>
 
@@ -89,6 +107,8 @@
   <br>
 
 </&>
+
+
 
 
 <script>
@@ -109,6 +129,7 @@ jQuery(document).ready(function() {
     $('#stability_output').empty();
   });
   jQuery('#select_dataset').click(function() {
+    $('html, body').animate({scrollTop:$(document).height()}, 'slow');
     var dataset_id = get_dataset_id();
     jQuery('#working_modal').modal('show');
     $.ajax({
@@ -116,16 +137,14 @@ jQuery(document).ready(function() {
       data: {'dataset_id': dataset_id},
       success: function(response) {
         if (response.error) {
-        jQuery('#working_modal').modal('hide');
+          jQuery('#working_modal').modal('hide');
           $('#dataset_select').val('ERROR');
         }
         else {
-        jQuery('#working_modal').modal('hide');
-	       jQuery('#fixed_and_random_factors').html(response.html);
-         //alert("factors successfully retrieved!");
-
-	}
-
+          jQuery('#working_modal').modal('hide');
+	        jQuery('#fixed_and_random_factors').html(response.html);
+          //alert("factors successfully retrieved!");
+        }
       },
       error: function(response) {
         alert("An error occurred, the service may be temporarily unavailable. Please try again later.");
@@ -136,33 +155,26 @@ jQuery(document).ready(function() {
   var lo = new CXGN.List();
   jQuery('#sin_list').html(lo.listSelect('sin_list', ['dataset'], 'Select a formula', 'refresh', undefined));
   jQuery('#sin_list_list_select').change(
-      function() {
-          load_sin();
-      });
-
- //  jQuery('#method_btn').on('click', function() {
- //   var method_id = jQuery('#select_method').val();
- //   $.ajax({
- //       url: '/ajax/Stability/get_method',
- //       data: {'method_id': method_id  },
- //     }); // end .ajax    // }; // end else statement
- //  });
+    function() {
+      load_sin();
+    }
+  );
 
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
     } else {
-      //alert("Inside trait preview");
-      var tempfile = jQuery('#tempfile').html();
-      var trait = jQuery('#pheno_select').val();
-      //alert(trait);
-      jQuery.ajax( {
+        //alert("Inside trait preview");
+        var tempfile = jQuery('#tempfile').html();
+        var trait = jQuery('#pheno_select').val();
+        //alert(trait);
+        jQuery.ajax( {
           url: '/ajax/gcpc/getdata',
           data: { 'file' : tempfile },
           success: function(r)  {
-          //alert("data grabbed "+JSON.stringify(r.data));
-          var v = {
+          
+            var v = {
               "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
               "width": 200,
               "height": 100,
@@ -170,38 +182,33 @@ jQuery(document).ready(function() {
               "data": { 'values': r.data },
               "mark": "bar",
               "encoding": {
-              "x": {
-                "bin": true,
-                "field": trait,
-                "type": "quantitative"
-              },
-              "y": {
-                "aggregate": "count",
-                "type": "quantitative"
+                "x": {
+                  "bin": true,
+                  "field": trait,
+                  "type": "quantitative"
+                },
+                "y": {
+                  "aggregate": "count",
+                  "type": "quantitative"
+                }
               }
-             }
             };
 
-   //alert("embedding"+ JSON.stringify(v));
+            //alert("embedding"+ JSON.stringify(v));
             vegaEmbed("#trait_histogram_plot", v);
             //alert("done");
           },
 
 
-        error: function(e) { alert('error!'); }
-      });
-    };
+          error: function(e) { alert('error!'); }
+        });
+      };
   });
 
-   //if (!jQuery('#sin_list_list_select').val()) {
-    //  alert("Please select a selection index.")
-    //  $('#gcpc_files').empty();
-    //} else {
-			      //if ($('#sin_list_list_select').val() != ""){
-        // var method_id = $('#select_method').val();
 
-
+  
   jQuery('#runGCPC').click( function () {
+      $('html, body').animate({scrollTop:$(document).height()}, 'slow');
       $('#gcpc_files').empty();
           var factors = ["studyYear", "programName" , "studyName", "studyDesign" , "plantingDate", "locationName",  "replicate" , "rowNumber",  "colNumber" , "germplasmName"];
           var factor_param = "";
@@ -227,56 +234,71 @@ jQuery(document).ready(function() {
       $.ajax({
         'url': '/ajax/gcpc/generate_results?dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id+factor_param,
         'method': "GET",
-	'timeout': 60000000,
-        'contentType': 'application/json'
-       }).done( function(data) {
-          if (data.message) {
+	      'timeout': 60000000,
+        'contentType': 'application/json',
+        error: function(error) {
           jQuery('#working_modal').modal('hide');
-          alert(data.message);
-        }
-       if (data.error) {
+          alert("An error occured" +error.responseText);
+        },
+        success:function(data) {
           jQuery('#working_modal').modal('hide');
-	  alert(data.error); return;
-      }
+          if (!data.histogram || data.histogram == "") {
+            alert("An error occured. Possible causes include: \n - The factors included have less than 2 levels. \n - No genotypic data. \n - Phenotypic data has a lot of missing data.");          
+          } else {
+            if (data.download_link) {
+              jQuery('#gcpc_results_download_link').html(data.download_link);
+            }
+            var headers = data.header;
+            var column_headers = [];
 
-      //alert('Download link = '+data.download_link);
-     if (data.download_link) {
-      jQuery('#gcpc_results_download_link').html(data.download_link);
-      }
+            for (var i in headers) {
+              // some code
+              column_headers += `{ "data": ${headers[i]} },`
+            }
+            //alert (column_headers);
 
+            var histogram_html = '<img src="'+data.histogram+'"/>';
+            jQuery('#cross_predicted_merit_histogram').html(histogram_html);
+    
+             
+	          jQuery('#working_modal').modal('hide');
+            jQuery('#gcpc_output').DataTable( {
+	            'destroy': true,
+              'timeout': 6000000,
+              'data' : data.data,
+              'columns': headers,
 
-      var headers = data.header;
-      var column_headers = [];
-
-      for (var i in headers) {
-      // some code
-        column_headers += `{ "data": ${headers[i]} },`
-      }
-      //alert (column_headers);
-
-      //alert('JSON data retrieved: '+JSON.stringify(data));
-	jQuery('#working_modal').modal('hide');
-        jQuery('#gcpc_output').DataTable( {
-	     'destroy': true,
-             'timeout': 6000000,
-             'data' : data.data,
-             'columns': headers,
+              dom: 'Bfrtip',
+              buttons: [
+                'copy',
+                'csv',
+                'excel',
+                'pdf',
+                {
+                  extend: 'print',
+                  text: 'Print all (not just selected)',
+                  exportOptions: {
+                    modifier: {
+                        selected: null
+                    }
+                  } 
+                }
+              ],
+              select: {
+              style: 'multi'
+              },         
 
              "order": [[ 3, "desc" ]]
-
-
-             //[
-             //   { "data": "Cross #" },
-             //   { "data": "Parent 1" },
-             //   { "data": "Parent 2" },
-             //   { "data": "Cross Predicted Merit" },
-	     //]
-
-        });
-     });
+            });
+          };
+          //error: function(data) {
+            //alert("An error occurred, the service may be temporarily unavailable. Please try again later.");
+          //}  
+        }
+      });
   });
 
-function get_dataset_id() {
+  function get_dataset_id() {
       var selected_datasets = [];
       jQuery('input[name="dataset_select_checkbox"]:checked').each(function() {
           selected_datasets.push(jQuery(this).val());
@@ -291,8 +313,7 @@ function get_dataset_id() {
     var dataset_id=selected_datasets[0];
     return dataset_id;
     }
-  }
-
+  };
 });
 
 
@@ -396,6 +417,7 @@ h1 {
   overflow:scroll;
   overflow-x: hidden;
 }
+
 
 
 

@@ -55,10 +55,11 @@ phone
 research_keywords
 research_interests
 webpage
+password
 
-The first four columns listed are required.
+The first four columns listed are required. If no password is provided the system will create one.
 
-The script outputs the username, first_name, last_name, email and assigned initial random password. This can be used to send the password to the user.
+The script outputs the username, first_name, last_name, email and assigned initial random password. This can be used to send the password to the user. 
 
 =head1 AUTHOR
 
@@ -185,13 +186,31 @@ my $coderef = sub {
 		next();
 	    }
 
-	    $row = $people_schema->resultset("SpPerson")->find( { contact_email => $data{email} } );
-	    if ($row) {
-		print STDERR "Email $data{contact_email} already exists in the database. Skipping this row.\n";
-		next();
+	    if ($data{email}) {	
+		my $rs = $people_schema->resultset("SpPerson")
+		    ->search( { '-or' => [ contact_email => $data{email}, private_email => $data{email}, pending_email => $data{email} ] } );
+		
+		if ($rs->count > 0) {
+		    print STDERR "Email $data{email} already exists in the database in contact_email, pending_email, or private_email field. Skipping this row.\n";
+		    next();
+		}
 	    }
 
-	    my $password =Crypt::RandPasswd->word( 8 , 8 );
+	    # $row = $people_schema->resultset("SpPerson")->find( { pending_email => $data{email} });
+	    # if ($row) {
+	    # 	print STDERR "Email $data{email} already exists in the database in pending_email field. Skipping this row.\n";
+	    # 	next();
+	    # }
+	    
+	    my $password;
+
+	    if ($data{password}) {
+		$password = $data{password};
+	    }
+	    else {
+		$password =Crypt::RandPasswd->word( 8 , 8 );
+	    }
+	    
 	    if ($data{username}) {
 		my $login = CXGN::People::Login->new($dbh);
 				
@@ -202,7 +221,6 @@ my $coderef = sub {
 		$login->set_password($password);
 
 		print  "$data{first_name}\t$data{last_name}\t$data{username}\t$data{email}\t$password\n";
-
 		
 		my $sp_person_id = $login->store();
 

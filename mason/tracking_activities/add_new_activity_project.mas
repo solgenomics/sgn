@@ -1,0 +1,221 @@
+<%args>
+$programs
+$locations
+</%args>
+
+
+<& /util/import_javascript.mas, classes => ['CXGN.TrialTreeFolders'] &>
+
+<div class="modal fade" id="create_activity_project_dialog" name="create_activity_project_dialog" tabindex="-1" role="dialog" aria-labelledby="createActivityProjectDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header">
+                <button type="reset" class="close" id="add_activity_project_dismiss_button_1" name="add_activity_project_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="creatActivityProjectDialog">Add New Tracking Activities Project</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "add_tracking_activity_project_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Tracking Activities Tool" &>
+                            <p>You can use tracking tool to track and record activity information related to materials stored in the database (i.e. tracking tissue culture process of an accession). Data types of each process can be customized (please contact us).</p>
+                            <ul>
+                                <li>Tracking identifier is a globally unique name assigned to each material for capturing tracking information.</li>
+                                <li>Tracking identifiers are organized using Tracking Activities projects</li>
+                                <li>You can generate tracking identifiers by using a link on the Tracking Activities project page</li>
+                                <li>Record page allows you to record inputs of different data types. The link can be found on the project page. To record new information, you can retrieve any tracking identifier by scanning a barcode.</li>
+                                <li>Each tracking identifier has its own details page. In addition to the record page, you can record data directly using this details page. Tracking Identifier details page displays details of each data entry including an input, operator and timestamp as well as a summary of multiple entries of the same data type</li>
+                                <li>If you would like to track preparation process for requested items from ordering tool, ordering tool can be connected with tracking tool (please contact us).</li>
+                            </ul>
+                            <hr>
+                            <center>
+                                <button id="next_step_add_new_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <form class="form-horizontal" role="form" name="create_activity_project_form" id="create_activity_project_form">
+                            <&| /util/workflow.mas:step, title=> "Add project info" &>
+                                <& /page/page_title.mas, title=>"Enter basic information about the project" &>
+                                    <br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-lable">Project Name: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" type="text" id="activity_project_name" name="activity_project_name"  />
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Activity Type: </label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="activity_type" name="activity_type">
+                                                <option value="">Select an activity type</option>
+                                                <option value="tissue_culture">Tissue Culture</option>
+                                                <option value="transformation">Transformation</option>                                                
+                                            </select>
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="activity_project_program" name="activity_project_program">
+                                                <option value="">Select Breeding Program</option>
+<%perl>
+foreach my $program (@$programs) {
+    if (@$program[3]) {
+        print "<option selected=\"selected\" value='".@$program[0]."'>".@$program[1]."</option>";
+    } else {
+        print "<option value='".@$program[0]."'>".@$program[1]."</option>";
+    }
+}
+</%perl>
+                                            </select>
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Location of this project: </label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="activity_project_location" name="activity_project_location">
+                                                <option value="">Select Location</option>
+<%perl>
+    foreach my $location_hashref (@$locations) {
+        my $properties = $location_hashref->{'properties'};
+        my $program = $properties->{'Program'};
+        my $name = $properties->{'Name'};
+        print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
+    }
+</%perl>
+                                            </select>
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Year:</label>
+                                        <div class="col-sm-9">
+                                            <div id="activity_project_year" name="activity_project_year" ></div>
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Description:</label>
+                                        <div class="col-sm-9">
+                                            <textarea class="form-control" id="activity_project_description" name="activity_project_description" ></textarea>
+                                        </div>
+                                    </div>
+                                <br/>
+                                <br/>
+                                <br/>
+                                <center>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_activity_project_submit" id="create_activity_project_submit">Submit</button>
+                                </center>
+                            </&>
+                        </form>
+
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Your project is now in the database" &>
+                            <ul>
+                                <center><li>Please use "Generate Tracking Identifiers" link on your tracking activities project page to generate tracking identifiers for each project.</li></center>
+                            </ul>
+                            <br/>
+                        </&>
+                    </&><!-- End of workflow -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="add_activity_project_dismiss_button_2" name="add_activity_project_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var selectedProgram = jQuery('#activity_project_program option:selected').text()
+
+    filter_options(selectedProgram, 'program', 'activity_project_location');
+
+    jQuery('#activity_project_program').change(function() {
+        filter_options(jQuery('#activity_project_program option:selected').text(), 'program', 'activity_project_location');
+    });
+
+    jQuery("[name='add_activity_project_dismiss_button']").click(function() {
+        jQuery('#create_activity_project_dialog').modal('hide');
+        jQuery('#activity_project_name').val('');
+        jQuery('#activity_project_program').val('');
+        jQuery('#activity_project_location').val('');
+        jQuery('#activity_project_project_year').val('');
+        jQuery('#activity_project_description').val('');
+    });
+
+    jQuery('#create_activity_project_submit').click(function() {
+        var project_name = jQuery("#activity_project_name").val();
+        if (!project_name) {
+            alert("Project name is required");
+            return;
+        }
+
+        var activity_type = jQuery("#activity_type").val();
+        if (!activity_type) {
+            alert("Activity type is required");
+            return;
+        }
+
+        var breeding_program = jQuery("#activity_project_program").val();
+        if (!breeding_program) {
+            alert("Breeding program is required");
+            return;
+        }
+
+        var project_location = jQuery("#activity_project_location").val();
+        if (!project_location) {
+            alert ("Location is required");
+            return;
+        }
+
+        var year = jQuery("#activity_project_year_select").val();
+        if (!year) {
+            alert ("Year is required");
+            return;
+        }
+
+        var project_description = jQuery("#activity_project_description").val();
+        if (!project_description) {
+            alert ("Description is required");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/tracking_activity/create_tracking_activity_project',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'project_name' : project_name,
+                'activity_type': activity_type,
+                'breeding_program': breeding_program,
+                'project_location': project_location,
+                'year': year,
+                'project_description': project_description
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                if (response.error) {
+                    jQuery('#working_modal').modal('hide');
+                    alert(response.error);
+                } else {
+                    refreshActivityJsTree(0);
+                    Workflow.focus("#add_tracking_activity_project_workflow", -1); //Go to success page
+                    Workflow.check_complete("#add_tracking_activity_project_workflow");
+                    jQuery('#working_modal').modal('hide');
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred saving new tracking activities project');
+            }
+        });
+    });
+
+});
+
+</script>

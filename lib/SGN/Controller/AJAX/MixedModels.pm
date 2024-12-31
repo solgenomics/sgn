@@ -73,7 +73,7 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 	die "Do not know what engine $engine is!\n";
     }
 
-    print STDERR "MODEL: Dumper $model\n";
+    print STDERR "MODEL: ".Dumper($model)." ERROR: $error\n";
 
     $c->stash->{rest} = {
 	error => $error,
@@ -154,9 +154,9 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $self = shift;
     my $c = shift;
-
+    
     my $params = $c->req()->params();
-
+    
     my $tempfile = $params->{tempfile};
     my $dependent_variables = $params->{'dependent_variables[]'};
     if (!ref($dependent_variables)) {
@@ -171,21 +171,20 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     if (!ref($fixed_factors)) {
 	$fixed_factors = [ $fixed_factors ];
     }
-
+    
     print STDERR "sub run: FIXED FACTORS: ".Dumper($fixed_factors)." RANDOM FACTORS: ".Dumper($random_factors)."\n";
     my $engine = $params->{engine};
-
+    
     print STDERR "ENGINE = $engine\n";
-
+    
     my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
-
+    
     $mm->dependent_variables($dependent_variables);
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
     $mm->engine($engine);
-    $mm->run_model($c->config->{backend}, $c->config->{cluster_shared_tempdir} . "/mixed_models", $c->config->{cluster_host});
-
-
+    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models" );
+    
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
     my $adjusted_blups_file = $temppath.".adjustedBLUPs";
@@ -195,7 +194,6 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $adjusted_blues_file = $temppath.".adjustedBLUEs";
     my $anovafile = $temppath.".anova";
     my $varcompfile = $temppath.".varcomp";
-    my $error;
     my $lines;
 
     my $accession_names;
@@ -215,17 +213,19 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 
 
     if ( -e $adjusted_blups_file) {
-       $method = "random";
+	$method = "random";
     	($adjusted_blups_data, $adjusted_blups_html, $accession_names, $traits) = $self->result_file_to_hash($c, $adjusted_blups_file);
-   }
-   elsif (-e $adjusted_blues_file) {
-	   $method = "fixed";
-	     ($adjusted_blues_data, $adjusted_blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $adjusted_blues_file);
     }
-   else {
-	   $error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.";
-     $c->stash->{rest} = { error => $error };
-    return;
+    elsif (-e $adjusted_blues_file) {
+	$method = "fixed";
+	($adjusted_blues_data, $adjusted_blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $adjusted_blues_file);
+    }
+    else {
+	if (! $error) { 
+	    $error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.";
+	}
+	$c->stash->{rest} = { error => $error };
+	return;
     }
 
     # read other result files, if they exist and parse into data structures
@@ -235,30 +235,27 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $blues_html;
     my $blues_data;
     if (-e $blupfile) {
-      $method = "random";
+	$method = "random";
 	($blups_data, $blups_html, $accession_names, $traits) = $self->result_file_to_hash($c, $blupfile);
     }
 
     elsif (-e $bluefile) {
-      $method= "fixed";
+	$method= "fixed";
 	($blues_data, $blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $bluefile);
     }
 
     else {
-  	    $error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.";
+	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.";
         $c->stash->{rest} = { error => $error };
         return;
-      }
-
-
-
+    }
 
     my $response = {
 	error => $error,
 	accession_names => $accession_names,
 	adjusted_blups_data => $adjusted_blups_data,
-  adjusted_blups_html => $adjusted_blups_html,
-  adjusted_blues_data => $adjusted_blues_data,
+	adjusted_blups_html => $adjusted_blups_html,
+	adjusted_blues_data => $adjusted_blues_data,
 	adjusted_blues_html => $adjusted_blues_html,
 	blups_data => $blups_data,
 	blups_html => $blups_html,
@@ -295,32 +292,29 @@ sub result_file_to_hash {
 
     my $html = qq | <style> th, td {padding: 10px;} </style> \n <table cellpadding="20" cellspacing="20"> |;
 
-    $html .= "<br><tr>";
+    $html .= "<br><tr><th>accession name</th>";
     for (my $m=0; $m<@value_cols; $m++) {
       $html .= "<th scope=\"col\">".($value_cols[$m])."</th>";
     }
     $html .= "</tr><tr>";
     foreach my $line (@lines) {
-	      my ($accession_name, @values) = split /\t/, $line;
-	      push @accession_names, $accession_name;
-
-        #$html .= "<tr><td>".join("</td><td>", $accession_name)."</td>";
-
+	my ($accession_name, @values) = split /\t/, $line;
+	push @accession_names, $accession_name;
+	$html .= "<tr><td>$accession_name</td>";
+	
         for (my $k=0; $k<@value_cols; $k++) {
-          #print STDERR "adding  $values[$k] to column $value_cols[$k]\n";
-          $html .= "<td>".($values[$k])."</td>";
+	    #print STDERR "adding  $values[$k] to column $value_cols[$k]\n";
+	    $html .= "<td>".($values[$k])."</td>";
         }
-
-	      for(my $n=0; $n<@values; $n++) {
-	         #print STDERR "Building hash for trait $accession_name and value $value_cols[$n]\n";
-	          $analysis_data{$accession_name}->{$value_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
-
-
-
-	      }
+	
+	for(my $n=0; $n<@values; $n++) {
+	    #print STDERR "Building hash for trait $accession_name and value $value_cols[$n]\n";
+	    $analysis_data{$accession_name}->{$value_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
+	    
+	    
+	    
+	}
         $html .= "</tr>"
-
-
     }
     $html .= "</table>";
 
@@ -358,7 +352,7 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
 	chomp;
 
 	my @fields = split "\t";
-	my %line = {};
+	my %line = ();
 	for(my $n=0; $n <@keys; $n++) {
 	    if (exists($fields[$n]) && defined($fields[$n])) {
 		$line{$keys[$n]}=$fields[$n];

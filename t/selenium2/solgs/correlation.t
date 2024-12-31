@@ -12,20 +12,19 @@ my $f = SGN::Test::Fixture->new();
 
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 160, 'plots_list_subset' => 160});
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
-print STDERR "\nadding plots list '\n";
+
 my $plots_list =  $solgs_data->load_plots_list();
 my $plots_list_name = $plots_list->{list_name};
 my $plots_list_id = 'list_' . $plots_list->{list_id};
 
-print STDERR "\nadding trials list '\n";
 my $trials_list =  $solgs_data->load_trials_list();
 my $trials_list_name = $trials_list->{list_name};
 my $trials_list_id = 'list_' . $trials_list->{list_id};
+
 my $trials_dt = $solgs_data->load_trials_dataset();
 my $trials_dt_name = $trials_dt->{dataset_name};
 my $trials_dt_id = 'dataset_' . $trials_dt->{dataset_id};
 
-print STDERR "\nadding plots dataset\n";
 my $plots_dt = $solgs_data->load_plots_dataset();
 my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id = 'dataset_' . $plots_dt->{dataset_id};
@@ -40,13 +39,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/correlation/analysis', 'correlation home page');
     sleep(5);
 
-    $d->find_element_ok('//select[@id="corr_pops_select"]/option[text()="'. $plots_list_name . '"]', 'xpath', 'plots list')->click();
-    sleep(10);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(5);
-    $d->find_element_ok('//select[starts-with(@id,"corr_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-    sleep(2);
-    $d->find_element_ok('//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
+    $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
@@ -56,13 +49,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    $d->find_element_ok('//select[@id="corr_pops_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
-    sleep(10);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(5);
-    $d->find_element_ok('//select[starts-with(@id,"corr_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-    sleep(2);
-    $d->find_element_ok('//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
@@ -72,13 +59,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    $d->find_element_ok('//select[@id="corr_pops_select"]/option[text()="' . $plots_dt_name . '"]', 'xpath', 'plots dataset')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(20);
-    $d->find_element_ok('//select[starts-with(@id,"corr_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-    sleep(3);
-    $d->find_element_ok('//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
+    $d->find_element_ok('//tr[@id="' . $plots_dt_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
@@ -90,26 +71,42 @@ $d->while_logged_in_as("submitter", sub {
 
     `rm -r $cache_dir`;
 
-    $d->find_element_ok('//select[@id="corr_pops_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'trials dataset')->click();
-    sleep(5);
-    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
-    sleep(20);
-    $d->find_element_ok('//select[starts-with(@id,"corr_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
-    sleep(3);
-    $d->find_element_ok('//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
-   $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
+    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table'); 
     sleep(2);
 
+
+    `rm -r $cache_dir`;
+    sleep(3);
+
+    ########## trial detail page ##########
+    $d->get_ok('/breeders/trial/139', 'trial detail home page');
+    sleep(5);
+    my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    sleep(5);
+    $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
+    sleep(5);
+    $d->find_element_ok('Phenotypic correlation', 'partial_link_text', 'expand correlation')->click();
+    sleep(1);
+    $d->find_element_ok('run_correlation', 'id', 'run correlation')->click();
+    sleep(200);
+    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot -- trial detail page')->click();
+    sleep(5);
+    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
+    sleep(2);
+
     `rm -r $cache_dir`;
 
+    ########## solGS ##########
     $d->get('/solgs', 'solgs home page');
     sleep(3);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(3);
@@ -123,19 +120,19 @@ $d->while_logged_in_as("submitter", sub {
     sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(15);
 
     my $corr = $d->find_element('Phenotypic correlation', 'partial_link_text', 'scroll to correlation');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $corr);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-170);", $corr);
     sleep(2);
-    $d->find_element('Phenotypic correlation', 'partial_link_text', 'scroll to correlation')->click();
+    $d->find_element('ANOVA', 'partial_link_text', 'scroll to correlation')->click();
     sleep(2);
-    $d->find_element_ok('run_pheno_correlation', 'id', 'run correlation')->click();
+    $d->find_element_ok('run_correlation', 'id', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
@@ -173,7 +170,7 @@ $d->while_logged_in_as("submitter", sub {
     #   sleep(15);
     # # ######################################################################
     #
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(3);
@@ -217,7 +214,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
 
-    my $si = $d->find_element('Calculate selection', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
@@ -241,22 +238,22 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get('/solgs');
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(1);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
 
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
     sleep(2);
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
     sleep(2);
-    $d->find_element_ok('done_selecting', 'id', 'done selecting')->click();
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
     sleep(2);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(3);
@@ -272,32 +269,32 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(3);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
 
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
     sleep(3);
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
     sleep(3);
-    $d->find_element_ok('done_selecting', 'id', 'done selecting')->click();
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
     sleep(3);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(20);
 
     my $corr = $d->find_element('Phenotypic correlation', 'partial_link_text', 'scroll to correlation');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $corr);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-270);", $corr);
     sleep(2);
-    $d->find_element('Phenotypic correlation', 'partial_link_text', 'scroll to correlation')->click();
+    $d->find_element('Acronyms', 'partial_link_text', 'scroll to correlation')->click();
     sleep(1);
-    $d->find_element_ok('run_pheno_correlation', 'id', 'run correlation')->click();
+    $d->find_element_ok('run_correlation', 'id', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
@@ -331,7 +328,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(30);
@@ -375,7 +372,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
 
-    my $si = $d->find_element('Calculate selection', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
@@ -395,26 +392,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
 
-    `rm -r $cache_dir`;
-    sleep(3);
-
-    $d->get_ok('/breeders/trial/139', 'trial detail home page');
-    sleep(5);
-    my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
-    sleep(5);
-    $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
-    sleep(5);
-    $d->find_element_ok('Phenotypic correlation', 'partial_link_text', 'expand correlation')->click();
-    sleep(1);
-    $d->find_element_ok('run_pheno_correlation', 'id', 'run correlation')->click();
-    sleep(200);
-    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot -- trial detail page')->click();
-    sleep(5);
-    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
-    sleep(2);
    
-
     foreach my $list_id ($trials_list_id,  $plots_list_id) {
         $list_id =~ s/\w+_//g;
         $solgs_data->delete_list($list_id);

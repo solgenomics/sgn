@@ -2,7 +2,7 @@
 <%args>
 
 $sp_person_autocomplete_uri => '/ajax/people/autocomplete'
-$stock_types     => undef
+$stock_types     => []
 $editable_vector_props => undef
 </%args>
 
@@ -18,8 +18,9 @@ $editable_vector_props => undef
 use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_selectbox_html/;
 
 my $vector_cvterm_id;
+my $stock_types_number = scalar(@$stock_types);
 
-for (my $i=0; $i<= scalar(@$stock_types); $i++) {
+for (my $i=0; $i<= $stock_types_number; $i++) {
     if ( $stock_types->[$i][1] eq "vector_construct" ) {
         $vector_cvterm_id = $stock_types->[$i][0];
         last();
@@ -193,11 +194,11 @@ my $stock_type_select = simple_selectbox_html(
         });
 
         jQuery("#any_name").autocomplete({
-            source: '/ajax/stock/stock_autocomplete?stock_type_id='+jQuery('#stock_type_select option:selected').val(),
+            source: '/ajax/stock/stock_autocomplete?stock_type_id=' + '<% $vector_cvterm_id %>',
         });
         jQuery('#stock_type_select').change(function(){
             jQuery("#any_name").autocomplete({
-                source: '/ajax/stock/stock_autocomplete?stock_type_id='+jQuery('#stock_type_select option:selected').val(),
+                source: '/ajax/stock/stock_autocomplete?stock_type_id=' + '<% $vector_cvterm_id %>',
             });
         });
 
@@ -265,6 +266,7 @@ my $stock_type_select = simple_selectbox_html(
         });
 
         parseArgs(editable_stockprops_search);
+        var search_vectorprop = 0;
         _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
         //stockprop search
@@ -273,8 +275,9 @@ my $stock_type_select = simple_selectbox_html(
             document.getElementById('any_name_tnumber').value= "";
             document.getElementById('any_name_gene').value= "";
             document.getElementById('any_name').value= "";
+            search_vectorprop = 1;
 
-            _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+            _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,'','',search_vectorprop);
         });
 
         //gene and vector search
@@ -284,6 +287,8 @@ my $stock_type_select = simple_selectbox_html(
             var gene_name;
             document.getElementById('field_input_id').value= "";
             document.getElementById('any_name').value= "";
+            search_vectorprop = 0;
+            editable_stockprops_search = {};
 
             if(jQuery('#any_name_tnumber').val()){
                 stock_type = 'vector_construct';
@@ -293,11 +298,12 @@ my $stock_type_select = simple_selectbox_html(
                 gene_name = jQuery('#any_name_gene').val();
                 editable_stockprops_search['Gene'] = {"matchtype": "contains"};
                 editable_stockprops_search['Gene']["value"] = gene_name;
+                search_vectorprop = 1;
             }
             if(!any_name && !gene_name){
                 alert("Type a valid value!",any_name);
             }
-            _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name,'and');
+            _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name,'and',search_vectorprop);
         });
 
         //general search
@@ -340,7 +346,7 @@ my $stock_type_select = simple_selectbox_html(
         }
     }
 
-    function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array, any_name, operator){
+    function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array, any_name, operator, search_vectorprop){
         console.log("Making AJAX request with editable stockprop "+JSON.stringify(editable_stockprops_search));
         stock_table = jQuery('#stock_search_results').DataTable({
             'destroy' : true,
@@ -363,6 +369,7 @@ my $stock_type_select = simple_selectbox_html(
                     d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
                     d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
                     d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
+                    d.search_vectorprop = search_vectorprop;
                 }
             }
         });

@@ -109,8 +109,8 @@ solGS.submitJob = {
 
   askUser: function (page, args) {
     var title =
-      "<p>This analysis may take a long time. " +
-      "Do you want to submit the analysis and get an email when it completes?</p>";
+      "<p>Since the job takes long time, you can only submit and wait for an email with a link to the results. " +
+      "Do you want to submit it and get an email when it completes?</p>";
 
     var jobSubmit = '<div id= "job_submission">' + title + "</div>";
 
@@ -118,9 +118,9 @@ solGS.submitJob = {
 
     jQuery("#job_submission").dialog({
       height: 200,
-      width: 400,
+      width: 600,
       modal: true,
-      title: "Analysis job submission",
+      title: "Job submission",
       buttons: {
         OK: {
           text: "Yes",
@@ -143,7 +143,7 @@ solGS.submitJob = {
         //     },
         // },
         Cancel: {
-          text: "Cancel",
+          text: "No",
           class: "btn btn-info",
           id: "cancel_queue_info",
           click: function () {
@@ -327,10 +327,10 @@ solGS.submitJob = {
     jQuery("<div />", { id: "email-form" })
       .html(form)
       .dialog({
-        height: "auto",
-        width: "auto",
+        height: 400,
+        width: 400,
         modal: true,
-        title: "Please fill in some info about your analysis.",
+        title: "Info about the analysis",
         buttons: {
           Submit: {
             click: function (e) {
@@ -800,6 +800,7 @@ solGS.getTrainingTraitsIds = function () {
 solGS.getModelArgs = function () {
   var args = this.getTrainingPopArgs();
   var trainingTraitsIds = this.getTrainingTraitsIds();
+
   if (trainingTraitsIds) {
     args["training_traits_code"] = jQuery("#training_traits_code").val();
     args["training_traits_ids"] = trainingTraitsIds;
@@ -808,7 +809,18 @@ solGS.getModelArgs = function () {
   if (trainingTraitsIds.length == 1) {
     args["trait_id"] = trainingTraitsIds[0];
   }
+
   return args;
+};
+
+solGS.selectMenuModelArgs = function() {
+    var modelArgs = this.getModelArgs();
+
+    return {
+      id: modelArgs.training_pop_id,
+      name: modelArgs.training_pop_name,
+      pop_type: "training",
+    };
 };
 
 solGS.getSelectionPopArgs = function () {
@@ -896,6 +908,14 @@ solGS.checkPageType = function () {
 
   return pageType;
 };
+
+
+solGS.blockSolgsSearchInterface = function () {
+
+	jQuery("#solgs_search_interfaces").hide();
+
+};
+
 
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function (a, b) {

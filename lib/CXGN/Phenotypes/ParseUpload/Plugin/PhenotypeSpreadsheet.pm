@@ -289,8 +289,10 @@ sub parse {
     my $num_predef_col = 0;
     my $json = JSON->new();
     if ($worksheet->get_cell(4,1)) {
-      $predefined_columns  = $json->decode($worksheet->get_cell(4,1)->value());
-      $num_predef_col = scalar(@$predefined_columns);
+	$predefined_columns  = $json->decode($worksheet->get_cell(4,1)->value());
+	if (ref($predefined_columns)) { 
+	    $num_predef_col = scalar(@$predefined_columns);
+	}
     }
 
     my $num_col_before_traits = $num_fixed_col + $num_predef_col;

@@ -8,6 +8,8 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
+# DEPRECATED: This plugin has been replaced by the CrossesGeneric plugin
+
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
@@ -36,10 +38,11 @@ sub _validate_with_plugin {
     $supported_cross_types{'self'} = 1; #only female parent required
     $supported_cross_types{'open'} = 1; #only female parent required
     $supported_cross_types{'sib'} = 1; #both parents required but can be the same
-    $supported_cross_types{'bulk'} = 1; #both parents required
-    $supported_cross_types{'bulk_self'} = 1; #only female parent required
-    $supported_cross_types{'bulk_open'} = 1; #only female parent required
+    $supported_cross_types{'bulk'} = 1; #both female population and male accession required
+    $supported_cross_types{'bulk_self'} = 1; #only female population required
+    $supported_cross_types{'bulk_open'} = 1; #only female population required, male parent can be a population or unknown
     $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
+    $supported_cross_types{'dihaploid_induction'} = 1; # ditto
     $supported_cross_types{'polycross'} = 1; #both parents required
     $supported_cross_types{'backcross'} = 1; #both parents required, parents can be cross or accession stock type
 
@@ -148,6 +151,7 @@ sub _validate_with_plugin {
     my %seen_accession_names;
     my %seen_plot_plant_names;
     my %seen_backcross_parents;
+    my %seen_population_names;
 
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
@@ -177,9 +181,8 @@ sub _validate_with_plugin {
             $female_parent =  $worksheet->get_cell($row,3)->value();
         }
 
-        #skip blank lines or lines with no name, type and parent
-        if (!$cross_name && !$cross_type && !$female_parent) {
-            next;
+        if (!defined $cross_name && !defined $cross_type && !defined $female_parent) {
+            last;
         }
 
         if ($worksheet->get_cell($row,4)) {
@@ -230,7 +233,26 @@ sub _validate_with_plugin {
             $seen_cross_names{$cross_name}++;
         }
 
-        if ($cross_type eq 'backcross') {
+        if (($cross_type eq 'bulk') || ($cross_type eq 'bulk_self') || ($cross_type eq 'bulk_open')) {
+            $female_parent =~ s/^\s+|\s+$//g;
+            $seen_population_names{$female_parent}++;
+            if ($cross_type eq 'bulk_open') {
+                if ($male_parent) {
+                    $male_parent =~ s/^\s+|\s+$//g;
+                    $seen_population_names{$male_parent}++;
+                }
+            } elsif ($cross_type eq 'bulk') {
+                $male_parent =~ s/^\s+|\s+$//g;
+                $seen_accession_names{$male_parent}++;
+            }
+        } elsif (($cross_type eq 'polycross') || ($cross_type eq 'open')) {
+            $female_parent =~ s/^\s+|\s+$//g;
+            $seen_accession_names{$female_parent}++;
+            if ($male_parent) {
+                $male_parent =~ s/^\s+|\s+$//g;
+                $seen_population_names{$male_parent}++;
+            }
+        } elsif ($cross_type eq 'backcross') {
             $female_parent =~ s/^\s+|\s+$//g;
             $seen_backcross_parents{$female_parent}++;
             $male_parent =~ s/^\s+|\s+$//g;
@@ -256,22 +278,25 @@ sub _validate_with_plugin {
         }
     }
 
+
     my @accessions = keys %seen_accession_names;
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames',\@accessions)->{'missing'}};
+    if (scalar(@accessions_missing) > 0) {
+        push @error_messages, "The following parents are not in the database, or are not in the database as accession uniquenames: ".join(',',@accessions_missing);
+        $errors{'missing_accessions'} = \@accessions_missing;
+    }
 
+    my @populations = keys %seen_population_names;
     my $population_validator = CXGN::List::Validate->new();
-    my @parents_missing = @{$population_validator->validate($schema,'populations',\@accessions_missing)->{'missing'}};
-
-    if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
-        $errors{'missing_accessions'} = \@parents_missing;
+    my @populations_missing = @{$population_validator->validate($schema,'populations',\@populations)->{'missing'}};
+    if (scalar(@populations_missing) > 0) {
+        push @error_messages, "The following parents are not in the database, or are not in the database as population uniquenames: ".join(',',@populations_missing);
     }
 
     my @backcross_parents = keys %seen_backcross_parents;
     my $backcross_parent_validator = CXGN::List::Validate->new();
     my @backcross_parents_missing = @{$backcross_parent_validator->validate($schema,'accessions_or_crosses',\@backcross_parents)->{'missing'}};
-
     if (scalar(@backcross_parents_missing) > 0) {
         push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@backcross_parents_missing);
         $errors{'missing_accessions_or_crosses'} = \@backcross_parents_missing;
@@ -383,10 +408,10 @@ sub _parse_with_plugin {
             $female_parent =~ s/^\s+|\s+$//g;
         }
 
-        #skip blank lines or lines with no name, type and parent
-        if (!$cross_name && !$cross_type && !$female_parent) {
-            next;
+        if (!defined $cross_name && !defined $cross_type && !defined $female_parent) {
+            last;
         }
+
         if ($worksheet->get_cell($row,4)) {
             $male_parent =  $worksheet->get_cell($row,4)->value();
             $male_parent =~ s/^\s+|\s+$//g;

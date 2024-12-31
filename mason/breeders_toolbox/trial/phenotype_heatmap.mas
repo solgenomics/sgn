@@ -6,7 +6,7 @@ $has_col_and_row_numbers => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
-<& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', 'd3.d3Min.js', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
+<& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
 <style>
     #trait_heatmap {display: inline; }
@@ -143,7 +143,7 @@ $has_col_and_row_numbers => undef
 </div>
 
 <div id="container_heatmap" ></div>
-<div>
+<div id="container_legend">
     <ul class="legend">
         <li><span class="border_plots"></span> Border Plots and Filler Plots</li>
         <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
@@ -756,7 +756,12 @@ jQuery(document).ready( function() {
             var observations;
             jQuery.ajax({
                 headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-                url: '/brapi/v2/observations?studyDbId='+trial_id+'&pageSize=10000',
+                method: 'GET',
+                url: '/brapi/v2/observations',
+                data: {
+                    studyDbId: trial_ids,
+                    pageSize: 10000
+                },
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -795,7 +800,7 @@ jQuery(document).ready( function() {
             }
         }
       
-        var fieldMap = new BrAPIFieldmap("#container_heatmap_geo_div",brapi_endpoint);
+        var fieldMap = new BrAPIFieldmap("#container_heatmap_geo_div", brapi_endpoint, { viewOnly: true });
 
         fieldMap.brapi_endpoint = brapi_endpoint;
         fieldMap.opts.brapi_pageSize = 1000;
@@ -1181,16 +1186,19 @@ jQuery(document).ready( function() {
         jQuery("#container_heatmap").css("display", "none");
         jQuery("#chart_fm").css("display", "none");
         jQuery("#container_fm").css("display", "none");
+        jQuery("#container_legend").css("display", "none");
         jQuery("#trial_no_phenoMSG").css("display", "none");
         jQuery("#d3legend").css("display", "none");
     });
 
-    jQuery(document).on('change', '#trait_list_dropdown', function () {
+    jQuery(document).on('change', '#trait_list_dropdown', on_change_view);
+    function on_change_view() {
         selected = jQuery("#trait_list_dropdown").val();
         if (selected == 'fieldmap'){
             d3.select("svg").remove();
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");
+            jQuery("#container_legend").css("display", "block");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#include_linked_trials").css("display", "block");
             d3.select("#container_heatmap_geo_div").remove();
@@ -1204,6 +1212,7 @@ jQuery(document).ready( function() {
             jQuery("#container_heatmap").css("display", "none");
             jQuery("#d3legend").css("display", "none");
             jQuery("#container_fm").css("display", "none");
+            jQuery("#container_legend").css("display", "none");
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
@@ -1216,12 +1225,12 @@ jQuery(document).ready( function() {
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#view_ctrl_button").show();
-            jQuery("#include_linked_trials").css("display", "none");
+            jQuery("#include_linked_trials").css("display", "block");
             FieldMap.heatmap_selected = true;
             FieldMap.heatmap_selection = selected;
             heatmap(selected);
         }
-    });
+    }
 
     jQuery(document).on('change', '#include_linked_trials_checkmark', () => {
         trial_ids = [trial_id];
@@ -1269,6 +1278,9 @@ jQuery(document).ready( function() {
             jQuery(".fieldmap_edit").prop("disabled", include_linked_trials);
             jQuery("#fieldmap_edit_info").css("display", include_linked_trials ? 'block' : 'none');
             jQuery("#include_linked_trials_list_container").css("display", include_linked_trials ? 'block' : 'none');
+            jQuery("#trait_list_dropdown").val("fieldmap");
+            on_change_view();
+            FieldMap.heatmap_queried = false;
             field_map_view();
         }
     });

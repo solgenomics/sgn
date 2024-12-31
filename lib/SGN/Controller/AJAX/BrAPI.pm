@@ -61,7 +61,7 @@ my $DEFAULT_PAGE_SIZE=10;
 sub deserialize_image {
 	my ( $self, $data, $c ) = @_;
 	# want $c->request->data to be undefined so that parsing in brapi sub skips it
-	return undef;
+	return;
 }
 
 # have to serialize the json because using the callbacks in the config map
@@ -100,13 +100,16 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $session_token = $c->req->headers->header("access_token") || $c->req->cookies->{sgn_session_id} ? $c->req->cookies->{"sgn_session_id"}->value() : undef || $bearer_token;
 	print STDERR "SESSION TOKEN : $session_token\n";
 	if (defined $c->request->data){
-		my $data_type = ref $c->request->data;
-		my $current_page = $c->request->data->{"page"} if ($data_type ne 'ARRAY');
-		my $current_page_size = $c->request->data->{"pageSize"} if ($data_type ne 'ARRAY');
-		my $current_sesion_token = $c->request->data->{"access_token"} if ($data_type ne 'ARRAY');
-		$page = $current_page || $page || 0;
-		$page_size = $current_page_size || $page_size || $DEFAULT_PAGE_SIZE;
-        $session_token = $current_sesion_token|| $session_token;
+	    my $data_type = ref $c->request->data;
+	    my $current_page;
+	    $current_page = $c->request->data->{"page"} if ($data_type ne 'ARRAY');
+	    my $current_page_size;
+	    $current_page_size = $c->request->data->{"pageSize"} if ($data_type ne 'ARRAY');
+	    my $current_session_token;
+	    $current_session_token = $c->request->data->{"access_token"} if ($data_type ne 'ARRAY');
+	    $page = $current_page || $page || 0;
+	    $page_size = $current_page_size || $page_size || $DEFAULT_PAGE_SIZE;
+	    $session_token = $current_session_token|| $session_token;
 	}
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -266,10 +269,13 @@ sub _authenticate_user {
     
     print STDERR "BrAPI Authenticating User... (resource = $resource, access_level = $requested_access_level\n";
 
+
     ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
     	print STDERR "USER: $user_id. TYPE: $user_type EXPIRED: $expired\n";
+
 	my %server_permission;
-	my $rc = eval{
+    my $rc = eval{
+	print STDERR "SERVER PERMISSION CHECK...\n";
 		my $server_permission = $c->config->{"brapi_" . $c->request->method};
 		my @server_permission  = split ',', $server_permission;
 		%server_permission = map { $_ => 1 } @server_permission;
@@ -279,12 +285,14 @@ sub _authenticate_user {
 		$server_permission{$wildcard} = 1;
 	}
 
+    print STDERR "SERVER CHECK DONE...\n";
 	# Check if there is a config for default brapi user. This will be overwritten if a token is passed.
 	# Will still throw error if auth is required
-	if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
-	    #$user_id = $c->user() ? $c->user()->get_object()->sp_person_id : undef; #CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
-	    $user_id = $c->stash->{user_id};
-	    
+
+    if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
+	print STDERR "BRAPI DEFAULT USER CHECK...\n";
+		$user_id = CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
+
 		$user_type = $c->config->{brapi_default_user_role};
 		if (! defined $user_id) {
 			my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'Default brapi user was not found');
@@ -293,7 +301,8 @@ sub _authenticate_user {
 	}
 
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
-	# authentication or serverinfo call method request auth, we authenticate.
+    # authentication or serverinfo call method request auth, we authenticate.
+    my $login = CXGN::Login->new($c->dbc->dbh); 
     if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
 
 	print STDERR "REQUIRING BRAPI LOGIN! user_id = $user_id\n";
@@ -308,16 +317,24 @@ sub _authenticate_user {
 	print STDERR "No resource provided... going on...\n";
 
 	
- 
-
-#	my $sp_person = $c->user()->get_object();
-#	my $user_id = $sp_person->get_sp_person_id();
-#	my $user_type = $sp_person->get_user_type();
-#	my $user_pref = $sp_person->get_user_format();
-#	my $expired = 0;
-	
-
-
+	print STDERR "REQUIRE LOGIN... logging in user\n";
+	print STDERR "SESSION TOKEN: ".$c->stash->{session_token}."\n";
+	if ($c->stash->{session_token}) { 
+	    ($user_id, $user_type, $user_pref, $expired) = $login->query_from_cookie($c->stash->{session_token});
+	    print STDERR "LOGGING IN USER: ".$user_id." : ".$user_type." : ".$expired;
+	}
+	else { 
+	    print STDERR "GET USER ID FROM LOGIN...\n";
+	    if ($c->user) {
+		$user_id = $c->user->get_object->get_sp_person_id();
+		($user_type) = $c->user->get_object->get_user_type();
+	   
+		my $cookie_string = $login->get_login_cookie();
+		print STDERR "USER ID: $user_id, EXPIRED: $expired, USER TYPE: $user_type\n";
+		$c->stash->{session_token} = $login->get_login_cookie();
+	    }
+	}
+          
         if (!$user_id || $expired || !$user_type || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
@@ -369,7 +386,7 @@ POST Response:
      "datafiles": []
    },
    "userDisplayName": "John Smith",
-   "access_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4",
+   "access_token": "..."
    "expires_in": "The lifetime in seconds of the access token"
  }
 
@@ -377,7 +394,7 @@ For Logging out
 DELETE Request:
 
 {
-    "access_token" : "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4" // (optional, text, `R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4`) ... The user access token. Default: current user token.
+    "access_token" : "..." // (optional, text, `R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4`) ... The user access token. Default: current user token.
 }
 
 DELETE Response:
@@ -875,7 +892,7 @@ sub germplasm_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $brapi_package_result = $brapi_module->search($clean_inputs);
+    my $brapi_package_result = $brapi_module->search($clean_inputs,$c);
 
     _standard_response_construction($c, $brapi_package_result);
 }
@@ -957,7 +974,7 @@ sub germplasm_detail_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
 	my $brapi_package_result = $brapi_module->germplasm_detail(
-		$c->stash->{stock_id}
+		$c->stash->{stock_id},$c
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -3555,7 +3572,7 @@ sub observationvariable_list_GET {
 		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
 		traitClasses => $clean_inputs->{traitClass},
 		studyDbIds => $clean_inputs->{studyDbId},
-		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceIds => $clean_inputs->{externalReferenceId},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		supportedCrop =>$supported_crop,
 	}, $c);

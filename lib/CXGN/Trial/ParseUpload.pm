@@ -49,6 +49,15 @@ has '_parsed_data' => (
     predicate => '_has_parsed_data'
 );
 
+has '_validated_data' => (
+    is => 'ro',
+    isa => 'HashRef',
+    writer => '_set_validated_data',
+    reader => '_get_validated_data',
+    predicate => '_has_validated_data',
+    required => 0
+);
+
 has '_location_code_map' => (
     is => 'ro',
     isa => 'HashRef',
@@ -64,6 +73,15 @@ has 'trial_stock_type' => (
     predicate => 'has_trial_stock_type',
     required => 0,
     default => 'accession'
+);
+
+has 'trial_name' => (
+    isa => 'Str',
+    is => 'rw',
+    writer => '_set_trial_name',
+    reader => 'get_trial_name',
+    predicate => 'has_trial_name',
+    required => 0
 );
 
 has 'facility_identifiers_included' => (

@@ -459,8 +459,8 @@ $user_role => undef
   jQuery(document).ready(function () {
 
     jQuery('#add_seedlot_transaction_button').click( function() {
-        get_select_box('seedlots', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>', 'exclude_discarded': '1' });
-        get_select_box('seedlots', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>', 'exclude_discarded': '1' });
+        get_select_box('seedlots', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>', 'exclude_discarded': '1', 'seedlot_id':'<% $seedlot_id %>', 'exclude_self': '1' });
+        get_select_box('seedlots', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>', 'exclude_discarded': '1', 'seedlot_id':'<% $seedlot_id %>' });
         get_select_box('breeding_programs', 'transaction_new_seedlot_breeding_program_div', { 'name' : 'transaction_new_seedlot_breeding_program_id', 'id' : 'transaction_new_seedlot_breeding_program_id' });
         jQuery('#add_seedlot_transaction_dialog').modal('show')
     });
@@ -487,11 +487,12 @@ $user_role => undef
             { title: "Transaction Weight (g)", "data": "weight" },
             { title: "Operator", "data": "operator" },
             { title: "Transaction Description", "data": "description" },
-            { title: "Options", "data": "null", "render" : function ( data, type, row ) {
+            { title: "Edit Transaction", "data": "null", "render" : function ( data, type, row ) {
                 if (status == 'discarded') {
                     return "";
                 } else {return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>";}
             }},
+            { title: "Delete Transaction", "data": "null", "render" : function ( data, type, row ) { return "<a onclick='deleteSeedlotTransaction("+row.transaction_id+")' >X</a>"; } },
         ],
     });
 
@@ -605,8 +606,8 @@ $user_role => undef
                 }
             }
         }
-        var amount = jQuery('#seedlot_transaction_amount').val();
-        var weight = jQuery('#seedlot_transaction_weight').val();
+        var amount = jQuery('#seedlot_transaction_amount').val().trim();
+        var weight = jQuery('#seedlot_transaction_weight').val().trim();
         var timestamp = jQuery('#seedlot_transaction_timestamp').val();
         var transaction_description = jQuery('#seedlot_transaction_description').val();
 
@@ -825,6 +826,31 @@ function editSeedlotTransaction(transaction_id){
             alert('An error occurred getting seedlot transaction');
         }
     });
+}
+
+function deleteSeedlotTransaction(transaction_id){
+    if (confirm("Are you sure you want to delete this seedlot transaction?")){
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot/<% $seedlot_id %>/transaction/'+transaction_id+'/delete',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert('The seedlot transaction has been deleted');
+                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred deleting seedlot transaction');
+            }
+        });
+    }
 }
 
 </script>

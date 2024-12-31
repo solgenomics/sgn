@@ -62,7 +62,8 @@ sub create_cross_wishlist : Path('/ajax/cross/create_cross_wishlist') : ActionCl
 
 sub create_cross_wishlist_POST : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
     my $female_trial_id = $c->req->param('female_trial_id');
@@ -186,10 +187,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
-    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $user_id);
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
 
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
@@ -200,6 +201,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $selected_plot_ids = decode_json $c->req->param('selected_plot_ids');
     my $test_ona_form_name = $c->config->{odk_crossing_data_test_form_name};
     my $separate_crosswishlist_by_location = $c->config->{odk_crossing_data_separate_wishlist_by_location};
+    print STDERR "ONA FORM NAME =".Dumper($ona_form_name)."\n";
+    print STDERR "ONA FORM ID =".Dumper($ona_form_id)."\n";
 
 #    print STDERR "CROSSES =".Dumper($data)."\n";
 #    print STDERR "SELECT PLOT IDS =".Dumper($selected_plot_ids)."\n";
@@ -298,10 +301,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 $cross_wishlist_file_name =~ s/.csv//;
                 my $wishlist_file_name_loc = $cross_wishlist_file_name;
                 $wishlist_file_name_loc =~ s/cross_wishlist_//;
-                print STDERR Dumper $wishlist_file_name_loc;
-
+#                print STDERR "WISHLIST FILE NAME LOC =".Dumper($wishlist_file_name_loc)."\n";
                 if ($separate_crosswishlist_by_location){
                     if ($female_location_name eq $wishlist_file_name_loc) {
+                        getstore($t->{media_url}, $cross_wishlist_temp_file_path);
+                        $cross_wihlist_ona_id = $t->{id};
+                    } elsif ($wishlist_file_name_loc eq 'BTracTSendusuMultiParental') {
                         getstore($t->{media_url}, $cross_wishlist_temp_file_path);
                         $cross_wihlist_ona_id = $t->{id};
                     }
@@ -320,6 +325,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
 
                 if ($separate_crosswishlist_by_location){
                     if ($female_location_name eq $germplasm_info_file_name_loc) {
+                        getstore($t->{media_url}, $germplasm_info_temp_file_path);
+                        $germplasm_info_ona_id = $t->{id};
+                    } elsif ($germplasm_info_file_name_loc eq 'BTracTSendusuMultiParental') {
                         getstore($t->{media_url}, $germplasm_info_temp_file_path);
                         $germplasm_info_ona_id = $t->{id};
                     }
@@ -718,7 +726,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($is_test_form){
         $archive_name = 'cross_wishlist_test.csv';
     } elsif ($separate_crosswishlist_by_location){
-        $archive_name = 'cross_wishlist_'.$female_location_name.'.csv';
+        if ($ona_form_name eq 'BTracTSendusuMultiParental') {
+            $archive_name = 'cross_wishlist_'.$ona_form_name.'.csv';
+        } else {
+            $archive_name = 'cross_wishlist_'.$female_location_name.'.csv';
+        }
     } else {
         $archive_name = 'cross_wishlist_'.$site_name.'.csv';
     }
@@ -727,7 +739,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($is_test_form) {
         $file_type = 'cross_wishlist_test_'.$ona_form_id;
     } elsif ($separate_crosswishlist_by_location) {
-        $file_type = 'cross_wishlist_'.$female_location_name.'_'.$ona_form_id;
+        if ($ona_form_name eq 'BTracTSendusuMultiParental') {
+            $file_type = 'cross_wishlist_'.$ona_form_name.'_'.$ona_form_id;
+        } else {
+            $file_type = 'cross_wishlist_'.$female_location_name.'_'.$ona_form_id;
+        }
     } else {
         $file_type = 'cross_wishlist_'.$ona_form_id;
     }
@@ -779,7 +795,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($is_test_form){
         $germplasm_info_archive_name = 'germplasm_info_test.csv';
     } elsif ($separate_crosswishlist_by_location){
-        $germplasm_info_archive_name = 'germplasm_info_'.$female_location_name.'.csv';
+        if ($ona_form_name eq 'BTracTSendusuMultiParental') {
+            $germplasm_info_archive_name = 'germplasm_info_'.$ona_form_name.'.csv';
+        } else {
+            $germplasm_info_archive_name = 'germplasm_info_'.$female_location_name.'.csv';
+        }
     } else {
         $germplasm_info_archive_name = 'germplasm_info_'.$site_name.'.csv';
     }
@@ -905,7 +925,8 @@ sub list_cross_wishlists : Path('/ajax/cross/list_cross_wishlists') : ActionClas
 
 sub list_cross_wishlists_GET : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $q = "SELECT file_table.id, file_table.file_name, mdf.dirname, mdf.filetype, mdf.comment, mdmd.create_date, mdmd.create_person_id, p.first_name, p.last_name
         FROM
         (SELECT mf.file_id AS id,mf.basename AS file_name FROM metadata.md_files AS mf WHERE file_id IN (SELECT MAX(file_id) AS file_id FROM metadata.md_files
@@ -936,10 +957,6 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
         $c->detach();
     }
-
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
     my $female_trial_id = $c->req->param('cross_wishlist_upload_female_trial_id');
     my $male_trial_id = $c->req->param('cross_wishlist_upload_male_trial_id');
@@ -990,6 +1007,10 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
+
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -1108,7 +1129,8 @@ sub check_wishlist_accessions : Path('/ajax/cross/check_wishlist_accessions') : 
 
 sub check_wishlist_accessions_POST : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $dbh = $c->dbc->dbh;
     my $female_trial_id = $c->req->param('female_trial_id');
     my $female_list_id = $c->req->param('female_list_id');

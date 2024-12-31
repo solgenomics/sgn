@@ -286,6 +286,109 @@ for my $extension ("xls", "xlsx") {
 	my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15, undef, undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
 
 
+	########################################
+	#Tests for phenotype spreadsheet parsing - this time updating and removing some observations
+
+	my $filename = "t/data/trial/upload_phenotypin_spreadsheet_update.$extension";
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd()."_".$time->hms();
+
+
+	#Test archive upload file
+	my $uploader = CXGN::UploadFile->new({
+		tempfile => $filename,
+		subdirectory => 'temp_fieldbook',
+		archive_path => '/tmp',
+		archive_filename => "upload_phenotypin_spreadsheet_update.$extension",
+		timestamp => $timestamp,
+		user_id => 41, #janedoe in fixture
+		user_role => 'curator'
+	});
+
+	## Store uploaded temporary file in archive
+	my $archived_filename_with_path = $uploader->archive();
+	my $md5 = $uploader->get_md5($archived_filename_with_path);
+	ok($archived_filename_with_path);
+	ok($md5);
+
+	#Now parse phenotyping spreadsheet file using correct parser
+	$parser = CXGN::Phenotypes::ParseUpload->new();
+	$validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+	ok($validate_file == 1, "Check if parse validate works for phenotype file");
+
+	my $parsed_file = $parser->parse('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+	ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
+
+	is_deeply($parsed_file, {'data' => {'test_trial28' => {'dry matter content|CO_334:0000092' => ['139','']},'test_trial210' => {'dry matter content|CO_334:0000092' => ['130','']},'test_trial27' => {'dry matter content|CO_334:0000092' => ['138','']},'test_trial211' => {'dry matter content|CO_334:0000092' => ['138','']},'test_trial21' => {'dry matter content|CO_334:0000092' => ['135','']},'test_trial26' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial214' => {'dry matter content|CO_334:0000092' => ['130','']},'test_trial213' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial29' => {'dry matter content|CO_334:0000092' => ['135','']},'test_trial23' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial24' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial212' => {'dry matter content|CO_334:0000092' => ['139','']},'test_trial22' => {'dry matter content|CO_334:0000092' => ['130','']},'test_trial25' => {'dry matter content|CO_334:0000092' => ['135','']},'test_trial215' => {'dry matter content|CO_334:0000092' => ['138','']}},'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],'variables' => ['dry matter content|CO_334:0000092']}, "Check parse phenotyping spreadsheet" );
+
+
+	my %phenotype_metadata;
+	$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+	$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+	$phenotype_metadata{'operator'}="janedoe";
+	$phenotype_metadata{'date'}="2016-02-16_01:10:56";
+	my %parsed_data = %{$parsed_file->{'data'}};
+	my @plots = @{$parsed_file->{'units'}};
+	my @traits = @{$parsed_file->{'variables'}};
+
+	my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+		basepath=>$f->config->{basepath},
+		dbhost=>$f->config->{dbhost},
+		dbname=>$f->config->{dbname},
+		dbuser=>$f->config->{dbuser},
+		dbpass=>$f->config->{dbpass},
+		temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+		bcs_schema=>$f->bcs_schema,
+		metadata_schema=>$f->metadata_schema,
+		phenome_schema=>$f->phenome_schema,
+		user_id=>41,
+		stock_list=>\@plots,
+		trait_list=>\@traits,
+		values_hash=>\%parsed_data,
+		has_timestamps=>0,
+		overwrite_values=>1,
+		remove_values=>1,
+		metadata_hash=>\%phenotype_metadata,
+		composable_validation_check_name=>$f->config->{composable_validation_check_name}
+	);
+	my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+	ok(!$verified_error);
+	my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+	ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
+
+	my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
+		trial_id => 137 });
+
+	my $traits_assayed  = $tn->get_traits_assayed(); # returns the counts assayed
+	my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
+	print STDERR Dumper @traits_assayed_sorted;
+	my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
+	is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload update' );
+
+	my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
+	my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+	#print STDERR Dumper @pheno_for_trait_sorted;
+	my @pheno_for_trait_check = ('15','15','15','15','15','15','15','15','15','15','15','15','15','15','15');
+	is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70666 from phenotyping spreadsheet upload update' );
+
+	@pheno_for_trait = $tn->get_phenotypes_for_trait(70668);
+	@pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+	#print STDERR Dumper @pheno_for_trait_sorted;
+	@pheno_for_trait_check = ('0.8','1.8','2.8','3.8','4.8','5.8','6.8','7.8','8.8','9.8','10.8','11.8','12.8','13.8','14.8');
+	is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70668 from phenotyping spreadsheet upload update' );
+
+	@pheno_for_trait = $tn->get_phenotypes_for_trait(70741);
+	@pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+	@pheno_for_trait_check = ('130','130','130','135','135','135','138','138','138','139','139');
+	is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from phenotyping spreadsheet upload update' );
+
+	@pheno_for_trait = $tn->get_phenotypes_for_trait(70773);
+	@pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+	#print STDERR Dumper @pheno_for_trait_sorted;
+	@pheno_for_trait_check = ('20','21','22','23','24','25','26','27','28','29','30','31','32','33','34');
+	is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload update' );
+
+
 	print STDERR "THIS TEST NEEDS TO BE HEAVILY REVISED. SKIPPING OUT EARLY.\n";
 
 	$tn->delete_phenotype_data();
@@ -5549,10 +5652,10 @@ ok($md5);
 
 #Now parse phenotyping spreadsheet file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
-$validate_file = $parser->validate('phenotype spreadsheet simple', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+$validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+my $parsed_file = $parser->parse('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 print STDERR Dumper $parsed_file;
@@ -5608,7 +5711,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
 my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
-ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet simple works");
+ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet simple generic works");
 
 my $bs = CXGN::BreederSearch->new( { dbh=>$f->bcs_schema->storage->dbh, dbname=>$f->config->{dbname} } );
 my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'phenotypes', 'concurrent', $f->config->{basepath});

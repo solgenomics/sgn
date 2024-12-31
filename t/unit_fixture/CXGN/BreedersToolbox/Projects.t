@@ -14,6 +14,8 @@ my $schema = $f->bcs_schema();
 
 my $p = CXGN::BreedersToolbox::Projects->new({schema=>$schema});
 
+$f->get_db_stats();
+
 my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_trial'})->project_id();
 ok($p->trial_exists($trial_id));
 
@@ -293,5 +295,7 @@ is_deeply($gt_protocols, [
 
 my $program_id = $schema->resultset('Project::Project')->find({name=>'test_new_bp'})->project_id();
 ok($p->delete_breeding_program($program_id));
+
+$f->clean_up_db();
 
 done_testing;

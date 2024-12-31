@@ -78,6 +78,7 @@ $stock_id
                                     <option value="bulk_self">bulk selfed</option>
                                     <option value="bulk_open">bulk and open pollinated</option>
                                     <option value="doubled_haploid">doubled haploid</option>
+				    <option value="dihaploid_induction">dihaploid induction</option>
                                     <option value="polycross">polycross</option>
                                     <option value="reciprocal">reciprocal</option>
                                     <option value="multicross">multicross</option>
@@ -212,27 +213,48 @@ $stock_id
 
 <& /util/import_javascript.mas, classes => [ 'd3.d3v4Min', 'd3.d3-pedigree-tree', 'brapi.BrAPI', 'brapi.PedigreeViewer' ] &>
 <script type="text/javascript">
-(function() {
-    'use strict';
-    var STOCK_ID = "<% $stock_id %>";
-    var base_url="/brapi/v2";
-    var auth_token;
-    var require_login = "<%  $c->get_conf('brapi_require_login') %>";
-    if (require_login === '1'){
-        auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-        if (!auth_token){
-            alert("Login required to display pedigree");
-        }
-    }
+        "use strict";
 
-    var pdg = PedigreeViewer(base_url,auth_token,'v2.0',function(dbId){
-        return "/stock/"+dbId+"/view";
-    });
-    pdg.newTree(STOCK_ID,function(){
-        pdg.drawViewer("#pdgv-wrap",600,600);
-        jQuery("#pdgv-loading-indicator").hide();
-    });
-}());
+        // This function initializes and draws a Pedigree Viewer for a specified stock ID. 
+        // The Pedigree Viewer is configured with a base URL, an authentication token (if login is required), 
+        // and a callback function to generate links for each node in the viewer.        
+        function drawPedigreeViewer() {
+        
+            var STOCK_ID = "<% $stock_id %>";
+            var base_url="/brapi/v2";
+            var auth_token;
+            var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+            if (require_login === '1'){
+                auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+                if (!auth_token){
+                    alert("Login required to display pedigree");
+                }
+            }
+
+            var pdg = PedigreeViewer(base_url,auth_token,'v2.0',function(dbId){
+                return "/stock/"+dbId+"/view";
+            });
+
+            pdg.newTree(STOCK_ID,function(){
+                pdg.drawViewer("#pdgv-wrap",600,600);
+                jQuery("#pdgv-loading-indicator").hide();
+            });
+        };
+
+        var onSwitchElement = document.getElementById('stock_pedigree_section_onswitch');
+        onSwitchElement.addEventListener('click', onSwitchHandler);
+
+        // display the viewer automatically - if the section is expanded by default
+        if ( onSwitchElement.style.display === 'none' ) {
+            onSwitchHandler();
+        }
+
+        // handler if viewer is collapsed - to trigger only once drawing after click
+        function onSwitchHandler() {
+            drawPedigreeViewer();
+            onSwitchElement.removeEventListener('click', onSwitchHandler);
+        }
+                
 // ;
 // (function(){
 //     var STOCK_ID = "<% $stock_id %>";

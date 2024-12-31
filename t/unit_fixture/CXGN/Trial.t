@@ -438,6 +438,7 @@ is_deeply(\@all_project_types, [
           'Specialty Trial',
           'Uniform Yield Trial',
           'Variety Release Trial',
+          'activity_record',
           'crossing_block_trial',
           'crossing_trial',
           'genetic_gain_trial',
@@ -445,11 +446,12 @@ is_deeply(\@all_project_types, [
           'genotyping_trial',
           'grafting_trial',
           'health_status_trial',
-	        'heterosis_trial',
-	      	'misc_trial',
-	        'phenotyping_trial',
+          'heterosis_trial',
+          'misc_trial',
+          'phenotyping_trial',
           'pollinating_trial',
-          'storage_trial'
+          'storage_trial',
+          'transformation_project'
       ], "check get_all_project_types");
 
 
@@ -912,6 +914,17 @@ $trial->remove_transplanting_date('2016/01/03 12:21:11');
 $transplanting_date = $trial->get_transplanting_date();
 ok(!$transplanting_date, "test remove transplanting_date");
 
+# test transplantnig date accessors visibility
+$trial->set_transplanting_date('2023/06/15 12:21:14');
+my $transplanting_date = $trial->get_transplanting_date();
+is($transplanting_date, '2023-June-15 12:21:14', "set transplanting_date test");
+$trial->set_transplanting_date('2023/06/16 12:21:14');
+$transplanting_date = $trial->get_transplanting_date();
+is($transplanting_date, '2023-June-16 12:21:14', "update/set transplanting_date test");
+$trial->remove_transplanting_date('2023/06/16 12:21:14');
+$transplanting_date = $trial->get_transplanting_date();
+ok(!$transplanting_date, "remove transplanting_date test");
+
 #test transplanting_date accessors
 $trial->set_transplanting_date('2017/02/03 12:21:12');
 my $transplanting_date = $trial->get_transplanting_date();
@@ -932,8 +945,8 @@ $trial->set_year(2013);
 is($trial->get_year(), 2013, "set year test");
 
 # test planting date accessors
-# 
-#$trial-> set_planting_date ('2016/01/02 12:21:12'); 
+#
+#$trial-> set_planting_date ('2016/01/02 12:21:12');
 #my $planting_date = $trial -> get_planting_date();
 #print STDERR Dumper $planting_date;
 #is($planting_date, '2016-January-02 12:21:12', "set planting_date test");

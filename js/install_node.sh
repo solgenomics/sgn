@@ -9,7 +9,7 @@ fi
 curl -sSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
 
 # Add the desired NodeSource repository
-VERSION=node_10.x
+VERSION=node_20.x
 # The below command will set this correctly, but if lsb_release isn't available, you can set it manually:
 # - For Debian distributions: jessie, sid, etc...
 # - For Ubuntu distributions: xenial, bionic, etc...

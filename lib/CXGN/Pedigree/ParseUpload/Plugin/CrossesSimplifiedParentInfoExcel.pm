@@ -8,6 +8,8 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
+# DEPRECATED: This plugin has been replaced by the CrossesGeneric plugin
+
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
@@ -36,9 +38,11 @@ sub _validate_with_plugin {
     $supported_cross_types{'self'} = 1; #only female parent required
     $supported_cross_types{'open'} = 1; #only female parent required
     $supported_cross_types{'sib'} = 1; #both parents required but can be the same.
-    $supported_cross_types{'bulk_self'} = 1; #only female parent required
-    $supported_cross_types{'bulk_open'} = 1; #only female parent required
+    $supported_cross_types{'bulk_self'} = 1; #only female population required
+    $supported_cross_types{'bulk_open'} = 1; #only female population required
+    $supported_cross_types{'bulk'} = 1; #both female population and male accession required
     $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
+    $supported_cross_types{'dihaploid_induction'} = 1; # ditto
     $supported_cross_types{'polycross'} = 1; #both parents required
     $supported_cross_types{'backcross'} = 1; #both parents required, parents can be cross or accession stock type
 
@@ -156,6 +160,10 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,4)) {
             $male_parent =  $worksheet->get_cell($row,4)->value();
+        }
+
+        if (!defined $cross_name && !defined $cross_type && !defined $female_parent) {
+            last;
         }
 
         #cross name must not be blank
@@ -295,6 +303,11 @@ sub _parse_with_plugin {
             $female_parent =  $worksheet->get_cell($row,3)->value();
             $female_parent =~ s/^\s+|\s+$//g;
         }
+
+        if (!defined $cross_name && !defined $cross_type && !defined $female_parent) {
+            last;
+        }
+
         if ($worksheet->get_cell($row,4)) {
             $male_parent =  $worksheet->get_cell($row,4)->value();
             $male_parent =~ s/^\s+|\s+$//g;
