@@ -243,7 +243,6 @@ sub auto : Private {
         if ($sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
             #For audit system
             $dbh->do("CREATE temporary table IF NOT EXISTS logged_in_user (sp_person_id bigint)");
->>>>>>> master
 
 	    my $already_there_q = "SELECT sp_person_id FROM logged_in_user where sp_person_id=?";
 	    my $already_there_h = $dbh->prepare($already_there_q);
