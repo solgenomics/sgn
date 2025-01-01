@@ -1,6 +1,6 @@
 
 use strict;
-use Test::More;
+use Test::More qw| no_plan |;
 use Data::Dumper;
 use CXGN::Access;
 
@@ -59,7 +59,6 @@ ok($result->{success} == 1, "access level delete ok");
 
 $result = $a->delete_resource($resource_id);
 ok($result->{success} == 1, "resource delete ok");
-
 
 done_testing();
 
