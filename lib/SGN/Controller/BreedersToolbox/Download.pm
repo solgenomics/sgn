@@ -900,7 +900,7 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     }
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id;)
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     my $dbh = $schema->storage->dbh;
 
