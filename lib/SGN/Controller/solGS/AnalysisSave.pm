@@ -150,6 +150,14 @@ sub check_stored_analysis {
 
 }
 
+sub check_logged_analysis_name {
+	my ($self, $c) = @_;
+
+	my $log = $self->get_analysis_job_info($c);
+
+	return $log->{analysis_name};
+
+}
 
 sub extended_trait_name {
 	my ($self, $c, $trait_id) = @_;

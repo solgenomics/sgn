@@ -155,7 +155,7 @@ sub prepare_pca_output_response {
             }
 
         
-            my $analysis_id = $c->controller('solGS::AnalysisSave')->check_stored_analysis($c);
+            my $analysis_name = $c->controller('solGS::AnalysisSave')->check_logged_analysis_name($c);
 
             if ($scores) {
                 $res = {
@@ -174,7 +174,7 @@ sub prepare_pca_output_response {
                     "trials_names"    => $trials_names,
                     "output_link"     => $output_link,
                     "data_type"       => $c->stash->{data_type},
-                    "analysis_id"     => $analysis_id    
+                    "analysis_name"   => $analysis_name   
                 };
         
             }

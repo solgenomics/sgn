@@ -474,7 +474,7 @@ solGS.pca = {
     pcaArgs = JSON.stringify(pcaArgs);
   
     var savePcs;
-    if(res.analysis_id) {
+    if(res.analysis_name) {
      savePcs= `<button id="save_pcs_btn_${res.file_id}" class="btn btn-success" data-selected-pop='${pcaArgs}'>Save PCs</button>`;
     }
 
