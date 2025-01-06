@@ -8,20 +8,29 @@ $first_name
 $last_name
 $sp_person_id
 
+$phenotype_files => undef
+$breeding_programs => undef
+$locations => undef
+$preferred_species => undef
+$editable_stock_props => {}
+
 </%args>
 
 <center>
 
 <h3>Welcome back <% $first_name %>!</h3>
 
+<&|  /page/info_section.mas, title => "Continue where you left off", collapsible => 1, collapsed => 1 &>
 
 Interval:&nbsp;
+
 <select id="interval">
     <option>day</option>
     <option>week</option>
     <option>month</option>
     <option>year</option>
 </select>
+
 <h4>Continue where you left off:</h4>
 
 <h3>Recently created trials:</h3>
@@ -59,24 +68,37 @@ Interval:&nbsp;
 <br />
 <br />
 
-</center>
 
+</&>
 
 <script>
     var interval = jQuery('#interval').val()	
 
-    jQuery('#recently_created_trial_table').DataTable({
-        'ajax':'/ajax/breeders/recent_trials/'+interval,
-        'order': [[ 3, 'desc']]
-    });
+    update_tables(interval);
 
-    jQuery('#recently_modified_trial_table').DataTable({
-        'ajax':'/ajax/breeders/recently_modified_trials/'+interval,
-    });
+    jQuery('#interval').change( function() {
+        interval = jQuery('#interval').val();
+	update_tables(interval);
+	});
 
-    jQuery('#recently_added_accessions_table').DataTable({
-        'ajax':'/ajax/breeders/recently_added_accessions/'+interval,
-    });
+    function update_tables(interval) { 
+        jQuery('#recently_created_trial_table').DataTable({
+	    'destroy': true,
+            'ajax':'/ajax/breeders/recent_trials/'+interval,
+            'order': [[ 3, 'desc']]
+        });
 
+        jQuery('#recently_modified_trial_table').DataTable({
+	    'destroy' : true,
+            'ajax':'/ajax/breeders/recently_modified_trials/'+interval,
+        });
+
+        jQuery('#recently_added_accessions_table').DataTable({
+	    'destroy' : true,
+            'ajax':'/ajax/breeders/recently_added_accessions/'+interval,
+        });
+    }
    
 </script>
+
+<& /index.mas, schema => $schema &>

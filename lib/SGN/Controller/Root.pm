@@ -92,7 +92,7 @@ sub index :Path :Args(0) {
     $c->stash->{schema}   = $c->dbic_schema('SGN::Schema');
     $c->stash->{static_content_path} = $c->config->{static_content_path};
 
-    if ($c->user()) {
+    if ($c->user() && $c->config->{personalized_homepage} == 1) {
 	my $user = $c->user()->get_object();
 	$c->stash->{username} = $user->get_username();
 	$c->stash->{first_name} = $user->get_first_name();
