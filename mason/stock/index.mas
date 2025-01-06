@@ -248,7 +248,9 @@ function jqueryStuff() {
 
 
                 </div>
-
+                <%perl>
+                if ($type_name eq 'accession') { 
+                </%perl>
                 <div class="col-sm-6">
                     <div style="position: relative;">
                         <button class="btn btn-default btn-small" id="toggle_qr_code" style="position: absolute; right: 10px; top: 10px; z-index: 10;">Show QR Code</button>
@@ -260,7 +262,7 @@ function jqueryStuff() {
                     <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode" &>
                     </div>
                 </div>
-                
+
                 <div class="col-sm-6">
                     <br /><br />
                     <div style="display: flex; justify-content: center; align-items; height: 100%; margin-top: 20px;">
@@ -275,6 +277,17 @@ function jqueryStuff() {
                     </div>
                     <br /><br />
                 </div>
+            <%perl>
+            } else {
+            </%perl>
+                <div class="col-sm-6">
+                    <br /><br />
+                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &>
+                    <br /><br />
+                </div>
+                <%perl>
+                }
+                </%perl>
             </div>
 
 	    <div class="row">
