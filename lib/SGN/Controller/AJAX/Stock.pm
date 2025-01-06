@@ -2376,10 +2376,6 @@ sub stock_obsolete_GET {
             });
             my $saved_stock_id = $stock->store();
 
-            my $dbh = $c->dbc->dbh();
-            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
             $c->stash->{rest} = { message => "Stock obsoleted" };
         } catch {
             $c->stash->{rest} = { error => "Failed: $_" }
@@ -2388,7 +2384,6 @@ sub stock_obsolete_GET {
 	    $c->stash->{rest} = { error => "Not a valid stock $stock_id " };
 	}
 
-    #$c->stash->{rest} = { message => 'success' };
 }
 
 
