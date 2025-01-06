@@ -293,6 +293,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 		trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
 		editable_stock_props   => $editable_stockprops,
 		editable_vector_props   => $editable_vectorprops,
+        is_obsolete   => $obsolete,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
@@ -1031,11 +1032,11 @@ sub _stock_owner_ids {
 sub _stock_editor_info {
     my ($self,$stock) = @_;
     my @owner_info;
-    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
+    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note, md_metadata.obsolete_note  FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
     my $h = $stock->get_schema->storage->dbh()->prepare($q);
     $h->execute($stock->get_stock_id);
-    while (my ($sp_person_id, $timestamp, $modification_note) = $h->fetchrow_array){
-        push @owner_info, [$sp_person_id, $timestamp, $modification_note];
+    while (my ($sp_person_id, $timestamp, $modification_note, $obsolete_note) = $h->fetchrow_array){
+        push @owner_info, [$sp_person_id, $timestamp, $modification_note, $obsolete_note];
     }
     return \@owner_info;
 }
