@@ -25,49 +25,6 @@ $transformation_id
     </div>
 </&>
 
-<div class="modal fade" id="obsolete_transformant_dialog" name="obsolete_transformant_dialog" tabindex="-1" role="dialog" aria-labelledby="obsoleteTransformantDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="obsoleteTransformantDialog">Obsolete Transformant</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <div id="obsolete_transformant_div">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="obsolete_stock_button" name="obsolete_stock_button" type="button" class="btn btn-primary" >Obsolete</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="obsolete_transformant_message_dialog" name="obsolete_transformant_message_dialog" tabindex="-1" role="dialog" aria-labelledby="obsoleteTransformantMessageDialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="obsoleteTransformantMessageDialog">Success</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Successfully obsoleted!.
-                    </p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="dismiss_obsolete_transformant_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <& /transformation/obsolete_stock_dialog.mas &>
 
 
@@ -103,71 +60,7 @@ jQuery(document).ready(function(){
         }
     });
 
-    jQuery('#obsolete_transformant_button').click( function() {
-
-        const comments = jQuery('#obsolete_transformant_comments').val();
-        if (!comments) {
-            alert ("Please provide reason for obsoleting this transformant");
-            return;
-        }
-
-        const transformant_id = jQuery('#obsolete_transformant_id').val();
-        if (!transformant_id) {
-            alert ("Error retrieving transformant stock id");
-            return;
-        }
-
-        const transformant_name = jQuery('#obsolete_transformant_name').val();
-        if (!transformant_name) {
-            alert ("Error retrieving transformant name");
-            return;
-        }
-
-        const confirmation = confirm('Are you sure you want to obsolete this transformant?' + "  " + transformant_name);
-
-        if (confirmation) {
-            jQuery.ajax({
-                url: '/stock/obsolete',
-                data : {
-                    'stock_id' : transformant_id,
-                    'is_obsolete': 1,
-                    'comments':comments,
-                },
-                beforeSend: function(response){
-                    jQuery('#working_modal').modal('show');
-                },
-                success: function(response){
-                    console.log(response);
-                    jQuery('#working_modal').modal('hide');
-                    jQuery('#obsolete_transformant_dialog').modal('hide');
-                    jQuery('#obsolete_transformant_message_dialog').modal('show');
-                },
-                error: function(response){
-                    jQuery('#working_modal').modal('hide');
-                    alert("Error obsoleting transformant.");
-                }
-            });
-        }
-    });
-
-    jQuery("#dismiss_obsolete_transformant_message_dialog").click(function(){
-        location.reload();
-    });
-
 });
-
-function obsoleteTransformantDialog(transformant_id, transformant_name){
-
-    let html = '';
-    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">Transformant Name: </label><div class="col-sm-8" ><input class="form-control" id="obsolete_transformant_name" name="obsolete_transformant_name" value="'+transformant_name+'" disabled></div></div>';
-    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Comments: </label><div class="col-sm-8" ><input class="form-control" id="obsolete_transformant_comments" name="obsolete_transformant_comments" placeholder=""></div></div></form>';
-    html = html + '<div class="form-group"><input id="obsolete_transformant_id" type="hidden" value="'+transformant_id+'"/>';
-
-    jQuery('#obsolete_transformant_div').html(html);
-    jQuery('#obsolete_transformant_dialog').modal('show');
-
-}
-
 
 
 </script>
