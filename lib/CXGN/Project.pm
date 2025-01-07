@@ -5519,13 +5519,20 @@ sub transformation_id_count {
 sub get_recently_added_trials {
     my $bcs_schema = shift;
     my $interval = shift;
+    my $limit = shift || 10;
+    
+    if (! grep($interval, qw| day week month year | )) {
+	print STDERR "Interval $interval not recognized, aborting query\n";
+	return;
+    }
 
+    
     print STDERR "INTERVAL is $interval\n";
-    my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc";
+    my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
     
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
-    $h->execute();
+    $h->execute($limit);
     
     my @recent_trials = ();
     while (my ($trial_id) = $h->fetchrow_array()) {
@@ -5547,13 +5554,20 @@ sub get_recently_added_trials {
 sub get_recently_modified_trials {
     my $bcs_schema = shift;
     my $interval = shift;
+    my $limit = shift || 10;
 
+    if (! grep($interval, qw| day week month year | )) {
+	print STDERR "Interval $interval not recognized, aborting query\n";
+	return;
+    }
+    
+    
     print STDERR "INTERVAL is $interval\n";
-    my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc";
+    my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc limit ? ";
     
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
-    $h->execute();
+    $h->execute($limit);
     
     my @recent_trials;
     while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
@@ -5565,7 +5579,7 @@ sub get_recently_modified_trials {
 	
 	my $breeding_program = $t->get_breeding_program();
 	my $breeding_program_id = $t->get_breeding_program_id();
-	my $create_date = $t->get_create_date();
+
 	my $breeding_program_link = "<a href=\"/breeders/program/".$breeding_program_id."\">$breeding_program</a>";
        push @recent_trials, [ $trial_link, $trial_type, $breeding_program_link, $create_date ];
     }
@@ -5575,12 +5589,18 @@ sub get_recently_modified_trials {
 sub get_recently_added_accessions {
     my $bcs_schema = shift;
     my $interval = shift;
+    my $limit = shift || 10;
 
-    my $q = "select stock.stock_id from stock where create_date + interval '1 $interval' > current_date order by create_date desc";
+    if (! grep($interval, qw| day week month year | )) {
+	print STDERR "Interval $interval not recognized, aborting query\n";
+	return;
+    }
+    
+    my $q = "select stock.stock_id from stock where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
-    $h->execute();
+    $h->execute($limit);
 
     my @stock_table;
     while (my ($stock_id) = $h->fetchrow_array()) {
