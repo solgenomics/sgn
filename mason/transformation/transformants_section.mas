@@ -2,6 +2,7 @@
 $transformation_id
 </%args>
 
+
 <&| /page/info_section.mas, title => 'Transformants (Accessions) Derived from this Transformation ', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
@@ -39,7 +40,7 @@ $transformation_id
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="obsolete_transformant_button" type="button" class="btn btn-primary" >Obsolete</button>
+                <button id="obsolete_stock_button" name="obsolete_stock_button" type="button" class="btn btn-primary" >Obsolete</button>
             </div>
         </div>
     </div>
@@ -67,6 +68,9 @@ $transformation_id
     </div>
 </div>
 
+<& /transformation/obsolete_stock_dialog.mas &>
+
+
 <script>
 
 jQuery(document).ready(function(){
@@ -77,7 +81,7 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteTransformantDialog("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
+            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
         ],
 
         "fnInitComplete": function(oSettings, json) {

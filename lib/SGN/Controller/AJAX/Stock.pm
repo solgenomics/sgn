@@ -2357,9 +2357,8 @@ sub stock_obsolete_GET {
 
     my $stock_id = $c->req->param('stock_id');
     my $is_obsolete  = $c->req->param('is_obsolete');
-    my $comments  = $c->req->param('comments');
-
-	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+    my $obsolete_note  = $c->req->param('obsolete_note');
+    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
     if ($stock) {
 
@@ -2372,7 +2371,7 @@ sub stock_obsolete_GET {
                 user_name => $c->user()->get_object()->get_username(),
                 modification_note => "Obsolete at ".localtime,
                 is_obsolete => $is_obsolete,
-                obsolete_note => $comments,
+                obsolete_note => $obsolete_note,
             });
             my $saved_stock_id = $stock->store();
 
