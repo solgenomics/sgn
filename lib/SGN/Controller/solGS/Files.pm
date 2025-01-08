@@ -777,7 +777,7 @@ sub copy_to_tempfiles_subdir {
     my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, $dir_name);
     my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
 
-    mkpath ([$base_tmp_dir], 0, 0755);
+    mkpath ([$base_tmp_dir], 0, 755);
 
     $self->copy_file($file, $base_tmp_dir);
     $file = catfile($tmp_dir, basename($file));
@@ -1029,7 +1029,7 @@ sub get_solgs_dirs {
 	 $h2_temp, $h2_cache,  $qc_cache, $qc_temp, $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
 	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp, $kinship_cache, $kinship_temp
 	],
-	0, 0755
+	0, 755
 	);
 
     $c->stash(solgs_dir                 => $solgs_dir,

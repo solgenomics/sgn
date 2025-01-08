@@ -123,7 +123,7 @@ sub get_selection_genotypes_list_from_file {
     my ( $self, $file ) = @_;
     my @clones;
 
-    open my $fh, $file or die "Can't open file $file: $!";
+    open (my $fh, "<", $file ) || die "Can't open file $file: $!";
 
     while (<$fh>) {
         $_ =~ s/\n//;

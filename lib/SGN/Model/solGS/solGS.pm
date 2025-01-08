@@ -850,8 +850,9 @@ sub structure_genotype_data {
 sub genotypes_list_genotype_data {
     my ( $self, $genotypes_ids, $protocol_id ) = @_;
 
+    my $protocol_detail;
     if ( !$protocol_id ) {
-        my $protocol_detail = $self->protocol_detail() if !$protocol_id;
+        $protocol_detail = $self->protocol_detail() if !$protocol_id;
         $protocol_id = $protocol_detail->{protocol_id};
     }
 
