@@ -248,11 +248,46 @@ function jqueryStuff() {
 
 
                 </div>
+                <%perl>
+                if ($type_name eq 'accession') { 
+                </%perl>
+                <div class="col-sm-6">
+                    <div style="position: relative;">
+                        <button class="btn btn-default btn-small" id="toggle_qr_code" style="position: absolute; right: 10px; top: 10px; z-index: 10;">Show QR Code</button>
+                    </div>
+                </div>
+
+                <div id ="qr_code_display" style="display: none; text-align: center; margin-top: 40px;">
+                    <div style="text-align: center;">
+                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode" &>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <br /><br />
+                    <div style="display: flex; justify-content: center; align-items; height: 100%; margin-top: 20px;">
+                        <%perl>
+                        use SGN::Image;
+                        my $image_id = $stockref->{image_ids}->[0]->[0];
+                        my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+                        my $image_url = $image->get_image_url('small');
+                        </%perl>
+
+                        <img src="<% $image_url %>" alt="No accession image to display" class="img-responsive" style="max-width: 100%; height: auto;" />
+                    </div>
+                    <br /><br />
+                </div>
+            <%perl>
+            } else {
+            </%perl>
                 <div class="col-sm-6">
                     <br /><br />
                     <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &>
                     <br /><br />
                 </div>
+                <%perl>
+                }
+                </%perl>
             </div>
 
 	    <div class="row">
@@ -447,6 +482,18 @@ function jqueryStuff() {
             },
             error: function() {
                 jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
+            }
+        });
+
+        jQuery('#toggle_qr_code').click(function() {
+            var qrCodeDisplay = jQuery('#qr_code_display');
+            var buttonText = jQuery(this).text();
+
+            qrCodeDisplay.toggle();
+            if (qrCodeDisplay.is(':visible')) {
+                jQuery(this).text('Hide QR Code');
+            } else {
+                jQuery(this).text('Show QR Code');
             }
         });
 
