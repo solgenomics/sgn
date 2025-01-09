@@ -511,7 +511,7 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
                     } else {
                         push @summary, $input;
                     }
-                } elsif ($type =~ m/date/) {
+                } else {
                     foreach my $key (keys %details_hash) {
                         $input = $details_hash{$key}{'input'};
                     }
@@ -591,7 +591,7 @@ sub get_project_active_identifiers :Path('/ajax/tracking_activity/project_active
                             $input += $details_hash{$key}{'input'};
                         }
                         push @row, $input;
-                    } elsif ($type =~ m/date/) {
+                     } else {
                         foreach my $key (keys %details_hash) {
                             $input = $details_hash{$key}{'input'};
                         }
