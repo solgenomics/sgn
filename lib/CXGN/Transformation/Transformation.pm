@@ -155,9 +155,11 @@ sub get_obsoleted_transformants {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformant_of", "stock_relationship")->cvterm_id();
 
-    my $q = "SELECT stock.stock_id, stock.uniquename
+    my $q = "SELECT stock.stock_id, stock.uniquename, metadata.md_metadata.obsolete_note, metadata.md_metadata.modification_note, phenome.stock_owner.sp_person_id
         FROM stock_relationship
         JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
+        JOIN phenome.stock_owner ON (stock.stock_id = phenome.stock_owner.stock_id)
+        JOIN metadata.md_metadata ON (phenome.stock_owner.metadata_id = metadata.md_metadata.metadata_id)
         where stock_relationship.object_id = ? AND stock.is_obsolete != 'F' ";
 
     my $h = $schema->storage->dbh()->prepare($q);
@@ -165,8 +167,8 @@ sub get_obsoleted_transformants {
     $h->execute($transformant_of_type_id, $transformation_stock_id);
 
     my @obsoleted_transformants = ();
-    while (my ($stock_id,  $stock_name) = $h->fetchrow_array()){
-        push @obsoleted_transformants, [$stock_id,  $stock_name]
+    while (my ($stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
+        push @obsoleted_transformants, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id]
     }
 
     return \@obsoleted_transformants;

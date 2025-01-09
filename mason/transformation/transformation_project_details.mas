@@ -137,7 +137,7 @@ $default_plant_material_name
 </br>
 % if ($tracking_project_id) {
     <td>
-        <a href='/breeders/trial/<%$tracking_project_id%>'><p>Go to Tracking Page</p></a>
+        <a href='/breeders/trial/<%$tracking_project_id%>'><p>Go to Transformation Progress</p></a>
     </td>
 % }
 

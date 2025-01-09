@@ -498,6 +498,21 @@ has 'subjects' => (
     is => 'rw',
 );
 
+=head2 accessor obsolete_note()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'obsolete_note' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
 
 sub BUILD {
     my $self = shift;
@@ -690,7 +705,7 @@ sub store {
             $self->_update_population_relationship();
         }
     }
-    $self->associate_owner($self->sp_person_id, $self->sp_person_id, $self->user_name, $self->modification_note);
+    $self->associate_owner($self->sp_person_id, $self->sp_person_id, $self->user_name, $self->modification_note, $self->obsolete_note);
 
     return $self->stock_id();
 }
@@ -991,11 +1006,12 @@ sub associate_owner {
     my $sp_person_id = shift;
     my $user_name = shift;
     my $modification_note = shift;
+    my $obsolete_note = shift;
     if (!$owner_id || !$sp_person_id) {
         warn "Need both owner_id and person_id for linking the stock with an owner!";
         return;
     }
-    my $metadata_id = $self->_new_metadata_id($sp_person_id, $user_name, $modification_note);
+    my $metadata_id = $self->_new_metadata_id($sp_person_id, $user_name, $modification_note, $obsolete_note);
     #check if the owner is already linked
     my $ids =  $self->schema()->storage()->dbh()->selectcol_arrayref
         ( "SELECT stock_owner_id FROM phenome.stock_owner WHERE stock_id = ? AND sp_person_id = ?",
@@ -1064,8 +1080,8 @@ sub associate_uploaded_file {
 =head2 obsolete_uploaded_file()
 
  Usage: $self->obsolete_uploaded_file($file_id, $user_id, $role )
- Desc:  Obsolete files with metadata 
- Side Effects:  
+ Desc:  Obsolete files with metadata
+ Side Effects:
  Example:
 
 =cut
@@ -1079,9 +1095,9 @@ sub obsolete_uploaded_file {
 
     my @errors;
     # check ownership of that file
-    my $q = "SELECT metadata.md_metadata.create_person_id, metadata.md_metadata.metadata_id, metadata.md_files.file_id 
-    FROM metadata.md_metadata 
-    join metadata.md_files using(metadata_id) 
+    my $q = "SELECT metadata.md_metadata.create_person_id, metadata.md_metadata.metadata_id, metadata.md_files.file_id
+    FROM metadata.md_metadata
+    join metadata.md_files using(metadata_id)
     where md_metadata.obsolete=0 and md_files.file_id=? and md_metadata.create_person_id=?";
 
     my $dbh = $self->bcs_schema->storage()->dbh();
@@ -1175,10 +1191,10 @@ sub get_trials {
     }
 
     my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'project location', 'project_property')->cvterm_id();
-    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on 
-	(accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) 
-	JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id) 
-	JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id) 
+    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on
+	(accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id)
+	JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id)
+	JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id)
 	where projectprop.type_id=$geolocation_type_id AND accession.stock_id=?;";
 
     my $h = $dbh->prepare($q);
@@ -1574,7 +1590,7 @@ sub _remove_stockprop_all_of_type {
     my $value = shift;
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
     my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$type_id, stock_id => $self->stock_id() } );
-    
+
     if ($rs->count() > 0) {
         while (my $row = $rs->next()) {
             $row->delete();
@@ -1619,8 +1635,8 @@ sub _store_population_relationship {
 
     my @populations = split /\|/, $self->population_name();
 
-    foreach my $population_name (@populations) { 
-    
+    foreach my $population_name (@populations) {
+
 	print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
 	my $population_row = $schema->resultset("Stock::Stock")->find_or_create({
 	    uniquename => $population_name,
@@ -1732,6 +1748,7 @@ sub _new_metadata_id {
     my $sp_person_id = shift;
     my $user_name = shift;
     my $modification_note = shift;
+    my $obsolete_note = shift;
     my $metadata_schema = CXGN::Metadata::Schema->connect(
         sub { $self->schema()->storage()->dbh() },
         );
@@ -1742,6 +1759,7 @@ sub _new_metadata_id {
     if ($modification_note){
         my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $user_name, $metadata_id);
         $metadata->set_modification_note($modification_note);
+        $metadata->set_obsolete_note($obsolete_note);
         $metadata_id = $metadata->store()->get_metadata_id();
     }
     $metadata_schema->storage->dbh->do('SET search_path TO public,sgn');
