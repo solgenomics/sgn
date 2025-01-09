@@ -97,7 +97,7 @@
 
 </&>
 
-<&| /page/info_section.mas, title=>"Bar Plot", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Graphics", collapsible=>1, collapsed=>1 &>
 
     <label for="traitSelection">Select Trait:</label>
     <select id="traitSelection" class="form-control">
@@ -117,20 +117,15 @@
       <label><input type="radio" name="filter" value="bottom-25"> Show bottom 25%</label>
       <label><input type="radio" name="filter" value="bottom-50"> Show bottom 50%</label>
       <label><input type="radio" name="filter" value="bottom-75"> Show bottom 75%</label>
-
     </div>
 
     <br>
 
     <div id="barplotContainer" style="width: 100%; height: 500px;"></div>
-
-
-    </div>
+    <br>
+    <div id="boxplotContainer" style="width: 100%; height: 500px;"></div>
 
 </&>
-
-
-
 
 <script>
 let currentPage = 1;   
@@ -174,6 +169,7 @@ document.getElementById('downloadCsvButton').addEventListener('click', function 
   link.click(); // Trigger the download
   document.body.removeChild(link); // Clean up the DOM
 });
+
 
 
 
@@ -323,8 +319,139 @@ $('#traitSelection, input[name="filter"]').on('change', function () {
   const selectedTrait = $('#traitSelection').val();
   if (selectedTrait) {
     drawD3Barplot(stats, selectedTrait); // Use global statsByTrait
+    drawGroupedBoxplot(selectedProjects, selectedTrait);
   }
 });
+
+function drawGroupedBoxplot(data, selectedTrait) {
+    const container = document.getElementById('boxplotContainer');
+    if (!container || !container.clientWidth) {
+        console.error('Error: boxplotContainer is missing or not rendered.');
+        return;
+    }
+
+    const margin = { top: 20, right: 30, bottom: 150, left: 60 };
+    const width = container.clientWidth - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = d3
+        .select('#boxplotContainer')
+        .html('') // Clear the previous plot
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Filter the data to include only valid numerical values and the selected trait
+    const filteredData = data.filter(
+        (d) =>
+            d.value !== null &&
+            d.value !== undefined &&
+            !isNaN(parseFloat(d.value)) &&
+            d.trait === selectedTrait // Only include the selected trait
+    );
+
+    // Group data by trial
+    const groupedData = d3.group(filteredData, (d) => d.trial);
+
+    // Compute boxplot statistics, but only for trials that have valid data
+    const boxplotData = Array.from(groupedData, ([trial, trialData]) => {
+        const values = trialData.map((d) => parseFloat(d.value)).sort(d3.ascending);
+        if (values.length === 0) return null; // Exclude trials with no valid values
+        return {
+            trial,
+            q1: d3.quantile(values, 0.25),
+            median: d3.quantile(values, 0.5),
+            q3: d3.quantile(values, 0.75),
+            min: d3.min(values),
+            max: d3.max(values),
+            values, // Store all valid values for plotting dots
+        };
+    }).filter((d) => d !== null); // Remove null entries from boxplot data
+
+    // Define scales
+    const xScale = d3
+        .scaleBand()
+        .domain(boxplotData.map((d) => d.trial))
+        .range([0, width])
+        .padding(0.6); // Increased padding for more space between boxplots
+
+    const yScale = d3
+        .scaleLinear()
+        .domain([0, d3.max(boxplotData, (d) => d.max)])
+        .nice()
+        .range([height, 0]);
+
+    // Axes
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(xScale))
+        .selectAll('text')
+        .attr('transform', 'rotate(45)')
+        .style('text-anchor', 'start');
+
+    svg.append('g').call(d3.axisLeft(yScale));
+
+    // Define color for the selected trait
+    const color = traitColorMap[selectedTrait] || '#69b3a2'; // Use a predefined color map or default
+
+    // Draw boxes
+    svg.selectAll('.box')
+        .data(boxplotData)
+        .enter()
+        .append('rect')
+        .attr('class', 'box')
+        .attr('x', (d) => xScale(d.trial))
+        .attr('y', (d) => yScale(d.q3))
+        .attr('width', xScale.bandwidth())
+        .attr('height', (d) => yScale(d.q1) - yScale(d.q3))
+        .attr('fill', color)
+        .attr('stroke', 'black');
+
+    // Draw median lines
+    svg.selectAll('.median-line')
+        .data(boxplotData)
+        .enter()
+        .append('line')
+        .attr('x1', (d) => xScale(d.trial))
+        .attr('x2', (d) => xScale(d.trial) + xScale.bandwidth())
+        .attr('y1', (d) => yScale(d.median))
+        .attr('y2', (d) => yScale(d.median))
+        .attr('stroke', 'black')
+        .attr('stroke-width', 2);
+
+    // Draw dots for all data points
+    boxplotData.forEach((d) => {
+        svg.selectAll(`.dot-${d.trial}`)
+            .data(d.values)
+            .enter()
+            .append('circle')
+            .attr('class', `dot-${d.trial}`)
+            .attr('cx', () =>
+                xScale(d.trial) +
+                xScale.bandwidth() / 2 +
+                (Math.random() - 0.5) * (xScale.bandwidth() * 0.5) // Random horizontal spread
+            )
+            .attr('cy', (value) => yScale(value))
+            .attr('r', 4) // Radius of the dots
+            .attr('fill', 'black')
+            .attr('opacity', 0.6);
+    });
+
+    // Draw whiskers (min and max)
+    svg.selectAll('.whisker')
+        .data(boxplotData)
+        .enter()
+        .append('line')
+        .attr('class', 'whisker')
+        .attr('x1', (d) => xScale(d.trial) + xScale.bandwidth() / 2)
+        .attr('x2', (d) => xScale(d.trial) + xScale.bandwidth() / 2)
+        .attr('y1', (d) => yScale(d.min))
+        .attr('y2', (d) => yScale(d.max))
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1);
+}
 
 
 let traitColorMap = {}; 
@@ -440,6 +567,7 @@ function calculateStatisticsPerTrait(data) {
 
 let stats = {};
 
+
 // Example usage with an AJAX call
 $(document).ready(function () {
   $('#calculate_statistics').on('click', function () {
@@ -451,6 +579,10 @@ $(document).ready(function () {
       data: { projectTrait: JSON.stringify(allProjects) },
       dataType: 'json',
       success: function (response) {
+        
+        //sending data to boxplot
+        selectedProjects = response;
+
         // Call the function to calculate statistics
         stats = calculateStatisticsPerTrait(response);
 
@@ -510,32 +642,57 @@ function populateStatisticsTable(stats) {
 /// Array to store selected location names
 let selectedLocations = [];
 let allProjects = [];
+let selectedProjects = [];
 
 $(document).on('change', '.projectCheckbox', function () {
-
     const projectName = $(this).data('name');
-    const validatedTrait = $(this).data('trait'); 
+    const validatedTrait = $(this).data('trait');
 
     if ($(this).is(':checked')) {
+        // Check if the combination of name and trait already exists in allProjects
+        const exists = allProjects.some(
+            (project) =>
+                project.name === projectName &&
+                project.validated_trait === validatedTrait
+        );
 
-        if (!selectedLocations.includes(projectName)) {
-            selectedLocations.push(projectName);
-
+        if (!exists) {
             allProjects.push({
                 name: projectName,
                 validated_trait: validatedTrait,
             });
+        }
 
+        // Ensure the name exists in selectedLocations
+        if (!selectedLocations.includes(projectName)) {
+            selectedLocations.push(projectName);
         }
     } else {
-        selectedLocations = selectedLocations.filter(name => name !== projectName);
-        allProjects = allProjects.filter(project => project.name !== projectName);
-    }
+        // Remove only the specific combination of name and trait
+        allProjects = allProjects.filter(
+            (project) =>
+                !(project.name === projectName && project.validated_trait === validatedTrait)
+        );
 
+        // Check if the projectName still has any associated traits in allProjects
+        const hasOtherTraits = allProjects.some(
+            (project) => project.name === projectName
+        );
+
+        // Remove the projectName from selectedLocations if no traits are left
+        if (!hasOtherTraits) {
+            selectedLocations = selectedLocations.filter(
+                (name) => name !== projectName
+            );
+        }
+    }
+    console.log("here sel loc:", selectedLocations);
+    // Call fetchLatLonForProjects only with unique selectedLocations
     if (selectedLocations.length > 0) {
-        fetchLatLonForProjects(selectedLocations);
+        fetchLatLonForProjects([...new Set(selectedLocations)]);
     }
 });
+
 
 
 
@@ -617,6 +774,13 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Ensure the map size is adjusted properly
 setTimeout(function () {
     map.invalidateSize();
+
+    const container = document.getElementById('boxplotContainer');
+    if (!container || !container.clientWidth) {
+      console.error('Error: boxplotContainer is missing or not rendered.');
+      return;
+    }
+
 }, 100); // Delay for 100ms to ensure the container is fully rendered
 
 
