@@ -81,6 +81,7 @@ my $trait_ontology_db_name = $stockref->{trait_ontology_db_name};
 my $editable_stock_props_string = $stockref->{editable_stock_props};
 my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
+my $is_obsolete = $stockref->{is_obsolete};
 
 my @editable_stock_props = split "," , $editable_stock_props_string;
 
@@ -130,13 +131,26 @@ foreach my $o_id (@owner_ids){
   my $last_name = $person->get_last_name;
   $owners_html .= qq|<a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a> |;
 }
-my $editor_link_table = "<table class='table table-bordered'><thead><tr><th>Editor</th><th>Timestamp</th><th>Modification Note</th></tr></thead><tbody>";
-foreach my $o_id (@$owners) {
-  my $person = CXGN::People::Person->new($dbh, $o_id->[0]);
-  my $first_name = $person->get_first_name;
-  my $last_name = $person->get_last_name;
-  $editor_link_table .= qq|<tr><td><a href="/solpeople/personal-info.pl?sp_person_id=$o_id->[0]">$first_name $last_name</a></td><td>$o_id->[1]</td><td>$o_id->[2]</td></tr>|;
+
+my $editor_link_table;
+if ($is_obsolete) {
+    $editor_link_table = "<table class='table table-bordered'><thead><tr><th>Editor</th><th>Timestamp</th><th>Modification Note</th><th>Obsolete Note</th></tr></thead><tbody>";
+    foreach my $o_id (@$owners) {
+        my $person = CXGN::People::Person->new($dbh, $o_id->[0]);
+        my $first_name = $person->get_first_name;
+        my $last_name = $person->get_last_name;
+        $editor_link_table .= qq|<tr><td><a href="/solpeople/personal-info.pl?sp_person_id=$o_id->[0]">$first_name $last_name</a></td><td>$o_id->[1]</td><td>$o_id->[2]</td><td>$o_id->[3]</td></tr>|;
+    }
+} else {
+    $editor_link_table = "<table class='table table-bordered'><thead><tr><th>Editor</th><th>Timestamp</th><th>Modification Note</th></tr></thead><tbody>";
+    foreach my $o_id (@$owners) {
+        my $person = CXGN::People::Person->new($dbh, $o_id->[0]);
+        my $first_name = $person->get_first_name;
+        my $last_name = $person->get_last_name;
+        $editor_link_table .= qq|<tr><td><a href="/solpeople/personal-info.pl?sp_person_id=$o_id->[0]">$first_name $last_name</a></td><td>$o_id->[1]</td><td>$o_id->[2]</td></tr>|;
+    }
 }
+
 $editor_link_table .= "</tbody></table>";
 $editor_link_table = "<br/>".$owners_html."<br/><br/>".$editor_link_table;
 
@@ -391,8 +405,8 @@ function jqueryStuff() {
 
 % if ($type_name eq 'population') {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => "<h4 style='display:inline'>Delete This Stock</h4>", info_section_subtitle => 'Delete this population.', icon_class => "glyphicon glyphicon-trash", info_section_id => "population_delete_section" &>
-% } else {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Obsolete This Stock</h4>", info_section_subtitle => 'Make a stock obsolete so that it does not show in searches.', icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
+% } elsif (($type_name ne 'population') && (!$is_obsolete)) {
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => "<h4 style='display:inline'>Obsolete This Stock</h4>", info_section_subtitle => 'Make a stock obsolete so that it does not show in searches.', icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
 % }
 
 </&>

@@ -2,6 +2,7 @@
 $transformation_id
 </%args>
 
+
 <&| /page/info_section.mas, title => 'Transformants (Accessions) Derived from this Transformation ', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
@@ -24,6 +25,9 @@ $transformation_id
     </div>
 </&>
 
+<& /transformation/obsolete_stock_dialog.mas &>
+
+
 <script>
 
 jQuery(document).ready(function(){
@@ -34,7 +38,7 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteTransformant("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
+            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
         ],
 
         "fnInitComplete": function(oSettings, json) {
@@ -58,28 +62,5 @@ jQuery(document).ready(function(){
 
 });
 
-
-function obsoleteTransformant(transformant_id, transformant_name){
-    const confirmation = confirm('Are you sure you want to obsolete this transformant?' + "  " + transformant_name);
-
-    if (confirmation) {
-        jQuery.ajax ({
-            url : '/stock/obsolete?stock_id='+transformant_id+'&is_obsolete=1',
-            beforeSend : function() {
-                jQuery('#working_modal').modal('show');
-            },
-            success: function(response){
-                console.log(response);
-                jQuery('#working_modal').modal('hide');
-                alert('Successfully obsoleted!');
-                location.reload();
-            },
-            error: function(response){
-                jQuery('#working_modal').modal('hide');
-                alert("Error obsoleting transformants.");
-            }
-        });
-    }
-}
 
 </script>

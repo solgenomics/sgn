@@ -705,10 +705,16 @@ sub get_obsoleted_transformants :Path('/ajax/transformation/obsoleted_transforma
 
     my @obsoleted_transformants;
     foreach my $r (@$result){
-        my ($stock_id, $stock_name) =@$r;
+        my ($stock_id, $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) =@$r;
+        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
+        my $full_name = $person->get_first_name()." ".$person->get_last_name();
+
         push @obsoleted_transformants, {
             transformant_id => $stock_id,
             transformant_name => $stock_name,
+            obsolete_note => $obsolete_note,
+            obsolete_date => $obsolete_date,
+            obsolete_person => $full_name
         };
     }
 
