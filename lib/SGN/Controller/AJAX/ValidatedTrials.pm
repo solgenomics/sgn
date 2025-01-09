@@ -153,49 +153,15 @@ sub get_phenotype :Path('/ajax/validatedtrials/getphenotype') Args(0){
     my @data;
 
     foreach my $project (@$projects_names) {
-        my $trial_name = $project->{name};             # Extract 'name' (trial)
-        my $trait_name = $project->{validated_trait};  # Extract 'validated_trait' (trait)
+        my $trial_name = $project->{name};             
+        my $trait_name = $project->{validated_trait};
 
         # Skip if either trial or trait is missing
         next unless $trial_name && $trait_name;
 
-        # Step 1: Get outlier names for this trial–trait pair
-        my $sql_outliers = "
-            select s.uniquename from phenotypeprop p
-            join nd_experiment_phenotype nep on nep.phenotype_id = p.phenotype_id 
-            join phenotype p2 on p2.phenotype_id = nep.phenotype_id 
-            join cvterm on p2.cvalue_id = cvterm.cvterm_id 
-            join nd_experiment_project nep2 on nep2.nd_experiment_id = nep.nd_experiment_id 
-            join nd_experiment_stock nes on nes.nd_experiment_id = nep.nd_experiment_id 
-            join stock s on s.stock_id = nes.stock_id
-            join project p3 on p3.project_id = nep2.project_id 
-            where p3.name = ?
-            and cvterm.name = ?
-            group by s.uniquename;
-        ";
-
-        my @outlier_names;
-        eval {
-            my $sth = $dbh->prepare($sql_outliers);
-            $sth->execute($trial_name, $trait_name);
-            while (my ($name) = $sth->fetchrow_array) {
-                push @outlier_names, $name;
-            }
-        };
-
-        # Handle errors
-        if ($@) {
-            warn "Error fetching outliers for trial '$trial_name' and trait '$trait_name': $@";
-            next;
-        }
-
-        # Flatten outlier names
-        my $outliers_sql = @outlier_names ? join(", ", ("?") x @outlier_names) : 'NULL';
-
-        # Step 2: Fetch phenotype data for this trial–trait pair, excluding outliers
+        # Fetch phenotype data for this trial–trait pair, excluding outliers
         my $sql_phenotypes = "
-            select p.name as location_name, s.uniquename as plot_name, s2.uniquename as accession, 
-                   cvterm.name as trait, phenotype.value 
+            select p.name as location_name, s.uniquename as plot_name, s2.uniquename as accession, cvterm.name as trait, phenotype.value 
             from phenotype 
             join nd_experiment_phenotype nep ON nep.phenotype_id = phenotype.phenotype_id 
             join nd_experiment_project nep2 on nep2.nd_experiment_id = nep.nd_experiment_id
@@ -208,12 +174,12 @@ sub get_phenotype :Path('/ajax/validatedtrials/getphenotype') Args(0){
             join stock s2 on s2.stock_id = sr.object_id 
             where p.name = ?
             and cvterm.name = ?
-            and s.uniquename not in ($outliers_sql);
+            and phenotype.phenotype_id not in ( select phenotype_id from phenotypeprop p3 WHERE p3.type_id = ( select cvterm_id from cvterm where name = 'phenotype_outlier'));
         ";
 
         eval {
             my $sth = $dbh->prepare($sql_phenotypes);
-            $sth->execute($trial_name, $trait_name, @outlier_names);
+            $sth->execute($trial_name, $trait_name);
 
             while (my ($location, $plot, $accession, $trait, $value) = $sth->fetchrow_array) {
                 push @data, {
