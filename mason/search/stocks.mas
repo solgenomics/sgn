@@ -261,7 +261,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="panel panel-default">
         <div class="panel-body">
-            <div id="stock_search_results_div" style="overflow:scroll" >
+            <div id="stock_search_results_div">
                 <table id="stock_search_results" width="100%" class="table table-hover table-striped">
                 <thead>
                   <tr>
@@ -280,7 +280,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the stock names currently showing in the search results table to a new or exisiting list</i>'&>
+            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the stock names currently showing in the search results table to a new or exisiting list. Use "Show All entries" to capture all results.</i>'&>
             <br>
             <div style="text-align:right" id="results_to_list_menu"></div>
             <div id="search_result_names" style="display: none;"></div>
@@ -453,7 +453,6 @@ jQuery(document).ready(function () {
       addToListMenu('results_to_list_menu', 'search_result_names', {
         listType: jQuery('#stock_type_select option:selected').text()+'s' || 'null'
       });
-
     });
 
    jQuery('#submit_stock_search').click( function() {
@@ -555,7 +554,12 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
         'ordering'  : false,
         'processing': true,
         'serverSide': true,
-        'lengthMenu': [10,20,50,100,1000,5000],
+        'lengthMenu': [
+          [10,20,50,100,1000,1000000000000000],
+          [10,20,50,100,1000,'All']
+        ],
+        'fixedFooter' : true,
+        'scrollY' : '350px',
         'ajax': { 'url':  '/ajax/search/stocks',
             'data': function(d) {
               d.any_name  = jQuery('#any_name').val();
