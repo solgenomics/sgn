@@ -118,9 +118,8 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
 
     # Format the unique project names for the SQL query
     
-    my $trait_raw = $trait;
     $trait =~ s/\|.*//;
-    my $trait_ilike = $trait;
+    my $trait_like = $trait . '%';
     
     my $project_names = join(", ", map { "'$_'" } keys %unique_names);
 
@@ -129,7 +128,7 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
         join project on project.project_id = projectprop.project_id 
         where projectprop.type_id = (select cvterm_id from cvterm where cvterm."name" = 'validated_phenotype')
         and project.name in ($project_names)
-        and projectprop.value = '$trait_raw'
+        and projectprop.value like '$trait_like'
         group by project."name";
     };
 
@@ -216,11 +215,6 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
     
     $c->stash->{rest} = { data => $project_names, trait => $trait};
 }
-
-sub limit_values : path('/ajax/qualitycontrol/limitvalues') Args(0) {
-    
-}
-
 
 sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my ($self, $c) = @_;
