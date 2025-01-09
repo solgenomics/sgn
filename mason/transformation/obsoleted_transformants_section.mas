@@ -26,6 +26,9 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         columns: [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
+            { title: "Note", "data": "obsolete_note" },
+            { title: "Date", "data": "obsolete_date" },
+            { title: "Obsoleted by", "data": "obsolete_person" },
         ],
     });
 

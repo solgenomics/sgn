@@ -2423,8 +2423,8 @@ sub stock_obsolete_GET {
 
     my $stock_id = $c->req->param('stock_id');
     my $is_obsolete  = $c->req->param('is_obsolete');
-
-	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+    my $obsolete_note  = $c->req->param('obsolete_note');
+    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
     if ($stock) {
 
@@ -2436,13 +2436,10 @@ sub stock_obsolete_GET {
                 sp_person_id => $c->user()->get_object()->get_sp_person_id(),
                 user_name => $c->user()->get_object()->get_username(),
                 modification_note => "Obsolete at ".localtime,
-                is_obsolete => $is_obsolete
+                is_obsolete => $is_obsolete,
+                obsolete_note => $obsolete_note,
             });
             my $saved_stock_id = $stock->store();
-
-            my $dbh = $c->dbc->dbh();
-            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
             $c->stash->{rest} = { message => "Stock obsoleted" };
         } catch {
@@ -2452,7 +2449,6 @@ sub stock_obsolete_GET {
 	    $c->stash->{rest} = { error => "Not a valid stock $stock_id " };
 	}
 
-    #$c->stash->{rest} = { message => 'success' };
 }
 
 
