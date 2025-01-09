@@ -13,8 +13,9 @@ use DateTime;
 use Bio::Chado::Schema;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
-use CXGN::MixedModels;
+use CXGN::Phenotypes::PhenotypeMatrix;
 use SGN::Controller::AJAX::Dataset;
+use CXGN::BreedersToolbox::Projects;
 use JSON;
 
 
@@ -89,6 +90,155 @@ sub grab_data :Path('/ajax/validatedtrials/grabdata') Args(0) {
     }
 }
 
+sub get_coordinate :Path('/ajax/validatedtrials/getcoordinates') Args(0) {
+    
+    my ($self, $c) = @_;
+    
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $dbh = $c->dbc->dbh();
+    
+
+    # Parse the input JSON to get the list of location names
+    my $locations_json = $c->req->param('locNames');
+    my $location_names = decode_json($locations_json);
+
+    # Escape the location names for SQL query
+    my $placeholders = join(", ", ("?") x @$location_names);
+
+    # Prepare and execute the SQL query
+    my $sql = "
+        SELECT DISTINCT p.name, p.project_id, ng.latitude, ng.longitude
+        FROM project p
+        JOIN nd_experiment_project nep ON nep.project_id = p.project_id
+        JOIN nd_experiment ne ON ne.nd_experiment_id = nep.nd_experiment_id
+        JOIN nd_geolocation ng ON ng.nd_geolocation_id = ne.nd_geolocation_id
+        WHERE p.name IN ($placeholders)
+    ";
+    
+    
+    eval{
+        my $sth = $dbh->prepare($sql);
+        $sth->execute(@{$location_names});
+        
+        my @locations_with_coordinates;
+        while (my ($name, $project_id, $latitude, $longitude) = $sth->fetchrow_array) {
+            push @locations_with_coordinates, { name => $name, trial_id => $project_id, latitude => $latitude, longitude => $longitude };
+        }
+        # Return the results as JSON
+        $c->res->content_type('application/json');
+        $c->res->body(encode_json(\@locations_with_coordinates));
+    };
+
+    if ($@) {
+        $c->res->status(500);
+        $c->res->body(encode_json({ error => "Database error: $_" }));
+    };
+
+}
+
+sub get_phenotype :Path('/ajax/validatedtrials/getphenotype') Args(0){
+
+    my ($self, $c) = @_;
+    
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $dbh = $c->dbc->dbh();
+
+    # Parse the input JSON to get the list of trial and trait pairs
+    my $projects_json = $c->req->param('projectTrait');
+    my $projects_names = decode_json($projects_json);
+
+    # Array to hold final results
+    my @data;
+
+    foreach my $project (@$projects_names) {
+        my $trial_name = $project->{name};             # Extract 'name' (trial)
+        my $trait_name = $project->{validated_trait};  # Extract 'validated_trait' (trait)
+
+        # Skip if either trial or trait is missing
+        next unless $trial_name && $trait_name;
+
+        # Step 1: Get outlier names for this trial–trait pair
+        my $sql_outliers = "
+            select s.uniquename from phenotypeprop p
+            join nd_experiment_phenotype nep on nep.phenotype_id = p.phenotype_id 
+            join phenotype p2 on p2.phenotype_id = nep.phenotype_id 
+            join cvterm on p2.cvalue_id = cvterm.cvterm_id 
+            join nd_experiment_project nep2 on nep2.nd_experiment_id = nep.nd_experiment_id 
+            join nd_experiment_stock nes on nes.nd_experiment_id = nep.nd_experiment_id 
+            join stock s on s.stock_id = nes.stock_id
+            join project p3 on p3.project_id = nep2.project_id 
+            where p3.name = ?
+            and cvterm.name = ?
+            group by s.uniquename;
+        ";
+
+        my @outlier_names;
+        eval {
+            my $sth = $dbh->prepare($sql_outliers);
+            $sth->execute($trial_name, $trait_name);
+            while (my ($name) = $sth->fetchrow_array) {
+                push @outlier_names, $name;
+            }
+        };
+
+        # Handle errors
+        if ($@) {
+            warn "Error fetching outliers for trial '$trial_name' and trait '$trait_name': $@";
+            next;
+        }
+
+        # Flatten outlier names
+        my $outliers_sql = @outlier_names ? join(", ", ("?") x @outlier_names) : 'NULL';
+
+        # Step 2: Fetch phenotype data for this trial–trait pair, excluding outliers
+        my $sql_phenotypes = "
+            select p.name as location_name, s.uniquename as plot_name, s2.uniquename as accession, 
+                   cvterm.name as trait, phenotype.value 
+            from phenotype 
+            join nd_experiment_phenotype nep ON nep.phenotype_id = phenotype.phenotype_id 
+            join nd_experiment_project nep2 on nep2.nd_experiment_id = nep.nd_experiment_id
+            join nd_experiment_stock nes on nes.nd_experiment_id = nep.nd_experiment_id
+            join phenotype p2 ON p2.phenotype_id = nep.phenotype_id 
+            join project p on p.project_id = nep2.project_id
+            join cvterm on p2.cvalue_id = cvterm.cvterm_id 
+            join stock s on s.stock_id = nes.stock_id
+            join stock_relationship sr on sr.subject_id = nes.stock_id
+            join stock s2 on s2.stock_id = sr.object_id 
+            where p.name = ?
+            and cvterm.name = ?
+            and s.uniquename not in ($outliers_sql);
+        ";
+
+        eval {
+            my $sth = $dbh->prepare($sql_phenotypes);
+            $sth->execute($trial_name, $trait_name, @outlier_names);
+
+            while (my ($location, $plot, $accession, $trait, $value) = $sth->fetchrow_array) {
+                push @data, {
+                    trial => $location,
+                    plot => $plot,
+                    accession => $accession,
+                    trait => $trait,
+                    value => $value,
+                };
+            }
+        };
+
+        # Handle errors
+        if ($@) {
+            warn "Error fetching phenotype data for trial '$trial_name' and trait '$trait_name': $@";
+        }
+    }
+
+    # Return the combined results as JSON
+    $c->res->content_type('application/json');
+    $c->res->body(encode_json(\@data));
+
+    # Debugging: Print results
+    # print Dumper \@data;
+}
 
 
 1;

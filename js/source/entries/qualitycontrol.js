@@ -21,6 +21,7 @@ export function init(main_div) {
     var trait_selected;
     var tempfile;
     let allData = [];
+    var all_traits;
 
     $('#qc_analysis_prepare_button').click(function () {
         dataset_id = get_dataset_id();
@@ -60,7 +61,8 @@ export function init(main_div) {
                 },
                 slide: function(event, ui) {
                     handle.text(ui.value);
-                    updateBoxplot();  // Update the boxplot when the slider value changes
+                    isFixedMinMax = false;
+                    updateBoxplot(isFixedMinMax, minVal, maxVal);  // Update the boxplot when the slider value changes
                 }
             });
         });
@@ -75,10 +77,9 @@ export function init(main_div) {
                     if (r.error) {
                         alert(r.error);
                     } else {
-                        console.log("AJAX response:", r);  // Log full response for debugging
-
-                        if (r.selected_variable) {
+                          if (r.selected_variable) {
                             populateTraitDropdown(r.selected_variable);  // Populate dropdown with traits
+                            all_traits = r.selected_variable;
                         }
                         if (r.tempfile) {
                             $('#tempfile').html(r.tempfile);
@@ -91,6 +92,10 @@ export function init(main_div) {
             });
         }
     });
+
+    let isFixedMinMax = false;
+    let minVal;
+    let maxVal;
     
     $('#selected_variable').on('change', function () {
         trait_selected = $('#trait_select').val();  // Get the selected trait from the dropdown
@@ -112,18 +117,16 @@ export function init(main_div) {
         if (!outlierMultiplier || isNaN(outlierMultiplier)) {
             outlierMultiplier = 1.5;         }
 
-        // Proceed with the AJAX call for grabbing data
         $.ajax({
             url: '/ajax/qualitycontrol/grabdata',
             data: { 'file': tempfile, 'trait': trait_selected },
             success: function (r) {
                 $('#working_modal').modal("hide");
                 if (r.message) {
-                    // Display the message to the user and stop further processing
                     alert(r.message);
                     return;
                 } else {
-                    const result = drawBoxplot(r.data, trait_selected, outlierMultiplier );
+                    const result = drawBoxplot(r.data, trait_selected, outlierMultiplier, isFixedMinMax, minVal, maxVal );
                     outliers = result.outliers;  // Extract the outliers
                     allData = r.data;
                     populateOutlierTable(r.data, trait_selected);
@@ -138,11 +141,53 @@ export function init(main_div) {
 
     });
     
+    $("#fixed-min-max").click(function() {
+        isFixedMinMax = true;  
+
+        let dataset_id = get_dataset_id();
+        minVal = parseFloat(document.getElementById("min-limit").value);
+        maxVal = parseFloat(document.getElementById("max-limit").value);
+
+        if (dataset_id) {
+            $.ajax({
+                url: '/ajax/qualitycontrol/prepare',
+                data: { 'dataset_id': dataset_id },
+                success: function (r) {
+                    if (r.error) {
+                        alert(r.error);
+                    } else {
+                        if (r.selected_variable) {
+                            updateBoxplot(isFixedMinMax, minVal, maxVal);
+                        }
+                        if (r.tempfile) {
+                            $('#tempfile').html(r.tempfile);
+                        }
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert('Error in AJAX request: ' + errorThrown);
+                }
+            });
+        }
+    });
+    
+    const checkedTraits = [];
+    $('#select_traits_button').on('click', function () {
+        populateOtherTraits(all_traits, trait_selected);
+        $(document).on('change', 'input[name="new_trait_options"]', function() {
+            $('input[name="new_trait_options"]:checked').each(function() {
+                checkedTraits.push($(this).val());  // Get the value of each checked checkbox
+            });
+        });
+    });
+
+        
     $('#store_outliers_button').click(function () {
+        console.log("The other is:", checkedTraits);
         $.ajax({
             url: '/ajax/qualitycontrol/storeoutliers',  
             method: "POST",  
-            data: {"outliers": JSON.stringify(outliers),
+            data: {"outliers": JSON.stringify(outliers), "othertraits": JSON.stringify(checkedTraits)
             },
             success: function(response) {
                 if(response.is_curator === 1) {
@@ -199,11 +244,35 @@ export function init(main_div) {
         });
     });
 
-
-
 }
 
-function updateBoxplot() {
+function populateOtherTraits(traitsHTML, traitSelected) {
+    const $traitContainer = $('#other_traits');
+    $traitContainer.empty();
+
+    const $traits = $(traitsHTML);  // Parse the HTML into jQuery elements
+    const traitsArray = $traits.map(function() {
+        return $(this).val();  // Get the value of each trait input element
+    }).get();  // Convert jQuery object to a regular array
+
+    const filteredTraits = traitsArray.filter(trait => !traitSelected.includes(trait));
+
+    filteredTraits.forEach(trait => {
+        const $checkbox = $('<input>', {
+            type: 'checkbox',
+            name: 'new_trait_options',
+            value: trait
+        });
+
+        const $label = $('<label>').text(trait);
+
+        const $div = $('<div>').append($checkbox).append($label);
+        $traitContainer.append($div);
+    });
+}
+
+
+function updateBoxplot(isFixed, minValue, maxValue) {
     // Fetch the selected trait and tempfile
     var trait_selected = $('#trait_select').val();
     var tempfile = $('#tempfile').html();
@@ -220,10 +289,9 @@ function updateBoxplot() {
         url: '/ajax/qualitycontrol/grabdata',  // Adjust this URL if needed
         data: { 'file': tempfile, 'trait': trait_selected },  // Send both tempfile and trait
         success: function (response) {
-
             const boxplotData = response.data || [];  // Adjust based on the actual response structure
-            drawBoxplot(boxplotData, trait_selected, outlierMultiplier);
-            const result = drawBoxplot(boxplotData, trait_selected, outlierMultiplier);
+            drawBoxplot(boxplotData, trait_selected, outlierMultiplier, outlierMultiplier, isFixed, minValue, maxValue);
+            const result = drawBoxplot(boxplotData, trait_selected, outlierMultiplier, isFixed, minValue, maxValue);
             const outliers = result.outliers || [];
             populateCleanTable(boxplotData, outliers, trait_selected);
         },
@@ -359,71 +427,84 @@ function populateCleanTable(data, outliers, trait) {
 
 
 
-function drawBoxplot(data, selected_trait, outlierMultiplier) {
-    const groupedData = d3.nest()
-        .key(d => d.locationDbId)
-        .entries(data);
-    if (outlierMultiplier === null){outlierMultiplier = 1.5}    
-    let allOutliers = [];  // Collect all outliers here
+function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, minVal, maxVal) {
+  const groupedData = d3.nest()
+    .key(d => d.locationDbId)
+    .entries(data);
+  if (outlierMultiplier === null) { outlierMultiplier = 1.5; }
 
-    const boxplotData = groupedData.map(group => {
-        const values = group.values.map(d => parseFloat(d[selected_trait])).filter(d => d != null && !isNaN(d));
+  let allOutliers = [];
 
-        if (values.length < 4) {
-            return {
-                locationDbId: group.key,
-                values: [],
-                outliers: [],
-                q1: null,
-                q3: null,
-                iqr: null,
-                lowerBound: null,
-                upperBound: null,
-                min: null,
-                max: null,
-                median: null
-            };
-        }
+  const boxplotData = groupedData.map(group => {
+    const values = group.values.map(d => parseFloat(d[selected_trait])).filter(d => d != null && !isNaN(d));
 
-        values.sort(d3.ascending);
-        const q1 = d3.quantile(values, 0.25);
-        const q3 = d3.quantile(values, 0.75);
-        const iqr = Math.max(0, q3 - q1);
-        const lowerBound = q1 - outlierMultiplier * iqr;
-        const upperBound = q3 + outlierMultiplier * iqr;
-        const median = d3.quantile(values, 0.5);
+    if (values.length < 4) {
+      return {
+        locationDbId: group.key,
+        values: [],
+        outliers: [],
+        q1: null,
+        q3: null,
+        iqr: null,
+        lowerBound: null,
+        upperBound: null,
+        min: null,
+        max: null,
+        median: null
+      };
+    }
 
-        const outliers = values.filter(v => v < lowerBound || v > upperBound);
+    values.sort(d3.ascending);
+    const q1 = d3.quantile(values, 0.25);
+    const q3 = d3.quantile(values, 0.75);
+    const iqr = Math.max(0, q3 - q1);
 
-        const groupOutliers = outliers.flatMap(value => {
-            return group.values
-                .filter(v => parseFloat(v[selected_trait]) === value)
-                .map(match => ({
-                    locationDbId: group.key,
-                    studyName: match.studyName,
-                    locationName: match.locationName,
-                    plotName: match.observationUnitName,
-                    trait: selected_trait,
-                    value: value
-                }));
-        });
+    // Calculate lower and upper bounds based on isFixedMinMax
+    let lowerBound, upperBound;
+    if (isFixedMinMax) {
+      // Use the provided minVal and maxVal for all locations
+      lowerBound = minVal;
+      upperBound = maxVal;
+    } else {
+      lowerBound = q1 - outlierMultiplier * iqr;
+      upperBound = q3 + outlierMultiplier * iqr;
+    }
+    
 
-        allOutliers = allOutliers.concat(groupOutliers);
+    const median = d3.quantile(values, 0.5);
 
-        return {
-            locationDbId: group.key,
-            values, // Include all data points
-            outliers,
-            q1,
-            q3,
-            iqr,
-            lowerBound,
-            upperBound,
-            min: d3.min(values), // Minimum value
-            max: d3.max(values), // Maximum value
-            median // Median value
-        };
+    const outliers = values.filter(v => v < lowerBound || v > upperBound);
+
+    const groupOutliers = outliers.flatMap(value => {
+      return group.values
+        .filter(v => parseFloat(v[selected_trait]) === value)
+        .map(match => ({
+          locationDbId: group.key,
+          studyName: match.studyName,
+          locationName: match.locationName,
+          plotName: match.observationUnitName,
+          trait: selected_trait,
+          value: value
+        }));
     });
+
+    allOutliers = allOutliers.concat(groupOutliers);
+
+    return {
+      locationDbId: group.key,
+      values,
+      outliers,
+      q1,
+      q3,
+      iqr,
+      lowerBound,
+      upperBound,
+      min: d3.min(values),
+      max: d3.max(values),
+      median
+    };
+  });
+
 
     // Drawing the boxplot
     const margin = {top: 10, right: 30, bottom: 50, left: 40},

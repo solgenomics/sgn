@@ -45,7 +45,7 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => 1, file_name => $temppath, quotes => 0);
     $ds->retrieve_phenotypes();
     my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
 
@@ -216,6 +216,10 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
     $c->stash->{rest} = { data => $project_names, trait => $trait};
 }
 
+sub limit_values : path('/ajax/qualitycontrol/limitvalues') Args(0) {
+    
+}
+
 
 sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my ($self, $c) = @_;
@@ -236,21 +240,33 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my $outliers_string = $c->req->param('outliers');
     
     # Now proceed to decode JSON
-    my $outliers_data;
-    $outliers_data = decode_json($outliers_string);
+    my $outliers_data = decode_json($outliers_string);
 
     my %trait_ids;
     my %study_names;
     my $trait;
 
-    # print STDERR Dumper \$outliers_data;
+    my $othertraits_json = $c->req->param('othertraits');  
+    my $othertraits = decode_json($othertraits_json);
+
+    # Remove duplicates using a hash
+    my %unique_traits = map { $_ => 1 } @$othertraits;
+    my @unique_othertraits = keys %unique_traits;
+
+    # @unique_othertraits = map { s/\|.*//r } @unique_othertraits;
+    # print STDERR Dumper \@unique_othertraits;
 
     foreach my $entry (@$outliers_data) { 
         $trait = $entry->{trait};  # Directly use the trait from the entry
-        $trait_ids{$trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait)->cvterm_id;
         my $study_name = $entry->{studyName};
         $study_names{$study_name} = 1 if defined $study_name;
     }
+    
+    my @alltraits = ($trait, @unique_othertraits);
+    foreach my $sel_trait (@alltraits) {
+        $trait_ids{$sel_trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $sel_trait)->cvterm_id;
+    }
+    
 
     $trait =~ s/\|.*//;
     my $trait_operator = $trait."|".$operator;
