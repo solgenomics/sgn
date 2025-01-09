@@ -1819,12 +1819,6 @@ function combineSelectedListGroup(list_ids, type = 'union') {
         }
         if ( list_types.length > 1 && !confirm('Are you sure you want to combine these list types: ' + list_types.join(', ')) ) return;
 
-        // Create new list
-        var new_list_id = lo.newList(list_name);
-        if ( list_types.length === 1 ) {
-            lo.setListType(new_list_id, list_types[0]);
-        }
-
         // Combine list items
         var arrayItems = [];
 
@@ -1854,8 +1848,15 @@ function combineSelectedListGroup(list_ids, type = 'union') {
 
         // Get unique set of items
         arrayItems = [...new Set(arrayItems)];
+        if ( !arrayItems || arrayItems.length === 0 ) {
+            return alert("The selected lists don't have any list items in common.  New list not created.");
+        }
 
         // Add combined items to new list
+        var new_list_id = lo.newList(list_name);
+        if ( list_types.length === 1 ) {
+            lo.setListType(new_list_id, list_types[0]);
+        }
         lo.addBulk(new_list_id, arrayItems);
         lo.renderLists('list_dialog');
         alert("Added " + arrayItems.length + " items to the new List " + list_name);
