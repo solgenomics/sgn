@@ -59,6 +59,7 @@ use CXGN::BreederSearch;
 use CXGN::People::Schema;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
+use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 
 =head2 people_schema()
@@ -1274,14 +1275,18 @@ sub store_tool_compatibility {
     my $trial_designs = $self->retrieve_trial_designs();
     my $genotyping_methods = $self->retrieve_genotyping_protocols();# listref of listrefs. First index is 
         # method ID, second is method name
+    print STDERR Dumper $genotyping_methods;
+    print STDERR "\n";
     my $locations = $self->retrieve_locations(); # faster and easier than pulling it out of the phenotypes_ref
         # listref of listrefs, first index is locationID, second is location name
-    my $genotypes = $self->retrieve_genotypes(); # Give it at least 15 seconds!
-        # listref of hashrefs. Each hashref should describe a stock (accession) genotype measurement, with a list of SNPs/genotypes.
-        # Relevant hash keys: stock_id, germplasmName, analysisMethod, analysisMethodDbId, selected_genotype_hash
+    # my $genotypes = $self->retrieve_genotypes(); # Give it at least 15 seconds!
+    #     # listref of hashrefs. Each hashref should describe a stock (accession) genotype measurement, with a list of SNPs/genotypes.
+    #     # Relevant hash keys: stock_id, germplasmName, analysisMethod, analysisMethodDbId, selected_genotype_hash
     my ($phenotypes, undef) = $self->retrieve_phenotypes_ref(); # Returns data as a listref with two hashrefs. First hashref is a list of all phenotypes in this dataset, which is an observational unit w/ a list 
         # of trait observations. Each OU is a stock (plot, accession, etc). Second hashref has all unique traits in the phenotype list. 
         # Relevant hash keys: observations, trial_id, trial_location_id, germplasm_stock_id, trait_id, trait_name, value
+    my $accessions = $self->retrieve_accessions();
+    my $num_accessions = scalar(@{$accessions});
 
     my $obs_by_trait = {};
     my $pheno_represented_accessions = {};
@@ -1305,17 +1310,23 @@ sub store_tool_compatibility {
     }
     my $num_phenotyped_accessions = scalar(%{$pheno_represented_accessions});
 
-    my $geno_represented_accessions = {}; #This will store average marker counts for genotype methods and accessions typed by each method
-    foreach my $genotype (@{$genotypes}) {
-        $geno_represented_accessions->{$genotype->{'analysisMethodDbId'}}->{'accessions'}->{$genotype->{'stock_id'}} = 1; # each accession genotyped using each method
-    }
+    # my $geno_represented_accessions = {}; #This will store average marker counts for genotype methods and accessions typed by each method
+    # foreach my $genotype (@{$genotypes}) {
+    #     $geno_represented_accessions->{$genotype->{'analysisMethodDbId'}}->{'accessions'}->{$genotype->{'stock_id'}} = 1; # each accession genotyped using each method
+    # }
     foreach my $method (@{$genotyping_methods}){
-        my $num_markers = [map {$_->{'resultCount'}} grep {$_->{'analysisMethodDbId'} == $method->[0]} @{$genotypes}];
-        $num_markers = sum(@{$num_markers}) / scalar @{$num_markers}; #average marker size should be large enough to do a GWAS. There is no set minimum since it depends on LD scores but I will say they need at least 100
-        $geno_represented_accessions->{$method->[0]}->{'avg_marker_count'} = $num_markers;
-
-        if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) > 1) {
-            if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) < 30) {
+        my $geno_method = CXGN::Genotype::Protocol->new({
+            bcs_schema => $self->schema,
+            nd_protocol_id => $method->[0]
+        });
+        my $num_markers = scalar(@{$geno_method->markers_array});
+        # $num_markers = sum(@{$num_markers}) / scalar @{$num_markers}; #average marker size should be large enough to do a GWAS. There is no set minimum since it depends on LD scores but I will say they need at least 100
+        # $geno_represented_accessions->{$method->[0]}->{'avg_marker_count'} = $num_markers;
+        print STDERR "#####################\n";
+        print STDERR Dumper $geno_method->marker_name_list;
+        print STDERR "########################\n";
+        if ($num_markers > 1) {
+            if ($num_accessions < 30) {
                 $tool_compatibility->{'Population Structure'}->{'warn'}->{"You may not have enough accessions for strong results."} = "";
                 $tool_compatibility->{'Kinship & Inbreeding'}->{'warn'}->{"You may not have enough accessions for strong results."} = "";
                 $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotyped accessions for strong genotype clustering."} = "";
@@ -1336,9 +1347,17 @@ sub store_tool_compatibility {
         $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
         $tool_compatibility->{'Clustering'}->{'types'}->{'Phenotype'} = "";
         foreach my $method (@{$genotyping_methods}){
-            if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) > 1) { # for GEBV clustering, there needs to be enough accessions using the same geno method and which have lots of trait measurements
-                if (scalar(keys(%{$geno_represented_accessions->{$method->[0]}->{'accessions'}})) < 30) {
+            my $geno_method = CXGN::Genotype::Protocol->new({
+                bcs_schema => $self->schema,
+                nd_protocol_id => $method->[0]
+            });
+            my $num_markers = scalar(@{$geno_method->markers_array});
+            if ($num_accessions > 1 && $num_markers > 30) { # for GEBV clustering, there needs to be enough accessions using the same geno method (not checked right here) and which have lots of trait measurements
+                if ($num_accessions < 30) {
                     $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotyped accessions for strong GEBV clustering."} = "";
+                }
+                if ($num_markers < 1000) {
+                    $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotype markers for strong GEBV clustering."} = "";
                 }
                 $tool_compatibility->{'Clustering'}->{'types'}->{'GEBV'} = "";
             }
@@ -1390,12 +1409,17 @@ sub store_tool_compatibility {
         }
 
         foreach my $method (@{$genotyping_methods}){ # There needs to be consistent genotyping protocol for genomic modeling
-            my $num_accessions_typed_for_this_trait = scalar( grep {exists($geno_represented_accessions->{$method->[0]}->{'accessions'}->{$_})} keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}) );
-            if ($total_obs > 100 && $geno_represented_accessions->{$method->[0]}->{'avg_marker_count'} > 100 && $num_accessions_typed_for_this_trait > 50) { # If lots of markers, lots of accessions, and lots of phenotype measurements, then you can do genomic modeling
+            my $geno_method = CXGN::Genotype::Protocol->new({
+                bcs_schema => $self->schema,
+                nd_protocol_id => $method->[0]
+            });
+            my $num_markers = scalar(@{$geno_method->markers_array});
+            my $num_accessions_typed_for_this_trait = scalar( keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}) );
+            if ($total_obs > 100 && $num_markers > 100 && $num_accessions_typed_for_this_trait > 50) { # If lots of markers, lots of accessions, and lots of phenotype measurements, then you can do genomic modeling
                 if ($total_obs < 300) {
                     $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough observations of ".$trait->[1]." to identify associated loci."} = "";
                 }
-                if ($geno_represented_accessions->{$method->[0]}->{'avg_marker_count'} < 2500) {
+                if ($num_markers < 2500) {
                     $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough SNPs genotyped for method ".$method->[1]." to identify associated loci."} = "";
                 }
                 if ($num_accessions_typed_for_this_trait < 300) {

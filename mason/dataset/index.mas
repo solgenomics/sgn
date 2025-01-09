@@ -100,7 +100,6 @@ $dataset_contents => ''
 %                   }
                     <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
                     <tr><td>Tool Compatibility <span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Predicted tool compatibility based on dataset definition. 
-Tools present in this table are compatible with your dataset.
 The table details the traits and types of analyses that can
 be performed. If database elements are updated, such as 
 phenotypes added to field trials or accessions, you may wish 
