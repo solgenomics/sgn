@@ -599,7 +599,31 @@ To upload an additional file, click on the "Upload Additional Files" link. A dia
 knitr::include_graphics('assets/images/trial_upload_additional_file_info.png')
 ```
 
-### Deleting Trial Data
+## Updating Trial Data
+
+To updated the trial-level metadata (such as the planting date, design type, description, etc) of one or more existing trials, click the "Update Existing Trial(s)" button from the Manage > Field Trials page.  This upload can also be used to rename trials or move trials to a different breeding program.  In order to update a trial, you must be a curator or a submitter (that is associated with the breeding program of the trials).
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/update_trial_metadata.png')
+```
+
+Here you can upload a file that contains the new metadata for the existing trials in the database.  The first column is labeled 'trial_name' and includes the name of the existing trial.  Additional columns can be included for the metadata you want to update.  Any columns not included in the file or values left blank will leave the existing metadata unchanged.  The columns that can be included are:
+
+- new_trial_name: A new name for the trial, must not already exist in the database
+- breeding_program: The name of breeding program that managed the trial, must exist in the database.
+- location: The name or abbreviation of the location where the trial was held, must exist in the database.
+- year: The year the trial was held.
+- transplanting_date: The transplanting_date of the trial was conducted. Date in YYYY-MM-DD format or 'remove' to remove the date
+- planting_date: Date of Planting in YYYY-MM-DD format or 'remove' to remove the date
+- harvest_date: Date of Harvest in YYYY-MM-DD format or 'remove' to remove the date
+- design_type: The shorthand for the design type, must exist in the database. Possible values include CRD: Completely Randomized Design, RCBD: Randomized Complete Block Design, RRC: Resolvable Row-Column, DRRC: Doubly-Resolvable Row-Column, ARC: Augmented Row-Column, Alpha: Alpha Lattice Design, Lattice: Lattice Design, Augmented: Augmented Design, MAD: Modified Augmented Design, greenhouse: undesigned Nursery/Greenhouse, splitplot: Split Plot, p-rep: Partially Replicated, Westcott: Westcott Design
+- description: Additional text with any other relevant information about the trial.
+- trial_type: The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial
+- plot_width: plot width in meters
+- plot_length: plot length in meters
+- field_size: field size in hectares
+
+## Deleting Trial Data
 
 To delete a trial data, click on the "Delete trial data" section. There are links to delete traits, layout and trial entry data.
 

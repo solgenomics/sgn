@@ -27,120 +27,132 @@ jQuery(document).ready(function($) {
 
 });
 
-function refreshTrailJsTree(refreshpage){
-    jQuery.ajax( {
-        url: '/ajax/breeders/get_trials_with_folders?type=trial',
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (refreshpage == 1){
-                location.reload();
+function refreshTrailJsTree(refreshpage) {
+    setTimeout(() => {
+        jQuery.ajax({
+            url: '/ajax/breeders/get_trials_with_folders?type=trial',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (refreshpage == 1){
+                    location.reload();
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred refreshing trial jstree html');
             }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            alert('An error occurred refreshing trial jstree html');
-        }
-    });
+        });
+    }, 500);
 }
 
 function refreshCrossJsTree(refreshpage){
-    jQuery.ajax( {
-        url: '/ajax/breeders/get_trials_with_folders?type=cross',
-        beforeSend: function() {
-            if (refreshpage == 1){
-                jQuery("#working_modal").modal("show");
-            }
-        },
-        success: function(response) {
-            if (refreshpage == 1){
+    setTimeout(() => {
+        jQuery.ajax( {
+            url: '/ajax/breeders/get_trials_with_folders?type=cross',
+            beforeSend: function() {
+                if (refreshpage == 1){
+                    jQuery("#working_modal").modal("show");
+                }
+            },
+            success: function(response) {
+                if (refreshpage == 1){
+                    jQuery("#working_modal").modal("hide");
+                    location.reload();
+                }
+            },
+            error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                location.reload();
+                alert('An error occurred refreshing crosses jstree html');
             }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            alert('An error occurred refreshing crosses jstree html');
-        }
-    });
+        });
+    }, 500);
 }
 
 function refreshGenotypingTrialJsTree(refreshpage){
-    jQuery.ajax({
-        url: '/ajax/breeders/get_trials_with_folders?type=genotyping_trial',
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (refreshpage == 1){
-                location.reload();
+    setTimeout(() => {
+        jQuery.ajax({
+            url: '/ajax/breeders/get_trials_with_folders?type=genotyping_trial',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (refreshpage == 1){
+                    location.reload();
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred refreshing genotype trial jstree html');
             }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            alert('An error occurred refreshing genotype trial jstree html');
-        }
-    });
+        });
+    }, 500);
 }
 
 function refreshGenotypingProjectJsTree(refreshpage){
-    jQuery.ajax({
-        url: '/ajax/breeders/get_trials_with_folders?type=genotyping_project',
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (refreshpage == 1){
-                location.reload();
+    setTimeout(() => {
+        jQuery.ajax({
+            url: '/ajax/breeders/get_trials_with_folders?type=genotyping_project',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (refreshpage == 1){
+                    location.reload();
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred refreshing genotype project jstree html');
             }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            alert('An error occurred refreshing genotype project jstree html');
-        }
-    });
+        });
+    }, 500);
 }
 
 function refreshActivityJsTree(refreshpage){
-    jQuery.ajax( {
-        url: '/ajax/breeders/get_trials_with_folders?type=activity',
-        beforeSend: function() {
-            if (refreshpage == 1){
-                jQuery("#working_modal").modal("show");
-            }
-        },
-        success: function(response) {
-            if (refreshpage == 1){
+    setTimeout(() => {
+        jQuery.ajax( {
+            url: '/ajax/breeders/get_trials_with_folders?type=activity',
+            beforeSend: function() {
+                if (refreshpage == 1){
+                    jQuery("#working_modal").modal("show");
+                }
+            },
+            success: function(response) {
+                if (refreshpage == 1){
+                    jQuery("#working_modal").modal("hide");
+                    location.reload();
+                }
+            },
+            error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                location.reload();
+                alert('An error occurred refreshing activity jstree html');
             }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            alert('An error occurred refreshing activity jstree html');
-        }
-    });
+        });
+    }, 500);
 }
 
 function refreshTransformationProjectJsTree(refreshpage){
-    jQuery.ajax({
-        url: '/ajax/breeders/get_trials_with_folders?type=transformation',
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (refreshpage == 1){
-                location.reload();
+    setTimeout(() => {
+        jQuery.ajax({
+            url: '/ajax/breeders/get_trials_with_folders?type=transformation',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (refreshpage == 1){
+                    location.reload();
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred refreshing transformation project jstree html');
             }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            alert('An error occurred refreshing transformation project jstree html');
-        }
-    });
+        });
+    }, 500);
 }
