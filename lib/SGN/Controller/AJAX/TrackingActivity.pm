@@ -243,6 +243,7 @@ sub activity_info_save_POST : Args(0) {
     my $activity_type = $c->req->param("activity_type");
     my $program_name = $c->req->param("program_name");
     my $source_info = $c->req->param("source_info");
+    my $material_name = $c->req->param("material_name");
     my $tracking_transformation = $c->config->{tracking_transformation};
 
     if (!$c->user()) {
@@ -274,6 +275,7 @@ sub activity_info_save_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh();
     my $number_of_transformants;
+    my $number_of_plantlets;
     if (($selected_type eq 'number_of_transformants') && $tracking_transformation) {
         $number_of_transformants = $input;
         my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema => $schema, dbh => $dbh, tracking_identifier_stock_id => $tracking_identifier_id});
@@ -329,8 +331,35 @@ sub activity_info_save_POST : Args(0) {
                 }
             }
         }
-    }
+    } elsif ($selected_type eq 'number_of_plantlets') {
+        $number_of_plantlets = $input;
+        my @new_child_tracking_ids;
+        foreach my $n (1..$number_of_plantlets) {
+            my $new_id = $tracking_identifier."_".$n;
+            push @new_child_tracking_ids, $new_id;
+        }
+        
+        foreach my $new_child_identifier (@new_child_tracking_ids) {
+            my $tracking_obj = CXGN::TrackingActivity::AddTrackingIdentifier->new({
+                schema => $schema,
+                phenome_schema => $phenome_schema,
+                tracking_identifier => $new_child_identifier,
+                parent_tracking_identifier => $tracking_identifier,
+                material => $material_name,
+                user_id => $user_id
+             });
 
+            my $return = $tracking_obj->store_child_identifier();
+            if (!$return) {
+                $c->stash->{rest} = {error => "Error generating tracking identifier"};
+                return;
+            } elsif ($return->{error}) {
+                my $error = $return->{error};
+                $c->stash->{rest} = {error => $error};
+                return;
+            }
+        }
+    }
     my $add_activity_info = CXGN::TrackingActivity::ActivityInfo->new({
         schema => $schema,
         tracking_identifier => $tracking_identifier,
