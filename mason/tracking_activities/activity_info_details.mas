@@ -113,6 +113,24 @@ $source_info => undef
     </div>
 </&>
 
+<&| /page/info_section.mas, title => 'Plantlet Info', collapsible => 1, collapsed => 0, subtitle => '' &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "plantlets_table" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Plantlet ID</th>
+                             </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
 <&| /page/info_section.mas, title => 'Activity Details', collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
@@ -202,6 +220,15 @@ jQuery(document).ready( function() {
         'paging': false,
         'info': false,
         'ajax': '/ajax/tracking_activity/summary/'+identifier_id,
+    });
+
+    jQuery('#plantlets_table').DataTable({
+        'autoWidth': false,
+        'searching' : false,
+        'ordering': false,
+        'paging': false,
+        'info': false,
+        'ajax': '/ajax/tracking_activity/plantlets/'+identifier_id,
     });
 
     jQuery('#type_select').change(function() {

@@ -107,6 +107,31 @@ sub get_associated_project_program {
 }
 
 
+sub get_child_tracking_identifiers {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $parent_tracking_identifier_stock_id = $self->tracking_identifier_stock_id();
+    my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", "stock_type")->cvterm_id();
+    my $child_of_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'child_of', 'stock_relationship')->cvterm_id;
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) AND stock_relationship.type_id = ? AND stock.type_id = ?
+        WHERE stock_relationship.object_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($child_of_type_id, $tracking_identifier_type_id, $parent_tracking_identifier_stock_id);
+
+    my @child_tracking_identifiers = ();
+    while (my ($tracking_stock_id, $tracking_name) = $h->fetchrow_array()){
+        push @child_tracking_identifiers, [$tracking_stock_id, $tracking_name]
+    }
+
+    return \@child_tracking_identifiers;
+
+}
+
 
 ###
 1;

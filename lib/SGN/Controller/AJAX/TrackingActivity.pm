@@ -333,12 +333,17 @@ sub activity_info_save_POST : Args(0) {
         }
     } elsif ($selected_type eq 'number_of_plantlets') {
         $number_of_plantlets = $input;
+
+        my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema => $schema, dbh => $dbh, tracking_identifier_stock_id => $tracking_identifier_id});
+        my $child_tracking_identifiers = $tracking_identifier_obj->get_child_tracking_identifiers();
+        my $number_of_exist_ids = scalar @$child_tracking_identifiers;
         my @new_child_tracking_ids;
         foreach my $n (1..$number_of_plantlets) {
-            my $new_id = $tracking_identifier."_".$n;
+            my $incremented_number = $n + $number_of_exist_ids;
+            my $new_id = $tracking_identifier."_".$incremented_number;
             push @new_child_tracking_ids, $new_id;
         }
-        
+
         foreach my $new_child_identifier (@new_child_tracking_ids) {
             my $tracking_obj = CXGN::TrackingActivity::AddTrackingIdentifier->new({
                 schema => $schema,
@@ -912,6 +917,26 @@ sub get_project_inactive_identifiers :Path('/ajax/tracking_activity/project_inac
 }
 
 
+sub get_plantlets :Path('/ajax/tracking_activity/plantlets') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $identifier_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+
+    my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
+    my $ids = $tracking_identifier_obj->get_child_tracking_identifiers();
+    my @all_ids;
+    foreach my $id (@$ids) {
+        my $identifier_id = $id->[0];
+        my $identifier_name = $id->[1];
+        push @all_ids, [qq{<a href="/activity/details/$identifier_id">$identifier_name</a>}];
+
+    }
+
+    $c->stash->{rest} = { data => \@all_ids };
+
+}
 
 
 1;
