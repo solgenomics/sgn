@@ -489,7 +489,7 @@ has 'modification_note' => (
 );
 
 has 'create_date' => (
-    isa => 'Str',
+    isa => 'Maybe[Str]',
     is => 'rw',
     );
 
