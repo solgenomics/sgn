@@ -21,6 +21,7 @@ use SGN::Model::Cvterm;
 use CXGN::Location::LocationLookup;
 use CXGN::List;
 use CXGN::Stock::Status;
+use CXGN::TrackingActivity::IdentifierMetadata;
 
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -173,6 +174,8 @@ sub generate_tracking_identifiers_POST : Args(0) {
     my $all_identifiers = $activity_project->get_project_active_identifiers();
     my $last_number = scalar (@$all_identifiers);
 
+    my $activity_type = $activity_project->get_project_activity_type();
+
     my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
     my $material_names = $list->elements();
 
@@ -214,6 +217,7 @@ sub generate_tracking_identifiers_POST : Args(0) {
          });
 
         my $return = $tracking_obj->store();
+        my $tracking_id;
         if (!$return) {
             $c->stash->{rest} = {error => "Error generating tracking identifier"};
             return;
@@ -221,7 +225,23 @@ sub generate_tracking_identifiers_POST : Args(0) {
             my $error = $return->{error};
             $c->stash->{rest} = {error => $error};
             return;
+        } else {
+             $tracking_id = $return->{tracking_id};
         }
+
+        my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({
+            bcs_schema => $schema,
+            data_type => $activity_type,
+            data_level => 'first',
+            parent_id => $tracking_id
+        });
+
+        $identifier_metadata->store();
+        if (!$identifier_metadata->store()){
+            $c->stash->{rest} = {error_string => "Error saving identifier metadata",};
+            return;
+        }
+
     }
 
     $c->stash->{rest} = { success => 1};
@@ -355,12 +375,28 @@ sub activity_info_save_POST : Args(0) {
              });
 
             my $return = $tracking_obj->store_child_identifier();
+            my $tracking_id;
             if (!$return) {
                 $c->stash->{rest} = {error => "Error generating tracking identifier"};
                 return;
             } elsif ($return->{error}) {
                 my $error = $return->{error};
                 $c->stash->{rest} = {error => $error};
+                return;
+            } else {
+                $tracking_id = $return->{tracking_id};
+            }
+
+            my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({
+                bcs_schema => $schema,
+                data_type => $activity_type,
+                data_level => 'second',
+                parent_id => $tracking_id
+            });
+
+            $identifier_metadata->store();
+            if (!$identifier_metadata->store()){
+                $c->stash->{rest} = {error_string => "Error saving identifier metadata",};
                 return;
             }
         }
