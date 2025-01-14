@@ -133,6 +133,29 @@ sub get_child_tracking_identifiers {
 }
 
 
+sub get_parent_tracking_identifier {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $tracking_identifier_stock_id = $self->tracking_identifier_stock_id();
+    my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", "stock_type")->cvterm_id();
+    my $child_of_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'child_of', 'stock_relationship')->cvterm_id;
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.object_id = stock.stock_id) AND stock_relationship.type_id = ? AND stock.type_id = ?
+        WHERE stock_relationship.subject_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($child_of_type_id, $tracking_identifier_type_id, $tracking_identifier_stock_id);
+
+    my @parent_identifier_info = $h->fetchrow_array();
+
+    return \@parent_identifier_info;
+
+}
+
+
 ###
 1;
 ###
