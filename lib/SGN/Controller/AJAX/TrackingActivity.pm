@@ -430,12 +430,29 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
 
-    my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
-    my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
-    my $tracking_project_id = $associated_projects->[0]->[0];
-    my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
-    my $activity_type = $tracking_project->get_project_activity_type();
+    my $activity_type;
+    my $data_level;
+    my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({ bcs_schema => $schema, parent_id => $identifier_id});
+    my $metadata = $identifier_metadata->get_identifier_metadata();
+    if (@$metadata > 0) {
+        $activity_type = $metadata->[0];
+        $data_level = $metadata->[1];
+    }
 
+    my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
+
+    if (!$activity_type) {
+        my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
+        if ($associated_projects) {
+            my $tracking_project_id = $associated_projects->[0]->[0];
+            my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
+            $activity_type = $tracking_project->get_project_activity_type();
+        }
+    }
+
+    if (!$data_level) {
+        $data_level = 'first';
+    }
 
     my $tracking_activities;
     my $tracking_data_json_cvterm_id;
@@ -444,7 +461,11 @@ sub get_activity_details :Path('/ajax/tracking_activity/details') :Args(1) {
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
     } elsif ($activity_type eq 'propagation') {
-        $tracking_activities = $c->config->{tracking_propagation_info};
+        if ($data_level eq 'second') {
+            $tracking_activities = $c->config->{second_tracking_propagation_info};
+        } else {
+            $tracking_activities = $c->config->{tracking_propagation_info};
+        }
     }
 
     my @details;
@@ -516,11 +537,29 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
 
+    my $activity_type;
+    my $data_level;
+    my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({ bcs_schema => $schema, parent_id => $identifier_id});
+    my $metadata = $identifier_metadata->get_identifier_metadata();
+    if (@$metadata > 0) {
+        $activity_type = $metadata->[0];
+        $data_level = $metadata->[1];
+    }
+
     my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
-    my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
-    my $tracking_project_id = $associated_projects->[0]->[0];
-    my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
-    my $activity_type = $tracking_project->get_project_activity_type();
+
+    if (!$activity_type) {
+        my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
+        if ($associated_projects) {
+            my $tracking_project_id = $associated_projects->[0]->[0];
+            my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
+            $activity_type = $tracking_project->get_project_activity_type();
+        }
+    }
+
+    if (!$data_level) {
+        $data_level = 'first';
+    }
 
     my $tracking_activities;
     my $tracking_data_json_cvterm_id;
@@ -529,7 +568,11 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     } elsif ($activity_type eq 'transformation') {
         $tracking_activities = $c->config->{tracking_transformation_info};
     } elsif ($activity_type eq 'propagation') {
-        $tracking_activities = $c->config->{tracking_propagation_info};
+        if ($data_level eq 'second') {
+            $tracking_activities = $c->config->{second_tracking_propagation_info};
+        } else {
+            $tracking_activities = $c->config->{tracking_propagation_info};
+        }
     }
 
     my @summary = ();
