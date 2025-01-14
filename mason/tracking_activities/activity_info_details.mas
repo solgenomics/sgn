@@ -2,7 +2,7 @@
 <%args>
 $identifier_name
 $identifier_id
-$program_name
+$program_name => undef
 $user_id => undef
 $identifier_prefix => ''
 $type_select_options => undef
@@ -16,7 +16,7 @@ $updated_status_type => undef
 $updated_status_string => undef
 $status_display => undef
 $user_role
-$project_id
+$project_id => undef
 $activity_type
 $source_info => undef
 

@@ -25,5 +25,29 @@ sub BUILD {
     $self->load();
 }
 
+sub get_identifier_metadata {
+    my $self = shift;
+    my $args = shift;
+    my $schema = $self->bcs_schema();
+    my $identifier_id = $self->parent_id();
+    my $type = $self->prop_type();
+    my $type_id = $self->_prop_type_id();
+    my $key_ref = $self->allowed_fields();
+    
+    my @fields = @$key_ref;
+    my @identifier_metadata;
+    my $metadata_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $identifier_id, type_id => $type_id});
+    if ($metadata_rs) {
+        my $metadata_json = $metadata_rs->value();
+        my $metadata_hash = JSON::Any->jsonToObj($metadata_json);
+        foreach my $field (@fields){
+            push @identifier_metadata, $metadata_hash->{$field};
+        }
+    }
+
+    return \@identifier_metadata;
+}
+
+
 
 1;

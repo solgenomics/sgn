@@ -8,6 +8,7 @@ use CXGN::TrackingActivity::TrackingIdentifier;
 use CXGN::Stock::Status;
 use CXGN::People::Person;
 use CXGN::Transformation::Transformation;
+use CXGN::TrackingActivity::IdentifierMetadata;
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -49,11 +50,31 @@ sub activity_details :Path('/activity/details') : Args(1) {
         $completed_metadata = 1;
     }
 
+    my $tracking_project_id;
+    my $program_name;
     my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
-    my $tracking_project_id = $associated_projects->[0]->[0];
-    my $program_name = $associated_projects->[0]->[3];
-    my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
-    my $activity_type = $tracking_project->get_project_activity_type();
+    if ($associated_projects) {
+        $tracking_project_id = $associated_projects->[0]->[0];
+        $program_name = $associated_projects->[0]->[3];
+    }
+
+    my $activity_type;
+    my $data_level;
+    my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({ bcs_schema => $schema, parent_id => $identifier_id});
+    my $metadata = $identifier_metadata->get_identifier_metadata();
+    if (@$metadata > 0) {
+        $activity_type = $metadata->[0];
+        $data_level = $metadata->[1];
+    }
+
+    if (!$activity_type) {
+        my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
+        $activity_type = $tracking_project->get_project_activity_type();
+    }
+
+    if (!$data_level) {
+        $data_level = 'first';
+    }
 
     my $types;
     my $activity_type_header;
@@ -64,8 +85,13 @@ sub activity_details :Path('/activity/details') : Args(1) {
         $types = $c->config->{tracking_transformation_info};
         $activity_type_header = $c->config->{tracking_transformation_info_header};
     } elsif ($activity_type eq 'propagation') {
-        $types = $c->config->{tracking_propagation_info};
-        $activity_type_header = $c->config->{tracking_propagation_info_header};
+       if ($data_level eq 'second') {
+           $types = $c->config->{second_tracking_propagation_info};
+           $activity_type_header = $c->config->{second_tracking_propagation_info_header};
+       } else {
+           $types = $c->config->{tracking_propagation_info};
+           $activity_type_header = $c->config->{tracking_propagation_info_header};
+       }
     }
 
     my @type_select_options = split ',',$types;
