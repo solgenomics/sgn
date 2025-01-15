@@ -117,4 +117,46 @@ sub get_project_activity_type {
 }
 
 
+=head2 get_project_related_active_identifier_names
+
+    Class method.
+    Returns all active tracking identifer names and related identifiers.
+    Example: my @active_identifiers = CXGN::TrackingActivity::ActivityProject->get_project_related_active_identifier_names($schema, $project_id)
+
+=cut
+
+sub get_project_related_active_identifier_names{
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $activity_project_id = $self->trial_id;
+
+    my $project_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_record', 'project_type')->cvterm_id;
+    my $experiment_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_activity', 'experiment_type')->cvterm_id;
+    my $stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id;
+    my $stock_relationship_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'child_of', 'stock_relationship')->cvterm_id;
+    my $completed_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'completed_metadata', 'stock_property')->cvterm_id;
+    my $terminated_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'terminated_metadata', 'stock_property')->cvterm_id;
+
+    my $q = "SELECT identifier.stock_id, identifier.uniquename, child_identifier.stock_id, child_identifier.uniquename
+        FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock AS identifier ON (nd_experiment_stock.stock_id = identifier.stock_id) AND identifier.type_id = ?
+        LEFT JOIN stockprop ON (identifier.stock_id = stockprop.stock_id) AND stockprop.type_id in (?, ?)
+        LEFT JOIN stock_relationship ON (identifier.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        JOIN stock AS child_identifier on (stock_relationship.subject_id = child_identifier.stock_id)
+        WHERE nd_experiment_project.project_id = ? AND stockprop.value IS NULL";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($stock_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $stock_relationship_type_id,  $activity_project_id);
+
+    my @data = ();
+    while(my($identifier_id, $identifier_name, $child_identifier_id, $child_identifer_name) = $h->fetchrow_array()){
+        push @data, [$identifier_id, $identifier_name, $child_identifier_id, $child_identifer_name];
+    }
+
+    return \@data;
+}
+
+
+
 1;

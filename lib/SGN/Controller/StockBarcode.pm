@@ -1472,10 +1472,15 @@ sub download_identifier_labels :Path('/barcode/identifier/download/pdf') :Args(0
         }
     } elsif ($trial_id || $trial_id ne '') {
         my $activity_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $trial_id);
-        $tracking_info = $activity_project->get_project_active_identifiers();
+        $tracking_info = $activity_project->get_project_related_active_identifier_names();
         @tracking_list = @$tracking_info;
-        foreach my $item_info (@tracking_list) {
-            push @id_list, $item_info->[1];
+        foreach my $identifier (@tracking_list) {
+            my $identifier_name = $identifier->[1];
+            push @id_list, $identifier_name;
+            my $child_identifier_name = $identifier->[3];
+            if ($child_identifier_name) {
+                push @id_list, $child_identifier_name;
+            }
         }
     } else {
         my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, bcs_schema => $schema});
