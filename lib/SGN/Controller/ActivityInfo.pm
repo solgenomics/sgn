@@ -195,6 +195,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $activity_type;
     my $program_name;
     my $source_info_string;
+    my $parent_identifier_stock_id;
 
     if ($identifier_name) {
         my $identifier_rs = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name});
@@ -208,7 +209,10 @@ sub record_activity :Path('/activity/record') :Args(0) {
 
         my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
         my $associated_projects = $tracking_identifier_obj->get_associated_project_program();
-        $program_name = $associated_projects->[0]->[3];
+        if ($associated_projects) {
+            $program_name = $associated_projects->[0]->[3];
+            $tracking_project_id = $associated_projects->[0]->[0];
+        }
         my $material_info = $tracking_identifier_obj->get_tracking_identifier_info();
         $material_stock_id = $material_info->[0]->[2];
         $material_name = $material_info->[0]->[3];
@@ -229,9 +233,28 @@ sub record_activity :Path('/activity/record') :Args(0) {
             $source_info_string = encode_json $source_info_hash;
         }
 
-        $tracking_project_id = $associated_projects->[0]->[0];
-        my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
-        $activity_type = $tracking_project->get_project_activity_type();
+        my $activity_type;
+        my $data_level;
+        my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({ bcs_schema => $schema, parent_id => $identifier_id});
+        my $metadata = $identifier_metadata->get_identifier_metadata();
+        if (@$metadata > 0) {
+            $activity_type = $metadata->[0];
+            $data_level = $metadata->[1];
+        }
+
+        if (!$activity_type) {
+            my $tracking_project = CXGN::TrackingActivity::ActivityProject->new(bcs_schema => $schema, trial_id => $tracking_project_id);
+            $activity_type = $tracking_project->get_project_activity_type();
+        }
+
+        if (!$data_level) {
+            $data_level = 'first';
+        }
+
+        if ($data_level eq 'second') {
+            my $parent_identifier_info = $tracking_identifier_obj->get_parent_tracking_identifier();
+            $parent_identifier_stock_id = $parent_identifier_info->[0];
+        }
 
         my $types;
         my $activity_type_header;
@@ -242,8 +265,13 @@ sub record_activity :Path('/activity/record') :Args(0) {
             $types = $c->config->{tracking_transformation_info};
             $activity_type_header = $c->config->{tracking_transformation_info_header};
         } elsif ($activity_type eq 'propagation') {
-            $types = $c->config->{tracking_propagation_info};
-            $activity_type_header = $c->config->{tracking_propagation_info_header};
+            if ($data_level eq 'second') {
+                $types = $c->config->{second_tracking_propagation_info};
+                $activity_type_header = $c->config->{second_tracking_propagation_info_header};
+            } else {
+                $types = $c->config->{tracking_propagation_info};
+                $activity_type_header = $c->config->{tracking_propagation_info_header};
+            }
         }
 
         my @type_select_options = split ',',$types;
@@ -270,6 +298,8 @@ sub record_activity :Path('/activity/record') :Args(0) {
     $c->stash->{activity_type} = $activity_type;
     $c->stash->{program_name} = $program_name;
     $c->stash->{source_info} = $source_info_string;
+    $c->stash->{parent_identifier_stock_id} = $parent_identifier_stock_id;
+
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
 }

@@ -13,6 +13,7 @@ $project_id => undef
 $activity_type => undef
 $program_name => undef
 $source_info => undef
+$parent_identifier_stock_id => undef
 
 </%args>
 
@@ -81,8 +82,13 @@ $source_info => undef
 
 
 % if ($identifier_id) {
+
     <td>
+% if ($parent_identifier_stock_id) {
+        <a href='/activity/details/<%$parent_identifier_stock_id%>'><p>Go to Parent Identifier Page</p></a>
+% } else {
         <a href='/breeders/trial/<%$project_id%>'><p>Go to Project Page</p></a>
+% }
     </td>
 
     <&| /page/info_section.mas, title => 'Summary', collapsible => 1, collapsed => 0, subtitle => '' &>
