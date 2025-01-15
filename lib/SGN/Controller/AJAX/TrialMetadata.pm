@@ -282,45 +282,12 @@ sub trial_details_POST  {
     print STDERR "logged in user TrialMetadata.pm BEFORE EVAL: ".Dumper($logged_in_user_arr)."\n";
 
 
-    eval {
-        if ($details->{name}) { $trial->set_name($details->{name}); }
-        if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
-        if ($details->{location}) { $trial->set_location($details->{location}); }
-        if ($details->{year}) { $trial->set_year($details->{year}); }
-        if ($details->{type}) { $trial->set_project_type($details->{type}); }
-        if ($details->{planting_date}) {
-        if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
-        else { $trial->set_planting_date($details->{planting_date}); }
-    }
-        if ($details->{transplanting_date}) {
-            if ($details->{transplanting_date} eq 'remove') { $trial->remove_transplanting_date($trial->get_transplanting_date()); }
-            else { $trial->set_transplanting_date($details->{transplanting_date}); }
-        }
-        if ($details->{harvest_date}) {
-            if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
-            else { $trial->set_harvest_date($details->{harvest_date}); }
-        }
-
-        if ($details->{description}) { $trial->set_description($details->{description}); }
-        if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
-        if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
-        if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
-        if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
-        if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
-    };
-
-    if ($details->{plate_format}) { $trial->set_genotyping_plate_format($details->{plate_format}); }
-    if ($details->{plate_sample_type}) { $trial->set_genotyping_plate_sample_type($details->{plate_sample_type}); }
-    if ($details->{facility}) { $trial->set_genotyping_facility($details->{facility}); }
-    if ($details->{facility_submitted}) { $trial->set_genotyping_facility_submitted($details->{facility_submitted}); }
-    if ($details->{facility_status}) { $trial->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
-    if ($details->{raw_data_link}) { $trial->set_raw_data_link($details->{raw_data_link}); }
-
-    if ($@) {
-	    $c->stash->{rest} = { error => "An error occurred setting the new trial details: $@" };
+    my $error = $trial->update_metadata($details);
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
     }
     else {
-	    $c->stash->{rest} = { success => 1 };
+        $c->stash->{rest} = { success => 1 };
     }
 }
 
