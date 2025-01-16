@@ -2,6 +2,7 @@ package CXGN::File::Parse::Plugin::Excel;
 
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
+use List::MoreUtils qw|uniq|;
 
 sub type {
   return "excel";
@@ -12,6 +13,7 @@ sub parse {
   my $super = shift;
   my $file = $super->file();
   my $type = $super->type();
+  my $column_arrays = $super->column_arrays();
 
   # Parsed data to return
   my %rtn = (
@@ -68,7 +70,15 @@ sub parse {
       my $c = $worksheet->get_cell($row, $col);
       my $v = $c ? $c->value() : undef;
       $v = $super->clean_value($v, $hv);
-      $row_info{$hv} = $v;
+
+      # Merge with existing data if column occurs more than once and allowed to be an array
+      if ( exists $row_info{$hv} && exists $column_arrays->{$hv} ) {
+        my @merged = uniq(@{$row_info{$hv}}, @$v);
+        $row_info{$hv} = \@merged;
+      }
+      else {
+        $row_info{$hv} = $v;
+      }
 
       if ( $v && $v ne '' ) {
         if ( ref($v) eq 'ARRAY' ) {

@@ -297,6 +297,7 @@ sub parse {
   my $type = $self->type();
   my $required_columns = $self->required_columns();
   my $optional_columns = $self->optional_columns();
+  my $column_arrays = $self->column_arrays();
 
   # If type is not defined, use the file extension
   if ( !$type ) {
@@ -399,6 +400,10 @@ sub parse {
       }
 
     }
+
+    # Add columns that are arrays, as defined in the CXGN::File::Parse constructor
+    my @array_columns = keys %$column_arrays if $column_arrays;
+    $parsed->{'array_columns'} = \@array_columns || [];
 
     return $parsed;
   }
