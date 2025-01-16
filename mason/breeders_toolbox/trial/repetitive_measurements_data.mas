@@ -174,8 +174,8 @@ jQuery(document).ready(function() {
             },function (start) {
                 var new_start_date = new Date(start).getTime();
                 var new_end_date = new Date(jQuery('#repetitive_measurement_end_date').val()).getTime();
-                alert("the start date is : new_start_date");
-                alert("the end date is: new_end_date");
+                //alert("the start date is : new_start_date");
+                //alert("the end date is: new_end_date");
                 jQuery('#repetitive_slider_range').slider('values', [new_start_date, new_end_date]);
             });
         });
@@ -194,8 +194,8 @@ jQuery(document).ready(function() {
             }, function (end) {
                 var new_start_date = new Date(jQuery('#repetitive_measurement_start_date').val()).getTime();
                 var new_end_date = new Date(end).getTime();
-                console.log("the start date in the end_date section is : new_start_date");
-                console.log("the end date  in the  end_date section is: new_end_date");
+                //console.log("the start date in the end_date section is : new_start_date");
+                //console.log("the end date  in the  end_date section is: new_end_date");
                 jQuery('#repetitive_slider_range').slider('values', [new_start_date, new_end_date]);
             });
         });
@@ -235,6 +235,15 @@ jQuery(document).ready(function() {
 	    });
     }
 
+    function parseDateIgnoreTimeZone(timestampStr){
+        var datePart = timestampStr.slice(0,10); // includes only the first 10 characters YYYY-MM-DD !!!
+        var parts = datePart.split("-"); 
+        var year = +parts[0];
+        var month = +parts[1] - 1;
+        var day = +parts[2];
+        return new Date(year, month, day, 12); //return a UTC date for that day !!!
+    }
+    
     function repetitive_build_menu(result) {
         var menu='<select id="selectRawDataTrait">';
         for (var i =0; i<result.data.length; i++) {
@@ -284,18 +293,19 @@ jQuery(document).ready(function() {
                     values: []
                 };
             }
+            var dateOnly = parseDateIgnoreTimeZone(item.observationTimeStamp);
             observation_units_map[unique_key].values.push({
 				value: parseFloat(item.value),
-				date: new Date(item.observationTimeStamp)
+				date: dateOnly
 			});
         });
 		
 		var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
         var start_date = new Date(jQuery('#repetitive_measurement_start_date').val());
         var end_date = new Date(jQuery('#repetitive_measurement_end_date').val());
-        console.log("the trait is: ", trait_name);
-        console.log("the start date of this trait is: ", start_date);
-        console.log("the end date of this trait is: ", end_date);
+        //console.log("the trait is: ", trait_name);
+        //console.log("the start date of this trait is: ", start_date);
+        //console.log("the end date of this trait is: ", end_date);
 
         /*
 		just a note:if user select the 'all values' option in the UI, the output values will be separated by comma ",".
@@ -307,7 +317,6 @@ jQuery(document).ready(function() {
             //sort the repetitive values arrray by collect_date!!
             group.values.sort((a, b) => a.date - b.date);
             var values = group.values.map(d => d.value); //store only the value for each object !!
-			var repetitive_line_graph = [];
             var valueToShow = '';
 
             if (repetitive_measurement_level === 'first') {
@@ -319,10 +328,9 @@ jQuery(document).ready(function() {
                 var avg = sum / values.length;
                 valueToShow = avg.toFixed(2);
             } else if(repetitive_measurement_level === 'sum') {
-                var sum = values.reduce((a,b) => a + b, 0);
-                valueToShow = sum.toFixed(2);
-            }
-            else if(repetitive_measurement_level === 'all') {
+                var sum_values = values.reduce((a,b) => a + b, 0);
+                valueToShow = sum_values.toFixed(2);
+            } else if(repetitive_measurement_level === 'all') {
                 valueToShow = values.join(', ');
             }
 
@@ -347,9 +355,9 @@ jQuery(document).ready(function() {
 					var container = jQuery(this);
 					var observationUnitKey = container.data('observation');
 					var group = observation_units_map[observationUnitKey];
-					var data = group.values;
+					var small_graph_data = group.values;
 
-					draw_small_graph(container, data);
+					draw_small_graph(container, small_graph_data);
 				});
 		   	}
 		});
@@ -361,7 +369,6 @@ jQuery(document).ready(function() {
 	*/
 
 	function draw_small_graph(container, data) {
-		//set dimensions
 		var small_graph_dim = {
 			"width": 60,
 			"height": 20,
@@ -377,37 +384,34 @@ jQuery(document).ready(function() {
 		};
 
 		//draw a line graph based on the repetitive_values for each obs_unit_name 
-		lineGraphRepetitiveValues.drawLineGraph(data, container.get(0), small_graph_dim, '', '', options); //since, we are just displaying the trend, therefore, '' strings !
+		lineGraphRepetitiveValues.drawLineGraph(data, container.get(0), small_graph_dim, '', '', options);
 
 		//add a click event to small_graph to view the graph in the larger appearance
 		container.on('click', function() {
 			var observationUnitKey = container.data('observation');
 			var group = observation_units_map[observationUnitKey];
-			var data = group.values;
+			var graph_data = group.values;
             var label_observation_unit_name = group.observationUnitName;
 			var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
 
-			open_large_graph(data, trait_name, label_observation_unit_name);
+			open_large_graph(graph_data, trait_name, label_observation_unit_name);
 		});
 	}
 
 	//here, the larger graph function, it has all the graph info - titles, axis labels and will open in the new window !!
 	function open_large_graph(data, trait_name, label_observation_unit_name) {
 		//use trait_name for the title of the graph 
-        console.log("all values in the data object:", data);
+        //console.log("all values in the data object:", data);
 		jQuery('#title_trait_name').text(trait_name);
-
 		//clear any previous content
 		jQuery('#large_graph_container').html('');
-
-		//open the modal 
 		jQuery('#large_graph').modal('show');
 
 		//add options to show in the larger graph 
 		var options = {
 			showXAxis:true, 
 			showYAxis:true, 
-			showTitle:true, 
+			showTitle:true,
 			showDots: true
 		};
 		
