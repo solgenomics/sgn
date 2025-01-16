@@ -7,6 +7,7 @@ $user_id => undef
 $identifier_prefix => ''
 $type_select_options => undef
 $activity_headers
+$second_activity_headers => undef
 $timestamp => undef
 $date => undef
 $material_name
@@ -28,6 +29,10 @@ $parent_identifier_stock_id => undef
 % use utf8;
 % my @column_headers = @$activity_headers;
 % my @activity_types = @$type_select_options;
+% my @second_column_headers;
+% if ($second_activity_headers) {
+%    @second_column_headers = @$second_activity_headers;
+% }
 
 <& /page/page_title.mas, title => "Tracking Activities of '$identifier_name'" &>
 
@@ -118,6 +123,7 @@ $parent_identifier_stock_id => undef
     </div>
 </&>
 
+% if (!$parent_identifier_stock_id && ($activity_type eq 'propagation')) {
 <&| /page/info_section.mas, title => 'Plantlet Info', collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
@@ -127,6 +133,9 @@ $parent_identifier_stock_id => undef
                         <thead>
                             <tr>
                                 <th>Plantlet ID</th>
+% foreach my $second_header(@second_column_headers){
+                                <th><%$second_header%></th>
+%}
                              </tr>
                         </thead>
                     </table>
@@ -135,6 +144,7 @@ $parent_identifier_stock_id => undef
         </div>
     </div>
 </&>
+% }
 
 <&| /page/info_section.mas, title => 'Activity Details', collapsible => 1, collapsed => 0, subtitle => '' &>
     <div class = "well well-sm">

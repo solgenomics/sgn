@@ -77,25 +77,28 @@ sub activity_details :Path('/activity/details') : Args(1) {
     }
 
     my $types;
-    my $activity_type_header;
+    my $activity_type_headers;
+    my $second_activity_type_headers;
     if ($activity_type eq 'tissue_culture') {
         $types = $c->config->{tracking_tissue_culture_info};
-        $activity_type_header = $c->config->{tracking_tissue_culture_info_header};
+        $activity_type_headers = $c->config->{tracking_tissue_culture_info_header};
     } elsif ($activity_type eq 'transformation') {
         $types = $c->config->{tracking_transformation_info};
-        $activity_type_header = $c->config->{tracking_transformation_info_header};
+        $activity_type_headers = $c->config->{tracking_transformation_info_header};
     } elsif ($activity_type eq 'propagation') {
        if ($data_level eq 'second') {
            $types = $c->config->{second_tracking_propagation_info};
-           $activity_type_header = $c->config->{second_tracking_propagation_info_header};
+           $activity_type_headers = $c->config->{second_tracking_propagation_info_header};
        } else {
            $types = $c->config->{tracking_propagation_info};
-           $activity_type_header = $c->config->{tracking_propagation_info_header};
+           $activity_type_headers = $c->config->{tracking_propagation_info_header};
+           $second_activity_type_headers = $c->config->{second_tracking_propagation_info_header};
        }
     }
 
     my @type_select_options = split ',',$types;
-    my @activity_headers = split ',',$activity_type_header;
+    my @activity_headers = split ',',$activity_type_headers;
+    my @second_activity_headers = split ',',$second_activity_type_headers;
 
     my @options = ();
     for my $i (0 .. $#type_select_options) {
@@ -147,6 +150,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{identifier_name} = $identifier_name;
     $c->stash->{type_select_options} = \@options;
     $c->stash->{activity_headers} = \@activity_headers;
+    $c->stash->{second_activity_headers} = \@second_activity_headers;
     $c->stash->{material_name} = $material_name;
     $c->stash->{material_id} = $material_id;
     $c->stash->{material_type} = $material_type;

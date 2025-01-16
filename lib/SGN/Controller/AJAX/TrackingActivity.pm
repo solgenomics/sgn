@@ -742,7 +742,7 @@ sub get_project_active_identifier_names :Path('/ajax/tracking_activity/project_a
         push @identifier_names, $identifier_name;
         my $child_identifier_name = $identifier_info->[3];
         if ($child_identifier_name) {
-            push @identifier_names, $child_identifier_name;        
+            push @identifier_names, $child_identifier_name;
         }
 
     }
@@ -1009,16 +1009,45 @@ sub get_plantlets :Path('/ajax/tracking_activity/plantlets') :Args(1) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
 
+    my $info_fields = $c->config->{second_tracking_propagation_info};
+    my @activity_types = split ',',$info_fields;
+
     my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
-    my $ids = $tracking_identifier_obj->get_child_tracking_identifiers();
+    my $ids = $tracking_identifier_obj->get_child_tracking_identifier_info();
     my @all_ids;
     foreach my $id (@$ids) {
+        my @each_id_info = ();
         my $identifier_id = $id->[0];
         my $identifier_name = $id->[1];
-        push @all_ids, [qq{<a href="/activity/details/$identifier_id">$identifier_name</a>}];
-
+        push @each_id_info, qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};
+        my $progress_value = $id->[2];
+        if ($progress_value) {
+            my $progress_ref = JSON::Any->jsonToObj($progress_value);
+            my %progress_hash = %{$progress_ref};
+            foreach my $type (@activity_types){
+                my $input = '';
+                if ($progress_hash{$type}) {
+                    my $details = {};
+                    my %details_hash = ();
+                    $details = $progress_hash{$type};
+                    %details_hash = %{$details};
+                    foreach my $key (keys %details_hash) {
+                        $input = $details_hash{$key}{'input'};
+                        push @each_id_info, $input;
+                    }
+                } else {
+                    push @each_id_info, $input;
+                }
+            }
+            push @all_ids,[@each_id_info];
+        } else {
+            foreach my $type (@activity_types) {
+                push @each_id_info, '';
+            }
+            push @all_ids,[@each_id_info];
+        }
     }
-
+    
     $c->stash->{rest} = { data => \@all_ids };
 
 }

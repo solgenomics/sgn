@@ -156,6 +156,35 @@ sub get_parent_tracking_identifier {
 }
 
 
+sub get_child_tracking_identifier_info {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $parent_tracking_identifier_stock_id = $self->tracking_identifier_stock_id();
+    my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", "stock_type")->cvterm_id();
+    my $child_of_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'child_of', 'stock_relationship')->cvterm_id;
+    my $propagation_stockprop_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_propagation_json', 'stock_property')->cvterm_id;
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) AND stock_relationship.type_id = ? AND stock.type_id = ?
+        LEFT JOIN stockprop ON (stockprop.stock_id = stock.stock_id) AND stockprop.type_id = ?
+        WHERE stock_relationship.object_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($child_of_type_id, $tracking_identifier_type_id, $propagation_stockprop_type_id, $parent_tracking_identifier_stock_id);
+
+    my @child_tracking_identifiers = ();
+    while (my ($tracking_stock_id, $tracking_name, $progress_info) = $h->fetchrow_array()){
+        push @child_tracking_identifiers, [$tracking_stock_id, $tracking_name, $progress_info]
+    }
+
+    return \@child_tracking_identifiers;
+
+}
+
+
+
 ###
 1;
 ###
