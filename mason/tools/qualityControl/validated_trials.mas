@@ -204,12 +204,12 @@ function drawD3Barplot(statsByTrait, selectedTrait) {
     // Top filtering (e.g., "5", "10", "25", etc.)
     const percentage = parseInt(filterOption, 10); // Extract percentage from top option
     const count = Math.ceil((percentage / 100) * sortedData.length);
-    filteredData = sortedData.slice(-count); // Get the top entries
+    filteredData = sortedData.slice(0, count); // Get the top entries
   } else {
     // Bottom filtering (e.g., "bottom-5", "bottom-25")
     const percentage = parseInt(filterOption.split('-')[1], 10); // Extract percentage from "bottom-XX"
     const count = Math.ceil((percentage / 100) * sortedData.length);
-    filteredData = sortedData.slice(0, count); // Get the bottom entries
+    filteredData = sortedData.slice(-count); // Get the bottom entries
   }
 
   // Always show values ordered from major to minor
