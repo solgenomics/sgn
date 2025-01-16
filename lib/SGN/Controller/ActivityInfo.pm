@@ -192,6 +192,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $identifier_id;
     my @options = ();
     my @activity_headers = ();
+    my @second_activity_headers = ();
     my $material_stock_id;
     my $material_name;
     my $material_type;
@@ -262,6 +263,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
 
         my $types;
         my $activity_type_header;
+        my $second_activity_type_headers;
         if ($activity_type eq 'tissue_culture') {
             $types = $c->config->{tracking_tissue_culture_info};
             $activity_type_header = $c->config->{tracking_tissue_culture_info_header};
@@ -275,34 +277,38 @@ sub record_activity :Path('/activity/record') :Args(0) {
             } else {
                 $types = $c->config->{tracking_propagation_info};
                 $activity_type_header = $c->config->{tracking_propagation_info_header};
+                $second_activity_type_headers = $c->config->{second_tracking_propagation_info_header};
             }
         }
 
         my @type_select_options = split ',',$types;
         @activity_headers = split ',',$activity_type_header;
+        @second_activity_headers = split ',',$second_activity_type_headers;
 
         for my $i (0 .. $#type_select_options) {
             push @options, [$type_select_options[$i], $activity_headers[$i]];
         }
+
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+        my $date = $time->ymd();
+
+        $c->stash->{identifier_id} = $identifier_id;
+        $c->stash->{type_select_options} = \@options;
+        $c->stash->{activity_headers} = \@activity_headers;
+        $c->stash->{second_activity_headers} = \@second_activity_headers;
+        $c->stash->{material_stock_id} = $material_stock_id;
+        $c->stash->{material_name} = $material_name;
+        $c->stash->{material_type} = $material_type;
+        $c->stash->{timestamp} = $timestamp;
+        $c->stash->{date} = $date;
+        $c->stash->{project_id} = $tracking_project_id;
+        $c->stash->{activity_type} = $activity_type;
+        $c->stash->{program_name} = $program_name;
+        $c->stash->{source_info} = $source_info_string;
+        $c->stash->{parent_identifier_stock_id} = $parent_identifier_stock_id;
+
     }
-
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-    my $date = $time->ymd();
-
-    $c->stash->{identifier_id} = $identifier_id;
-    $c->stash->{type_select_options} = \@options;
-    $c->stash->{activity_headers} = \@activity_headers;
-    $c->stash->{material_stock_id} = $material_stock_id;
-    $c->stash->{material_name} = $material_name;
-    $c->stash->{material_type} = $material_type;
-    $c->stash->{timestamp} = $timestamp;
-    $c->stash->{date} = $date;
-    $c->stash->{project_id} = $tracking_project_id;
-    $c->stash->{activity_type} = $activity_type;
-    $c->stash->{program_name} = $program_name;
-    $c->stash->{source_info} = $source_info_string;
-    $c->stash->{parent_identifier_stock_id} = $parent_identifier_stock_id;
 
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
