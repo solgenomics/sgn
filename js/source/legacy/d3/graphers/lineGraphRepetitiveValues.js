@@ -53,11 +53,8 @@
             d.value = +d.value;
         });
 
-        // sort the datA BY date in ascending order  
-        //data.sort((a, b) => d3.ascending(a.date, b.date));
-
         // Set the x-axis scale
-        var xExtent = d3.extent(data, d => d.date);
+        var xExtent = d3.extent(data, function(d) { return d.date; });
         var xPadding = 0.05 * (xExtent[1] - xExtent[0]);
         var x = d3.scaleTime()
         .domain([
@@ -68,7 +65,7 @@
 
         // Set the y-axis scale
         var y = d3.scaleLinear()
-            .domain([d3.min(data, d => d.value), d3.max(data, d => d.value)])
+            .domain([d3.min(data, function(d) { return d.value; }), d3.max(data, function(d) {return d.value; })])
             .nice()
             .range([height, 0]);
 
@@ -90,8 +87,8 @@
         }
 
         var line = d3.line()
-            .x(d => x(d.date))
-            .y(d => y(d.value))
+            .x(function(d) {return x(d.date); })
+            .y(function(d) {return y(d.value); })
             .curve(d3.curveMonotoneX); //this will make the line 
 
         // Draw line path
@@ -102,32 +99,56 @@
             .attr("stroke-width", 2)
             .attr("d", line);
 
-        // highlight the data points with dots 
+        var tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("position", "absolute")
+            .style("background-color", "#fff")
+            .style("border", "1px solid #ccc")
+            .style("padding", "5px")
+            .style("z-index", 9999)
+            .style("opacity", 0);
         if (options.showDots) {
-            svg.selectAll("dot")
+            var dotsGroup = svg.selectAll("g.dot-group")
                 .data(data)
                 .enter()
+                .append("g")
+                  .attr("class", "dot-group");
+
+            // The visible circle (red, radius=4)
+            dotsGroup
                 .append("circle")
-                .attr("cx", d => x(d.date))
-                .attr("cy", d => y(d.value))
-                .attr("r", 4)
-                .attr("fill", "red")
-                .on("mouseover", function(event, d) {
-                    //console.log('chek mouseover is working as it supposed to be:', d);
-                    // Show tooltip with date + value
-                    var tooltip = d3.select("body").append("div")
-                        .attr("class", "tooltip")
-                        .style("position", "absolute")
-                        .style("background-color", "#fff")
-                        .style("border", "1px solid #ccc")
-                        .style("padding", "5px")
-                        .html(`<strong>Date:</strong> ${d3.timeFormat("%Y-%m-%d")(d.date)}<br><strong>Value:</strong> ${d.value}`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 25) + "px");
+                  .attr("cx", function(d) { return x(d.date); })
+                  .attr("cy", function(d) { return y(d.value); })
+                  .attr("r", 4)
+                  .attr("fill", "red");
+
+            // The invisible circle (bigger radius) to capture hover events
+            dotsGroup
+            .append("circle")
+                .attr("cx", function(d) { return x(d.date); })
+                .attr("cy", function(d) { return y(d.value); })
+                .attr("r", 10)                        // bigger radius
+                .style("fill", "none")
+                .style("pointer-events", "all")       // ensure it can receive events
+                .on("mouseover", function(d) {
+                var e = d3.event;
+                tooltip
+                    .html(
+                        "<strong>Value:</strong> " + d.value + "<br/>" +
+                        "<strong>Date:</strong> " + d3.timeFormat("%Y-%m-%d")(d.date)
+                    )
+                    .style("left", (e.pageX + 10) + "px")
+                    .style("top",  (e.pageY - 25) + "px")
+                    .style("opacity", 1);
+                })
+                .on("mousemove", function() {
+                    var e = d3.event;
+                    tooltip
+                      .style("left", (e.pageX + 10) + "px")
+                      .style("top",  (e.pageY - 25) + "px");
                 })
                 .on("mouseout", function() {
-                    //console.log('check mouseout is working as it supposed to be:', d);
-                    d3.select(".tooltip").remove();
+                    tooltip.style("opacity", 0);
                 });
         }
 
