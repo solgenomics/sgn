@@ -30,6 +30,15 @@ sub activity_details :Path('/activity/details') : Args(1) {
         $user_role = "curator";
     }
 
+    my $identifier_stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
+    my $tracking_identifier = $schema->resultset("Stock::Stock")->find( { stock_id => $identifier_id, type_id => $identifier_stock_type_id } );
+
+    if (!$tracking_identifier) {
+        $c->stash->{template} = '/generic_message.mas';
+        $c->stash->{message} = 'The requested tracking identifier does not exist.';
+        return;
+    }
+
     my $tracking_identifier_obj = CXGN::TrackingActivity::TrackingIdentifier->new({schema=>$schema, dbh=>$dbh, tracking_identifier_stock_id=>$identifier_id});
     my $tracking_info = $tracking_identifier_obj->get_tracking_identifier_info();
 

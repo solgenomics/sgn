@@ -229,18 +229,18 @@ sub generate_tracking_identifiers_POST : Args(0) {
              $tracking_id = $return->{tracking_id};
         }
 
-        my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({
-            bcs_schema => $schema,
-            data_type => $activity_type,
-            data_level => 'first',
-            parent_id => $tracking_id
-        });
+#        my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({
+#            bcs_schema => $schema,
+#            data_type => $activity_type,
+#            data_level => 'first',
+#            parent_id => $tracking_id
+#        });
 
-        $identifier_metadata->store();
-        if (!$identifier_metadata->store()){
-            $c->stash->{rest} = {error_string => "Error saving identifier metadata",};
-            return;
-        }
+#        $identifier_metadata->store();
+#        if (!$identifier_metadata->store()){
+#            $c->stash->{rest} = {error_string => "Error saving identifier metadata",};
+#            return;
+#        }
 
     }
 
@@ -371,7 +371,8 @@ sub activity_info_save_POST : Args(0) {
                 tracking_identifier => $new_child_identifier,
                 parent_tracking_identifier => $tracking_identifier,
                 material => $material_name,
-                user_id => $user_id
+                user_id => $user_id,
+                activity_type => $activity_type
              });
 
             my $return = $tracking_obj->store_child_identifier();
@@ -387,18 +388,18 @@ sub activity_info_save_POST : Args(0) {
                 $tracking_id = $return->{tracking_id};
             }
 
-            my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({
-                bcs_schema => $schema,
-                data_type => $activity_type,
-                data_level => 'second',
-                parent_id => $tracking_id
-            });
+#            my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({
+#                bcs_schema => $schema,
+#                data_type => $activity_type,
+#                data_level => 'second',
+#                parent_id => $tracking_id
+#            });
 
-            $identifier_metadata->store();
-            if (!$identifier_metadata->store()){
-                $c->stash->{rest} = {error_string => "Error saving identifier metadata",};
-                return;
-            }
+#            $identifier_metadata->store();
+#            if (!$identifier_metadata->store()){
+#                $c->stash->{rest} = {error_string => "Error saving identifier metadata",};
+#                return;
+#            }
         }
     }
     my $add_activity_info = CXGN::TrackingActivity::ActivityInfo->new({
@@ -1047,7 +1048,7 @@ sub get_plantlets :Path('/ajax/tracking_activity/plantlets') :Args(1) {
             push @all_ids,[@each_id_info];
         }
     }
-    
+
     $c->stash->{rest} = { data => \@all_ids };
 
 }

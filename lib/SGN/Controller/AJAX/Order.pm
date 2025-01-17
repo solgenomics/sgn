@@ -100,6 +100,7 @@ sub submit_order_POST : Args(0) {
     }
 
     my $tracking_activity = $c->config->{tracking_order_activity};
+    my $tracking_activity_type = $c->config->{tracking_order_type};
 
     my @item_list;
     my @contact_email_list;
@@ -170,7 +171,7 @@ sub submit_order_POST : Args(0) {
                     year => '2024',
                     project_description => 'Tracking order progress',
                     activity_project_name => $activity_project_name,
-                    activity_type => 'tissue_culture',
+                    activity_type => $tracking_activity_type,
                     nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
                     owner_id => $contact_id,
                     project_vendor => $contact_id
@@ -878,6 +879,7 @@ sub order_submission_POST : Args(0) {
     my $order_breeding_program_id = $c->req->param('order_breeding_program_id');
     my $order_details = decode_json ($c->req->param('order_details'));
     my $tracking_activity = $c->config->{tracking_order_activity};
+    my $tracking_activity_type = $c->config->{tracking_order_type};
 
     print STDERR "ORDER DETAILS =".Dumper($order_details)."\n";
     my %details;
@@ -966,7 +968,7 @@ sub order_submission_POST : Args(0) {
                 year => '2024',
                 project_description => 'Tracking order progress',
                 activity_project_name => $activity_project_name,
-                activity_type => 'propagation',
+                activity_type => $tracking_activity_type,
                 nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
                 owner_id => $contact_person_id,
                 project_vendor => $contact_person_id
@@ -989,7 +991,8 @@ sub order_submission_POST : Args(0) {
             tracking_identifier => $tracking_identifier,
             material => $source_name,
             project_id => $activity_project_id,
-            user_id => $contact_person_id
+            user_id => $contact_person_id,
+            activity_type => $tracking_activity_type
          });
         my $return = $tracking_obj->store();
         if (!$return) {

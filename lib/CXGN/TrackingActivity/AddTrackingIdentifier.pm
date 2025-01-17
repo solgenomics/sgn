@@ -21,6 +21,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::TrackingActivity::IdentifierMetadata;
 
 has 'schema' => (
     is => 'rw',
@@ -63,6 +64,13 @@ has 'parent_tracking_identifier' => (
     is => 'rw',
 );
 
+has 'activity_type' => (
+    isa =>'Str',
+    is => 'rw',
+    required => 1,
+);
+
+
 
 sub store {
     my $self = shift;
@@ -72,6 +80,7 @@ sub store {
     my $material_name = $self->get_material();
     my $project_id = $self->get_project_id();
     my $user_id = $self->get_user_id();
+    my $activity_type = $self->get_activity_type();
     my $error;
 
     my $tracking_identifier_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
@@ -118,6 +127,15 @@ sub store {
             project_id => $project_id,
         });
 
+        my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({
+            bcs_schema => $schema,
+            data_type => $activity_type,
+            data_level => 'first',
+            parent_id => $tracking_id
+        });
+
+        $identifier_metadata->store();
+
     };
 
     my $error;
@@ -148,6 +166,7 @@ sub store_child_identifier {
     my $parent_tracking_identifier = $self->get_parent_tracking_identifier();
     my $material_name = $self->get_material();
     my $user_id = $self->get_user_id();
+    my $activity_type = $self->get_activity_type();
     my $error;
 
     my $tracking_identifier_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_identifier', 'stock_type')->cvterm_id();
@@ -184,6 +203,15 @@ sub store_child_identifier {
             object_id => $parent_id_rs->stock_id,
             type_id => $child_of_cvterm_id,
         });
+
+        my $identifier_metadata = CXGN::TrackingActivity::IdentifierMetadata->new({
+            bcs_schema => $schema,
+            data_type => $activity_type,
+            data_level => 'second',
+            parent_id => $tracking_id
+        });
+
+        $identifier_metadata->store();
 
     };
 
