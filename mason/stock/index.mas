@@ -53,6 +53,8 @@ $barcode_tempdir => undef
 $barcode_tempuri => undef
 $identifier_prefix => 'SGN'
 $organism_autocomplete_uri => '/ajax/organism/autocomplete/'
+$image => undef
+$image_url => undef
 </%args>
 
 
@@ -268,9 +270,22 @@ function jqueryStuff() {
                     <div style="display: flex; justify-content: center; align-items; height: 100%; margin-top: 20px;">
                         <%perl>
                         use SGN::Image;
-                        my $image_id = $stockref->{image_ids}->[0]->[0];
-                        my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
-                        my $image_url = $image->get_image_url('small');
+                        my $schema = $stockref->{schema};
+                        my $stock_id = $stockref->{stock_id};
+
+                        my $display_image_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'selected_display_image', 'stock_property')->cvterm_id();
+                        my $stockprop = $schema->resultset('Stock::Stockprop')->find({ stock_id => $stock_id, type_id => $display_image_cvterm_id });
+
+                        if ($stockprop) {
+                            my $image_id = $stockprop->value;
+                            my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+                            $image_url = $image->get_image_url('small');
+                        } else {
+                            my $image_id = $stockref->{image_ids}->[0]->[0];
+                            my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+                            $image_url = $image->get_image_url('small');
+                        }
+                        
                         </%perl>
 
                         <img src="<% $image_url %>" alt="No accession image to display" class="img-responsive" style="max-width: 100%; height: auto;" />
