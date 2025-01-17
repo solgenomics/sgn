@@ -5508,7 +5508,7 @@ sub transformation_id_count {
 
 =head2 class function get_recently_added_trials()
 
- Usage:   my @trials = $p->get_recently_added_trials()
+ Usage:   my @trials = CXGN::Project::get_recently_added_trials()
  Params:  $interval - one of day, week, month, year
  Returns: a list of trials, consisting of listrefs listing
           trial_name (with link), trial_type, breeding program 
@@ -5526,7 +5526,6 @@ sub get_recently_added_trials {
 	return;
     }
 
-    
     print STDERR "INTERVAL is $interval\n";
     my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
     
@@ -5551,6 +5550,17 @@ sub get_recently_added_trials {
     return \@recent_trials;
 }
 
+=head2 class function get_recently_modified_trials()
+
+  Usage:   my $accs = $p->get_recenlty_modified_trials($bcs_schema, $interval, $limit)
+  Params:  $bcs_schema - Bio::Chado::Schema schema
+           $interval - day, week, month, year
+           $limit - the maximum number of accessions to report (default 10)
+
+  Returns: list ref of [ $trial_link, $trial_type, $breeding_program, $create_date ]
+
+=cut
+
 sub get_recently_modified_trials {
     my $bcs_schema = shift;
     my $interval = shift;
@@ -5560,8 +5570,7 @@ sub get_recently_modified_trials {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
-    
-    
+        
     print STDERR "INTERVAL is $interval\n";
     my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc limit ? ";
     
@@ -5585,6 +5594,17 @@ sub get_recently_modified_trials {
     }
     return \@recent_trials;
 }
+
+=head2 class function get_recently_added_accessions()
+
+  Usage:   my $accs = CXGN::Project::get_recenlty_added_accessions($bcs_schema, $interval, $limit)
+  Params:  $bcs_schema - Bio::Chado::Schema object
+           $interval - day, week, month, year
+           $limit - the maximum number of accessions to report (default 10)
+
+  Returns: list ref of [ $uniquename, $create_date ]
+
+=cut
 
 sub get_recently_added_accessions {
     my $bcs_schema = shift;
