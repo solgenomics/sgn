@@ -2636,5 +2636,49 @@ sub get_vector_related_stocks:Chained('/stock/get_stock') PathPart('datatables/v
     $c->stash->{rest}={data=>\@related_stocks};
 }
 
+=head2 set_display_image
+
+Usage: /stock/set_display_image
+Desc: Updates stockprop with selected image_id
+Ret: Success or error string
+Args: stock_id, image_id
+Side Effects:
+Example:
+
+=cut
+
+sub set_display_image : Path('/ajax/stock/set_display_image') : ActionClass('REST') { }
+
+sub set_display_image_POST : Args(0) {
+    my ($self, $c) = @_;
+
+    my $stock_id = $c->req->param('stock_id');
+    my $image_id = $c->req->param('image_id');
+
+    unless ($stock_id && $image_id) {
+        $c->stash->{rest} = { error_string=> 'Missing stock_id or image_id' };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+
+    my $display_image_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'selected_display_image', 'stock_property')->cvterm_id();
+
+    my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
+    unless ($stock) {
+        $c->stash->{rest} = { error_string => 'Stock not found' };
+        return;
+    }
+
+    my $stockprop = $schema->resultset('Stock::Stockprop')->find_or_create({
+        stock_id => $stock_id,
+        type_id => $display_image_cvterm_id,
+    });
+    $stockprop->update({ value => $image_id });
+
+    $c->stash->{rest} = { success => 1 };
+
+}
 
 1;
