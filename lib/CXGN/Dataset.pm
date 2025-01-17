@@ -1218,11 +1218,12 @@ sub retrieve_tool_compatibility {
     }
 }
 
-=head2 store_tool_compatibility
+=head2 calculate_tool_compatibility
 
-Uploads a JSON of analysis tools that this dataset can be used with. For example, a dataset with genotype data but no trait phenotypes cannot be used with GWAS.
+Creates a hashref of analysis tools that this dataset can be used with. For example, a dataset with genotype data but no trait phenotypes cannot be used with GWAS.
 Note that this function should only ever be called once for a dataset and have the data stored as part of the dataset definition JSON, since retrieving high dimensional phenotype and genotype
 data can be time consuming. 
+
 Tools that use datasets: 
     solGS - genotyping data and phenotyping data
     PCA - genotyping data
@@ -1236,7 +1237,7 @@ Tools that use datasets:
 
 =cut
 
-sub store_tool_compatibility {
+sub calculate_tool_compatibility {
     my $self = shift;
 
     my $tool_compatibility = {
@@ -1415,7 +1416,7 @@ sub store_tool_compatibility {
             my $num_markers = $genotype_counts->{$method->[0]}->{"num_markers"};
             my $num_genotyped_accessions = $genotype_counts->{$method->[0]}->{"num_accessions"};
             my $num_accessions_phenotyped_for_this_trait = scalar( keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}) );
-            if ($total_obs > 100 && $num_markers > 100 && $num_accessions_phenotyped_for_this_trait > 50 && $num_genotyped_accessions > 50) { # If lots of markers, lots of accessions, and lots of phenotype measurements, then you can do genomic modeling
+            if ($total_obs > 100 && $num_markers > 100 && $num_accessions_phenotyped_for_this_trait > 50 && $num_genotyped_accessions > 50 && scalar(@{$trials}) > 0) { # If lots of markers, lots of accessions, and lots of phenotype measurements, then you can do genomic modeling
                 if ($total_obs < 300) {
                     $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough observations of ".$trait->[1]." to identify associated loci."} = "";
                 }
@@ -1440,21 +1441,29 @@ sub store_tool_compatibility {
 
     $self->tool_compatibility($tool_compatibility);
 
+    #return JSON::Any->encode($tool_compatibility);
+    return $tool_compatibility;
+}
+
+sub update_tool_compatibility {
+    my $self = shift;
+
+    $self->calculate_tool_compatibility();
+
     my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
     if (! $row) {
         return "The specified dataset does not exist";
     } else {
         eval {
-            $row->name($self->name());
-            $row->description($self->description());
-            $row->dataset(JSON::Any->encode($self->to_hashref()->{dataset}));
             $row->sp_person_id($self->sp_person_id());
+            $row->sp_dataset_id($self->sp_dataset_id());
+            $row->dataset(JSON::Any->encode($self->to_hashref()->{dataset}));
             $row->update();
         };
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return JSON::Any->encode($tool_compatibility);
+            return undef;
         }
     }
 }

@@ -62,6 +62,7 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
     }
 
     $dataset->store();
+    $dataset->update_tool_compatibility();
 
     $c->stash->{rest} = { message => "Stored Dataset Successfully!" };
 }
@@ -405,7 +406,8 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
 
     my $tool_compatibility;
     eval {
-        $tool_compatibility = $dataset->store_tool_compatibility();
+        $dataset->update_tool_compatibility();
+        $tool_compatibility = $dataset->tool_compatibility;
     };
     if ($@){
         $c->stash->{rest} = {
@@ -413,7 +415,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
         };
     } else {
          $c->stash->{rest} = {
-            tool_compatibility => $tool_compatibility
+            tool_compatibility => JSON::Any->encode($tool_compatibility)
         };
     }
 }

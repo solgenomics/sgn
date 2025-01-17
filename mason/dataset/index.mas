@@ -259,8 +259,8 @@ sizes. Hover for details."></span>
             
             function recursive_table_gen(obj) {
                 if (Object.prototype.toString.call(obj) == "[object Array]") {
-                let table = '<table border="1"><tr><td><p>' + obj.join("</p><p>") + '</p></table>';
-                return table;
+                    let table = '<table border="1"><tr><td><p>' + obj.join("</p><p>") + '</p></table>';
+                    return table;
                 }
                 var keys = [];
                 for (key in obj) {
