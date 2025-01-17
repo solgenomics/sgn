@@ -22,7 +22,7 @@
         layout = layout || {
             "width": 800,
             "height": 400,
-            "margin": { "top": 20, "right": 30, "bottom": 100, "left": 70 }
+            "margin": { "top": 20, "right": 30, "bottom": 100, "left": 80 }
         };
 
         options = options || {
@@ -166,7 +166,7 @@
             svg.append("text")
             .attr("transform", "rotate(-90)")
             .attr("x", -height / 2)
-            .attr("y", -margin.left + 15)
+            .attr("y", -margin.left + 20)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
             .text(trait_name);
