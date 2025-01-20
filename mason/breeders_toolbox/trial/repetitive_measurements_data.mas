@@ -105,6 +105,15 @@ $trial_stock_type => undef
         </div>
     </div>
 </div>
+<div id="working_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center;">
+                <h4 id="working_msg">Working… please wait!</h4>
+            </div>
+        </div>
+    </div>
+</div>
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
@@ -148,9 +157,20 @@ jQuery(document).ready(function() {
         var repetitive_measurement_level = jQuery('#repetitive_measurements_level').find(":selected").val();
         //alert("now fetching repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level")
         get_repetitive_measurement_data(trial_id, selectedTraitId, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
-        .then((result) => fetch_repetitive_measurement_dataTable(result.result.searchResultsDbId))
-        .then((result) => show_repetitive_measurement_values(result.result, repetitive_measurement_level))
-        .then((final) => {});
+        .then((result) => {
+            return fetch_repetitive_measurement_dataTable(result.result.searchResultsDbId)
+        })
+        .then((result) => {
+            return show_repetitive_measurement_values(result.result, repetitive_measurement_level)
+        })
+        .then(() => {
+            jQuery('#working_modal').modal('hide');
+        })
+        .fail((err) => {
+            jQuery('#working_modal').modal('hide');
+            //alert('errror occurred: ' + err.statusText);
+            console.error(err);
+        });
     });
 
     jQuery.ajax({
