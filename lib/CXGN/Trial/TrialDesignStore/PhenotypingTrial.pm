@@ -23,6 +23,7 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'num_seed_per_plot',
         'weight_gram_seed_per_plot',
         'stock_name',
+        'intercrop_stock_name',
         'plot_name',
         'plot_number',
         'block_number',
@@ -82,6 +83,12 @@ sub validate_design {
             if ($property eq 'stock_name') {
                 my $stock_name = $design{$stock}->{$property};
                 $seen_accession_names{$stock_name}++;
+            }
+            if ($property eq 'intercrop_stock_name') {
+                my $stock_names = $design{$stock}->{$property};
+                foreach my $stock_name (@$stock_names) {
+                    $seen_accession_names{$stock_name}++;
+                }
             }
             if ($property eq 'seedlot_name') {
                 my $stock_name = $design{$stock}->{$property};

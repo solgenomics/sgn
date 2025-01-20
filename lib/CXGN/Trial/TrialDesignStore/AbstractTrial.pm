@@ -408,6 +408,7 @@ sub store {
     my $stock_type_id = $self->get_stock_type_id();
     my $stock_rel_type_id = $self->get_stock_relationship_type_id();
     my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
+    my $intercrop_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'intercrop_plot_of', 'stock_relationship')->cvterm_id();
 
     my @source_stock_types = @{$self->get_source_stock_types()};
 
@@ -453,6 +454,11 @@ sub store {
         if ($design{$key}->{stock_name}) {
             my $stock_name = $design{$key}->{stock_name};
             $seen_accessions_hash{$stock_name}++;
+        }
+        if ($design{$key}->{intercrop_stock_name}) {
+            foreach my $stock_name (@{$design{$key}->{intercrop_stock_name}}) {
+                $seen_accessions_hash{$stock_name}++;
+            }
         }
         if ($design{$key}->{seedlot_name}) {
             my $stock_name = $design{$key}->{seedlot_name};
@@ -525,6 +531,12 @@ sub store {
             my $stock_name;
             if ($design{$key}->{stock_name}) {
                 $stock_name = $design{$key}->{stock_name};
+            }
+            my @intercrop_stock_names;
+            if ($design{$key}->{intercrop_stock_name}) {
+                foreach my $stock_name (@{$design{$key}->{intercrop_stock_name}}) {
+                    push @intercrop_stock_names, $stock_name;
+                }
             }
             my $seedlot_name;
             my $seedlot_stock_id;
@@ -691,6 +703,12 @@ sub store {
 
                 my $parent_stock;
                 push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $stock_id_checked };
+
+                # Add intercrop stocks as plot subjects
+                foreach my $stock_name (@intercrop_stock_names) {
+                    my $stock_id = $stock_data{$stock_name}[0];
+                    push @plot_subjects, { type_id => $intercrop_rel_type_id, object_id => $stock_id };
+                }
 
                 # For genotyping plate, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
                 if ($stock_type_checked == $self->get_plot_cvterm_id){

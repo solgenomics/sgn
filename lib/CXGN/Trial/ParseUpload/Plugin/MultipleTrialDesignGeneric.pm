@@ -10,7 +10,7 @@ use CXGN::Calendar;
 use CXGN::Trial;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
-my @OPTIONAL_COLUMNS = qw|plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+my @OPTIONAL_COLUMNS = qw|intercrop_accession_name plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
 # VALID DESIGN TYPES
@@ -56,7 +56,8 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new(
         file => $filename,
         required_columns => \@REQUIRED_COLUMNS,
-        optional_columns => \@OPTIONAL_COLUMNS
+        optional_columns => \@OPTIONAL_COLUMNS,
+        column_arrays => [ 'intercrop_accession_name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{'errors'};
@@ -92,6 +93,7 @@ sub _validate_with_plugin {
         my $design_type = $data->{'design_type'};
         my $description = $data->{'description'};
         my $accession_name = $data->{'accession_name'};
+        my $intercrop_accession_name = $data->{'intercrop_accession_name'};
         my $plot_number = $data->{'plot_number'};
         my $block_number = $data->{'block_number'};
         my $plot_name = $data->{'plot_name'} || _create_plot_name($trial_name, $plot_number);
@@ -341,7 +343,9 @@ sub _validate_with_plugin {
 
     # Accession Names: must exist in the database
     my @accessions = @{$parsed_values->{'accession_name'}};
-    my $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+    my @intercrop_accessions = @{$parsed_values->{'intercrop_accession_name'}};
+    my @merged_accessions = uniq(@accessions, @intercrop_accessions);
+    my $accessions_hashref = $validator->validate($schema,'accessions',\@merged_accessions);
 
     #find unique synonyms. Sometimes trial uploads use synonym names instead of the unique accession name. We allow this if the synonym is unique and matches one accession in the database
     my @synonyms = @{$accessions_hashref->{'synonyms'}};
@@ -351,12 +355,12 @@ sub _validate_with_plugin {
 
         push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
 
-        @accessions = grep !/\Q$matched_synonym/, @accessions;
-        push @accessions, $found_acc_name_from_synonym;
+        @merged_accessions = grep !/\Q$matched_synonym/, @merged_accessions;
+        push @merged_accessions, $found_acc_name_from_synonym;
     }
 
     #now validate again the accession names
-    $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+    $accessions_hashref = $validator->validate($schema,'accessions',\@merged_accessions);
     my @accessions_missing = @{$accessions_hashref->{'missing'}};
     my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
@@ -482,9 +486,11 @@ sub _parse_with_plugin {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my @accessions = @{$values->{'accession_name'}};
+    my @intercrop_accessions = @{$values->{'intercrop_accession_name'}};
+    my @merged_accessions = uniq(@accessions, @intercrop_accessions);
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
         'me.is_obsolete' => { '!=' => 't' },
-        'stockprops.value' => { -in => \@accessions},
+        'stockprops.value' => { -in => \@merged_accessions },
         'me.type_id' => $accession_cvterm_id,
         'stockprops.type_id' => $synonym_cvterm_id
     },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
@@ -508,6 +514,7 @@ sub _parse_with_plugin {
         my $row_id = $row->{'_row'};
         my $current_trial_name = $row->{'trial_name'};
         my $accession_name = $row->{'accession_name'};
+        my $intercrop_accession_name = $row->{'intercrop_accession_name'};
         my $plot_number = $row->{'plot_number'};
         my $plot_name = $row->{'plot_name'} || _create_plot_name($current_trial_name, $plot_number);
         my $block_number = $row->{'block_number'};
@@ -594,10 +601,22 @@ sub _parse_with_plugin {
             }
             $accession_name = $accession_names[0];
         }
+        my @checked_intercrop_accession_names;
+        foreach my $accession_name (@$intercrop_accession_name) {
+            if ($acc_synonyms_lookup{$accession_name}) {
+                my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+                if (scalar(@accession_names)>1) {
+                    print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+                }
+                $accession_name = $accession_names[0];
+            }
+            push @checked_intercrop_accession_names, $accession_name;
+        }
 
         my $key = $row_id;
         $design_details{$key}->{plot_name} = $plot_name;
         $design_details{$key}->{stock_name} = $accession_name;
+        $design_details{$key}->{intercrop_stock_name} = \@checked_intercrop_accession_names;
         $design_details{$key}->{plot_number} = $plot_number;
         $design_details{$key}->{block_number} = $block_number;
         if ($is_a_control) {
