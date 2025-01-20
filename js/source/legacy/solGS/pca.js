@@ -903,7 +903,6 @@ solGS.pca = {
         .attr("text-anchor", "start");
     }
   },
-
   ////////
 };
 /////
@@ -965,7 +964,7 @@ jQuery(document).ready(function () {
     if (runPcaBtnId.match(/run_pca/)) {
       var  pcaArgs = solGS.pca.getPcaAnalysisArgs(runPcaBtnId);
       pcaPopId = pcaArgs.pca_pop_id;
-
+    
       var canvas = solGS.pca.canvas;
       var pcaMsgDiv = solGS.pca.pcaMsgDiv;
 
@@ -978,9 +977,16 @@ jQuery(document).ready(function () {
           if (res.scores) {
             var plotData = solGS.pca.structurePlotData(res);
             var downloadLinks = solGS.pca.pcaDownloadLinks(res);
-            solGS.pca.plotPca(plotData, downloadLinks);
-
-             solGS.pca.cleanUpOnSuccess(pcaPopId);
+            var pcaPlotLinkId = `#download_pca_plot_${res.file_id}`;
+          
+            pcaResultDisplayed = document.querySelector(pcaPlotLinkId);
+            if (!pcaResultDisplayed) {
+              solGS.pca.plotPca(plotData, downloadLinks);
+            } 
+              
+            jQuery(`#${runPcaBtnId}`).html('Done').show();
+            
+            solGS.pca.cleanUpOnSuccess(pcaPopId);
           } else {
             var page = location.pathname;
             var pcaUrl = solGS.pca.generatePcaUrl(pcaArgs.pca_pop_id);
@@ -1018,8 +1024,8 @@ jQuery(document).ready(function () {
                   id: "no_queue",
                   click: function () {
                     jQuery(this).dialog("close");
-
-                    jQuery(runPcaBtnId).hide();
+                    
+                    jQuery(runPcaBtnId).html('Running...').show();
 
                     jQuery(`${canvas} .multi-spinner-container`).show();
                     jQuery(pcaMsgDiv).html("Running pca... please wait...").show();
@@ -1031,7 +1037,7 @@ jQuery(document).ready(function () {
                           var downloadLinks = solGS.pca.pcaDownloadLinks(res);
                           var plotData = solGS.pca.structurePlotData(res);
                           solGS.pca.plotPca(plotData, downloadLinks);
-
+                          jQuery(runPcaBtnId).html('Done').show();
                           solGS.pca.cleanUpOnSuccess(pcaPopId);
                         } else {
                           var msg = "There is no PCA output for this dataset.";
@@ -1072,8 +1078,8 @@ jQuery(document).ready(function () {
                     var plotData = solGS.pca.structurePlotData(res);
                     var downloadLinks = solGS.pca.pcaDownloadLinks(res);
                     solGS.pca.plotPca(plotData, downloadLinks);
-
-                   solGS.pca.cleanUpOnSuccess(pcaPopId);
+                    jQuery(runPcaBtnId).html('Done').show();
+                    solGS.pca.cleanUpOnSuccess(pcaPopId);
                   } else {
                     var msg = "There is no PCA output for this dataset.";
                     solGS.pca.feedBackOnFailure(pcaPopId, msg);
@@ -1082,17 +1088,19 @@ jQuery(document).ready(function () {
                 .fail(function (res) {
                   var msg = "Error occured running the PCA.";
                         solGS.pca.feedBackOnFailure(pcaPopId,msg);
+                  jQuery(runPcaBtnId).show();
                 });
 
-                jQuery(runPcaBtnId).show();
+              
             });
           }
         })
         .fail(function () {
           var msg = "Error occured checking for cached output.";
           solGS.pca.feedBackOnFailure(pcaPopId,msg);
+          jQuery(runPcaBtnId).show();
         });
-        jQuery(runPcaBtnId).show();
+        
     }
   });
 });
