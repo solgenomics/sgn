@@ -121,6 +121,7 @@ $trial_id
 	jQuery('#raw_data_trait_select_button').click( function() {
 	   	var trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
         var observation_level = jQuery('#raw_data_observation_level').find(":selected").val();
+		jQuery('#working_modal').modal('show');
 		//var start_date = jQuery('#raw_data_start_date').val();
 		//var end_date = jQuery('#raw_data_end_date').val();
 
@@ -135,7 +136,12 @@ $trial_id
 	   		.then( (result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))
 	   		.then( (result) => displayRawObservations(result.result) )
 	   		.then( (final) => {
-	   	});
+				jQuery('#working_modal').modal('hide');
+	   	})
+        .fail(() => {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred while processing the request.');
+        });;
     });
 	/*
     	jQuery('input[title="raw_data_start_date"]').daterangepicker(
