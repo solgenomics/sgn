@@ -54,23 +54,24 @@ Naama Menda <nm249@cornell.edu>
 #!/usr/bin/perl
 
 use strict;
-use warnings;
+#use warnings;
 use Spreadsheet::ParseExcel;
 use Getopt::Std;
 use DateTime;
 use File::Slurp;
 
 my %opts;
-getopts('f:o:n:m:s:c:', \%opts);
+getopts('f:o:n:m:s:c:p:', \%opts);
 
 # Check for required arguments
-die "Usage: $0 -f <input_file> -o <output_file> -n <trait namespace> -c [crop name - can be used as prefix for the namespaces] -m [method namespace ] -s [ scale namespace ] \n" unless $opts{f} && $opts{n};
+die "Usage: $0 -f <input_file> -o <output_file> -p <ontology id prefix. e.g. CO_325> -n <trait namespace> -c [crop name - can be used as prefix for the namespaces] -m [method namespace ] -s [ scale namespace ] \n" unless $opts{f} && $opts{n} && $opts{p};
 
 my $file = $opts{f};  # Input file
 my $output_file = $opts{o} || "outfile.obo";  # Output file
 my $trait_namespace = $opts{n} || $opts{c} . "_trait";
 my $method_namespace = $opts{m} || $opts{c} . "_method";
 my $scale_namespace = $opts{s} || $opts{c} . "_scale";
+my $prefix = $opts{p} ;
 
 my $parser   = Spreadsheet::ParseExcel->new();
 my $workbook = $parser->parse($file);
@@ -135,6 +136,14 @@ my $start_row =  1;
 my $end_row   = $worksheet->row_range();
 
 my @output;
+
+#these are for creating is_a, method_of, and scale_of relationships.
+#Need to map the actual trait, method, and scale parent terms from the TD file to the IDs that may be in the database,
+#or to create them dynamically
+my $trait_class_id  = $prefix . ":Trait";
+my $method_class_id = $prefix . ":Method";
+my $scale_class_id  = $prefix . ":Scale";
+
 
 for my $row ($start_row .. $end_row) {
     my %cell_values;
@@ -202,24 +211,22 @@ for my $row ($start_row .. $end_row) {
     my $category_10        = $cell_values{'category_10_col'};
 
     #print upper_value and lower_value and the scale categories in the scale definition field
+    my $categories = join(", ",
+        grep { defined }
+        map { $cell_values{"category_${_}_col"} } (1..10)
+    );
+    $categories = "categories: $categories" if $categories;
+
+    # Generate the final scale definition string
     my $scale_def = join(", ",
-    grep { defined }
-    map {
-        $_ eq 'lower_limit' && defined $cell_values{"${_}_col"}
-            ? "lower_limit: $cell_values{'lower_limit_col'}"
-        : $_ eq 'upper_limit' && defined $cell_values{"${_}_col"}
-            ? "upper_limit: $cell_values{'upper_limit_col'}"
-        : /^category_/ && defined $cell_values{"${_}_col"}
-            ? "categories: " . join(", ", grep { defined }
-                                      map { $cell_values{"category_${_}_col"} } (1..10))
-        : $cell_values{"${_}_col"}
-    } qw(lower_limit upper_limit category_1 category_2 category_3 category_4
-         category_5 category_6 category_7 category_8 category_9 category_10)
+        grep { defined }
+        (
+            $cell_values{'lower_limit_col'} ? "lower_limit: $cell_values{'lower_limit_col'}" : undef,
+            $cell_values{'upper_limit_col'} ? "upper_limit: $cell_values{'upper_limit_col'}" : undef,
+            $categories
+        )
     );
 
-    my $trait_class_id = undef;
-    my $method_class_id = undef;
-    my $scale_class_id = undef;
 
     # Add variable output in .obo format
     push @output, "[Term]\n";
@@ -230,8 +237,9 @@ for my $row ($start_row .. $end_row) {
     push @output, $var_synonyms_list if $var_synonyms_list;
     push @output, "relationship: variable_of $trait_id ! $trait_name \n";
     push @output, "relationship: variable_of $method_id ! $method_name \n" if $method_id;
-    push @output, "relationship: variable_of $scale_id ! $scale_name \n\n" if $scale_id;
-    push @output, "is_obsolete: true" if $variable_status eq 'Obsolete';
+    push @output, "relationship: variable_of $scale_id ! $scale_name \n" if $scale_id;
+    my $obsolete_var = $variable_status =~ /^\s*obsolete\s*$/i ? "is_obsolete: true\n\n" : "\n";
+    push @output, $obsolete_var;
 
     #trait output
     push @output, "[Term]\n";
@@ -240,8 +248,9 @@ for my $row ($start_row .. $end_row) {
     push @output, "namespace: $trait_namespace\n";
     push @output, "def: \"$trait_def\"\n" if $trait_def;
     push @output, $trait_synonyms_list  if $trait_synonyms_list;
-    push @output, "is_a: $trait_class_id | $trait_class \n\n" ;
-    push @output, "is_obsolete: true" if $trait_status eq 'Obsolete';
+    push @output, "is_a: $trait_class_id ! $trait_class \n" ;
+    my $obsolete_trait = $trait_status =~ /^\s*obsolete\s*$/i ? "is_obsolete: true\n\n" : "\n";
+    push @output, $obsolete_trait;
 
 
     #method output
@@ -250,7 +259,7 @@ for my $row ($start_row .. $end_row) {
     push @output, "name: $method_name\n";
     push @output, "namespace: $method_namespace\n";
     push @output, "def: \"$method_formula\"\n" if $method_formula;
-    push @output, "relationship: method_of $method_class_id | $method_class \n\n" if $method_class;
+    push @output, "relationship: method_of $method_class_id ! $method_class \n\n" if $method_class;
 
     #scale_output
     push @output, "[Term]\n";
@@ -258,7 +267,7 @@ for my $row ($start_row .. $end_row) {
     push @output, "name: $scale_name\n";
     push @output, "namespace: $scale_namespace\n";
     push @output, "def: \"$scale_def\"\n" if $scale_def;
-    push @output, "relationship: scale_of $scale_class_id | $scale_class \n\n" if $scale_class;
+    push @output, "relationship: scale_of $scale_class_id ! $scale_class \n\n" if $scale_class;
 
 }
 
@@ -273,8 +282,27 @@ date: $date_mdy $time_hm
 default-namespace: $trait_namespace
 ontology: $trait_namespace\n\n";
 
+my $trait_root_term =
+"[Term]
+id: $trait_class_id
+name:  $trait_namespace ontology
+namespace: $trait_namespace\n\n";
+
+my $method_root_term =
+"[Term]
+id: $method_class_id
+name:  methods
+namespace: $method_namespace\n\n";
+
+my $scale_root_term =
+"[Term]
+id: $scale_class_id
+name:  scales
+namespace: $scale_namespace\n\n";
+
+
 # Write the output to a file using File::Slurp
-write_file($output_file, $obo_header);
+write_file($output_file, $obo_header . $trait_root_term . $method_root_term . $scale_root_term);
 append_file($output_file, @output);
 
 print "Conversion to obo complete. Output saved to '$output_file'.\n";
