@@ -1304,7 +1304,13 @@ jQuery(document).ready( function() {
         if (!coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row]) {
             coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row] = [];
         }
-        coord_matrix[plot.observationUnitPosition[row]-FieldMap.meta_data.min_row][plot.observationUnitPosition[col]-FieldMap.meta_data.min_col] = plot.germplasmName;
+        let value = plot.germplasmName;
+        if ( plot.additionalInfo.intercropGermplasm ) {
+            for ( let i = 0; i < plot.additionalInfo.intercropGermplasm.length; i++ ) {
+                value += `,${plot.additionalInfo.intercropGermplasm[i].germplasmName}`;
+            }
+        }
+        coord_matrix[plot.observationUnitPosition[row]-FieldMap.meta_data.min_row][plot.observationUnitPosition[col]-FieldMap.meta_data.min_col] = `"${value}"`;
     }
     if (!FieldMap.meta_data.invert_row_checkmark) {
         coord_matrix.reverse();
