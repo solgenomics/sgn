@@ -313,6 +313,15 @@ sub _search {
             $additional_info->{familyName} = $obs_unit->{family_uniquename};
         }
 
+        ## Get intercropping accessions
+        if ($obs_unit->{intercrop_stocks}) {
+            my @intercrop;
+            foreach my $i (@{$obs_unit->{intercrop_stocks}}) {
+                push(@intercrop, { germplasmDbId => $i->{id}, germplasmName => $i->{name} });
+            }
+            $additional_info->{intercropGermplasm} = \@intercrop;
+        }
+
         push @data_window, {
             externalReferences => @formatted_external_references,
             additionalInfo => $additional_info,

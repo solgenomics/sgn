@@ -138,6 +138,7 @@ sub search {
     my $project_location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
 
     my $plot_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $intercrop_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'intercrop_plot_of', 'stock_relationship')->cvterm_id();
     my $treatment_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
     my $treatment_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -148,10 +149,12 @@ sub search {
     #For performance reasons the number of joins to stock can be reduced if a trial is given.
 
     my $from_clause = " FROM stock as observationunit
-        JOIN stock_relationship ON (observationunit.stock_id=subject_id) AND stock_relationship.type_id = ($plot_rel_type_id)
+        JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id = $plot_rel_type_id
         JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
-        JOIN stock as germplasm ON (object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id)
+        JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id)
         JOIN cvterm as germplasm_type ON (germplasm_type.cvterm_id = germplasm.type_id)
+        JOIN stock_relationship AS isr ON (observationunit.stock_id=isr.subject_id) AND isr.type_id = $intercrop_rel_type_id
+        JOIN stock AS istock ON (isr.object_id = istock.stock_id)
         JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
         JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
         JOIN project USING(project_id)
@@ -175,7 +178,7 @@ sub search {
         LEFT JOIN stockprop AS is_a_control ON (observationunit.stock_id=is_a_control.stock_id AND is_a_control.type_id = $is_a_control_type_id) ";
 
 
-    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, STRING_AGG(treatment.name, '|'), STRING_AGG(treatment.description, '|'), seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count ";
+    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, STRING_AGG(treatment.name, '|'), STRING_AGG(treatment.description, '|'), seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count, STRING_AGG(istock.stock_id::text, '|'), STRING_AGG(istock.uniquename, ',') ";
 
     my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY project.name, observationunit.uniquename";
 
@@ -235,7 +238,7 @@ sub search {
 
     my  $q = $select_clause . $from_clause . $where_clause . $group_by . $order_clause . $limit_clause . $offset_clause;
 
-    print STDERR "QUERY: $q\n\n";
+    # print STDERR "QUERY: $q\n\n";
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
@@ -251,7 +254,7 @@ sub search {
     my @observation_units;
 
     while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $germplasm_type_name, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description,
-    $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $treatment_name, $treatment_description, $seedlot_id, $seedlot_name, $full_count) = $h->fetchrow_array()) {
+    $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $treatment_name, $treatment_description, $seedlot_id, $seedlot_name, $full_count, $intercrop_stock_id, $intercrop_stock_name) = $h->fetchrow_array()) {
 
         my $location_name = $location_id ? $location_id_lookup{$location_id} : undef;
 
@@ -293,6 +296,15 @@ sub search {
             $accession_name = $germplasm_uniquename;
         }
 
+        my @intercrop_stock_ids = split(/\|/, $intercrop_stock_id);
+        my @intercrop_stock_names = split(',', $intercrop_stock_name);
+        my @intercrop_stocks;
+        for my $i (0 .. $#intercrop_stock_ids) {
+            my $id = $intercrop_stock_ids[$i];
+            my $name = $intercrop_stock_names[$i];
+            push @intercrop_stocks, { id => $id, name => $name };
+        }
+
         push @result, {
             obsunit_stock_id => $observationunit_stock_id,
             obsunit_uniquename => $observationunit_uniquename,
@@ -325,6 +337,7 @@ sub search {
             full_count => $full_count,
             seedlot_id => $seedlot_id,
             seedlot_name => $seedlot_name,
+            intercrop_stocks => \@intercrop_stocks
         };
     }
 
