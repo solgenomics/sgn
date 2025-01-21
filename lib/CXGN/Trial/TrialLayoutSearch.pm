@@ -153,8 +153,8 @@ sub search {
         JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
         JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id)
         JOIN cvterm as germplasm_type ON (germplasm_type.cvterm_id = germplasm.type_id)
-        JOIN stock_relationship AS isr ON (observationunit.stock_id=isr.subject_id) AND isr.type_id = $intercrop_rel_type_id
-        JOIN stock AS istock ON (isr.object_id = istock.stock_id)
+        LEFT JOIN stock_relationship AS isr ON (observationunit.stock_id=isr.subject_id) AND isr.type_id = $intercrop_rel_type_id
+        LEFT JOIN stock AS istock ON (isr.object_id = istock.stock_id)
         JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
         JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
         JOIN project USING(project_id)
@@ -333,7 +333,7 @@ sub search {
             row_number => $row_number,
             col_number => $col_number,
             plant_number => $plant_number,
-            treatments => \@treatments ,
+            treatments => \@treatments,
             full_count => $full_count,
             seedlot_id => $seedlot_id,
             seedlot_name => $seedlot_name,

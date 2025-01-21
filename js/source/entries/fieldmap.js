@@ -838,11 +838,17 @@ export function init() {
                             <strong>Block Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}<br />
                             <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />`;
                         if (plot.germplasmName) {
-                            html += `<strong>Accession Name:</strong> ${plot.germplasmName}`;
+                            html += `<strong>Accession Name:</strong> ${plot.germplasmName}<br />`;
                         } else if (plot.crossName) {
-                            html += `<strong>Cross Unique ID:</strong> ${plot.crossName}`;
+                            html += `<strong>Cross Unique ID:</strong> ${plot.crossName}<br />`;
                         } else if (plot.additionalInfo.familyName) {
-                            html += `<strong>Family Name:</strong> ${plot.additionalInfo.familyName}`;
+                            html += `<strong>Family Name:</strong> ${plot.additionalInfo.familyName}<br />`;
+                        }
+
+                        if ( plot.additionalInfo.intercropGermplasm ) {
+                            for ( let i = 0; i < plot.additionalInfo.intercropGermplasm.length; i++ ) {
+                                html += `<strong>Accession Name:</strong> ${plot.additionalInfo.intercropGermplasm[i].germplasmName}<br />`;
+                            }
                         }
 
                         if ( local_this.heatmap_selected ) {
