@@ -137,6 +137,7 @@ sub search {
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $project_location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
 
+    my $plot_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $treatment_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
     my $treatment_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -147,7 +148,7 @@ sub search {
     #For performance reasons the number of joins to stock can be reduced if a trial is given.
 
     my $from_clause = " FROM stock as observationunit
-        JOIN stock_relationship ON (observationunit.stock_id=subject_id)
+        JOIN stock_relationship ON (observationunit.stock_id=subject_id) AND stock_relationship.type_id = ($plot_rel_type_id)
         JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
         JOIN stock as germplasm ON (object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id)
         JOIN cvterm as germplasm_type ON (germplasm_type.cvterm_id = germplasm.type_id)
