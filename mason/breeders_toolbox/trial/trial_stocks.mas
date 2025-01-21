@@ -33,6 +33,7 @@ jQuery(document).ready(function(){
                     if (row.stock_type == 'cross') { return "<a href='/cross/"+row.stock_id+"'>"+row.accession_name+"</a>";
                     } else { return "<a href='/stock/"+row.stock_id+"/view'>"+row.accession_name+"</a>";}
                 }},
+                { title: "Stock Species", "data": "organism" },
                 { title: "Stock Type", "data": "stock_type" },
             ],
             "fnInitComplete": function(oSettings, json) {
