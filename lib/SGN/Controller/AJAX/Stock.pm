@@ -2641,7 +2641,7 @@ sub get_vector_related_stocks:Chained('/stock/get_stock') PathPart('datatables/v
 Usage: /stock/set_display_image
 Desc: Updates stockprop with selected image_id
 Ret: Success or error string
-Args: stock_id, image_id
+Args:
 Side Effects:
 Example:
 
@@ -2655,8 +2655,13 @@ sub set_display_image_POST : Args(0) {
     my $stock_id = $c->req->param('stock_id');
     my $image_id = $c->req->param('image_id');
 
-    unless ($stock_id && $image_id) {
-        $c->stash->{rest} = { error_string=> 'Missing stock_id or image_id' };
+    if (!$stock_id) {
+        $c->stash->{rest} = { error_string=> 'Missing stock_id' };
+        return;
+    }
+
+    if (!$image_id) {
+        $c->stash->{rest} = { error_string=> 'Missing image_id' };
         return;
     }
 
@@ -2666,7 +2671,7 @@ sub set_display_image_POST : Args(0) {
     my $display_image_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'selected_display_image', 'stock_property')->cvterm_id();
 
     my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
-    unless ($stock) {
+    if (!$stock) {
         $c->stash->{rest} = { error_string => 'Stock not found' };
         return;
     }
@@ -2676,6 +2681,11 @@ sub set_display_image_POST : Args(0) {
         type_id => $display_image_cvterm_id,
     });
     $stockprop->update({ value => $image_id });
+
+    if ($stockprop->value != $image_id) {
+        $c->stash->{rest} = { error_string => 'Error setting display image' };
+        return;
+    }
 
     $c->stash->{rest} = { success => 1 };
 
