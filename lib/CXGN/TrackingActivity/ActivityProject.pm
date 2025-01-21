@@ -143,7 +143,7 @@ sub get_project_related_active_identifier_names{
         JOIN stock AS identifier ON (nd_experiment_stock.stock_id = identifier.stock_id) AND identifier.type_id = ?
         LEFT JOIN stockprop ON (identifier.stock_id = stockprop.stock_id) AND stockprop.type_id in (?, ?)
         LEFT JOIN stock_relationship ON (identifier.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
-        JOIN stock AS child_identifier on (stock_relationship.subject_id = child_identifier.stock_id)
+        LEFT JOIN stock AS child_identifier on (stock_relationship.subject_id = child_identifier.stock_id)
         WHERE nd_experiment_project.project_id = ? AND stockprop.value IS NULL";
 
     my $h = $schema->storage->dbh()->prepare($q);

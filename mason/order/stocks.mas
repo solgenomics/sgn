@@ -193,11 +193,13 @@ $user_name
                                 <th>Order Details</th>
                                 <th>Tracking ID</th>
                                 <th>Material</th>
+                                <!--
 % my $activity_types = $c->config->{tracking_activities_header};
 % my @column_header = split ',',$activity_types;
 % foreach my $column_header(@column_header){
                                 <th><%$column_header%></th>
 %}
+                                -->
                             </tr>
                         </thead>
                     </table>
@@ -248,7 +250,7 @@ $(window).ready( function() {
         columns: [
             { title: "Order Number", "data": null, "render": function ( data, type, row ) { return "<a href='/order/details/view/"+row.order_id+"'>"+row.order_id+"</a>"; } },
             { title: "Submitted by", "data": "order_from_name" },
-            { title: "Sent to", "data": "order_to_name" },            
+            { title: "Sent to", "data": "order_to_name" },
             { title: "Submitted Date", "data": "create_date" },
             { title: "Order Details", "data": "order_details" },
             { title: "Status", "data": "order_status" },
