@@ -1028,5 +1028,9 @@ jQuery(document).ready(function(){
             planting_date_element.val(start.format('MM/DD/YYYY'));
         }
     );
+
+    jQuery('input[title="planting_date"]').on('apply.daterangepicker', function(ev, picker) {
+        jQuery(this).val(picker.startDate.format('MM/DD/YYYY'));
+    })
 });
 </script>
