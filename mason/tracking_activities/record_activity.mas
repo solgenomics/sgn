@@ -281,7 +281,8 @@ $(window).ready( function() {
                 'notes': notes,
                 'activity_type': activity_type,
                 'program_name': program_name,
-                'source_info': '<%$source_info%>'
+                'source_info': '<%$source_info%>',
+                'material_name': '<%$material_name%>'
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
