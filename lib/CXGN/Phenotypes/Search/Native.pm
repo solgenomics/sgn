@@ -194,6 +194,7 @@ sub search {
     my $planting_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_planting_date', 'project_property')->cvterm_id();
     my $havest_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_harvest_date', 'project_property')->cvterm_id();
     my $project_location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
+    my $plot_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $breeding_program_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
     my $folder_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_folder', 'project_property')->cvterm_id();
     my $plot_width_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_width', 'project_property')->cvterm_id();
@@ -294,7 +295,8 @@ sub search {
         $phenotypeprop_sql = " LEFT JOIN phenotypeprop ON (phenotype.phenotype_id = phenotypeprop.phenotype_id AND phenotypeprop.type_id = $phenotype_outlier_type_id)";
     }
 
-    my $from_clause = " FROM stock as observationunit JOIN stock_relationship ON (observationunit.stock_id=subject_id)
+    my $from_clause = " FROM stock as observationunit 
+      JOIN stock_relationship ON (observationunit.stock_id=subject_id) AND stock_relationship.type_id = $plot_rel_type_id
       JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
       JOIN stock as germplasm ON (object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id,$cross_type_id,$family_name_type_id)
       $design_layout_sql
