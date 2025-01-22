@@ -1464,7 +1464,7 @@ sub update_tool_compatibility {
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return;
         }
     }
 }
