@@ -80,6 +80,10 @@ has 'project_vendor' => (
     is => 'rw',
 );
 
+has 'progress_of_project_id' => (
+    isa => 'Int|Undef',
+    is => 'rw',
+);
 
 
 sub existing_project_name {
@@ -114,6 +118,7 @@ sub save_activity_project {
     my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_record', 'project_type')->cvterm_id();
     my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
     my $project_vendor_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_vendor', 'project_property')->cvterm_id();
+    my $progress_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'progress_of', 'project_relationship')->cvterm_id();
 
     my $project = $schema->resultset('Project::Project')
         ->create({
@@ -154,7 +159,18 @@ sub save_activity_project {
         });
     }
 
-    return $project_id;
+    my $progress_of_project_id = $self->get_progress_of_project_id();
+
+    if ($progress_of_project_id) {
+        my $project_rel_row = $schema->resultset('Project::ProjectRelationship')->create({
+            object_project_id => $progress_of_project_id,
+            subject_project_id => $project_id,
+            type_id => $progress_of_cvterm_id,
+        });
+        $project_rel_row->insert();
+    }
+
+    return {project_id => $project_id};
 
 }
 

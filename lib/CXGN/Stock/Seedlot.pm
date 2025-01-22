@@ -444,7 +444,7 @@ sub list_seedlots {
         $q .= " WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'seed transaction')";
 
         # Subquery to get stocks (plots, etc) in requested trial
-        my $sq = "SELECT DISTINCT(stock_id) FROM public.materialized_phenoview WHERE trial_id = (SELECT project_id FROM public.project WHERE name = ?)";
+        my $sq = "SELECT DISTINCT(observationunit_stock_id) FROM public.materialized_phenotype_jsonb_table WHERE trial_name = ?";
         my @filters;
 
         # Add source transaction (plot --> seedlot)
@@ -539,8 +539,8 @@ sub list_seedlots {
         $unique_seedlots{$_}->{organization} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} : 'NA';
         $unique_seedlots{$_}->{box} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} : 'NA';
         $unique_seedlots{$_}->{seedlot_quality} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} : '';
-        $unique_seedlots{$_}->{current_count} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
-        $unique_seedlots{$_}->{current_weight_gram} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
+        $unique_seedlots{$_}->{current_count} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
+        $unique_seedlots{$_}->{current_weight_gram} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
 
         push @seedlots, $unique_seedlots{$_};
 
@@ -1300,12 +1300,15 @@ sub current_count {
     my $transactions = $self->transactions();
 
     my $count = 0;
+    my $na_amount_counter = 0;
     foreach my $t (@$transactions) {
         if ($t->amount() ne 'NA'){
             $count += $t->amount() * $t->factor();
+        } else {
+            $na_amount_counter += 1;
         }
     }
-    if ($count == 0 && scalar(@$transactions)>0){
+    if ($count == 0 && scalar(@$transactions) == $na_amount_counter){
         $count = 'NA';
     }
     return $count;
@@ -1368,12 +1371,15 @@ sub current_weight {
     my $transactions = $self->transactions();
 
     my $weight = 0;
+    my $na_weight_counter = 0;
     foreach my $t (@$transactions) {
-        if ($t->weight_gram() ne 'NA'){
+        if ($t->weight_gram() ne 'NA' && length($t->weight_gram)){
             $weight += $t->weight_gram() * $t->factor();
+        } else {
+            $na_weight_counter += 1;
         }
     }
-    if ($weight == 0 && scalar(@$transactions)>0){
+    if ($weight == 0 && scalar(@$transactions) == $na_weight_counter){
         $weight = 'NA';
     }
     return $weight;

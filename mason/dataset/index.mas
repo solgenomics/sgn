@@ -111,6 +111,7 @@ sizes. Hover for details."></span>
                         <div id="predicted-tool-compatibility" style="width:85%;overflow-x:auto;overflow-y:auto">
                         </div>  
                         <div><br><button type="button" class="btn btn-sm btn-success" id="tool-compatibility-calc-button" >Calculate Tool Compatibility</button></div>
+                    <tr><td>Analyses using this dataset<td id="dataset_analysis_usage"></td></td>
             </table>
         </div>
     </div>
@@ -349,6 +350,21 @@ sizes. Hover for details."></span>
 
             window.open(url,'_blank');
         })
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/ajax/dataset/get_child_analyses/<% $dataset_id %>',
+            success: function(response) {
+                if (response.error){
+                    alert(response.error);
+                } else {
+                    jQuery('#dataset_analysis_usage').html(response.analysis_html_list);
+                }
+            },
+            error: function(response) {
+                alert("Error retrieving analyses using this dataset.");
+            }
+        });
     });
 
     </script>

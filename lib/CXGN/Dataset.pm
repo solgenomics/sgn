@@ -55,6 +55,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use Data::Dumper;
 use JSON::Any;
+use JSON::XS;
 use CXGN::BreederSearch;
 use CXGN::People::Schema;
 use CXGN::Phenotypes::PhenotypeMatrix;
@@ -461,7 +462,7 @@ sub set_dataset_public {
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return;
         }
     }
 }
@@ -487,7 +488,7 @@ sub set_dataset_private {
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return;
         }
     }
 }
@@ -1539,7 +1540,7 @@ sub delete {
 	if ($@) {
 	    return "An error occurred, $@";
         } else {
-	    return undef;
+	    return;
 	}
 
     }
@@ -1561,9 +1562,39 @@ sub update_description {
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return;
         }
     }
+}
+
+=head2 get_child_analyses()
+
+# Retrieves the list of analyses that use this dataset. 
+
+=cut
+
+sub get_child_analyses {
+    my $self = shift;
+    my $dataset_id = $self->sp_dataset_id();
+
+    my $dbh = $self->schema->storage->dbh();
+
+    my $analysis_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
+
+    my $analysis_q = "select DISTINCT project.name, project.project_id FROM projectprop 
+    JOIN project USING (project_id) 
+    WHERE projectprop.type_id=$analysis_info_type_id 
+        AND analysisinfo.value::json->>'dataset_id'=?;";
+    my $h = $dbh->prepare($analysis_q);
+    $h->execute($dataset_id);
+
+    my @html = ();
+
+    while (my ($analysis_name, $analysis_id) = $h->fetchrow_array()){
+        push @html, "<a href=/analyses/".$analysis_id.">".$analysis_name."</a>";
+    }
+
+    return join(" | ", @html);
 }
 
 

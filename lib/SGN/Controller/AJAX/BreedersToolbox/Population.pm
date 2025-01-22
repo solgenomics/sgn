@@ -56,24 +56,26 @@ sub create_population :Path('/ajax/population/new') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
 
     my $population_name = $c->req->param('population_name');
-    my $accession_list_id = $c->req->param('accession_list_id');
+    my $member_type = $c->req->param('member_type');
+    my $list_id =  $c->req->param('list_id');
+
     my $members;
-    if ($accession_list_id){
+    if ($list_id){
         my $dbh = $c->dbc->dbh;
-        my $list = CXGN::List->new({dbh=>$dbh, list_id=>$accession_list_id});
+        my $list = CXGN::List->new({dbh=>$dbh, list_id=>$list_id});
         $members = $list->elements();
     } else {
         my @input_members = $c->req->param('accessions[]');
         $members = \@input_members;
     }
 
-    my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, phenome_schema => $phenome_schema, user_id => $user_id, name => $population_name, members => $members} );
+    my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, phenome_schema => $phenome_schema, user_id => $user_id, name => $population_name, members => $members, member_type => $member_type} );
     my $return = $population_add->add_population();
 
     $c->stash->{rest} = $return;
 }
 
-sub add_accessions_to_population :Path('/ajax/population/add_accessions') Args(0) {
+sub add_members_to_population :Path('/ajax/population/add_members') Args(0) {
     my $self = shift;
     my $c = shift;
     my $session_id = $c->req->param("sgn_session_id");
@@ -104,15 +106,16 @@ sub add_accessions_to_population :Path('/ajax/population/add_accessions') Args(0
     }
 
     my $population_name = $c->req->param('population_name');
-    my $accession_list_id = $c->req->param('accession_list_id');
+    my $list_id = $c->req->param('list_id');
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $list = CXGN::List->new({dbh=>$dbh, list_id=>$accession_list_id});
+    my $list = CXGN::List->new({dbh=>$dbh, list_id=>$list_id});
     my $members = $list->elements();
 
-    my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, name => $population_name, members => $members });
-    my $return = $population_add->add_accessions();
+    my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, phenome_schema => $phenome_schema, name => $population_name, members => $members, user_id => $user_id });
+    my $return = $population_add->add_members();
 
     $c->stash->{rest} = $return;
 }

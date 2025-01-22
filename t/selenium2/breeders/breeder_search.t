@@ -2,7 +2,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests' => 110;
+use Test::More 'tests' => 113;
 
 use SGN::Test::WWW::WebDriver;
 use Selenium::Remote::WDKeys 'KEYS';
@@ -389,6 +389,17 @@ $t->while_logged_in_as("submitter", sub {
     ok($selected_reloaded_elements =~ /UG120001/, "Verify first column wizard, selected elements, after merging $fourth_list_name and two new elements: accession UG120001");
     ok($selected_reloaded_elements =~ /IITA-TMS-IBA011412/, "Verify first column wizard, selected elements, after merging $fourth_list_name and two new elements: accession IITA-TMS-IBA011412");
     ok($selected_reloaded_elements =~ /IITA-TMS-IBA30572/, "Verify first column wizard, selected elements, after merging $fourth_list_name and two new elements: accession IITA-TMS-IBA30572");
+
+    #  TEST WORKING MIXED MODEL AND DETAILS PAGE FOR DATASET 1
+    $t->get_ok('/search/datasets');
+    sleep(1);
+    
+    $t->find_element_ok("//a[text()='$dataset_name_1']",'xpath','checking for created dataset on dataset overview page')->click();
+    sleep(5);
+
+    my $child_analyses = $t->find_element('dataset_analysis_usage', 'id')->get_text();
+    ok($child_analyses eq "(none)", 'checking initial analysis usage');
+    sleep(1);
 
     #  DELETE DATASET
     $t->get_ok('/breeders/search');

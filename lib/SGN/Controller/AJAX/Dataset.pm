@@ -357,6 +357,38 @@ sub get_dataset :Path('/ajax/dataset/get') Args(1) {
     $c->stash->{rest} = { dataset => $dataset_data };
 }
 
+sub get_child_analyses :Path('/ajax/dataset/get_child_analyses') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
+    my $dataset = CXGN::Dataset->new(
+	{
+	    schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
+	    people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
+	    sp_dataset_id=> $dataset_id,
+	});
+
+    my $analysis_list;
+    eval {
+        $analysis_list = $dataset->get_child_analyses();
+    };
+
+    if ($@){
+        $c->stash->{rest} = {error => "Error retrieving analyses using this dataset. $@"};
+    }
+
+    if ($analysis_list eq "") {
+        $analysis_list = "(none)";
+    }
+
+    print STDERR "Got the following list of accessions using this dataset: $analysis_list \n";
+
+    $c->stash->{rest} = { analysis_html_list => $analysis_list };
+}
+
 
 sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
     my $self = shift;

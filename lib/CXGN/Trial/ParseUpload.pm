@@ -15,9 +15,9 @@ has 'chado_schema' => (
 );
 
 has 'trial_id' => (
-  is => 'ro',
-  isa => 'Str',
-  required => 0
+    is => 'ro',
+    isa => 'Str',
+    required => 0
 );
 
 has 'filename' => (
@@ -47,6 +47,15 @@ has '_parsed_data' => (
     isa => 'HashRef',
     writer => '_set_parsed_data',
     predicate => '_has_parsed_data'
+);
+
+has '_validated_data' => (
+    is => 'ro',
+    isa => 'HashRef',
+    writer => '_set_validated_data',
+    reader => '_get_validated_data',
+    predicate => '_has_validated_data',
+    required => 0
 );
 
 has '_location_code_map' => (

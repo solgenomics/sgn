@@ -37,18 +37,73 @@ function enable_ui() {
 jQuery(document).ready(function ($) {
 
     jQuery('#manage_accessions_populations_new').click(function(){
-        jQuery("#create_population_list_div").html(list.listSelect("create_population_list_div", ["accessions"], undefined, undefined, undefined ));
         jQuery('#manage_populations_add_population_dialog').modal('show');
     });
 
     jQuery("#create_population_submit").click(function(){
+        const lo = new CXGN.List();
+
+        const population_name = jQuery('#create_population_name').val();
+        if (!population_name) {
+            alert ("Population name is required");
+            return;
+        }
+
+        const member_type = jQuery('#member_type').val();
+        if (!member_type) {
+            alert ("Member type is required");
+            return;
+        }
+
+        let list_id;
+        let list_validation = 1;
+
+        if (member_type == 'accessions') {
+            list_id =  jQuery('#create_population_accession_list_div_list_select').val();
+            if (!list_id) {
+                alert ("A list of accessions is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(list_id, 'accessions', true);
+                if (list_validation != 1) {
+                    alert("The accession list did not pass validation. Names in the list must be uniquenames with accession stock type in the database");
+                    return;
+                }
+            }
+        } else if (member_type == 'plots') {
+            list_id =  jQuery('#create_population_plot_list_div_list_select').val();
+            if (!list_id) {
+                alert ("A list of plots is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(list_id, 'plots', true);
+                if (list_validation != 1) {
+                    alert("The plot list did not pass validation. Names in the list must be uniquenames with plot stock type in the database");
+                    return;
+                }
+            }
+        } else if (member_type == 'plants') {
+            list_id =  jQuery('#create_population_plant_list_div_list_select').val();
+            if (!list_id) {
+                alert ("A list of plants is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(list_id, 'plants', true);
+                if (list_validation != 1) {
+                    alert("The plant list did not pass validation. Names in the list must be uniquenames with plant stock type in the database");
+                    return;
+                }
+            }
+        }
+
         jQuery.ajax({
             type: 'POST',
             url: '/ajax/population/new',
             dataType: "json",
             data: {
-                'population_name': jQuery('#create_population_name').val(),
-                'accession_list_id': jQuery('#create_population_list_div_list_select').val(),
+                'population_name': population_name,
+                'member_type': member_type,
+                'list_id': list_id,
             },
             beforeSend: function(){
                 disable_ui();
@@ -91,10 +146,11 @@ jQuery(document).ready(function ($) {
             var name = populations[i].name;
             var population_id = populations[i].stock_id;
             var accessions = populations[i].members;
-            var table_id = name+i+"_pop_table";
+            var member_type = populations[i].member_type
+            var table_id = population_id+i+"_pop_table";
 
             var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" >';
-            section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'" data-population_name="'+name+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>[Go To Population Page]</small></a></div><div class="col-sm-3"><a name="manage_populations_add_accessions" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Add Accessions To Population]</small></a><br/><a name="manage_populations_delete_population" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Delete Population]</small></a></div></div></div></div>';
+            section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'" data-population_name="'+name+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>[Go To Population Page]</small></a></div><div class="col-sm-3"><a name="manage_populations_add_members" data-population_id="'+population_id+'" data-population_name="'+name+'" data-member_type="'+member_type+'"><small>[Add Members To Population]</small></a><br/><a name="manage_populations_delete_population" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Delete Population]</small></a></div></div></div></div>';
             section_html += '<div id="collapse'+i+'" class="panel-collapse collapse">';
             section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table><div id="populations_members_add_to_list_data_'+population_id+'" style="display:none"></div><br/><div id="populations_members_add_to_list_menu_'+population_id+'"></div></div>';
             section_html += '</div><br/></div></div></div><br/>';
@@ -119,7 +175,8 @@ jQuery(document).ready(function ($) {
             ajax: '/ajax/manage_accessions/population_members/'+population_id,
             destroy: true,
             columns: [
-                { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
+                { title: "Member Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
+                { title: "Member Type", "data": "stock_type" },
                 { title: "Description", "data": "description" },
                 { title: "Synonyms", "data": "synonyms[, ]" },
                 { title: "Remove From Population", "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
@@ -143,13 +200,22 @@ jQuery(document).ready(function ($) {
 
     var population_id;
     var population_name;
+    var member_type;
 
-    jQuery(document).on("click", "a[name='manage_populations_add_accessions']", function(){
+    jQuery(document).on("click", "a[name='manage_populations_add_members']", function(){
+
         population_id = jQuery(this).data('population_id');
         population_name = jQuery(this).data('population_name');
-        jQuery("#add_accession_to_population_list_div").html(list.listSelect("add_accession_to_population_list_div", ["accessions"], undefined, undefined, undefined));
-        jQuery('#add_accession_population_name').html(population_name);
-        jQuery('#manage_populations_add_accessions_dialog').modal('show');
+        member_type = jQuery(this).data('member_type');
+        if (member_type == 'plots') {
+            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['plots'], 'select a list of plots', undefined, undefined));
+        } else if (member_type == 'plants') {
+            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['plants'], 'select a list of plants', undefined, undefined));
+        } else {
+            jQuery("#add_member_to_population_list_div").html(list.listSelect("add_member_to_population_list_div", ['accessions'], 'select a list of accessions', undefined, undefined));
+        }
+        jQuery('#add_member_population_name').html(population_name);
+        jQuery('#manage_populations_add_members_dialog').modal('show');
     });
 
     jQuery(document).on("click", "a[name='manage_populations_delete_population']", function(){
@@ -167,14 +233,64 @@ jQuery(document).ready(function ($) {
        source: '/ajax/stock/population_autocomplete',
     });
 
-    jQuery("#add_accessions_to_population_submit").click(function(){
+    jQuery("#add_members_to_population_submit").click(function(){
+        const lo = new CXGN.List();
+        let list_validation = 1;
+        const member_list_id = jQuery('#add_member_to_population_list_div_list_select').val();
+
+        if (member_type == 'accessions') {
+            if (!member_list_id) {
+                alert ("A list of accessions is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(member_list_id, 'accessions', true);
+                if (list_validation != 1) {
+                    alert("The accession list did not pass validation. Names in the list must be uniquenames with accession stock type in the database");
+                    return;
+                }
+            }
+        } else if (member_type == 'plots') {
+            if (!member_list_id) {
+                alert ("A list of plots is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(member_list_id, 'plots', true);
+                if (list_validation != 1) {
+                    alert("The plot list did not pass validation. Names in the list must be uniquenames with plot stock type in the database");
+                    return;
+                }
+            }
+        } else if (member_type == 'plants') {
+            if (!member_list_id) {
+                alert ("A list of plants is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(member_list_id, 'plants', true);
+                if (list_validation != 1) {
+                    alert("The plant list did not pass validation. Names in the list must be uniquenames with plant stock type in the database");
+                    return;
+                }
+            }
+        } else {
+            if (!member_list_id) {
+                alert ("A list of accessions is required");
+                return;
+            } else {
+                list_validation = lo.legacy_validate(member_list_id, 'accessions', true);
+                if (list_validation != 1) {
+                    alert("The accession list did not pass validation. Names in the list must be  in the database");
+                    return;
+                }
+            }
+        }
+
         jQuery.ajax({
             type: 'POST',
-            url: '/ajax/population/add_accessions',
+            url: '/ajax/population/add_members',
             dataType: "json",
             data: {
                 'population_name': population_name,
-                'accession_list_id': jQuery('#add_accession_to_population_list_div_list_select').val(),
+                'list_id': jQuery('#add_member_to_population_list_div_list_select').val(),
             },
             beforeSend: function(){
                 disable_ui();
@@ -189,7 +305,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function () {
-                alert('An error occurred in adding accessions to population. sorry');
+                alert('An error occurred in adding members to population. sorry');
             }
         });
     });
