@@ -307,7 +307,7 @@ sub search {
       JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
       JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
       JOIN db USING(db_id)
-      JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_phenotype.nd_experiment_id)
+      JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
       JOIN project USING(project_id)
       LEFT JOIN project_relationship ON (project.project_id=project_relationship.subject_project_id AND project_relationship.type_id = $breeding_program_rel_type_id)
       LEFT JOIN project as breeding_program ON (breeding_program.project_id=project_relationship.object_project_id)
