@@ -75,10 +75,10 @@ $analysis_metadata
                 </td>
             </tr>
 
-            <tr><td><b>Dataset ID</b></td>
+            <tr><td><b>Dataset</b></td>
                 <td>
                     <div id="analysis_dataset_id">
-%  print $analysis_metadata->dataset_id;
+%  print "<a href=/dataset/".$analysis_metadata->dataset_id.">".$analysis_metadata->dataset_id."</a>";
                     </div>
                 </td>
             </tr>
