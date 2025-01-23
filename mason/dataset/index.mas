@@ -99,6 +99,7 @@ $dataset_contents => ''
                         </span>
 %                   }
                     <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
+                    <tr><td>Analyses using this dataset<td id="dataset_analysis_usage"></td></td>
             </table>
         </div>
     </div>
@@ -249,6 +250,21 @@ $dataset_contents => ''
 
             window.open(url,'_blank');
         })
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/ajax/dataset/get_child_analyses/<% $dataset_id %>',
+            success: function(response) {
+                if (response.error){
+                    alert(response.error);
+                } else {
+                    jQuery('#dataset_analysis_usage').html(response.analysis_html_list);
+                }
+            },
+            error: function(response) {
+                alert("Error retrieving analyses using this dataset.");
+            }
+        });
     });
 
     </script>
