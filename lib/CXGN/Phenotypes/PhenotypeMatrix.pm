@@ -358,68 +358,68 @@ sub get_phenotype_matrix {
         my %seen_obsunits;        
 
         foreach my $d (@$data) {
-            my $cvterm = $d->{trait_name};
-            if ($cvterm){
-                my $obsunit_id = $d->{obsunit_stock_id};
-                if (!exists($seen_obsunits{$obsunit_id})) {
-                    push @unique_obsunit_list, $obsunit_id;
-                    $seen_obsunits{$obsunit_id} = 1;
-                }
+            my $obsunit_id = $d->{obsunit_stock_id};
+            if (!exists($seen_obsunits{$obsunit_id})) {
+                push @unique_obsunit_list, $obsunit_id;
+                $seen_obsunits{$obsunit_id} = 1;
+            }
 
-                my $timestamp_value = $d->{timestamp};
-                my $value = $d->{phenotype_value};
-                #my $cvterm = $trait."|".$cvterm_accession;
+            my $timestamp_value = $d->{timestamp};
+            my $value = $d->{phenotype_value};
+
+            my $cvterm = $d->{trait_name};
+            if ( $cvterm ) {
                 if ($include_timestamp && $timestamp_value) {
                     $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
                 } else {
                     $obsunit_data{$obsunit_id}->{$cvterm} = $value;
                 }
-                $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
-
-                my $synonyms = $d->{synonyms};
-                my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-                my $entry_type = $d->{is_a_control} ? 'check' : 'test';
-
-                my $trial_name = $d->{trial_name};
-                my $trial_desc = $d->{trial_description};
-
-                $trial_name =~ s/\s+$//g;
-                $trial_desc =~ s/\s+$//g;
-
-                $obsunit_data{$obsunit_id}->{metadata} = [
-                    $d->{year},
-                    $d->{breeding_program_id},
-                    $d->{breeding_program_name},
-                    $d->{breeding_program_description},
-                    $d->{trial_id},
-                    $trial_name,
-                    $trial_desc,
-                    $d->{design},
-                    $d->{plot_width},
-                    $d->{plot_length},
-                    $d->{field_size},
-                    $d->{field_trial_is_planned_to_be_genotyped},
-                    $d->{field_trial_is_planned_to_cross},
-                    $d->{planting_date},
-                    $d->{harvest_date},
-                    $d->{location_id},
-                    $d->{location_name},
-                    $d->{accession_stock_id},
-                    $d->{accession_uniquename},
-                    $synonym_string,
-                    $d->{obsunit_type_name},
-                    $d->{obsunit_stock_id},
-                    $d->{obsunit_uniquename},
-                    $d->{rep},
-                    $d->{block},
-                    $d->{plot_number},
-                    $d->{row_number},
-                    $d->{col_number},
-                    $entry_type,
-                    $d->{plant_number}
-                ];
                 $traits{$cvterm}++;
             }
+            $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
+
+            my $synonyms = $d->{synonyms};
+            my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
+            my $entry_type = $d->{is_a_control} ? 'check' : 'test';
+
+            my $trial_name = $d->{trial_name};
+            my $trial_desc = $d->{trial_description};
+
+            $trial_name =~ s/\s+$//g;
+            $trial_desc =~ s/\s+$//g;
+
+            $obsunit_data{$obsunit_id}->{metadata} = [
+                $d->{year},
+                $d->{breeding_program_id},
+                $d->{breeding_program_name},
+                $d->{breeding_program_description},
+                $d->{trial_id},
+                $trial_name,
+                $trial_desc,
+                $d->{design},
+                $d->{plot_width},
+                $d->{plot_length},
+                $d->{field_size},
+                $d->{field_trial_is_planned_to_be_genotyped},
+                $d->{field_trial_is_planned_to_cross},
+                $d->{planting_date},
+                $d->{harvest_date},
+                $d->{location_id},
+                $d->{location_name},
+                $d->{accession_stock_id},
+                $d->{accession_uniquename},
+                $synonym_string,
+                $d->{obsunit_type_name},
+                $d->{obsunit_stock_id},
+                $d->{obsunit_uniquename},
+                $d->{rep},
+                $d->{block},
+                $d->{plot_number},
+                $d->{row_number},
+                $d->{col_number},
+                $entry_type,
+                $d->{plant_number}
+            ];
         }
         #print STDERR Dumper \%plot_data;
         #print STDERR Dumper \%traits;
