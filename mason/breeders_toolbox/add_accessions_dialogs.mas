@@ -53,7 +53,7 @@ $editable_stock_props_definitions
 %#                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
 %# }
                                 <br/>
-                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
+                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. </small>
                             </div>
                         </div>
                     </form>
