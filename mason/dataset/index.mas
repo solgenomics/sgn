@@ -8,7 +8,7 @@ $dataset_contents => ''
 </%args>
 
 <& /page/page_title.mas, title => "Dataset $dataset_name" &>
-<& /util/import_javascript.mas, entries => [qw|dataset_scatterplot dataset|], classes => [ qw|jqueryui.js jquery.js d3.d3v4Min jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers jquery.dataTables| ] &>
+<& /util/import_javascript.mas, entries => [qw|dataset_scatterplot dataset|], classes => [ qw|jqueryui.js jquery.js dataset jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers jquery.dataTables| ] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <style>
@@ -82,17 +82,24 @@ $dataset_contents => ''
         <div class="wizard-datasets">
             <table id="dataset_results"; border="1">
                     <tr><td>Name<td><% $dataset_name %>
+%                   if ($c->user()) {
+                    <tr><td>Description
+                    <td><input type="text" id="description" value=" <% $dataset_description %>"></input>
+                    <button style="width:9em;bargin-left:4px;" class="btn btn-sm btn-primary" onclick="datasetUpdate(<% $dataset_id %>)">Update</button>
+%                   } else {
                     <tr><td>Description<td><% $dataset_description %>
+%                   }
                     <tr><td>Contents<td><% $dataset_contents %>
 %                   if ($c->user()) {
                         <tr><td>Edit<td>
                         <span class="input-group-btn">
-                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-public">Make Public</button></span>
-                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-private">Make Private</button></span>
-                        <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger" id="wizard-dataset-delete">Delete</button></span>
+                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" onclick="datasetPublic(<% $dataset_id %>)">Make Public</button></span>
+                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" onclick="datasetPrivate(<% $dataset_id %>)">Make Private</button></span>
+                        <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger" onclick="datasetDelete(<% $dataset_id %>)">Delete</button></span>
                         </span>
 %                   }
                     <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
+                    <tr><td>Analyses using this dataset<td id="dataset_analysis_usage"></td></td>
             </table>
         </div>
     </div>
@@ -243,6 +250,21 @@ $dataset_contents => ''
 
             window.open(url,'_blank');
         })
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/ajax/dataset/get_child_analyses/<% $dataset_id %>',
+            success: function(response) {
+                if (response.error){
+                    alert(response.error);
+                } else {
+                    jQuery('#dataset_analysis_usage').html(response.analysis_html_list);
+                }
+            },
+            error: function(response) {
+                alert("Error retrieving analyses using this dataset.");
+            }
+        });
     });
 
     </script>

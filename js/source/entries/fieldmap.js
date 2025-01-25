@@ -836,8 +836,15 @@ export function init() {
                     if (plot.type == "data") {
                         html += `<strong>Plot Number:</strong> ${plot.observationUnitPosition.observationLevel.levelCode}<br />
                             <strong>Block Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}<br />
-                            <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />
-                            <strong>Accession Name:</strong> ${plot.germplasmName}`;
+                            <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />`;
+                        if (plot.germplasmName) {
+                            html += `<strong>Accession Name:</strong> ${plot.germplasmName}`;
+                        } else if (plot.crossName) {
+                            html += `<strong>Cross Unique ID:</strong> ${plot.crossName}`;
+                        } else if (plot.additionalInfo.familyName) {
+                            html += `<strong>Family Name:</strong> ${plot.additionalInfo.familyName}`;
+                        }
+
                         if ( local_this.heatmap_selected ) {
                             let v = '<em>NA</em>';
                             if ( heatmap_object.hasOwnProperty(trait_name) && heatmap_object[trait_name].hasOwnProperty(plot.observationUnitDbId) ) {

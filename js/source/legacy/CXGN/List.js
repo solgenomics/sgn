@@ -54,9 +54,24 @@ CXGN.List = function () {
 
 
 
+// Keep track of the rendered lists page number and sort column between refreshes
+var render_lists_page = 0;  // first page
+var render_lists_order = [[0, "asc"]];  // sort by list name, ascending
 
 
 CXGN.List.prototype = {
+
+    // CXGN::List::Transform Plugin names for list types
+    transform_keys: {
+        "traits": 'traits_2_trait_ids',
+        "locations": 'locations_2_location_ids',
+        "trials": 'projects_2_project_ids',
+        "breeding_programs": 'projects_2_project_ids',
+        "accessions": 'accessions_2_accession_ids',
+        "plots": 'plots_2_plot_ids',
+        "seedlots": 'stocks_2_stock_ids',
+        "crosses": 'stocks_2_stock_ids'
+    },
 
     // Return the data as a straight list
     //
@@ -324,7 +339,11 @@ CXGN.List.prototype = {
     },
 
     renderLists: function(div) {
+        var type = jQuery('#render_lists_type').val();
+        var autocreated = jQuery("#render_lists_autocreated").is(":checked");
         var lists = this.availableLists();
+        var types = this.allListTypes();
+
         var html = '';
         html = html + '<div class="well well-sm"><form class="form-horizontal"><div class="form-group form-group-sm"><label class="col-sm-3 control-label">Create New List: </label><div class="col-sm-9"><div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List. Type New List Name Here" /><span class="input-group-btn"><button class="btn btn-primary btn-sm" type="button" id="add_list_button" value="new list">New List</button></span></div></div></div><div class="form-group form-group-sm"><label class="col-sm-3 control-label"></label><div class="col-sm-9">';
         html = html + '<input id="add_list_input_description" type="text" class="form-control" placeholder="Description For New List" /></div></div></form></div>';
@@ -334,35 +353,79 @@ CXGN.List.prototype = {
             jQuery('#'+div+'_div').html(html);
         }
 
-        html += '<div class="well well-sm"><table id="private_list_data_table" class="table table-hover table-condensed">';
+        // List Table Container
+        html += "<div class='well'>";
+
+        // Table Header
+        html += "<div style='display: flex; flex-wrap: wrap; column-gap: 30px; justify-content: space-between; margin-bottom: 15px'>";
+
+        // Filter Container
+        html += "<div style='display: flex; flex-direction: column; row-gap: 15px'>"
+
+        // Filter by List Type
+        html += "<div style='display: flex; align-items: baseline; column-gap: 15px;'>"
+        html += "<p style='white-space: nowrap'><strong>Filter Lists by Type</strong>:</p>";
+        html += "<select id='render_lists_type' class='render_lists_filter form-control' style='max-width: 200px'>";
+        html += "<option value=''>Any</option>";
+        for ( let i = 0; i < types.length; i++ ) {
+            let selected = type && type === types[i][1] ? 'selected' : '';
+            html += "<option value='" + types[i][1] + "' " + selected + ">"+types[i][1]+"</option>";
+        }
+        html += "</select>";
+        html += "</div>";
+
+        // Autocreated filter
+        html += "<div style='display: flex; align-items: baseline; column-gap: 15px;'>";
+        html += "<p style='white-space: nowrap'><strong>Include Autocreated Lists</strong>:</p>";
+        let checked = autocreated ? 'checked' : ''
+        html += "<input id='render_lists_autocreated' class='render_lists_filter' type='checkbox' " + checked + " />";
+        html += "</div>";
+
+        // End Filter Container
+        html += "</div>";
+
+        // Multiple List Container
+        html += "<div id='list_group_select_action' style='flex-grow: 1; width: min-content; min-width: 500px;'></div>";
+
+        // End Header
+        html += "</div>";
+
+        // List Table
+        html += '<table id="private_list_data_table" class="table table-hover table-condensed">';
         html += '<thead><tr><th>List Name</th><th>Description</th><th>Date Created</th><th>Date Modified</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
-            html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
-            html += '<td>'+lists[i][2]+'</td>';
-            html += '<td>'+lists[i][7]+'</td>';
-            html += '<td>'+lists[i][8]+'</td>';
-            html += '<td>'+lists[i][3]+'</td>';
-            html += '<td>'+lists[i][5]+'</td>';
-            html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
-            html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></span></td>';
-            html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
-            html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
-            if (lists[i][6] == 0){
-                html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td>';
-            } else if (lists[i][6] == 1){
-                html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td>';
+            if ( (!type || type === lists[i][5]) && (autocreated || !(lists[i][2] || '').startsWith("Autocreated")) ) {
+                html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
+                html += '<td>'+(lists[i][2] ? lists[i][2] : '')+'</td>';
+                html += '<td>'+(lists[i][7] ? new Date(lists[i][7]).toLocaleDateString() : '')+'</td>';
+                html += '<td>'+(lists[i][8] ? new Date(lists[i][8]).toLocaleDateString() : '')+'</td>';
+                html += '<td>'+(lists[i][3] ? lists[i][3] : '0')+'</td>';
+                html += '<td>'+(lists[i][5] ? lists[i][5] : '&lt;NOT SET&gt;')+'</td>';
+                html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
+                html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></span></td>';
+                html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
+                html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
+                if (lists[i][6] == 0){
+                    html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td>';
+                } else if (lists[i][6] == 1){
+                    html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td>';
+                }
+                html += '<td><input type="checkbox" id="list_select_checkbox_'+lists[i][0]+'" name="list_select_checkbox" value="'+lists[i][0]+'"/></td></tr>';
             }
-            html += '<td><input type="checkbox" id="list_select_checkbox_'+lists[i][0]+'" name="list_select_checkbox" value="'+lists[i][0]+'"/></td></tr>';
         }
-        html = html + '</tbody></table></div>';
-        html += '<div id="list_group_select_action"></div>';
+        html += '</tbody></table>';
+        html += '</div>';
 
         jQuery('#'+div+'_div').html(html);
 
-        jQuery('#private_list_data_table').DataTable({
+        var table = jQuery('#private_list_data_table').DataTable({
             "destroy": true,
-            "columnDefs": [   { "orderable": false, "targets": [4,5,6,7,8] }  ]
+            "columnDefs": [{ "orderable": false, "targets": [6,7,8,9,10,11] }],
+            "order": render_lists_order
         });
+        table.page(render_lists_page).draw('page');
+        table.on('order', () => render_lists_order = table.order());
+        table.on('page', () => render_lists_page = table.page.info().page);
 
         jQuery('#add_list_button').click(function() {
             var lo = new CXGN.List();
@@ -380,26 +443,54 @@ CXGN.List.prototype = {
             lo.renderPublicLists('public_list_dialog_div');
         });
 
-        jQuery("input[name='list_select_checkbox']").click(function() {
+        function render_selected_lists_container() {
             var total=jQuery("input[name='list_select_checkbox']:checked").length;
             var list_group_select_action_html='';
-            if (total == 0) {
-                list_group_select_action_html += '';
-            } else {
+            if (total > 1) {
                 var selected = [];
                 jQuery("input[name='list_select_checkbox']:checked").each(function() {
                     selected.push(jQuery(this).attr('value'));
                 });
 
-                list_group_select_action_html = '<hr><div class="row well well-sm"><div class="col-sm-4">For Selected Lists:</div><div class="col-sm-8">';
-                if (total == 1) {
-                    list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';
-                } else if (total > 1) {
-                    list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a><br/><br/><div class="input-group input-group-sm"><input type="text" class="form-control" id="new_combined_list_name" placeholder="New List Name"><span class="input-group-btn"><a id="combine_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:combineSelectedListGroup(['+selected+'])">Combine</a></span></div>';
-                }
-                list_group_select_action_html += '</div></div>';
+                // Delete / Public / Private Functions
+                list_group_select_action_html += '<div class="row">';
+                list_group_select_action_html += '<div class="col-sm-4"><p><strong>Modify Selected Lists:</strong></p></div>';
+                list_group_select_action_html += '<div class="col-sm-8">';
+                list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';
+                list_group_select_action_html += '</div>';  // end column
+                list_group_select_action_html += '</div>';  // end row
+
+                // Union / Intersection Icons
+                var unionIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 256 256"><path fill="currentColor" d="M172.91 83.09a78 78 0 1 0-89.82 89.82a78 78 0 1 0 89.82-89.82M226 160a65 65 0 0 1-.62 8.9l-53.76-53.77A77.8 77.8 0 0 0 174 96v-.49A66.1 66.1 0 0 1 226 160M45.31 53.79l55.5 55.5a77.9 77.9 0 0 0-12 19L34 73.48a66 66 0 0 1 11.31-19.69m88.92 96l-28-28a66.5 66.5 0 0 1 15.52-15.52l28 28a66.5 66.5 0 0 1-15.52 15.48ZM162 96a65.6 65.6 0 0 1-6 27.49L132.51 100A65.6 65.6 0 0 1 160 94h1.95c.05.7.05 1.35.05 2m-52.71 4.81l-55.5-55.5A66 66 0 0 1 73.48 34l54.8 54.81a77.9 77.9 0 0 0-18.99 12M94 160a65.6 65.6 0 0 1 6-27.49L123.49 156A65.6 65.6 0 0 1 96 162c-.65 0-1.3 0-2-.05zm52.71-4.81l55.5 55.5A66 66 0 0 1 182.52 222l-54.8-54.81a77.9 77.9 0 0 0 18.99-12m8.48-8.48a77.9 77.9 0 0 0 12-19L222 182.52a66 66 0 0 1-11.35 19.69Zm5.3-64.7H160a77.8 77.8 0 0 0-19.13 2.38L87.1 30.62A65 65 0 0 1 96 30a66.1 66.1 0 0 1 64.49 52ZM30 96a65 65 0 0 1 .62-8.9l53.76 53.77A77.8 77.8 0 0 0 82 160v.49A66.1 66.1 0 0 1 30 96m65.51 78H96a77.8 77.8 0 0 0 19.13-2.38l53.77 53.76a65 65 0 0 1-8.9.62a66.1 66.1 0 0 1-64.49-52"/></svg>';
+                var intersectionIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 256 256"><path fill="currentColor" d="M174.63 81.37a80 80 0 1 0-93.26 93.26a80 80 0 1 0 93.26-93.26M100.69 136L120 155.31A63.5 63.5 0 0 1 96 160a63.5 63.5 0 0 1 4.69-24m33.75 11.13l-25.57-25.57a64.7 64.7 0 0 1 12.69-12.69l25.57 25.57a64.7 64.7 0 0 1-12.69 12.69M155.31 120L136 100.69A63.5 63.5 0 0 1 160 96a63.5 63.5 0 0 1-4.69 24M32 96a64 64 0 0 1 126-16a80.08 80.08 0 0 0-77.95 78A64.11 64.11 0 0 1 32 96m128 128a64.11 64.11 0 0 1-62-48a80.08 80.08 0 0 0 78-78a64 64 0 0 1-16 126"/></svg>';
+
+                // Union / Intersection Functions
+                list_group_select_action_html += '<div class="row" style="margin-top: 15px">';
+                list_group_select_action_html += '<div class="col-sm-4"><p><strong>Combine List Items From Selected Lists to a New List:</strong></p></div>';
+                list_group_select_action_html += '<div class="col-sm-8">';
+                list_group_select_action_html += '<div class="input-group input-group-sm">'
+                list_group_select_action_html += '<input type="text" class="form-control" id="new_combined_list_name" placeholder="New List Name"><span class="input-group-btn">';
+                list_group_select_action_html += '<button id="combine_selected_list_group_union" class="btn btn-primary btn-sm" style="color:white; display: inline-flex; align-items: center; gap: 5px;" onclick="javascript:combineSelectedListGroup(['+selected+'], \'union\')">' + unionIcon + 'Union</button>';
+                list_group_select_action_html += '<button id="combine_selected_list_group_intersection" class="btn btn-primary btn-sm" style="color:white; display: inline-flex; align-items: center; gap: 5px;" onclick="javascript:combineSelectedListGroup(['+selected+'], \'intersection\')">' + intersectionIcon + 'Intersection</button>';
+                list_group_select_action_html += '</input></span>';
+                list_group_select_action_html += '</div>';  // End input group
+                list_group_select_action_html += '</div>';  // end column
+                list_group_select_action_html += '</div>';  // end row
+            }
+            else {
+                list_group_select_action_html += '<div style="width: 100%; text-align: right">';
+                list_group_select_action_html += '<p><em>Select 2 or more lists in the <strong>Group</strong> column to modify or combine them</em></p>';
+                list_group_select_action_html += '</div>';
             }
             jQuery("#list_group_select_action").html(list_group_select_action_html);
+        }
+        jQuery('body').on("click", "input[name='list_select_checkbox']", render_selected_lists_container);
+        render_selected_lists_container();
+
+        jQuery(".render_lists_filter").on("change", function() {
+            render_lists_page = 0;
+            var lo = new CXGN.List();
+            lo.renderLists('list_dialog');
         });
     },
 
@@ -458,6 +549,7 @@ CXGN.List.prototype = {
         var list_name = this.listNameById(list_id);
         var type_select_id = 'type_select';
         var html = '';
+        var enable_details_link = !!this.getListItemUrl(list_type);
 
         if (list_type == 'catalog_items') {
             html += '<div class="well well-sm"><table id="list_cart_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
@@ -493,7 +585,15 @@ CXGN.List.prototype = {
         html += '<div class="well well-sm"><table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
         for(var n=0; n<items.length; n++) {
-            html = html +'<tr><td id="list_item_toggle_edit_div_'+items[n][0]+'" ><div name="list_item_toggle_edit" data-listitemdiv="list_item_toggle_edit_div_'+items[n][0]+'" data-listitemid="'+items[n][0]+'" data-listitemname="'+items[n][1]+'" >'+ items[n][1] + '</div></td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
+            html = html +'<tr>';
+            html += '<td id="list_item_toggle_edit_div_'+items[n][0]+'" >';
+            html += '<div name="list_item_toggle_edit" data-listitemdiv="list_item_toggle_edit_div_'+items[n][0]+'" data-listitemid="'+items[n][0]+'" data-listitemname="'+items[n][1]+'" >'+ items[n][1] + '</div>';
+            html += '</td>'
+            html += '<td>';
+            html += '<span data-list-item-id="'+items[n][0]+'" class="list_item_remove btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove</span>'
+            if ( enable_details_link ) html += '<span data-list-item-name="'+items[n][1]+'" class="list_item_details btn btn-default btn-xs" style="margin-left: 15px"><span class="glyphicon glyphicon-new-window"></span>&nbsp;&nbsp;Details</span>';
+            html += '</td>';
+            html += '</tr>';
         }
         html += '</tbody></table></div>';
 
@@ -532,18 +632,29 @@ CXGN.List.prototype = {
             }
         });
 
-        for (var n=0; n<items.length; n++) {
-            var list_item_id = items[n][0];
+        jQuery('.list_item_remove').click( function() {
+            var id = jQuery(this).data("list-item-id");
+            jQuery(this).attr("disabled", true);
 
-            jQuery('#'+items[n][0]).click( function() {
-                var lo = new CXGN.List();
-                var i = lo.availableLists();
+            var lo = new CXGN.List();
+            lo.removeItem(list_id, id);
+            lo.renderItems(div, list_id);
+            lo.renderLists('list_dialog');
+        });
+        jQuery('.list_item_details').click( function() {
+            var el = this;
+            var name = jQuery(el).data("list-item-name");
+            jQuery(el).attr("disabled", true);
 
-                lo.removeItem(list_id, this.id );
-                lo.renderItems(div, list_id);
-                lo.renderLists('list_dialog');
+            var lo = new CXGN.List();
+            lo.getListItemDbId(list_type, name).then((list_item_db_id) => {
+                jQuery(el).attr("disabled", false);
+                var url = lo.getListItemUrl(list_type, list_item_db_id);
+                window.open(url, '_blank');
+            }).catch((err) => {
+                alert(err);
             });
-        }
+        });
 
         jQuery('#dialog_add_list_item_button').click( function() {
             addMultipleItemsToList('dialog_add_list_item', list_id);
@@ -1073,37 +1184,72 @@ CXGN.List.prototype = {
         //console.log("data ="+JSON.stringify(data));
         var list_type = data.type_name;
 
-        var new_type;
-        switch (list_type)
-        {
-            case "traits":
-                new_type = 'traits_2_trait_ids';
-                break;
-            case "locations":
-                new_type = 'locations_2_location_ids';
-                break;
-            case "trials":
-            case "breeding_programs":
-                new_type = 'projects_2_project_ids';
-                break;
-            case "accessions":
-                new_type = 'accessions_2_accession_ids';
-                break;
-            case "plots":
-                new_type = 'plots_2_plot_ids';
-                break;
-            case "seedlots":
-                new_type = 'stocks_2_stock_ids';
-                break;
-            default:
-                return { 'error' : "cannot convert the list because of unknown type" };
-        }
+        var new_type = this.transform_keys[list_type];
+        if ( !new_type ) return { 'error' : "cannot convert the list because of unknown type" };
         //if (window.console) console.log("new type = "+new_type);
         var transformed = this.transform(list_id, new_type);
         //if (window.console) console.log("transformed="+JSON.stringify(transformed));
         return transformed;
+    },
 
+    getListItemDbId: function(list_type, list_item_name) {
+        return new Promise((resolve, reject) => {
+            var new_type = this.transform_keys[list_type];
+            if ( !new_type ) return reject('Unsupported list type');
+
+            jQuery.ajax({
+                url: '/list/transform/temp',
+                method: 'GET',
+                data: {
+                    type: new_type,
+                    items: JSON.stringify([list_item_name])
+                },
+                success: (resp) => {
+                    if ( resp && resp.missing && resp.transform ) {
+                        if ( resp.missing.length > 0 ) {
+                            return reject(`The list item ${list_item_name} is not in the database`);
+                        }
+                        else if ( resp.transform.length === 1 ) {
+                            return resolve(resp.transform[0]);
+                        }
+                    }
+                    return reject(`Could not get list item db id`);
+                },
+                error: (resp) => {
+                    return reject(`Could not get list item db id [${resp}]`);
+                }
+            });
+        });
+    },
+
+    getListItemUrl: function(list_type, list_item_db_id) {
+        switch (list_type) {
+            case "accessions":
+            case "plants":
+            case "plots":
+                return document.location.origin + `/stock/${list_item_db_id}/view`;
+            case "seedlots":
+                return document.location.origin + `/breeders/seedlot/${list_item_db_id}`;
+            case "crosses":
+                return document.location.origin + `/cross/${list_item_db_id}`;
+            case "breeding_programs":
+                return document.location.origin + `/breeders/manage_programs`;
+            case "locations":
+                return document.location.origin + `/breeders/locations`;
+            case "traits":
+            case "trait_components":
+                return document.location.origin + `/cvterm/${list_item_db_id}/view`;
+            case "trials":
+                return document.location.origin + `/breeders/trial/${list_item_db_id}`;
+            case "genotyping_protocols":
+                return document.location.origin + `/breeders_toolbox/protocol/${list_item_db_id}`;
+            case "genotyping_projects":
+                return document.location.origin + `/breeders/trial/${list_item_db_id}`;
+            default:
+                return null;
+        }
     }
+
 };
 
 function setUpLists() {
@@ -1553,15 +1699,24 @@ function changeListType(html_select_id, list_id) {
 */
 
 function validateList(list_id, list_type, html_select_id) {
-    jQuery('#working_modal').modal('show');
-    var lo = new CXGN.List();
     if (!list_type) {
         list_type = jQuery('#'+html_select_id).val();
     }
+    if ( !list_type || list_type === '' || list_type === '(none)' ) {
+        alert("You must select the list type before validating");
+        return;
+    }
+
+    jQuery('#working_modal').modal('show');
+    var lo = new CXGN.List();
     var validate = lo.validate(list_id, list_type);
     validate.then(function(response) {
-	//alert("That's the response : "+JSON.stringify(response));
         jQuery('#working_modal').modal('hide');
+    }).catch(function(err) {
+        jQuery('#working_modal').modal('hide');
+        let msg = "There was an error validating your list.";
+        if ( err && err.responseText ) msg += `\n\n${err.responseText}`;
+        alert(msg);
     });
 }
 
@@ -1642,36 +1797,69 @@ function makePrivateSelectedListGroup(list_ids) {
     }
 }
 
-function combineSelectedListGroup(list_ids) {
+/**
+ * Combine the items from the selected lists and create a new list
+ * The items can be combined either using a union method or intersection method
+ * @param {Array[Integer]} list_ids Array of List IDs of Lists to combine
+ * @param {String} type Method of combining lists (either 'union' or 'intersection', union is default)
+ */
+function combineSelectedListGroup(list_ids, type = 'union') {
     var arrayLength = list_ids.length;
     var list_name = jQuery('#new_combined_list_name').val();
-    if (confirm('Combine selected lists into a new list called '+list_name+'?')) {
-        var arrayItems = [];
+    if ( !list_name || list_name === '' ) return alert("You must enter a new list name first");
+
+    if ( confirm('Combine selected lists into a new list called '+list_name+'?') ) {
         var lo = new CXGN.List();
-        var first_list_type = lo.getListType(list_ids[0]);
-        var same_list_types = true;
-        for (var i=0; i<arrayLength; i++) {
+
+        // Check if the selected lists are the same list type
+        var list_types = [];
+        for ( var i=0; i<arrayLength; i++ ) {
             var list_type = lo.getListType(list_ids[i]);
-            if (list_type != first_list_type) {
-                same_list_types = false;
-                if (!confirm('Are you sure you want to combine these list types: '+first_list_type+' and '+list_type)) {
-                    return;
+            if ( !list_types.includes(list_type) ) list_types.push(list_type);
+        }
+        if ( list_types.length > 1 && !confirm('Are you sure you want to combine these list types: ' + list_types.join(', ')) ) return;
+
+        // Combine list items
+        var arrayItems = [];
+
+        // INTERSECTION
+        if ( type === 'intersection' ) {
+            var allListItems = [];
+            for ( var i=0; i<arrayLength; i++ ) {
+                list = lo.getListData(list_ids[i]);
+                var listItems = [];
+                for ( var j=0; j<list.elements.length; j++ ) {
+                    listItems.push(list.elements[j][1]);
+                }
+                allListItems.push(listItems);
+            }
+            arrayItems = allListItems.reduce((result, array) => result.filter(value => array.includes(value)));
+        }
+
+        // UNION
+        else {
+            for ( var i=0; i<arrayLength; i++ ) {
+                list = lo.getListData(list_ids[i]);
+                for ( var j=0; j<list.elements.length; j++ ) {
+                    arrayItems.push(list.elements[j][1]);
                 }
             }
         }
-        var new_list_id = lo.newList(list_name);
-        if (same_list_types == true) {
-            lo.setListType(new_list_id, first_list_type);
+
+        // Get unique set of items
+        arrayItems = [...new Set(arrayItems)];
+        if ( !arrayItems || arrayItems.length === 0 ) {
+            return alert("The selected lists don't have any list items in common.  New list not created.");
         }
-        for (var i=0; i<arrayLength; i++) {
-            list = lo.getListData(list_ids[i]);
-            var numElements = list.elements.length;
-            for (var j=0; j<numElements; j++) {
-                arrayItems.push(list.elements[j][1]);
-            }
+
+        // Add combined items to new list
+        var new_list_id = lo.newList(list_name);
+        if ( list_types.length === 1 ) {
+            lo.setListType(new_list_id, list_types[0]);
         }
         lo.addBulk(new_list_id, arrayItems);
         lo.renderLists('list_dialog');
+        alert("Added " + arrayItems.length + " items to the new List " + list_name);
     }
 }
 

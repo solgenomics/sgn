@@ -55,7 +55,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $c = shift;
     my $trial_id = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    
+
     print STDERR "This is sp_person_id from trial detail edit: $sp_person_id \n";
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
@@ -156,6 +156,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
     elsif ($datatype eq 'genotyping_project') {
         $error = $c->stash->{trial}->delete_empty_genotyping_project();
+    }
+    elsif ($datatype eq 'transformation_project') {
+        $error = $c->stash->{trial}->delete_empty_transformation_project();
     }
     else {
         $c->stash->{rest} = { error => "unknown delete action for $datatype" };
@@ -279,45 +282,12 @@ sub trial_details_POST  {
     print STDERR "logged in user TrialMetadata.pm BEFORE EVAL: ".Dumper($logged_in_user_arr)."\n";
 
 
-    eval {
-        if ($details->{name}) { $trial->set_name($details->{name}); }
-        if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
-        if ($details->{location}) { $trial->set_location($details->{location}); }
-        if ($details->{year}) { $trial->set_year($details->{year}); }
-        if ($details->{type}) { $trial->set_project_type($details->{type}); }
-        if ($details->{planting_date}) {
-        if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
-        else { $trial->set_planting_date($details->{planting_date}); }
-    }
-        if ($details->{transplanting_date}) {
-            if ($details->{transplanting_date} eq 'remove') { $trial->remove_transplanting_date($trial->get_transplanting_date()); }
-            else { $trial->set_transplanting_date($details->{transplanting_date}); }
-        }
-        if ($details->{harvest_date}) {
-            if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
-            else { $trial->set_harvest_date($details->{harvest_date}); }
-        }
-
-        if ($details->{description}) { $trial->set_description($details->{description}); }
-        if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
-        if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
-        if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
-        if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
-        if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
-    };
-
-    if ($details->{plate_format}) { $trial->set_genotyping_plate_format($details->{plate_format}); }
-    if ($details->{plate_sample_type}) { $trial->set_genotyping_plate_sample_type($details->{plate_sample_type}); }
-    if ($details->{facility}) { $trial->set_genotyping_facility($details->{facility}); }
-    if ($details->{facility_submitted}) { $trial->set_genotyping_facility_submitted($details->{facility_submitted}); }
-    if ($details->{facility_status}) { $trial->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
-    if ($details->{raw_data_link}) { $trial->set_raw_data_link($details->{raw_data_link}); }
-
-    if ($@) {
-	    $c->stash->{rest} = { error => "An error occurred setting the new trial details: $@" };
+    my $error = $trial->update_metadata($details);
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
     }
     else {
-	    $c->stash->{rest} = { success => 1 };
+        $c->stash->{rest} = { success => 1 };
     }
 }
 
@@ -336,7 +306,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $start_date = shift;
     my $end_date = shift;
     my $include_dateless_items = shift;
-    
+
     #get userinfo from db
     my $user = $c->user();
     if (! $c->user) {
@@ -481,11 +451,11 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my @phenotype_data;
 
     my @numeric_trait_ids;
-    
+
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
 
 	push @numeric_trait_ids, $trait_id;
-	
+
         my $cv = 0;
         if ($stddev && $average != 0) {
             $cv = ($stddev /  $average) * 100;
@@ -514,18 +484,18 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     # get data from the non-numeric trait ids
     #
-    
+
     # prevent sql statement from failing if there are no numeric traits
     #
     my $exclude_numeric_trait_ids = "";
     if (@numeric_trait_ids) {
 	$exclude_numeric_trait_ids = " AND cvterm.cvterm_id NOT IN (".join(",", @numeric_trait_ids).")";
     }
-	
+
     my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value)
-	$select_clause_additional	
+	$select_clause_additional
         FROM cvterm
             JOIN phenotype ON (cvterm_id=cvalue_id)
             JOIN nd_experiment_phenotype USING(phenotype_id)
@@ -545,7 +515,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional ";
 
     my $h = $dbh->prepare($q);
-    
+
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
@@ -553,7 +523,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 	push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
-    
+
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
@@ -2311,7 +2281,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     } else {
         $c->stash->{rest} = {success => 1};
     }
-}   
+}
 
 sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     my $self = shift;
@@ -3235,7 +3205,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
@@ -3331,7 +3301,7 @@ sub get_female_plots : Chained('trial') PathPart('get_female_plots') Args(0) {
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
@@ -5017,8 +4987,10 @@ sub update_trial_design_type_POST : Args(0) {
         $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
         return;
     }
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $curator     = $c->user()->check_roles('curator') if $user_id;
+    my $user_id;
+    my $curator;
+    $user_id = $c->user()->get_object()->get_sp_person_id();
+    $curator = $c->user()->check_roles('curator') if $user_id;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
@@ -5231,10 +5203,19 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
 
     }
 
+    my @all_lines = ();
+    foreach my $each_line (@data) {
+        my $each_line_string = join(",", @$each_line);
+        push @all_lines, $each_line_string;
+    }
+
+    my $all_lines_string = join("\n", @all_lines);
+
     # Return the generated file
     $c->res->content_type('text/csv');
     $c->res->headers->push_header("Content-disposition", "attachment; filename=\"$filename\"");
-    $c->res->body( join("\n", map { $_ = join(",", @{$_}) } @data) );
+    $c->res->body($all_lines_string);
+
     return;
 }
 

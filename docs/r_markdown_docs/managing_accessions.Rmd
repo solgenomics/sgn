@@ -90,6 +90,12 @@ Once you click "Add Accessions", the new accessions and information will be crea
 knitr::include_graphics('assets/images/manage_accessions_add_accessions_saved.png')
 ```
 
+## Email alert for accession upload
+
+When uploading accessions from a file, you have the option to receive email notifications about the status and results of your upload by clicking the "Email Alert" checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results, including any warnings or errors that may have occurred during the upload.
+```{r echo=FALSE, out.width='75%', fig.align='center'}
+knitr::include_graphics('assets/images/accession_upload_using_email.png')
+```
 
 ## Add Parentage (Pedigree) Information to Accessions
 

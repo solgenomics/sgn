@@ -11,7 +11,7 @@ sub name {
 sub validate { 
     my $self = shift;
     my $schema = shift;
-    my $list = shift;
+    my $list = shift || [];
 
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 

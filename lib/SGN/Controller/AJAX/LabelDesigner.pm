@@ -109,6 +109,29 @@ my %ADDITIONAL_LIST_DATA = (
             }
 
             return \%values;
+        },
+
+        'accession synonyms' => sub {
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+
+            my $rs = $schema->resultset("Stock::Stockprop")->search({
+                'me.stock_id' => { in => $list_item_db_ids },
+                'me.type_id' => $type_id
+            });
+            while ( my $row = $rs->next() ) {
+                my $accession_id = $row->stock_id();
+                my $synonym = $row->value();
+                for my $index (0 .. $#$list_item_db_ids ) {
+                    if ( $list_item_db_ids->[$index] eq $accession_id ) {
+                        my $id = $list_item_ids->[$index];
+                        $values{$id} = $values{$id} ? $values{$id} . ", " . $synonym : $synonym;
+                    }
+                }
+            }
+
+            return \%values;
         }
 
     },
@@ -450,20 +473,20 @@ __PACKAGE__->config(
 
             # Sort the label design elements by trial, plot order, plot number
             # (if the trial does not have a layout, it will default to sorting by plot number)
-            @sorted_keys = sort { 
-                    ncmp($design->{$a}{trial_name}, $design->{$b}{trial_name}) || 
+            @sorted_keys = sort {
+                    ncmp($design->{$a}{trial_name}, $design->{$b}{trial_name}) ||
                     ncmp($design->{$a}{_plot_order}, $design->{$b}{_plot_order}) ||
-                    ncmp($design->{$a}{plot_number}, $design->{$b}{plot_numer}) || 
+                    ncmp($design->{$a}{plot_number}, $design->{$b}{plot_numer}) ||
                     ncmp($a, $b)
             } keys %design;
        }
 
        # Sort by designated data property(s)
        else {
-            @sorted_keys = sort { 
-                    ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) || 
+            @sorted_keys = sort {
+                    ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) ||
                     ncmp($design->{$a}{$sort_order_2}, $design->{$b}{$sort_order_2}) ||
-                    ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3}) || 
+                    ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3}) ||
                     ncmp($a, $b)
             } keys %design;
        }
@@ -731,11 +754,11 @@ sub get_trial_design {
     my $trial_ids = shift;
     my $type = shift;
     my %selected_columns = (
-        plate => {genotyping_project_name=>1,genotyping_facility=>1,trial_name=>1,acquisition_date=>1,exported_tissue_sample_name=>1,tissue_sample_name=>1,well_A01=>1,row_number=>1,col_number=>1,source_observation_unit_name=>1,accession_name=>1,accession_id=>1,pedigree=>1,dna_person=>1,notes=>1,tissue_type=>1,extraction=>1,concentration=>1,volume=>1,is_blank=>1,year=>1,location_name=>1},
-        plots => {plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,rep_number=>1,range_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
-        plants => {plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
-        subplots => {subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,rep_number=>1,range_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
-        field_trial_tissue_samples => {tissue_sample_name=>1,tissue_sample_id=>1,plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,tissue_sample_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1}
+        plate => {genotyping_project_name=>1,genotyping_facility=>1,trial_name=>1,acquisition_date=>1,exported_tissue_sample_name=>1,tissue_sample_name=>1,well_A01=>1,row_number=>1,col_number=>1,source_observation_unit_name=>1,accession_name=>1,synonyms=>0,accession_id=>1,pedigree=>1,dna_person=>1,notes=>1,tissue_type=>1,extraction=>1,concentration=>1,volume=>1,is_blank=>1,year=>1,location_name=>1},
+        plots => {plot_name=>1,plot_id=>1,accession_name=>1,synonyms=>0,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,rep_number=>1,range_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
+        plants => {plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,synonyms=>0,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
+        subplots => {subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,synonyms=>0,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,rep_number=>1,range_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
+        field_trial_tissue_samples => {tissue_sample_name=>1,tissue_sample_id=>1,plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,synonyms=>0,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,tissue_sample_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1}
     );
     my %unique_identifier = (
         plate => 'tissue_sample_name',
@@ -911,58 +934,88 @@ sub get_data {
         }
     }
     elsif ($data_level eq "crosses") {
-        my $project;
-        my $cross_list_ids;
-        my %all_design;
+        my %cross_info;
         if ($data_type =~ m/Crossing Experiments/) {
-            $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+            my $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+            my $result = $project->get_crosses_and_details_in_crossingtrial();
+            my @cross_data = @$result;
+            foreach my $cross (@cross_data){
+                my $cross_combination;
+                my $male_parent_name;
+                my $male_parent_id;
+
+                if (!$cross->[2] || $cross->[2] eq ''){
+                    $cross_combination = 'No cross combination available';
+                } else {
+                    $cross_combination = $cross->[2];
+                }
+
+                if (!$cross->[8] || $cross->[8] eq ''){
+                    $male_parent_name = 'No male parent available';
+                } else {
+                    $male_parent_name = $cross->[8];
+                }
+
+                if (!$cross->[7] || $cross->[7] eq ''){
+                    $male_parent_id = 'No male parent available';
+                } else {
+                    $male_parent_id = $cross->[7];
+                }
+
+                $cross_info{$cross->[0]} = {
+                    'cross_name' => $cross->[1],
+                    'cross_id' => $cross->[0],
+                    'cross_combination' => $cross_combination,
+                    'cross_type' => $cross->[3],
+                    'female_parent_name' => $cross->[5],
+                    'female_parent_id' => $cross->[4],
+                    'male_parent_name' => $male_parent_name,
+                    'male_parent_id' => $male_parent_id
+                };
+            }
+
         } elsif ($data_type =~ m/List/) {
-            $cross_list_ids = convert_stock_list($c, $schema, $id);
-            my ($crossing_experiment_id, $num_trials) = get_trial_from_stock_list($c, $schema, $cross_list_ids);
-            $project = CXGN::Cross->new({ schema => $schema, trial_id => $crossing_experiment_id});
+            my $cross_list_ids = convert_stock_list($c, $schema, $id);
+            foreach my $cross_id (@$cross_list_ids) {
+                my $cross = CXGN::Cross->new({ schema => $schema, cross_stock_id => $cross_id});
+                my $info = $cross->cross_parents();
+#                print STDERR "INFO =".Dumper($info)."\n";
+                my $cross_combination;
+                my $male_parent_name;
+                my $male_parent_id;
+
+                if (!$info->[0]->[13] || $info->[0]->[13] eq ''){
+                    $cross_combination = 'No cross combination available';
+                } else {
+                    $cross_combination = $info->[0]->[13];
+                }
+
+                if (!$info->[0]->[7] || $info->[0]->[7] eq ''){
+                    $male_parent_name = 'No male parent available';
+                } else {
+                    $male_parent_name = $info->[0]->[7];
+                }
+
+                if (!$info->[0]->[6] || $info->[0]->[6] eq ''){
+                    $male_parent_id = 'No male parent available';
+                } else {
+                    $male_parent_id = $info->[0]->[6];
+                }
+
+                $cross_info{$cross->cross_stock_id()} = {
+                    'cross_name' => $cross->cross_name(),
+                    'cross_id' => $cross->cross_stock_id(),
+                    'cross_combination' => $cross_combination,
+                    'cross_type' => $info->[0]->[12],
+                    'female_parent_name' => $info->[0]->[1],
+                    'female_parent_id' => $info->[0]->[0],
+                    'male_parent_name' => $male_parent_name,
+                    'male_parent_id' => $male_parent_id
+                };
+            }
         }
 
-        my $result = $project->get_crosses_and_details_in_crossingtrial();
-        my @cross_data = @$result;
-        foreach my $cross (@cross_data){
-            my $cross_combination;
-            my $male_parent_name;
-            my $male_parent_id;
-
-            if ($cross->[2] eq ''){
-                $cross_combination = 'No cross combination available';
-            } else {
-                $cross_combination = $cross->[2];
-            }
-
-            if ($cross->[8] eq ''){
-                $male_parent_name = 'No male parent available';
-            } else {
-                $male_parent_name = $cross->[8];
-            }
-
-            if ($cross->[7] eq ''){
-                $male_parent_id = 'No male parent available';
-            } else {
-                $male_parent_id = $cross->[7];
-            }
-
-            $all_design{$cross->[0]} = {'cross_name' => $cross->[1],
-                                      'cross_id' => $cross->[0],
-                                      'cross_combination' => $cross_combination,
-                                      'cross_type' => $cross->[3],
-                                      'female_parent_name' => $cross->[5],
-                                      'female_parent_id' => $cross->[4],
-                                      'male_parent_name' => $male_parent_name,
-                                      'male_parent_id' => $male_parent_id};
-        }
-
-        if ($data_type =~ m/List/) {
-            my %filtered_hash = map { $_ => $all_design{$_} } @$cross_list_ids;
-            $design = \%filtered_hash;
-        } else {
-            $design = \%all_design;
-        }
+        $design = \%cross_info;
     }
 
 #    print STDERR "Design is ".Dumper($design)."\n";

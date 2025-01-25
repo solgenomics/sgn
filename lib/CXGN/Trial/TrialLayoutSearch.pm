@@ -133,8 +133,10 @@ sub search {
     my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $project_location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
-    
+
     my $treatment_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
     my $treatment_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -142,22 +144,23 @@ sub search {
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 
-    #For performance reasons the number of joins to stock can be reduced if a trial is given.     
+    #For performance reasons the number of joins to stock can be reduced if a trial is given.
 
-    my $from_clause = " FROM stock as observationunit 
+    my $from_clause = " FROM stock as observationunit
         JOIN stock_relationship ON (observationunit.stock_id=subject_id)
         JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
-        JOIN stock as accession ON (object_id=accession.stock_id AND accession.type_id = $accession_type_id)
+        JOIN stock as germplasm ON (object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id)
+        JOIN cvterm as germplasm_type ON (germplasm_type.cvterm_id = germplasm.type_id)
         JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
         JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
         JOIN project USING(project_id)
         LEFT JOIN project_relationship ON (project.project_id=project_relationship.subject_project_id AND project_relationship.type_id = $breeding_program_rel_type_id)
         LEFT JOIN project as breeding_program ON (breeding_program.project_id=project_relationship.object_project_id)
         LEFT JOIN project_relationship folder_rel ON (project.project_id = folder_rel.subject_project_id AND folder_rel.type_id = $folder_rel_type_id)
-        LEFT JOIN project folder ON (folder.project_id = folder_rel.object_project_id) 
+        LEFT JOIN project folder ON (folder.project_id = folder_rel.object_project_id)
         LEFT JOIN projectprop as location ON (project.project_id=location.project_id AND location.type_id = $project_location_type_id)
         LEFT JOIN nd_experiment_stock treatment_nds ON (treatment_nds.type_id = $treatment_experiment_type_id AND treatment_nds.stock_id = observationunit.stock_id)
-        LEFT JOIN nd_experiment_project treatment_ndp ON (treatment_ndp.nd_experiment_id = treatment_nds.nd_experiment_id)     
+        LEFT JOIN nd_experiment_project treatment_ndp ON (treatment_ndp.nd_experiment_id = treatment_nds.nd_experiment_id)
         LEFT JOIN project_relationship treatment_rel ON (project.project_id = treatment_rel.object_project_id AND treatment_rel.type_id = $treatment_rel_type_id)
         LEFT JOIN project treatment ON (treatment.project_id = treatment_rel.subject_project_id AND treatment.project_id = treatment_ndp.project_id)
         LEFT JOIN stock_relationship AS seedplot_planted ON(seedplot_planted.subject_id = observationunit.stock_id AND seedplot_planted.type_id=$seedlot_transaction_type_id)
@@ -171,18 +174,18 @@ sub search {
         LEFT JOIN stockprop AS is_a_control ON (observationunit.stock_id=is_a_control.stock_id AND is_a_control.type_id = $is_a_control_type_id) ";
 
 
-    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, treatment.name, treatment.description, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count ";
+    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, STRING_AGG(treatment.name, '|'), STRING_AGG(treatment.description, '|'), seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count ";
 
     my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY project.name, observationunit.uniquename";
 
-    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, accession.uniquename, accession.stock_id, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description, rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, treatment.name, treatment.description, seedlot.stock_id, seedlot.uniquename ";
+    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description, rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename ";
 
     # WHERE
     my @where_clause;
 
     if ($self->accession_list && scalar(@{$self->accession_list})>0) {
         my $accession_sql = _sql_from_arrayref($self->accession_list);
-        push @where_clause, "accession.stock_id in ($accession_sql)";
+        push @where_clause, "germplasm.stock_id in ($accession_sql)";
     }
 
     if ($self->observation_unit_names_list && scalar(@{$self->observation_unit_names_list})>0) {
@@ -209,7 +212,7 @@ sub search {
         my $folder_sql = _sql_from_arrayref($self->folder_list);
         push @where_clause, "folder.project_id in ($folder_sql)";
     }
-    
+
     if ($self->data_level ne 'all') {
         my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
         push @where_clause, "observationunit.type_id = $stock_type_id"; #ONLY plot or plant or subplot or tissue_sample
@@ -246,11 +249,24 @@ sub search {
 
     my @observation_units;
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $accession_uniquename, $accession_stock_id, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, 
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $germplasm_type_name, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description,
     $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $treatment_name, $treatment_description, $seedlot_id, $seedlot_name, $full_count) = $h->fetchrow_array()) {
 
         my $location_name = $location_id ? $location_id_lookup{$location_id} : undef;
-        my $treatments = $treatment_name ? { $treatment_name => $treatment_description } : { 'No ManagementFactor'=>undef };
+
+        # Split treatment names and descriptions on | and parse into an array
+        my @names = split(/\|/, $treatment_name);
+        my @descriptions = split(/\|/, $treatment_description);
+        my @treatments;
+        for my $i (0 .. $#names) {
+            my $n = $names[$i];
+            my $d = $descriptions[$i];
+            push @treatments, { $n => $d };
+        }
+        if ( scalar(@treatments) == 0 ) {
+            push @treatments, { 'No ManagementFactor' => undef };
+        }
+        # my $treatments = $treatment_name ? { $treatment_name => $treatment_description } : { 'No ManagementFactor'=>undef };
 
         if ($project_description) { $project_description =~ s/\R//g; }
         if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };
@@ -258,17 +274,39 @@ sub search {
 
         push @observation_units, $observationunit_stock_id;
 
+        my $accession_stock_id;
+        my $accession_name;
+        my $cross_stock_id;
+        my $cross_name;
+        my $family_stock_id;
+        my $family_name;
+
+        if ($germplasm_type_name eq 'cross') {
+            $cross_stock_id = $germplasm_stock_id;
+            $cross_name = $germplasm_uniquename;
+        } elsif ($germplasm_type_name eq 'family_name') {
+            $family_stock_id = $germplasm_stock_id;
+            $family_name = $germplasm_uniquename;
+        } else {
+            $accession_stock_id = $germplasm_stock_id;
+            $accession_name = $germplasm_uniquename;
+        }
+
         push @result, {
             obsunit_stock_id => $observationunit_stock_id,
             obsunit_uniquename => $observationunit_uniquename,
             obsunit_type_name => $observationunit_type_name,
-            germplasm_uniquename => $accession_uniquename,
+            germplasm_uniquename => $accession_name,
             germplasm_stock_id => $accession_stock_id,
+            cross_uniquename => $cross_name,
+            cross_stock_id => $cross_stock_id,
+            family_uniquename => $family_name,
+            family_stock_id => $family_stock_id,
             trial_id => $project_project_id,
             trial_name => $project_name,
             trial_description => $project_description,
             location_name => $location_name,
-            location_id => $location_id,        
+            location_id => $location_id,
             breeding_program_id => $breeding_program_project_id,
             breeding_program_name => $breeding_program_name,
             breeding_program_description => $breeding_program_description,
@@ -282,12 +320,11 @@ sub search {
             row_number => $row_number,
             col_number => $col_number,
             plant_number => $plant_number,
-            treatments => $treatments ,
+            treatments => \@treatments ,
             full_count => $full_count,
             seedlot_id => $seedlot_id,
             seedlot_name => $seedlot_name,
         };
-
     }
 
     ## Query observations if requested. No requested by default

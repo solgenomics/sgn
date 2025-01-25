@@ -1147,15 +1147,22 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $return_only_first_genotypeprop_for_stock = $c->req->param('include_duplicate_genotypes') eq 'true' ? 0 : 1;
     my $marker_set_list_id = $c->req->param('marker_set_list_id');
 
+    my $o;
     my @marker_name_list;
     if ($marker_set_list_id) {
         my $list = CXGN::List->new({ dbh => $schema->storage->dbh, list_id => $marker_set_list_id });
         my $elements = $list->elements();
 
         foreach my $e (@$elements) {
-            my $o = decode_json $e;
-            if (exists($o->{marker_name})) {
-                push @marker_name_list, $o->{marker_name};
+            eval {
+                $o = decode_json($e);
+            };
+            if ($@) {    #simple list
+                push @marker_name_list, $e;
+            } else {    #json list
+                if (exists($o->{marker_name})) {
+                    push @marker_name_list, $o->{marker_name};
+                }
             }
         }
     }
@@ -1759,7 +1766,7 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
     my $download = $kasp_genotyping_data_download->download();
 
     my $format = 'csv';
-    my $download_file_name = 'BreedbaseKASPdata'.$format;
+    my $download_file_name = 'BreedbaseKASPdata'.'.'.$format;
 
     $c->res->content_type('Application/'.$format);
     $c->res->header('Content-Disposition', qq[attachment; filename="$download_file_name"]);

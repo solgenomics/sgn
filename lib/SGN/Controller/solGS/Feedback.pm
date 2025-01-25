@@ -31,8 +31,10 @@ sub message_content {
     my $back_link = "<a href=\"$referer\">[ Go back ]</a>";
     
     my $msg = "<p>Your $job_type job is submitted.</p>"
-      . "<p>You will receive an email when it is completed. "
-      . "You can also check the status of the job in $profile_link."
+      . "<p>You will receive an email when it is completed,  " 
+      . "which may take up to a few hours. If the email is not in your inbox, "
+      . "please check also your spam folder.</p>"
+      . "<p>Alternatively, you can also check the status of the job in $profile_link."
       . "<p>$back_link</p>";
 
     return $msg;
