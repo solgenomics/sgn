@@ -2625,8 +2625,15 @@ sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatabl
     my @related_accessions;
 
     foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
-        push @related_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $vector_name, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
+        push @related_accessions, {
+            transformant_id => $transformant_id,
+            transformant_name => $transformant_name,
+            plant_id => $plant_id,
+            plant_name => $plant_name,
+            transformation_id => $transformation_id,
+            transformation_name => $transformation_name,
+        };
     }
 
     $c->stash->{rest}={data=>\@related_accessions};
@@ -2647,11 +2654,17 @@ sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datata
     my @obsoleted_accessions;
 
     foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
+        my $transformation_info;
+        if ($transformation_id) {
+            $transformation_info = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
+        } else {
+            $transformation_info = 'NA';
+        }
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
 
-        push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
+        push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
     }
 
     $c->stash->{rest}={data=>\@obsoleted_accessions};

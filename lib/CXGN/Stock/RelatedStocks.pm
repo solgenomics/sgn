@@ -236,7 +236,7 @@ sub get_vector_related_accessions {
     my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_of', 'stock_relationship')->cvterm_id();
 
 
-    my $q = "SELECT transformant.stock_id, transformant.uniquename, vector.stock_id, vector.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename
+    my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename
         FROM stock AS transformant
         JOIN stock_relationship AS plant_relationship ON (plant_relationship.object_id = transformant.stock_id) AND plant_relationship.type_id = ?
         JOIN stock AS plant ON (plant_relationship.subject_id = plant.stock_id) AND plant.type_id = ?
@@ -250,8 +250,8 @@ sub get_vector_related_accessions {
     $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $stock_id);
 
     my @related_stocks =();
-    while(my($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = $h->fetchrow_array()){
-        push @related_stocks, [$transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name]
+    while(my($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = $h->fetchrow_array()){
+        push @related_stocks, [$transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name]
     }
 
     return \@related_stocks;
@@ -271,7 +271,7 @@ sub get_vector_obsoleted_accessions {
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_of', 'stock_relationship')->cvterm_id();
 
-    my $q = "SELECT transformant.stock_id, transformant.uniquename, vector.stock_id, vector.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename, metadata.md_metadata.obsolete_note, metadata.md_metadata.modification_note, phenome.stock_owner.sp_person_id
+    my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename, metadata.md_metadata.obsolete_note, metadata.md_metadata.modification_note, phenome.stock_owner.sp_person_id
         FROM stock AS transformant
         JOIN phenome.stock_owner ON (transformant.stock_id = phenome.stock_owner.stock_id)
         JOIN metadata.md_metadata ON (phenome.stock_owner.metadata_id = metadata.md_metadata.metadata_id)
@@ -287,8 +287,8 @@ sub get_vector_obsoleted_accessions {
     $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $stock_id);
 
     my @obsoleted_accessions =();
-    while(my($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
-        push @obsoleted_accessions, [$transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id]
+    while(my($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
+        push @obsoleted_accessions, [$transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id]
     }
 
     return \@obsoleted_accessions;
