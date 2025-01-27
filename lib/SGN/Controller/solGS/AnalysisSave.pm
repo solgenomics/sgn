@@ -181,17 +181,27 @@ sub get_analysis_job_info {
 	my $analysis_name = $c->stash->{analysis_name};
 	
 	my @log;
-
+	my @analysis_logs;
 	foreach my $log_file (@$files) {
 		my @logs = read_file($log_file, {binmode => ':utf8'});
-		my ($log) = grep{ $_ =~ /$analysis_page\s+/} @logs;
+		@analysis_logs = grep{ $_ =~ /$analysis_page\s+/} @logs;
 
-		@log = split(/\t/, $log);
-		last if $log;
+		last if @analysis_logs;
 	}
 
-	if (@log) {
-		my $analysis_info = decode_json($log[5]);
+	if (@analysis_logs) {
+		my @analysis_times;
+		foreach my $analysis_log (@analysis_logs){
+			my @analysis_log_cols = split(/\t/, $analysis_log);
+			push @analysis_times, $analysis_log_cols[4];
+		}
+
+		my ($oldest, $latest) = (sort @analysis_times)[0, -1];
+		
+		my ($latest_analysis_log) = grep{ $_ =~ $latest } @analysis_logs;
+		my @latest_analysis_log_cols = split(/\t/, $latest_analysis_log);
+		my $analysis_info = decode_json($latest_analysis_log_cols[5]);
+
 		return $analysis_info;
 	} else {
 		return;
