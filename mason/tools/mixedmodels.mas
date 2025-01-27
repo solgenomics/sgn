@@ -85,6 +85,9 @@
 		</div>
 	      </div>
 	      <br />
+        <input type="checkbox" id="dataset_trait_outliers" />
+        <label>Use validated trials &nbsp; </label>          
+        <br>
 	      <br />
 
 </&>
@@ -241,6 +244,12 @@
 </&>
 
 <script>
+
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('dataset_trait_outliers').checked = true;
+}
 
 $(document).ready( function() {
 var mixedmodels = window.jsMod['mixedmodels'].init("mixedmodels");
