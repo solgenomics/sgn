@@ -314,9 +314,12 @@ $field_headers => ()
 % if ($info_section_id eq 'stock_related_stock_section'){
                                 <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End stock_related_stock_section
-% if ($info_section_id eq 'vector_related_stocks_section'){
-                                <& /stock/vector_related_stocks_section.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_related_stocks_section
+% if ($info_section_id eq 'vector_related_accessions_section'){
+                                <& /stock/vector_related_stocks.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_related_accessions_section
+% if ($info_section_id eq 'vector_obsoleted_accessions_section'){
+                                <& /stock/vector_obsoleted_transformants.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_related_accessions_section
 
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>

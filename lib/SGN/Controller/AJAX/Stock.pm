@@ -2613,7 +2613,7 @@ sub accession_or_seedlot_or_population_or_vector_construct_autocomplete_GET :Arg
 }
 
 
-sub get_vector_related_stocks:Chained('/stock/get_stock') PathPart('datatables/vector_related_stocks') Args(0){
+sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatables/vector_related_accessions') Args(0){
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->stash->{stock_row}->stock_id();
@@ -2621,19 +2621,19 @@ sub get_vector_related_stocks:Chained('/stock/get_stock') PathPart('datatables/v
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
     my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $progenies->get_vector_related_stocks();
-    my @related_stocks;
+    my $result = $progenies->get_vector_related_accessions();
+    my @related_accessions;
 
     foreach my $r (@$result){
         my ($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
-        push @related_stocks, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $vector_name, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
+        push @related_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $vector_name, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
     }
 
-    $c->stash->{rest}={data=>\@related_stocks};
+    $c->stash->{rest}={data=>\@related_accessions};
 }
 
 
-sub get_vector_obsoleted_transformants:Chained('/stock/get_stock') PathPart('datatables/vector_obsoleted_transformants') Args(0){
+sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datatables/vector_obsoleted_accessions') Args(0){
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->stash->{stock_row}->stock_id();
@@ -2643,18 +2643,18 @@ sub get_vector_obsoleted_transformants:Chained('/stock/get_stock') PathPart('dat
     my $dbh = $c->dbc->dbh;
 
     my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $related_stocks->get_vector_obsoleted_transformants();
-    my @obsoleted_stocks;
+    my $result = $related_stocks->get_vector_obsoleted_accessions();
+    my @obsoleted_accessions;
 
     foreach my $r (@$result){
         my ($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
 
-        push @obsoleted_stocks, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
+        push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
     }
 
-    $c->stash->{rest}={data=>\@obsoleted_stocks};
+    $c->stash->{rest}={data=>\@obsoleted_accessions};
 }
 
 

@@ -223,7 +223,7 @@ sub get_plot_plant_related_seedlots {
 }
 
 
-sub get_vector_related_stocks {
+sub get_vector_related_accessions {
     my $self = shift;
     my $stock_id = $self->stock_id;
     my $schema = $self->dbic_schema();
@@ -259,7 +259,7 @@ sub get_vector_related_stocks {
 }
 
 
-sub get_vector_obsoleted_transformants {
+sub get_vector_obsoleted_accessions {
     my $self = shift;
     my $stock_id = $self->stock_id;
     my $schema = $self->dbic_schema();
@@ -286,12 +286,12 @@ sub get_vector_obsoleted_transformants {
     my $h = $schema->storage->dbh->prepare($q);
     $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $stock_id);
 
-    my @related_stocks =();
+    my @obsoleted_accessions =();
     while(my($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
-        push @related_stocks, [$transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id]
+        push @obsoleted_accessions, [$transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id]
     }
-    
-    return \@related_stocks;
+
+    return \@obsoleted_accessions;
 
 }
 
