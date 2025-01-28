@@ -2620,8 +2620,8 @@ sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatabl
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
-    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $progenies->get_vector_related_accessions();
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_stocks->get_vector_related_accessions();
     my @related_accessions;
 
     foreach my $r (@$result){
