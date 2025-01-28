@@ -259,7 +259,7 @@ for my $row ($start_row .. $end_row) {
     push @output, "name: $method_name\n";
     push @output, "namespace: $method_namespace\n";
     push @output, "def: \"$method_formula\"\n" if $method_formula;
-    push @output, "relationship: method_of $method_class_id ! $method_class \n\n" if $method_class;
+    push @output, "is_a: method_of $method_class_id ! $method_class \n\n" if $method_class;
 
     #scale_output
     push @output, "[Term]\n";
@@ -267,7 +267,7 @@ for my $row ($start_row .. $end_row) {
     push @output, "name: $scale_name\n";
     push @output, "namespace: $scale_namespace\n";
     push @output, "def: \"$scale_def\"\n" if $scale_def;
-    push @output, "relationship: scale_of $scale_class_id ! $scale_class \n\n" if $scale_class;
+    push @output, "is_a: $scale_class_id ! $scale_class \n\n" if $scale_class;
 
 }
 
