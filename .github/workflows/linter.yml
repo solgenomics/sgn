@@ -11,6 +11,9 @@ on: # yamllint disable-line rule:truthy
 
 permissions: {}
 
+env:
+  FILTER_REGEX_EXCLUDE: "docs/.*"
+
 jobs:
   build:
     name: Lint
