@@ -182,6 +182,12 @@ has 'include_dateless_items' => (
     default => sub { return 1; },
     );
 
+has 'include_intercrop_stocks' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw'
@@ -197,6 +203,7 @@ sub get_phenotype_matrix {
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $include_timestamp = $self->include_timestamp;
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
+    my $include_intercrop_stocks = $self->include_intercrop_stocks;
 
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
@@ -221,9 +228,10 @@ sub get_phenotype_matrix {
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
             phenotype_max_value=>$self->phenotype_max_value,
-	    start_date => $self->start_date(),
-	    end_date => $self->end_date(),
-	    include_dateless_items => $self->include_dateless_items(),
+            start_date => $self->start_date(),
+            end_date => $self->end_date(),
+            include_dateless_items => $self->include_dateless_items(),
+            include_intercrop_stocks => $include_intercrop_stocks,
             limit=>$self->limit,
             offset=>$self->offset
         }
@@ -243,6 +251,10 @@ sub get_phenotype_matrix {
 
         if ($include_pedigree_parents){
             push @line, ('germplasmPedigreeFemaleParentName', 'germplasmPedigreeFemaleParentDbId', 'germplasmPedigreeMaleParentName', 'germplasmPedigreeMaleParentDbId');
+        }
+
+        if ( $include_intercrop_stocks ) {
+            push(@line, 'intercropGermplasmDbId', 'intercropGermplasmName');
         }
 
         my @sorted_traits = sort keys(%$unique_traits);
@@ -295,8 +307,18 @@ sub get_phenotype_matrix {
                 push @line, ($parents->{'mother'}, $parents->{'mother_id'}, $parents->{'father'}, $parents->{'father_id'});
             }
 
+            if ( $include_intercrop_stocks ) {
+                my @ic_stock_ids;
+                my @ic_stock_names;
+                my $ic_stocks = $obs_unit->{intercrop_germplasm};
+                foreach my $ic_stock (@$ic_stocks) {
+                    push(@ic_stock_ids, $ic_stock->{stock_id});
+                    push(@ic_stock_names, $ic_stock->{stock_uniquename});
+                }
+                push(@line, join(',', @ic_stock_ids), join(',', @ic_stock_names));
+            }
+
             my $observations = $obs_unit->{observations};
-#            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
             my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
             my %phenotype_ids;
@@ -355,7 +377,12 @@ sub get_phenotype_matrix {
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
-        my %seen_obsunits;        
+        my %seen_obsunits;
+
+        # Add intercrop stock headers, if requested
+        if ( $include_intercrop_stocks ) {
+            push(@metadata_headers, 'intercropGermplasmDbId', 'intercropGermplasmName');
+        }
 
         foreach my $d (@$data) {
             my $obsunit_id = $d->{obsunit_stock_id};
@@ -420,6 +447,19 @@ sub get_phenotype_matrix {
                 $entry_type,
                 $d->{plant_number}
             ];
+
+            # add intercrop stocks, if requested
+            if ( $include_intercrop_stocks ) {
+                my @ic_stock_ids;
+                my @ic_stock_names;
+                my $ic_stocks = $d->{intercrop_stocks};
+                foreach my $ic_stock (@$ic_stocks) {
+                    push(@ic_stock_ids, $ic_stock->{id});
+                    push(@ic_stock_names, $ic_stock->{name});
+                }
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, join(',', @ic_stock_ids));
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, join(',', @ic_stock_names));
+            }
         }
         #print STDERR Dumper \%plot_data;
         #print STDERR Dumper \%traits;

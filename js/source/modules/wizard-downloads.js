@@ -194,6 +194,7 @@ export function WizardDownloads(main_id,wizard){
         var level = d3.select(".wizard-download-phenotypes-level").node().value;
         var timestamp = d3.selectAll('.wizard-download-phenotypes-timestamp').property('checked')?1:0;
         var entry_numbers = d3.selectAll('.wizard-download-phenotypes-entry-numbers').property('checked')?1:0;
+        var intercrop = d3.selectAll('.wizard-download-phenotypes-intercrop').property('checked')?1:0;
         var outliers = d3.selectAll('.wizard-download-phenotypes-outliers').property('checked')?1:0;
         var names = JSON.stringify(d3.select(".wizard-download-phenotypes-name").node().value.split(","));
         var min = d3.select(".wizard-download-phenotypes-min").node().value;
@@ -216,6 +217,7 @@ export function WizardDownloads(main_id,wizard){
             phenotype_max_value: max,
             timestamp: timestamp,
             entry_numbers: entry_numbers,
+            intercrop: intercrop,
             trait_contains: names,
             include_row_and_column_numbers: 1,
             exclude_phenotype_outlier: outliers,

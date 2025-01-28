@@ -93,6 +93,7 @@ sub download {
     my $phenotype_max_value = $self->phenotype_max_value();
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
     my $search_type = $self->search_type();
+    my $include_intercrop_stocks = $self->include_intercrop_stocks();
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my @data;
@@ -122,6 +123,7 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
+            include_intercrop_stocks=>$include_intercrop_stocks
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }

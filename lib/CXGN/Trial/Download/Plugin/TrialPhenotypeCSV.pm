@@ -92,6 +92,7 @@ sub download {
     my $phenotype_max_value = $self->phenotype_max_value();
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
     my $include_pedigree_parents = $self->include_pedigree_parents();
+    my $include_intercrop_stocks = $self->include_intercrop_stocks();
     my $search_type = $self->search_type();
 
     $self->trial_download_log($trial_id, "trial phenotypes");
@@ -125,7 +126,8 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
-            include_pedigree_parents=>$include_pedigree_parents
+            include_pedigree_parents=>$include_pedigree_parents,
+            include_intercrop_stocks=>$include_intercrop_stocks
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }

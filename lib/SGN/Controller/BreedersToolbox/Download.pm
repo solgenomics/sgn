@@ -226,6 +226,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
     my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
+    my $include_intercrop_stocks = $c->req->param("intercrop") && $c->req->param("intercrop") ne 'null' && $c->req->param("intercrop") ne 'undefined' ? $c->req->param("intercrop") : 0;
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
@@ -410,6 +411,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         data_level => $data_level,
         include_timestamp => $timestamp_option,
         include_pedigree_parents=>$include_pedigree_parents,
+        include_intercrop_stocks => $include_intercrop_stocks,
         exclude_phenotype_outlier => $exclude_phenotype_outlier,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
