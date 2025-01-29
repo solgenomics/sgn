@@ -50,7 +50,6 @@ Lukas Mueller <lam87@cornell.edu>
 
 package CXGN::Dataset;
 
-use List::Util 'sum';
 use Moose;
 use Moose::Util::TypeConstraints;
 use Data::Dumper;
@@ -1272,6 +1271,13 @@ sub calculate_tool_compatibility {
         },
         'Correlation' => {
             'compatible' => 0
+        },
+        'Data Summary' => {
+            'markers per genotyping protocol' => [],
+            'number of phenotyped accessions per trait' => [],
+            'number of observations per trait' => [],
+            'number of genotyped accessions per protocol' => [],
+            'trait observations per location' => {}
         }
     };
 
@@ -1350,6 +1356,10 @@ sub calculate_tool_compatibility {
     foreach my $method (@{$genotyping_methods}){
         my $num_markers = $genotype_counts->{$method->[0]}->{"num_markers"};
         my $num_accessions = $genotype_counts->{$method->[0]}->{"num_accessions"};
+
+        push @{$tool_compatibility->{"Data Summary"}->{"markers per genotyping protocol"}}, $method->[1]." : ".$num_markers;
+        push @{$tool_compatibility->{"Data Summary"}->{"number of genotyped accessions per protocol"}}, $method->[1]." : ".$num_accessions;
+
         if ($num_markers > 1) {
             if ($num_accessions < 30) {
                 $tool_compatibility->{'Population Structure'}->{'warn'}->{"You may not have enough accessions (n=$num_accessions) genotyped for ".$method->[1].", ($num_markers markers) for strong results."} = "";
@@ -1365,7 +1375,7 @@ sub calculate_tool_compatibility {
 
     if ($num_phenotyped_accessions > 1 && scalar(@{$traits}) > 1) { #dont need to go trait by trait for clustering, since all traits are combined to eigenvectors. just need plenty of trait measurements
         if (scalar(@{$traits}) < 5) {
-            $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough trait measurements (only ".scalar(@{$traits})." traits) for strong phenotype clustering."} = "";
+            $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough measured traits (only ".scalar(@{$traits}).") for strong phenotype clustering."} = "";
         }
         if ($num_phenotyped_accessions < 30) {
             $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough phenotyped accessions (n=$num_phenotyped_accessions) for strong phenotype clustering."} = "";
@@ -1397,9 +1407,14 @@ sub calculate_tool_compatibility {
         foreach my $location (@{$locations}){
             $total_obs += $obs_by_trait->{$trait->[0]}->{$location->[0]};
             push @location_counts, $obs_by_trait->{$trait->[0]}->{$location->[0]};
+            push @{$tool_compatibility->{"Data Summary"}->{"trait observations per location"}->{$location->[1]}}, $trait->[1]." : ".$obs_by_trait->{$trait->[0]}->{$location->[0]};
         }
         
         my $num_accessions_phenotyped_for_this_trait = scalar(keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}));
+
+        push @{$tool_compatibility->{"Data Summary"}->{"number of phenotyped accessions per trait"}}, $trait->[1]." : ".$num_accessions_phenotyped_for_this_trait;
+        push @{$tool_compatibility->{"Data Summary"}->{"number of observations per trait"}}, $trait->[1]." : ".$total_obs;
+
         if ($total_obs > 0) { # This trait was measured
 
             if ($total_obs < 30) {
@@ -1421,6 +1436,9 @@ sub calculate_tool_compatibility {
             if (scalar(grep {$_ > 0} @location_counts) > 1 && $num_accessions_phenotyped_for_this_trait > 1) { # More than one location had measurements, and more than one accession was measured
                 if ($num_accessions_phenotyped_for_this_trait < 30) {
                     $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to get strong results."} = "";
+                }
+                if (scalar(grep {$_ < 30} @location_counts) > 1) {
+                    $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough phenotype observations at all trial locations to get strong results."} = "";
                 }
                 $tool_compatibility->{'Stability'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Stability'}->{'traits'}}, $trait->[1];
