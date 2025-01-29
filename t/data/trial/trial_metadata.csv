@@ -1,0 +1,3 @@
+trial_name,new_trial_name,breeding_program,location,year,planting_date,harvest_date,design_type,description,trial_type,plot_width,plot_length,field_size
+test_trial,,,Cornell Biotech,2017,2017-06-01,remove,RCBD,Updated Description,Advanced Yield Trial,1.5,1,10
+CASS_6Genotypes_Sampling_2015,updated_trial,,,,2017-06-02,2017-07-19,,,,,,

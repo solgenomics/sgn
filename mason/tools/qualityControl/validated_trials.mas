@@ -1,0 +1,987 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery', 'CXGN.Login','CXGN.BreedersToolbox.HTMLSelect'], entries => ['validatedtrials' ] &>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+
+
+
+
+<& /page/page_title.mas, title=>"Validated Trials" &>
+
+<p>This table presents all trials that have been thoroughly filtered and validated through the Quality Control Tool.</p>
+<br>
+<div>
+    <input type="text" id="searchBox" placeholder="Search tool..." onkeyup="filterTable()">
+    <br>
+</div>
+<div id="validated_trials_tool">
+  <div>
+    <br>
+    <table id="projectDataTable" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Select</th> 
+                <th>Project Name</th>
+                <th>Project Location</th>
+                <th>Trait Name</th>
+                <th>Validated By</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+<div id="paginationControls">
+    <button id="prevPageBtn" onclick="changePage(-1)">Previous</button>
+    <span id="currentPageLabel">Page 1</span>
+    <button id="nextPageBtn" onclick="changePage(1)">Next</button>
+</div>
+
+<!-- Items per page control -->
+<div>
+    <label for="itemsPerPage">Items per page:</label>
+    <select id="itemsPerPage" onchange="setItemsPerPage()">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+    </select>
+</div>
+
+<div id="location-checkboxes"></div>
+</div>
+<div id="map"></div>
+
+<br>
+<br>
+
+<&| /page/info_section.mas, title=>"Statistcs", collapsible=>1, collapsed=>1 &>
+
+    <button id="calculate_statistics">Calculate Statistics</button>
+    <br>
+    <div>
+        <br>
+        <table id="statTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Accession</th>
+                    <th>Trials</th>
+                    <th>Observations</th> 
+                    <th>Trait</th>
+                    <th>Average</th>
+                    <th>SD</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+    <button id="downloadCsvButton">Download CSV</button>
+
+
+</&>
+
+<&| /page/info_section.mas, title=>"Graphics", collapsible=>1, collapsed=>1 &>
+
+    <label for="traitSelection">Select Trait:</label>
+    <select id="traitSelection" class="form-control">
+        <option value="" disabled selected>Select a trait</option>
+        <!-- Options will be dynamically populated -->
+    </select>
+
+    <div id="filterOptions" style="margin-bottom: 20px;">
+      <label><input type="radio" name="filter" value="5"> Show top 5%</label>
+      <label><input type="radio" name="filter" value="10" checked > Show top 10%</label>
+      <label><input type="radio" name="filter" value="25"> Show top 25%</label>
+      <label><input type="radio" name="filter" value="50"> Show top 50%</label>
+      <label><input type="radio" name="filter" value="100"> Show 100%</label>
+      <br>
+      <!-- Bottom filters -->
+      <label><input type="radio" name="filter" value="bottom-5"> Show bottom 5%</label>
+      <label><input type="radio" name="filter" value="bottom-25"> Show bottom 25%</label>
+      <label><input type="radio" name="filter" value="bottom-50"> Show bottom 50%</label>
+      <label><input type="radio" name="filter" value="bottom-75"> Show bottom 75%</label>
+    </div>
+
+    <br>
+
+    <div id="barplotContainer" style="width: 100%; height: 500px;"></div>
+    <br>
+    <div id="boxplotContainer" style="width: 100%; height: 500px;"></div>
+
+</&>
+
+<script>
+let currentPage = 1;   
+let itemsPerPage = 10; 
+let allData = [];
+
+document.getElementById('downloadCsvButton').addEventListener('click', function () {
+  // Prepare the headers for the CSV file
+  const headers = ['Accession', 'Trials', 'Observations', 'Trait', 'Average', 'SD', 'Min', 'Max'];
+
+  // Use the global `statisticsData` (or replace it with the actual variable holding all table data)
+  const rows = [];
+
+  Object.entries(stats).forEach(([trait, accessions]) => {
+    Object.entries(accessions).forEach(([accession, stats]) => {
+      rows.push([
+        accession, // Accession
+        stats.uniqueTrials || 0, // Trials
+        stats.uniquePlots || 0, // Observations
+        trait, // Trait
+        stats.mean !== undefined ? stats.mean.toFixed(2) : 'N/A', // Average
+        stats.stdDev !== undefined ? stats.stdDev.toFixed(2) : 'N/A', // SD
+        stats.min !== undefined ? stats.min.toFixed(2) : 'N/A', // Min
+        stats.max !== undefined ? stats.max.toFixed(2) : 'N/A', // Max
+      ]);
+    });
+  });
+
+  // Combine headers and rows into a single CSV string
+  const csvContent =
+    [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+
+  // Create a Blob and a link to download the CSV
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'statistics_table.csv'); // Set the download file name
+  document.body.appendChild(link);
+  link.click(); // Trigger the download
+  document.body.removeChild(link); // Clean up the DOM
+});
+
+
+
+
+function drawD3Barplot(statsByTrait, selectedTrait) {
+  const traitStats = statsByTrait[selectedTrait];
+
+  if (!traitStats) {
+    alert('No data available for the selected trait!');
+    return;
+  }
+
+  // Get the selected filter option (e.g., "5", "10", "bottom-5")
+  const filterOption = $('input[name="filter"]:checked').val();
+
+  // Prepare data sorted by average
+  const sortedData = Object.keys(traitStats)
+    .map((accession) => {
+      const stat = traitStats[accession];
+      return {
+        accession: accession,
+        avg: stat.mean || 0,
+        min: stat.min || 0,
+        max: stat.max || 0,
+      };
+    })
+    .sort((a, b) => b.avg - a.avg); // Sort by average value (ascending for filtering)
+
+  let filteredData = []; // Initialize filteredData
+
+  // Apply filtering based on the selected option
+  if (!filterOption.startsWith('bottom')) {
+    // Top filtering (e.g., "5", "10", "25", etc.)
+    const percentage = parseInt(filterOption, 10); // Extract percentage from top option
+    const count = Math.ceil((percentage / 100) * sortedData.length);
+    filteredData = sortedData.slice(0, count); // Get the top entries
+  } else {
+    // Bottom filtering (e.g., "bottom-5", "bottom-25")
+    const percentage = parseInt(filterOption.split('-')[1], 10); // Extract percentage from "bottom-XX"
+    const count = Math.ceil((percentage / 100) * sortedData.length);
+    filteredData = sortedData.slice(-count); // Get the bottom entries
+  }
+
+  // Always show values ordered from major to minor
+  filteredData = filteredData.sort((a, b) => b.avg - a.avg); // Sort in descending order by average
+
+  // Clear the container
+  d3.select('#barplotContainer').html('');
+
+  // Set up dimensions
+  const margin = { top: 20, right: 30, bottom: 150, left: 60 }; // Increased bottom margin for long labels
+  const width = document.getElementById('barplotContainer').clientWidth - margin.left - margin.right;
+  const height = 500 - margin.top - margin.bottom;
+
+  // Append SVG
+  const svg = d3
+    .select('#barplotContainer')
+    .append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+  // Retrieve the color for the selected trait
+  const barColor = traitColorMap[selectedTrait] || '#17becf'; // Default color if not found
+
+  // Create scales
+  const xScale = d3.scaleBand().domain(filteredData.map((d) => d.accession)).range([0, width]).padding(0.4);
+  const yScale = d3
+    .scaleLinear()
+    .domain([0, d3.max(filteredData, (d) => d.max)])
+    .nice()
+    .range([height, 0]);
+
+  // Add axes
+  svg
+    .append('g')
+    .attr('transform', `translate(0,${height})`)
+    .call(d3.axisBottom(xScale))
+    .selectAll('text')
+    .attr('transform', 'rotate(45)') // Adjusted to 45 degrees for better readability
+    .attr('y', 10) // Fine-tuned y position
+    .attr('x', 5) // Adjusted x position for better alignment
+    .style('text-anchor', 'start')
+    .style('font-size', '10px'); // Reduced font size for clarity with many labels
+
+  svg.append('g').call(d3.axisLeft(yScale));
+
+  // Add bars
+  svg
+    .selectAll('.bar')
+    .data(filteredData)
+    .enter()
+    .append('rect')
+    .attr('class', 'bar')
+    .attr('x', (d) => xScale(d.accession))
+    .attr('y', (d) => yScale(d.avg))
+    .attr('width', xScale.bandwidth())
+    .attr('height', (d) => height - yScale(d.avg))
+    .attr('fill', barColor); // Use dynamically assigned color
+
+  // Add error bars (min and max)
+  svg
+    .selectAll('.error-line')
+    .data(filteredData)
+    .enter()
+    .append('line')
+    .attr('class', 'error-line')
+    .attr('x1', (d) => xScale(d.accession) + xScale.bandwidth() / 2)
+    .attr('x2', (d) => xScale(d.accession) + xScale.bandwidth() / 2)
+    .attr('y1', (d) => yScale(d.min))
+    .attr('y2', (d) => yScale(d.max))
+    .attr('stroke', 'black')
+    .attr('stroke-width', 1);
+
+  // Add min and max caps for error bars
+  svg
+    .selectAll('.error-cap-min')
+    .data(filteredData)
+    .enter()
+    .append('line')
+    .attr('class', 'error-cap-min')
+    .attr('x1', (d) => xScale(d.accession) + xScale.bandwidth() / 4)
+    .attr('x2', (d) => xScale(d.accession) + (3 * xScale.bandwidth()) / 4)
+    .attr('y1', (d) => yScale(d.min))
+    .attr('y2', (d) => yScale(d.min))
+    .attr('stroke', 'black')
+    .attr('stroke-width', 1);
+
+  svg
+    .selectAll('.error-cap-max')
+    .data(filteredData)
+    .enter()
+    .append('line')
+    .attr('class', 'error-cap-max')
+    .attr('x1', (d) => xScale(d.accession) + xScale.bandwidth() / 4)
+    .attr('x2', (d) => xScale(d.accession) + (3 * xScale.bandwidth()) / 4)
+    .attr('y1', (d) => yScale(d.max))
+    .attr('y2', (d) => yScale(d.max))
+    .attr('stroke', 'black')
+    .attr('stroke-width', 1);
+}
+
+
+
+// Event listener for the dropdown and filter options
+$('#traitSelection, input[name="filter"]').on('change', function () {
+  const selectedTrait = $('#traitSelection').val();
+  if (selectedTrait) {
+    drawD3Barplot(stats, selectedTrait); // Use global statsByTrait
+    drawGroupedBoxplot(selectedProjects, selectedTrait);
+  }
+});
+
+function drawGroupedBoxplot(data, selectedTrait) {
+    const container = document.getElementById('boxplotContainer');
+    if (!container || !container.clientWidth) {
+        console.error('Error: boxplotContainer is missing or not rendered.');
+        return;
+    }
+
+    const margin = { top: 20, right: 30, bottom: 150, left: 60 };
+    const width = container.clientWidth - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = d3
+        .select('#boxplotContainer')
+        .html('') // Clear the previous plot
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Filter the data to include only valid numerical values and the selected trait
+    const filteredData = data.filter(
+        (d) =>
+            d.value !== null &&
+            d.value !== undefined &&
+            !isNaN(parseFloat(d.value)) &&
+            d.trait === selectedTrait // Only include the selected trait
+    );
+
+    // Group data by trial
+    const groupedData = d3.group(filteredData, (d) => d.trial);
+
+    // Compute boxplot statistics, but only for trials that have valid data
+    const boxplotData = Array.from(groupedData, ([trial, trialData]) => {
+        const values = trialData.map((d) => parseFloat(d.value)).sort(d3.ascending);
+        if (values.length === 0) return null; // Exclude trials with no valid values
+        return {
+            trial,
+            q1: d3.quantile(values, 0.25),
+            median: d3.quantile(values, 0.5),
+            q3: d3.quantile(values, 0.75),
+            min: d3.min(values),
+            max: d3.max(values),
+            values, // Store all valid values for plotting dots
+        };
+    }).filter((d) => d !== null); // Remove null entries from boxplot data
+
+    // Define scales
+    const xScale = d3
+        .scaleBand()
+        .domain(boxplotData.map((d) => d.trial))
+        .range([0, width])
+        .padding(0.6); // Increased padding for more space between boxplots
+
+    const yScale = d3
+        .scaleLinear()
+        .domain([0, d3.max(boxplotData, (d) => d.max)])
+        .nice()
+        .range([height, 0]);
+
+    // Axes
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(xScale))
+        .selectAll('text')
+        .attr('transform', 'rotate(45)')
+        .style('text-anchor', 'start');
+
+    svg.append('g').call(d3.axisLeft(yScale));
+
+    // Define color for the selected trait
+    const color = traitColorMap[selectedTrait] || '#69b3a2'; // Use a predefined color map or default
+
+    // Draw boxes
+    svg.selectAll('.box')
+        .data(boxplotData)
+        .enter()
+        .append('rect')
+        .attr('class', 'box')
+        .attr('x', (d) => xScale(d.trial))
+        .attr('y', (d) => yScale(d.q3))
+        .attr('width', xScale.bandwidth())
+        .attr('height', (d) => yScale(d.q1) - yScale(d.q3))
+        .attr('fill', color)
+        .attr('stroke', 'black');
+
+    // Draw median lines
+    svg.selectAll('.median-line')
+        .data(boxplotData)
+        .enter()
+        .append('line')
+        .attr('x1', (d) => xScale(d.trial))
+        .attr('x2', (d) => xScale(d.trial) + xScale.bandwidth())
+        .attr('y1', (d) => yScale(d.median))
+        .attr('y2', (d) => yScale(d.median))
+        .attr('stroke', 'black')
+        .attr('stroke-width', 2);
+
+    // Draw dots for all data points
+    boxplotData.forEach((d) => {
+        svg.selectAll(`.dot-${d.trial}`)
+            .data(d.values)
+            .enter()
+            .append('circle')
+            .attr('class', `dot-${d.trial}`)
+            .attr('cx', () =>
+                xScale(d.trial) +
+                xScale.bandwidth() / 2 +
+                (Math.random() - 0.5) * (xScale.bandwidth() * 0.5) // Random horizontal spread
+            )
+            .attr('cy', (value) => yScale(value))
+            .attr('r', 4) // Radius of the dots
+            .attr('fill', 'black')
+            .attr('opacity', 0.6);
+    });
+
+    // Draw whiskers (min and max)
+    svg.selectAll('.whisker')
+        .data(boxplotData)
+        .enter()
+        .append('line')
+        .attr('class', 'whisker')
+        .attr('x1', (d) => xScale(d.trial) + xScale.bandwidth() / 2)
+        .attr('x2', (d) => xScale(d.trial) + xScale.bandwidth() / 2)
+        .attr('y1', (d) => yScale(d.min))
+        .attr('y2', (d) => yScale(d.max))
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1);
+}
+
+
+let traitColorMap = {}; 
+
+
+// Function to populate the trait selection dropdown
+function populateTraitSelection(stats) {
+  // Get the dropdown element
+  const traitSelection = $('#traitSelection');
+
+  // Clear existing options (if any)
+  traitSelection.empty();
+
+  // Add a default option
+  traitSelection.append('<option value="" disabled selected>Select a trait</option>');
+
+  // Get the traits from the stats object and populate the dropdown
+  const traits = Object.keys(stats); // Traits are the top-level keys in the stats object
+  traits.forEach((trait) => {
+    traitSelection.append(`<option value="${trait}">${trait}</option>`);
+  });
+
+  // Enable the dropdown if it was disabled
+  traitSelection.prop('disabled', traits.length === 0);
+}
+
+function calculateStatisticsPerTrait(data) {
+  const statsByTrait = {};
+
+  // Generate a unique color for each trait
+  const colorPalette = d3.schemeCategory10; // Use D3's built-in color palette
+  let colorIndex = 0;
+
+  // Group data by trait and accession
+  data.forEach((record) => {
+    // Extract relevant fields from the record
+    const { trait, accession, plot, trial, value } = record;
+
+    if (!traitColorMap[trait]) {
+      traitColorMap[trait] = colorPalette[colorIndex % colorPalette.length];
+      colorIndex++;
+    }
+
+    // Initialize the trait in the stats object if not already present
+    if (!statsByTrait[trait]) {
+      statsByTrait[trait] = {};
+    }
+
+    // Initialize the accession within the trait if not already present
+    if (!statsByTrait[trait][accession]) {
+      statsByTrait[trait][accession] = {
+        uniquePlots: new Set(), // Use a Set to track unique plots
+        uniqueTrials: new Set(), // Use a Set to track unique trials
+        values: [], // Store all valid values for calculations
+      };
+    }
+
+    // Update the stats for this accession under this trait
+    statsByTrait[trait][accession].uniquePlots.add(plot);
+    statsByTrait[trait][accession].uniqueTrials.add(trial);
+
+    // Add the value if it's a valid number
+    const numericValue = parseFloat(value);
+    if (!isNaN(numericValue)) {
+      statsByTrait[trait][accession].values.push(numericValue);
+    }
+  });
+
+  // Calculate derived statistics for each trait and accession
+  for (const trait in statsByTrait) {
+    for (const accession in statsByTrait[trait]) {
+      const accessionData = statsByTrait[trait][accession];
+      const validValues = accessionData.values;
+
+      // Calculate statistics if valid values exist
+      if (validValues.length > 0) {
+        const minValue = Math.min(...validValues);
+        const maxValue = Math.max(...validValues);
+        const mean =
+          validValues.reduce((sum, val) => sum + val, 0) / validValues.length;
+        const variance =
+          validValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+          validValues.length;
+        const stdDev = Math.sqrt(variance);
+
+        // Update the stats object
+        statsByTrait[trait][accession] = {
+          uniquePlots: accessionData.uniquePlots.size, // Count unique plots
+          uniqueTrials: accessionData.uniqueTrials.size, // Count unique trials
+          count: validValues.length, // Total number of valid values
+          min: minValue,
+          max: maxValue,
+          mean: mean,
+          stdDev: stdDev,
+        };
+      } else {
+        // If no valid values, set stats to null
+        statsByTrait[trait][accession] = {
+          uniquePlots: accessionData.uniquePlots.size,
+          uniqueTrials: accessionData.uniqueTrials.size,
+          count: 0, // No valid values
+          min: null,
+          max: null,
+          mean: null,
+          stdDev: null,
+        };
+      }
+    }
+  }
+
+  return statsByTrait;
+}
+
+let stats = {};
+
+
+// Example usage with an AJAX call
+$(document).ready(function () {
+  $('#calculate_statistics').on('click', function () {
+    $('#loading_spinner').show();
+
+    $.ajax({
+      url: '/ajax/validatedtrials/getphenotype',
+      type: 'POST',
+      data: { projectTrait: JSON.stringify(allProjects) },
+      dataType: 'json',
+      success: function (response) {
+        
+        //sending data to boxplot
+        selectedProjects = response;
+
+        // Call the function to calculate statistics
+        stats = calculateStatisticsPerTrait(response);
+
+        // Populate the table with the results
+        populateStatisticsTable(stats);
+
+        // Populate the trait selection dropdown
+        populateTraitSelection(stats);
+
+        // Integrate pagination if needed
+        $('#statTable').DataTable();
+
+      },
+      error: function (xhr, status, error) {
+        console.error('Error:', error);
+        alert('An error occurred while calculating statistics.');
+      },
+      complete: function () {
+        $('#loading_spinner').hide();
+      },
+    });
+  });
+});
+
+// Function to populate the statistics table
+function populateStatisticsTable(stats) {
+  // Clear existing table rows
+  $('#statTable tbody').empty();
+
+  // Iterate through the stats object to populate the table
+  for (const trait in stats) {
+    for (const accession in stats[trait]) {
+      const stat = stats[trait][accession];
+
+      // Create a new row
+      const row = `
+        <tr>
+          <td>${accession}</td>
+          <td>${stat.uniqueTrials}</td>
+          <td>${stat.count}</td>
+          <td>${trait}</td>
+          <td>${stat.mean !== null ? stat.mean.toFixed(2) : "N/A"}</td>
+          <td>${stat.stdDev !== null ? stat.stdDev.toFixed(2) : "N/A"}</td>
+          <td>${stat.min !== null ? stat.min.toFixed(2) : "N/A"}</td>
+          <td>${stat.max !== null ? stat.max.toFixed(2) : "N/A"}</td>
+        </tr>
+      `;
+
+      // Append the row to the table body
+      $('#statTable tbody').append(row);
+    }
+  }
+}
+
+
+
+/// Array to store selected location names
+let selectedLocations = [];
+let allProjects = [];
+let selectedProjects = [];
+
+$(document).on('change', '.projectCheckbox', function () {
+    const projectName = $(this).data('name');
+    const validatedTrait = $(this).data('trait');
+
+    if ($(this).is(':checked')) {
+        // Check if the combination of name and trait already exists in allProjects
+        const exists = allProjects.some(
+            (project) =>
+                project.name === projectName &&
+                project.validated_trait === validatedTrait
+        );
+
+        if (!exists) {
+            allProjects.push({
+                name: projectName,
+                validated_trait: validatedTrait,
+            });
+        }
+
+        // Ensure the name exists in selectedLocations
+        if (!selectedLocations.includes(projectName)) {
+            selectedLocations.push(projectName);
+        }
+    } else {
+        // Remove only the specific combination of name and trait
+        allProjects = allProjects.filter(
+            (project) =>
+                !(project.name === projectName && project.validated_trait === validatedTrait)
+        );
+
+        // Check if the projectName still has any associated traits in allProjects
+        const hasOtherTraits = allProjects.some(
+            (project) => project.name === projectName
+        );
+
+        // Remove the projectName from selectedLocations if no traits are left
+        if (!hasOtherTraits) {
+            selectedLocations = selectedLocations.filter(
+                (name) => name !== projectName
+            );
+        }
+    }
+    console.log("here sel loc:", selectedLocations);
+    // Call fetchLatLonForProjects only with unique selectedLocations
+    if (selectedLocations.length > 0) {
+        fetchLatLonForProjects([...new Set(selectedLocations)]);
+    }
+});
+
+
+
+
+
+
+
+$(document).ready(function() {
+    fetchProjectData();
+
+    // Set items per page from localStorage if previously selected
+    const storedItemsPerPage = localStorage.getItem("itemsPerPage");
+    if (storedItemsPerPage) {
+        itemsPerPage = parseInt(storedItemsPerPage);
+        $("#itemsPerPage").val(itemsPerPage);
+    }
+});
+
+
+function displayData(data) {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const pagedData = data.slice(startIndex, startIndex + itemsPerPage);
+
+    // Clear the existing table rows
+    $('#projectDataTable tbody').empty();
+
+    // Populate the table with paged data and ensure project name goes in the second column
+    pagedData.forEach(function(project) {
+        $('#projectDataTable tbody').append(
+            `<tr>
+                <td><input type="checkbox" class="projectCheckbox" data-name="${project.name}" data-trait="${project.validated_trait}">
+                <td>${project.name}</td>  <!-- Project Name in the second column -->
+                <td>${project.project_location}</td>
+                <td>${project.validated_trait}</td>
+                <td>${project.username}</td>
+            </tr>`
+        );
+    });
+}
+
+function fetchLatLonForProjects(selectedLocations) {
+    $.ajax({
+        url: '/ajax/validatedtrials/getcoordinates',
+        method: 'POST',
+        data: { locNames: JSON.stringify(selectedLocations) },
+        success: function(response) {
+            
+            try {
+                // Ensure response is parsed as JSON
+                const coordinates = typeof response === 'string' ? JSON.parse(response) : response;
+                // Check the structure of the parsed data
+                if (!Array.isArray(coordinates)) {
+                    console.error('Expected an array but got:', coordinates);
+                    return;
+                }
+                // Pass the data to the map update function
+                updateMapWithSelectedProjects(coordinates);
+            } catch (error) {
+                console.error('Error processing server response:', error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', {
+                status: status,
+                error: error,
+                responseText: xhr.responseText
+            });
+        }
+    });
+}
+
+// Initialize the map
+var map = L.map('map').setView([0, 0], 2);  // Default view set to the whole world
+
+// Add OpenStreetMap tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+// Ensure the map size is adjusted properly
+setTimeout(function () {
+    map.invalidateSize();
+
+    const container = document.getElementById('boxplotContainer');
+    if (!container || !container.clientWidth) {
+      console.error('Error: boxplotContainer is missing or not rendered.');
+      return;
+    }
+
+}, 100); // Delay for 100ms to ensure the container is fully rendered
+
+
+
+function updateMapWithSelectedProjects(coordinates) {
+    // Clear existing markers
+    if (typeof map !== 'undefined') {
+        map.eachLayer(function(layer) {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+    }
+
+    // Add new markers
+    coordinates.forEach(coord => {
+        if (coord.latitude !== undefined && coord.longitude !== undefined) {
+            // Create marker and bind popup with the name only
+            L.marker([coord.latitude, coord.longitude])
+                .addTo(map)
+                .bindPopup(`<span>${coord.name}</span>`) // Display only the name in the popup
+                .openPopup();
+        } else {
+            console.error('Skipping invalid coordinate:', coord);
+        }
+    });
+}
+
+
+
+// Trigger the updateMapWithSelectedProjects function when the checkboxes change
+$(document).on('change', '.projectCheckbox', function() {
+    updateMapWithSelectedProjects();
+});
+
+
+function filterTable() {
+    const query = document.getElementById("searchBox").value.toLowerCase();
+    const filteredData = allData.filter(project => {
+        return project.name.toLowerCase().includes(query) ||
+               project.project_location.toLowerCase().includes(query) ||
+               project.validated_trait.toLowerCase().includes(query);
+    });
+    displayData(filteredData);
+    updatePaginationControls(filteredData);
+}
+
+function changePage(offset) {
+    currentPage += offset;
+    displayData(allData);
+    updatePaginationControls(allData);
+}
+
+function updatePaginationControls(data) {
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+    currentPage = Math.min(Math.max(1, currentPage), totalPages); 
+
+    // Enable/disable the buttons based on the current page
+    document.getElementById("prevPageBtn").disabled = currentPage === 1;
+    document.getElementById("nextPageBtn").disabled = currentPage === totalPages;
+    
+    document.getElementById("currentPageLabel").textContent = `Page ${currentPage} of ${totalPages}`;
+}
+
+
+
+function setItemsPerPage() {
+    itemsPerPage = parseInt(document.getElementById("itemsPerPage").value);
+    localStorage.setItem("itemsPerPage", itemsPerPage);
+    displayData(allData);
+    updatePaginationControls(allData);
+}
+
+function fetchProjectData() {
+    $.ajax({
+        url: '/ajax/validatedtrials/grabdata', 
+        method: "GET",
+        dataType: "json",
+        success: function(response) {
+            if (response && response.data && Array.isArray(response.data)) {
+                allData = response.data; 
+                displayData(allData); 
+                updatePaginationControls(allData);
+            } else {
+                alert("No valid data found or data format issue");
+            }
+        },
+        error: function() {
+            alert("An error occurred while fetching project data.");
+        }
+    });
+}
+
+
+
+
+// Initialize the base map
+function initializeBaseMap() {
+    // Assuming "map" is the global Leaflet map variable
+    if (!map) {
+        map = L.map('map').setView([0, 0], 2); // Default view (adjust lat/lon and zoom as needed)
+    }
+
+    // Add a tile layer (adjust the URL if needed)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+}
+
+
+
+// Add markers for each location
+locations.forEach(function(location) {
+    L.marker([location.lat, location.lon])
+        .addTo(map)
+        .bindPopup(location.name);
+});
+
+// Ensure map resizes properly when zooming
+map.on('resize', function() {
+    map.invalidateSize();
+});
+
+// Optional: Trigger invalidateSize() if the map is not resizing correctly
+window.addEventListener('load', function() {
+    map.invalidateSize();
+});
+
+// Trigger invalidateSize on window resize to ensure the map fits properly
+window.addEventListener('resize', function() {
+    map.invalidateSize();
+});
+
+
+</script>
+
+
+<style>
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+#map { 
+    height: 500px;
+    width: 100%
+}
+
+.search-container {
+    text-align: right;
+    margin: 10px;
+}
+
+#searchBox {
+    padding: 5px;
+    width: 200px; /* Adjust the width as needed */
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+
+.factor {
+    z-index:4;
+    border-style:solid;
+    border-radius:8px;
+    width:200px;
+    height:100;
+    border-color:#337ab7;
+    background-color:#337ab7;
+    color:white;
+    margin:4px
+}
+.factor_panel {
+    min-height:100px;
+    height:auto;
+    margin-top:0px;
+    border-style:dotted;
+    border-width:5px;
+    color:grey;
+    background-color:lightyellow;
+}
+    .factor_interaction_panel {
+    border-style:dotted;
+    border-width:0px;
+    margin-top:20px;
+    height:auto;
+    z-index:1;
+}
+.model_bg {
+    margin-left:30px;
+    margin-right:30px;
+    background-color:#DDEEEE;
+    min-height:80px;
+    padding-top:10px;
+    padding-left:10px;
+    padding-bottom:10px;
+    border-radius:8px;
+}
+</style>

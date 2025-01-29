@@ -15,7 +15,7 @@ $design_types => ()
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_trial_link">Upload Existing Trial(s)</button>  <button class="btn btn-sm btn-primary" style="margin:3px" id="add_project_link">Design New Trial</button>' &>
+<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-info" style="margin: 3px" name="update_trial_link">Update Existing Trial(s)</button>  <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_trial_link">Upload Existing Trial(s)</button>  <button class="btn btn-sm btn-primary" style="margin:3px" id="add_project_link">Design New Trial</button>' &>
 
   <& /breeders_toolbox/trialtreefolders.mas, locations=>$locations, breeding_programs=>$breeding_programs, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions, timestamp=>$timestamp, management_factor_types => $management_factor_types, design_types => $design_types &>
   </&>
