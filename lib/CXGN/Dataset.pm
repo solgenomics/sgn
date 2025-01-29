@@ -1269,6 +1269,9 @@ sub calculate_tool_compatibility {
         },
         'Boxplotter' => {
             'compatible' => 0
+        },
+        'Correlation' => {
+            'compatible' => 0
         }
     };
 
@@ -1399,11 +1402,14 @@ sub calculate_tool_compatibility {
         my $num_accessions_phenotyped_for_this_trait = scalar(keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}));
         if ($total_obs > 0) { # This trait was measured
 
-            if ($total_obs < 0) {
+            if ($total_obs < 30) {
                 $tool_compatibility->{'Boxplotter'}->{'warn'}->{"There may not be enough observations (n=$total_obs) of ". $trait->[1]." to get meaningful data."} = "";
+                $tool_compatibility->{'Correlation'}->{'warn'}->{"There may not be enough observations (n=$total_obs) of ". $trait->[1]." to get meaningful data."} = "";
             }
             $tool_compatibility->{'Boxplotter'}->{'compatible'} = 1;
             push @{$tool_compatibility->{'Boxplotter'}->{'traits'}}, $trait->[1];
+            $tool_compatibility->{'Correlation'}->{'compatible'} = 1;
+            push @{$tool_compatibility->{'Correlation'}->{'traits'}}, $trait->[1];
 
             if (scalar(@{$trial_designs}) > 0 && $num_accessions_phenotyped_for_this_trait > 1){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
                 if ($num_accessions_phenotyped_for_this_trait < 30) {
