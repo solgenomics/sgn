@@ -156,8 +156,7 @@ is($related_stock_count, '2');
 #obsolete a transformant
 $mech->get_ok('http://localhost:3010/stock/obsolete?stock_id='.$transformant_stock_id.'&is_obsolete=1'.'&obsolete_note="test"');
 $response = decode_json $mech->content;
-$response = decode_json $mech->content;
-is($response->{'message'}, 'Stock obsoleted');
+is($response->{'success'}, '1');
 
 #retrieving related accessions for vector page after obsoleting a transformant
 $mech->get_ok("http://localhost:3010/stock/$vector_stock_id/datatables/vector_related_accessions");

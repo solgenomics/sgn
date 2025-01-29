@@ -2351,7 +2351,7 @@ sub stock_obsolete_GET {
     }
 
     if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-        $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+        $c->stash->{rest} = { error => 'Cannot obsolete stock! You do not have a curator, sequencer or submitter account' };
         $c->detach();
     }
 
@@ -2374,8 +2374,7 @@ sub stock_obsolete_GET {
                 obsolete_note => $obsolete_note,
             });
             my $saved_stock_id = $stock->store();
-
-            $c->stash->{rest} = { message => "Stock obsoleted" };
+            $c->stash->{rest} = { success => 1 };
         } catch {
             $c->stash->{rest} = { error => "Failed: $_" }
         };

@@ -125,9 +125,14 @@ jQuery(document).ready(function($) {
                 success: function(response){
                     console.log(response);
                     jQuery('#working_modal').modal('hide');
-                    jQuery('#obsolete_stock_dialog').modal('hide');
-                    jQuery('#obsolete_stock_message_dialog').modal('show');
-                },
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    if (response.success == 1) {
+                        jQuery('#obsolete_stock_dialog').modal('hide');
+                        jQuery('#obsolete_stock_message_dialog').modal('show');
+                    }
+                },                
                 error: function(response){
                     jQuery('#working_modal').modal('hide');
                     alert("Error obsoleting stock.");
