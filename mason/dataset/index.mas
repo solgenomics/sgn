@@ -296,7 +296,7 @@ sizes. Hover for details."></span>
                         alert("An error occured calculating tool compatibility: \n" + response.error);
                         jQuery('#predicted-tool-compatibility').text("Error calculating tool compatibility.");
                     } else {
-                        jQuery('#predicted-tool-compatibility').css('height', '300px');
+                        jQuery('#predicted-tool-compatibility').css('height', '400px');
                         jQuery('#predicted-tool-compatibility').html(populate_tool_compatibility(JSON.parse(response.tool_compatibility)));
                         jQuery('#working_modal').modal("hide");
                     }
