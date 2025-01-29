@@ -62,6 +62,7 @@ use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
+use CXGN::Trait;
 
 =head2 people_schema()
 
@@ -1274,6 +1275,17 @@ sub calculate_tool_compatibility {
     my $trials = $self->retrieve_trials(); # faster and easier than pulling it out of the phenotypes_ref
         # listref of listrefs, first index is trialID, second is trial name
     my $traits = $self->retrieve_traits();
+    # my $traits = [];
+    # foreach my $trait (@{$all_traits}) { #filter for quantitative traits
+    #     my $trait_obj = CXGN::Trait->new({
+    #         bcs_schema => $self->schema,
+    #         cvterm_id => $trait->[0]
+    #     });
+    #     if ($trait_obj->categories ne ""){# ??? Not sure how to filter for categorical traits only
+    #         push @{$traits}, $trait;
+    #     }
+    # }
+
     my $trial_designs = $self->retrieve_trial_designs();
     my $genotyping_methods = $self->retrieve_genotyping_protocols();# listref of listrefs. First index is 
         # method ID, second is method name
@@ -1337,9 +1349,9 @@ sub calculate_tool_compatibility {
         my $num_accessions = $genotype_counts->{$method->[0]}->{"num_accessions"};
         if ($num_markers > 1) {
             if ($num_accessions < 30) {
-                $tool_compatibility->{'Population Structure'}->{'warn'}->{"You may not have enough accessions for strong results."} = "";
-                $tool_compatibility->{'Kinship & Inbreeding'}->{'warn'}->{"You may not have enough accessions for strong results."} = "";
-                $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotyped accessions for strong genotype clustering."} = "";
+                $tool_compatibility->{'Population Structure'}->{'warn'}->{"You may not have enough accessions (n=$num_accessions) genotyped for ".$method->[1].", ($num_markers markers) for strong results."} = "";
+                $tool_compatibility->{'Kinship & Inbreeding'}->{'warn'}->{"You may not have enough accessions (n=$num_accessions) genotyped for ".$method->[1].", ($num_markers markers) for strong results."} = "";
+                $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough accessions (n=$num_accessions) genotyped for ".$method->[1].", ($num_markers markers) for strong genotype clustering."} = "";
             }
             $tool_compatibility->{'Population Structure'}->{'compatible'} = 1;
             $tool_compatibility->{'Kinship & Inbreeding'}->{'compatible'} = 1;
@@ -1349,24 +1361,27 @@ sub calculate_tool_compatibility {
     }
 
     if ($num_phenotyped_accessions > 1 && scalar(@{$traits}) > 1) { #dont need to go trait by trait for clustering, since all traits are combined to eigenvectors. just need plenty of trait measurements
-        if ($num_phenotyped_accessions > 1 && scalar(@{$traits}) < 30) {
-            $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough trait measurements for strong phenotype clustering."} = "";
+        if (scalar(@{$traits}) < 5) {
+            $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough trait measurements (only ".scalar(@{$traits})." traits) for strong phenotype clustering."} = "";
+        }
+        if ($num_phenotyped_accessions < 30) {
+            $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough phenotyped accessions (n=$num_phenotyped_accessions) for strong phenotype clustering."} = "";
         }
         $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
         $tool_compatibility->{'Clustering'}->{'types'}->{'Phenotype'} = "";
-        foreach my $method (@{$genotyping_methods}){
-            my $num_markers = $genotype_counts->{$method->[0]}->{"num_markers"};
-            my $num_accessions = $genotype_counts->{$method->[0]}->{"num_accessions"};
-            if ($num_accessions > 1 && $num_markers > 30) { # for GEBV clustering, there needs to be enough accessions using the same geno method (not checked right here) and which have lots of trait measurements
-                if ($num_accessions < 30) {
-                    $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotyped accessions for strong GEBV clustering."} = "";
-                }
-                if ($num_markers < 1000) {
-                    $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotype markers for strong GEBV clustering."} = "";
-                }
-                $tool_compatibility->{'Clustering'}->{'types'}->{'GEBV'} = "";
-            }
-        }
+        # foreach my $method (@{$genotyping_methods}){
+        #     my $num_markers = $genotype_counts->{$method->[0]}->{"num_markers"};
+        #     my $num_accessions = $genotype_counts->{$method->[0]}->{"num_accessions"};
+        #     if ($num_accessions > 1 && $num_markers > 30) { # for GEBV clustering, there needs to be enough accessions using the same geno method (not checked right here) and which have lots of trait measurements
+        #         if ($num_accessions < 30) {
+        #             $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotyped accessions for strong GEBV clustering."} = "";
+        #         }
+        #         if ($num_markers < 1000) {
+        #             $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotype markers for strong GEBV clustering."} = "";
+        #         }
+        #         $tool_compatibility->{'Clustering'}->{'types'}->{'GEBV'} = "";
+        #     }
+        # }
     }
 
     if (exists $tool_compatibility->{'Clustering'}->{'types'}) {
@@ -1385,28 +1400,28 @@ sub calculate_tool_compatibility {
         if ($total_obs > 0) { # This trait was measured
 
             if ($total_obs < 0) {
-                $tool_compatibility->{'Boxplotter'}->{'warn'}->{"There may not be enough observations of ". $trait->[1]." to get meaningful data."} = "";
+                $tool_compatibility->{'Boxplotter'}->{'warn'}->{"There may not be enough observations (n=$total_obs) of ". $trait->[1]." to get meaningful data."} = "";
             }
             $tool_compatibility->{'Boxplotter'}->{'compatible'} = 1;
             push @{$tool_compatibility->{'Boxplotter'}->{'traits'}}, $trait->[1];
 
             if (scalar(@{$trial_designs}) > 0 && $num_accessions_phenotyped_for_this_trait > 1){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
                 if ($num_accessions_phenotyped_for_this_trait < 30) {
-                    $tool_compatibility->{'Heritability'}->{'warn'}->{"There may not be enough accessions phenotyped for ".$trait->[1]." to get strong results."} = "";
+                    $tool_compatibility->{'Heritability'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to get strong results."} = "";
                 }
                 $tool_compatibility->{'Heritability'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Heritability'}->{'traits'}}, $trait->[1];
             }
             if (scalar(grep {$_ > 0} @location_counts) > 1 && $num_accessions_phenotyped_for_this_trait > 1) { # More than one location had measurements, and more than one accession was measured
                 if ($num_accessions_phenotyped_for_this_trait < 30) {
-                    $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough accessions phenotyped for ".$trait->[1]." to get strong results."} = "";
+                    $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to get strong results."} = "";
                 }
                 $tool_compatibility->{'Stability'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Stability'}->{'traits'}}, $trait->[1];
             }
             if(scalar(@{$trial_designs}) > 0 && $num_accessions_phenotyped_for_this_trait > 1) {
                 if ($num_accessions_phenotyped_for_this_trait < 30) {
-                    $tool_compatibility->{'Mixed Models'}->{'warn'}->{"There may not be enough accessions phenotyped for ".$trait->[1]." to build a strong model."} = "";
+                    $tool_compatibility->{'Mixed Models'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to build a strong model."} = "";
                 }
                 $tool_compatibility->{'Mixed Models'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Mixed Models'}->{'traits'}}, $trait->[1];
@@ -1419,13 +1434,13 @@ sub calculate_tool_compatibility {
             my $num_accessions_phenotyped_for_this_trait = scalar( keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}) );
             if ($total_obs > 100 && $num_markers > 100 && $num_accessions_phenotyped_for_this_trait > 50 && $num_genotyped_accessions > 50 && scalar(@{$trials}) > 0) { # If lots of markers, lots of accessions, and lots of phenotype measurements, then you can do genomic modeling
                 if ($total_obs < 300) {
-                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough observations of ".$trait->[1]." to identify associated loci."} = "";
+                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough observations (n=$total_obs) of ".$trait->[1]." to identify associated loci."} = "";
                 }
                 if ($num_markers < 2500) {
-                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough SNPs genotyped for method ".$method->[1]." to identify associated loci."} = "";
+                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough SNPs ($num_markers) genotyped for method ".$method->[1]." to identify associated loci."} = "";
                 }
                 if ($num_accessions_phenotyped_for_this_trait < 300 || $num_genotyped_accessions < 300) {
-                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough accessions both genotyped and assayed for ".$trait->[1]." to identify associated loci."} = "";
+                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough accessions (n=$num_genotyped_accessions) both genotyped and assayed for ".$trait->[1]." to identify associated loci."} = "";
                 }
                 push @{$tool_compatibility->{'GWAS'}->{'traits'}}, $trait->[1];
                 $tool_compatibility->{'GWAS'}->{'compatible'} = 1;

@@ -110,7 +110,7 @@ sizes. Hover for details."></span>
                     <td>
                         <div id="predicted-tool-compatibility" style="width:85%;overflow-x:auto;overflow-y:auto">
                         </div>  
-                        <div><br><button type="button" class="btn btn-sm btn-success" id="tool-compatibility-calc-button" >Calculate Tool Compatibility</button></div>
+                        <div><br><button type="button" class="btn btn-sm btn-success" id="tool-compatibility-calc-button" >Check Tool Compatibility</button></div>
                     <tr><td>Analyses using this dataset<td id="dataset_analysis_usage"></td></td>
             </table>
         </div>
