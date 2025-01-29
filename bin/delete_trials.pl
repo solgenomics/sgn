@@ -124,37 +124,47 @@ foreach my $name (@trial_names) {
     push @trial_ids, $trial->project_id();
 }
 
-foreach my $trial_id (@trial_ids) { 
-    print STDERR "Retrieving trial information for trial $trial_id...\n";
+eval {
+    $dbh->do("set search_path to public,sgn,phenome,sgn_people,metadata");
+    my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() });
 
-    my $t = CXGN::Trial->new({
-        bcs_schema => $schema,
-        metadata_schema => $metadata_schema,
-        phenome_schema => $phenome_schema,
-        trial_id => $trial_id
-    });
-
-    my $answer = "";
-    if (!$non_interactive) { 
-	print $t->get_name().", ".$t->get_description().". Delete? ";
-	$answer = <>;
-    }
-    if ($non_interactive || $answer =~ m/^y/i) { 
-	eval { 
+    my $metadata_schema = CXGN::Metadata::Schema->connect( sub { $dbh->get_actual_dbh() });
+    my $phenome_schema = CXGN::Phenome::Schema->connect( sub { $dbh->get_actual_dbh() });
+    
+    foreach my $trial_id (@trial_ids) { 
+	print STDERR "Retrieving trial information for trial $trial_id...\n";
+	
+	my $t = CXGN::Trial->new({
+	    bcs_schema => $schema,
+	    metadata_schema => $metadata_schema,
+	    phenome_schema => $phenome_schema,
+	    trial_id => $trial_id
+				 });
+	
+	my $answer = "";
+	if (!$non_interactive) { 
+	    print $t->get_name().", ".$t->get_description().". Delete? ";
+	    $answer = <>;
+	}
+	if ($non_interactive || $answer =~ m/^y/i) { 
+	    
 	    delete_trial($metadata_schema, $phenome_schema, $t);
-	};
-	if ($@) { 
-	    print STDERR "An error occurred trying to delete trial ".$t->get_name()." ($@)\n";
-	    $dbh->rollback();
+	    
 	}
-	else { 
-	    $dbh->commit();
-	    print STDERR "Trial ".$t->get_name()." successfully deleted\n";
-	}
-
     }
+};
 
+if ($@) { 
+    print STDERR "ERROR: $@\n";
+    $dbh->rollback();
 }
+else { 
+    $dbh->commit();
+    print STDERR "Trials successfully deleted\n";
+}
+
+
+
 
 $dbh->disconnect();
 print STDERR "Done with everything (though nd_experiment entry deletion may still be occuring asynchronously).\n";
@@ -167,7 +177,7 @@ sub delete_trial {
     print STDERR "Deleting trial ".$t->get_name()."\n";
     print STDERR "Delete metadata...\n";
     $t->delete_metadata();
-    print STDERR "Deleting phenotypes...\n";
+    print STDERR "Deleting phenotypes... (using $dbhost, $dbuser, $dbname)\n";
     $t->delete_phenotype_data($opt_b, $dbhost, $dbname, $dbuser, $dbpass, $opt_r);
     print STDERR "Deleting layout...\n";
     $t->delete_field_layout();

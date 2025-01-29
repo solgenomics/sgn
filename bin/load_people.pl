@@ -55,10 +55,11 @@ phone
 research_keywords
 research_interests
 webpage
+password
 
-The first four columns listed are required.
+The first four columns listed are required. If no password is provided the system will create one.
 
-The script outputs the username, first_name, last_name, email and assigned initial random password. This can be used to send the password to the user.
+The script outputs the username, first_name, last_name, email and assigned initial random password. This can be used to send the password to the user. 
 
 =head1 AUTHOR
 
@@ -102,7 +103,7 @@ if (!$opt_H || !$opt_D || !$opt_i) {
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 				      dbname=>$dbname,
-				      dbargs => {AutoCommit => 0,
+				      dbargs => {AutoCommit => 1,
 						 RaiseError => 1}
 				    }
     );
@@ -201,7 +202,15 @@ my $coderef = sub {
 	    # 	next();
 	    # }
 	    
-	    my $password =Crypt::RandPasswd->word( 8 , 8 );
+	    my $password;
+
+	    if ($data{password}) {
+		$password = $data{password};
+	    }
+	    else {
+		$password =Crypt::RandPasswd->word( 8 , 8 );
+	    }
+	    
 	    if ($data{username}) {
 		my $login = CXGN::People::Login->new($dbh);
 				

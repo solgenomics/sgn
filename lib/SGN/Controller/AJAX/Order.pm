@@ -10,7 +10,7 @@ use DateTime;
 use CXGN::People::Person;
 use CXGN::Contact;
 use CXGN::Trial::Download;
-use CXGN::Stock::TrackingActivity::TrackingIdentifier;
+use CXGN::TrackingActivity::AddTrackingIdentifier;
 use CXGN::Stock::OrderTrackingIdentifier;
 use CXGN::TrackingActivity::AddActivityProject;
 use CXGN::Location::LocationLookup;
@@ -176,13 +176,20 @@ sub submit_order_POST : Args(0) {
                     project_vendor => $contact_id
                 });
 
-                $activity_project_id = $add_activity_project->save_activity_project();
+                my $return = $add_activity_project->save_activity_project();
+                if ($return->{error}) {
+                    my $error = $return->{error};
+                    $c->stash->{rest} = {error_string => $error};
+                    return;
+                } else {
+                    $activity_project_id = $return->{project_id};
+                }
             }
 
             foreach my $identifier_info (@tracking_identifiers) {
                 my $tracking_identifier = $identifier_info->[0];
                 my $material = $identifier_info->[1];
-                my $tracking_obj = CXGN::Stock::TrackingActivity::TrackingIdentifier->new({
+                my $tracking_obj = CXGN::TrackingActivity::AddTrackingIdentifier->new({
                     schema => $schema,
                     phenome_schema => $phenome_schema,
                     tracking_identifier => $tracking_identifier,
@@ -190,8 +197,18 @@ sub submit_order_POST : Args(0) {
                     project_id => $activity_project_id,
                     user_id => $contact_id
                  });
-                my $tracking_stock_id = $tracking_obj->store();
-                push @identifier_stock_ids, $tracking_stock_id;
+                my $return = $tracking_obj->store();
+                if (!$return) {
+                    $c->stash->{rest} = {error_string => "Error generating tracking identifier"};
+                    return;
+                } elsif ($return->{error}) {
+                    my $error = $return->{error};
+                    $c->stash->{rest} = {error_string => $error};
+                    return;
+                } else {
+                    my $tracking_stock_id = $return->{tracking_id};
+                    push @identifier_stock_ids, $tracking_stock_id;
+                }
             }
 
             my $order_tracking_identifier_prop = CXGN::Stock::OrderTrackingIdentifier->new({ bcs_schema => $schema, people_schema => $people_schema});
@@ -764,7 +781,7 @@ sub get_order_progress :Path('/ajax/order/progress') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $tracking_activities = $c->config->{tracking_activities};
+    my $tracking_activities = $c->config->{tracking_tissue_culture_info};
     my @activity_types = split ',',$tracking_activities;
 
     my $order_properties = $c->config->{order_properties};

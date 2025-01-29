@@ -313,10 +313,10 @@ for my $extension ("xls", "xlsx") {
 
 	#Now parse phenotyping spreadsheet file using correct parser
 	$parser = CXGN::Phenotypes::ParseUpload->new();
-	$validate_file = $parser->validate('phenotype spreadsheet simple', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+	$validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
 	ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-	my $parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+	my $parsed_file = $parser->parse('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
 	ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 	is_deeply($parsed_file, {'data' => {'test_trial28' => {'dry matter content|CO_334:0000092' => ['139','']},'test_trial210' => {'dry matter content|CO_334:0000092' => ['130','']},'test_trial27' => {'dry matter content|CO_334:0000092' => ['138','']},'test_trial211' => {'dry matter content|CO_334:0000092' => ['138','']},'test_trial21' => {'dry matter content|CO_334:0000092' => ['135','']},'test_trial26' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial214' => {'dry matter content|CO_334:0000092' => ['130','']},'test_trial213' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial29' => {'dry matter content|CO_334:0000092' => ['135','']},'test_trial23' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial24' => {'dry matter content|CO_334:0000092' => ['','']},'test_trial212' => {'dry matter content|CO_334:0000092' => ['139','']},'test_trial22' => {'dry matter content|CO_334:0000092' => ['130','']},'test_trial25' => {'dry matter content|CO_334:0000092' => ['135','']},'test_trial215' => {'dry matter content|CO_334:0000092' => ['138','']}},'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],'variables' => ['dry matter content|CO_334:0000092']}, "Check parse phenotyping spreadsheet" );
@@ -5652,10 +5652,10 @@ ok($md5);
 
 #Now parse phenotyping spreadsheet file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
-$validate_file = $parser->validate('phenotype spreadsheet simple', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+$validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+my $parsed_file = $parser->parse('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 print STDERR Dumper $parsed_file;
@@ -5711,7 +5711,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
 my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
-ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet simple works");
+ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet simple generic works");
 
 my $bs = CXGN::BreederSearch->new( { dbh=>$f->bcs_schema->storage->dbh, dbname=>$f->config->{dbname} } );
 my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'phenotypes', 'concurrent', $f->config->{basepath});

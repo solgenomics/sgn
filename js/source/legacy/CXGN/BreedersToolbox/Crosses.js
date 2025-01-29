@@ -83,6 +83,7 @@ jQuery(document).ready(function($) {
             $("#get_maternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross") || ($("#cross_type").val() == "sib"));
             $("#get_paternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross") || ($("#cross_type").val() == "sib"));
             $("#exact_parents").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross") || ($("#cross_type").val() == "sib"));
+            $("#exact_female").toggle($("#cross_type").val() == "open");
             $("#get_selfed_parent").toggle($("#cross_type").val() == "self");
             $("#get_open_maternal_parent").toggle($("#cross_type").val() == "open");
             $("#get_open_paternal_population").toggle($("#cross_type").val() == "open");
@@ -92,7 +93,7 @@ jQuery(document).ready(function($) {
             $("#get_bulk_open_maternal_population").toggle($("#cross_type").val() == "bulk_open");
             $("#get_bulk_open_paternal_population").toggle($("#cross_type").val() == "bulk_open");
             $("#get_doubled_haploid_parent").toggle($("#cross_type").val() == "doubled_haploid");
-	    $("#get_dihaploid_induction_parent").toggle($("#cross_type").val() == "dihaploid_induction");
+            $("#get_dihaploid_induction_parent").toggle($("#cross_type").val() == "dihaploid_induction");
             $("#polycross_accessions").toggle($("#cross_type").val() == "polycross");
             $("#reciprocal_accessions").toggle($("#cross_type").val() == "reciprocal");
             $("#maternal_accessions").toggle($("#cross_type").val() == "multicross");
@@ -165,11 +166,16 @@ jQuery(document).ready(function($) {
         }
 
         var visibleToRole = $("#visible_to_role").val();
-        var female_plot = $("#female_plot").val();
-        var male_plot = $("#male_plot").val();
-        var cross_combination = $("#dialog_cross_combination").val();
+        let female_plot_plant;
+        if (crossType == 'open') {
+            female_plot_plant = jQuery("#open_female_plot_plant").val();
+        } else {
+            female_plot_plant = jQuery("#female_plot_plant").val();
+        }
+        const male_plot_plant = $("#male_plot_plant").val();
+        const cross_combination = $("#dialog_cross_combination").val();
 
-        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination);
+        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot_plant, male_plot_plant, cross_combination);
 
     });
 
@@ -193,88 +199,9 @@ jQuery(document).ready(function($) {
         get_select_box('projects', 'upload_crosses_crossing_experiment_select_div', { 'name' : 'upload_crosses_crossing_experiment_id', 'id' : 'upload_crosses_crossing_experiment_id', 'breeding_program_id' : breeding_program_id, 'get_crossing_trials': '1', 'empty':1});
     });
 
-    jQuery("#cross_accession_info_format").click(function() {
+    jQuery("#upload_crosses_spreadsheet_format_info").click(function() {
         jQuery("#cross_spreadsheet_info_dialog").modal("show");
-        jQuery("#cross_parents_header").show();
-        jQuery("#cross_plot_parents_header").hide();
-        jQuery("#cross_plant_parents_header").hide();
-        jQuery("#accession_parent_info").show();
-        jQuery("#plot_parent_info").hide();
-        jQuery("#plant_parent_info").hide();
-        jQuery("#any_parent_info").hide();
     });
-
-    jQuery("#cross_plot_info_format").click(function() {
-        jQuery("#cross_spreadsheet_info_dialog").modal("show");
-        jQuery("#cross_parents_header").hide();
-        jQuery("#cross_plot_parents_header").show();
-        jQuery("#cross_plant_parents_header").hide();
-        jQuery("#accession_parent_info").hide();
-        jQuery("#plot_parent_info").show();
-        jQuery("#plant_parent_info").hide();
-        jQuery("#any_parent_info").hide();
-    });
-
-    jQuery("#cross_plant_info_format").click(function() {
-        jQuery("#cross_spreadsheet_info_dialog").modal("show");
-        jQuery("#cross_parents_header").hide();
-        jQuery("#cross_plot_parents_header").hide();
-        jQuery("#cross_plant_parents_header").show();
-        jQuery("#accession_parent_info").hide();
-        jQuery("#plot_parent_info").hide();
-        jQuery("#plant_parent_info").show();
-        jQuery("#any_parent_info").hide();
-    });
-
-    jQuery("#cross_simplified_parent_info_format").click(function() {
-        jQuery("#cross_spreadsheet_info_dialog").modal("show");
-        jQuery("#cross_parents_header").show();
-        jQuery("#cross_plot_parents_header").hide();
-        jQuery("#cross_plant_parents_header").hide();
-        jQuery("#accession_parent_info").hide();
-        jQuery("#plot_parent_info").hide();
-        jQuery("#plant_parent_info").hide();
-        jQuery("#any_parent_info").show();
-    });
-
-    jQuery("#cross_file_format_option").change(function(){
-        if (jQuery(this).val() == ""){
-            jQuery("#xls_cross_accession_section").hide();
-            jQuery("#xls_cross_plot_section").hide();
-            jQuery("#xls_cross_plant_section").hide();
-            jQuery("#xls_cross_simplified_section").hide();
-            jQuery("#submit_button_section").hide();
-      }
-        if (jQuery(this).val() == "xls_cross_accession"){
-            jQuery("#xls_cross_accession_section").show();
-            jQuery("#xls_cross_plot_section").hide();
-            jQuery("#xls_cross_plant_section").hide();
-            jQuery("#xls_cross_simplified_section").hide();
-            jQuery("#submit_button_section").show();
-        }
-        if(jQuery(this).val() == "xls_cross_plot"){
-            jQuery("#xls_cross_plot_section").show();
-            jQuery("#xls_cross_accession_section").hide();
-            jQuery("#xls_cross_plant_section").hide();
-            jQuery("#xls_cross_simplified_section").hide();
-            jQuery("#submit_button_section").show();
-        }
-        if (jQuery(this).val() == "xls_cross_plant" ){
-            jQuery("#xls_cross_plant_section").show();
-            jQuery("#xls_cross_plot_section").hide();
-            jQuery("#xls_cross_accession_section").hide();
-            jQuery("#xls_cross_simplified_section").hide();
-            jQuery("#submit_button_section").show();
-        }
-        if (jQuery(this).val() == "xls_cross_simplified" ){
-            jQuery("#xls_cross_simplified_section").show();
-            jQuery("#xls_cross_plant_section").hide();
-            jQuery("#xls_cross_plot_section").hide();
-            jQuery("#xls_cross_accession_section").hide();
-            jQuery("#submit_button_section").show();
-        }
-    });
-
 
     $("#upload_crosses_submit").click(function() {
         upload_crosses_file();
@@ -320,7 +247,7 @@ jQuery(document).ready(function($) {
     });
 
 
-    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination) {
+    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot_plant, male_plot_plant, cross_combination) {
 
         var progenyNumber = $("#progeny_number").val();
         var prefix = $("#prefix").val();
@@ -368,7 +295,7 @@ jQuery(document).ready(function($) {
                 maternal = doubledHaploidParent;
                 paternal = doubledHaploidParent;
                 break;
-	    case 'dihaploid_induction':
+            case 'dihaploid_induction':
                 var dihaploidInductionParent = $("#dihaploid_induction_parent").val();
                 maternal = dihaploidInductionParent;
                 paternal = dihaploidInductionParent;
@@ -419,8 +346,8 @@ jQuery(document).ready(function($) {
                 'suffix': suffix,
                 'visible_to_role': visibleToRole,
                 'crossing_trial_id': crossing_trial_id,
-                'female_plot': female_plot,
-                'male_plot': male_plot,
+                'female_plot_plant': female_plot_plant,
+                'male_plot_plant': male_plot_plant,
                 'cross_combination': cross_combination,
             },
             beforeSend: function() {
@@ -446,32 +373,28 @@ jQuery(document).ready(function($) {
     }
 
     function upload_crosses_file() {
-        var crossing_trial_id = $("#upload_crosses_crossing_experiment_id").val();
-        var experiment_id = $("#experiment_id").val();
+        const breeding_program = jQuery("#upload_crosses_breeding_program_id").val();
+        if (!breeding_program) {
+            alert("Please select your breeding program");
+            return;
+        }
 
+        const crossing_trial_id = jQuery("#upload_crosses_crossing_experiment_id").val();
+        const experiment_id = jQuery("#experiment_id").val();
         if (!crossing_trial_id && !experiment_id) {
             alert("A crossing experiment is required");
             return;
         }
 
-        var uploadFileXlsSimple = $("#xls_crosses_simple_file").val();
-        if (uploadFileXlsSimple === ''){
-            var uploadFileXlsPlots = $("#xls_crosses_plots_file").val();
-            if (uploadFileXlsPlots === ''){
-                var uploadFileXlsPlants = $("#xls_crosses_plants_file").val();
-                if (uploadFileXlsPlants === '') {
-                    var uploadFileXlsSimplifiedParents = $("#xls_crosses_simplified_parents_file").val();
-                    if (uploadFileXlsSimplifiedParents === ''){
-                        alert("Please select a file");
-                        return;
-                    }
-                }
-            }
+        const uploadFile = jQuery("#upload_crosses_file").val();
+        if (!uploadFile) {
+            alert("Please select a file");
+            return;
         }
 
-        $('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
+        jQuery('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
 
-        $("#upload_crosses_form").submit();
+        jQuery("#upload_crosses_form").submit();
     }
 
     function get_accession_names(accession_select_id) {
@@ -533,13 +456,11 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.error) {
+                    jQuery("#working_modal").modal("hide");
                     alert(response.error);
+
                 } else {
                     refreshCrossJsTree(0);
-//                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
-//                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
-//                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_3', {'id':'upload_crosses_select_crossingtrial_3_sel', 'name':'upload_crosses_select_crossingtrial_3_sel', 'multiple':0});
-//                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
                     Workflow.focus("#add_crossing_trial_workflow", -1); //Go to success page
                     Workflow.check_complete("#add_crossing_trial_workflow");
                     jQuery("#working_modal").modal("hide");

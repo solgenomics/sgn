@@ -12,7 +12,7 @@ solGS.selectionPopulation = {
   resultSelDiv: "#selection_pops_result",
   selPopsDiv: "#selection_pops_div",
   searchBtn: "#search_selection_pop",
-  searchBox: "#population_search_entry",
+  searchBox: "#trial_search_box",
   selPopsTable: "#selection_pops_table",
   searchAllSelPops: "#search_all_selection_pops",
   searchFormFeedBack: "#form-feedback-search-trials",
