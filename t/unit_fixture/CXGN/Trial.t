@@ -5,8 +5,6 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
-#use SimulateC;
-
 use Data::Dumper;
 
 use CXGN::Trial;
