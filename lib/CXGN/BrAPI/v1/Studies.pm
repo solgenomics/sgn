@@ -777,6 +777,7 @@ sub studies_table {
 		#print STDERR Dumper \@trait_names;
 		my @header_ids;
 		foreach my $t (@trait_names) {
+			next unless $t =~ /\|/;
             if ($t eq 'notes'){
                 push @header_ids, 0;
             } else {
