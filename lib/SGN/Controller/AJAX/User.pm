@@ -242,7 +242,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	return;
     }
 
-    my $person = new CXGN::People::Login($c->dbc->dbh(), $c->user->get_sp_person_id());
+    my $person = CXGN::People::Login->($c->dbc->dbh(), $c->user->get_sp_person_id());
 
 #    my ($current_password, $change_username, $change_password, $change_email) = $c->req->param({qw(current_password change_username change_password change_email)});
 
@@ -537,7 +537,7 @@ END_HEREDOC
 sub tempname {
     my $self = shift;
     my $rand_string = "";
-    my $dev_urandom = new IO::File "</dev/urandom" || print STDERR "Can't open /dev/urandom";
+    my $dev_urandom = IO::File->new("</dev/urandom") || print STDERR "Can't open /dev/urandom";
     $dev_urandom->read( $rand_string, 16 );
     my @bytes = unpack( "C16", $rand_string );
     $rand_string = "";
