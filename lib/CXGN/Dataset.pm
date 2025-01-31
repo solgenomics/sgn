@@ -61,7 +61,7 @@ use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
-use CXGN::Trait;
+use CXGN::Trial;
 
 =head2 people_schema()
 
@@ -1277,7 +1277,8 @@ sub calculate_tool_compatibility {
             'number of phenotyped accessions per trait' => [],
             'number of observations per trait' => [],
             'number of genotyped accessions per protocol' => [],
-            'trait observations per location' => {}
+            'trait observations per location' => {},
+            'number of accessions per trial' => []
         }
     };
 
@@ -1308,6 +1309,21 @@ sub calculate_tool_compatibility {
     my $genotype_counts = {};
 
     my @accession_ids = map {$_->[0]} @{$accessions};
+
+    my $accessions_in_common = {};
+    foreach my $trial (@{$trials}) {
+        my $trial_obj = CXGN::Trial->new({
+            bcs_schema => $self->schema,
+            trial_id => $trial->[0]
+        });
+        my $current_accessions = $trial_obj->get_accessions();
+        push @{$tool_compatibility->{"Data Summary"}->{'number of accessions per trial'}}, $trial->[1]." : ".scalar(@{$current_accessions});
+        foreach my $accession (@{$current_accessions}) {
+            $accessions_in_common->{$accession->{"stock_id"}}++; 
+        }
+    }
+    my $num_shared_accessions = scalar(grep {$accessions_in_common->{$_} > 1} keys(%{$accessions_in_common}));
+    push @{$tool_compatibility->{"Data Summary"}->{'number of accessions per trial'}}, "Shared across all trials : $num_shared_accessions";
 
     foreach my $method (@{$genotyping_methods}) {
         my $genotype_query = "SELECT COUNT(DISTINCT(stock_id, nd_protocol_id)) FROM stock 
@@ -1426,9 +1442,12 @@ sub calculate_tool_compatibility {
             $tool_compatibility->{'Correlation'}->{'compatible'} = 1;
             push @{$tool_compatibility->{'Correlation'}->{'traits'}}, $trait->[1];
 
-            if (scalar(@{$trial_designs}) > 0 && $num_accessions_phenotyped_for_this_trait > 1){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
+            if ($num_accessions_phenotyped_for_this_trait > 1 && scalar(@{$trials}) > 1){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
                 if ($num_accessions_phenotyped_for_this_trait < 30) {
                     $tool_compatibility->{'Heritability'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to get strong results."} = "";
+                }
+                if ($num_shared_accessions < 30) {
+                    $tool_compatibility->{'Heritability'}->{'warn'}->{"There may not be enough accessions shared across all trials ($num_shared_accessions) to get strong results."} = "";
                 }
                 $tool_compatibility->{'Heritability'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Heritability'}->{'traits'}}, $trait->[1];
@@ -1437,8 +1456,11 @@ sub calculate_tool_compatibility {
                 if ($num_accessions_phenotyped_for_this_trait < 30) {
                     $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to get strong results."} = "";
                 }
-                if (scalar(grep {$_ < 30} @location_counts) > 1) {
+                if (scalar(grep {$_ < 30} @location_counts) > 1) {#If any of the locations had too few pheno observations
                     $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough phenotype observations at all trial locations to get strong results."} = "";
+                }
+                if ($total_obs < $num_accessions_phenotyped_for_this_trait) {# If total observations is lower than number of accessions, accessions were probably not replicated
+                    $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough replicated measurements of ".$trait->[1]."."} = "";
                 }
                 $tool_compatibility->{'Stability'}->{'compatible'} = 1;
                 push @{$tool_compatibility->{'Stability'}->{'traits'}}, $trait->[1];
