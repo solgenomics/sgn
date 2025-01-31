@@ -1,4 +1,4 @@
-package CXGN::Stock::Seedlot::ParseUpload::Plugin::CreateMissingAccessionsForSeedlots;
+package CXGN::Stock::Seedlot::ParseUpload::Plugin::CreateMissingAccessionsForSeedlotsXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;

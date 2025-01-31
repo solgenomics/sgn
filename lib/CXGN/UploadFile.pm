@@ -91,7 +91,12 @@ has 'include_timestamp' => (
     is => 'rw',
     required => 0,
     default => 1
-);
+    );
+
+has 'file_type' => (
+    isa => 'Str',
+    is => 'rw',
+    );
 
 sub archive {
     my $self = shift;
@@ -142,6 +147,8 @@ sub archive {
     }
 
     try {
+
+	print STDERR "GENERATING PATH...\n";
         if (!-d $archive_path) {
             mkdir $archive_path;
         }
@@ -162,13 +169,14 @@ sub archive {
             }
         }
 
+	print STDERR "COPYING $tempfile to $file_destination\n";
         copy($tempfile,$file_destination);
     }
     catch {
         $error = "Error saving archived file: $file_destination\n$_";
     };
     if ($error) {
-        print STDERR  "$error\n";
+        print STDERR  "ERROR: $error\n";
     }
     print STDERR "ARCHIVED: $file_destination\n";
     return $file_destination;
@@ -185,6 +193,47 @@ sub get_md5 {
     $md5->addfile($F);
     close($F);
     return $md5;
+}
+
+sub save_archived_file_metadata {
+    my $self = shift;
+    my $metadata_schema = shift;
+
+    my $experiment_ids = shift;
+    
+    #my $archived_file = $self->archived_file();
+    #my $archived_file_type = $self->file_type();
+
+#    my $md5checksum;
+
+#    if ($archived_file ne 'none'){
+#        my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $self->get_md5($self->archived_file);
+    my $md5checksum = $md5->hexdigest();
+#    }
+
+    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
+    $md_row->insert();
+    my $file_row = $self->metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($self->archived_file),
+            dirname => dirname($self->archived_file),
+            filetype => $self->file_type, 
+            md5checksum => $md5checksum,
+            metadata_id => $md_row->metadata_id(),
+        });
+    $file_row->insert();
+
+    foreach my $nd_experiment_id (keys %$experiment_ids) {
+        ## Link the file to the experiment
+        my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")
+            ->create({
+                nd_experiment_id => $nd_experiment_id,
+                file_id => $file_row->file_id(),
+            });
+        $experiment_files->insert();
+        #print STDERR "[StorePhenotypes] Linking file: ".$self->archived_file()." \n\t to experiment id " . $nd_experiment_id . "\n";
+    }
 }
 
 ###
