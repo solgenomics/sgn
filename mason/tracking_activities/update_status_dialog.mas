@@ -4,7 +4,13 @@ $identifier_name
 $material_id
 $updated_status_type
 $program_name
+$stock_type
 </%args>
+
+% my $display_label;
+% if ($stock_type eq 'tracking_id') { $display_label = 'Tracking ID';
+% } elsif ($stock_type eq 'transformation_id') { $display_label = 'Transformation ID';
+% }
 
 <div class="modal fade" id="update_status_dialog" name="_dialog" tabindex="-1" role="dialog" aria-labelledby="updateStatusDialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -17,7 +23,7 @@ $program_name
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="update_status_form" name="update_status_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Tracking Identifier: </label>
+                            <label class="col-sm-4 control-label"><% $display_label %>: </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" name="tracking_identifier_name" id="tracking_identifier_name" disabled value="<% $identifier_name %>">
                             </div>
@@ -101,7 +107,7 @@ jQuery(document).ready(function(){
     var material_id = "<% $material_id %>";
     var program_name = "<% $program_name %>";
 
-    jQuery("#update_status_link").click( function() {
+    jQuery("[name='update_status_link']").click(function() {
         jQuery('#update_status_dialog').modal('show');
     });
 

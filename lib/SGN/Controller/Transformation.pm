@@ -17,6 +17,17 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $c->dbc->dbh;
+    my $user_role;
+
+    if (! $c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if ($c->user() && $c->user()->check_roles("curator")) {
+        $user_role = "curator";
+    }
+
     my $transformation_stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation', 'stock_type')->cvterm_id();
 
     my $transformation = $schema->resultset("Stock::Stock")->find( { stock_id => $id, type_id => $transformation_stock_type_id } );
@@ -103,12 +114,14 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{updated_status_type} = $updated_status_type;
     $c->stash->{updated_status_string} = $updated_status_string;
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
+    $c->stash->{user_role} = $user_role;
     $c->stash->{identifier_link} = $identifier_link;
     $c->stash->{project_link} = $project_link;
     $c->stash->{program_id} = $program_id;
     $c->stash->{program_name} = $program_name;
     $c->stash->{name_format} = $name_format;
     $c->stash->{source_info} = $source_info_string;
+    $c->stash->{stock_type} = 'transformation_id';
     $c->stash->{template} = '/transformation/transformation.mas';
 
 }
