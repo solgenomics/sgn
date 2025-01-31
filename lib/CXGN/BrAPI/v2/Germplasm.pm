@@ -228,7 +228,7 @@ sub search {
         #Populating data
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? $_->{'create_date'} : $_->{'acquisition date'},
             additionalInfo=>$additional_info,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
@@ -606,7 +606,7 @@ sub germplasm_mcpd {
             subtaxon=>$_->{subtaxa},
             subtaxonAuthority=>$_->{subtaxaAuthority},
             donorInfo=>\@donors,
-            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'}
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? $_->{'create_date'} : $_->{'acquisition date'}
         );
     }
     my $total_count = (%result) ? 1 : 0;
@@ -1202,7 +1202,7 @@ sub _simple_search {
 
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? $_->{'create_date'} : $_->{'acquisition date'},
             additionalInfo=> $additional_info,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,

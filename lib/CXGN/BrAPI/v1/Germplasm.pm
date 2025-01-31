@@ -126,7 +126,7 @@ sub search {
             subtaxa=>$_->{subtaxa},
             subtaxaAuthority=>$_->{subtaxaAuthority},
             donors=>$_->{donors},
-            acquisitionDate=>$_->{'acquisition date'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? $_->{'create_date'} : $_->{'acquisition date'},
             breedingMethodDbId=>undef,
             documentationURL=>undef,
             germplasmGenus=>$_->{genus},
@@ -198,7 +198,7 @@ sub germplasm_detail {
         subtaxa=>$result->[0]->{subtaxa},
         subtaxaAuthority=>$result->[0]->{subtaxaAuthority},
         donors=>$result->[0]->{donors},
-        acquisitionDate=>$result->[0]->{'acquisition date'},
+        acquisitionDate=>$result->[0]->{'acquisition date'} eq '' ? $result->[0]->{'create_date'} : $result->[0]->{'acquisition date'}
     );
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');

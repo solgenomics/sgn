@@ -625,7 +625,7 @@ ORDER BY organism_id ASC;";
     # Get additional stock properties (pedigree, synonyms, donor info)
     my $stock_query = "SELECT stock.stock_id, stock.uniquename, stock.organism_id,
                mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
-               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name
+               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name, to_char(stock.create_date, 'YYYYMMDD')
         FROM stock
         LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
         LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
@@ -653,6 +653,7 @@ ORDER BY organism_id ASC;";
         my @donor_institutes = keys %{$donor_inst_json};
         my @donor_puis = keys %{$donor_pui_json};
         my $population_name = $r[10] || undef;
+        my $create_date = $r[11];
 
         # add stock props to the result hash
         $result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
@@ -676,6 +677,7 @@ ORDER BY organism_id ASC;";
         $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
 
         $result_hash{$stock_id}{population_name} = $population_name;
+        $result_hash{$stock_id}{create_date} = $create_date;
     }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
