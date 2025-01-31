@@ -7,7 +7,7 @@ $username
 $first_name
 $last_name
 $sp_person_id
-
+$timestamp
 $phenotype_files => undef
 $breeding_programs => undef
 $locations => undef
@@ -123,4 +123,4 @@ Interval:&nbsp;
 
 <table><tr><td>
 
-<& /index.mas, schema => $schema &>
+<& /index.mas, schema => $schema, timestamp => $timestamp &>
