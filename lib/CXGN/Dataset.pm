@@ -1284,21 +1284,24 @@ sub calculate_tool_compatibility {
 
     my $trials = $self->retrieve_trials(); # faster and easier than pulling it out of the phenotypes_ref
         # listref of listrefs, first index is trialID, second is trial name
-    my $traits = $self->retrieve_traits();
-    # my $traits = [];
-    # foreach my $trait (@{$all_traits}) { #filter for quantitative traits
-    #     my $trait_obj = CXGN::Trait->new({
-    #         bcs_schema => $self->schema,
-    #         cvterm_id => $trait->[0]
-    #     });
-    #     if ($trait_obj->categories ne ""){# ??? Not sure how to filter for categorical traits only
-    #         push @{$traits}, $trait;
-    #     }
-    # }
+    my $all_traits = $self->retrieve_traits();
+    my $traits = [];
+    foreach my $trait (@{$all_traits}) { #filter for quantitative traits
+        my $trait_obj = CXGN::Trait->new({
+            bcs_schema => $self->schema,
+            cvterm_id => $trait->[0]
+        });
+        if ($trait_obj->categories eq ""){# ??? Not sure how to filter properly
+            push @{$traits}, $trait;
+        }
+    }
 
     my $trial_designs = $self->retrieve_trial_designs();
     my $genotyping_methods = $self->retrieve_genotyping_protocols();# listref of listrefs. First index is 
         # method ID, second is method name
+    # if (scalar(@{$genotyping_methods}) == 0) {
+    #     push @{$genotyping_methods}, $c->config->{default_genotyping_protocol};
+    # }
     my $locations = $self->retrieve_locations(); # faster and easier than pulling it out of the phenotypes_ref
         # listref of listrefs, first index is locationID, second is location name
     my ($phenotypes, undef) = $self->retrieve_phenotypes_ref(); # Returns data as a listref with two hashrefs. First hashref is a list of all phenotypes in this dataset, which is an observational unit w/ a list 

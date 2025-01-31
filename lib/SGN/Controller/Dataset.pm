@@ -80,7 +80,8 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
     }
     $html .= "</table>";
 
-    # print STDERR Dumper $dataset->retrieve_traits();
+    # print STDERR "=======================================================\n";
+    # print STDERR "=======================================================\n";
 
     $c->stash->{dataset_name} = $dataset->name();
     $c->stash->{dataset_id} = $dataset_id;
