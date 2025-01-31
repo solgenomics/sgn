@@ -16,7 +16,11 @@ $name_format => undef
 $program_id
 $program_name
 $source_info
-$stock_type
+$stock_type_page
+$identifier_id
+$identifier_name
+$material_id
+$material_name
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables", "CXGN.Stock"] &>
@@ -78,7 +82,7 @@ $stock_type
 
 <& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number, name_format => $name_format, program_id => $program_id, program_name => $program_name, source_info => $source_info &>
 <& /transformation/add_transformants_using_list_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, program_name => $program_name &>
-<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id, material_id => $material_id, updated_status_type => $updated_status_type, program_name => $program_name, stock_type => $stock_type &>
+<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id, material_id => $material_id, material_name => $material_name, updated_status_type => $updated_status_type, program_name => $program_name, stock_type_page => $stock_type_page &>
 
 <script>
 

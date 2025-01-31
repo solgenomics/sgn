@@ -666,12 +666,14 @@ sub update_status_POST : Args(0) {
     my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", 'stock_type')->cvterm_id();
     my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
 
-    my $identifier_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $identifier_id, type_id => $tracking_identifier_type_id });
-    if (!$identifier_rs) {
-        $c->stash->{rest} = { error_string => 'Error. No tracking identifier entry found in the database.' };
-	    return;
-    } else {
-        push @stocks_to_update, $identifier_id;
+    if ($identifier_id ne 'NA') {
+        my $identifier_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $identifier_id, type_id => $tracking_identifier_type_id });
+        if (!$identifier_rs) {
+            $c->stash->{rest} = { error_string => 'Error. No tracking identifier entry found in the database.' };
+    	    return;
+        } else {
+            push @stocks_to_update, $identifier_id;
+        }
     }
 
     my $material_stock_type_id;

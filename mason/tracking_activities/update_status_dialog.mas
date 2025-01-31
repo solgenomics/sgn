@@ -2,15 +2,25 @@
 $identifier_id
 $identifier_name
 $material_id
+$material_name
 $updated_status_type
 $program_name
-$stock_type
+$stock_type_page
 </%args>
 
-% my $display_label;
-% if ($stock_type eq 'tracking_id') { $display_label = 'Tracking ID';
-% } elsif ($stock_type eq 'transformation_id') { $display_label = 'Transformation ID';
-% }
+<%perl>
+
+my $display_label;
+my $display_name;
+if ($stock_type_page eq 'tracking_id') {
+    $display_label = 'Tracking ID';
+    $display_name = $identifier_name;
+} elsif ($stock_type_page eq 'transformation_id') {
+    $display_label = 'Transformation ID';
+    $display_name = $material_name;
+}
+</%perl>
+
 
 <div class="modal fade" id="update_status_dialog" name="_dialog" tabindex="-1" role="dialog" aria-labelledby="updateStatusDialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -25,7 +35,7 @@ $stock_type
                         <div class="form-group">
                             <label class="col-sm-4 control-label"><% $display_label %>: </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" name="tracking_identifier_name" id="tracking_identifier_name" disabled value="<% $identifier_name %>">
+                                <input class="form-control" name="tracking_identifier_name" id="tracking_identifier_name" disabled value="<% $display_name %>">
                             </div>
                         </div>
                         <div class="form-group">
