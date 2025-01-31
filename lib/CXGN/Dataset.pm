@@ -1386,6 +1386,7 @@ sub calculate_tool_compatibility {
                 $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough accessions (n=$num_accessions) genotyped for ".$method->[1].", ($num_markers markers) for strong genotype clustering."} = "";
             }
             $tool_compatibility->{'Population Structure'}->{'compatible'} = 1;
+            $tool_compatibility->{'Population Structure'}->{'types'}->{'Genotype'} = 1;
             $tool_compatibility->{'Kinship & Inbreeding'}->{'compatible'} = 1;
             $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
             $tool_compatibility->{'Clustering'}->{'types'}->{'Genotype'} = "";
@@ -1395,29 +1396,23 @@ sub calculate_tool_compatibility {
     if ($num_phenotyped_accessions > 1 && scalar(@{$traits}) > 1) { #dont need to go trait by trait for clustering, since all traits are combined to eigenvectors. just need plenty of trait measurements
         if (scalar(@{$traits}) < 5) {
             $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough measured traits (only ".scalar(@{$traits}).") for strong phenotype clustering."} = "";
+            $tool_compatibility->{'Population Structure'}->{'warn'}->{"You have only ".scalar(@{$traits})." measured traits, which will limit the number of principal components in a phenotype PCA."} = "";
         }
         if ($num_phenotyped_accessions < 30) {
             $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough phenotyped accessions (n=$num_phenotyped_accessions) for strong phenotype clustering."} = "";
+            $tool_compatibility->{'Population Structure'}->{'warn'}->{"You may not have enough phenotyped accessions (n=$num_phenotyped_accessions) for a strong phenotype PCA."} = "";
         }
         $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
         $tool_compatibility->{'Clustering'}->{'types'}->{'Phenotype'} = "";
-        # foreach my $method (@{$genotyping_methods}){
-        #     my $num_markers = $genotype_counts->{$method->[0]}->{"num_markers"};
-        #     my $num_accessions = $genotype_counts->{$method->[0]}->{"num_accessions"};
-        #     if ($num_accessions > 1 && $num_markers > 30) { # for GEBV clustering, there needs to be enough accessions using the same geno method (not checked right here) and which have lots of trait measurements
-        #         if ($num_accessions < 30) {
-        #             $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotyped accessions for strong GEBV clustering."} = "";
-        #         }
-        #         if ($num_markers < 1000) {
-        #             $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough genotype markers for strong GEBV clustering."} = "";
-        #         }
-        #         $tool_compatibility->{'Clustering'}->{'types'}->{'GEBV'} = "";
-        #     }
-        # }
+        $tool_compatibility->{'Population Structure'}->{'compatible'} = 1;
+        $tool_compatibility->{'Population Structure'}->{'types'}->{'Phenotype'} = "";
     }
 
     if (exists $tool_compatibility->{'Clustering'}->{'types'}) {
         $tool_compatibility->{'Clustering'}->{'types'} = [keys(%{$tool_compatibility->{'Clustering'}->{'types'}})];
+    }
+    if (exists $tool_compatibility->{'Population Structure'}->{'types'}) {
+        $tool_compatibility->{'Population Structure'}->{'types'} = [keys(%{$tool_compatibility->{'Population Structure'}->{'types'}})];
     }
 
     foreach my $trait (@{$traits}){ # For each trait, we need to check for number of observations (plus locations for stability)
