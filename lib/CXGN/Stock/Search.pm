@@ -251,6 +251,16 @@ has 'external_ref_source_list' => (
     is => 'rw',
 );
 
+has 'min_acquisition_date' => (
+    isa => 'Str|Int|Undef',
+    is => 'rw'
+);
+
+has 'max_acquisition_date' => (
+    isa => 'Str|Int|Undef',
+    is => 'rw'
+);
+
 sub search {
     my $self = shift;
     print STDERR "CXGN::Stock::Search search start\n";
@@ -281,6 +291,8 @@ sub search {
     my @external_ref_source_array = $self->external_ref_source_list ? @{$self->external_ref_source_list} : ();
     my $limit = $self->limit;
     my $offset = $self->offset;
+    my $min_acquisition_date = $self->min_acquisition_date;
+    my $max_acquisition_date = $self->max_acquisition_date;
 
     my $advanced_search = 0; #this is for joining nd_experiment and its related tables
 
@@ -490,11 +502,43 @@ sub search {
     }
     if ( !$and_conditions) {  $and_conditions = [ { 'me.type_id' => { '!=' => undef } } ] };
 
+    my $acq_date_join = $min_acquisition_date || $max_acquisition_date ? 'stockprops' : '';
+    my $acq_date_conditions = $min_acquisition_date || $max_acquisition_date ? { "-and" => [] } : {};
+    if ( $min_acquisition_date ) {
+        my $f = {
+            "-or" => [
+                {
+                    'me.create_date' => { '>=', $min_acquisition_date }
+                },
+                {
+                    'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
+                    'stockprops_2.value' => { '>=', $min_acquisition_date }
+                }
+            ]
+        };
+        push(@{$acq_date_conditions->{'-and'}}, $f)
+    }
+    if ( $max_acquisition_date ) {
+        my $f = {
+            "-or" => [
+                {
+                    'me.create_date' => { '<=', $max_acquisition_date }
+                },
+                {
+                    'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
+                    'stockprops_2.value' => { '<=', $max_acquisition_date }
+                }
+            ]
+        };
+        push(@{$acq_date_conditions->{'-and'}}, $f)
+    }
+
     #$schema->storage->debug(1);
     my $search_query = {
         -and => [
             $or_conditions,
             $and_conditions,
+            $acq_date_conditions
         ],
     };
     if (!$self->include_obsolete) {
@@ -528,14 +572,15 @@ sub search {
     print STDERR "**stock search q " . Dumper($search_query)  ."\n";
     print STDERR "***stock_join= " . Dumper($stock_join) ." \n\n";
     my $rs = $schema->resultset("Stock::Stock")->search(
-    $search_query,
-    {
-        join => ['type', 'organism', 'stockprops', $stock_join],
-        '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
-        '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
-        order_by  => 'me.name',
-        distinct=>1
-    });
+        $search_query,
+        {
+            join => ['type', 'organism', 'stockprops', $stock_join, $acq_date_join],
+            '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
+            '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
+            order_by  => 'me.name',
+            distinct=>1
+        }
+    );
 
     my $records_total = $rs->count();
     print STDERR "total records: ".$records_total;

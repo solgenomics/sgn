@@ -43,6 +43,8 @@ sub search {
     my $progeny_db_id = $params->{progenyDbId} || ($params->{progenyDbIds} || ());
     my $external_reference_id_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
     my $external_reference_source_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
+    my $minAcquisitionDate = $params->{minAcquisitionDate}->[0];
+    my $maxAcquisitionDate = $params->{maxAcquisitionDate}->[0];
 
     if ( $collection || $progeny_db_id || $parent_db_id ){
         push @$status, { 'error' => 'The following search parameters are not implemented: collection, parentDbId, progenyDbId' };
@@ -148,7 +150,9 @@ sub search {
         external_ref_source_list=>$external_reference_source_arrayref,
         limit=>$limit,
         offset=>$offset,
-        display_pedigree=>1
+        display_pedigree=>1,
+        min_acquisition_date=>$minAcquisitionDate,
+        max_acquisition_date=>$maxAcquisitionDate
     });
     my ($result, $total_count) = $stock_search->search();
 
