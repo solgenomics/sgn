@@ -20,14 +20,14 @@ $editable_stock_props => {}
 
 <h3>Welcome back <% $first_name %>!</h3>
 
-<table id="manage_user_role_table" class="table table-bordered" width="100%" >
+<!-- table id="manage_user_role_table" class="table table-bordered" width="100%" >
 <thead>
 <tr><th>User</th><th>Your currently assigned roles</th></tr>
 
 </thead>
 <tbody>
 </tbody>
-</table>
+</table -->
 
 <&|  /page/info_section.mas, title => "<b><font size=\"3\">Continue where you left off</font></b>", collapsible => 1, collapsed => 1 &>
 
@@ -111,11 +111,11 @@ Interval:&nbsp;
     	    'columns': [{ width: '680px'}, null ],	
         });
 
-   jQuery('#manage_user_role_table').DataTable( {
-       ajax : '/ajax/roles/list/<% $sp_person_id %>',
-       searching: false,
-       paging: false,
-   });
+//   jQuery('#manage_user_role_table').DataTable( {
+//       ajax : '/ajax/roles/list/<% $sp_person_id %>',
+//       searching: false,
+//       paging: false,
+//   });
 
 }
 
