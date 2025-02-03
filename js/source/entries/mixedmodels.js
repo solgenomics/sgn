@@ -103,10 +103,12 @@ export function init(main_div) {
     $('#mixed_model_analysis_prepare_button').click(function () {
 
         dataset_id = get_dataset_id();
+        var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+
         if (dataset_id != false) {
             $.ajax({
                 url: '/ajax/mixedmodels/prepare',
-                data: { 'dataset_id': get_dataset_id() },
+                data: { 'dataset_id': get_dataset_id(),'dataset_trait_outliers': dataset_trait_outliers, },
                 success: function (r) {
                     if (r.error) {
                         alert(r.error);
