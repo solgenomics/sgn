@@ -958,6 +958,17 @@ jQuery(document).ready(function () {
   }
 });
 
+jQuery(document).ready(function (){    
+    jQuery("#pca_div").on("change", function (e) {
+        var pcaHtmlElem = e.target.id;
+        if (pcaHtmlElem.match(/pca_data_type_select/)) {
+            var pcaPopId = pcaHtmlElem.replace(/pca_data_type_select_/, '');
+            var runPcaBtnId = solGS.pca.getRunPcaId(pcaPopId);
+            jQuery(`#${runPcaBtnId}`).html('Run PCA').show();
+        }        
+    });
+});
+
 jQuery(document).ready(function () {
   jQuery("#pca_div").on("click", function (e) {
     var runPcaBtnId = e.target.id;
