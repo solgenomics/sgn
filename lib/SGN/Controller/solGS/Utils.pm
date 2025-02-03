@@ -317,48 +317,44 @@ sub stash_json_args {
     my $protocol_id =  $args_hash->{'genotyping_protocol_id'};
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
-    foreach my $key (keys %{$args_hash})
-    {
+    foreach my $key (keys %{$args_hash}) {
         my $val = $args_hash->{$key};
         $val = $val =~ /null|undefined/ ? undef : $val;
 
-        if (ref($val) eq 'ARRAY' && scalar(@$val) == 1)
-        {
+        if (ref($val) eq 'ARRAY' && scalar(@$val) == 1) {
             $c->stash->{$key} = $val->[0];
 
-            if ($key =~ /training_pop_id|model_id|combo_pops_list|combo_pops_id/)
-    		{
-                 if ($val->[0] =~ /\d+/)
-                 {
+            if ($key =~ /training_pop_id|model_id|combo_pops_list|combo_pops_id/) {
+                 if ($val->[0] =~ /\d+/) {
             		    $c->stash->{pop_id} = $val->[0];
                         $c->stash->{model_id} = $val->[0];
                         $c->stash->{training_pop_id} = $val->[0];
                  }
             }
 
-            if ($key =~ /trait_id|training_traits_ids/)
-            {
+            if ($key =~ /trait_id|training_traits_ids/) {
                 $c->stash->{training_traits_ids} = $val;
                 $c->stash->{trait_id} = $val->[0];
             }
 
-        }
-        else
-        {
+        } else {
             no warnings 'uninitialized';
             $c->stash->{$key} = $val;
-
-            if ($data_str =~ /dataset|list/  && $key =~ /(cluster|kinship|pca|corr)_pop_id/)
-            {
-                my $name = "${data_str }_id";
+            if ($data_str =~ /dataset|list/  && $key =~ /(cluster|kinship|pca|corr)_pop_id/) {
+                my $name = "${data_str}_id";
                 $val =~ s/\d+-\w+_|\w+_//g;
-                $c->stash->{$name } = $val;
+                $c->stash->{$name} = $val;
             }
         }
     }
 
-    if  ($c->stash->{data_set_type} =~ /combined/)
-    {
+    if ($data_str =~ /dataset|list/) {
+        my $name = "${data_str}_id";
+        my $id = $c->stash->{$name} =~ s/\w+_//gr;
+        $c->stash->{$name} = $id;
+    }
+
+    if  ($c->stash->{data_set_type} =~ /combined/) {
         $c->stash->{combo_pops_id} = $c->stash->{training_pop_id};
     }
 
