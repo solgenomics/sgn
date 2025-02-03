@@ -4,6 +4,7 @@
 $schema
 $static_content_path
 $username
+$role
 $first_name
 $last_name
 $sp_person_id
@@ -20,6 +21,8 @@ $editable_stock_props => {}
 
 <h3>Welcome back <% $first_name %>!</h3>
 
+Your status is currently "<% $role %>".
+
 <!-- table id="manage_user_role_table" class="table table-bordered" width="100%" >
 <thead>
 <tr><th>User</th><th>Your currently assigned roles</th></tr>
@@ -28,6 +31,8 @@ $editable_stock_props => {}
 <tbody>
 </tbody>
 </table -->
+
+% if ($role ne "user") {
 
 <&|  /page/info_section.mas, title => "<b><font size=\"3\">Continue where you left off</font></b>", collapsible => 1, collapsed => 1 &>
 
@@ -71,6 +76,9 @@ Interval:&nbsp;
 
 
 </&>
+
+%} # -- if ($role ne...
+
 
 <script>
     var interval = jQuery('#interval').val()	
@@ -123,4 +131,4 @@ Interval:&nbsp;
 
 <table><tr><td>
 
-<& /index.mas, schema => $schema, timestamp => $timestamp &>
+<& /index.mas, schema => $schema, timestamp => $timestamp, static_content_path=> $static_content_path, phenotype_files => $phenotype_files, breeding_programs => $breeding_programs, locations => $locations, preferred_species => $preferred_species, editable_stock_props => $editable_stock_props &>
