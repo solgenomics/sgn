@@ -215,7 +215,6 @@ sub search {
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
-    my $plant_of_subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of_subplot', 'stock_relationship')->cvterm_id();
 
     my $include_timestamp = $self->include_timestamp;
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
@@ -301,7 +300,7 @@ sub search {
 
     my $from_clause = " FROM stock as observationunit JOIN stock_relationship ON (observationunit.stock_id=subject_id)
       JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
-      JOIN stock as germplasm ON (object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id,$cross_type_id,$family_name_type_id) AND stock_relationship.type_id IN ($plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $plant_of_subplot_type_id)
+      JOIN stock as germplasm ON (object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id,$cross_type_id,$family_name_type_id) AND stock_relationship.type_id IN ($plot_of_type_id, $plant_of_type_id, $subplot_of_type_id)
       $design_layout_sql
       JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
       JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
