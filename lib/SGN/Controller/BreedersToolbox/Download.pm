@@ -495,6 +495,8 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $datalevel         = $c->req->param("metadata_datalevel");
     }
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
+    my $include_intercrop_stocks = $c->req->param("intercrop") || 0;
+    my $include_entry_numbers = $c->req->param("entry_numbers") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
 
     # parameters for outliers download
@@ -580,6 +582,8 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+            include_intercrop_stocks=>$include_intercrop_stocks,
+            include_entry_numbers=>$include_entry_numbers,
             dataset_exluded_outliers=>$outliers,
     		data_level=>$datalevel,
     	);

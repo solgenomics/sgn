@@ -75,6 +75,18 @@ Choose a list for each parameter and click "Download".
         <option value="0">No</option>
         <option value="1">Yes</option>
     </select>
+    <br/>
+    <b>Include Intercrop Accessions:</b><br/>
+    <select class="form-control" id="intercrop" name="intercrop">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+    </select>
+    <br/>
+    <b>Include Accession Entry Numbers:</b><br/>
+    <select class="form-control" id="entry_numbers" name="entry_numbers">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+    </select>
     </td>
     <td>
       <button class="btn btn-primary" type="button" id="phenotype">Download</button>
