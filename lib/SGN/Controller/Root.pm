@@ -40,6 +40,11 @@ sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+    my $role;
+    if ($c->user) {
+	($role) = $c->user()->roles(); # get the highest role
+    }
+    
     if ($c->config->{homepage_display_phenotype_uploads}){
         my @file_array;
         my %file_info;
@@ -99,6 +104,7 @@ sub index :Path :Args(0) {
 	$c->stash->{last_name} = $user->get_last_name();
 	$c->stash->{sp_person_id} = $user->get_sp_person_id();
 	$c->stash->{template} = '/index_logged_in_user.mas';
+	$c->stash->{role} = $role;
     }
     else { 
 	$c->stash->{template} = '/index.mas';
