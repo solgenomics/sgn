@@ -1225,16 +1225,7 @@ Creates a hashref of analysis tools that this dataset can be used with. For exam
 Note that this function should only ever be called once for a dataset and have the data stored as part of the dataset definition JSON, since retrieving high dimensional phenotype and genotype
 data can be time consuming. 
 
-Tools that use datasets: 
-    solGS - genotyping data and phenotyping data
-    PCA - genotyping data
-    Cluster Analysis - genotyping data and/or phenotyping data
-    Kinship & Inbreeding - genotyping data
-    Stability - trials and observed traits, trials must have multiple locations. Traits and accessions need to be represented in all locations, with replicates. Some missing data allowed. 
-    Heritability - trial(s) w/ different designs and observed traits. 
-    Mixed Models - observed traits, fairly flexible
-    Boxplots - observed traits
-    GWAS - at least one trial, a genotyping protocol, and observed traits
+Takes one parameter, passed from Controller: the name of the default genotyping protocol to use as a fallback if none is found in the dataset. 
 
 =cut
 
@@ -1509,6 +1500,12 @@ sub calculate_tool_compatibility {
     #return JSON::Any->encode($tool_compatibility);
     return $tool_compatibility;
 }
+
+=head2 update_tool_compatibility
+
+Recalculates and stores tool compatibility individually without updating other dataset characteristics. Used in a button in the dataset details page. 
+
+=cut
 
 sub update_tool_compatibility {
     my $self = shift;
