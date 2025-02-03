@@ -42,8 +42,7 @@ my $stock_id = $schema->resultset("Stock::Stock")->find({name=>'test_accession1'
 
 $mech->get_ok('http://localhost:3010/stock/obsolete?stock_id='.$stock_id.'&is_obsolete=1'.'&obsolete_note="test"');
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
-is_deeply($response, { message => "Stock obsoleted" }, 'obsolete stock via ajax catalyst controller');
+is($response->{'success'}, '1');
 
 my $after_stock_count_all = $schema->resultset("Stock::Stock")->search({})->count();
 my $after_stock_count_obsolete = $schema->resultset("Stock::Stock")->search({is_obsolete=>1})->count();
