@@ -50,6 +50,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Trial;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -188,6 +189,12 @@ has 'include_intercrop_stocks' => (
     default => 0
 );
 
+has 'include_entry_numbers' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw'
@@ -204,6 +211,8 @@ sub get_phenotype_matrix {
     my $include_timestamp = $self->include_timestamp;
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
     my $include_intercrop_stocks = $self->include_intercrop_stocks;
+    my $include_entry_numbers = $self->include_entry_numbers;
+    my %trial_entry_numbers;
 
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
@@ -255,6 +264,22 @@ sub get_phenotype_matrix {
 
         if ( $include_intercrop_stocks ) {
             push(@line, 'intercropGermplasmDbId', 'intercropGermplasmName');
+        }
+
+        if ( $include_entry_numbers ) {
+            push(@line, 'germplasmEntryNumber');
+
+            # Get unique set of trial ids in data
+            my %trial_ids;
+            foreach (@$data) {
+                $trial_ids{$_->{'trial_id'}} = 1;
+            }
+
+            # Get the entry numbers for each trial
+            foreach my $trial_id (keys %trial_ids) {
+                my $trial = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $trial_id });
+                $trial_entry_numbers{$trial_id} = $trial->get_entry_numbers();
+            }
         }
 
         my @sorted_traits = sort keys(%$unique_traits);
@@ -316,6 +341,13 @@ sub get_phenotype_matrix {
                     push(@ic_stock_names, $ic_stock->{stock_uniquename});
                 }
                 push(@line, join(',', @ic_stock_ids), join(',', @ic_stock_names));
+            }
+
+            if ( $include_entry_numbers ) {
+                my $trial = $obs_unit->{trial_id};
+                my $germplasm = $obs_unit->{germplasm_stock_id};
+                my $entry_number = $trial_entry_numbers{$trial}{$germplasm} || '';
+                push(@line, $entry_number);
             }
 
             my $observations = $obs_unit->{observations};
@@ -382,6 +414,23 @@ sub get_phenotype_matrix {
         # Add intercrop stock headers, if requested
         if ( $include_intercrop_stocks ) {
             push(@metadata_headers, 'intercropGermplasmDbId', 'intercropGermplasmName');
+        }
+
+        # Add entry number stock headers, if requested
+        if ( $include_entry_numbers ) {
+            push(@metadata_headers, 'germplasmEntryNumber');
+
+            # Get unique set of trial ids in data
+            my %trial_ids;
+            foreach (@$data) {
+                $trial_ids{$_->{'trial_id'}} = 1;
+            }
+
+            # Get the entry numbers for each trial
+            foreach my $trial_id (keys %trial_ids) {
+                my $trial = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $trial_id });
+                $trial_entry_numbers{$trial_id} = $trial->get_entry_numbers();
+            }
         }
 
         foreach my $d (@$data) {
@@ -459,6 +508,14 @@ sub get_phenotype_matrix {
                 }
                 push(@{$obsunit_data{$obsunit_id}->{metadata}}, join(',', @ic_stock_ids));
                 push(@{$obsunit_data{$obsunit_id}->{metadata}}, join(',', @ic_stock_names));
+            }
+
+            # Include entry numbers, if requested
+            if ( $include_entry_numbers ) {
+                my $trial = $d->{trial_id};
+                my $germplasm = $d->{accession_stock_id};
+                my $entry_number = $trial_entry_numbers{$trial}{$germplasm} || '';
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, $entry_number);
             }
         }
         #print STDERR Dumper \%plot_data;
