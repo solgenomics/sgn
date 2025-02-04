@@ -168,7 +168,7 @@ $source_info => undef
         <div class="panel panel-default">
             <div class="panel-body">
 % if ($updated_status_type) {
-    <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link" name = "update_status_usage_link">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="reverse_status_link">Reverse Status</button>
+    <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link" name = "update_status_usage_link">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="reverse_status_link_tracking_page" name="reverse_status_link">Reverse Status</button>
 % } else {
     <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link" name = "update_status_usage_link">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button><button class="btn btn-sm btn-primary" style="margin:3px" id="update_status_link_tracking_page" name="update_status_link">Update Status</button>
 % }

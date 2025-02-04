@@ -56,11 +56,12 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $updated_status_type = $info->[0]->[5];
     my $completed_metadata;
     my $terminated_metadata;
+    my $status_display;
     if ($updated_status_type eq 'terminated_metadata') {
-        $updated_status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
+        $status_display = '<span style="color:red">'.'TERMINATED'.'</span>';
         $terminated_metadata = 1;
     } elsif ($updated_status_type eq 'completed_metadata') {
-        $updated_status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
+        $status_display = '<span style="color:red">'.'COMPLETED'.'</span>';
         $completed_metadata = 1;
     }
 
@@ -131,6 +132,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{identifier_name} = $identifier_name;
     $c->stash->{material_id} = $transformation_id;
     $c->stash->{material_name} = $transformation_name;
+    $c->stash->{status_display} = $status_display;
 
     $c->stash->{template} = '/transformation/transformation.mas';
 

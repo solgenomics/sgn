@@ -172,9 +172,9 @@ jQuery(document).ready(function(){
         location.reload();
     });
 
-    jQuery('#reverse_status_link').click(function() {
+    jQuery("[name='reverse_status_link']").click(function() {
         var updated_status_type = "<% $updated_status_type %>";
-        var confirmation = confirm("Are you sure you want to reverse status of this tracking identifier ?");
+        var confirmation = confirm("Are you sure you want to reverse status of this <% $display_label %>?");
         if (confirmation) {
             jQuery.ajax({
                 url: '/ajax/tracking_activity/reverse_status',
