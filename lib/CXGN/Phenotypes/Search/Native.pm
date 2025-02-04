@@ -298,9 +298,9 @@ sub search {
         $phenotypeprop_sql = " LEFT JOIN phenotypeprop ON (phenotype.phenotype_id = phenotypeprop.phenotype_id AND phenotypeprop.type_id = $phenotype_outlier_type_id)";
     }
 
-    my $from_clause = " FROM stock as observationunit JOIN stock_relationship ON (observationunit.stock_id=subject_id)
+    my $from_clause = " FROM stock as observationunit JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id IN ($plot_of_type_id, $plant_of_type_id, $subplot_of_type_id)
       JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
-      JOIN stock as germplasm ON (object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id,$cross_type_id,$family_name_type_id) AND stock_relationship.type_id IN ($plot_of_type_id, $plant_of_type_id, $subplot_of_type_id)
+      JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id,$cross_type_id,$family_name_type_id)
       $design_layout_sql
       JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
       JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
