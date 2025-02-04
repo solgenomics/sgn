@@ -1124,7 +1124,7 @@ GROUP BY 1,2;
 ALTER VIEW tissue_sampleXtrait_components OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.tissue_sampleXseedlots CASCADE;
-CREATE VIEW public.tissueXseedlots AS
+CREATE VIEW public.tissue_sampleXseedlots AS
 SELECT public.stock.stock_id AS tissue_sample_id,
     public.materialized_phenoview.seedlot_id
    FROM public.materialized_phenoview
