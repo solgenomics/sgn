@@ -102,7 +102,7 @@ if (dataType == 'genotype') {
         phenoData <- na.omit(phenoData)
         genoMetaData <- phenoData$studyDbId
 
-        phenoData <- phenoData %>% mutate(germplasmName = paste0(germplasmName, '_', studyDbId))
+        phenoData <- phenoData %>% mutate(germplasmName = paste0(germplasmName, '_trial_', studyDbId))
         dropCols = c('replicate', 'blockNumber', 'locationName', 'studyDbId', 'studyYear')
         phenoData <- phenoData %>% select(-dropCols)
         rownames(phenoData) <- NULL
