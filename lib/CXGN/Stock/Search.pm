@@ -251,6 +251,11 @@ has 'external_ref_source_list' => (
     is => 'rw',
 );
 
+has 'acquisition_date' => (
+    isa => 'Str|Int|Undef',
+    is => 'rw'
+);
+
 has 'min_acquisition_date' => (
     isa => 'Str|Int|Undef',
     is => 'rw'
@@ -291,6 +296,7 @@ sub search {
     my @external_ref_source_array = $self->external_ref_source_list ? @{$self->external_ref_source_list} : ();
     my $limit = $self->limit;
     my $offset = $self->offset;
+    my $acquisition_date = $self->acquisition_date;
     my $min_acquisition_date = $self->min_acquisition_date;
     my $max_acquisition_date = $self->max_acquisition_date;
 
@@ -502,13 +508,27 @@ sub search {
     }
     if ( !$and_conditions) {  $and_conditions = [ { 'me.type_id' => { '!=' => undef } } ] };
 
-    my $acq_date_join = $min_acquisition_date || $max_acquisition_date ? 'stockprops' : '';
-    my $acq_date_conditions = $min_acquisition_date || $max_acquisition_date ? { "-and" => [] } : {};
+    my $acq_date_join = $acquisition_date || $min_acquisition_date || $max_acquisition_date ? 'stockprops' : '';
+    my $acq_date_conditions = $acquisition_date || $min_acquisition_date || $max_acquisition_date ? { "-and" => [] } : {};
+    if ( $acquisition_date ) {
+        my $f = {
+            "-or" => [
+                {
+                    "to_char(me.create_date, 'YYYYMMDD')" => $acquisition_date
+                },
+                {
+                    'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
+                    'stockprops_2.value' => $acquisition_date
+                }
+            ]
+        };
+        push(@{$acq_date_conditions->{'-and'}}, $f)
+    }
     if ( $min_acquisition_date ) {
         my $f = {
             "-or" => [
                 {
-                    'me.create_date' => { '>=', $min_acquisition_date }
+                    "to_char(me.create_date, 'YYYYMMDD')" => { '>=', $min_acquisition_date }
                 },
                 {
                     'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
@@ -522,7 +542,7 @@ sub search {
         my $f = {
             "-or" => [
                 {
-                    'me.create_date' => { '<=', $max_acquisition_date }
+                    "to_char(me.create_date, 'YYYYMMDD')" => { '<=', $max_acquisition_date }
                 },
                 {
                     'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),

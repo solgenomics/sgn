@@ -31,8 +31,9 @@ sub search {
     my $synonyms_arrayref = $params->{synonym} || ($params->{synonyms} || ());
     my $subtaxa = $params->{germplasmSubTaxa}->[0];
     my $match_method = $params->{matchMethod}->[0] || 'exact';
-    my $minAcquisitionDate = $params->{minAcquisitionDate}->[0];
-    my $maxAcquisitionDate = $params->{maxAcquisitionDate}->[0];
+    my $acquisitionDate = ref $params->{acquisitionDate} eq 'ARRAY' ? $params->{acquisitionDate}->[0] : $params->{acquisitionDate};
+    my $minAcquisitionDate = ref $params->{minAcquisitionDate} eq 'ARRAY' ? $params->{minAcquisitionDate}->[0] : $params->{minAcquisitionDate};
+    my $maxAcquisitionDate = ref $params->{maxAcquisitionDate} eq 'ARRAY' ? $params->{maxAcquisitionDate}->[0] : $params->{maxAcquisitionDate};
 
     if ($match_method ne 'exact' && $match_method ne 'wildcard') {
         push @$status, { 'error' => "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters." };
@@ -92,6 +93,7 @@ sub search {
         limit=>$limit,
         offset=>$offset,
         display_pedigree=>1,
+        acquisition_date=>$acquisitionDate,
         min_acquisition_date=>$minAcquisitionDate,
         max_acquisition_date=>$maxAcquisitionDate
     });

@@ -43,8 +43,9 @@ sub search {
     my $progeny_db_id = $params->{progenyDbId} || ($params->{progenyDbIds} || ());
     my $external_reference_id_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
     my $external_reference_source_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
-    my $minAcquisitionDate = $params->{minAcquisitionDate}->[0];
-    my $maxAcquisitionDate = $params->{maxAcquisitionDate}->[0];
+    my $acquisitionDate = ref $params->{acquisitionDate} eq 'ARRAY' ? $params->{acquisitionDate}->[0] : $params->{acquisitionDate};
+    my $minAcquisitionDate = ref $params->{minAcquisitionDate} eq 'ARRAY' ? $params->{minAcquisitionDate}->[0] : $params->{minAcquisitionDate};
+    my $maxAcquisitionDate = ref $params->{maxAcquisitionDate} eq 'ARRAY' ? $params->{maxAcquisitionDate}->[0] : $params->{maxAcquisitionDate};
 
     if ( $collection || $progeny_db_id || $parent_db_id ){
         push @$status, { 'error' => 'The following search parameters are not implemented: collection, parentDbId, progenyDbId' };
@@ -151,6 +152,7 @@ sub search {
         limit=>$limit,
         offset=>$offset,
         display_pedigree=>1,
+        acquisition_date=>$acquisitionDate,
         min_acquisition_date=>$minAcquisitionDate,
         max_acquisition_date=>$maxAcquisitionDate
     });
