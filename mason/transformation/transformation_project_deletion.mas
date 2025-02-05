@@ -32,13 +32,13 @@ $trial_id
 
 jQuery(document).ready(function(){
 
+    const project_id = "<% $trial_id %>";
 
     jQuery('#delete_transformation_project').click(function() {
-        var trial_id = "<% $trial_id %>";
-        var confirmation = confirm("Are you sure you want to delete this transformation project? The deletion cannot be undone.");
+        const confirmation = confirm("Are you sure you want to delete this transformation project? The deletion cannot be undone.");
         if (confirmation) {
             jQuery.ajax({
-                url: '/ajax/breeders/trial/'+trial_id+'/delete/transformation_project',
+                url: '/ajax/breeders/trial/'+project_id+'/delete/transformation_project',
                 beforeSend: function(){
                     jQuery('#working_modal').modal("show");
                 },
@@ -59,6 +59,18 @@ jQuery(document).ready(function(){
             });
         }
     });
+
+    const deletion_table = jQuery('#transformation_ids_deletion_table').DataTable({
+        'ajax': '/ajax/transformation/all_transformation_ids_in_project/'+project_id,
+        'autoWidth': false,
+        'columns': [
+            { title: "Transformation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/transformation/"+row.transformation_id+"'>"+row.transformation_name+"</a>"; } },
+            { title: "Status", "data": "status_type" },
+            { title: "Number of Transformants", "data": "number_of_transformants" },
+        ],
+
+    });
+
 
 });
 
