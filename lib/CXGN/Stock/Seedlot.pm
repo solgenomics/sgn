@@ -333,6 +333,9 @@ sub list_seedlots {
     my $only_good_quality = shift;
     my $box_name = shift;
     my $contents_cross_db_id = shift;
+    my $trial_name = shift;  # name of trial used in a transaction (must also specify trial_usage)
+    my $trial_usage = shift; # transaction type (either 'source', 'sink', or 'source|sink')
+                             # where the trial is the source, sink, or either of the matching seedlot's seed
 
     select(STDERR);
     $| = 1;
@@ -354,23 +357,23 @@ sub list_seedlots {
     $search_criteria{'me.type_id'} = $type_id;
     $search_criteria{'stock_relationship_objects.type_id'} = $collection_of_cvterm_id;
     if ($seedlot_name) {
-	print STDERR "Adding seedlot name ($seedlot_name) to query...\n";
+        # print STDERR "Adding seedlot name ($seedlot_name) to query...\n";
         $search_criteria{'me.uniquename'} = { 'ilike' => '%'.$seedlot_name.'%' };
     }
     if ($seedlot_id) {
-	print STDERR "Adding seedlot_id ($seedlot_id) to query...\n";
+        # print STDERR "Adding seedlot_id ($seedlot_id) to query...\n";
         $search_criteria{'me.stock_id'} = { -in => $seedlot_id };
     }
     if ($breeding_program) {
-	print STDERR "Adding breeding_program $breeding_program to query...\n";
+        # print STDERR "Adding breeding_program $breeding_program to query...\n";
         $search_criteria{'project.name'} = { 'ilike' => '%'.$breeding_program.'%' };
     }
     if ($location) {
-	print STDERR "Adding location $location to query...\n";
+        # print STDERR "Adding location $location to query...\n";
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
     if ($contents_accession && scalar(@$contents_accession)>0) {
-	print STDERR "Adding contents accession: $contents_accession ...\n";
+        # print STDERR "Adding contents accession: $contents_accession ...\n";
         $search_criteria{'subject.type_id'} = $accession_type_id;
         if ($exact_match_uniquenames){
             $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
@@ -419,17 +422,57 @@ sub list_seedlots {
             $search_criteria{'stockprops.value::numeric'}  = { '>=' => $minimum_weight };
             $search_criteria{'stockprops.type_id'}  = $current_weight_cvterm_id;
         }
-	if ($quality) {
-	    print STDERR "Quality $quality\n";
-	     $search_criteria{'stockprops.value' } = { '=' => $quality };
-	     $search_criteria{'stockprops.type_id' } = $seedlot_quality_cvterm_id;
-	}
+        if ($quality) {
+            print STDERR "Quality $quality\n";
+            $search_criteria{'stockprops.value' } = { '=' => $quality };
+            $search_criteria{'stockprops.type_id' } = $seedlot_quality_cvterm_id;
+        }
         if ($box_name) {
             print STDERR "Box Name $box_name\n";
             $search_criteria{'stockprops.value'} = { 'ilike' => '%'.$box_name.'%' };
             $search_criteria{'stockprops.type_id'} = $location_code_cvterm_id;
         }
         push @seedlot_search_joins, 'stockprops';
+    }
+
+    if ($trial_name && $trial_usage) {
+
+        # Build query to get stocks that match the requested transactions
+        my @phs;
+        my $q = "SELECT subject_id, object_id";
+        $q .= " FROM public.stock_relationship";
+        $q .= " WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'seed transaction')";
+
+        # Subquery to get stocks (plots, etc) in requested trial
+        my $sq = "SELECT DISTINCT(observationunit_stock_id) FROM public.materialized_phenotype_jsonb_table WHERE trial_name = ?";
+        my @filters;
+
+        # Add source transaction (plot --> seedlot)
+        if ( $trial_usage =~ m/source/ ) {
+            push @filters, "object_id IN ($sq)";
+            push @phs, $trial_name;
+        }
+
+        # Add sink transaction (seedlot --> plot)
+        if ( $trial_usage =~ m/sink/ ) {
+            push @filters, "subject_id IN ($sq)";
+            push @phs, $trial_name;
+        }
+
+        # Add filters to main query
+        $q .= " AND (" . join(" OR ", @filters) . ")";
+
+        # Execute query
+        my @seedlot_ids;
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute(@phs);
+        while ( my ($subject_id, $object_id) = $h->fetchrow_array() ) {
+            push @seedlot_ids, $subject_id;
+            push @seedlot_ids, $object_id;
+        }
+
+        # Add Seedlot IDs as filter to overall seedlot query
+        $search_criteria{'me.stock_id'} = { -in => \@seedlot_ids };
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search(
@@ -452,7 +495,7 @@ sub list_seedlots {
     while (my $row = $rs->next()) {
         $seen_seedlot_ids{$row->stock_id}++;
 
-	$unique_seedlots{$row->uniquename}->{seedlot_stock_id} = $row->stock_id;
+        $unique_seedlots{$row->uniquename}->{seedlot_stock_id} = $row->stock_id;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_uniquename} = $row->uniquename;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_description} = $row->description;
         $unique_seedlots{$row->uniquename}->{breeding_program_name} = $row->get_column('breeding_program_name');
@@ -495,11 +538,11 @@ sub list_seedlots {
         $unique_seedlots{$_}->{owners_string} = $owners_string;
         $unique_seedlots{$_}->{organization} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} : 'NA';
         $unique_seedlots{$_}->{box} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} : 'NA';
-	$unique_seedlots{$_}->{seedlot_quality} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} : '';
-        $unique_seedlots{$_}->{current_count} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
-        $unique_seedlots{$_}->{current_weight_gram} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
+        $unique_seedlots{$_}->{seedlot_quality} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} : '';
+        $unique_seedlots{$_}->{current_count} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
+        $unique_seedlots{$_}->{current_weight_gram} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
 
-	push @seedlots, $unique_seedlots{$_};
+        push @seedlots, $unique_seedlots{$_};
 
     }
 
@@ -1257,12 +1300,15 @@ sub current_count {
     my $transactions = $self->transactions();
 
     my $count = 0;
+    my $na_amount_counter = 0;
     foreach my $t (@$transactions) {
         if ($t->amount() ne 'NA'){
             $count += $t->amount() * $t->factor();
+        } else {
+            $na_amount_counter += 1;
         }
     }
-    if ($count == 0 && scalar(@$transactions)>0){
+    if ($count == 0 && scalar(@$transactions) == $na_amount_counter){
         $count = 'NA';
     }
     return $count;
@@ -1325,12 +1371,15 @@ sub current_weight {
     my $transactions = $self->transactions();
 
     my $weight = 0;
+    my $na_weight_counter = 0;
     foreach my $t (@$transactions) {
-        if ($t->weight_gram() ne 'NA'){
+        if ($t->weight_gram() ne 'NA' && length($t->weight_gram)){
             $weight += $t->weight_gram() * $t->factor();
+        } else {
+            $na_weight_counter += 1;
         }
     }
-    if ($weight == 0 && scalar(@$transactions)>0){
+    if ($weight == 0 && scalar(@$transactions) == $na_weight_counter){
         $weight = 'NA';
     }
     return $weight;

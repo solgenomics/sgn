@@ -210,7 +210,7 @@ sub _prep_upload {
         if ($spreadsheet_format eq 'detailed'){
             $validate_type = "phenotype spreadsheet";
         } elsif ($spreadsheet_format eq 'simple'){
-            $validate_type = "phenotype spreadsheet simple";
+            $validate_type = "phenotype spreadsheet simple generic";
         } elsif ($spreadsheet_format eq 'associated_images'){
             $validate_type = "phenotype spreadsheet associated_images";
         } else {
