@@ -1519,7 +1519,7 @@ sub run_rrblup_trait {
 
     $self->input_files($c);
     $self->output_files($c);
-    $c->stash->{r_script} = 'R/solGS/gs.r';
+    $c->stash->{r_script} = 'R/solGS/rrblup_gblup_gs.r';
 
     my $training_pop_gebvs_file  = $c->stash->{rrblup_training_gebvs_file};
     my $selection_pop_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
