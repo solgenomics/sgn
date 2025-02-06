@@ -311,6 +311,78 @@ sub get_default_plant_material {
 }
 
 
+sub delete {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $transformation_stock_id = $self->transformation_stock_id();
+
+    eval {
+        $dbh->begin_work();
+
+        my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+        my $transformation_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_experiment', 'experiment_type')->cvterm_id();
+
+        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+        my $transformants = $transformation_obj->get_transformants();
+        my $number_of_transformants = scalar(@$transformants);
+        if ($number_of_transformants > 0) {
+	        die "Transformation ID has associated transformants. Cannot delete.\n";
+        }
+
+        my $transformation_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $transformation_stock_id, type_id => $transformation_type_id});
+        if (!$transformation_rs) {
+	        die "This stock id is not a transformation ID. Cannot delete.\n";
+        }
+
+        my $experiment_id;
+        my $nd_q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
+            JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+            WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
+
+        my $nd_h = $schema->storage->dbh()->prepare($nd_q);
+        $nd_h->execute($transformation_experiment_type_id, $transformation_stock_id);
+        my @nd_experiment_ids= $nd_h->fetchrow_array();
+        if (scalar @nd_experiment_ids == 1) {
+            $experiment_id = $nd_experiment_ids[0];
+        } else {
+            die "Error retrieving experiment id";
+        }
+
+        #delete the nd_experiment_md_files entries
+        my $md_files_q = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id = ?";
+        my $md_files_h = $schema->storage->dbh()->prepare($md_files_q);
+        $md_files_h->execute($experiment_id);
+
+	    # delete the nd_experiment entries
+	    my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
+	    my $h2 = $dbh->prepare($q2);
+	    $h2->execute($experiment_id, $transformation_experiment_type_id);
+
+	    # delete stock owner entries
+	    #
+	    my $q3 = "delete from phenome.stock_owner where stock_id=?";
+	    my $h3 = $dbh->prepare($q3);
+	    $h3->execute($transformation_stock_id);
+
+	    # delete the stock entries
+	    my $q4 = "delete from stock where stock.stock_id=? and stock.type_id = ?";
+	    my $h4 = $dbh->prepare($q4);
+	    $h4->execute($transformation_stock_id, $transformation_type_id);
+
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while deleting transformation id ".$transformation_stock_id."$@\n";
+	    $dbh->rollback();
+	    return $@;
+    } else {
+	    $dbh->commit();
+	    return 0;
+    }
+}
+
+
 ###
 1;
 ###

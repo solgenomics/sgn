@@ -955,9 +955,38 @@ sub get_all_transformation_ids_in_project :Path('/ajax/transformation/all_transf
         };
     }
 
-    print STDERR "TRANSFORMATION =".Dumper(\@transformations)."\n";
     $c->stash->{rest} = { data => \@transformations };
 
+}
+
+
+sub delete_transformation_id : Path('/ajax/transformation/delete') : ActionClass('REST') {}
+
+sub delete_transformation_id_POST :Args(0){
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    my $transformation_stock_id = $c->req->param('transformation_stock_id');
+
+    if (!$c->user()){
+        $c->stash->{rest} = {error => "You need to be logged in to delete the transformation ID."};
+        return;
+    }
+
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete transformation ID. Please contact us." };
+        $c->detach();
+    }
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+    my $error = $transformation_obj->delete();
+
+    if ($error) {
+	    $c->stash->{rest} = { error => "An error occurred attempting to delete the transformation ID. ($@)" };
+	    return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 
