@@ -7,17 +7,23 @@ $trial_id
 
 <&| /page/info_section.mas, id=>'delete_transformation_ids_section', title => 'Delete Transformation IDs', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
+        <center>You cannot delete any transformation ID with associated transformants, but you can mark the transformation ID as terminated.</center>
+    </div>
+
+    <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
                 <table class="table table-hover table-bordered" id="transformation_ids_deletion_table">
                 </table>
             </div>
         </div>
-        <button class="btn btn-default" id="delete_all_transformation_ids" role="button">Delete all transformation ids in this project</button><br/><br/>
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'delete_transformation_project_section', title => 'Delete Transformation Project', subtitle => '<font color="red">Deletion cannot be undone. Please delete transformation ids in this project first</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'delete_transformation_project_section', title => 'Delete Transformation Project', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <center>You cannot delete any transformation project with associated transformation IDs. Please delete those associated transformation IDs in the project first.</center>
+    </div>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
