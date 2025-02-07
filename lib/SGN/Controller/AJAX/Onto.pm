@@ -342,7 +342,7 @@ sub children_GET {
 
     my ($db_name, $accession) = split ":", $c->request->param('node');
 
-    my $db = $schema->resultset('General::Db')->search({ name => uc($db_name) })->first();
+    my $db = $schema->resultset('General::Db')->search({ 'UPPER(name)' => uc($db_name) })->first();
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
 
     my $cvterm = $dbxref->cvterm;
