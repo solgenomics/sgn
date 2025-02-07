@@ -228,11 +228,13 @@ solGS.cluster = {
       `<button type="button" id=${runClusterBtnId}` +
       ` class="btn btn-success" data-selected-pop='${clusterArgs}'>Run cluster</button>`;
 
+    var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
+      compatibility_message = `<p id=compatibility_glyph_${popId}>Working...</p>`;
     }
     var rowData = [popName,
-      dataStr, clusterPop.owner, clusterTypeOpts,
+      dataStr, compatibility_message, clusterPop.owner, clusterTypeOpts,
       dataTypeOpts, kNum, runClusterBtn, `${dataStr}_${popId}`];
 
     return rowData;
@@ -247,6 +249,7 @@ solGS.cluster = {
       "<tr>" +
       "<th>Name</th>" +
       "<th>Data structure</th>" +
+      "<th>Compatibility</th>" +
       "<th>Ownership</th>" +
       "<th>Clustering method</th>" +
       "<th>Data type</th>" +
@@ -743,7 +746,7 @@ solGS.cluster = {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[7]
+        return a[8]
       }
     });
 
