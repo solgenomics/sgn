@@ -46,6 +46,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $exact_cross = $params->{exact_cross};
     my $quality = $params->{quality};
     my $only_good_quality = $params->{only_good_quality};
+    my $trial_name = $params->{trial_name};
+    my $trial_usage = $params->{trial_usage};
 
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
@@ -83,7 +85,10 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         undef,
         $quality,
         $only_good_quality,
-        $box_name
+        $box_name,
+        undef,
+        $trial_name,
+        $trial_usage,
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -467,11 +472,6 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $transaction_description = $c->req->param("seedlot_transaction_description");
     my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
-    if (!$weight && !$amount){
-        $c->stash->{rest} = {error=>'A seedlot must have either a weight or an amount.'};
-        $c->detach();
-    }
-
     if (!$timestamp){
         $c->stash->{rest} = {error=>'A seedlot must have a timestamp for the transaction.'};
         $c->detach();
@@ -509,11 +509,15 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $transaction->factor(1);
         $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
         $transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
-        if ($amount){
+        if (defined($amount) && length($amount)){
             $transaction->amount($amount);
+        } else {
+            $transaction->amount('NA');
         }
-        if ($weight){
+        if (defined($weight) && length($weight)){
             $transaction->weight_gram($weight);
+        } else {
+            $transaction->weight_gram('NA');
         }
         $transaction->timestamp($timestamp);
         $transaction->description($transaction_description);
@@ -1284,6 +1288,54 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
 }
 
+sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('delete') Args(0) {
+#depends on CXGN/Stock/Seedlot/Transaction.pm: delete_transaction sub
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete seedlot transactions" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlot transactions. Please contact us." };
+        $c->detach();
+    }
+
+    my $t = $c->stash->{transaction_object};
+    my $from_stock = $t->from_stock();
+    my $from_stock_id = $from_stock->[0];
+    my $from_stock_type = $from_stock->[2];
+    my $to_stock = $t->to_stock();
+    my $to_stock_id = $to_stock->[0];
+    my $to_stock_type = $to_stock->[2];
+    my $delete = $t->delete_transaction();
+
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+
+    if ($from_stock_type == $seedlot_cvterm_id) {
+        my $from_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_stock_id);
+        $from_stock_update->set_current_count_property();
+        $from_stock_update->set_current_weight_property();
+    }
+
+    if ($to_stock_type == $seedlot_cvterm_id) {
+        my $to_stock_update = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $to_stock_id);
+        $to_stock_update->set_current_count_property();
+        $to_stock_update->set_current_weight_property();
+    }
+
+    if ($delete){
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+        $c->stash->{rest} = { success => 1 };
+    }
+    else {
+        $c->stash->{rest} = { error => "An error occured deleting the seedlot transaction" };
+    }
+}
 
 #
 # SEEDLOT MAINTENANCE EVENTS
@@ -1318,12 +1370,16 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
     # Get cvterm of root term
     my ($db_name, $accession) = split ":", $c->config->{seedlot_maintenance_event_ontology_root};
     my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
-    my $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
-    my $root_cvterm = $dbxref->cvterm if $dbxref;
-    my $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
+    my $dbxref;
+    $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
+    my $root_cvterm;
+    $root_cvterm = $dbxref->cvterm if $dbxref;
+    my $root_cvterm_id;
+    $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
 
     # Get children (recursively) of root cvterm
-    my $ontology = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
+    my $ontology;
+    $ontology = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
 
     $c->stash->{rest} = { ontology => $ontology };
 }

@@ -707,7 +707,7 @@ ORDER BY organism_id ASC;";
 
         while (my ($uniquename, $info) = each %result_hash){
             foreach (@stockprop_view){
-                if (!$info->{$_}){
+                if (!defined($info->{$_})){
                     $info->{$_} = '';
                 }
             }

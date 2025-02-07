@@ -1,8 +1,8 @@
-package CXGN::Stock::TrackingActivity::TrackingIdentifier;
+package CXGN::TrackingActivity::AddTrackingIdentifier;
 
 =head1 NAME
 
-CXGN::Stock::TrackingActivity::TrackingIdentifier - a module to handle tracking identifier.
+CXGN::TrackingActivity::AddTrackingIdentifier - a module to add tracking identifier.
 
 =head1 USAGE
 
@@ -80,7 +80,7 @@ sub store {
         uniquename => $tracking_identifier,
     });
     if ($check_id_rs->count() > 0){
-        return { error_string => "$tracking_identifier already used in the database! " };
+        return { error => "$tracking_identifier already used in the database! " };
     }
 
     my $coderef = sub {
@@ -130,7 +130,7 @@ sub store {
         sp_person_id => $user_id,
     });
 
-    return $tracking_id;
+    return {tracking_id => $tracking_id};
 
 }
 

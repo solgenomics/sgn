@@ -234,9 +234,8 @@ sub get_transactions {
 sub store {
     my $self = shift;
     my $transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seed transaction", "stock_relationship")->cvterm_id();
-
-    my $amount = defined($self->amount()) ? $self->amount() : 'NA';
-    my $weight = defined($self->weight_gram()) ? $self->weight_gram() : 'NA';
+    my $amount = defined($self->amount()) && length($self->amount()) ? $self->amount() : 'NA';
+    my $weight = defined($self->weight_gram()) && length($self->weight_gram()) ? $self->weight_gram() : 'NA';
     my $value = {
         amount => $amount,
         weight_gram => $weight,
@@ -306,9 +305,11 @@ sub update_transaction_object_id {
     return $row->stock_relationship_id();
 }
 
-sub delete {
-
-
+sub delete_transaction {
+    my $self = shift;
+    my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
+    $row->delete();
+    return $row->stock_relationship_id();
 }
 
 1;

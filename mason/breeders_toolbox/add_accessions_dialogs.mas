@@ -145,6 +145,7 @@ $editable_stock_props_definitions
                                 <td>population_name</td>
                                 <td>organization_name</td>
                                 <td>synonym</td>
+				<td>description</td>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
 %                               print "<td>$editable_stockprop</td>";
 % }
@@ -168,7 +169,8 @@ $editable_stock_props_definitions
                     </ul>
                     <b>Optional Fields:</b>
                     <ul>
-                    <li>population_name (a population is a grouping of accessions. if the population already exists in the database, the accession will be added into it, otherwise, the new population will be created.)</li>
+		    <li>description - a free text description of the stock.</li>
+                    <li>population_name (a population is a grouping of accessions. If the population already exists in the database, the accession will be added to it; otherwise, a new population will be created). Multiple populations can be specified, using the pipe symbol (|) as the separator (for example, pop1|pop2|pop3)</li>
                     <li>organization_name (the name(s) of the organization(s) which use this accession e.g. NARO,IITA)</li>
                     <li>synonym (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. e.g. accession_synonym1,accession_synonym001)</li>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {

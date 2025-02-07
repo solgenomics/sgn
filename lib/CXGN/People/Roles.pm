@@ -24,6 +24,7 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use Text::Unidecode;
+use List::MoreUtils qw /any /;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -83,8 +84,8 @@ sub get_breeding_program_roles {
 	my $dbh = $self->bcs_schema->storage->dbh;
 	my @breeding_program_roles;
 	my $q="SELECT username, sp_person_id, name, censor FROM sgn_people.sp_person
-	JOIN sgn_people.sp_person_roles using(sp_person_id) 
-	JOIN sgn_people.sp_roles using(sp_role_id) 
+	JOIN sgn_people.sp_person_roles using(sp_person_id)
+	JOIN sgn_people.sp_roles using(sp_role_id)
 	where  disabled IS NULL and sp_person.censor = 0";
 	my $sth = $dbh->prepare($q);
 	$sth->execute();
@@ -135,5 +136,25 @@ sub get_sp_roles {
 	}
 	return \@sp_roles;
 }
+
+sub check_sp_roles {
+	my $self = shift;
+	my $user_roles = shift;
+	my $program_name = shift;
+    my %check_roles;
+	if (!any { $_ eq "curator" || $_ eq "submitter" } (@$user_roles)){
+        $check_roles{'invalid_role'} = 1;
+    }
+
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @$user_roles;
+
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+		$check_roles{'invalid_program'} = 1;
+    }
+
+    return \%check_roles;
+}
+
 
 1;

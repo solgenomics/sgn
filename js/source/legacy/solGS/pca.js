@@ -412,21 +412,19 @@ solGS.pca = {
     var screePlotLink = '<a href="' + screePlotFile + '" download=' + screePlot + ">Scree plot</a>";
 
     var scores = scoresFile.split("/").pop();
-
     var scoresLink = '<a href="' + scoresFile + '" download=' + scores + "> Scores </a>";
 
     var loadings = loadingsFile.split("/").pop();
-
     var loadingsLink = '<a href="' + loadingsFile + '" download=' + loadings + ">Loadings</a>";
 
     var variances = variancesFile.split("/").pop();
-
     var variancesLink = '<a href="' + variancesFile + '" download=' + variances + ">Variances</a>";
 
-    var plotId = res.pca_pop_id.replace(/-/g, "_");
-    var pcaDownloadBtn = "download_pca_plot_" + plotId;
-    pcaPlot =
-      "<a href='#'  onclick='event.preventDefault();' id='" + pcaDownloadBtn + "'>PCA plot</a>";
+    var pcaPlotDiv = this.pcaPlotDivPrefix.replace(/#/, '');
+    var plotId = res.file_id;
+    var pcaDownloadLinkId = `download_${pcaPlotDiv}_${plotId}`;
+    var pcaPlotLink =
+      `<a href='#'  onclick='event.preventDefault();' id='${pcaDownloadLinkId}'>PCA plot</a>`;
 
     var downloadLinks =
       screePlotLink +
@@ -437,7 +435,7 @@ solGS.pca = {
       " | " +
       loadingsLink +
       " | " +
-      pcaPlot;
+      pcaPlotLink;
 
     return downloadLinks;
   },
@@ -449,21 +447,11 @@ solGS.pca = {
     if (listId) {
       var list = new CXGN.List();
       listName = list.listNameById(listId);
+      res['list_id'] = listId;
+      res['list_name'] = listName;
     }
 
-    var plotData = {
-      scores: res.scores,
-      variances: res.variances,
-      loadings: res.loadings,
-      pca_pop_id: res.pca_pop_id,
-      list_id: listId,
-      list_name: listName,
-      trials_names: res.trials_names,
-      output_link: res.output_link,
-      data_type: res.data_type,
-    };
-
-    return plotData;
+    return res;
   },
 
   generatePcaUrl: function (pcaPopId) {
@@ -557,12 +545,13 @@ solGS.pca = {
     var totalW = width + pad.left + pad.right + 400;
 
     var pcaCanvasDivId = this.canvas;
-    var pcaPlotDivId = plotData.pca_pop_id.replace(/-/g, "_");
-    pcaPlotDivId = "pca_plot_" + pcaPlotDivId;
+    var pcaPlotPopId = plotData.file_id; 
+    var pcaPlotDivId = `${this.pcaPlotDivPrefix}_${pcaPlotPopId}`;
 
+    pcaPlotDivId = pcaPlotDivId.replace(/#/, "");
     jQuery(pcaCanvasDivId).append("<div id=" + pcaPlotDivId + "></div>");
-    pcaPlotDivId = "#" + pcaPlotDivId;
 
+    pcaPlotDivId = "#" + pcaPlotDivId;
     var svg = d3
       .select(pcaPlotDivId)
       .insert("svg", ":first-child")
@@ -884,12 +873,20 @@ jQuery(document).ready(function () {
       });
     }
   }
+});
 
+jQuery(document).ready(function () {
+  var canvas = solGS.pca.canvas;
+  
   jQuery(canvas).on("click", "a", function (e) {
-    var buttonId = e.target.id;
-    var pcaPlotId = buttonId.replace(/download_/, "");
-    saveSvgAsPng(document.getElementById("#" + pcaPlotId), pcaPlotId + ".png", { scale: 2 });
+    var linkId = e.target.id;
+    var pcaPlotId = linkId.replace(/download_/, "");
+
+    if (pcaPlotId.match(/pca_plot_/)) {
+      saveSvgAsPng(document.getElementById("#" + pcaPlotId), pcaPlotId + ".png", { scale: 2 });
+    }
   });
+
 });
 
 jQuery(document).ready(function () {
@@ -904,10 +901,12 @@ jQuery(document).ready(function () {
   jQuery("#pca_div").on("click", function (e) {
     var runPcaBtnId = e.target.id;
     if (runPcaBtnId.match(/run_pca/)) {
-      var pcaArgs = solGS.pca.getPcaArgs();
-      var pcaPopId = pcaArgs.pca_pop_id;
-      if (!pcaPopId) {
+    
+      var  pcaArgs;
+      if (document.URL.match(/pca\/analysis\//)) {
         pcaArgs = solGS.pca.getSelectedPopPcaArgs(runPcaBtnId);
+      } else {
+        pcaArgs = solGS.pca.getPcaArgs();
       }
 
       pcaPopId = pcaArgs.pca_pop_id;
@@ -915,7 +914,6 @@ jQuery(document).ready(function () {
       var pcaMsgDiv = solGS.pca.pcaMsgDiv;
       var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
       pcaArgs["analysis_page"] = pcaUrl;
-
 
       solGS.pca
         .checkCachedPca(pcaArgs)
