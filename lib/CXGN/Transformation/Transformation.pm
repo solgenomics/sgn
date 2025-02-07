@@ -339,17 +339,21 @@ sub delete {
     my $schema = $self->schema();
     my $dbh = $self->schema()->storage()->dbh();
     my $transformation_stock_id = $self->transformation_stock_id();
+    my $tracking_identifier = $self->tracking_identifier();
+    my $transformants = $self->transformants();
+    my $number_of_transformants = scalar(@$transformants);
+    my $obsoleted_transformants = $self->obsoleted_transformants();
+    my $number_of_obsoleted_transformants = scalar(@$obsoleted_transformants);
 
     eval {
         $dbh->begin_work();
 
         my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+        my $tracking_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", "stock_type")->cvterm_id();
         my $transformation_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_experiment', 'experiment_type')->cvterm_id();
+        my $tracking_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_activity', 'experiment_type')->cvterm_id();
 
-#        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-        my $transformants = $self->transformants();
-        my $number_of_transformants = scalar(@$transformants);
-        if ($number_of_transformants > 0) {
+        if (($number_of_transformants > 0) || ($number_of_obsoleted_transformants > 0)) {
 	        die "Transformation ID has associated transformants. Cannot delete.\n";
         }
 
@@ -358,7 +362,7 @@ sub delete {
 	        die "This stock id is not a transformation ID. Cannot delete.\n";
         }
 
-        my $experiment_id;
+        my $transformation_experiment_id;
         my $nd_q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
             JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
             WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
@@ -367,7 +371,7 @@ sub delete {
         $nd_h->execute($transformation_experiment_type_id, $transformation_stock_id);
         my @nd_experiment_ids= $nd_h->fetchrow_array();
         if (scalar @nd_experiment_ids == 1) {
-            $experiment_id = $nd_experiment_ids[0];
+            $transformation_experiment_id = $nd_experiment_ids[0];
         } else {
             die "Error retrieving experiment id";
         }
@@ -375,12 +379,12 @@ sub delete {
         #delete the nd_experiment_md_files entries
         my $md_files_q = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id = ?";
         my $md_files_h = $schema->storage->dbh()->prepare($md_files_q);
-        $md_files_h->execute($experiment_id);
+        $md_files_h->execute($transformation_experiment_id);
 
 	    # delete the nd_experiment entries
 	    my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
 	    my $h2 = $dbh->prepare($q2);
-	    $h2->execute($experiment_id, $transformation_experiment_type_id);
+	    $h2->execute($transformation_experiment_id, $transformation_experiment_type_id);
 
 	    # delete stock owner entries
 	    #
@@ -393,6 +397,38 @@ sub delete {
 	    my $h4 = $dbh->prepare($q4);
 	    $h4->execute($transformation_stock_id, $transformation_type_id);
 
+        #if linking with tracking tool, delete tracking identifier entry
+        if (scalar @$tracking_identifier > 0) {
+            my $tracking_experiment_id;
+            my $tracking_stock_id = $tracking_identifier->[0]->[0];
+            my $tracking_nd_q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
+                JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+                WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
+
+            my $tracking_nd_h = $schema->storage->dbh()->prepare($tracking_nd_q);
+            $tracking_nd_h->execute($tracking_experiment_type_id, $tracking_stock_id);
+            my @tracking_nd_experiment_ids= $tracking_nd_h->fetchrow_array();
+            if (scalar @tracking_nd_experiment_ids == 1) {
+                $tracking_experiment_id = $tracking_nd_experiment_ids[0];
+            } else {
+                die "Error retrieving experiment id";
+            }
+
+            # delete the tracking nd_experiment entries
+    	    my $tracking_q2= "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
+    	    my $tracking_h2 = $dbh->prepare($tracking_q2);
+    	    $tracking_h2->execute($tracking_experiment_id, $tracking_experiment_type_id);
+
+    	    # delete tracking stock owner entries
+    	    my $tracking_q3 = "delete from phenome.stock_owner where stock_id=?";
+    	    my $tracking_h3 = $dbh->prepare($tracking_q3);
+    	    $tracking_h3->execute($tracking_stock_id);
+
+    	    # delete the tracking stock entries
+    	    my $tracking_q4 = "delete from stock where stock.stock_id=? and stock.type_id = ?";
+    	    my $tracking_h4 = $dbh->prepare($tracking_q4);
+    	    $h4->execute($tracking_stock_id, $tracking_type_id);
+        }
     };
 
     if ($@) {
