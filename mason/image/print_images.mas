@@ -50,6 +50,7 @@ $image_objects => undef
 $selected_image_id => undef
 $stock_id => undef
 $stock_image_flag => undef
+$curator => undef
 
 </%args>
 
@@ -130,8 +131,11 @@ if ($image_objects)  { # don't display anything for empty list of images
   }); </script>\n";
 
 }
-$m_image_html .=
-  "<table class='table table-bordered'><thead><tr><th><button class='btn btn-sm btn-default' id='print_images_multi_image_view'>View Selected</button></th><th>Image</th><th>Description</th><th>Type</th></tr></thead><tbody>";  #open table tag for the hidden figures #4 and on
+if ($curator && $stock_image_flag == '1') { # Only include 'Set as Display Image' column for images of this stock, not for images of related stock table
+    $m_image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th><th>Set as Display Image</th></tr></thead><tbody>|; #open table tag for the hidden figures #4 and on
+  } else {
+    $m_image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th></tr></thead><tbody>|;
+  }
 my $more = scalar(@more_is);
 foreach (@more_is) { $m_image_html .= $_; }
 

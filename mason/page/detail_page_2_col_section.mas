@@ -13,6 +13,7 @@ $info_section_title => "A title"
 $info_section_subtitle => "A subtitle"
 $buttons_html => undef
 $locations_by_program_json => undef
+$curator => undef
 
 #Trying to find the right one
 $project_id => undef
