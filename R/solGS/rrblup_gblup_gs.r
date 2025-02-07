@@ -89,14 +89,27 @@ modelPhenoFile <- grep('model_phenodata', outputFiles, value = TRUE)
 message('model input trait pheno file ', modelPhenoFile)
 modelGenoFile <- grep('model_genodata', outputFiles, value = TRUE)
 message('model input trait geno file ', modelGenoFile)
+
+trainingPopGeneticValuesFile <- grep(
+    'training_genetic_values', 
+    outputFiles, 
+    value = TRUE
+)
+
+selectionPopGeneticValuesFile <- grep(
+    'selection_genetic_values', 
+    outputFiles, 
+    value = TRUE
+)
+
 traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
 analysisReportFile <- grep("_report_", outputFiles, value = TRUE)
 genoFilteringLogFile <- grep("genotype_filtering_log", outputFiles, value = TRUE)
 
-filteredTrainingGenoFile       <- grep("filtered_training_genotype_data", outputFiles, value = TRUE)
-filteredSelGenoFile       <- grep("filtered_selection_genotype_data", outputFiles, value = TRUE)
-formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, value = TRUE)
+filteredTrainingGenoFile <- grep("filtered_training_genotype_data", outputFiles, value = TRUE)
+filteredSelGenoFile <- grep("filtered_selection_genotype_data", outputFiles, value = TRUE)
+formattedPhenoFile <- grep("formatted_phenotype_data", inputFiles, value = TRUE)
 
 genoFile <- grep("genotype_data_", inputFiles, value = TRUE)
 
@@ -121,11 +134,34 @@ cloneFilter <- 0.8
 logHeading <- paste0("Genomic Prediction Analysis Log for ", traitAbbr,  ".\n")
 logHeading <- append(logHeading,  paste0("Date: ", format(Sys.time(), "%d %b %Y %H:%M"), "\n\n\n"))
 logHeading <- format(logHeading, width=80, justify="c")
+
 trainingLog <- paste0("\n\n#Preprocessing training population genotype data.\n\n")
-trainingLog <- append(trainingLog, "The following data filtering will be applied to the genotype dataset:\n\n")
-trainingLog <- append(trainingLog, paste0("Markers with less or equal to ", maf * 100, "% minor allele frequency (maf)  will be removed.\n"))
-trainingLog <- append(trainingLog, paste0("\nMarkers with greater or equal to ", markerFilter * 100, "% missing values will be removed.\n"))
-trainingLog <- append(trainingLog, paste0("Clones  with greater or equal to ", cloneFilter * 100, "% missing values  will be removed.\n") )
+trainingLog <- append(
+    trainingLog, 
+    "The following data filtering will be applied to the genotype dataset:\n\n"
+)
+trainingLog <- append(
+    trainingLog, 
+    paste0("Markers with less or equal to ", 
+    maf * 100, 
+    "% minor allele frequency (maf)  will be removed.\n"
+    )
+)
+
+trainingLog <- append(
+    trainingLog, 
+    paste0("\nMarkers with greater or equal to ", 
+    markerFilter * 100, 
+    "% missing values will be removed.\n"
+    )
+)
+trainingLog <- append(
+    trainingLog, 
+    paste0("Clones  with greater or equal to ", 
+    cloneFilter * 100, 
+    "% missing values  will be removed.\n"
+    )
+)
 
 if (length(filteredTrainingGenoFile) != 0 && file.info(filteredTrainingGenoFile)$size != 0) {
     filteredTrainingGenoData     <- fread(filteredTrainingGenoFile,
@@ -147,7 +183,9 @@ if (is.null(filteredTrainingGenoData)) {
   #genoDataFilter::filterGenoData
     genoData <- convertToNumeric(genoData)
 
-    trainingLog <- append(trainingLog, "#Running training population genotype data cleaning.\n\n")
+    trainingLog <- append(trainingLog, 
+    "#Running training population genotype data cleaning.\n\n"
+    )
     genoFilterOut <- filterGenoData(genoData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter, logReturn=TRUE)
     
     genoData <- genoFilterOut$data
@@ -298,9 +336,18 @@ selectionLog <- append(selectionLog, paste0("#Data preprocessing of selection po
   selectionData <- column_to_rownames(selectionData, 'V1')
   selectionData <- convertToNumeric(selectionData)
 
-  selectionLog <- append(selectionLog, paste0("Running selection population genotype data cleaning."))
+  selectionLog <- append(
+    selectionLog, 
+    paste0("Running selection population genotype data cleaning.")
+    )
 
-  selectionFilterOut <- filterGenoData(selectionData, maf=maf, markerFilter=markerFilter, indFilter=cloneFilter, logReturn=TRUE)
+  selectionFilterOut <- filterGenoData(selectionData, 
+    maf=maf, 
+    markerFilter=markerFilter, 
+    indFilter=cloneFilter, 
+    logReturn=TRUE
+    )
+
   selectionData <- selectionFilterOut$data
   selectionLog <- append(selectionLog, selectionFilterOut$log)
   selectionData <- roundAlleleDosage(selectionData)
@@ -321,23 +368,64 @@ if (sum(is.na(genoData)) > 0) {
 
 #extract observation lines with both
 #phenotype and genotype data only.
-trainingLog <- append(trainingLog, paste0("\n\n#Filtering for training population genotypes with both phenotype and marker data.\n\n"))
-trainingLog <- append(trainingLog, paste0("After calculating trait averages, the training population phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n") )
-trainingLog <- append(trainingLog, paste0("After cleaning up for missing values, the training population genotype dataset has ", length(rownames(genoData)), " individuals.\n") )
+trainingLog <- append(
+    trainingLog, 
+    paste0("\n\n#Filtering for training population genotypes", 
+        " with both phenotype and marker data.\n\n"
+    )
+)
 
-commonObs           <- intersect(phenoTrait$genotypes, row.names(genoData))
+trainingLog <- append(
+    trainingLog, 
+    paste0("After calculating trait averages,", 
+    " the training population phenotype dataset has ", 
+    length(rownames(phenoTrait)), 
+    " individuals.\n"
+    ) 
+)
 
-trainingLog <- append(trainingLog, paste0(length(commonObs), " individuals are shared in both phenotype and genotype datasets.\n"))
+trainingLog <- append(
+    trainingLog, 
+    paste0("After cleaning up for missing values,", 
+        " the training population genotype dataset has ", 
+        length(rownames(genoData)), 
+        " individuals.\n"
+    ) 
+)
+
+commonObs <- intersect(phenoTrait$genotypes, row.names(genoData))
+
+trainingLog <- append(
+    trainingLog, 
+    paste0(length(commonObs), 
+    " individuals are shared in both phenotype", 
+    " and genotype datasets.\n"
+    )
+)
 
 #remove genotyped lines without phenotype data
 genoDataFilteredObs <- genoData[(rownames(genoData) %in% commonObs), ]
 
-trainingLog <- append(trainingLog, paste0("After removing individuals without phenotype data, this genotype dataset has ", length(rownames(genoDataFilteredObs)), " individuals.\n"))
+trainingLog <- append(
+    trainingLog, 
+    paste0("After removing individuals without phenotype data,", 
+        " this genotype dataset has ", 
+        length(rownames(genoDataFilteredObs)), 
+        " individuals.\n"
+    )
+)
 
 #remove phenotyped lines without genotype data
 phenoTrait <- phenoTrait[(phenoTrait$genotypes %in% commonObs), ]
 
-trainingLog <- append(trainingLog, paste0("After removing individuals without genotype data, this phenotype dataset has ", length(rownames(phenoTrait)), " individuals.\n" ))
+trainingLog <- append(
+    trainingLog, 
+    paste0("After removing individuals without genotype data,", 
+        " this phenotype dataset has ", 
+        length(rownames(phenoTrait)), 
+        " individuals.\n" 
+    )
+)
 
 phenoTraitMarker           <- data.frame(phenoTrait)
 rownames(phenoTraitMarker) <- phenoTraitMarker[, 1]
@@ -351,19 +439,56 @@ if (length(selectionData) != 0) {
   trainingMarkers <- names(genoDataFilteredObs)
   selectionMarkers <-  names(selectionData)
 
-selectionLog <- append(selectionLog, paste0("#Comparing markers in the training and selection populations genotype datasets.\n\n" ))
+selectionLog <- append(
+    selectionLog, 
+    paste0("#Comparing markers in the training and", 
+        " selection populations genotype datasets.\n\n"
+    )
+)
   
-selectionLog <- append(selectionLog, paste0("The training population genotype dataset has ", length(trainingMarkers), " markers.\n" ))
-selectionLog <- append(selectionLog, paste0("The selection population genotype dataset has ", length(selectionMarkers), " markers.\n" ))
+selectionLog <- append(
+    selectionLog, 
+    paste0("The training population genotype dataset has ", 
+        length(trainingMarkers), 
+        " markers.\n"
+    )
+)
+
+selectionLog <- append(
+    selectionLog, 
+    paste0("The selection population genotype dataset has ", 
+        length(selectionMarkers), 
+        " markers.\n"
+    )
+)
 
 commonMarkers  <- intersect(trainingMarkers, selectionMarkers)
-selectionLog <- append(selectionLog, paste0("The training and selection populations genotype dataset have ", length(trainingMarkers), " markers in common.\n" ))
+selectionLog <- append(
+    selectionLog, 
+    paste0("The training and selection populations genotype dataset have ",
+        length(trainingMarkers), 
+        " markers in common.\n" 
+    )
+)
 
 genoDataFilteredObs <- subset(genoDataFilteredObs, select= commonMarkers)
-selectionLog <- append(selectionLog, paste0("After filtering for shared markers, the training population genotype dataset has ", length(names(selectionData)), " markers.\n" ))
+selectionLog <- append(
+    selectionLog, 
+    paste0("After filtering for shared markers,", 
+        " the training population genotype dataset has ", 
+        length(names(selectionData)), " markers.\n" 
+    )
+)
 
-selectionData      <- subset(selectionData, select = commonMarkers)
-selectionLog <- append(selectionLog, paste0("After filtering for shared markers, the selection population genotype dataset has ", length(names(selectionData)), " markers.\n" ))
+selectionData <- subset(selectionData, select = commonMarkers)
+selectionLog <- append(
+    selectionLog, 
+    paste0("After filtering for shared markers,",
+        " the selection population genotype dataset has ", 
+        length(names(selectionData)), 
+        " markers.\n"
+    )
+)
 
   if (sum(is.na(selectionData)) > 0) {
     selectionDataMissing <- c('yes')
@@ -392,11 +517,16 @@ combinedGebvsFile     <- c()
 allGebvs              <- c()
 modelPhenoData        <- c()
 relationshipMatrix    <- c()
+trainingPopGeneticValues <- c()
 
 #additive relationship model
 #calculate the inner products for
 #genotypes (realized relationship matrix)
-relationshipMatrixFile <- grep("relationship_matrix_table", outputFiles, value = TRUE)
+relationshipMatrixFile <- grep(
+    "relationship_matrix_table", 
+    outputFiles, 
+    value = TRUE
+)
 relationshipMatrixJsonFile <- grep("relationship_matrix_json", outputFiles, value = TRUE)
 
 traitRelationshipMatrixFile <- grep("relationship_matrix_adjusted_table", outputFiles, value = TRUE)
@@ -420,8 +550,8 @@ if (length(relationshipMatrixFile) != 0) {
 
   } else {
     relationshipMatrix           <- A.mat(genoData)
-  diag(relationshipMatrix)     <- diag(relationshipMatrix) %>% replace(., . < 1, 1)
-relationshipMatrix <- relationshipMatrix %>% replace(., . <= 0, 0.00001)
+    diag(relationshipMatrix)     <- diag(relationshipMatrix) %>% replace(., . < 1, 1)
+    relationshipMatrix <- relationshipMatrix %>% replace(., . <= 0, 0.00001)
 
     inbreeding <- diag(relationshipMatrix)
     inbreeding <- inbreeding - 1
@@ -448,9 +578,15 @@ traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationship
 
 kinshipLog <- c()
 if (any(eigen(traitRelationshipMatrix)$values < 0) ) {
-kinshipLog <- paste0("\n\nNote: The kinship matrix of this dataset causes 'Not positive semi-definite error' while running the Cholesky decomposition. To fix this and run the modeling, a corrected positive semi-definite matrix was computed using the 'Matrix::nearPD' function. The negative eigen values from this decomposition nudged to positive values.\n\n")
+    kinshipLog <- paste0(
+        "\n\nNote: The kinship matrix of this dataset causes 'Not positive semi-definite error'", 
+        " while running the Cholesky decomposition.",
+        " To fix this and run the modeling, a corrected positive semi-definite matrix was computed",
+        " using the 'Matrix::nearPD' function. The negative eigen values", 
+        " from this decomposition nudged to positive values.\n\n"
+    )
 
-traitRelationshipMatrix <- Matrix::nearPD(as.matrix(traitRelationshipMatrix))$mat
+    traitRelationshipMatrix <- Matrix::nearPD(as.matrix(traitRelationshipMatrix))$mat
 }
 
 traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
@@ -462,176 +598,202 @@ if (nCores > 1) {
 } else {
   nCores <- 1
 }
+
 varCompData <- c()
+
 modelingLog <- paste0("\n\n#Training a model for ", traitAbbr, ".\n\n")
-modelingLog <- append(modelingLog, paste0("The genomic prediction modeling follows a two-step approach. First trait average values, as described above, are computed for each genotype. This is followed by the model fitting on the basis of single phenotype value for each genotype entry and kinship  matrix computed from their marker data.\n"))
+modelingLog <- append(
+    modelingLog, 
+    paste0("The genomic prediction modeling follows a two-step approach.", 
+        " First trait average values, as described above, are computed for each genotype.", 
+        " This is followed by the model fitting on the basis of single phenotype value",
+        " for each genotype entry and kinship  matrix computed from their marker data.\n"
+    )
+)
 
 if (length(kinshipLog)) {
-modelingLog <- append(modelingLog, paste0(kinshipLog))
+    modelingLog <- append(modelingLog, paste0(kinshipLog))
 }
 
 if (length(selectionData) == 0) {
 
-  trModel  <- kin.blup(data   = phenoTrait,
-                      geno   = 'genotypes',
-                      pheno  = traitAbbr,
-                      K      = traitRelationshipMatrix,
-                      n.core = nCores,
-                      PEV    = TRUE
-                     )
+    trModel  <- kin.blup(
+        data   = phenoTrait,
+        geno   = 'genotypes',
+        pheno  = traitAbbr,
+        K      = traitRelationshipMatrix,
+        n.core = nCores,
+        PEV    = TRUE
+    )
 
-modelingLog <- paste0(modelingLog, "The model training is based on rrBLUP R package, version ", packageVersion('rrBLUP'), ". GEBVs are predicted using the kin.blup function and GBLUP method.\n\n")
+    modelingLog <- paste0(modelingLog, 
+        "\nThe model training is based on rrBLUP R package, version ", 
+        packageVersion('rrBLUP'), 
+        ". GEBVs are predicted using the kin.blup function and GBLUP method.\n\n"
+    )
 
-  trGEBV    <- trModel$g
-  trGEBVPEV <- trModel$PEV
-  trGEBVSE  <- sqrt(trGEBVPEV)
-  trGEBVSE  <- data.frame(round(trGEBVSE, 2))
+    trainingPopGeneticValues <- data.frame(round(trModel$pred, 2))
+    colnames(trainingPopGeneticValues) <- traitAbbr
+    trainingPopGeneticValues <-  trainingPopGeneticValues %>% arrange(across(traitAbbr, desc))
 
-  trGEBV <- data.frame(round(trGEBV, 2))
+    trGEBV    <- trModel$g
+    trGEBVPEV <- trModel$PEV
+    trGEBVSE  <- sqrt(trGEBVPEV)
+    trGEBVSE  <- data.frame(round(trGEBVSE, 2))
 
-  colnames(trGEBVSE) <- c('SE')
-  colnames(trGEBV) <- traitAbbr
+    trGEBV <- data.frame(round(trGEBV, 2))
 
-  trGEBVSE <- rownames_to_column(trGEBVSE, var="genotypes")
-  trGEBV   <- rownames_to_column(trGEBV, var="genotypes")
+    colnames(trGEBVSE) <- c('SE')
+    colnames(trGEBV) <- traitAbbr
 
-  trGEBVSE <- full_join(trGEBV, trGEBVSE)
+    trGEBVSE <- rownames_to_column(trGEBVSE, var="genotypes")
+    trGEBV   <- rownames_to_column(trGEBV, var="genotypes")
+    
+    trGEBVSE <- full_join(trGEBV, trGEBVSE)
 
-  trGEBVSE <-  trGEBVSE %>% arrange(across(traitAbbr, desc))
-  trGEBVSE <- column_to_rownames(trGEBVSE, var="genotypes")
-  
-  trGEBV <-  trGEBV %>% arrange(across(traitAbbr, desc))
-  trGEBV <- column_to_rownames(trGEBV, var="genotypes")
+    trGEBVSE <-  trGEBVSE %>% arrange(across(traitAbbr, desc))
+    trGEBVSE <- column_to_rownames(trGEBVSE, var="genotypes")
+    
+    trGEBV <-  trGEBV %>% arrange(across(traitAbbr, desc))
+    trGEBV <- column_to_rownames(trGEBV, var="genotypes")
 
-  phenoTraitMarker    <- data.matrix(phenoTraitMarker)
-  genoDataFilteredObs <- data.matrix(genoDataFilteredObs)
+    phenoTraitMarker    <- data.matrix(phenoTraitMarker)
+    genoDataFilteredObs <- data.matrix(genoDataFilteredObs)
 
-  markerEffects <- mixed.solve(y = phenoTraitMarker,
-                               Z = genoDataFilteredObs
-                               )
+    markerEffects <- mixed.solve(y = phenoTraitMarker,
+                                Z = genoDataFilteredObs
+                                )
 
-  ordered.markerEffects <- data.matrix(markerEffects$u)
-  ordered.markerEffects <- data.matrix(ordered.markerEffects [order (-ordered.markerEffects[, 1]), ])
-  ordered.markerEffects <- round(ordered.markerEffects, 5)
+    ordered.markerEffects <- data.matrix(markerEffects$u)
+    ordered.markerEffects <- data.matrix(ordered.markerEffects [order (-ordered.markerEffects[, 1]), ])
+    ordered.markerEffects <- round(ordered.markerEffects, 5)
 
-  colnames(ordered.markerEffects) <- c("Marker Effects")
-  ordered.markerEffects <- data.frame(ordered.markerEffects)
+    colnames(ordered.markerEffects) <- c("Marker Effects")
+    ordered.markerEffects <- data.frame(ordered.markerEffects)
 
-  modelPhenoData   <- data.frame(round(phenoTraitMarker, 2))
+    modelPhenoData   <- data.frame(round(phenoTraitMarker, 2))
 
-  heritability  <- round((trModel$Vg/(trModel$Ve + trModel$Vg)), 2)
-  additiveVar <- round(trModel$Vg, 2)
-  errorVar <- round(trModel$Ve, 2)
+    heritability  <- round((trModel$Vg/(trModel$Ve + trModel$Vg)), 2)
+    additiveVar <- round(trModel$Vg, 2)
+    errorVar <- round(trModel$Ve, 2)
 
- varCompData <- c("\nAdditive genetic variance\t", additiveVar, "\n")
- varCompData <- append(varCompData, c("Error variance\t", errorVar, "\n"))
- varCompData <- append(varCompData, c("SNP heritability (h)\t", heritability, "\n"))
+    varCompData <- c("\nAdditive genetic variance\t", additiveVar, "\n")
+    varCompData <- append(varCompData, c("Error variance\t", errorVar, "\n"))
+    varCompData <- append(varCompData, c("SNP heritability (h)\t", heritability, "\n"))
 
-  combinedGebvsFile <- grep('selected_traits_gebv', outputFiles, ignore.case = TRUE,value = TRUE)
+    combinedGebvsFile <- grep('selected_traits_gebv', outputFiles, ignore.case = TRUE,value = TRUE)
 
-  if (length(combinedGebvsFile) != 0) {
-      fileSize <- file.info(combinedGebvsFile)$size
-      if (fileSize != 0 ) {
-          combinedGebvs <- data.frame(fread(combinedGebvsFile,
-                                            header = TRUE))
+    if (length(combinedGebvsFile) != 0) {
+        fileSize <- file.info(combinedGebvsFile)$size
+        if (fileSize != 0 ) {
+            combinedGebvs <- data.frame(fread(combinedGebvsFile,
+                                                header = TRUE))
 
-        rownames(combinedGebvs) <- combinedGebvs[,1]
-          combinedGebvs[,1]       <- NULL
+            rownames(combinedGebvs) <- combinedGebvs[,1]
+            combinedGebvs[,1]       <- NULL
 
-          allGebvs <- merge(combinedGebvs, trGEBV,
-                            by = 0,
-                            all = TRUE
-                            )
+            allGebvs <- merge(combinedGebvs, trGEBV,
+                                by = 0,
+                                all = TRUE
+                                )
 
-          rownames(allGebvs) <- allGebvs[,1]
-          allGebvs[,1] <- NULL
-      }
+            rownames(allGebvs) <- allGebvs[,1]
+            allGebvs[,1] <- NULL
+        }
   }
 
 #cross-validation
 
   if (is.null(selectionFile)) {
-      genoNum <- nrow(phenoTrait)
+    genoNum <- nrow(phenoTrait)
 
-      if (genoNum < 20 ) {
-          warning(genoNum, " is too small number of genotypes.")
-      }
+    if (genoNum < 20 ) {
+        warning(genoNum, " is too small number of genotypes.")
+    }
 
-      set.seed(4567)
+    set.seed(4567)
 
-      k <- 10
-      reps <- 2
-      cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=reps)
+    k <- 10
+    reps <- 2
+    cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=reps)
 
-  modelingLog <- paste0(modelingLog, "Model prediction accuracy is evaluated using cross-validation method. ",  k,  " folds, replicated ", reps, " times are used to predict the model accuracy.\n\n")
+    modelingLog <- paste0(
+        modelingLog, 
+        "Model prediction accuracy is evaluated using cross-validation method. ",  
+        k,  
+        " folds, replicated ", 
+        reps, 
+        " times are used to predict the model accuracy.\n\n"
+    )
 
-      for ( r in 1:reps) {
-          re <- paste0('Rep', r)
+    for ( r in 1:reps) {
+        re <- paste0('Rep', r)
 
-          for (i in 1:k) {
-              fo <- ifelse(i < 10, 'Fold0', 'Fold')
+        for (i in 1:k) {
+            fo <- ifelse(i < 10, 'Fold0', 'Fold')
 
-              trFoRe <- paste0(fo, i, '.', re)
-              trG <- cvFolds[[trFoRe]]
-              slG <- as.numeric(rownames(phenoTrait[-trG,]))
+            trFoRe <- paste0(fo, i, '.', re)
+            trG <- cvFolds[[trFoRe]]
+            slG <- as.numeric(rownames(phenoTrait[-trG,]))
 
-              kblup <- paste("rKblup", i, sep = ".")
+            kblup <- paste("rKblup", i, sep = ".")
 
-              result <- kin.blup(data  = phenoTrait[trG,],
-                                 geno  = 'genotypes',
-                                 pheno = traitAbbr,
-                                 K     = traitRelationshipMatrix,
-                                 n.core = nCores,
-                                 PEV    = TRUE
-                                 )
+            result <- kin.blup(data  = phenoTrait[trG,],
+                                geno  = 'genotypes',
+                                pheno = traitAbbr,
+                                K     = traitRelationshipMatrix,
+                                n.core = nCores,
+                                PEV    = TRUE
+                                )
 
-              assign(kblup, result)
+            assign(kblup, result)
 
-              #calculate cross-validation accuracy
-              valBlups   <- result$g
-              valBlups   <- data.frame(valBlups)
+            #calculate cross-validation accuracy
+            valBlups   <- result$g
+            valBlups   <- data.frame(valBlups)
 
-              slG <- slG[which(slG <= nrow(phenoTrait))]
+            slG <- slG[which(slG <= nrow(phenoTrait))]
 
-              slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
-              rownames(slGDf) <- slGDf[, 1]
-              slGDf[, 1] <- NULL
+            slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
+            rownames(slGDf) <- slGDf[, 1]
+            slGDf[, 1] <- NULL
 
-              valBlups <-  rownames_to_column(valBlups, var="genotypes")
-              slGDf    <-  rownames_to_column(slGDf, var="genotypes")
+            valBlups <-  rownames_to_column(valBlups, var="genotypes")
+            slGDf    <-  rownames_to_column(slGDf, var="genotypes")
 
-              valCorData <- inner_join(slGDf, valBlups, by="genotypes")
-              valCorData$genotypes <- NULL
+            valCorData <- inner_join(slGDf, valBlups, by="genotypes")
+            valCorData$genotypes <- NULL
 
-              accuracy   <- try(cor(valCorData))
-              validation <- paste("validation", trFoRe, sep = ".")
-              cvTest <- paste("CV", trFoRe, sep = " ")
+            accuracy   <- try(cor(valCorData))
+            validation <- paste("validation", trFoRe, sep = ".")
+            cvTest <- paste("CV", trFoRe, sep = " ")
 
-              if (inherits(accuracy, 'try-error') == FALSE)
-              {
-                  accuracy <- round(accuracy[1,2], digits = 3)
-                  accuracy <- data.matrix(accuracy)
+            if (inherits(accuracy, 'try-error') == FALSE)
+            {
+                accuracy <- round(accuracy[1,2], digits = 3)
+                accuracy <- data.matrix(accuracy)
 
-                  colnames(accuracy) <- c("correlation")
-                  rownames(accuracy) <- cvTest
+                colnames(accuracy) <- c("correlation")
+                rownames(accuracy) <- cvTest
 
-                  assign(validation, accuracy)
+                assign(validation, accuracy)
 
-                  if (!is.na(accuracy[1,1])) {
-                      validationAll <- rbind(validationAll, accuracy)
-                  }
-              }
-          }
-      }
+                if (!is.na(accuracy[1,1])) {
+                    validationAll <- rbind(validationAll, accuracy)
+                }
+            }
+        }
+    }
 
-      validationAll <- data.frame(validationAll[order(-validationAll[, 1]), ])
-      colnames(validationAll) <- c('Correlation')
+    validationAll <- data.frame(validationAll[order(-validationAll[, 1]), ])
+    colnames(validationAll) <- c('Correlation')
   }
 }
 
 selectionPopResult <- c()
 selectionPopGEBVs  <- c()
 selectionPopGEBVSE <- c()
+selectionPopGeneticValues  <- c()
 
 #selection pop geno data after  cleaning up and removing unique markers to selection pop
 filteredSelGenoData <- selectionData
@@ -640,38 +802,45 @@ if (length(selectionData) != 0) {
     genoDataTrSl <- rbind(genoDataFilteredObs, selectionData)
     rTrSl <- A.mat(genoDataTrSl)
 
-    selectionPopResult <- kin.blup(data   = phenoTrait,
-                                    geno   = 'genotypes',
-                                    pheno  = traitAbbr,
-                                    K      = rTrSl,
-                                    n.core = nCores,
-                                    PEV    = TRUE
-                                    )
+    selectionPopResult <- kin.blup(
+        data   = phenoTrait,
+        geno   = 'genotypes',
+        pheno  = traitAbbr,
+        K      = rTrSl,
+        n.core = nCores,
+        PEV    = TRUE
+    )
+
+    selectionPopGenotypes <- rownames(selectionData)
+
+    selectionPopGeneticValues <- data.frame(round(selectionPopResult$pred, 2))
+    colnames(selectionPopGeneticValues) <- traitAbbr
+    selectionPopGeneticValues <- rownames_to_column(selectionPopGeneticValues, var="genotypes")
+    selectionPopGeneticValues <-  selectionPopGeneticValues %>% filter(genotypes %in% selectionPopGenotypes)
+    selectionPopGeneticValues <-  selectionPopGeneticValues %>% arrange(across(all_of(traitAbbr), desc))
 
     selectionPopGEBVs <- round(data.frame(selectionPopResult$g), 2)
     colnames(selectionPopGEBVs) <- traitAbbr
     selectionPopGEBVs <- rownames_to_column(selectionPopGEBVs, var="genotypes")
-
+    selectionPopGEBVs <-  selectionPopGEBVs %>% filter(genotypes %in% selectionPopGenotypes)
+    # sortVar <- parse_expr(traitAbbr)
+    
     selectionPopPEV <- selectionPopResult$PEV
     selectionPopSE  <- sqrt(selectionPopPEV)
     selectionPopSE  <- data.frame(round(selectionPopSE, 2))
     colnames(selectionPopSE) <- 'SE'
-    genotypesSl     <- rownames(selectionData)
-
     selectionPopSE <- rownames_to_column(selectionPopSE, var="genotypes")
-    selectionPopSE <-  selectionPopSE %>% filter(genotypes %in% genotypesSl)
-
-    selectionPopGEBVs <-  selectionPopGEBVs %>% filter(genotypes %in% genotypesSl)
+    selectionPopSE <-  selectionPopSE %>% filter(genotypes %in% selectionPopGenotypes)
 
     selectionPopGEBVSE <- inner_join(selectionPopGEBVs, selectionPopSE, by="genotypes")
 
-    sortVar <- parse_expr(traitAbbr)
-    selectionPopGEBVs <- selectionPopGEBVs %>% arrange(desc((!!sortVar)))
+    selectionPopGEBVs <- selectionPopGEBVs %>% arrange(across(all_of(traitAbbr), desc))
     selectionPopGEBVs <- column_to_rownames(selectionPopGEBVs, var="genotypes")
 
-    selectionPopGEBVSE <-  selectionPopGEBVSE %>% arrange(desc((!!sortVar)))
+    selectionPopGEBVSE <-  selectionPopGEBVSE %>% arrange(across(all_of(traitAbbr), desc))
     selectionPopGEBVSE <- column_to_rownames(selectionPopGEBVSE, var="genotypes")
 }
+
 
 if (!is.null(selectionPopGEBVs) & length(selectionPopGEBVsFile) != 0)  {
     fwrite(selectionPopGEBVs,
@@ -680,6 +849,26 @@ if (!is.null(selectionPopGEBVs) & length(selectionPopGEBVsFile) != 0)  {
            sep   = "\t",
            quote = FALSE,
            )
+}
+
+if (!is.null(trainingPopGeneticValues) & length(trainingPopGeneticValuesFile) != 0)  {
+    fwrite(
+        trainingPopGeneticValues,
+        file  = trainingPopGeneticValuesFile,
+        row.names = TRUE,
+        sep   = "\t",
+        quote = FALSE,
+    )
+}
+
+if (!is.null(selectionPopGeneticValues) & length(selectionPopGeneticValuesFile) != 0)  {
+    fwrite(
+        selectionPopGeneticValues,
+        file  = selectionPopGeneticValuesFile,
+        row.names = TRUE,
+        sep   = "\t",
+        quote = FALSE,
+    )
 }
 
 if(!is.null(validationAll)) {
