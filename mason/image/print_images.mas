@@ -71,11 +71,12 @@ if ($images && !$image_objects) {
 ###print qq{  <script src="jquery.colorbox-min.js"></script> };
 
 if ($image_objects)  { # don't display anything for empty list of images
-  if ($stock_image_flag == '1') { # Only include 'Set as Display Image' column for images of this stock, not for images of related stock table
+  if ($curator && $stock_image_flag == '1') { # Only include 'Set as Display Image' column for images of this stock, not for images of related stock table
     $image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th><th>Set as Display Image</th></tr></thead><tbody>|;
   } else {
     $image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th></tr></thead><tbody>|;
   }
+  
   my $i = 0;
   foreach my $image_ob (@$image_objects) {
     $count++;
@@ -102,9 +103,9 @@ if ($image_objects)  { # don't display anything for empty list of images
               . $image_description
                 . "</td><td>"
                 .  $images->[$i]->[1]
-                .  "</td><td>"
-                .  $set_button
-                . "</td></tr>";
+                .  "</td>"
+                .  ($curator == 1 ? "<td>$set_button</td>" : "")
+                . "</tr>";
     if ( $count < 3 ) { $image_html .= $fhtml; }
     else {
       push @more_is, $fhtml;
