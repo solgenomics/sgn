@@ -95,7 +95,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $identifier_name;
     my $tracking_transformation = $c->config->{tracking_transformation};
     if ($tracking_transformation) {
-        my $tracking_info = $transformation_obj->get_tracking_identifier();
+        my $tracking_info = $transformation_obj->tracking_identifier();
         $identifier_id = $tracking_info->[0]->[0];
         $identifier_name = $tracking_info->[0]->[1];
         $identifier_link = qq{<a href="/activity/details/$identifier_id">$identifier_name</a>};

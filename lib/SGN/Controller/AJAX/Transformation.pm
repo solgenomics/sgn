@@ -423,9 +423,8 @@ sub get_active_transformations_in_project :Path('/ajax/transformation/active_tra
     foreach my $r (@$result){
         my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $status_type) =@$r;
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
-        my $transformants = $transformation_obj->get_transformants();
+        my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
-
         push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
     }
 
@@ -454,7 +453,7 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
             $status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
         }
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
-        my $transformants = $transformation_obj->get_transformants();
+        my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
 
         push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
@@ -548,7 +547,7 @@ sub add_transformants_POST :Args(0){
     my $tracking_transformation = $c->config->{tracking_transformation};
     if ($tracking_transformation) {
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-        my $tracking_identifier = $transformation_obj->get_tracking_identifier();
+        my $tracking_identifier = $transformation_obj->tracking_identifier();
         my $tracking_identifier_name = $tracking_identifier->[0]->[1];
 
         my $time = DateTime->now();
@@ -677,7 +676,7 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
 
-    my $result = $transformation_obj->get_transformants();
+    my $result = $transformation_obj->transformants();
 
     my @transformants;
     foreach my $r (@$result){
@@ -702,7 +701,7 @@ sub get_obsoleted_transformants :Path('/ajax/transformation/obsoleted_transforma
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
 
-    my $result = $transformation_obj->get_obsoleted_transformants();
+    my $result = $transformation_obj->obsoleted_transformants();
 
     my @obsoleted_transformants;
     foreach my $r (@$result){
@@ -916,16 +915,16 @@ sub get_all_transformation_ids_in_project :Path('/ajax/transformation/all_transf
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
 
-    my $result = $transformation_obj->get_active_transformations_in_project();
-    my $obsoleted_result = $transformation_obj->get_inactive_transformations_in_project();
+    my $active_transformations = $transformation_obj->get_active_transformations_in_project();
+    my $inactive_transformations = $transformation_obj->get_inactive_transformations_in_project();
 
     my @transformations;
-    foreach my $r (@$result){
-        my $transformation_id = $r->[0];
-        my $transformation_name = $r->[1];
+    foreach my $active_id (@$active_transformations){
+        my $transformation_id = $active_id->[0];
+        my $transformation_name = $active_id->[1];
         my $status_type = 'ACTIVE';
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
-        my $transformants = $transformation_obj->get_transformants();
+        my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
         push @transformations, {
             transformation_id => $transformation_id,
@@ -935,10 +934,10 @@ sub get_all_transformation_ids_in_project :Path('/ajax/transformation/all_transf
         };
     }
 
-    foreach my $obsoleted_r (@$obsoleted_result){
-        my $transformation_id = $obsoleted_r->[0];
-        my $transformation_name = $obsoleted_r->[1];
-        my $status_type = $obsoleted_r->[7];
+    foreach my $inactive_id (@$inactive_transformations){
+        my $transformation_id = $inactive_id->[0];
+        my $transformation_name = $inactive_id->[1];
+        my $status_type = $inactive_id->[7];
         my $status_display;
         if ($status_type eq 'completed_metadata') {
             $status_display = 'COMPLETED';
@@ -946,7 +945,7 @@ sub get_all_transformation_ids_in_project :Path('/ajax/transformation/all_transf
             $status_display = 'TERMINATED';
         }
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
-        my $transformants = $transformation_obj->get_transformants();
+        my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
         push @transformations, {
             transformation_id => $transformation_id,

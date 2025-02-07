@@ -469,7 +469,7 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $obsoleted_transformant_count;
     if ($material_stock_type eq 'transformation') {
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$material_stock_id});
-        my $obsoleted_transformants = $transformation_obj->get_obsoleted_transformants();
+        my $obsoleted_transformants = $transformation_obj->obsoleted_transformants();
         if ($obsoleted_transformants) {
             $obsoleted_transformant_count = scalar @$obsoleted_transformants;
         }

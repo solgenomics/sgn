@@ -41,6 +41,27 @@ has 'transformation_stock_id' => (
     is => 'rw',
 );
 
+has 'transformants' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_transformants',
+);
+
+has 'obsoleted_transformants' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_obsoleted_transformants',
+);
+
+has 'tracking_identifier' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_tracking_identifier',
+);
+
 
 sub get_active_transformations_in_project {
     my $self = shift;
@@ -121,7 +142,7 @@ sub get_inactive_transformations_in_project {
 }
 
 
-sub get_transformants {
+sub _get_transformants {
     my $self = shift;
     my $schema = $self->schema();
     my $transformation_stock_id = $self->transformation_stock_id();
@@ -143,11 +164,11 @@ sub get_transformants {
         push @transformants, [$stock_id,  $stock_name]
     }
 
-    return \@transformants;
+    $self->transformants(\@transformants);
 }
 
 
-sub get_obsoleted_transformants {
+sub _get_obsoleted_transformants {
     my $self = shift;
     my $schema = $self->schema();
     my $transformation_stock_id = $self->transformation_stock_id();
@@ -171,7 +192,8 @@ sub get_obsoleted_transformants {
         push @obsoleted_transformants, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id]
     }
 
-    return \@obsoleted_transformants;
+    $self->obsoleted_transformants(\@obsoleted_transformants);
+
 }
 
 
@@ -241,7 +263,7 @@ sub get_associated_projects {
 }
 
 
-sub get_tracking_identifier {
+sub _get_tracking_identifier {
     my $self = shift;
     my $schema = $self->schema();
     my $transformation_stock_id = $self->transformation_stock_id();
@@ -256,12 +278,13 @@ sub get_tracking_identifier {
 
     $h->execute($material_of_type_id, $transformation_stock_id);
 
-    my @tracking_identifiers = ();
+    my @tracking_identifier_info = ();
     while (my ($stock_id,  $stock_name) = $h->fetchrow_array()){
-        push @tracking_identifiers, [$stock_id,  $stock_name]
+        push @tracking_identifier_info, [$stock_id,  $stock_name]
     }
 
-    return \@tracking_identifiers;
+    $self->tracking_identifier(\@tracking_identifier_info);
+
 }
 
 
@@ -323,8 +346,8 @@ sub delete {
         my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
         my $transformation_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_experiment', 'experiment_type')->cvterm_id();
 
-        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-        my $transformants = $transformation_obj->get_transformants();
+#        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+        my $transformants = $self->transformants();
         my $number_of_transformants = scalar(@$transformants);
         if ($number_of_transformants > 0) {
 	        die "Transformation ID has associated transformants. Cannot delete.\n";

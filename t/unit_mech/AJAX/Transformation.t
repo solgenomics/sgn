@@ -156,7 +156,7 @@ $project_owner->delete();
 $project_rs->delete();
 
 my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-my $result = $transformation_obj->get_transformants();
+my $result = $transformation_obj->transformants();
 foreach my $transformant (@$result) {
     push @all_new_stocks, $transformant->[0];
 }
