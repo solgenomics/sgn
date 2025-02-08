@@ -763,7 +763,6 @@ CREATE VIEW public.genotyping_protocolsXplants AS
         JOIN genotyping_protocols gp ON gp.genotyping_protocol_id = nep.nd_protocol_id 
         JOIN nd_experiment_stock nes2 ON nes2.nd_experiment_id = nep.nd_experiment_id
         JOIN stock s_inner ON s_inner.stock_id = nes2.stock_id 
-        WHERE s_inner.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'tissue_sample')
     ),
     second_query AS (
         SELECT DISTINCT nep.project_id 
@@ -794,7 +793,6 @@ WITH first_query AS (
         JOIN genotyping_protocols gp ON gp.genotyping_protocol_id = nep.nd_protocol_id 
         JOIN nd_experiment_stock nes2 ON nes2.nd_experiment_id = nep.nd_experiment_id
         JOIN stock s_inner ON s_inner.stock_id = nes2.stock_id 
-        WHERE s_inner.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'tissue_sample')
     ),
     second_query AS (
         SELECT DISTINCT nep.project_id 
@@ -846,7 +844,6 @@ CREATE VIEW public.genotyping_protocolsXtrials AS
         JOIN nd_experiment_protocol nep ON nep.nd_protocol_id = gp.genotyping_protocol_id
         JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id 
         JOIN stock s ON s.stock_id = nes.stock_id 
-        WHERE s.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'tissue_sample')
     ),
     second_query AS (
         SELECT nep.project_id as trial_id, fq.genotyping_protocol_id
@@ -862,11 +859,12 @@ ALTER VIEW genotyping_protocolsXtrials OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.genotyping_protocolsXyears CASCADE;
 CREATE VIEW public.genotyping_protocolsXyears AS
-SELECT public.materialized_genoview.genotyping_protocol_id,
-    public.materialized_phenoview.year_id
-   FROM public.materialized_genoview
-   JOIN public.materialized_phenoview USING(accession_id)
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.year_id;
+SELECT gp.genotyping_protocol_id , p.value AS year_id from projectprop p 
+    JOIN nd_experiment_project nep on nep.project_id = p.project_id
+    JOIN nd_experiment_protocol nep2 on nep2.nd_experiment_id = nep.nd_experiment_id 
+    JOIN genotyping_protocols gp on gp.genotyping_protocol_id = nep2.nd_protocol_id  
+    WHERE p.type_id = (select cvterm_id from cvterm where name = 'project year')
+GROUP BY gp.genotyping_protocol_id, year_id;
 ALTER VIEW genotyping_protocolsXyears OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.locationsXplants CASCADE;
@@ -1194,7 +1192,6 @@ CREATE VIEW public.genotyping_projectsXtissue_sample AS
         JOIN genotyping_projects gp ON gp.genotyping_project_id = nep.project_id
         JOIN nd_experiment_stock nes2 ON nes2.nd_experiment_id = nep.nd_experiment_id
         JOIN stock s_inner ON s_inner.stock_id = nes2.stock_id 
-        WHERE s_inner.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'tissue_sample')
     ),
     second_query AS (
         SELECT DISTINCT nep.project_id 
@@ -1225,7 +1222,6 @@ WITH first_query AS (
         JOIN genotyping_protocols gp ON gp.genotyping_protocol_id = nep.nd_protocol_id 
         JOIN nd_experiment_stock nes2 ON nes2.nd_experiment_id = nep.nd_experiment_id
         JOIN stock s_inner ON s_inner.stock_id = nes2.stock_id 
-        WHERE s_inner.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'tissue_sample')
     ),
     second_query AS (
         SELECT DISTINCT nep.project_id 
@@ -1280,6 +1276,7 @@ ALTER VIEW public.genotyping_projects OWNER TO web_usr;
 CREATE VIEW public.accessionsXgenotyping_projects AS 
     SELECT accession_id, genotyping_project_id
     FROM materialized_genoview
+    where stock_type = 'accession'
     GROUP BY 1,2;
 ALTER VIEW public.accessionsXgenotyping_projects OWNER TO web_usr;
 
@@ -1323,7 +1320,6 @@ CREATE VIEW public.genotyping_projectsXtrials AS
         FROM nd_experiment_stock nes_trial
         JOIN nd_experiment_project nep_trial 
             ON nes_trial.nd_experiment_id = nep_trial.nd_experiment_id
-        WHERE nes_trial.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'field_layout')
     )
     SELECT 
         gp.genotyping_project_id,
@@ -1371,7 +1367,6 @@ CREATE VIEW public.genotyping_projectsXplants AS
         JOIN genotyping_projects gp ON gp.genotyping_project_id = nep.project_id
         JOIN nd_experiment_stock nes2 ON nes2.nd_experiment_id = nep.nd_experiment_id
         JOIN stock s_inner ON s_inner.stock_id = nes2.stock_id 
-        WHERE s_inner.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'tissue_sample')
     ),
     second_query AS (
         SELECT DISTINCT nep.project_id 
@@ -1401,7 +1396,6 @@ CREATE VIEW public.genotyping_projectsXplots AS
         JOIN genotyping_projects gp ON gp.genotyping_project_id = nep.project_id
         JOIN nd_experiment_stock nes2 ON nes2.nd_experiment_id = nep.nd_experiment_id
         JOIN stock s_inner ON s_inner.stock_id = nes2.stock_id 
-        WHERE s_inner.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'tissue_sample')
     ),
     second_query AS (
         SELECT DISTINCT nep.project_id 
