@@ -130,6 +130,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                         <option value="ASD Qualityspec">ASD Qualityspec</option>
                                         <option value="ASD LabSpec">ASD LabSpec</option>
                                         <option value="Specim FX17">Specim FX17</option>
+                                        <option value="FTIR6X">FT/IR-6X</option>
                                     </select>
                                 </div>
                             </div>

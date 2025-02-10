@@ -2351,7 +2351,7 @@ sub stock_obsolete_GET {
     }
 
     if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-        $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+        $c->stash->{rest} = { error => 'Cannot obsolete stock! You do not have a curator, sequencer or submitter account' };
         $c->detach();
     }
 
@@ -2374,8 +2374,7 @@ sub stock_obsolete_GET {
                 obsolete_note => $obsolete_note,
             });
             my $saved_stock_id = $stock->store();
-
-            $c->stash->{rest} = { message => "Stock obsoleted" };
+            $c->stash->{rest} = { success => 1 };
         } catch {
             $c->stash->{rest} = { error => "Failed: $_" }
         };
@@ -2613,24 +2612,116 @@ sub accession_or_seedlot_or_population_or_vector_construct_autocomplete_GET :Arg
 }
 
 
-sub get_vector_related_stocks:Chained('/stock/get_stock') PathPart('datatables/vector_related_stocks') Args(0){
+sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatables/vector_related_accessions') Args(0){
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
-    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $progenies->get_vector_related_stocks();
-    my @related_stocks;
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_stocks->get_vector_related_accessions();
+    my @related_accessions;
 
     foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
-        push @related_stocks, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $vector_name, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
+        push @related_accessions, {
+            transformant_id => $transformant_id,
+            transformant_name => $transformant_name,
+            plant_id => $plant_id,
+            plant_name => $plant_name,
+            transformation_id => $transformation_id,
+            transformation_name => $transformation_name,
+        };
     }
 
-    $c->stash->{rest}={data=>\@related_stocks};
+    $c->stash->{rest}={data=>\@related_accessions};
 }
 
+
+sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datatables/vector_obsoleted_accessions') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $dbh = $c->dbc->dbh;
+
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_stocks->get_vector_obsoleted_accessions();
+    my @obsoleted_accessions;
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
+        my $transformation_info;
+        if ($transformation_id) {
+            $transformation_info = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
+        } else {
+            $transformation_info = 'NA';
+        }
+        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
+        my $full_name = $person->get_first_name()." ".$person->get_last_name();
+
+        push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
+    }
+
+    $c->stash->{rest}={data=>\@obsoleted_accessions};
+}
+
+=head2 set_display_image
+
+Usage: /stock/set_display_image
+Desc: Updates stockprop with selected image_id
+Ret: Success or error string
+Args:
+Side Effects:
+Example:
+
+=cut
+
+sub set_display_image : Path('/ajax/stock/set_display_image') : ActionClass('REST') { }
+
+sub set_display_image_POST : Args(0) {
+    my ($self, $c) = @_;
+
+    my $stock_id = $c->req->param('stock_id');
+    my $image_id = $c->req->param('image_id');
+
+    if (!$stock_id) {
+        $c->stash->{rest} = { error_string=> 'Missing stock_id' };
+        return;
+    }
+
+    if (!$image_id) {
+        $c->stash->{rest} = { error_string=> 'Missing image_id' };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+
+    my $display_image_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'selected_display_image', 'stock_property')->cvterm_id();
+
+    my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
+    if (!$stock) {
+        $c->stash->{rest} = { error_string => 'Stock not found' };
+        return;
+    }
+
+    my $stockprop = $schema->resultset('Stock::Stockprop')->find_or_create({
+        stock_id => $stock_id,
+        type_id => $display_image_cvterm_id,
+    });
+    $stockprop->update({ value => $image_id });
+
+    if ($stockprop->value != $image_id) {
+        $c->stash->{rest} = { error_string => 'Error setting display image' };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
 
 1;
