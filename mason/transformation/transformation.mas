@@ -23,6 +23,7 @@ $identifier_name
 $material_id
 $material_name
 $status_display => undef
+$has_associated_transformants => undef
 
 </%args>
 
@@ -85,7 +86,11 @@ $status_display => undef
 </&>
 
 <&|  /page/info_section.mas, title => "Delete Transformation ID", collapsible => 1, collapsed => 1, subtitle => '<font color="red">Deletion cannot be undone</font>'  &>
+% if ($has_associated_transformants) {
+    <font color="red">This transformation ID has associated transformants. Cannot delete!</font>
+% } else {
     <button id="delete_transformation_button" class="btn btn-primary">Delete</button>
+% }
 </&>
 
 

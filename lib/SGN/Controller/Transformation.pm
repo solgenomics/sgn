@@ -45,6 +45,15 @@ sub transformation_page : Path('/transformation') Args(1) {
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
     my $info = $transformation_obj->get_transformation_info();
+    my $transformants = $transformation_obj->transformants();
+    my $number_of_transformants = scalar(@$transformants);
+    my $obsoleted_transformants = $transformation_obj->obsoleted_transformants();
+    my $number_of_obsoleted_transformants = scalar(@$obsoleted_transformants);
+    my $has_associated_transformants;
+    if (($number_of_transformants > 0) || ($number_of_obsoleted_transformants > 0)) {
+        $has_associated_transformants = 1;
+    }
+
     my $plant_material_id = $info->[0]->[0];
     my $plant_material_name = $info->[0]->[1];
     my $vector_id = $info->[0]->[2];
@@ -133,6 +142,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{material_id} = $transformation_id;
     $c->stash->{material_name} = $transformation_name;
     $c->stash->{status_display} = $status_display;
+    $c->stash->{has_associated_transformants} = $has_associated_transformants;
 
     $c->stash->{template} = '/transformation/transformation.mas';
 
