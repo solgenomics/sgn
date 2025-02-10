@@ -13,7 +13,7 @@
 </%perl>
 
 
-<& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+<& '/util/import_javascript.mas', entries => ["toolcompatibility"], classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
 
 <script src="https://cdn.jsdelivr.net/npm/vega@3.3.1"></script>
@@ -26,7 +26,7 @@
 <& /page/page_title.mas, title=>"Stability" &>
 
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/stability" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
   <div class="form-group form-inline">
     <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
