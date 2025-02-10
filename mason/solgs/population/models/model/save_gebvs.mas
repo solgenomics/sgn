@@ -17,7 +17,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%args>
 
 
- <& /util/import_javascript.mas, classes => ["solGS.analysisSave"] &>
+ <& /util/import_javascript.mas, classes => ["solGS.analysisSave", "solGS.gebvsSave"] &>
  <div id="gebvs_output">
  		 <button id="save_gebvs" class="btn btn-success">Save GEBVs</button>	
 		<& /solgs/spinner/spinner.mas &>
