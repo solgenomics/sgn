@@ -26,7 +26,7 @@ $status_display => undef
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables", "CXGN.Stock"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables", "CXGN.Stock", "CXGN.Transformation"] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
@@ -85,7 +85,7 @@ $status_display => undef
 </&>
 
 <&|  /page/info_section.mas, title => "Delete Transformation ID", collapsible => 1, collapsed => 1, subtitle => '<font color="red">Deletion cannot be undone</font>'  &>
-<button id="delete_transformation_button" class="btn btn-primary">Delete</button>
+    <button id="delete_transformation_button" class="btn btn-primary">Delete</button>
 </&>
 
 
@@ -98,9 +98,15 @@ $status_display => undef
 
 jQuery(document).ready(function(){
 
+    const transformation_stock_id = "<%$transformation_id%>";
     jQuery('#custom_barcode_link').click(function() {
         location.href = '/tools/label_designer';
     })
+
+    jQuery('#delete_transformation_button').click(function() {
+        deleteTransformationID(transformation_stock_id);
+    })
+
 
 });
 
