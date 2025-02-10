@@ -154,4 +154,6 @@ is($s->typeOfGermplasmStorageCode, $stock2_storage);
 is($s->acquisitionDate, $stock2_date);
 is_deeply($s->donors, $stock2donors);
 
+$f->clean_up_db();
+
 done_testing();

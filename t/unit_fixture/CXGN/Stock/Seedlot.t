@@ -53,5 +53,6 @@ is($s->quality, 'MOLD', 'set/get quality test');
 $s->quality('ROT');
 is($s->quality(), 'ROT', 'quality update test');
 
+$f->clean_up_db();
 
 done_testing();
