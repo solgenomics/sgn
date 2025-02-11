@@ -172,9 +172,9 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     $submitter = $logged_user->check_roles('submitter') if $logged_user;
     $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
 
-	$c->stash->{can_read_pedigree} = $c->stash->{access}->grant($c->stash->{user_id}, "read", "pedigree");
-	$c->stash->{can_write_pedigree} = $c->stash->{access}->grant($c->stash->{user_id}, "write", "pedigree");
-	$c->stash->{can_delete_pedigree} = $c->stash->{access}->grant($c->stash->{user_id}, "delete", "pedigree");
+	$c->stash->{can_read_pedigree} = $c->stash->{access}->grant($c->stash->{user_id}, "read", "pedigrees");
+	$c->stash->{can_write_pedigree} = $c->stash->{access}->grant($c->stash->{user_id}, "write", "pedigrees");
+	$c->stash->{can_delete_pedigree} = $c->stash->{access}->grant($c->stash->{user_id}, "delete", "pedigrees");
 	
 	my $dbh = $c->dbc->dbh;
 

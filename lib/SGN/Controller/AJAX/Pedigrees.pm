@@ -60,7 +60,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     
-    if (! $c->stash->{access}->grant($user_id, "pedigrees", "write")) { 
+    if (! $c->stash->{access}->grant($user_id, "write", "pedigrees")) { 
     
 #    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add pedigrees." };
@@ -151,7 +151,7 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
 
      my $user_id = $c->user()->get_object()->get_sp_person_id();
     
-    if (! $c->stash->{access}->grant($user_id, "pedigrees", "write")) { 
+    if (! $c->stash->{access}->grant($c->stash->{user_id}, "write", "pedigrees")) { 
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add pedigrees." };
 	return;
     }
@@ -199,7 +199,7 @@ sub get_full_pedigree_GET {
     my $c = shift;
 
     if (! $c->stash->{access}->
-	grant( $c->stash->{user_id}, "pedigrees", "read")) {
+	grant( $c->stash->{user_id}, "read", "pedigrees")) {
 	return;
     }
     

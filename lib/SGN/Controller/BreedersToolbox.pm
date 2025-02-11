@@ -803,13 +803,15 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
     my $self = shift;
     my $c = shift;
 
-#    if (!$c->user()) {
-#	# redirect to login page
-#	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-#	return;
-    #    }
+    if (!$c->user()) {
+	# redirect to login page
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
 
-    if (! $c->stash->{access}->grant($c->stash->{user_id}, "genotyping", "read")) {
+    print STDERR "USER ID: ". $c->stash->{user_id}."\n";
+    
+    if (! $c->stash->{access}->grant($c->stash->{user_id}, "read", "genotyping")) {
 	$c->stash->{message} = 'You do not have the privileges to view genotyping data';
 	$c->stash->{template} = '/generic_message.mas';
 	return;
@@ -891,12 +893,12 @@ sub manage_genotyping_projects : Path("/breeders/genotyping_projects") Args(0) {
     my $self = shift;
     my $c = shift;
 
-#    if (!$c->user()) {
-#	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-#	return;
-    #    }
-
-     if (! $c->stash->{access}->grant($c->stash->{user_id}, "genotyping", "read")) {
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+    
+    if (! $c->stash->{access}->grant($c->stash->{user_id}, "read", "genotyping")) {
 	$c->stash->{message} = 'You do not have the privileges to view genotyping data';
 	$c->stash->{template} = '/generic_message.mas';
 	return;

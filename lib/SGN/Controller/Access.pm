@@ -18,7 +18,7 @@ sub access_table_page :Path('/access/table') {
 	return;
     }
     
-    if (! $c->stash->{access}->grant( $c->user()->get_object()->get_sp_person_id(), "read", "access_table_page")) { 
+    if (! $c->stash->{access}->grant( $c->user()->get_object()->get_sp_person_id(), "read", "privileges")) { 
     	$c->response->status(401);
 	my $error =  "You do not have the necessary privileges to access this resource";
 	$c->stash->{rest} = { error => $error};

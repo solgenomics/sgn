@@ -40,13 +40,13 @@ sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    $c->stash->{access}->resource("homepage");
-    if ($c->stash->{access}->grant($c->stash->{user_id}), "read") {
-	print STDERR "READ IS ALLOWED!\n";
-    }
-    else {
-	print STDERR "NOT SURE WHAT IS ALLOWED!\n";
-    }
+    #$c->stash->{access}->resource("homepage");
+    #if ($c->stash->{access}->grant($c->stash->{user_id}), "read") {
+    #	print STDERR "READ IS ALLOWED!\n";
+    #}
+    #else {
+    #	print STDERR "NOT SURE WHAT IS ALLOWED!\n";
+    #}
     
     
     if ($c->config->{homepage_display_phenotype_uploads}){
