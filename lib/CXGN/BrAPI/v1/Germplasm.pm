@@ -31,6 +31,9 @@ sub search {
     my $synonyms_arrayref = $params->{synonym} || ($params->{synonyms} || ());
     my $subtaxa = $params->{germplasmSubTaxa}->[0];
     my $match_method = $params->{matchMethod}->[0] || 'exact';
+    my $acquisitionDate = ref $params->{acquisitionDate} eq 'ARRAY' ? $params->{acquisitionDate}->[0] : $params->{acquisitionDate};
+    my $minAcquisitionDate = ref $params->{minAcquisitionDate} eq 'ARRAY' ? $params->{minAcquisitionDate}->[0] : $params->{minAcquisitionDate};
+    my $maxAcquisitionDate = ref $params->{maxAcquisitionDate} eq 'ARRAY' ? $params->{maxAcquisitionDate}->[0] : $params->{maxAcquisitionDate};
 
     if ($match_method ne 'exact' && $match_method ne 'wildcard') {
         push @$status, { 'error' => "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters." };
@@ -89,7 +92,10 @@ sub search {
         stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
         limit=>$limit,
         offset=>$offset,
-        display_pedigree=>1
+        display_pedigree=>1,
+        acquisition_date=>$acquisitionDate,
+        min_acquisition_date=>$minAcquisitionDate,
+        max_acquisition_date=>$maxAcquisitionDate
     });
     my ($result, $total_count) = $stock_search->search();
 
@@ -126,7 +132,7 @@ sub search {
             subtaxa=>$_->{subtaxa},
             subtaxaAuthority=>$_->{subtaxaAuthority},
             donors=>$_->{donors},
-            acquisitionDate=>$_->{'acquisition date'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? $_->{'create_date'} : $_->{'acquisition date'},
             breedingMethodDbId=>undef,
             documentationURL=>undef,
             germplasmGenus=>$_->{genus},
@@ -198,7 +204,7 @@ sub germplasm_detail {
         subtaxa=>$result->[0]->{subtaxa},
         subtaxaAuthority=>$result->[0]->{subtaxaAuthority},
         donors=>$result->[0]->{donors},
-        acquisitionDate=>$result->[0]->{'acquisition date'},
+        acquisitionDate=>$result->[0]->{'acquisition date'} eq '' ? $result->[0]->{'create_date'} : $result->[0]->{'acquisition date'}
     );
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');

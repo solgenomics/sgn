@@ -201,9 +201,10 @@ sub download {
     }
 
     #print STDERR "Self include notes is ".$self->include_notes."\n";
-    if ( $self->include_notes()) {
+    if ( $self->include_notes() && $self->include_notes() ne 'false') {
         push @trait_list, 'notes';
     }
+
 
     for (my $i = 0; $i < @trait_list; $i++) {
         #if (exists($cvinfo{$trait_list[$i]})) {
