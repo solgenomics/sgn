@@ -9,6 +9,7 @@
     <!--li><a href="/solgs/search">Genomic Selection</a></li -->
     <li><a href="/pca/analysis">Population Structure</a></li>
     <li><a href="/cluster/analysis">Clustering</a></li>
+    <li><a href="/correlation/analysis">Correlation</a></li>
     <li><a href="/kinship/analysis">Kinship & Inbreeding</a></li>
     <li><a href="/tools/stability">Stability AMMI/GGE</a></li>
     <li><a href="/tools/heritability">Heritability</a></li>

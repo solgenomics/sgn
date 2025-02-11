@@ -374,46 +374,46 @@ jQuery(document).ready(function () {
         var upload_new_analysis_model_auxiliary_file_3 = jQuery('#upload_new_analysis_model_auxiliary_file_3').val();
         var upload_new_analysis_model_auxiliary_file_type_3 = jQuery('#upload_new_analysis_model_auxiliary_file_type_3').val();
 
-        if (upload_new_analysis_model_id != '' && upload_new_analysis_model_name != '') {
-            alert('Please select a model or create a new model, not both!');
-            return false;
-        }
-        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name == '') {
-            alert('Please select a saved model or give a new model name');
-            return false;
-        }
-        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_description == '') {
+        // if (upload_new_analysis_model_id != '' && upload_new_analysis_model_name != '') {
+        //     alert('Please select a model or create a new model, not both!');
+        //     return false;
+        // }
+        // if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name == '') {
+        //     alert('Please select a saved model or give a new model name');
+        //     return false;
+        // }
+        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_description == '') {
             alert('Please give a new model description');
             return false;
         }
-        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_is_public == '') {
-            alert('Please give a new model is public');
+        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_is_public == '') {
+            alert('Please specify if the new model is public');
             return false;
         }
-        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_language == '') {
+        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_language == '') {
             alert('Please give a new model language');
             return false;
         }
-        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_properties_string == '') {
+        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_properties_string == '') {
             alert('Please give a new model properties. At least one key:value!');
             return false;
         }
-        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_application_name == '') {
+        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_application_name == '') {
             alert('Please give a new model application name');
             return false;
         }
-        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_application_version == '') {
+        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_name !== '' && upload_new_analysis_model_application_version == '') {
             alert('Please give a new model application version');
             return false;
         }
-        if (upload_new_analysis_model_training_data_file === '') {
-            alert('Please give a new model training data file (or the main phenotype file you used to do the analysis)');
-            return false;
-        }
-        if (upload_new_analysis_model_training_data_file_type == '') {
-            alert('Please give a new model training data file type (or the main phenotype file you used to do the analysis)');
-            return false;
-        }
+        // if (upload_new_analysis_model_training_data_file === '') {
+        //     alert('Please give a new model training data file (or the main phenotype file you used to do the analysis)');
+        //     return false;
+        // }
+        // if (upload_new_analysis_model_training_data_file_type == '') {
+        //     alert('Please give a new model training data file type (or the main phenotype file you used to do the analysis)');
+        //     return false;
+        // }
         if ( (upload_new_analysis_model_file == '' && upload_new_analysis_model_file_type != '') || (upload_new_analysis_model_file != '' && upload_new_analysis_model_file_type == '') ) {
             alert('If you give a new model file, please give a new model file type also');
             return false;
