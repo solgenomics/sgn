@@ -149,6 +149,13 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
+     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    
+    if (! $c->stash->{access}->grant($user_id, "pedigrees", "write")) { 
+	$c->stash->{rest} = {error =>  "You have insufficient privileges to add pedigrees." };
+	return;
+    }
+    
     my $pedigree_hash = decode_json $pedigree_data;
     my $file_pedigree_info = $pedigree_hash->{'pedigrees'};
 

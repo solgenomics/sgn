@@ -803,9 +803,15 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!$c->user()) {
-	# redirect to login page
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+#    if (!$c->user()) {
+#	# redirect to login page
+#	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+#	return;
+    #    }
+
+    if (! $c->stash->{access}->grant($c->stash->{user_id}, "genotyping", "read")) {
+	$c->stash->{message} = 'You do not have the privileges to view genotyping data';
+	$c->stash->{template} = '/generic_message.mas';
 	return;
     }
 
@@ -885,11 +891,19 @@ sub manage_genotyping_projects : Path("/breeders/genotyping_projects") Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!$c->user()) {
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+#    if (!$c->user()) {
+#	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+#	return;
+    #    }
+
+     if (! $c->stash->{access}->grant($c->stash->{user_id}, "genotyping", "read")) {
+	$c->stash->{message} = 'You do not have the privileges to view genotyping data';
+	$c->stash->{template} = '/generic_message.mas';
 	return;
     }
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    
+    
+    my $schema = $c->stash->{bcs_schema}; #$c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
     my $breeding_programs = $projects->get_breeding_programs();
 

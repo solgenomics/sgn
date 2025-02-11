@@ -26,13 +26,19 @@ sub generate_genotype_trial_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping plate.' };
-        $c->detach();
+#    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+#        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping plate.' };
+#        $c->detach();
+    #    }
+
+
+    if (! $c->stash->{access}->grant($c->stash->{user_id}, "genotyping", "write")) {
+	$c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping plate.' };
+	$c->detech();
     }
 
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $sp_person_id = $c->stash->{user_id};
+    my $schema = $c->stash->{bcs_schema}; # $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $plate_info = decode_json $c->req->param("plate_data");
     #print STDERR Dumper $plate_info;
 

@@ -101,8 +101,7 @@ sub check_user {
     
     print STDERR "PRIVLEGES FOR $resource and $sp_person_id are ". join(", ", @privileges)."\n";
 
-    return @privileges;
-    
+    return @privileges;    
 }
 
 sub user_privileges {
@@ -163,7 +162,7 @@ sub grant {
 sub privileges_table {
     my $self = shift;
 
-    my $q = "SELECT sp_privilege.sp_privilege_id, sp_privilege.sp_resource_id, sp_resource.name, sp_access_level.sp_access_level_id, sp_access_level.name, sp_roles.sp_role_id, sp_roles.name FROM sgn_people.sp_privilege join sgn_people.sp_access_level using(sp_access_level_id) join sgn_people.sp_resource using(sp_resource_id) join  sgn_people.sp_roles using(sp_role_id) order by sp_resource.name";
+    my $q = "SELECT sp_privilege.sp_privilege_id, sp_privilege.sp_resource_id, sp_resource.name, sp_access_level.sp_access_level_id, sp_access_level.name, sp_roles.sp_role_id, sp_roles.name FROM sgn_people.sp_privilege LEFT join sgn_people.sp_access_level using(sp_access_level_id) LEFT join sgn_people.sp_resource using(sp_resource_id) LEFT join  sgn_people.sp_roles using(sp_role_id) order by sp_resource.name";
     my $h =  $self->people_schema()->storage()->dbh()->prepare($q);
     $h->execute();
     my @data;
