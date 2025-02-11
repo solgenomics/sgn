@@ -172,6 +172,42 @@ my $obsoleted_accessions = $response->{'data'};
 my $obsoleted_accession_count = scalar(@$obsoleted_accessions);
 is($obsoleted_accession_count, '1');
 
+
+
+#test deleting transformation ID with associated transformants
+$mech->post_ok('http://localhost:3010/ajax/transformation/delete', ['transformation_stock_id' => $transformation_stock_id]);
+$response = decode_json $mech->content;
+is($response->{'error'}, 'An error occurred attempting to delete the transformation ID. (Transformation ID has associated transformants. Cannot delete.
+)');
+
+#test deleting transformation ID without associated transformants
+$mech->post_ok('http://localhost:3010/ajax/transformation/add_transformation_identifier', [ 'transformation_identifier' => 'UG1TT1_2', 'plant_material' => 'UG120001', 'vector_construct' => 'TT1', 'notes' => 'test', 'transformation_project_id' => $project_id]);
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $transformation_rs_2 = $schema->resultset('Stock::Stock')->find({name => 'UG1TT1_2'});
+my $transformation_stock_id_2 = $transformation_rs_2->stock_id();
+$mech->post_ok('http://localhost:3010/ajax/transformation/delete', ['transformation_stock_id' => $transformation_stock_id_2]);
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+#test deleting project with associated transformation id
+$mech->get_ok("http://localhost:3010/ajax/breeders/trial/$project_id/delete/transformation_project");
+$response = decode_json $mech->content;
+is($response->{'error'}, 'Cannot delete transformation project with associated transformation IDs.');
+
+#test deleting project without associated transformation id
+$mech->post_ok('http://localhost:3010/ajax/transformation/add_transformation_project', [ 'project_name' => 'transformation_project_2', 'project_program_id' => 134, 'project_location' => 'test_location', 'year' => '2024', 'project_description' => 'test transformation' ]);
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $project_rs_2 = $schema->resultset('Project::Project')->find({ name => 'transformation_project_2' });
+my $project_id_2 = $project_rs_2->project_id();
+
+$mech->get_ok("http://localhost:3010/ajax/breeders/trial/$project_id_2/delete/transformation_project");
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
 #deleting project, transformation_id, vector_construct, transformants
 my $project_owner = $phenome_schema->resultset('ProjectOwner')->find({ project_id => $project_id });
 $project_owner->delete();
