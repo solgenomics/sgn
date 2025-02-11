@@ -27,7 +27,7 @@ $trial_id
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <button class="btn btn-default" id="delete_transformation_project" role="button">Delete transformation project</button><br/><br/>
+                <button class="btn btn-primary" id="delete_transformation_project" role="button">Delete transformation project</button><br/><br/>
             </div>
         </div>
     </div>
