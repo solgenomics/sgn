@@ -585,6 +585,14 @@ knitr::include_graphics('assets/images/trial_detail_page_add_plot_gps_upload_inf
 This dialog tells you that the file must be XLS or XLSX and must contain: plot_name	WGS84_bottom_left_x	WGS84_bottom_left_y	WGS84_bottom_right_x	WGS84_bottom_right_y	WGS84_top_right_x	WGS84_top_right_y	WGS84_top_left_x	WGS84_top_left_y
 The GPS coordinates should be WGS84 format and specify a four-pointed polygon around the plot.
 
+### Repetitive Measurements Section
+
+If a trial includes repetitive traits or time-series values, you can effectively view and analyze these values through the Repetitive Measurements Section. Start by selecting the desired trait from the trait drop-down menu. Next, define the date range by either using the date-range picker or an interactive slider, which allows you to dynamically adjust the period you wish to examine. Once the date range is set, determine how to handle the repetitive measurements by choosing from various options such as First Value, Last Value, Averaged Value, Sum Values, or All Values. Choosing the "All Values" option enables an additional feature that visualizes the trend of the values over time, helping you identify patterns and trends within the data.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_detail_page_view_repetitive_measurements.png')
+```
+
 ### Uploading Additional Files To Trial
 
 It may be of interest to you to upload additional documents, images, or recordings to your trial. To do this, scroll down to the "Uploaded Additional File" section on the trial detail page. From here you can view and download any of these additional files.
