@@ -37,11 +37,10 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-Description of this patch goes here
+Adds privileges that imitate the old privileges
 
 has '+prereq' => (
-    default => sub {
-    },
+    
   );
 
 sub patch {
@@ -69,7 +68,7 @@ insert into sgn_people.sp_access_level (name) values ('read');
 insert into sgn_people.sp_access_level (name) values ('write');
 insert into sgn_people.sp_access_level (name) values ('delete');
 
-o-- add specific privileges
+-- add specific privileges
 --
 -- curator for pedigrees:
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (1, 1, 1);
@@ -97,15 +96,6 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 
 -- user for genotyping
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 4, 1);
-
-
-
-
-
-
-
-
-
 
 
 EOSQL
