@@ -85,8 +85,9 @@ is_deeply($response, {'metadata' => {'status' => [{'message' => 'BrAPI base call
 
 $mech->post_ok('http://localhost:3010/brapi/v1/search/germplasm', ['access_token'=>$access_token, 'pageSize'=>'1', 'page'=>'5', 'germplasmNames'=>['t%'], 'matchMethod'=>'wildcard'] );
 $response = decode_json $mech->content;
+print STDERR Dumper $response;
 $searchId = $response->{result} ->{searchResultsDbId};
-#print STDERR Dumper $response;
+print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v1/search/germplasm/'. $searchId . '?access_token='.$access_token );
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
