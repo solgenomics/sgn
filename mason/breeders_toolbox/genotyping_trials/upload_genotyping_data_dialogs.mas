@@ -1090,19 +1090,18 @@ $facilities
                                 <td>Locus</td>
                                 <td>Description</td>
                                 <td>Category</td>
-                                <td>Allele 1</td>
-                                <td>Allele 2</td>
+                                <td>Allele</td>
+                                <td>Allele</td>
                                 <td>...add additional Allele columns, as necessary</td>
                             </tr>
                             </tbody>
                             </table>
                             <b>Required values:</b><br>
                             <b>Locus:</b> the name of the Major Locus (this must match the marker name in the selected Genotyping Protocol)<br>
-                            <b>Allele 1:</b> the name of a possible allele value for this Locus<br>
-                            <b>Allele 2:</b> the name of another possible allele value for this Locus (add as many Allele columns as necessary)<br>
+                            <b>Allele:</b> the name of a possible allele value for this Locus (add as many Allele columns as necessary - or separate values in one column with a comma)<br>
                             <br /><b>Optional values:</b><br>
                             <b>Description:</b> a description of the major locus (its associated phenotype, etc)<br>
-                            <b>Category:</b> the name of the trait category that the Major Locus belongs to<br>
+                            <b>Category:</b> the name of the trait category that the Major Locus belongs to (add as many Category columns as necessary - or separate values in one column with a comma) <br>
 
                             <& /help/file_upload_type.mas, type => "Major Loci Alleles" &>
 

@@ -18,12 +18,21 @@ sub _validate_with_plugin {
     ## Parse the upload file
     my $parser = CXGN::File::Parse->new(
         file => $filename,
-        required_columns => [ 'Locus' ],
-        optional_columns => [ 'Description', 'Trait' ]
+        required_columns => [ 'Locus', 'Allele' ],
+        optional_columns => [ 'Description', 'Category' ],
+        column_aliases => [ 'Allele', 'Category' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
     my $parsed_data = $parsed->{data};
+
+
+
+    print STDERR "\n\n\n\n\n=====> PARSED DATA:\n";
+    print STDERR Dumper $parsed_data;
+    push @error_messages, "Not implemented!";
+
+
     my @markers = @{$parsed->{values}->{'Locus'}};
 
     # Return if parsing errors
