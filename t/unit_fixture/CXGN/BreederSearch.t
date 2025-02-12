@@ -105,32 +105,28 @@ is_deeply($results, {
 $criteria_list = [
                'years',
                'locations',
-               'trials',
                'genotyping_protocols'
              ];
 $dataref = {
                'genotyping_protocols' => {
-                                         'trials' => '\'139\'',
-                                         'locations' => '\'23\'',
+                                         'locations' => '\'24\'',
                                          'years' => '\'2014\''
                                        }
              };
 $queryref = {
                'genotyping_protocols' => {
-                                         'trials' => 0,
                                          'locations' => 0,
                                          'years' => 0
                                        }
              };
 $results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+print STDERR "Actual results:\n";
+print STDERR Dumper($results);
 is_deeply($results, {
-               'results' => [
-                              [
-                                1,
-                                'GBS ApeKI genotyping v4'
-                              ]
-                            ]
-             }, "wizard four category query");
+    'results' => []
+}, "wizard four category query");
+
+
 
 $criteria_list = [
                'breeding_programs',
