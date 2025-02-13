@@ -4812,7 +4812,7 @@ sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/do
     my $tempfile = $c->req->param('file');
 
     $c->res->content_type('application/vnd.ms-excel');
-    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xls"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xlsx"]);
     my $output = read_file($tempfile);
     $c->res->body($output);
 }
