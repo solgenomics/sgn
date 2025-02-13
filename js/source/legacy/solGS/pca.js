@@ -173,7 +173,6 @@ solGS.pca = {
     } else {
       pcaPopId = selectedId;
     }
-
     return pcaPopId;
   },
 
@@ -911,13 +910,13 @@ jQuery(document).ready(function () {
     if (runPcaBtnId.match(/run_pca/)) {
     
       var  pcaArgs;
-      if (document.URL.match(/pca\/analysis\//)) {
+      if (document.URL.match(/pca\/analysis/)) {
         pcaArgs = solGS.pca.getSelectedPopPcaArgs(runPcaBtnId);
       } else {
         pcaArgs = solGS.pca.getPcaArgs();
       }
-
       pcaPopId = pcaArgs.pca_pop_id;
+
       var canvas = solGS.pca.canvas;
       var pcaMsgDiv = solGS.pca.pcaMsgDiv;
       var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
