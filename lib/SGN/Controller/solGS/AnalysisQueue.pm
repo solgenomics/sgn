@@ -8,6 +8,8 @@ use File::Slurp qw /write_file read_file/;
 use JSON;
 use CXGN::Tools::Run;
 use Try::Tiny;
+use Time::Piece;
+use Time::Seconds;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use Scalar::Util 'reftype';
@@ -1271,7 +1273,15 @@ sub get_user_solgs_analyses {
                 $result_page = 'N/A';
             }
             elsif ( $analysis_status =~ /Submitted/i ) {
+              my $submitted_time = Time::Piece->strptime($submitted_on,'%m/%d/%Y %R');
+              my $now = localtime;
+              my $time_running = ($now - $submitted_time) / ONE_DAY;
+              if ($time_running >= 2) { #two days is too long!
+                $result_page = 'NA';
+                $analysis_status = 'Dubious';
+              } else {
                 $result_page = 'In progress...';
+              }
             }
             else {
                 $result_page = qq |<a href=$result_page>[ View ]</a>|;
