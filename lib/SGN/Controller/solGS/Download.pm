@@ -11,8 +11,10 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON' },
-    );
+    map       => {
+        'application/json' => 'JSON'
+    },
+);
 
 
 sub download_training_pop_data :Path('/solgs/download/training/pop/data') Args(0) {
@@ -26,7 +28,6 @@ sub download_training_pop_data :Path('/solgs/download/training/pop/data') Args(0
     $c->stash->{rest}{traits_acronym_file} = $self->download_traits_acronym_file($c);
 
 }
-
 
 sub download_selection_pop_data :Path('/solgs/download/selection/pop/data') Args(0) {
     my ($self, $c) = @_;
@@ -57,7 +58,6 @@ sub download_model_input_data :Path('/solgs/download/model/input/data') Args(0) 
 
 }
 
-
 sub download_gebvs :Path('/solgs/download/gebvs/pop') Args(0) {
     my ($self, $c) = @_;
 
@@ -66,8 +66,8 @@ sub download_gebvs :Path('/solgs/download/gebvs/pop') Args(0) {
 
     my $gebvs_file;
     my $genetic_values_file;
-
     my $type;
+
     if ($c->stash->{selection_pop_id}) {
         $type = 'selection';
         $gebvs_file = $self->download_selection_gebvs_file($c);
@@ -108,7 +108,6 @@ sub download_traits_acronym :Path('/solgs/download/traits/acronym') Args(0) {
     
 }
 
-
 sub selection_prediction_download_urls {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
 
@@ -138,7 +137,7 @@ sub selection_prediction_download_urls {
     $url_args->{data_set_type} = $data_set_type;
 
     my $sel_pop_page;
-     my $download_url;
+    my $download_url;
 
     if (@selected_model_traits ~~ @selection_traits_ids) {
         foreach my $trait_id (@selection_traits_ids) {
@@ -149,8 +148,7 @@ sub selection_prediction_download_urls {
 
             $sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);
 
-            if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
-            {
+            if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//) {
                 $download_url .= " | " if $download_url;
             }
 
@@ -196,7 +194,6 @@ sub download_raw_pheno_data_file {
     return \@files;
 
 }
-
 
 sub download_raw_geno_data_file {
     my ($self, $c) = @_;
@@ -249,7 +246,6 @@ sub download_model_geno_data_file {
     return $file;
 
 }
-
 
 sub download_model_pheno_data_file {
     my ($self, $c) = @_;
@@ -377,7 +373,6 @@ sub download_marker_effects_file {
 
 sub download_traits_acronym_file {
     my ($self, $c) = @_;
-
 
     $c->controller('solGS::Files')->traits_acronym_file($c, $c->stash->{training_pop_id});
     my $file = $c->stash->{traits_acronym_file};
