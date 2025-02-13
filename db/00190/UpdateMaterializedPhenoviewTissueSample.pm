@@ -200,10 +200,10 @@ DROP VIEW IF EXISTS public.traits CASCADE;
 CREATE VIEW public.traits AS
   SELECT cvterm.cvterm_id AS trait_id,
   (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
-	FROM cv
+    FROM cv
     JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'trait_ontology'))
     JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
-	  JOIN dbxref USING(dbxref_id)
+      JOIN dbxref USING(dbxref_id)
     JOIN db ON(dbxref.db_id = db.db_id)
     LEFT JOIN cvterm_relationship is_variable ON cvterm.cvterm_id = is_variable.subject_id AND is_variable.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF')
     WHERE is_variable.subject_id IS NOT NULL
@@ -317,10 +317,10 @@ ALTER VIEW genotyping_protocolsXseedlots OWNER TO web_usr;
 DROP VIEW IF EXISTS public.locationsXseedlots CASCADE;
 CREATE VIEW public.locationsXseedlots AS
 SELECT nd_experiment.nd_geolocation_id AS location_id,nd_experiment_stock.stock_id AS seedlot_id
- 	FROM nd_experiment
-	LEFT JOIN nd_experiment_stock ON nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id
-  	WHERE nd_experiment.type_id IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name = 'seedlot_experiment')
-  	GROUP BY 1,2;
+    FROM nd_experiment
+    LEFT JOIN nd_experiment_stock ON nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id
+    WHERE nd_experiment.type_id IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name = 'seedlot_experiment')
+    GROUP BY 1,2;
 ALTER VIEW public.locationsXseedlots OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.plantsXseedlots CASCADE;
@@ -609,29 +609,11 @@ SELECT public.materialized_phenoview.accession_id,
 
 DROP VIEW IF EXISTS public.accessionsXgenotyping_protocols CASCADE;
 CREATE VIEW public.accessionsXgenotyping_protocols AS
-WITH accession_query AS (
-    SELECT mg.genotyping_protocol_id, mg.accession_id
-    FROM materialized_genoview mg
-    WHERE mg.stock_type = 'accession'
-    AND mg.genotyping_protocol_id IN (SELECT genotyping_protocol_id FROM genotyping_protocols)
-    GROUP BY mg.genotyping_protocol_id, mg.accession_id
-),
-non_accession_query AS (
-    SELECT gp.genotyping_protocol_id, s.stock_id AS accession_id
-    FROM genotyping_protocols gp
-    JOIN nd_experiment_protocol nep ON gp.genotyping_protocol_id = nep.nd_protocol_id
-    JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
-    JOIN stock_relationship sr ON sr.subject_id = nes.stock_id 
-    JOIN stock s ON s.stock_id = sr.object_id 
-    WHERE s.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'accession')
-    GROUP BY gp.genotyping_protocol_id, s.stock_id
-)
-SELECT genotyping_protocol_id, accession_id
-FROM accession_query
-UNION
-SELECT genotyping_protocol_id, accession_id
-FROM non_accession_query;
-ALTER VIEW accessionsXgenotyping_protocols OWNER TO web_usr;
+SELECT public.materialized_genoview.accession_id,
+    public.materialized_genoview.genotyping_protocol_id
+   FROM public.materialized_genoview
+  GROUP BY public.materialized_genoview.accession_id, public.materialized_genoview.genotyping_protocol_id;
+  ALTER VIEW accessionsXgenotyping_protocols OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.accessionsXlocations CASCADE;
 CREATE VIEW public.accessionsXlocations AS
@@ -764,66 +746,33 @@ SELECT public.materialized_phenoview.breeding_program_id,
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.year_id;
 ALTER VIEW breeding_programsXyears OWNER TO web_usr;
 
-DROP VIEW IF EXISTS public.genotyping_protocolsxlocations CASCADE;
-CREATE VIEW public.genotyping_protocolsxlocations AS
-WITH first_query AS (
-    SELECT p.project_id, mg.genotyping_protocol_id 
-    FROM materialized_genoview mg 
-    JOIN projectprop p ON mg.genotyping_project_id = p.project_id
-    WHERE p.type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'design')
-    AND p.value = 'genotype_data_project'
-    GROUP BY p.project_id, mg.genotyping_protocol_id 
-),
-location_query AS (
-    SELECT project_id, value::INTEGER AS location_id
-    FROM projectprop 
-    WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'project location')
-)
-SELECT fq.genotyping_protocol_id AS genotyping_protocol_id, 
-       lq.location_id
-FROM first_query fq
-LEFT JOIN location_query lq ON fq.project_id = lq.project_id;
+DROP VIEW IF EXISTS public.genotyping_protocolsXlocations CASCADE;
+CREATE VIEW public.genotyping_protocolsXlocations AS
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.materialized_phenoview.location_id
+   FROM public.materialized_genoview
+   JOIN public.materialized_phenoview USING(accession_id)
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.location_id;
+ALTER VIEW genotyping_protocolsXlocations OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.genotyping_protocolsXplants CASCADE;
 CREATE VIEW public.genotyping_protocolsXplants AS
-WITH first_query AS (
-    SELECT s_inner.stock_id, nep.nd_protocol_id AS genotyping_protocol_id 
-    FROM nd_experiment_genotype neg
-    JOIN nd_experiment_protocol nep ON neg.nd_experiment_id = nep.nd_experiment_id
-    JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
-    JOIN stock s_inner ON s_inner.stock_id = nes.stock_id
-),
-second_query AS (
-    SELECT s.stock_id AS plant_id, sr.subject_id
-    FROM stock_relationship sr  
-    JOIN stock s ON s.stock_id = sr.object_id 
-    WHERE sr.subject_id IN (SELECT stock_id FROM first_query)
-    AND s.type_id = (SELECT cvterm_id FROM cvterm WHERE cvterm.name = 'plant')
-)
-SELECT fq.genotyping_protocol_id, sq.plant_id
-FROM second_query sq
-JOIN first_query fq ON fq.stock_id = sq.subject_id;
-ALTER VIEW genotyping_protocolsXplants OWNER TO web_usr;
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.stock.stock_id AS plant_id
+   FROM public.materialized_genoview
+   JOIN public.materialized_phenoview USING(accession_id)
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant'))
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.stock.stock_id;
+  ALTER VIEW genotyping_protocolsXplants OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.genotyping_protocolsXplots CASCADE;
 CREATE VIEW public.genotyping_protocolsXplots AS
-WITH first_query AS (
-    SELECT s_inner.stock_id, nep.nd_protocol_id AS genotyping_protocol_id 
-    FROM nd_experiment_genotype neg
-    JOIN nd_experiment_protocol nep ON neg.nd_experiment_id = nep.nd_experiment_id
-    JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
-    JOIN stock s_inner ON s_inner.stock_id = nes.stock_id
-),
-second_query AS (
-    SELECT s.stock_id AS plot_id, sr.subject_id
-    FROM stock_relationship sr  
-    JOIN stock s ON s.stock_id = sr.object_id 
-    WHERE sr.subject_id IN (SELECT stock_id FROM first_query)
-    AND s.type_id = (SELECT cvterm_id FROM cvterm WHERE cvterm.name = 'plot')
-)
-SELECT fq.genotyping_protocol_id, sq.plot_id
-FROM second_query sq
-JOIN first_query fq ON fq.stock_id = sq.subject_id;
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.stock.stock_id AS plot_id
+    FROM public.materialized_genoview
+    JOIN public.materialized_phenoview USING(accession_id)
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plot'))
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.stock.stock_id;
 ALTER VIEW genotyping_protocolsXplots OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.genotyping_protocolsXtrial_designs CASCADE;
@@ -849,33 +798,20 @@ ALTER VIEW genotyping_protocolsXtrial_types OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.genotyping_protocolsXtrials CASCADE;
 CREATE VIEW public.genotyping_protocolsXtrials AS
-    WITH first_query AS (
-        SELECT nes.stock_id, gp.genotyping_protocol_id 
-        FROM genotyping_protocols gp 
-        JOIN nd_experiment_protocol nep ON nep.nd_protocol_id = gp.genotyping_protocol_id
-        JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id 
-        JOIN stock s ON s.stock_id = nes.stock_id 
-    ),
-    second_query AS (
-        SELECT nep.project_id as trial_id, fq.genotyping_protocol_id
-        FROM nd_experiment_project nep 
-        JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
-        JOIN first_query fq ON nes.stock_id = fq.stock_id
-        WHERE nes.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'field_layout')
-    )
-    SELECT second_query.genotyping_protocol_id, second_query.trial_id 
-    FROM second_query
-    group by genotyping_protocol_id, trial_id ;
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.materialized_phenoview.trial_id
+   FROM public.materialized_genoview
+   JOIN public.materialized_phenoview USING(accession_id)
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trial_id;
 ALTER VIEW genotyping_protocolsXtrials OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.genotyping_protocolsXyears CASCADE;
 CREATE VIEW public.genotyping_protocolsXyears AS
-SELECT gp.genotyping_protocol_id , p.value AS year_id from projectprop p 
-    JOIN nd_experiment_project nep on nep.project_id = p.project_id
-    JOIN nd_experiment_protocol nep2 on nep2.nd_experiment_id = nep.nd_experiment_id 
-    JOIN genotyping_protocols gp on gp.genotyping_protocol_id = nep2.nd_protocol_id  
-    WHERE p.type_id = (select cvterm_id from cvterm where name = 'project year')
-GROUP BY gp.genotyping_protocol_id, year_id;
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.materialized_phenoview.year_id
+   FROM public.materialized_genoview
+   JOIN public.materialized_phenoview USING(accession_id)
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.year_id;
 ALTER VIEW genotyping_protocolsXyears OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.locationsXplants CASCADE;
@@ -1146,25 +1082,25 @@ SELECT public.stock.stock_id AS tissue_sample_id,
   GROUP BY public.stock.stock_id, public.materialized_phenoview.year_id;
 ALTER VIEW tissue_sampleXyears OWNER TO web_usr;
 
-DROP VIEW IF EXISTS public.tissue_sampleXplots CASCADE;
-CREATE VIEW public.tissue_sampleXplots AS
+DROP VIEW IF EXISTS public.plotsXtissue_sample CASCADE;
+CREATE VIEW public.plotsXtissue_sample AS
 SELECT ts.tissue_sample_id, so.stock_id AS plot_id  
     FROM tissue_sample ts
     JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id 
     JOIN stock so ON so.stock_id = sr.object_id  
     WHERE so.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'plot')
 GROUP BY ts.tissue_sample_id, so.stock_id ;
-ALTER VIEW tissue_sampleXplots OWNER TO web_usr;
+ALTER VIEW public.plotsXtissue_sample OWNER TO web_usr;
 
-DROP VIEW IF EXISTS public.tissue_sampleXplants CASCADE;
-CREATE VIEW public.tissue_sampleXplants AS
+DROP VIEW IF EXISTS public.plantsXtissue_sample CASCADE;
+CREATE VIEW public.plantsXtissue_sample AS
 SELECT ts.tissue_sample_id, so.stock_id AS plant_id 
     FROM tissue_sample ts
     JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id 
     JOIN stock so ON so.stock_id = sr.object_id  
     WHERE so.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'plant')
 GROUP BY ts.tissue_sample_id, so.stock_id ;
-ALTER VIEW tissue_sampleXplants OWNER TO web_usr;
+ALTER VIEW plantsXtissue_sample OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.tissue_sampleXtraits CASCADE;
 CREATE VIEW public.tissue_sampleXtraits AS
@@ -1196,24 +1132,26 @@ SELECT public.stock.stock_id AS tissue_sample_id,
   GROUP BY 1,2;
 ALTER VIEW tissue_sampleXseedlots OWNER TO web_usr;
 
-DROP VIEW IF EXISTS public.genotyping_projectsXtissue_sample CASCADE;
 CREATE VIEW public.genotyping_projectsXtissue_sample AS
-SELECT nep.project_id as genotyping_project_id, s_inner.stock_id as tissue_sample_id FROM nd_experiment_genotype neg 
-JOIN nd_experiment_project nep ON neg.nd_experiment_id = nep.nd_experiment_id
-JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
-JOIN stock s_inner ON s_inner.stock_id = nes.stock_id
-WHERE s_inner.type_id = (select cvterm_id from cvterm where cvterm.name = 'tissue_sample')
-GROUP BY nep.project_id, tissue_sample_id;
+    SELECT materialized_genoview.genotyping_project_id, stock.stock_id AS tissue_sample_id
+    FROM materialized_genoview
+    JOIN materialized_phenoview USING (accession_id)
+    JOIN stock ON materialized_phenoview.stock_id = stock.stock_id AND stock.type_id = (
+        SELECT cvterm.cvterm_id
+        FROM cvterm
+        WHERE cvterm.name = 'tissue_sample'
+    )
+    GROUP BY 1,2;
 ALTER VIEW public.genotyping_projectsXtissue_sample OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.genotyping_protocolsXtissue_sample CASCADE;
 CREATE VIEW public.genotyping_protocolsXtissue_sample AS
-SELECT nep.nd_protocol_id as genotyping_protocol_id, s_inner.stock_id as tissue_sample_id FROM nd_experiment_genotype neg 
-JOIN nd_experiment_protocol nep ON neg.nd_experiment_id = nep.nd_experiment_id
-JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
-JOIN stock s_inner ON s_inner.stock_id = nes.stock_id
-WHERE s_inner.type_id = (select cvterm_id from cvterm where cvterm.name = 'tissue_sample')
-GROUP BY nep.nd_protocol_id, tissue_sample_id;
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.stock.stock_id AS tissue_sample_id
+    FROM public.materialized_genoview
+    JOIN public.materialized_phenoview USING(accession_id)
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.stock.stock_id;
 ALTER VIEW genotyping_protocolsXtissue_sample OWNER TO web_usr;
 
 -- NEW GENOTYPE PROJECT VIEWS --
@@ -1232,8 +1170,6 @@ DROP VIEW IF EXISTS public.genotyping_projectsXbreeding_programs CASCADE;
 DROP VIEW IF EXISTS public.genotyping_projectsXgenotyping_protocols CASCADE;
 DROP VIEW IF EXISTS public.genotyping_projectsXlocations CASCADE;
 DROP VIEW IF EXISTS public.genotyping_projectsXtrials CASCADE;
-DROP VIEW IF EXISTS public.genotyping_projectsXplots CASCADE;
-DROP VIEW IF EXISTS public.genotyping_projectsXplants CASCADE;
 
 -- Add genotyping_projects view
 CREATE VIEW public.genotyping_projects AS
@@ -1246,28 +1182,9 @@ ALTER VIEW public.genotyping_projects OWNER TO web_usr;
 
 -- Add accessionsXgenotyping_projects view
 CREATE VIEW public.accessionsXgenotyping_projects AS 
-    WITH accession_query AS (
-        SELECT mg.genotyping_project_id, mg.accession_id
-        FROM materialized_genoview mg
-        WHERE mg.stock_type = 'accession'
-        AND mg.genotyping_project_id IN (SELECT genotyping_project_id FROM genotyping_projects)
-        GROUP BY mg.genotyping_project_id, mg.accession_id
-    ),
-    non_accession_query AS (
-        SELECT gp.genotyping_project_id, s.stock_id AS accession_id
-        FROM genotyping_projects gp
-        JOIN nd_experiment_project nep ON gp.genotyping_project_id = nep.project_id 
-        JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
-        JOIN stock_relationship sr ON sr.subject_id = nes.stock_id 
-        JOIN stock s ON s.stock_id = sr.object_id 
-        WHERE s.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'accession')
-        GROUP BY gp.genotyping_project_id, s.stock_id
-    )
     SELECT accession_id, genotyping_project_id
-    FROM accession_query
-    UNION
-    SELECT accession_id, genotyping_project_id
-    FROM non_accession_query;
+    FROM materialized_genoview
+    GROUP BY 1,2;
 ALTER VIEW public.accessionsXgenotyping_projects OWNER TO web_usr;
 
 -- Add breeding_programsXgenotyping_projects view
@@ -1290,53 +1207,18 @@ ALTER VIEW public.genotyping_projectsXgenotyping_protocols OWNER TO web_usr;
 
 -- Add genotyping_projectsXlocations view
 CREATE VIEW public.genotyping_projectsXlocations AS
-WITH first_query AS (
-    SELECT p.project_id::INTEGER AS project_id, p.type_id
-    FROM materialized_genoview mg 
-    JOIN projectprop p ON mg.genotyping_project_id = p.project_id
-    WHERE p.type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'design')
-    AND p.value = 'genotype_data_project'
-    GROUP BY p.project_id, p.type_id
-)
-SELECT fq.project_id, 
-       pp.value::INTEGER AS location_id
-FROM first_query fq
-LEFT JOIN projectprop pp ON fq.project_id = pp.project_id  
-AND pp.type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'project location');
-
+    SELECT materialized_genoview.genotyping_project_id, materialized_phenoview.location_id
+    FROM materialized_genoview
+    JOIN materialized_phenoview USING (accession_id)
+    GROUP BY 1,2;
 ALTER VIEW public.genotyping_projectsXlocations OWNER TO web_usr;
-
 
 -- Add genotyping_projectsXtrials view
 CREATE VIEW public.genotyping_projectsXtrials AS
-    WITH genotyping_projects AS (
-        SELECT nes_genotyping.stock_id, nep_genotyping.project_id AS genotyping_project_id
-        FROM nd_experiment_stock nes_genotyping
-        JOIN nd_experiment_project nep_genotyping 
-            ON nes_genotyping.nd_experiment_id = nep_genotyping.nd_experiment_id
-        WHERE nes_genotyping.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'genotyping_experiment')
-    ),
-    field_layout_projects AS (
-        SELECT nes_trial.stock_id, nep_trial.project_id AS trial_id
-        FROM nd_experiment_stock nes_trial
-        JOIN nd_experiment_project nep_trial 
-            ON nes_trial.nd_experiment_id = nep_trial.nd_experiment_id
-    )
-    SELECT 
-        gp.genotyping_project_id,
-        flp.trial_id
-    FROM stock s
-    LEFT JOIN genotyping_projects gp ON gp.stock_id = s.stock_id
-    LEFT JOIN field_layout_projects flp ON flp.stock_id = s.stock_id
-    WHERE s.uniquename IN (
-        SELECT s_inner.uniquename  
-        FROM nd_experiment_project nep
-        JOIN genotyping_projects gp ON gp.genotyping_project_id = nep.project_id
-        JOIN nd_experiment_stock nes2 ON nes2.nd_experiment_id = nep.nd_experiment_id
-        JOIN stock s_inner ON s_inner.stock_id = nes2.stock_id 
-        WHERE s_inner.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'tissue_sample')
-    )
-    GROUP BY gp.genotyping_project_id, flp.trial_id;
+    SELECT materialized_genoview.genotyping_project_id, materialized_phenoview.trial_id
+    FROM materialized_genoview
+    JOIN materialized_phenoview USING (accession_id)
+    GROUP BY 1,2;
 ALTER VIEW public.genotyping_projectsXtrials OWNER TO web_usr;
 
 -- Add genotyping_projectsXtraits view
@@ -1348,7 +1230,6 @@ CREATE VIEW public.genotyping_projectsXtraits AS
 ALTER VIEW public.genotyping_projectsXtraits OWNER TO web_usr;
 
 -- Add genotyping_projectsXyears view
-DROP VIEW IF EXISTS public.genotyping_projectsXyears CASCADE;
 CREATE VIEW public.genotyping_projectsXyears AS
     SELECT projectprop.project_id AS genotyping_project_id, projectprop.value AS year_id
     FROM projectprop
@@ -1362,46 +1243,29 @@ CREATE VIEW public.genotyping_projectsXyears AS
 ALTER VIEW public.genotyping_projectsXyears OWNER TO web_usr;
 
 -- Add genotyping_projectsXplants view
-DROP VIEW IF EXISTS public.genotyping_projectsXplants CASCADE;
 CREATE VIEW public.genotyping_projectsXplants AS
-    WITH first_query AS (
-    SELECT s_inner.stock_id, nep.project_id AS genotyping_project_id 
-    FROM nd_experiment_genotype neg
-    JOIN nd_experiment_project nep ON neg.nd_experiment_id = nep.nd_experiment_id
-    JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
-    JOIN stock s_inner ON s_inner.stock_id = nes.stock_id
-    ),
-    second_query AS (
-        SELECT s.stock_id AS plant_id, sr.subject_id
-       FROM stock_relationship sr  
-       JOIN stock s ON s.stock_id = sr.object_id 
-      WHERE sr.subject_id IN (SELECT stock_id FROM first_query)
-     AND s.type_id = (SELECT cvterm_id FROM cvterm WHERE cvterm.name = 'plant')
-)
-   SELECT fq.genotyping_project_id, sq.plant_id
-   FROM second_query sq
-   JOIN first_query fq ON fq.stock_id = sq.subject_id;
+    SELECT materialized_genoview.genotyping_project_id, stock.stock_id AS plant_id
+    FROM materialized_genoview
+    JOIN materialized_phenoview USING (accession_id)
+    JOIN stock ON materialized_phenoview.stock_id = stock.stock_id AND stock.type_id = (
+        SELECT cvterm.cvterm_id
+        FROM cvterm
+        WHERE cvterm.name = 'plant'
+    )
+    GROUP BY 1,2;
 ALTER VIEW public.genotyping_projectsXplants OWNER TO web_usr;
 
 -- Add genotyping_projectsXplots view
 CREATE VIEW public.genotyping_projectsXplots AS
-    WITH first_query AS (
-    SELECT s_inner.stock_id, nep.project_id AS genotyping_project_id 
-    FROM nd_experiment_genotype neg
-    JOIN nd_experiment_project nep ON neg.nd_experiment_id = nep.nd_experiment_id
-    JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
-    JOIN stock s_inner ON s_inner.stock_id = nes.stock_id
-    ),
-    second_query AS (
-        SELECT s.stock_id AS plot_id, sr.subject_id
-        FROM stock_relationship sr  
-        JOIN stock s ON s.stock_id = sr.object_id 
-        WHERE sr.subject_id IN (SELECT stock_id FROM first_query)
-        AND s.type_id = (SELECT cvterm_id FROM cvterm WHERE cvterm.name = 'plot')
+    SELECT materialized_genoview.genotyping_project_id, stock.stock_id AS plot_id
+    FROM materialized_genoview
+    JOIN materialized_phenoview USING (accession_id)
+    JOIN stock ON materialized_phenoview.stock_id = stock.stock_id AND stock.type_id = (
+        SELECT cvterm.cvterm_id
+        FROM cvterm
+        WHERE cvterm.name = 'plot'
     )
-    SELECT fq.genotyping_project_id, sq.plot_id
-    FROM second_query sq
-    JOIN first_query fq ON fq.stock_id = sq.subject_id;
+    GROUP BY 1,2;
 ALTER VIEW public.genotyping_projectsXplots OWNER TO web_usr;
 
 -- Add genotyping_projectsXseedlots view
