@@ -47,13 +47,13 @@ $editable_stock_props_definitions
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
                             <div class="col-sm-8">
-% if ( $user_role eq 'curator' ) {
-                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked></input>
-% } else {
-                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
-% }
+%# if ( $user_role eq 'curator' ) {
+                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
+%# } else {
+%#                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
+%# }
                                 <br/>
-                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
+                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. </small>
                             </div>
                         </div>
                     </form>
@@ -87,11 +87,11 @@ $editable_stock_props_definitions
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
                             <div class="col-sm-8">
-% if ( $user_role eq 'curator' ) {
-                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked></input>
-% } else {
-                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked disabled></input>
-% }
+%# if ( $user_role eq 'curator' ) {
+                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions"></input>
+%# } else {
+%#                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked disabled></input>
+%# }
                                 <br/>
                                 <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
                             </div>
