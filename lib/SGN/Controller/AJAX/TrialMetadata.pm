@@ -4914,6 +4914,42 @@ sub upload_entry_number_template_POST : Args(0) {
     return;
 }
 
+sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    my $trial_id = $c->req->param("trial_id");
+
+    if (! $trial_id) {
+	$c->stash->{rest} = { error_string => 'A trial id must be provided to delete the entry numbers.' };
+	return;
+    }
+    
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
+        return;
+    }
+    
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $project_entry_number_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_entry_number_map', 'project_property')->cvterm_id();
+
+    
+    my $row = $schema->resultset("Project::Projectprop")->find( { type_id => $project_entry_number_map_cvterm_id, project_id => $trial_id });
+
+    eval { 
+	$row->delete();
+    };
+
+    if ($@) {
+	$c->stash->{rest} = { error_string => "The following error occurred when trying to delete an entry map: $@\n" };
+	return;
+    }
+    else {
+	$c->stash->{rest} = { success => 1 };
+    }
+}
+
 
 sub update_trial_status : Chained('trial') PathPart('update_trial_status') : ActionClass('REST'){ }
 
