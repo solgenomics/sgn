@@ -1,5 +1,6 @@
 package CXGN::File::Parse::Plugin::Excel;
 
+use strict;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 

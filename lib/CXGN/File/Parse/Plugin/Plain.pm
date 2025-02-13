@@ -1,5 +1,6 @@
 package CXGN::File::Parse::Plugin::Plain;
 
+use strict;
 use CXGN::File::Parse;
 use Text::CSV;
 
