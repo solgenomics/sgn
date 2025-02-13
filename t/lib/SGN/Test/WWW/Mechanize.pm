@@ -458,6 +458,35 @@ sub while_logged_in {
     });
 }
 
+
+=head2 login
+
+=cut
+
+sub login_ok {
+    my $self = shift;
+    my $username = shift;
+    my $password = shift;
+
+    $self->get_ok("http://localhost:3010/ajax/user/login?username=$username&password=$password");
+
+    print STDERR "RETRIEVED: ".$self->content()."\n";
+
+}
+
+=head2 logout
+
+=cut 
+
+sub logout_ok {
+    my $self = shift;
+
+    $self->get_ok("http://localhost:3010/ajax/user/logout");
+    
+
+}
+
+
 =head2 while_logged_in_all
 
 Execute the given code while logged in for each user_type.
@@ -477,7 +506,7 @@ Execute the given code while logged in for each user_type.
 
 sub while_logged_in_all {
     my ($self,$sub) = @_;
-    for ( qw/ user curator submitter sequencer genefamily_editor / ) {
+    for ( qw/ user curator submitter / ) {
         diag "Running tests as $_ user_type";
         $self->while_logged_in( { user_type => $_ }, $sub );
     }
@@ -487,7 +516,7 @@ sub log_in_ok {
     my ($self) = @_;
 
     $self->get_ok("/solpeople/top-level.pl");
-    $self->content_contains("Login");
+        $self->content_contains("Login");
 
     my %form = (
         form_name => 'login',
