@@ -94,6 +94,7 @@ sub parse {
     my $skip_row = 1;
     for my $c (@col_indices) {
       my $h = $rows[0]->[$c];
+      $h = $super->clean_header($h);
       my $v = $rows[$r]->[$c];
       $v = $super->clean_value($v, $h);
       $row_info{$h} = $v;
