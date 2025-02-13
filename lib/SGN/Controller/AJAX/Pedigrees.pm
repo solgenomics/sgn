@@ -37,6 +37,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $user_role;
 
     if ($session_id){
+	print STDERR "WORKING WITH THE SESSION ID OF $session_id\n";
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
@@ -49,16 +50,19 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         $user_name = $p->get_username;
     } else {
         if (!$c->user()){
+	    print STDERR "NO LOGIN AVAILABLE...!!!!\n";
             $c->stash->{rest} = {error=>'You must be logged in to upload pedigrees!'};
             $c->detach();
         }
+
+	print STDERR "GETTING USER INFO...\n";
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
 
+#       $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
     
     if (! $c->stash->{access}->grant($user_id, "write", "pedigrees")) { 
     
@@ -68,7 +72,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     }
 
     my $time = DateTime->now();
-    my $user_name = $c->user()->get_object()->get_username();
+    #my $user_name = $c->user()->get_object()->get_username();
+    my $user_name = $c->stash->{username};
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'pedigree_upload';
     my $upload = $c->req->upload('pedigrees_uploaded_file');
