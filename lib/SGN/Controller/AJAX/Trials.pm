@@ -182,7 +182,7 @@ sub get_recent_trials : Path('/ajax/breeders/recent_trials') Args(1) {
     my $c = shift;
     my $interval = shift; # 1 day, week, month, or year
     
-    my $trial_table = CXGN::Project::get_recently_added_trials($c->dbic_schema('Bio::Chado::Schema'), $interval);
+    my $trial_table = CXGN::Project::get_recently_added_trials($c->dbic_schema('Bio::Chado::Schema'),  $c->dbic_schema("CXGN::Phenome::Schema"),  $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $interval);
 
     $c->stash->{rest} =  { data => $trial_table }
 
@@ -205,7 +205,7 @@ sub get_recently_modified_trials : Path('/ajax/breeders/recently_modified_trials
     my $c = shift;
     my $interval = shift;
 
-    my $trial_table = CXGN::Project::get_recently_modified_trials($c->dbic_schema('Bio::Chado::Schema'), $interval);
+    my $trial_table = CXGN::Project::get_recently_modified_trials($c->dbic_schema('Bio::Chado::Schema'), $c->dbic_schema("CXGN::Phenome::Schema"), $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $interval);
 
     $c->stash->{rest} =  { data => $trial_table };
 }

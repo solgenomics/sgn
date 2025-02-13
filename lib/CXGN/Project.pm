@@ -5518,6 +5518,9 @@ sub transformation_id_count {
 
 sub get_recently_added_trials {
     my $bcs_schema = shift;
+    my $phenome_schema = shift;
+    my $people_schema = shift;
+    my $metadata_schema = shift;
     my $interval = shift;
     my $limit = shift || 10;
     
@@ -5526,7 +5529,6 @@ sub get_recently_added_trials {
 	return;
     }
 
-    print STDERR "INTERVAL is $interval\n";
     my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
     
     my $h = $bcs_schema->storage->dbh()->prepare($q);
@@ -5536,7 +5538,7 @@ sub get_recently_added_trials {
     my @recent_trials = ();
     while (my ($trial_id) = $h->fetchrow_array()) {
 	print STDERR "Formatting entry with trial id $trial_id...\n";
-	my $t = CXGN::Trial->new( { bcs_schema => $bcs_schema, trial_id => $trial_id });
+	my $t = CXGN::Trial->new({ bcs_schema => $bcs_schema, phenome_schema => $phenome_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, trial_id => $trial_id });
 	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
 	my $trial_type = ref($t);
 	$trial_type =~ s/^CXGN\:\://g;
@@ -5563,6 +5565,9 @@ sub get_recently_added_trials {
 
 sub get_recently_modified_trials {
     my $bcs_schema = shift;
+    my $phenome_schema = shift;
+    my $people_schema = shift;
+    my $metadata_schema = shift;
     my $interval = shift;
     my $limit = shift || 10;
 
@@ -5571,7 +5576,7 @@ sub get_recently_modified_trials {
 	return;
     }
         
-    print STDERR "INTERVAL is $interval\n";
+    #print STDERR "INTERVAL is $interval\n";
     my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc limit ? ";
     
     my $h = $bcs_schema->storage->dbh()->prepare($q);
@@ -5581,7 +5586,7 @@ sub get_recently_modified_trials {
     my @recent_trials;
     while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
 	print STDERR "Formatting entry with trial id $trial_id...\n";
-	my $t = CXGN::Trial->new( { bcs_schema => $bcs_schema, trial_id => $trial_id });
+	my $t = CXGN::Trial->new( { bcs_schema => $bcs_schema, phenome_schema => $phenome_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, trial_id => $trial_id });
 	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
 	my $trial_type = ref($t);
 	$trial_type =~ s/^CXGN\:\://g;
