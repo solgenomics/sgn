@@ -71,7 +71,7 @@ use CXGN::ManagementFactor;
 use CXGN::GenotypeDataProject;
 use CXGN::AerialImagingEventBandProject;
 use CXGN::AerialImagingEventProject;
-use Data::Dumper;
+
 
 sub new {
     my $class = shift;
