@@ -269,13 +269,14 @@ sub get_sample_data {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
-    my @sample_with_data = ();
+    my @samples_with_data = ();
     while(my ($stock_id) = $h->fetchrow_array()){
-        push @sample_with_data, [$stock_id];
+        push @samples_with_data, $stock_id;
     }
 
-    my $number_of_samples_with_data = scalar(@sample_with_data);
+    my $number_of_samples_with_data = scalar(@samples_with_data);
     $sample_info{'number_of_samples_with_data'} = $number_of_samples_with_data;
+    $sample_info{'samples_with_data'} = \@samples_with_data;
 
     return \%sample_info;
 

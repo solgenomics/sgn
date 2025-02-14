@@ -33,7 +33,7 @@ jQuery(document).ready(function () {
         'processing': true,
         'serverSide': true,
         'lengthMenu': [ 10, 50, 100, 2000 ],
-        'ajax': '/ajax/genotyping_data/search?genotyping_data_project_id_list=<% $trial_id %>',
+        'ajax': '/ajax/genotyping_data/search?plate_id_list=<% $trial_id %>',
     });
 
     var refresh_results;
@@ -47,7 +47,7 @@ jQuery(document).ready(function () {
                 'processing': true,
                 'serverSide': true,
                 'lengthMenu': [ 10, 50, 100, 2000 ],
-                'ajax': '/ajax/genotyping_data/search?genotyping_data_project_id_list=<% $trial_id %>&forbid_cache=1',
+                'ajax': '/ajax/genotyping_data/search?plate_id_list=<% $trial_id %>&forbid_cache=1',
             });
         }
     });
