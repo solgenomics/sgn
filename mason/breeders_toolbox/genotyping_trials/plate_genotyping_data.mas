@@ -1,8 +1,9 @@
 <%args>
 $trial_id
 </%args>
-
+<!--
 <input type="checkbox" id="plate_genotyping_data_forbid_cache"> Refresh results
+-->
 <hr>
 
 <div style="overflow:scroll">
@@ -33,7 +34,7 @@ jQuery(document).ready(function () {
         'processing': true,
         'serverSide': true,
         'lengthMenu': [ 10, 50, 100, 2000 ],
-        'ajax': '/ajax/genotyping_data/search?plate_list=<% $trial_id %>',
+        'ajax': '/ajax/genotyping_data/search?plate_list=<% $trial_id %>&forbid_cache=1',
     });
 
     var refresh_results;
