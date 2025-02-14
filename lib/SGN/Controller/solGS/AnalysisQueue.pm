@@ -1239,6 +1239,104 @@ sub analysis_log_file {
 
 }
 
+# Deletes analysis logfile rows which show dead or failed analyses
+sub delete_dead_analyses : Path('/solgs/delete_dead_analysis_logs') Args(0) {
+  my ( $self, $c ) = @_;
+
+  $self->analysis_log_file($c);
+  my $log_file = $c->stash->{analysis_log_file};
+
+   no warnings 'uninitialized';
+
+    if ($log_file) {
+      my @rows = read_file( $log_file, { binmode => ':utf8' } );
+        my @user_analyses = grep { $_ !~ /User_name\s+/i } @rows;
+
+        $self->index_log_file_headers($c);
+        my $header_index = $c->stash->{header_index};
+
+        my @rows_to_delete = ();
+
+        my $json = JSON->new();
+        foreach my $row (@user_analyses) {
+            my @analysis = split( /\t/, $row );
+            my $submitted_on    = $analysis[ $header_index->{'Submitted on'} ];
+            my $analysis_status = $analysis[ $header_index->{'Status'} ];
+
+            my $submitted_time = Time::Piece->strptime($submitted_on,'%m/%d/%Y %R');
+            my $now = localtime;
+            my $analysis_age = ($now - $submitted_time) / ONE_DAY;
+
+            if ($analysis_status =~ /Submitted/i && $analysis_age >= 2) {
+              push @rows_to_delete, $row;
+            }
+        }
+
+        my @new_logfile = ();
+        foreach my $row (@rows) {
+          if (scalar(grep {$row eq $_} @rows_to_delete) == 0) {
+            push @new_logfile, $row;
+          } 
+        }
+
+        write_file($log_file,{binmode => ':utf8'},@new_logfile);
+    }
+}
+
+# deletes all analyses in logfile older than $time. Time is one week, one month, six months, or one year
+sub delete_old_analyses : Path('/solgs/delete_old_analyses') Args(1) {
+  my ( $self, $c, $time ) = @_;
+
+  my $timetable = {
+    'one_week' => 7,
+    'one_month' => 30,
+    'six_months' => 180,
+    'one_year' => 365
+  };
+
+  if ($time ne 'one_week' && $time ne 'one_month' && $time ne 'six_months' && $time ne 'one_year') {
+    $c->stash->{error => 'Invalid time period selected.'};
+  }
+
+  $self->analysis_log_file($c);
+  my $log_file = $c->stash->{analysis_log_file};
+
+     no warnings 'uninitialized';
+
+    if ($log_file) {
+      my @rows = read_file( $log_file, { binmode => ':utf8' } );
+        my @user_analyses = grep { $_ !~ /User_name\s+/i } @rows;
+
+        $self->index_log_file_headers($c);
+        my $header_index = $c->stash->{header_index};
+
+        my @rows_to_delete = ();
+
+        my $json = JSON->new();
+        foreach my $row (@user_analyses) {
+            my @analysis = split( /\t/, $row );
+            my $submitted_on    = $analysis[ $header_index->{'Submitted on'} ];
+
+            my $submitted_time = Time::Piece->strptime($submitted_on,'%m/%d/%Y %R');
+            my $now = localtime;
+            my $analysis_age = ($now - $submitted_time) / ONE_DAY;
+
+            if ($analysis_age > $timetable->{$time}) {
+              push @rows_to_delete, $row;
+            }
+        }
+
+        my @new_logfile = ();
+        foreach my $row (@rows) {
+          if (scalar(grep {$row eq $_} @rows_to_delete) == 0) {
+            push @new_logfile, $row;
+          } 
+        }
+
+        write_file($log_file,{binmode => ':utf8'},@new_logfile);
+    }
+}
+
 sub get_user_solgs_analyses {
     my ( $self, $c ) = @_;
 
