@@ -94,12 +94,17 @@ my $worksheet = $workbook->worksheet(0);
      'Variable name'        => 'variable_name_col',
      'Variable synonyms'    => 'variable_synonyms_col',
      'Variable status'      => 'variable_status_col',
+     'Variable label'       => 'variable_label_col',
+     'Variable name'        => 'variable_name_col',
+     'Variable description' => 'variable_def_col',
+     'Variable Xref'        => 'variable_xref_col',
      'Trait ID'             => 'trait_id_col',
      'Trait name'           => 'trait_name_col',
      'Trait class'          => 'trait_class_col',
      'Trait description'    => 'trait_def_col',
      'Trait synonyms'       => 'trait_synonyms_col',
      'Trait status'         => 'trait_status_col',
+     'Trait Xref'        => 'trait_xref_col',
      'Method ID'            => 'method_id_col',
      'Method name'          => 'method_name_col',
      'Method class'         => 'method_class_col',
@@ -160,7 +165,7 @@ for my $row ($start_row .. $end_row) {
     # Access the values for the current row
     my $variable_id   = $cell_values{'variable_id_col'};
     my $variable_name = $cell_values{'variable_name_col'};
-    my $variable_def;
+    my $variable_def  = $cell_values{'variable_def_col'};;
     # Check if required columns are found
     die "Error: 'Variable ID' column not found.\n"   unless defined $variable_id;
     die "Error: 'Variable name' column not found.\n" unless defined $variable_name;
@@ -173,6 +178,7 @@ for my $row ($start_row .. $end_row) {
     }
 
     my $variable_status = $cell_values{'variable_status_col'};
+    my $variable_xref = $cell_values{'variable_xref_col'};
 
     my $trait_id      = $cell_values{'trait_id_col'};
     my $trait_name    = $cell_values{'trait_name_col'};
@@ -187,6 +193,8 @@ for my $row ($start_row .. $end_row) {
     }
 
     my $trait_status = $cell_values{'trait_status_col'};
+
+    my $trait_xref = $cell_values{'trait_xref_col'};
 
     my $method_id          = $cell_values{'method_id_col'};
     my $method_name        = $cell_values{'method_name_col'};
@@ -239,6 +247,8 @@ for my $row ($start_row .. $end_row) {
     push @output, "relationship: variable_of $method_id ! $method_name \n" if $method_id;
     push @output, "relationship: variable_of $scale_id ! $scale_name \n" if $scale_id;
     my $obsolete_var = $variable_status =~ /^\s*obsolete\s*$/i ? "is_obsolete: true\n\n" : "\n";
+    my $xref_var = $variable_xref ? "xref: $variable_xref\n" : undef;
+    push @output, $xref_var;
     push @output, $obsolete_var;
 
     #trait output
@@ -250,6 +260,8 @@ for my $row ($start_row .. $end_row) {
     push @output, $trait_synonyms_list  if $trait_synonyms_list;
     push @output, "is_a: $trait_class_id ! $trait_class \n" ;
     my $obsolete_trait = $trait_status =~ /^\s*obsolete\s*$/i ? "is_obsolete: true\n\n" : "\n";
+    my $xref_trait = $trait_xref ? "xref: $trait_xref\n" : undef;
+    push @output, $xref_trait;
     push @output, $obsolete_trait;
 
 
@@ -259,7 +271,7 @@ for my $row ($start_row .. $end_row) {
     push @output, "name: $method_name\n";
     push @output, "namespace: $method_namespace\n";
     push @output, "def: \"$method_formula\"\n" if $method_formula;
-    push @output, "is_a: method_of $method_class_id ! $method_class \n\n" if $method_class;
+    push @output, "is_a: $method_class_id ! $method_class \n\n" if $method_class;
 
     #scale_output
     push @output, "[Term]\n";
