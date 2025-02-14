@@ -256,6 +256,7 @@ sub get_sample_data {
         my $sample_id = $schema->resultset("Stock::Stock")->find({ name => $sample })->stock_id();
         push @sample_id_list, $sample_id;
     }
+    $sample_info{'sample_list'} = \@sample_id_list;
 
     my $where_clause;
     my $query = join ("," , @sample_id_list);
@@ -276,7 +277,6 @@ sub get_sample_data {
 
     my $number_of_samples_with_data = scalar(@samples_with_data);
     $sample_info{'number_of_samples_with_data'} = $number_of_samples_with_data;
-    $sample_info{'samples_with_data'} = \@samples_with_data;
 
     return \%sample_info;
 

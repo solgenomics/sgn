@@ -45,26 +45,9 @@ sub genotyping_data_search_GET : Args(0) {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
-#   print STDERR "INPUT =".Dumper($clean_inputs)."\n";
 
     my $limit = $c->req->param('length');
     my $offset = $c->req->param('start');
-
-    if ($clean_inputs->{plate_id_list}) {
-        my $sample_data_search = CXGN::Stock::TissueSample::Search->new({
-            bcs_schema=>$bcs_schema,
-            plate_db_id_list => $clean_inputs->{plate_id_list},
-        });
-        my $samples_with_data;
-        my $data = $sample_data_search->get_sample_data();
-        my $number_of_samples_with_data = $data->{number_of_samples_with_data};
-        print STDERR "NUMBER OF SAMPLES WITH DATA =".Dumper($number_of_samples_with_data)."\n";
-        if ($number_of_samples_with_data > 0) {
-            my $samples_with_data = $data->{samples_with_data};
-            print STDERR "PLATE SAMPLE =".Dumper($samples_with_data)."\n";
-            $clean_inputs->{tissue_sample_id_list} = $samples_with_data;
-        }
-    }
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$bcs_schema,
@@ -74,6 +57,7 @@ sub genotyping_data_search_GET : Args(0) {
         tissue_sample_list=>$clean_inputs->{tissue_sample_id_list},
         genotype_data_project_list=>$clean_inputs->{genotyping_data_project_id_list},
         protocol_id_list=>$clean_inputs->{protocol_id_list},
+        plate_list=>$clean_inputs->{plate_list},
         #marker_name_list=>['S80_265728', 'S80_265723']
         #marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
         #marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
