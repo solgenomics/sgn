@@ -17,6 +17,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 <div id="analysis_log_div" style="display:none">
+  <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Clear failed and dead jobs</button>
+  <br>
+  <button id="clear_jobs_cache_button" class='btn btn-sm btn-primary'>Clear all jobs except most recent</button> 
+  <select id="keep_x_recent_jobs_select">
+    <option>20</option>
+    <option>10</option>
+    <option>5</option>
+  </select>
   <table class="table" id="analysis_list" style="text-align: left;">
     <thead>
       <tr>
