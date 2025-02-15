@@ -1,5 +1,7 @@
 package CXGN::File::Parse::Plugin::Plain;
 
+use strict;
+
 use Data::Dumper;
 use CXGN::File::Parse;
 use Text::CSV;
