@@ -219,7 +219,7 @@ sub create_hash_lookups {
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
-    print STDERR "trait list after filtering @trait_list\n";
+    #print STDERR "trait list after filtering @trait_list\n";
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
 
@@ -228,7 +228,7 @@ sub create_hash_lookups {
     $self->stock_id_list($stock_id_list->{'transform'});
 
     foreach my $trait_name (@trait_list) {
-        print STDERR "trait: $trait_name\n";
+        #print STDERR "trait: $trait_name\n";
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
         $trait_objs{$trait_name} = $trait_cvterm;
         push @cvterm_ids, $trait_cvterm->cvterm_id();
@@ -276,7 +276,7 @@ sub verify {
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
-    print STDERR Dumper \@trait_list;
+    #print STDERR Dumper \@trait_list;
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
@@ -447,12 +447,12 @@ sub verify {
                 } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
                     my $prev = $check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp};
                     if ( defined($prev) ) {
-                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
                     }
                 } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
                     my $prev = $check_unique_trait_stock{$trait_cvterm_id, $stock_id};
                     if ( defined($prev) ) {
-                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
                     }
                 }
 
