@@ -1089,6 +1089,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
     my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
     my $associated_protocol;
 
@@ -1177,6 +1178,11 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         push @genotyping_project_list, $genotyping_project_id;
     }
 
+    my @genotyping_plate_list;
+    if (defined $genotyping_plate_id) {
+        push @genotyping_plate_list, $genotyping_plate_id;
+    }
+
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
@@ -1196,6 +1202,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock,
             #markerprofile_id_list=>$markerprofile_id_list,
             genotype_data_project_list=>\@genotyping_project_list,
+            genotyping_plate_list=>\@genotyping_plate_list,
             #limit=>$limit,
             #offset=>$offset
         }
@@ -1764,7 +1771,7 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
             people_schema=>$people_schema,
             protocol_id_list=>\@protocol_list,
             genotype_data_project_list=>\@genotyping_project_list,
-            genotyping_plate_list=>\@genotyping_plate_list,            
+            genotyping_plate_list=>\@genotyping_plate_list,
             filename => $tempfile,
         }
     );

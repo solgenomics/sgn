@@ -225,7 +225,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
     </div>
 </div>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data derived from this genotyping plate.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button><button class="btn btn-default" style="margin:3px" id="plate_kasp_genotype_data_download_csv">Download All Genotype Data (CSV)</button>', info_section_id => "plate_genotyping_data" &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data derived from this genotyping plate.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="plate_genotyping_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button><button class="btn btn-default" style="margin:3px" id="plate_kasp_genotype_data_download_csv">Download All Genotype Data (CSV)</button>', info_section_id => "plate_genotyping_data" &>
 
 <div class="row">
     <div class="col-sm-12">
