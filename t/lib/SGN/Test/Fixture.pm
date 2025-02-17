@@ -161,7 +161,7 @@ sub dbic_schema {
 	return $self->people_schema();
     }
 
-    return undef;
+    return;
 }
 
 sub get_conf {
