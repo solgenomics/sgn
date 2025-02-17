@@ -447,12 +447,12 @@ sub verify {
                 } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
                     my $prev = $check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp};
                     if ( defined($prev) ) {
-                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
                     }
                 } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
                     my $prev = $check_unique_trait_stock{$trait_cvterm_id, $stock_id};
                     if ( defined($prev) ) {
-                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
                     }
                 }
 
