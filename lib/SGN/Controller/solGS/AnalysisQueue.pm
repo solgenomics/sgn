@@ -1240,13 +1240,11 @@ sub analysis_log_file {
 }
 
 # Deletes analysis logfile rows which show dead or failed analyses
-sub delete_dead_analyses : Path('/solgs/delete_dead_analysis_logs') Args(0) {
+sub delete_dead_analyses : Path('/solgs/delete/dead/analyses') Args(0) {
   my ( $self, $c ) = @_;
 
   $self->analysis_log_file($c);
   my $log_file = $c->stash->{analysis_log_file};
-
-   no warnings 'uninitialized';
 
     if ($log_file) {
       my @rows = read_file( $log_file, { binmode => ':utf8' } );
@@ -1270,6 +1268,9 @@ sub delete_dead_analyses : Path('/solgs/delete_dead_analysis_logs') Args(0) {
             if ($analysis_status =~ /Submitted/i && $analysis_age >= 2) {
               push @rows_to_delete, $row;
             }
+            if ($analysis_status =~ /Failed/i) {
+              push @rows_to_delete, $row;
+            }
         }
 
         my @new_logfile = ();
@@ -1281,10 +1282,15 @@ sub delete_dead_analyses : Path('/solgs/delete_dead_analysis_logs') Args(0) {
 
         write_file($log_file,{binmode => ':utf8'},@new_logfile);
     }
+    if ($@){
+      print STDERR "Error: $@";
+      $c->stash->{rest} = {error => "$@"};
+    }
+    $c->stash->{rest} = {success => 1};
 }
 
 # deletes all analyses in logfile older than $time. Time is one week, one month, six months, or one year
-sub delete_old_analyses : Path('/solgs/delete_old_analyses') Args(1) {
+sub delete_old_analyses : Path('/solgs/delete/old/analyses') Args(1) {
   my ( $self, $c, $time ) = @_;
 
   my $timetable = {
@@ -1294,14 +1300,14 @@ sub delete_old_analyses : Path('/solgs/delete_old_analyses') Args(1) {
     'one_year' => 365
   };
 
+  print STDERR "Clearing jobs older than $time...\n";
+
   if ($time ne 'one_week' && $time ne 'one_month' && $time ne 'six_months' && $time ne 'one_year') {
-    $c->stash->{error => 'Invalid time period selected.'};
+    $c->stash->{rest} = {error => 'Invalid time period selected.'};
   }
 
   $self->analysis_log_file($c);
   my $log_file = $c->stash->{analysis_log_file};
-
-     no warnings 'uninitialized';
 
     if ($log_file) {
       my @rows = read_file( $log_file, { binmode => ':utf8' } );
@@ -1335,6 +1341,11 @@ sub delete_old_analyses : Path('/solgs/delete_old_analyses') Args(1) {
 
         write_file($log_file,{binmode => ':utf8'},@new_logfile);
     }
+    if ($@){
+      print STDERR "Error: $@";
+      $c->stash->{rest} = {error => "$@"};
+    }
+    $c->stash->{rest} = {success => 1};
 }
 
 sub get_user_solgs_analyses {
