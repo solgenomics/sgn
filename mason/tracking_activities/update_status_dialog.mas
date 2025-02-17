@@ -2,9 +2,25 @@
 $identifier_id
 $identifier_name
 $material_id
+$material_name
 $updated_status_type
 $program_name
+$stock_type_page
 </%args>
+
+<%perl>
+
+my $display_label;
+my $display_name;
+if ($stock_type_page eq 'tracking_id') {
+    $display_label = 'Tracking ID';
+    $display_name = $identifier_name;
+} elsif ($stock_type_page eq 'transformation_id') {
+    $display_label = 'Transformation ID';
+    $display_name = $material_name;
+}
+</%perl>
+
 
 <div class="modal fade" id="update_status_dialog" name="_dialog" tabindex="-1" role="dialog" aria-labelledby="updateStatusDialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -17,9 +33,9 @@ $program_name
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="update_status_form" name="update_status_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Tracking Identifier: </label>
+                            <label class="col-sm-4 control-label"><% $display_label %>: </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" name="tracking_identifier_name" id="tracking_identifier_name" disabled value="<% $identifier_name %>">
+                                <input class="form-control" name="tracking_identifier_name" id="tracking_identifier_name" disabled value="<% $display_name %>">
                             </div>
                         </div>
                         <div class="form-group">
@@ -101,7 +117,7 @@ jQuery(document).ready(function(){
     var material_id = "<% $material_id %>";
     var program_name = "<% $program_name %>";
 
-    jQuery("#update_status_link").click( function() {
+    jQuery("[name='update_status_link']").click(function() {
         jQuery('#update_status_dialog').modal('show');
     });
 
@@ -156,9 +172,9 @@ jQuery(document).ready(function(){
         location.reload();
     });
 
-    jQuery('#reverse_status_link').click(function() {
+    jQuery("[name='reverse_status_link']").click(function() {
         var updated_status_type = "<% $updated_status_type %>";
-        var confirmation = confirm("Are you sure you want to reverse status of this tracking identifier ?");
+        var confirmation = confirm("Are you sure you want to reverse status of this <% $display_label %>?");
         if (confirmation) {
             jQuery.ajax({
                 url: '/ajax/tracking_activity/reverse_status',
