@@ -2785,6 +2785,15 @@ while (my $rs = $exp_md_files_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_md_files_table;
 
+if ($@) {
+    print STDERR "An error occurred: $@\n";
+}
+
+$f->dbh()->rollback();
+
+$f->clean_up_db();
+
+
 
 done_testing();
 
