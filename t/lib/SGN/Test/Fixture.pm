@@ -413,6 +413,11 @@ sub delete_table_entries {
     }
 
     if ($table eq "metadata") {
+        # delete associated images first
+	my $iq = "DELETE FROM phenome.stock_image where metadata_id > ?";
+	my $ih = $self->dbh()->prepare($iq);
+	$ih->execute($previous_max_id);
+	    
         my $rs = undef;
         my $q = "DELETE FROM metadata.md_files where metadata_id > ?";
         my $h = $self->dbh()->prepare($q);
