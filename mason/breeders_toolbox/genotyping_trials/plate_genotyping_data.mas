@@ -54,15 +54,11 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#plate_genotyping_data_download_all_vcf').click(function(){
-        window.location.replace("/breeders/download_gbs_action/?genotyping_plate_id=<% $trial_id %>&download_format=VCF");
+        window.location.replace("/breeders/download_gbs_action/?genotyping_plate_id=<% $trial_id %>&download_format=VCF&forbid_cache=1");
     });
 
-    jQuery('#project_genotype_data_download_all_dosagematrix').click(function(){
-        if (refresh_results) {
-            window.location.replace("/breeders/download_gbs_action/?genotyping_project_id=<% $trial_id %>&download_format=DosageMatrix&format=accession_ids&forbid_cache=1");
-        } else {
-            window.location.replace("/breeders/download_gbs_action/?genotyping_project_id=<% $trial_id %>&download_format=DosageMatrix&format=accession_ids");
-        }
+    jQuery('#plate_genotyping_data_download_all_dosagematrix').click(function(){
+        window.location.replace("/breeders/download_gbs_action/?genotyping_plate_id=<% $trial_id %>&download_format=DosageMatrix&forbid_cache=1");
     });
 
     jQuery('#plate_kasp_genotype_data_download_csv').click(function(){
