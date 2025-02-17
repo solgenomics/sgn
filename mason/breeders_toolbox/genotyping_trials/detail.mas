@@ -224,28 +224,9 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
         </div>
     </div>
 </div>
-<div class="row">
-    <div class="col-sm-12">
-        <div class="well">
-            <div class="row">
-                <div class="col-sm-1">
-                    <span style="font-size:3.5em;" class="glyphicon glyphicon-map-marker"></span>
-                </div>
-                <div class="col-sm-11">
 
-                    <&| /page/info_section.mas, title => "<h4 style='display:inline'>Genotyping Data</h4>", subtitle=> "View genotyping data derived from this genotyping plate.", id => 'plate_genotyping_data_section', collapsible => 1, collapsed => 1 &>
-                        <div class="panel panel-default">
-                            <div class="panel-body">
-                                <& /breeders_toolbox/genotyping_trials/plate_genotyping_data.mas, trial_id => $trial_id &>
-                            </div>
-                        </div>
-                    </&>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data derived from this genotyping plate.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button><button class="btn btn-default" style="margin:3px" id="plate_kasp_genotype_data_download_csv">Download All Genotype Data (CSV)</button>', info_section_id => "plate_genotyping_data" &>
 
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 <div class="row">
     <div class="col-sm-12">
         <div class="well">

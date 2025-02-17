@@ -110,7 +110,7 @@ has 'genotype_data_project_list' => (
     is => 'ro',
 );
 
-has 'plate_list' => (
+has 'genotyping_plate_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'ro',
 );
@@ -370,7 +370,7 @@ sub get_genotype_info {
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
     my $tissue_sample_list = $self->tissue_sample_list;
-    my $plate_list = $self->plate_list;
+    my $genotyping_plate_list = $self->genotyping_plate_list;
     my $marker_name_list = $self->marker_name_list;
     my $chromosome_list = $self->chromosome_list;
     my $start_position = $self->start_position;
@@ -423,10 +423,10 @@ sub get_genotype_info {
     }
 
     #For genotyping plate samples
-    if ($plate_list && scalar(@$plate_list)>0) {
+    if ($genotyping_plate_list && scalar(@$genotyping_plate_list)>0) {
         my $sample_data_search = CXGN::Stock::TissueSample::Search->new({
             bcs_schema=>$self->bcs_schema,
-            plate_db_id_list => $plate_list,
+            plate_db_id_list => $genotyping_plate_list,
         });
         my $data = $sample_data_search->get_sample_data();
         my $sample_list = $data->{sample_list};
@@ -731,7 +731,7 @@ sub init_genotype_iterator {
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
     my $tissue_sample_list = $self->tissue_sample_list;
-    my $plate_list = $self->plate_list;
+    my $genotyping_plate_list = $self->genotyping_plate_list;
     my $marker_name_list = $self->marker_name_list;
     my $chromosome_list = $self->chromosome_list;
     my $start_position = $self->start_position;
@@ -793,10 +793,10 @@ sub init_genotype_iterator {
     }
 
     #For genotyping plate samples
-    if ($plate_list && scalar(@$plate_list)>0) {
+    if ($genotyping_plate_list && scalar(@$genotyping_plate_list)>0) {
         my $sample_data_search = CXGN::Stock::TissueSample::Search->new({
             bcs_schema=>$self->bcs_schema,
-            plate_db_id_list => $plate_list,
+            plate_db_id_list => $genotyping_plate_list,
         });
         my $data = $sample_data_search->get_sample_data();
         my $sample_list = $data->{sample_list};
@@ -849,7 +849,7 @@ sub init_genotype_iterator {
             push @where_clause, "genotype_values.value \\@> $json_val"."::jsonb";
         }
     }
-    
+
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $offset_clause = '';

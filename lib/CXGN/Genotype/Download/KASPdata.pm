@@ -47,6 +47,11 @@ has 'genotype_data_project_list' => (
     is => 'ro',
 );
 
+has 'genotyping_plate_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
 has 'genotypeprop_hash_select' => (
     isa => 'ArrayRef[Str]',
     is => 'ro',
@@ -70,14 +75,16 @@ sub download {
     my $people_schema = $self->people_schema;
     my $protocol_id_list = $self->protocol_id_list;
     my $genotyping_project_list = $self->genotype_data_project_list;
+    my $genotyping_plate_list = $self->genotyping_plate_list;
     my $genotypeprop_hash_select = ['NT', 'XV', 'YV'];
     my $return_only_first_genotypeprop_for_stock = $self->return_only_first_genotypeprop_for_stock;
-        
+
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
         protocol_id_list=>$protocol_id_list,
         genotype_data_project_list=>$genotyping_project_list,
+        genotyping_plate_list=>$genotyping_plate_list,
         genotypeprop_hash_select=>$genotypeprop_hash_select
     });
 

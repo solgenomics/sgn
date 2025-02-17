@@ -448,7 +448,10 @@ $field_headers => ()
 % if ($info_section_id eq 'pcr_genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/pcr_genotype_data.mas, protocol_id => $protocol_id, marker_names => $marker_names &>
 % } #End pcr_genotyping_protocol_genotype_data
+% if ($info_section_id eq 'plate_genotyping_data'){
+                                <& /breeders_toolbox/genotyping_trials/plate_genotyping_data.mas, trial_id => $trial_id &>
 
+% } #End plate_genotyping_data
 
 
 % if ($info_section_id eq 'crossingtrial_details'){
