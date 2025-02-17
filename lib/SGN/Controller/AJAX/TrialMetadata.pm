@@ -4929,6 +4929,11 @@ sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args
         $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
         return;
     }
+
+    if (!$c->user()->check_roles("curator")) {
+	$c->stash->{rest} = {error_string => "Your account must have the curator role to delete entry numbers" };
+	return;
+    }
     
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
