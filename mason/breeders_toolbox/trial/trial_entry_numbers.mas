@@ -96,7 +96,6 @@ $trial_name
             type: 'GET',
             success: function(response) {
                 if ( response && response.entry_numbers ) {
-		    alert(JSON.stringify(response.entry_numbers));
                     displayEntryNumbers(response.entry_numbers);
                 }
                 else {
