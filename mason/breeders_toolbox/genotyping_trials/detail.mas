@@ -267,6 +267,10 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
         </div>
     </div>
 </div>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Deletion</h4>", info_section_subtitle => 'Deleting genotyping data derived from this genotyping plate or genotyping plate layout.', icon_class => "glyphicon glyphicon-trash", info_section_id => "delete_genotyping_plate_section" &>
+
+
 <div class="row">
     <div class="col-sm-12">
         <div class="well">

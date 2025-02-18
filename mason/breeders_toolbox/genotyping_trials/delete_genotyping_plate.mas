@@ -1,0 +1,45 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Transformation' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<&| /page/info_section.mas, id=>'delete_genotyping_data_section', title => 'Delete Genotyping Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <center>Delete all genotyping data derived from this genotyping plate.</center>
+    </div>
+
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-primary" id="delete_plate_genotyping_data" role="button">Delete genotyping data</button><br/><br/>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, id=>'delete_genotyping_plate_layout_section', title => 'Delete Genotyping Plate Layout', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <center>You cannot delete genotyping plate having associated genotyping data.</center>
+    </div>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-primary" id="delete_genotyping_plate_layout" role="button">Delete genotyping plate layout</button><br/><br/>
+            </div>
+        </div>
+    </div>
+</&>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+
+
+
+});
+
+</script>
