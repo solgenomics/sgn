@@ -1426,7 +1426,7 @@ sub create_analysis_log_dir {
     # mkpath( $log_dir, 0, 0755 );
     make_path($log_dir,{
       verbose => 1,
-      chmod => 0755
+      chmod => "0755"
     });
 
     $c->stash->{analysis_log_dir} = $log_dir;
