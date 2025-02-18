@@ -914,7 +914,7 @@ sub delete_previous_phenotypes {
         my $dbh = $self->bcs_schema->storage->dbh();
 
         # create temp table to hold stock and trait combinations to delete
-        $dbh->do("DROP TABLE IF EXISTS pheno_data_delete");
+        $dbh->do("DROP TABLE IF EXISTS pheno_data_to_delete");
         $dbh->do("CREATE TEMP TABLE pheno_data_to_delete (stock_id BIGINT, cvterm_id BIGINT)");
 
         # Insert the stock and trait combinations
