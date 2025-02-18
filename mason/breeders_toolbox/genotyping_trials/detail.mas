@@ -268,9 +268,9 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
     </div>
 </div>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Deletion</h4>", info_section_subtitle => 'Deleting genotyping data derived from this genotyping plate or genotyping plate layout.', icon_class => "glyphicon glyphicon-trash", info_section_id => "delete_genotyping_plate_section" &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, number_of_samples_with_data => $number_of_samples_with_data, info_section_title => "<h4 style='display:inline'>Deletion</h4>", info_section_subtitle => 'Deleting genotyping data derived from this genotyping plate or genotyping plate layout.', icon_class => "glyphicon glyphicon-trash", info_section_id => "delete_genotyping_plate_section" &>
 
-
+<!--
 <div class="row">
     <div class="col-sm-12">
         <div class="well">
@@ -290,6 +290,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
         </div>
     </div>
 </div>
+-->
 
 <&| /page/info_section.mas, id=>"genotyping_trial_check_layout_section", title=>"Check Plate Design", collapsible=>1, collapsed=>1 &>
     <div id="genotyping_trial_check_layout_section_div">
@@ -321,6 +322,7 @@ genotyping_facility => $genotyping_facility
 <script>
 
     jQuery(document).ready(function(){
+
         load_breeding_program_info(<% $trial_id %>);
         //load_genotyping_status_info(<% $plate_id %>);
     });

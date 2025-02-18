@@ -1,8 +1,9 @@
 <%args>
 $trial_id
+$number_of_samples_with_data => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Transformation' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <&| /page/info_section.mas, id=>'delete_genotyping_data_section', title => 'Delete Genotyping Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
@@ -20,13 +21,16 @@ $trial_id
 </&>
 
 <&| /page/info_section.mas, id=>'delete_genotyping_plate_layout_section', title => 'Delete Genotyping Plate Layout', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
-    <div class="well well-sm">
-        <center>You cannot delete genotyping plate having associated genotyping data.</center>
-    </div>
+    <div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
+
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <button class="btn btn-primary" id="delete_genotyping_plate_layout" role="button">Delete genotyping plate layout</button><br/><br/>
+%if ($number_of_samples_with_data > 0) {
+                <div class="boxbgcolor5" >Cannot delete genotyping plate layout. This layout has associated genotyping data.</div>
+%} else {
+                <button class="btn btn-primary" id="delete_layout_data_by_trial_id" role="button">Delete genotyping plate layout</button><br/><br/>
+%}
             </div>
         </div>
     </div>
