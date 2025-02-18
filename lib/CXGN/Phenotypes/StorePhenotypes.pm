@@ -904,10 +904,17 @@ sub delete_previous_phenotypes {
     my $self = shift;
     my $trait_and_stock_to_overwrite = shift;
     my $saved_nd_experiment_ids = shift;
-    my $stocks_sql = join ("," , @{$trait_and_stock_to_overwrite->{stocks}});
-    my $traits_sql = join ("," , @{$trait_and_stock_to_overwrite->{traits}});
+    my @stocks = @{$trait_and_stock_to_overwrite->{stocks}};
+    my @traits = @{$trait_and_stock_to_overwrite->{traits}};
     my $saved_nd_experiment_ids_sql = join (",", @$saved_nd_experiment_ids);
     my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+    my @stocks_and_traits_query;
+    my @params;
+    for my $index (0 .. $#stocks) {
+        push(@stocks_and_traits_query, "(stock.stock_id = ? AND phenotype.cvalue_id = ?)");
+        push(@params, $stocks[$index], $traits[$index]);
+    }
 
     my $q_search = "
         SELECT phenotype_id, nd_experiment_id, file_id
@@ -917,14 +924,13 @@ sub delete_previous_phenotypes {
         JOIN nd_experiment using(nd_experiment_id)
         LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
         JOIN stock using(stock_id)
-        WHERE stock.stock_id IN ($stocks_sql)
-        AND phenotype.cvalue_id IN ($traits_sql)
+        WHERE (" . join(' OR ', @stocks_and_traits_query) . ")
         AND nd_experiment_id NOT IN ($saved_nd_experiment_ids_sql)
         AND nd_experiment.type_id = $nd_experiment_type_id;
         ";
 
     my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
-    $h->execute();
+    $h->execute(@params);
 
     my %phenotype_ids_and_nd_experiment_ids_to_delete;
     my @deleted_phenotypes;
