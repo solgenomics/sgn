@@ -2,7 +2,7 @@ package SGN::Controller::solGS::AnalysisQueue;
 
 use Moose;
 use namespace::autoclean;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path  /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use JSON;
@@ -607,8 +607,10 @@ sub structure_training_modeling_output {
     my $training_pop_id = $c->stash->{training_pop_id};
     my $protocol_id     = $c->stash->{genotyping_protocol_id};
 
-    my @traits_ids = @{ $c->stash->{training_traits_ids} }
-      if $c->stash->{training_traits_ids};
+    my @traits_ids;
+    if ($c->stash->{training_traits_ids}) {
+      @traits_ids = @{ $c->stash->{training_traits_ids} };
+    }
 
     my $referer = $c->req->referer;
     my $base    = $c->stash->{hostname};
@@ -833,8 +835,10 @@ sub structure_training_combined_pops_data_output {
 sub structure_selection_prediction_output {
     my ( $self, $c ) = @_;
 
-    my @traits_ids = @{ $c->stash->{training_traits_ids} }
-      if $c->stash->{training_traits_ids};
+    my @traits_ids;
+    if ($c->stash->{training_traits_ids}) {
+      @traits_ids = @{ $c->stash->{training_traits_ids} };
+    }
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $referer = $c->req->referer;
@@ -984,8 +988,10 @@ sub run_analysis {
     $analysis_page =~ s/$base//;
     my $referer = $c->req->referer;
 
-    my @selected_traits = @{ $c->stash->{training_traits_ids} }
-      if $c->stash->{training_traits_ids};
+    my @selected_traits;
+    if ($c->stash->{training_traits_ids}) {
+       @selected_traits = @{ $c->stash->{training_traits_ids} };
+    }
 
     eval {
         my $modeling_pages =
@@ -1135,7 +1141,7 @@ sub run_kinship_analysis {
 
     my $analysis_page = $c->stash->{analysis_page};
 
-    if ( $analysis_page = ~/kinship\/analysis/ ) {
+    if ( $analysis_page =~ /kinship\/analysis/ ) {
         $c->controller('solGS::Kinship')->run_kinship($c);
     }
 
@@ -1146,7 +1152,7 @@ sub run_pca_analysis {
 
     my $analysis_page = $c->stash->{analysis_page};
 
-    if ( $analysis_page = ~/pca\/analysis/ ) {
+    if ( $analysis_page =~ /pca\/analysis/ ) {
         $c->controller('solGS::pca')->run_pca($c);
     }
 
@@ -1157,7 +1163,7 @@ sub run_cluster_analysis {
 
     my $analysis_page = $c->stash->{analysis_page};
 
-    if ( $analysis_page = ~/cluster\/analysis/ ) {
+    if ( $analysis_page =~ /cluster\/analysis/ ) {
         $c->controller('solGS::Cluster')->run_cluster($c);
     }
 
@@ -1417,7 +1423,11 @@ sub create_analysis_log_dir {
     my $log_dir = $c->stash->{analysis_log_dir};
 
     $log_dir = catdir( $log_dir, $user_id );
-    mkpath( $log_dir, 0, 0755 );
+    # mkpath( $log_dir, 0, 0755 );
+    make_path($log_dir,{
+      verbose => 1,
+      chmod => 0755
+    });
 
     $c->stash->{analysis_log_dir} = $log_dir;
 
