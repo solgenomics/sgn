@@ -2156,46 +2156,46 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
 	    print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
 	}
 
-	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) { 
-	    my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
+	# if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) { 
+	#     my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
 	    
-	    # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
-	    #
-	    my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
-	    my $check_h = $schema->storage->dbh()->prepare($checkq);
-	    $check_h ->execute();
+	#     # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
+	#     #
+	#     my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
+	#     my $check_h = $schema->storage->dbh()->prepare($checkq);
+	#     $check_h ->execute();
 	    
-	    my @nd_experiment_ids;
-	    while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
-		push @nd_experiment_ids, $nd_experiment_id;
-	    }
+	#     my @nd_experiment_ids;
+	#     while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
+	# 	push @nd_experiment_ids, $nd_experiment_id;
+	#     }
 	    
-	    if (scalar(@nd_experiment_ids)>0) {
-		$nd_experiment_id_sql = join(",", @nd_experiment_ids);
+	#     if (scalar(@nd_experiment_ids)>0) {
+	# 	$nd_experiment_id_sql = join(",", @nd_experiment_ids);
 		
-		my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-		my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
-		$h3->execute();
+	# 	my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+	# 	my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
+	# 	$h3->execute();
 
-		my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
-		my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
-		$h_nd_json->execute();
+	# 	my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
+	# 	my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
+	# 	$h_nd_json->execute();
 		
-		my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-		my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
-		$h4->execute();
+	# 	my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+	# 	my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
+	# 	$h4->execute();
 		
-		open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
-                foreach (@nd_experiment_ids) {
-                    print $fh "$_\n";
-                }
-		close($fh);
-	    }
-	    my $async_delete = CXGN::Tools::Run->new();
-            $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
+	# 	open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
+        #         foreach (@nd_experiment_ids) {
+        #             print $fh "$_\n";
+        #         }
+	# 	close($fh);
+	#     }
+	#     my $async_delete = CXGN::Tools::Run->new();
+        #     $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
 
-            print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (and ".scalar(@nd_experiment_ids)." nd_experiment entries may still be in deletion in asynchronous process.)\n";
-        }
+        #     print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (and ".scalar(@nd_experiment_ids)." nd_experiment entries may still be in deletion in asynchronous process.)\n";
+        # }
     };
 
     my $error;
