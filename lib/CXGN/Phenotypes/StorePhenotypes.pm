@@ -906,7 +906,6 @@ sub delete_previous_phenotypes {
     my $saved_nd_experiment_ids = shift;
     my @stocks = @{$trait_and_stock_to_overwrite->{stocks}};
     my @traits = @{$trait_and_stock_to_overwrite->{traits}};
-    my $saved_nd_experiment_ids_sql = join (",", @$saved_nd_experiment_ids);
     my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
     my @deleted_phenotypes;
@@ -924,6 +923,17 @@ sub delete_previous_phenotypes {
             $h->execute($stocks[$index], $traits[$index]);
         }
 
+        # create temp table to hold experiment ids to keep
+        $dbh->do("DROP TABLE IF EXISTS experiments_to_keep");
+        $dbh->do("CREATE TEMP TABLE experiments_to_keep (nd_experiment_id BIGINT)");
+
+        # Insert saved nd_experiment_ids
+        for my $id (@$saved_nd_experiment_ids) {
+            my $i = "INSERT INTO experiments_to_keep (nd_experiment_id) VALUES (?)";
+            my $h = $dbh->prepare($i);
+            $h->execute($id);
+        }
+
         my $q_search = "
             SELECT phenotype_id, nd_experiment_id, file_id
             FROM phenotype
@@ -933,7 +943,7 @@ sub delete_previous_phenotypes {
             LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
             JOIN stock using(stock_id)
             JOIN pheno_data_to_delete AS temp ON (temp.stock_id = stock.stock_id AND temp.cvterm_id = phenotype.cvalue_id)
-            WHERE nd_experiment_id NOT IN ($saved_nd_experiment_ids_sql)
+            WHERE nd_experiment_id NOT IN (SELECT DISTINCT(nd_experiment_id) FROM experiments_to_keep)
             AND nd_experiment.type_id = $nd_experiment_type_id;
             ";
 
