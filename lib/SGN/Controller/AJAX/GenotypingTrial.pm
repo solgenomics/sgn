@@ -726,11 +726,10 @@ sub plate_genotyping_data_delete_GET : Args(0) {
     my $sample_list = $data->{sample_list};
     my $stock_ids = join ("," , @$sample_list);
 
-    my $q = "SELECT nd_experiment_id, genotype_id
-        FROM genotype
-        JOIN nd_experiment_genotype ON (genotype.genotype_id = nd_experiment_genotype.genotype_id)
-        JOIN nd_experiment ON (nd_experiment_genotype.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
-        JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+    my $q = "SELECT nd_experiment_genotype.nd_experiment_id, nd_experiment_genotype.genotype_id
+        FROM nd_experiment
+        JOIN nd_experiment_genotype ON (nd_experiment.nd_experiment_id = nd_experiment_genotype.nd_experiment_id) AND nd_experiment.type_id = ?
+        JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         WHERE nd_experiment_stock.stock_id IN ($stock_ids);
     ";
 
@@ -743,6 +742,8 @@ sub plate_genotyping_data_delete_GET : Args(0) {
         push @genotype_ids_to_delete, $genotype_id;
         push @nd_experiment_ids_to_delete, $nd_experiment_id;
     }
+    print STDERR "GENOTYPE IDS TO DELETE =".Dumper(\@genotype_ids_to_delete)."\n";
+    print STDERR "ND EXPERIMENT IDS TO DELETE =".Dumper(\@nd_experiment_ids_to_delete)."\n";
 
     if (scalar (@genotype_ids_to_delete) > 0) {
         my $genotype_ids = join ("," , @genotype_ids_to_delete);
