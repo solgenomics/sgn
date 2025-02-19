@@ -980,7 +980,7 @@ is($trial->get_project_type()->[1], "Clonal Evaluation", "set type test");
 
 # test for recently_modified_* functions
 #
-my $new_trials = CXGN::Project::get_recently_added_trials($f->bcs_schema(), 'week');
+my $new_trials = CXGN::Project::get_recently_added_trials($f->bcs_schema(), $f->phenome_schema, $f->people_schema, $f->metadata_schema, 'week');
 
 print STDERR "RECENT TRIALS: ".Dumper($new_trials);
 is(scalar(@$new_trials), 2, "check that there are two recently added trials");
@@ -990,7 +990,7 @@ my $phenotype_row = $f->bcs_schema()->resultset('Phenotype::Phenotype')->find( {
 $phenotype_row->create_date($now->iso8601());
 $phenotype_row->update();
 
-my $modified_trials = CXGN::Project::get_recently_modified_trials($f->bcs_schema(), 'week');
+my $modified_trials = CXGN::Project::get_recently_modified_trials($f->bcs_schema(), $f->phenome_schema, $f->people_schema, $f->metadata_schema, 'week');
 print STDERR "RECENTLY MODIFIED TRIALS: ".Dumper($modified_trials);
 is(scalar(@$modified_trials), 1, "check there is 1 modified trial in the database");
 
@@ -1012,6 +1012,7 @@ eval {
 };
 
 if ($@) { print "An error occurred: $@\n"; }
-ok($@, "deleted trial id (".$@.")");
+
+like($@, qr/The trial $trial_id does not exist/, "check that trial was deleted");
 
 done_testing();
