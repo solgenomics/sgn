@@ -205,6 +205,7 @@ be treated as management factors / treatments.
 use Moose;
 use Try::Tiny;
 use Module::Pluggable require => 1;
+use Data::Dumper;
 
 # Path to the file that is being parsed
 has 'file' => (
@@ -391,7 +392,7 @@ sub parse {
       foreach my $d (@$data) {
         foreach my $c ( @{$parsed->{required_columns}} ) {
           my $v = $d->{$c};
-          if ( !$v || $v eq '' ) {
+          if ( !defined($v) || $v eq '' ) {
             my $r = $d->{_row};
             push @{$parsed->{errors}}, "Required column $c does not have a value in row $r";
           }
@@ -463,7 +464,7 @@ sub clean_value {
   my $column_arrays = $self->column_arrays();
 
   # trim whitespace
-  if ( $value && $value ne '' ) {
+  if ( defined($value) && $value ne '' ) {
     $value =~ s/^\s+|\s+$//g;
   }
 
