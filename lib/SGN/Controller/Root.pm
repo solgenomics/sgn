@@ -40,6 +40,7 @@ sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+
     #$c->stash->{access}->resource("homepage");
     #if ($c->stash->{access}->grant($c->stash->{user_id}), "read") {
     #	print STDERR "READ IS ALLOWED!\n";
@@ -48,6 +49,12 @@ sub index :Path :Args(0) {
     #	print STDERR "NOT SURE WHAT IS ALLOWED!\n";
     #}
     
+
+    my $role;
+    if ($c->user) {
+	($role) = $c->user()->roles(); # get the highest role
+    }
+
     
     if ($c->config->{homepage_display_phenotype_uploads}){
         my @file_array;
@@ -98,9 +105,22 @@ sub index :Path :Args(0) {
     my @design_types = split ',',$design_type_string;
     $c->stash->{design_types} = \@design_types;
 
-    $c->stash->{template} = '/index.mas';
     $c->stash->{schema}   = $c->dbic_schema('SGN::Schema');
     $c->stash->{static_content_path} = $c->config->{static_content_path};
+
+    if ($c->user() && $c->config->{personalized_homepage} == 1) {
+	my $user = $c->user()->get_object();
+	$c->stash->{username} = $user->get_username();
+	$c->stash->{first_name} = $user->get_first_name();
+	$c->stash->{last_name} = $user->get_last_name();
+	$c->stash->{sp_person_id} = $user->get_sp_person_id();
+	$c->stash->{template} = '/index_logged_in_user.mas';
+	$c->stash->{role} = $role;
+    }
+    else { 
+	$c->stash->{template} = '/index.mas';
+    }
+ 
 }
 
 =head2 default

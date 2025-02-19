@@ -1,5 +1,8 @@
 package CXGN::File::Parse::Plugin::Plain;
 
+use strict;
+
+use Data::Dumper;
 use CXGN::File::Parse;
 use Text::CSV;
 
@@ -87,7 +90,7 @@ sub parse {
       $v = $super->clean_value($v, $h);
       $row_info{$h} = $v;
 
-      if ( $v && $v ne '' ) {
+      if ( defined($v) && $v ne '' ) {
         if ( ref($v) eq 'ARRAY' ) {
           if ( scalar(@$v) > 0 ) {
             foreach (@$v) {

@@ -488,6 +488,12 @@ has 'modification_note' => (
     is => 'rw',
 );
 
+has 'create_date' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+
 has 'objects' => (
     isa => 'Maybe[Ref]',
     is => 'rw',
@@ -523,6 +529,7 @@ sub BUILD {
         $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
         $self->stock($stock);
         $self->stock_id($stock->stock_id);
+	$self->create_date($stock->create_date);
     }
     elsif ($self->uniquename) {
 	$stock = $self->schema()->resultset("Stock::Stock")->find( { uniquename => $self->uniquename() });
@@ -531,6 +538,7 @@ sub BUILD {
 	}
 	else {
 	    $self->stock($stock);
+	    $self->create_date($stock->create_date());
 	    $self->stock_id($stock->stock_id);
 	}
     }
