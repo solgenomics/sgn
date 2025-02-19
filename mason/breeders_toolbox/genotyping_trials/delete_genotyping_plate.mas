@@ -21,8 +21,9 @@ $number_of_samples_with_data => undef
 </&>
 
 <&| /page/info_section.mas, id=>'delete_genotyping_plate_layout_section', title => 'Delete Genotyping Plate Layout', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
-    <div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
-
+    <div class="well well-sm">
+        <center>Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility..</center>
+    </div>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">

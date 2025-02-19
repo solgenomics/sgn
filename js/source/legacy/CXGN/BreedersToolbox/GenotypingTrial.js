@@ -389,6 +389,39 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    jQuery('#delete_plate_genotyping_data').click(function() {
+        const trial_id = get_trial_id();
+        const confirmation = confirm("Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/plate_genotyping_data_delete',
+                dataType: "json",
+                type: 'GET',
+                data:{
+                    'genotyping_plate_id': trial_id,
+                },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#working_msg').html("Deleting genotyping data...<br />");
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert('Deletion was successful');
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
+    });
+
     jQuery('#generate_genotyping_trial_barcode_link').click(function () {
         jQuery('#generate_genotyping_trial_barcode_button_dialog').modal("show");
     });

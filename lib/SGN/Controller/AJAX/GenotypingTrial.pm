@@ -12,6 +12,7 @@ use CXGN::Login;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::CreatePlateOrder;
 use CXGN::Genotype::StoreGenotypingProject;
+use CXGN::Stock::TissueSample::Search;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -665,6 +666,110 @@ sub set_project_for_genotyping_plate_POST : Args(0) {
 
     $c->stash->{rest} = { success => 1};
 }
+
+
+sub plate_genotyping_data_delete : Path('/ajax/breeders/plate_genotyping_data_delete') : ActionClass('REST') { }
+
+sub plate_genotyping_data_delete_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+
+    #print STDERR Dumper $c->req->params();
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_role;
+    my $user_name;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to delete genotyping data!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to delete genotyping data!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = { error => 'Must have correct permissions to delete genotyping data! Please contact us.' };
+        $c->detach();
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $basepath = $c->config->{basepath};
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+
+    my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+
+    my @plate_list = ();
+    @plate_list = ($genotyping_plate_id);
+    my $plate_samples = CXGN::Stock::TissueSample::Search->new({
+            bcs_schema => $schema,
+            plate_db_id_list => \@plate_list,
+        });
+
+    my $data = $plate_samples->get_sample_data();
+    my $sample_list = $data->{sample_list};
+    my $stock_ids = join ("," , @$sample_list);
+
+    my $q = "SELECT nd_experiment_id, genotype_id
+        FROM genotype
+        JOIN nd_experiment_genotype ON (genotype.genotype_id = nd_experiment_genotype.genotype_id)
+        JOIN nd_experiment ON (nd_experiment_genotype.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
+        JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        WHERE nd_experiment_stock.stock_id IN ($stock_ids);
+    ";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($experiment_cvterm_id);
+
+    my @genotype_ids_to_delete;
+    my @nd_experiment_ids_to_delete;
+    while (my ($nd_experiment_id, $genotype_id) = $h->fetchrow_array()) {
+        push @genotype_ids_to_delete, $genotype_id;
+        push @nd_experiment_ids_to_delete, $nd_experiment_id;
+    }
+
+    if (scalar (@genotype_ids_to_delete) > 0) {
+        my $genotype_ids = join ("," , @genotype_ids_to_delete);
+        my $genotype_q = "DELETE from genotype WHERE genotype_id IN ($genotype_ids);";
+        my $h = $schema->storage->dbh()->prepare($genotype_q);
+        $h->execute();
+    }
+
+    if (scalar (@nd_experiment_ids_to_delete) > 0) {
+        my $nd_experiment_ids = join ("," , @nd_experiment_ids_to_delete);
+        my $nd_experiment_ids_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_ids);";
+        my $h2 = $schema->storage->dbh()->prepare($nd_experiment_ids_files_delete);
+        $h2->execute();
+
+        my $nd_experiment_ids_delete = "DELETE FROM nd_experiment WHERE nd_experiment_id IN ($nd_experiment_ids);";
+        my $h3 = $schema->storage->dbh()->prepare($nd_experiment_ids_delete);
+        $h3->execute();
+
+    }
+
+    my $async_refresh = CXGN::Tools::Run->new();
+    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
 
 
 1;
