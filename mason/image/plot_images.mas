@@ -1,0 +1,111 @@
+
+<%args>
+$trial_id
+$stockref => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body" style="display: flex; justify-content: center;">
+            <table id="plot_images_results" class="table table-hover table-striped">
+            <thead>
+              <tr>
+                <th>Image Thumbnail</th>
+                <th>Filename</th>
+                <th>Description</th>
+                <th>Submitter</th>
+                <th>Associations</th>
+            </tr>
+            </thead>
+            </table>
+        </div>
+    </div>
+</div>
+            
+
+<script>
+
+<%perl>
+my $dbh = $stockref->{dbh};
+my $image_ids = $stockref->{image_ids} || [];
+</%perl>
+
+var trial_id = '<% $trial_id %>';
+var plotNames = [];
+var auth_token;
+    var require_login = "<% $c->get_conf('brapi_require_login') %>";
+    auth_token = "<% CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+
+    if (require_login == '1'){
+        auth_token = "<% CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+        if (!auth_token){
+            alert("Login required to display");
+        }
+    }
+
+jQuery(document).ready( function() {
+
+    jQuery('#trial_images_section_onswitch').click(function() {
+        console.log(<% $trial_id %>);
+        getObservationUnits()
+    });
+
+    jQuery('#plot_images_results').on( 'draw.dt', function () {
+        jQuery('a.image__search_group').colorbox();
+    });
+});
+
+function getObservationUnits() {
+    var trial_ids = [trial_id];
+
+    jQuery.ajax({
+        headers: (auth_token) ? {'Authorization': `Bearer ` + auth_token } : {},
+        method: 'GET',
+        url: '/brapi/v2/observationunits',
+        data: {
+            studyDbIds: trial_ids,
+            pageSize: 10000
+        },
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response) {
+            var data = response.result.data;
+            data.forEach(function(unit) {
+                plotNames.push(unit.observationUnitName);
+            });
+            console.log(plotNames);
+            _load_stock_image_results();
+        },
+        error: function(response) {
+            alert('Error fetching observation units');
+        },
+        complete: function() {
+            jQuery("#working_modal").modal("hide");
+        }
+    });
+}
+
+function _load_stock_image_results() {
+    var plotNamesString = plotNames.join(',');
+
+    plot_images_table = jQuery('#plot_images_results').DataTable({
+        'destroy' : true,
+        'searching' : false,
+        'ordering' : false,
+        'processing' : true,
+        'serverSide': true,
+        'scrollX': true,
+        'lengthMenu': [10,20,50,100,1000,5000],
+        'ajax': { 'url': '/ajax/search/images',
+            'data': function(d) {
+                d.image_stock_uniquename = plotNamesString;
+            }
+        }
+    });
+}
+
+
+</script>
