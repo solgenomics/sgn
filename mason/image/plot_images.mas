@@ -4,24 +4,26 @@ $trial_id
 $stockref => undef
 </%args>
 
+<style>
+#plot_images_results {
+    width: 100% !important;
+}
+</style>
+
 <& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
 
-<div class="well well-sm">
-    <div class="panel panel-default">
-        <div class="panel-body" style="display: flex; justify-content: center;">
-            <table id="plot_images_results" class="table table-hover table-striped">
-            <thead>
-              <tr>
-                <th>Image Thumbnail</th>
-                <th>Filename</th>
-                <th>Description</th>
-                <th>Submitter</th>
-                <th>Associations</th>
-            </tr>
-            </thead>
-            </table>
-        </div>
-    </div>
+<div class="well well-sm table-responsive">
+    <table id="plot_images_results" class="table table-hover table-striped">
+    <thead>
+        <tr>
+        <th>Image Thumbnail</th>
+        <th>Filename</th>
+        <th>Description</th>
+        <th>Submitter</th>
+        <th>Associations</th>
+    </tr>
+    </thead>
+    </table>
 </div>
             
 
@@ -93,12 +95,19 @@ function _load_stock_image_results() {
 
     plot_images_table = jQuery('#plot_images_results').DataTable({
         'destroy' : true,
-        'searching' : false,
-        'ordering' : false,
+        'searching' : true,
+        'ordering' : true,
         'processing' : true,
         'serverSide': true,
         'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
+        'colummnDefs': [
+            { "width": "50%", "targets": 0 },
+            { "width": "50%", "targets": 1 },
+            { "width": "50%", "targets": 2 },
+            { "width": "50%", "targets": 3 },
+            { "width": "50%", "targets": 4 },
+        ],
         'ajax': { 'url': '/ajax/search/images',
             'data': function(d) {
                 d.image_stock_uniquename = plotNamesString;
