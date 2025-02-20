@@ -151,6 +151,8 @@ $parent_project_id => undef
 $activity_type => undef
 $field_headers => ()
 
+$data_type => "" # for access_denied mason
+
 </%args>
 
 <& /util/import_javascript.mas,
@@ -179,6 +181,10 @@ $field_headers => ()
 
                         <div class="panel panel-default">
                             <div class="panel-body">
+
+% if ($info_section_id eq 'access_denied') {
+ <& /access/access_denied_div.mas, data_type => $data_type &>
+% }
 
 % if ($info_section_id eq 'pheno_heatmap'){
                                 <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level, has_col_and_row_numbers => $has_col_and_row_numbers &>

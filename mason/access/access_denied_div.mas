@@ -1,0 +1,16 @@
+
+<%args>
+  $message => ""
+  $data_type => "these"
+</%args>
+
+
+<div>
+  You do not have the privileges to access <% $data_type %> data on this server.
+  <br /><br />
+% if ($message) {
+      Additional information:
+      <% $message %>
+%}
+
+</div>

@@ -54,7 +54,13 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 
     $c->stash->{seedlot_maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
 
-    $c->stash->{can_read_pedigrees} = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "pedigree");
+    $c->stash->{can_read_pedigrees} = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "pedigrees");
+
+    $c->stash->{can_read_genotyping} = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "genotyping");
+
+    $c->stash->{can_read_phenotyping} = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "phenotyping");
+
+    $c->stash->{can_read_trials} = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "trials");
     
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
@@ -221,6 +227,12 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         }
     }
 
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "read", "phenotyping" )) {
+	$c->stash->{template} = "/access/access_denied.mas";
+	$c->stash->{data_type} = "phenotyping";
+	return;
+    }
+	
     my $has_header = defined($c->req->param('has_header')) ? $c->req->param('has_header') : 1;
     my $search_type = $c->req->param("speed") && $c->req->param("speed") ne 'null' ? $c->req->param("speed") : "Native";
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xlsx";

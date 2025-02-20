@@ -408,6 +408,11 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{management_factor_types} = \@management_factor_types;
         $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
 	$c->stash->{trial_stock_count} = $trial->get_trial_stock_count();
+	$c->stash->{can_read_phenotyping} = $c->stash->{access}->grant($c->stash->{user_id}, "read", "phenotyping");
+	$c->stash->{can_write_phenotyping}= $c->stash->{access}->grant($c->stash->{user_id}, "write", "phenotyping");
+	$c->stash->{can_read_genotyping} = $c->stash->{access}->grant($c->stash->{user_id}, "read", "genotyping");
+	$c->stash->{can_write_genotyping}= $c->stash->{access}->grant($c->stash->{user_id}, "write", "genotyping");
+	
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 

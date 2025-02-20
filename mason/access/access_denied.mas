@@ -1,0 +1,20 @@
+
+<%args>
+  $message => ""
+  $data_type => "these"
+</%args>
+
+
+  <&| /page/explanation.mas &>
+  <center>
+  <h4>ACCESS DENIED</h4>
+  You do not have the privileges to access <% $data_type %> data on this server.
+  <br /><br />
+% if ($message) {
+      Additional information:
+      <% $message %>
+%}
+<br />
+<br />
+	</center>
+  </&>

@@ -1,6 +1,9 @@
 <%args>
 $seedlot_maintenance_enabled => 0
 $can_read_pedigrees => 1
+$can_read_phenotyping => 1
+$can_read_genotyping => 1
+$can_read_trials => 1
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>
@@ -14,7 +17,17 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm">
-<h4>Download Phenotypes Using Lists</h4><p>Select Parameters:</p>
+
+<h4>Download Phenotypes Using Lists</h4>
+
+% if (! $can_read_phenotyping) {
+<& /access/access_denied_div.mas, data_type=>"phenotyping" &>
+% }
+% else {
+
+<p>Select Parameters:</p>
+
+
 <form id="download_form" action="/breeders/download_action" method="POST" >
 <table class="table table-bordered" >
   <thead>
@@ -85,8 +98,12 @@ Choose a list for each parameter and click "Download".
   </tbody>
   </table>
 </form>
-</div>
 
+
+
+% }
+
+</div>
 <div class="well well-sm">
 <h4>Inspect Datasets</h4>
 <table class="table table-bordered" >
@@ -346,13 +363,23 @@ $(document).ready(function() {
 
 <!-- start of code for pedigree download -->
 
-% if ($can_read_pedigrees) {
 
 <div class="well well-sm">
 <form id="download_pedigree" action="/breeders/download_pedigree_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download Pedigrees </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4>Download Pedigrees </h4>
+
+% if (! $can_read_pedigrees) {
+
+<& /access/access_denied_div.mas, data_type => "pedigrees" &>
+
+% }
+% else { 
+
+
+
+  <p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -402,10 +429,15 @@ $(document).ready(function() {
       <button class="btn btn-primary" type="button" id="pedigree">Download</button>
       <input type="hidden" id="pedigree_download_token" name="pedigree_download_token"/>
     </td>
+
+% }
+
   </tr>
   </tbody>
   </table>
 </form>
+
+
 </div>
 
 
@@ -461,11 +493,6 @@ $(document).ready(function() {
 
 </script>
 
-% } else {
-
-<div class="well well-sm"><h4>Download Pedigrees: You do not have the privileges to view pedigrees</h4></div>
-
-% }
 
 
 <!-- end of code for pedigree download -->
@@ -618,7 +645,19 @@ $(document).ready(function() {
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download Genotypes </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4>Download Genotypes </h4>
+
+% if (! $can_read_genotyping) {
+  <& /access/access_denied_div.mas, data_type => "genotyping" &>
+
+
+  </tr></thead>
+</table>
+
+% }
+% else {
+
+  <p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -649,6 +688,7 @@ $(document).ready(function() {
   </tbody>
   </table>
 </form>
+
 </div>
 
 <script>
@@ -734,6 +774,8 @@ $(document).ready(function() {
   </table>
 </form>
 </div>
+
+% }
 
 </div>
 

@@ -57,6 +57,14 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
         return;
     }
 
+    if (!$c->grant($c->stash->{user_id}, "read", "phenotyping")) {
+	$c->stash->{template} = "/access/access_denied.mas";
+	return;
+    }
+
+    
+
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my @trial_ids = @{_parse_list_from_json($c->req->param('trial_ids'))};
