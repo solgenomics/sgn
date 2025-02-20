@@ -1393,7 +1393,7 @@ sub get_user_solgs_analyses {
               my $time_running = ($now - $submitted_time) / ONE_DAY;
               if ($time_running >= 2) { #two days is too long!
                 $result_page = 'NA';
-                $analysis_status = 'Dubious';
+                $analysis_status = 'Timed Out';
               } else {
                 $result_page = 'In progress...';
               }
