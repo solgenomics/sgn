@@ -98,4 +98,4 @@ if ($url !~ /pca\/analysis/) {
 </div>
 </&>
 
-<& /util/import_javascript.mas, classes => ["solGS.pca"] &>
+<& /util/import_javascript.mas, classes => ["solGS.pca", "solGS.analysisSave", "solGS.pcaSave"] &>

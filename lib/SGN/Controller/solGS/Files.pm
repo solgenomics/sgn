@@ -777,7 +777,7 @@ sub copy_to_tempfiles_subdir {
     my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, $dir_name);
     my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
 
-    mkpath ([$base_tmp_dir], 0, 0755);
+    mkpath ([$base_tmp_dir], 0, 755);
 
     $self->copy_file($file, $base_tmp_dir);
     $file = catfile($tmp_dir, basename($file));
@@ -879,17 +879,6 @@ sub create_file_id {
 	    $file_id = $training_pop_id || $cluster_pop_id || $pca_pop_id;
     }
 
-    if ($c->req->referer =~ /cluster|pca|kinship/)
-    {
-        if ($data_structure =~ /list/)
-        {
-    	$file_id = "list_${list_id}" if $list_id;
-        }
-        elsif ($data_structure =~ /dataset/)
-        {
-    	$file_id = "dataset_${dataset_id}" if $dataset_id;
-        }
-    }
 
     if ($sindex_name)
     {
@@ -1040,7 +1029,7 @@ sub get_solgs_dirs {
 	 $h2_temp, $h2_cache,  $qc_cache, $qc_temp, $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
 	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp, $kinship_cache, $kinship_temp
 	],
-	0, 0755
+	0, 755
 	);
 
     $c->stash(solgs_dir                 => $solgs_dir,
