@@ -47,25 +47,26 @@ sub genotyping_protocol_delete_GET : Args(1) {
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to delete genotype info!'};
-            $c->detach();
+        if (!$user_info[0]) {
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
         }
+
         $user_id = $user_info[0];
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
     } else {
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to delete genotype info!'};
-            $c->detach();
+        if (!$c->user()) {
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'submitter' && $user_role ne 'curator') {
+    if ($user_role ne 'curator') {
         $c->stash->{rest} = { error => 'Must have correct permissions to delete genotypes! Please contact us.' };
         $c->detach();
     }

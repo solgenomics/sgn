@@ -683,18 +683,19 @@ sub plate_genotyping_data_delete_GET : Args(0) {
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to delete genotyping data!'};
-            $c->detach();
+        if (!$user_info[0]) {
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
         }
+
         $user_id = $user_info[0];
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to delete genotyping data!'};
-            $c->detach();
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
@@ -718,9 +719,9 @@ sub plate_genotyping_data_delete_GET : Args(0) {
     my @plate_list = ();
     @plate_list = ($genotyping_plate_id);
     my $plate_samples = CXGN::Stock::TissueSample::Search->new({
-            bcs_schema => $schema,
-            plate_db_id_list => \@plate_list,
-        });
+        bcs_schema => $schema,
+        plate_db_id_list => \@plate_list,
+    });
 
     my $data = $plate_samples->get_sample_data();
     my $sample_list = $data->{sample_list};
