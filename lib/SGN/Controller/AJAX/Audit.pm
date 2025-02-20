@@ -15,6 +15,7 @@ use CXGN::Dataset::File;
 use CXGN::Tools::Run;
 use Cwd qw(cwd);
 use JSON;
+use Encode;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -60,8 +61,11 @@ sub retrieve_table_names : Path('/ajax/audit/retrieve_table_names'){
         push @ids, $drop_options;
 
     };
-    my $json_string;
-    $json_string = encode_json(\@ids);
+    
+    # Fixing problems with Latin characters
+    @ids = map { Encode::decode('UTF-8', $_, Encode::FB_DEFAULT) } @ids;
+
+    my $json_string = encode_json(\@ids);
     $c->stash->{rest} = {
         result1 => $json_string,
         };
@@ -93,9 +97,9 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
         my $stock_json_string;
 	eval {
             if ($operation eq "DELETE"){
-                $stock_json_string = decode_json($before[$i]);
+                $stock_json_string = decode_json(Encode::decode('UTF-8', $before[$i]));
             } else {
-                $stock_json_string = decode_json($after[$i]);
+                $stock_json_string = decode_json(Encode::decode('UTF-8', $after[$i]));
             }
 	};
 	if ($@) {
@@ -144,9 +148,9 @@ sub retrieve_trial_audits : Path('/ajax/audit/retrieve_trial_audits'){
         my $operation = $all_audits[$i][1];
         my $json_string;
         if($operation eq "DELETE"){
-            $json_string = decode_json($before[$i]);
+            $json_string = decode_json(Encode::decode('UTF-8', $before[$i]));
         }else{
-            $json_string = decode_json($after[$i]);
+            $json_string = decode_json(Encode::decode('UTF-8', $after[$i]));
         }
         my $desired_trial_id = $json_string->{'project_id'};
         
