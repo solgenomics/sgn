@@ -130,6 +130,7 @@ solGS.kinship = {
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
       "<th>Population</th>" +
       "<th>Data structure type</th>" +
+      "<th>Compatibility</th>" + 
       "<th>Ownership</th>" +
       "<th>Data type</th>" +
       "<th>Run Kinship</th>" +
@@ -193,11 +194,13 @@ solGS.kinship = {
       `<button type="button" id=${runKinshipBtnId}` +
       ` class="btn btn-success" data-selected-pop='${kinshipArgs}'>Run kinship</button>`;
 
+    var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
+      compatibility_message = `<p id=compatibility_glyph_${popId}>Working...</p>`;
     }
     var rowData = [popName,
-      dataStr, kinshipPop.owner, dataTypeOpts, runKinshipBtn, `${dataStr}_${popId}`];
+      dataStr, compatibility_message, kinshipPop.owner, dataTypeOpts, runKinshipBtn, `${dataStr}_${popId}`];
 
     return rowData;
   },
@@ -212,7 +215,7 @@ solGS.kinship = {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[5]
+        return a[6]
       }
     });
 

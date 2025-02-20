@@ -139,6 +139,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     `<table id="${tableId}" class="table table-striped"><thead><tr>` +
       "<th>Name</th>" +
       "<th>Data structure</th>" +
+      "<th>Compatibility</th>" + 
       "<th>Ownership</th>" +
       "<th>Data type</th>" +
       "<th>Run correlation</th>" +
@@ -190,12 +191,14 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       `<button type="button" id=${runCorrBtnId}` +
       ` class="btn btn-success" data-selected-pop='${corrArgs}'>Run Correlation</button>`;
   
+    var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
+      compatibility_message = `<p id=compatibility_glyph_${popId}>Working...</p>`;
     }
 
     var rowData = [popName,
-      dataStr, corrPop.owner, dataTypeOpts, runCorrBtn, `${dataStr}_${popId}`];
+      dataStr, compatibility_message, corrPop.owner, dataTypeOpts, runCorrBtn, `${dataStr}_${popId}`];
     
     return rowData;
   },

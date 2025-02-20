@@ -1436,7 +1436,7 @@ sub calculate_tool_compatibility {
             $tool_compatibility->{'Correlation'}->{'compatible'} = 1;
             push @{$tool_compatibility->{'Correlation'}->{'traits'}}, $trait->[1];
 
-            if ($num_accessions_phenotyped_for_this_trait > 1 && scalar(@{$trials}) > 1){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
+            if ($num_accessions_phenotyped_for_this_trait > 1 && scalar(@{$trials}) > 1 && $num_shared_accessions > 2){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
                 if ($num_accessions_phenotyped_for_this_trait < 30) {
                     $tool_compatibility->{'Heritability'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to get strong results."} = "";
                 }

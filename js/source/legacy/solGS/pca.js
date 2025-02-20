@@ -173,7 +173,6 @@ solGS.pca = {
     } else {
       pcaPopId = selectedId;
     }
-
     return pcaPopId;
   },
 
@@ -221,11 +220,15 @@ solGS.pca = {
       `<button type="button" id=${runPcaBtnId}` +
       ` class="btn btn-success" data-selected-pop='${pcaArgs}'>Run PCA</button>`;
 
+    var compatibility_message = '';
+
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
+      compatibility_message = `<p id=compatibility_glyph_${popId}>Working...</p>`;
     }
+
     var rowData = [popName,
-      dataStr, pcaPop.owner, dataTypeOpts, runPcaBtn, `${dataStr}_${popId}`];
+      dataStr, compatibility_message, pcaPop.owner, dataTypeOpts, runPcaBtn, `${dataStr}_${popId}`];
 
     return rowData;
   },
@@ -236,11 +239,14 @@ solGS.pca = {
       'searching': true,
       'ordering': true,
       'processing': true,
-      'paging': true,
       'info': false,
+      'paging': true,
       'pageLength': 5,
+      'lengthMenu': [
+        [5,10,50,100,-1],[5,10,50,100,'All']
+      ],
       'rowId': function (a) {
-        return a[5]
+        return a[6]
       }
     });
 
@@ -379,6 +385,7 @@ solGS.pca = {
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
       "<th>Population</th>" +
       "<th>Data structure type</th>" +
+      "<th>Compatibility</th>" +
       "<th>Ownership</th>" +
       "<th>Data type</th>" +
       "<th>Run PCA</th>" +
@@ -903,13 +910,13 @@ jQuery(document).ready(function () {
     if (runPcaBtnId.match(/run_pca/)) {
     
       var  pcaArgs;
-      if (document.URL.match(/pca\/analysis\//)) {
+      if (document.URL.match(/pca\/analysis/)) {
         pcaArgs = solGS.pca.getSelectedPopPcaArgs(runPcaBtnId);
       } else {
         pcaArgs = solGS.pca.getPcaArgs();
       }
-
       pcaPopId = pcaArgs.pca_pop_id;
+
       var canvas = solGS.pca.canvas;
       var pcaMsgDiv = solGS.pca.pcaMsgDiv;
       var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
