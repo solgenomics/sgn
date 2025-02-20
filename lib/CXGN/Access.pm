@@ -5,6 +5,31 @@ CXGN::Access - manage access rights in Breedbase
 
 =head1 DESCRIPTION
 
+The Breedbase Access system provides fine-tuned access to the system through roles and privileges. The database is divided into different resources, for each of which access privileges can be defined. The current resources that are defined are privileges, pedigrees, phenotyping, genotyping, and trials.
+
+ ┌──────────────────┬───────────────────────┬───────────────────────────────────┐
+ │ Resource         │ Context               │ Access Levels                     │
+ │                  │                       │                                   │
+ ├──────────────────┼───────────────────────┼───────────────────────────────────┤
+ │ privileges       │ functionality related │ read, write                       │
+ │                  │ to how the system can │                                   │
+ │                  │ be accessed.          │                                   │
+ ├──────────────────┼───────────────────────┼───────────────────────────────────┤
+ │ pedigrees        │ access to pedigree    │ read, write, match_owner          │
+ │                  │ information           │                                   │
+ ├──────────────────┼───────────────────────┼───────────────────────────────────┤
+ │ phenotyping      │ access to phenotyping │ read, write, match_owner,         │
+ │                  │ information           │ match_breeding_program            │
+ ├──────────────────┼───────────────────────┼───────────────────────────────────┤
+ │ genotyping       │ access to genotyping  │ read, write, match_owner          │
+ │                  │ information           │ match_breeding_program            │
+ ├──────────────────┼───────────────────────┼───────────────────────────────────┤
+ │ trials           │ generating trials,    │ read, write,                      │
+ │                  │ layouts, modifying    │ match_breeding_program            │
+ │                  │ trial layouts         │                                   │
+ └──────────────────┴───────────────────────┴───────────────────────────────────┘
+
+
 =head2 Accessors
 
 people_schema
@@ -31,7 +56,13 @@ phenotypes
 
 =item
 
-wizard
+privileges
+
+=item
+
+trials
+
+
 
 =head1 AUTHOR
 
@@ -136,6 +167,12 @@ sub grant {
 
     my @privileges = $self->check_user($sp_person_id, $resource);
 
+    # do not allow anything if no privileges are set
+    #
+    if (!@privileges) {
+	return 0;
+    }
+    
     if (grep { /$requested_role/ } @privileges) {
 	return 1;
     }
