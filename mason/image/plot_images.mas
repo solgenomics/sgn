@@ -55,7 +55,7 @@ jQuery(document).ready( function() {
     });
 
     jQuery('#plot_images_results').on( 'draw.dt', function () {
-        jQuery('a.image__search_group').colorbox();
+        jQuery('a.image_search_group').colorbox();
     });
 });
 
@@ -78,7 +78,6 @@ function getObservationUnits() {
             data.forEach(function(unit) {
                 plotNames.push(unit.observationUnitName);
             });
-            console.log(plotNames);
             _load_stock_image_results();
         },
         error: function(response) {
