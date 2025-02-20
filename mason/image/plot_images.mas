@@ -31,7 +31,6 @@ $stockref => undef
 
 <%perl>
 my $dbh = $stockref->{dbh};
-my $image_ids = $stockref->{image_ids} || [];
 </%perl>
 
 var trial_id = '<% $trial_id %>';
