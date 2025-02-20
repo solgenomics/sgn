@@ -47,8 +47,8 @@ sub add_transformation_project_POST :Args(0){
     my $project_description = $c->req->param('project_description');
     $project_name =~ s/^\s+|\s+$//g;
 
-    if (!$c->user()){
-        $c->stash->{rest} = {error => "You need to be logged in to add a transformation project."};
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -163,8 +163,8 @@ sub add_transformation_identifier_POST :Args(0){
     my $transformation_project_id = $c->req->param('transformation_project_id');
     $transformation_identifier =~ s/^\s+|\s+$//g;
 
-    if (!$c->user()){
-        $c->stash->{rest} = {error => "You need to be logged in to add a transformation ID."};
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -423,9 +423,8 @@ sub get_active_transformations_in_project :Path('/ajax/transformation/active_tra
     foreach my $r (@$result){
         my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $status_type) =@$r;
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
-        my $transformants = $transformation_obj->get_transformants();
+        my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
-
         push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
     }
 
@@ -454,7 +453,7 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
             $status_type = '<span style="color:red">'.'COMPLETED'.'</span>';
         }
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
-        my $transformants = $transformation_obj->get_transformants();
+        my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
 
         push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
@@ -480,8 +479,8 @@ sub add_transformants_POST :Args(0){
     my $program_name = $c->req->param('program_name');
     my $source_info = $c->req->param('source_info');
 
-    if (!$c->user()){
-        $c->stash->{rest} = {error => "You need to be logged in to add new transformants."};
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -548,7 +547,7 @@ sub add_transformants_POST :Args(0){
     my $tracking_transformation = $c->config->{tracking_transformation};
     if ($tracking_transformation) {
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-        my $tracking_identifier = $transformation_obj->get_tracking_identifier();
+        my $tracking_identifier = $transformation_obj->tracking_identifier();
         my $tracking_identifier_name = $tracking_identifier->[0]->[1];
 
         my $time = DateTime->now();
@@ -587,9 +586,10 @@ sub add_transformants_using_list_POST : Args(0) {
     my $program_name = $c->req->param("program_name");
 
     if (!$c->user()) {
-        $c->stash->{rest} = { error_string => "You must be logged in to add new transformants." };
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
+
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
         $c->stash->{rest} = { error_string => "You do not have sufficient privileges to add new transformants." };
         return;
@@ -676,7 +676,7 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
 
-    my $result = $transformation_obj->get_transformants();
+    my $result = $transformation_obj->transformants();
 
     my @transformants;
     foreach my $r (@$result){
@@ -701,7 +701,7 @@ sub get_obsoleted_transformants :Path('/ajax/transformation/obsoleted_transforma
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
 
-    my $result = $transformation_obj->get_obsoleted_transformants();
+    my $result = $transformation_obj->obsoleted_transformants();
 
     my @obsoleted_transformants;
     foreach my $r (@$result){
@@ -733,8 +733,8 @@ sub set_autogenerated_name_format_POST :Args(0){
     my $name_format = $c->req->param('name_format');
     my $program_name = $c->req->param('program_name');
 
-    if (!$c->user()){
-        $c->stash->{rest} = {error => "You need to be logged in to set autogenerated name format."};
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -786,8 +786,8 @@ sub set_default_plant_material_POST :Args(0){
     my $default_plant_material_name = $c->req->param('default_plant_material');
     my $program_name = $c->req->param('program_name');
 
-    if (!$c->user()){
-        $c->stash->{rest} = {error => "You need to be logged in to add new autogenerated name info."};
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -859,8 +859,8 @@ sub add_autogenerated_name_metadata_POST :Args(0){
     my $time = DateTime->now();
     my $date = $time->ymd();
 
-    if (!$c->user()){
-        $c->stash->{rest} = {error => "You need to be logged in to add new autogenerated name metadata."};
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -905,6 +905,89 @@ sub add_autogenerated_name_metadata_POST :Args(0){
 
 }
 
+
+sub get_all_transformation_ids_in_project :Path('/ajax/transformation/all_transformation_ids_in_project') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $project_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
+
+    my $active_transformations = $transformation_obj->get_active_transformations_in_project();
+    my $inactive_transformations = $transformation_obj->get_inactive_transformations_in_project();
+
+    my @transformations;
+    foreach my $active_id (@$active_transformations){
+        my $transformation_id = $active_id->[0];
+        my $transformation_name = $active_id->[1];
+        my $status_type = 'ACTIVE';
+        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
+        my $transformants = $transformation_obj->transformants();
+        my $number_of_transformants = scalar(@$transformants);
+        push @transformations, {
+            transformation_id => $transformation_id,
+            transformation_name => $transformation_name,
+            status_type => $status_type,
+            number_of_transformants => $number_of_transformants
+        };
+    }
+
+    foreach my $inactive_id (@$inactive_transformations){
+        my $transformation_id = $inactive_id->[0];
+        my $transformation_name = $inactive_id->[1];
+        my $status_type = $inactive_id->[7];
+        my $status_display;
+        if ($status_type eq 'completed_metadata') {
+            $status_display = 'COMPLETED';
+        } elsif ($status_type eq 'terminated_metadata') {
+            $status_display = 'TERMINATED';
+        }
+        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
+        my $transformants = $transformation_obj->transformants();
+        my $number_of_transformants = scalar(@$transformants);
+        push @transformations, {
+            transformation_id => $transformation_id,
+            transformation_name => $transformation_name,
+            status_type => $status_display,
+            number_of_transformants => $number_of_transformants
+        };
+    }
+
+    $c->stash->{rest} = { data => \@transformations };
+
+}
+
+
+sub delete_transformation_id : Path('/ajax/transformation/delete') : ActionClass('REST') {}
+
+sub delete_transformation_id_POST :Args(0){
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    my $transformation_stock_id = $c->req->param('transformation_stock_id');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete transformation ID. Please contact us." };
+        $c->detach();
+    }
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+    my $error = $transformation_obj->delete();
+
+    if ($error) {
+	    $c->stash->{rest} = { error => "An error occurred attempting to delete the transformation ID. ($@)" };
+	    return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
 
 
 ###

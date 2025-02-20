@@ -777,11 +777,12 @@ sub studies_table {
 		#print STDERR Dumper \@trait_names;
 		my @header_ids;
 		foreach my $t (@trait_names) {
-            if ($t eq 'notes'){
-                push @header_ids, 0;
-            } else {
-                push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
-            }
+			if ($t eq 'notes'){
+				push @header_ids, 0;
+			} else {
+				next unless $t =~ /\|/;
+				push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
+			}
 		}
 
 		my $start = $page_size*$page;

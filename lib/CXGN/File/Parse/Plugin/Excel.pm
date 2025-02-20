@@ -82,7 +82,7 @@ sub parse {
       $v = $super->clean_value($v, $hv);
       $row_info{$hv} = $v;
 
-      if ( $v && $v ne '' ) {
+      if ( defined($v) && $v ne '' ) {
         if ( ref($v) eq 'ARRAY' ) {
           if ( scalar(@$v) > 0 ) {
             foreach (@$v) {

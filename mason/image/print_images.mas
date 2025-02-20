@@ -47,6 +47,10 @@ $additional_image_button_id => 'Images'
 $images => undef
 $dbh    => undef
 $image_objects => undef
+$selected_image_id => undef
+$stock_id => undef
+$stock_image_flag => undef
+$curator => undef
 
 </%args>
 
@@ -68,7 +72,12 @@ if ($images && !$image_objects) {
 ###print qq{  <script src="jquery.colorbox-min.js"></script> };
 
 if ($image_objects)  { # don't display anything for empty list of images
-  $image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th></tr></thead><tbody>|;
+  if ($curator && $stock_image_flag == '1') { # Only include 'Set as Display Image' column for images of this stock, not for images of related stock table
+    $image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th><th>Set as Display Image</th></tr></thead><tbody>|;
+  } else {
+    $image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th></tr></thead><tbody>|;
+  }
+  
   my $i = 0;
   foreach my $image_ob (@$image_objects) {
     $count++;
@@ -85,6 +94,8 @@ if ($image_objects)  { # don't display anything for empty list of images
     my $colorbox =
       qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" /></a> |;
     my $multi_open_colorbox =  qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$original_img" alt="$image_description" /></a> |;
+    
+    my $set_button = "<button class='btn btn-sm btn-default' onclick='setDisplayImage($image_id, $stock_id)'>Set</button";
     my $fhtml =
       qq|<tr><td><input type="checkbox" name="print_images_checkbox" data-html_text='$multi_open_colorbox'></td><td>|
         . $colorbox
@@ -93,7 +104,9 @@ if ($image_objects)  { # don't display anything for empty list of images
               . $image_description
                 . "</td><td>"
                 .  $images->[$i]->[1]
-                . "</td></tr>";
+                .  "</td>"
+                .  ($curator == 1 ? "<td>$set_button</td>" : "")
+                . "</tr>";
     if ( $count < 3 ) { $image_html .= $fhtml; }
     else {
       push @more_is, $fhtml;
@@ -118,8 +131,11 @@ if ($image_objects)  { # don't display anything for empty list of images
   }); </script>\n";
 
 }
-$m_image_html .=
-  "<table class='table table-bordered'><thead><tr><th><button class='btn btn-sm btn-default' id='print_images_multi_image_view'>View Selected</button></th><th>Image</th><th>Description</th><th>Type</th></tr></thead><tbody>";  #open table tag for the hidden figures #4 and on
+if ($curator && $stock_image_flag == '1') { # Only include 'Set as Display Image' column for images of this stock, not for images of related stock table
+    $m_image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th><th>Set as Display Image</th></tr></thead><tbody>|; #open table tag for the hidden figures #4 and on
+  } else {
+    $m_image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th></tr></thead><tbody>|;
+  }
 my $more = scalar(@more_is);
 foreach (@more_is) { $m_image_html .= $_; }
 
@@ -137,5 +153,61 @@ if (@more_is) {    #html_optional_show if there are more than 3 figures
 
 </%perl>
 
+<div class="modal fade" id="set_display_image_message_dialog" name="set_display_image_message_dialog" tabindex="-1" role="dialog" aria-labelledby="setDisplayMessageDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="setDisplayMessageDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The display image was set successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_set_display_image_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setDisplayImage(image_id, stock_id) {
+      jQuery.ajax({
+        url: '/ajax/stock/set_display_image',
+        dataType: 'json',
+        type: 'POST',
+        data: {
+          'image_id': image_id,
+          'stock_id': stock_id
+        },
+        beforeSend: function(response) {
+          jQuery('#working_modal').modal('show');
+        },
+        success: function(response) {
+          jQuery('#working_modal').modal('hide');
+          if (response.success == 1) {
+            jQuery('#set_display_image_message_dialog').modal('show');
+          } 
+          if (response.error_string) {
+            alert(response.error_string);
+          }
+        },
+        error: function() {
+          jQuery('#working_modal').modal('hide');
+          alert('An error occured while setting the display image');
+        }
+      });
+
+      jQuery("#dismiss_set_display_image_message_dialog").click(function(){
+        location.reload();
+      });
+
+    }
+</script>
 
 <% $image_html %>
