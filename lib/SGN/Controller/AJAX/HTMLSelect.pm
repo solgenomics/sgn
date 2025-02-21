@@ -1733,7 +1733,11 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
         'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
     );
 
-    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th><th>Compatibility</th></tr></thead><tbody>';
+    my $compatibility_header;
+    if ($show_compatibility){
+        $compatibility_header = '<th>Compatibility</th>';
+    }
+    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th>'.$compatibility_header.'</tr></thead><tbody>';
     foreach my $ds (@datasets) {
         $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td><a href="/dataset/'.$ds->{id}.'">'.$ds->{name}.'</a></td><td>';
 
