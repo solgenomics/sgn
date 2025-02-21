@@ -588,15 +588,15 @@ The result view contains two tabs, one with the raw data, either BLUPS or BLUEs,
 The results can be stored in the database as an analysis, by clicking the button provided on the top of the data.
 
 
-## Genomic Prediction of Cross Performance (GCPC)
+## Genomic Prediction of Cross Performance (GPCP)
 
-The GCPC tool is available at <a href="/tools/gcpc">/tools/gcpc</a> and a link is provided from the Analyze menu.
+The GPCP tool is available at <a href="/tools/gcpc">/tools/gcpc</a> and a link is provided from the Analyze menu.
 The GCPC tool implements genomic prediction with additive and directional dominance in the linear mixed model to predict for cross performance.
 
 Before using the tool, first create a dataset using the Wizard containing the data that you would like to analyze. (The dataset should have genotyping_protocols).
 Second, create Selection Indices for your traits using Selection Index in Analyze Menu.
 
-To use the tool, Select the GCPC tool from the Analyze menu.
+To use the tool, Select the GPCP tool from the Analyze menu.
 
 Then, select the dataset with genotyping_protocols that you wish to analyze, click on "Proceed to Factor Selection" to load available factors that can be included in the model.
 
@@ -604,5 +604,36 @@ Select the factors you wish to include in the model either as Fixed or Random. C
 
 The next step is to select the selection index for your traits on the dropdown menu.
 
-Once you are through, click "Run GCPC" to run the model. The output will be presented in form of a table with "ID", "Parent1", "Parent2" and their cross prediction merit organized in descending order.
+Once you are through, click "Run GPCP" to run the model. The output will be presented in form of a table with "ID", "Parent1", "Parent2" and their cross prediction merit organized in descending order.
 The results will also have sex information based on whether the dataset has plant sexes available in the database.
+
+## Tool Compatibility
+
+The dataset definition enables one to predict whether the dataset can be used in various analysis tools. 
+
+Upon creating a dataset, the site will automatically predict its compatibility with the available analysis tools and report these values on the dataset details page.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/tool_compatibility_details.png')
+```
+
+In the table, each tool will report to the user which traits are available to be analyzed based on phenotype data, and if different types of analyses are available, these will also be reported to the user. Some tools may give a warning sign to indicate that this dataset is compatible, but with potentially low sample sizes. Hover over the warning symbol to get a readout of the reason for the warning. 
+
+Below the table, there is a button that enables the user to re-calculate tool compatibility. This can be useful if a dataset is created before phenotypes are uploaded to a trial, since phenotype data is used in determining dataset compatibility. Even if the page appears to hang, do not worry; the compatibility check will continue in the background, and you can check later. 
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/tool_compatibility_details_data_summary.png')
+```
+
+Below the tool compatibilities, there is also a summary of the data encompassed by the dataset and the criteria used for determining tool compatibility. Those criteria are used in the following way:
+- Correlation: A dataset can be used in a correlation analysis if there are many phenotype measurements for different traits made on the same accession. 
+- Population Structure (PCA): A genotype PCA can be run if there are many accessions all genotyped with the same protocol. A phenotype PCA can be run if many accessions all have measurements on many traits. 
+- Clustering: Like a PCA, clustering can be done in both phenotype and genotype modes. They have the same requirements as PCA. 
+- Kinship & Inbreeding: A dataset with many accessions genotyped with the same protocol can be used for kinship analyses. 
+- Stability: A dataset containing many accessions with the same trait measured across multiple locations can be used in stability analyses. 
+- Heritability: This requires one or more trials with the same trait measured on the same accession across those trial(s).
+- Mixed Models: This requires sufficient accession numbers, trait measurements, and trial designs. 
+- GWAS: A dataset is compatible with GWAS if there are many accessions genotyped for the same genotyping protocol, and the genotyping protocol has enough markers to run a GWAS. In addition, each accession needs to be phenotyped for a trait. 
+- Boxplotter: There must be sufficient trait measurements to make a boxplot of the trait. 
+
+In addition to being on the dataset details page, tool compatibilities may be listed on the dataset selection screens for analysis tools. The compatibilities are non-blocking; you may always try using a dataset in an analysis even if there are warnings or if it is deemed non-compatible. As before, you can hover over the warning symbols to see why a dataset may not have statistical power. For analyses with multiple modes, such as clustering and PCA, you can also hover over the compatibliity checkmark to see what types (phenotype or genotype) the dataset is compatible with. 
