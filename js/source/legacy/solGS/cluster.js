@@ -232,7 +232,7 @@ solGS.cluster = {
     var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
-      if (tool_compatibility == "(not calculated)"){
+      if (tool_compatibility == null || tool_compatibility == "(not calculated)"){
         compatibility_message = "(not calculated)";
       } else {
           if (tool_compatibility["Clustering"]['compatible'] == 0) {
