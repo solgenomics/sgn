@@ -37,12 +37,12 @@ has 'protocol_id' => (
     is => 'rw',
 );
 
-has 'project_id' => (
+has 'genotyping_project_id' => (
     isa => 'Int',
     is => 'rw',
 );
 
-has 'plate_id' => (
+has 'genotyping_plate_id' => (
     isa => 'Int',
     is => 'rw',
 );
@@ -51,9 +51,11 @@ has 'plate_id' => (
 sub delete {
     my $self = shift;
     my $schema = $self->bcs_schema();
-    my $genotyping_project_id = $self->project_id();
-    my $genotyping_plate_id = $self->plate_id();
+    my $genotyping_project_id = $self->genotyping_project_id();
+    my $genotyping_plate_id = $self->genotyping_plate_id();
     my $protocol_id = $self->protocol_id();
+    my $dbh = $schema->storage->dbh;
+
 
     eval {
         $dbh->begin_work();
@@ -74,10 +76,10 @@ sub delete {
             my $stock_ids = join ("," , @$sample_list);
             $where_clause = "nd_experiment_stock.stock_id in ($stock_ids)";
 
-        } else if ($genotyping_project_id) {
+        } elsif ($genotyping_project_id) {
             $where_clause = "nd_experiment_project.project_id = $genotyping_project_id";
-        } else if ($protocol_id) {
-            $where_clause "nd_experiment_protocol.protocol_id = $protocol_id";
+        } elsif ($protocol_id) {
+            $where_clause = "nd_experiment_protocol.protocol_id = $protocol_id";
         }
 
         my $q = "SELECT nd_experiment_genotype.nd_experiment_id, nd_experiment_genotype.genotype_id
@@ -85,7 +87,7 @@ sub delete {
             JOIN nd_experiment_genotype ON (nd_experiment.nd_experiment_id = nd_experiment_genotype.nd_experiment_id) AND nd_experiment.type_id = ?
             JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
             JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-            JOIN nd_experiment_protocol ON (nd_experiment_protocol.nd_experiemnt_id = nd_experiment_stock.nd_experiment_id)
+            JOIN nd_experiment_protocol ON (nd_experiment_protocol.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
             WHERE $where_clause;
         ";
 
