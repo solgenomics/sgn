@@ -15,11 +15,10 @@ see the perldoc of parent class for more details.
 =head1 DESCRIPTION
 
 This patch:
- - updates the materialized_phenoview by intercrop accessions to the view
+ - updates the materialized_phenoview by adding intercrop accessions to the view
 
 =head1 AUTHOR
 
-Bryan Ellerbrock
 David Waring
 
 =head1 COPYRIGHT & LICENSE
@@ -30,7 +29,6 @@ This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-
 
 package UpdateMaterializedPhenoviewIntercrop;
 
@@ -72,8 +70,8 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
     phenotype.cvalue_id as trait_id,
     STRING_AGG(ics.stock_id::text, ',') AS intercrop_accession_ids
   FROM stock accession
-  LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('plot_of', 'subplot_of', 'plant_of', 'analysis_of'))
-  LEFT JOIN stock ON stock_relationship.subject_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('plot', 'subplot', 'plant', 'analysis_instance'))
+  LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('plot_of', 'subplot_of', 'plant_of', 'tissue_sample_of' ,'analysis_of'))
+  LEFT JOIN stock ON stock_relationship.subject_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('plot', 'subplot', 'plant', 'tissue_sample','analysis_instance'))
   LEFT JOIN stock_relationship AS icsr ON (icsr.subject_id = stock.stock_id) AND (icsr.type_id = (SELECT cvterm.cvterm_id FROM cvterm WHERE name = 'intercrop_plot_of'))
   LEFT JOIN stock AS ics ON (icsr.object_id = ics.stock_id)
   LEFT JOIN stock_relationship seedlot_relationship ON stock.stock_id = seedlot_relationship.subject_id AND seedlot_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'seed transaction')
@@ -206,10 +204,10 @@ DROP VIEW IF EXISTS public.traits CASCADE;
 CREATE VIEW public.traits AS
   SELECT cvterm.cvterm_id AS trait_id,
   (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
-	FROM cv
+    FROM cv
     JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'trait_ontology'))
     JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
-	  JOIN dbxref USING(dbxref_id)
+      JOIN dbxref USING(dbxref_id)
     JOIN db ON(dbxref.db_id = db.db_id)
     LEFT JOIN cvterm_relationship is_variable ON cvterm.cvterm_id = is_variable.subject_id AND is_variable.type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF')
     WHERE is_variable.subject_id IS NOT NULL
@@ -275,7 +273,16 @@ SELECT stock.stock_id AS seedlot_id,
    FROM stock
    WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot') AND is_obsolete = 'f'
    GROUP BY public.stock.stock_id, public.stock.uniquename;
-ALTER VIEW plants OWNER TO web_usr;
+ALTER VIEW seedlots OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.tissue_sample CASCADE;
+CREATE VIEW public.tissue_sample AS
+SELECT stock.stock_id AS tissue_sample_id,
+    stock.uniquename AS tissue_sample_name
+   FROM stock
+   WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample') AND is_obsolete = 'f'
+  GROUP BY public.stock.stock_id, public.stock.uniquename;
+ALTER VIEW tissue_sample OWNER TO web_usr;
 
 
 -- drop and recreate all the binary matviews as just views
@@ -314,10 +321,10 @@ ALTER VIEW genotyping_protocolsXseedlots OWNER TO web_usr;
 DROP VIEW IF EXISTS public.locationsXseedlots CASCADE;
 CREATE VIEW public.locationsXseedlots AS
 SELECT nd_experiment.nd_geolocation_id AS location_id,nd_experiment_stock.stock_id AS seedlot_id
- 	FROM nd_experiment
-	LEFT JOIN nd_experiment_stock ON nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id
-  	WHERE nd_experiment.type_id IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name = 'seedlot_experiment')
-  	GROUP BY 1,2;
+    FROM nd_experiment
+    LEFT JOIN nd_experiment_stock ON nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id
+    WHERE nd_experiment.type_id IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name = 'seedlot_experiment')
+    GROUP BY 1,2;
 ALTER VIEW public.locationsXseedlots OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.plantsXseedlots CASCADE;
@@ -923,15 +930,15 @@ SELECT public.stock.stock_id AS plot_id,
   GROUP BY public.stock.stock_id, public.materialized_phenoview.trial_id;
 ALTER VIEW plotsXtrials OWNER TO web_usr;
 
-DROP VIEW IF EXISTS public.plotsXtrial_designs CASCADE;
-CREATE VIEW public.plotsXtrial_designs AS
-SELECT public.stock.stock_id AS plot_id,
+DROP VIEW IF EXISTS public.tissue_sampleXtrial_designs CASCADE;
+CREATE VIEW public.tissue_sampleXtrial_designs AS
+SELECT public.stock.stock_id AS tissue_sample_id,
     trialdesign.value AS trial_design_id
    FROM public.materialized_phenoview
-   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plot'))
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'design' )
   GROUP BY stock.stock_id, trialdesign.value;
-ALTER VIEW plotsXtrial_designs OWNER TO web_usr;
+ALTER VIEW tissue_sampleXtrial_designs OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.plotsXtrial_types CASCADE;
 CREATE VIEW public.plotsXtrial_types AS
@@ -1009,6 +1016,147 @@ SELECT public.materialized_phenoview.trial_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trial_id, public.materialized_phenoview.year_id;
 ALTER VIEW trialsXyears OWNER TO web_usr;
+
+-- ADDING TISSUE SAMPLE VIEWS --
+
+DROP VIEW IF EXISTS public.breeding_programsXtissue_sample CASCADE;
+CREATE VIEW public.breeding_programsXtissue_sample AS
+SELECT public.materialized_phenoview.breeding_program_id,
+    public.stock.stock_id AS tissue_sample_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+  GROUP BY public.materialized_phenoview.breeding_program_id, public.stock.stock_id;
+ALTER VIEW breeding_programsXtissue_sample OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.accessionsXtissue_sample CASCADE;
+CREATE VIEW public.accessionsXtissue_sample AS
+SELECT public.materialized_phenoview.accession_id,
+    public.stock.stock_id AS tissue_sample_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+  GROUP BY public.materialized_phenoview.accession_id, public.stock.stock_id;
+ALTER VIEW accessionsXtissue_sample OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.locationsXtissue_sample CASCADE;
+CREATE VIEW public.locationsXtissue_sample AS
+SELECT public.materialized_phenoview.location_id,
+    public.stock.stock_id AS tissue_sample_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+  GROUP BY public.materialized_phenoview.location_id, public.stock.stock_id;
+ALTER VIEW locationsXtissue_sample OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.tissue_sampleXtrials CASCADE;
+CREATE VIEW public.tissue_sampleXtrials AS
+SELECT public.stock.stock_id AS tissue_sample_id,
+    public.materialized_phenoview.trial_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+  GROUP BY public.stock.stock_id, public.materialized_phenoview.trial_id;
+ALTER VIEW tissue_sampleXtrials OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.tissue_sampleXtrial_designs CASCADE;
+CREATE VIEW public.tissue_sampleXtrial_designs AS
+SELECT public.stock.stock_id AS tissue_sample_id,
+    projectprop.value AS trial_design_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm WHERE cvterm.name = 'tissue_sample'))
+   JOIN public.nd_experiment_stock nes on nes.stock_id = public.stock.stock_id  
+   JOIN public.projectprop  on (projectprop.project_id = nes.nd_experiment_id  AND projectprop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'design'))
+  GROUP BY stock.stock_id, public.projectprop.value;
+ALTER VIEW tissue_sampleXtrial_designs OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.tissue_sampleXtrial_types CASCADE;
+CREATE VIEW public.tissue_sampleXtrial_types AS
+SELECT public.stock.stock_id AS tissue_sample_id,
+    trialterm.cvterm_id AS trial_type_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+   JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
+   JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
+  GROUP BY public.stock.stock_id, trialterm.cvterm_id;
+ALTER VIEW tissue_sampleXtrial_types OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.tissue_sampleXyears CASCADE;
+CREATE VIEW public.tissue_sampleXyears AS
+SELECT public.stock.stock_id AS tissue_sample_id,
+    public.materialized_phenoview.year_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+  GROUP BY public.stock.stock_id, public.materialized_phenoview.year_id;
+ALTER VIEW tissue_sampleXyears OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.plotsXtissue_sample CASCADE;
+CREATE VIEW public.plotsXtissue_sample AS
+SELECT ts.tissue_sample_id, so.stock_id AS plot_id  
+    FROM tissue_sample ts
+    JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id 
+    JOIN stock so ON so.stock_id = sr.object_id  
+    WHERE so.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'plot')
+GROUP BY ts.tissue_sample_id, so.stock_id ;
+ALTER VIEW public.plotsXtissue_sample OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.plantsXtissue_sample CASCADE;
+CREATE VIEW public.plantsXtissue_sample AS
+SELECT ts.tissue_sample_id, so.stock_id AS plant_id 
+    FROM tissue_sample ts
+    JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id 
+    JOIN stock so ON so.stock_id = sr.object_id  
+    WHERE so.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'plant')
+GROUP BY ts.tissue_sample_id, so.stock_id ;
+ALTER VIEW plantsXtissue_sample OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.tissue_sampleXtraits CASCADE;
+CREATE VIEW public.tissue_sampleXtraits AS
+SELECT public.stock.stock_id AS tissue_sample_id,
+    public.materialized_phenoview.trait_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+  GROUP BY public.stock.stock_id, public.materialized_phenoview.trait_id;
+ALTER VIEW tissue_sampleXtraits OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.tissue_sampleXtrait_components CASCADE;
+CREATE VIEW public.tissue_sampleXtrait_components AS
+SELECT public.stock.stock_id AS tissue_sample_id,
+trait_component.cvterm_id AS trait_component_id
+FROM public.materialized_phenoview
+JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+JOIN cvterm trait ON(materialized_phenoview.trait_id = trait.cvterm_id)
+JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = (SELECT cvterm_id from cvterm where name = 'contains'))
+JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
+GROUP BY 1,2;
+ALTER VIEW tissue_sampleXtrait_components OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.tissue_sampleXseedlots CASCADE;
+CREATE VIEW public.tissue_sampleXseedlots AS
+SELECT public.stock.stock_id AS tissue_sample_id,
+    public.materialized_phenoview.seedlot_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+  GROUP BY 1,2;
+ALTER VIEW tissue_sampleXseedlots OWNER TO web_usr;
+
+CREATE VIEW public.genotyping_projectsXtissue_sample AS
+    SELECT materialized_genoview.genotyping_project_id, stock.stock_id AS tissue_sample_id
+    FROM materialized_genoview
+    JOIN materialized_phenoview USING (accession_id)
+    JOIN stock ON materialized_phenoview.stock_id = stock.stock_id AND stock.type_id = (
+        SELECT cvterm.cvterm_id
+        FROM cvterm
+        WHERE cvterm.name = 'tissue_sample'
+    )
+    GROUP BY 1,2;
+ALTER VIEW public.genotyping_projectsXtissue_sample OWNER TO web_usr;
+
+DROP VIEW IF EXISTS public.genotyping_protocolsXtissue_sample CASCADE;
+CREATE VIEW public.genotyping_protocolsXtissue_sample AS
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.stock.stock_id AS tissue_sample_id
+    FROM public.materialized_genoview
+    JOIN public.materialized_phenoview USING(accession_id)
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'tissue_sample'))
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.stock.stock_id;
+ALTER VIEW genotyping_protocolsXtissue_sample OWNER TO web_usr;
 
 -- NEW GENOTYPE PROJECT VIEWS --
 
