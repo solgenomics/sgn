@@ -86,8 +86,8 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
   LEFT JOIN nd_experiment_phenotype ON(nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id)
   LEFT JOIN phenotype ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id
   WHERE accession.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession')
-  ORDER BY breeding_program_id, location_id, trial_id, accession_id, seedlot_id, stock.stock_id, phenotype_id, trait_id
   GROUP BY 1,2,3,4,5,6,7,8,9
+  ORDER BY breeding_program_id, location_id, trial_id, accession_id, seedlot_id, stock.stock_id, phenotype_id, trait_id
 WITH DATA;
 CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(stock_id,phenotype_id,trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW materialized_phenoview OWNER TO web_usr;
