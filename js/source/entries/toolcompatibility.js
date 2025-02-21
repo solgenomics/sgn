@@ -41,7 +41,7 @@ function substituteCompatibilities(abbreviation) {
             jQuery(`#compatibility_glyph_${dataset_id}`).html(compatibility_message);
         }).catch(function(error) {
             console.log(error.error);
-            jQuery(`#compatibility_glyph_${dataset_id}`).text('error');
+            jQuery(`#compatibility_glyph_${dataset_id}`).text('(not calculated)');
         });
     });
 }
@@ -59,31 +59,4 @@ jQuery(document).ready(function() {
             substituteCompatibilities(analysis_abbr);
         });
     });
-});
-
-jQuery(document).ready(function() {
-
-    async function sleep_before_draw(ms) {
-        await new Promise(resolve => setTimeout(resolve, ms));
-
-        jQuery('[id^=html-select-dataset-table-]').each(function(index,element){
-            var table_id = element.id;
-            var title = jQuery('#pagetitle_h3').text();
-            var table = jQuery(`#${table_id}`);
-    
-            substituteCompatibilities(title);
-    
-            table.on('draw.dt', function() {
-                substituteCompatibilities(title);
-            });
-        });
-    }
-
-    sleep_before_draw(1000);
-    sleep_before_draw(2000);
-    sleep_before_draw(3500);
-    sleep_before_draw(5000);
-    sleep_before_draw(7500);
-    sleep_before_draw(10000);
-    sleep_before_draw(15000);
 });
