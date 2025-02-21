@@ -23,7 +23,7 @@ my $analysis_abbr = $analysis_type =~ /correlation/ ? 'corr' : $analysis_type;
 $wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
 </%perl>
 
-<& /util/import_javascript.mas, entries => ["toolcompatibility"], classes => [ "solGS.Dataset", "CXGN.List"] &>
+<& /util/import_javascript.mas, classes => [ "solGS.Dataset", "CXGN.List"] &>
 
 <div id="lists_datasets_canvas">
 

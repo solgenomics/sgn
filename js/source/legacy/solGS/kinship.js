@@ -155,6 +155,7 @@ solGS.kinship = {
     var popId = kinshipPop.id;
     var popName = kinshipPop.name;
     var dataStr = kinshipPop.data_str;
+    var tool_compatibility = kinshipPop.tool_compatibility;
 
     var kinshipPopId = solGS.kinship.getKinshipPopId(popId, dataStr);
    
@@ -197,7 +198,19 @@ solGS.kinship = {
     var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
-      compatibility_message = `<p id=compatibility_glyph_${popId}>Working...</p>`;
+      if (tool_compatibility == "(not calculated)"){
+        compatibility_message = "(not calculated)";
+      } else {
+          if (tool_compatibility["Kinship & Inbreeding"]['compatible'] == 0) {
+          compatibility_message = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
+          } else {
+              if ('warn' in tool_compatibility["Kinship & Inbreeding"]) {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + tool_compatibility["Kinship & Inbreeding"]['warn'] + '"></span></b>';
+              } else {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-ok" style="color:green"></span></b>';
+              }
+          }
+      }
     }
     var rowData = [popName,
       dataStr, compatibility_message, kinshipPop.owner, dataTypeOpts, runKinshipBtn, `${dataStr}_${popId}`];

@@ -597,7 +597,7 @@ sub get_dataset_data {
     $dataref->{category_order} = $self->category_order();
     $dataref->{outliers} = $self->outliers() if $self->outliers;
     $dataref->{outlier_cutoffs} = $self->outlier_cutoffs() if $self->outliers;
-    $dataref->{tool_compatibility} = $self->tool_compatibility() if $self->tool_compatibility;
+    $dataref->{tool_compatibility} = ($self->tool_compatibility) ? $self->tool_compatibility() : '(not calculated)';
     return $dataref;
 }
 

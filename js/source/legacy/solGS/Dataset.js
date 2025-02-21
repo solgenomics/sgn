@@ -68,6 +68,7 @@ solGS.dataset = {
               name: name,
               type: datasetTypes[j],
               data_str: "dataset",
+              tool_compatibility: d.tool_compatibility
             };
             datasetPops.push(dsObj);
             dsIds.push(id);
@@ -96,6 +97,7 @@ solGS.dataset = {
     privateDatasets = this.addDataOwnerAttr(privateDatasets, 'private')
     
     var allDatasets = [privateDatasets, publicDatasets];
+    console.log(allDatasets);
     return allDatasets.flat();
     
   },
