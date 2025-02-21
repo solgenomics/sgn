@@ -93,17 +93,41 @@ function _load_stock_image_results() {
 
     plot_images_table = jQuery('#plot_images_results').DataTable({
         'destroy' : true,
-        'searching' : false,
-        'ordering' : false,
+        'searching' : true,
+        'ordering' : true,
         'processing' : true,
-        'serverSide': true,
+        //'serverSide': true,
         'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url': '/ajax/search/images',
             'data': function(d) {
                 d.image_stock_uniquename = plotNamesString;
+            },
+            'dataSrc': function(json) {
+                json.data.forEach(function(row) {
+                    var imgElement = jQuery(row[0]).find('img');
+                    imgElement.attr('width', '160').attr('height', '140');
+                    var anchorElement = jQuery(row[0]);
+                    anchorElement.html(imgElement.prop('outerHTML'));
+                    row[0] = anchorElement.prop('outerHTML');
+                });
+                return json.data;
             }
-        }
+        },
+        'columns': [
+            { 'title': 'Image', 
+              'data': 0, },
+            { 'title': 'Filename', 'data': 1 },
+            { 'title': 'Description', 'data': 2 },
+            { 'title': 'Submitter', 'data': 3 },
+            { 'title': 'Associations', 'data': 4 },
+        ],
+        columnDefs: [
+            { "targets": [1,3,4], "type": 'html' },
+            { targets: [0], searchable: false }
+        ]
+    }).on('draw', function() {
+        jQuery(".image_search_group").colorbox({rel:'image_search_group'});
     });
 }
 
