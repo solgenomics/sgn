@@ -1,11 +1,11 @@
 
 =head1 NAME
 
-convert_rd_to_obo.pl - script to convert trait dictionary file from CO to obo folrmat
+convert_rd_to_obo.pl - script to convert trait dictionary file from CO to obo format. Input TD file needs to be in .xls format
 
 =head1 SYNOPSIS
 
-perl convert_rd_to_obo.pl  -f trait dictionary file -o output file name
+perl convert_td_to_obo.pl  -f trait dictionary file <.xls format>  -o output file name <.obo format> 
 
 =head1 DESCRIPTION
 
