@@ -17,7 +17,7 @@ $editable_stock_props => {}
 
 </%args>
 
-<center>
+<div style="text-align: center">
 
 <h3>Welcome back <% $first_name %>!</h3>
 
@@ -79,6 +79,7 @@ Interval:&nbsp;
 
 %} # -- if ($role ne...
 
+</div>
 
 <script>
     var interval = jQuery('#interval').val()	
@@ -129,6 +130,5 @@ Interval:&nbsp;
 
 </script>
 
-<table><tr><td>
 
 <& /index.mas, schema => $schema, timestamp => $timestamp, static_content_path=> $static_content_path, phenotype_files => $phenotype_files, breeding_programs => $breeding_programs, locations => $locations, preferred_species => $preferred_species, editable_stock_props => $editable_stock_props &>
