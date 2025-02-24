@@ -12,9 +12,9 @@ $marker_info_headers
             </div>
         </div>
     </div>
-    <center>
-    <button class="btn btn-primary btn-sm" id="marker_table_search_submit">Search</button>
-    </center>
+    <div style="text-align: center">
+        <button class="btn btn-primary btn-sm" id="marker_table_search_submit">Search</button>
+    </div>
 </div>
 <div style="overflow:scroll">
     <table id="protocol_markers_table" class="table table-hover table-bordered">

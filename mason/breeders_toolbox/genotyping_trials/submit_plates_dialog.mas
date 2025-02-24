@@ -40,9 +40,9 @@ $genotyping_facility
                         <div class="col-sm-9" id="number_samples">
                         </div>
                       </div> -->
-                        <center>
+                        <div style="text-align: center">
                             <button class="btn btn-primary" id="facility_info_link" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                        </center>
+                        </div>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Facility" &>
                     <& /page/page_title.mas, title=>"Facility information" &>
@@ -55,14 +55,14 @@ $genotyping_facility
                         <div class="form-group">
                         <label class="col-sm-3 control-label">Organism name: </label>
                         <div class="col-sm-9">
-                            <select class="form-control" id="organism_name">                               
+                            <select class="form-control" id="organism_name">
                             </select>
                         </div>
                       </div>
                       <div class="form-group">
                         <label class="col-sm-3 control-label">Facility Service ID: </label>
                         <div class="col-sm-9">
-                            <select class="form-control" id="service_id_select" multiple>                               
+                            <select class="form-control" id="service_id_select" multiple>
                             </select>
                         </div>
                       </div>
@@ -76,13 +76,13 @@ $genotyping_facility
                         <label class="col-sm-3 control-label">Sample type: </label>
                         <div class="col-sm-9" id="sample_type">
                         </div>
-                      </div> 
-                      <div class="form-group" id="required_services"> 
+                      </div>
+                      <div class="form-group" id="required_services">
                         <label class="col-sm-4 control-label">Required Service Info: </label>
                       </div>
-                      <center>
+                      <div style="text-align: center">
                             <button class="btn btn-primary" id="review_order_link" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                      </center>           
+                      </div>
                       <br/><br/>
                        </&>
                        <&| /util/workflow.mas:step, title=> "Review" &>
@@ -93,9 +93,9 @@ $genotyping_facility
                                 <& /breeders_toolbox/genotyping_trials/layout_as_list.mas, trial_id => $trial_id, genotyping_plate_format => '96' &>
                             </div>
                         </div>
-                        <center>
+                        <div style="text-align: center">
                             <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                        </center>  
+                        </div>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Confirm" &>
                         <& /page/page_title.mas, title=>"Submit your genotyping plate" &>
@@ -110,27 +110,27 @@ $genotyping_facility
                             </div>
                         </div>
                         <hr>
-                        <center>
+                        <div style="text-align: center">
                             <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="submit_plate_btn" id="submit_plate_btn" disabled>Submit genotyping plate</button>
-                        </center>
+                        </div>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Finalize" &>
                         <& /page/page_title.mas, title=>"Finalize your order" &>
-                            <p>Submission Id: <b><label id="submission_lbl"></label></b></p>
-                            <p>Please click <a id="facility_href" target="_blank">HERE</a> to complete your order. </p><br><br>
-                            <p>After order has been complete click continue.</p>
-                            <center>
-                                <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="continue_submission_btn" id="continue_submission_btn">Continue</button>
-                            <center>
-                    </&> 
+                        <p>Submission Id: <b><label id="submission_lbl"></label></b></p>
+                        <p>Please click <a id="facility_href" target="_blank">HERE</a> to complete your order. </p><br><br>
+                        <p>After order has been complete click continue.</p>
+                        <div style="text-align: center">
+                            <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="continue_submission_btn" id="continue_submission_btn">Continue</button>
+                        </div>
+                    </&>
                     <&| /util/workflow.mas:complete, title=> "Complete" &>
                         <& /page/page_title.mas, title=>"Complete!" &>
-                        
+
                             <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                             <p>Order complete.</p>
                             <!-- Facility Order Id: <b><label id="order_lbl"></label></b><br><br> -->
                             <li>You may want to proceed to the genotyping plate detail page to check order status.</li>
-                       
+
                         <br/>
                     </&>
 

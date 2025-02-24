@@ -10,7 +10,9 @@ $facilities
         <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="createGenotypingProjectdialog">Add New Genotyping Project</h4></center>
+                <div style="text-align: center">
+                    <h4 class="modal-title" id="createGenotypingProjectdialog">Add New Genotyping Project</h4>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -19,9 +21,9 @@ $facilities
                             <& /page/page_title.mas, title=>"Genotyping Project" &>
                             <p>Genotyping Project can be used to group a series of genotyping plates and genotyping data. Genotyping Project should match Vendor Project if you have one.</p>
                             <hr>
-                            <center>
+                            <div style="text-align: center">
                                 <button id="next_step_add_new_genotyping_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <form class="form-horizontal" role="form" name="create_genotyping_project_form" id="create_genotyping_project_form">
@@ -81,9 +83,9 @@ $facilities
                                 <br/>
                                 <br/>
                                 <br/>
-                                <center>
+                                <div style="text-align: center">
                                     <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="add_new_genotyping_project_submit" id="add_new_genotyping_project_submit">Submit</button>
-                                </center>
+                                </div>
                             </&>
                         </form>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>

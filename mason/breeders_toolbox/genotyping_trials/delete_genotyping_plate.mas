@@ -8,9 +8,8 @@ $number_of_samples_with_data => undef
 
 <&| /page/info_section.mas, id=>'delete_genotyping_data_section', title => 'Delete Genotyping Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
-        <center>Delete all genotyping data derived from this genotyping plate.</center>
+        <div style="text-align: center">Delete all genotyping data derived from this genotyping plate.</div>
     </div>
-
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -22,7 +21,7 @@ $number_of_samples_with_data => undef
 
 <&| /page/info_section.mas, id=>'delete_genotyping_plate_layout_section', title => 'Delete Genotyping Plate Layout', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
-        <center>Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility..</center>
+        <div style="text-align: center">Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
     </div>
     <div class="well well-sm">
         <div class="panel panel-default">

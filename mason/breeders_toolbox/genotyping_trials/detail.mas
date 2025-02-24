@@ -97,9 +97,10 @@ $number_of_samples_with_data => undef
 
         </div>
         <div class="col-sm-3">
-
-            <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"stock_qrcode"  &></center><br />
-
+            <div style="text-align: center">
+                <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"stock_qrcode"  &>
+            </div>
+            <br/>
         </div>
     </div>
 </div>
@@ -141,7 +142,9 @@ $number_of_samples_with_data => undef
 
 <!--
 DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
-<center><a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br />
+<div style="text-align: center">
+    <a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a>
+</div><br />
 -->
 
 <div class="row">
