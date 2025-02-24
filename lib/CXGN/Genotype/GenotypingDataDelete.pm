@@ -53,9 +53,8 @@ sub delete {
     my $schema = $self->bcs_schema();
     my $genotyping_project_id = $self->genotyping_project_id();
     my $genotyping_plate_id = $self->genotyping_plate_id();
-    my $protocol_id = $self->protocol_id();
+    my $genotyping_protocol_id = $self->protocol_id();
     my $dbh = $schema->storage->dbh;
-
 
     eval {
         $dbh->begin_work();
@@ -78,11 +77,11 @@ sub delete {
 
         } elsif ($genotyping_project_id) {
             $where_clause = "nd_experiment_project.project_id = $genotyping_project_id";
-        } elsif ($protocol_id) {
-            $where_clause = "nd_experiment_protocol.protocol_id = $protocol_id";
+        } elsif ($genotyping_protocol_id) {
+            $where_clause = "nd_experiment_protocol.protocol_id = $genotyping_protocol_id";
         }
 
-        my $q = "SELECT nd_experiment_genotype.nd_experiment_id, nd_experiment_genotype.genotype_id
+        my $q = "SELECT nd_experiment_genotype.nd_experiment_id, nd_experiment_genotype.genotype_id, nd_experiment_protocol.protocol.id
             FROM nd_experiment
             JOIN nd_experiment_genotype ON (nd_experiment.nd_experiment_id = nd_experiment_genotype.nd_experiment_id) AND nd_experiment.type_id = ?
             JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -96,9 +95,11 @@ sub delete {
 
         my @genotype_ids_to_delete;
         my @nd_experiment_ids_to_delete;
-        while (my ($nd_experiment_id, $genotype_id) = $h->fetchrow_array()) {
+        my %check_protocol_ids;
+        while (my ($nd_experiment_id, $genotype_id, $protocol_id) = $h->fetchrow_array()) {
             push @genotype_ids_to_delete, $genotype_id;
             push @nd_experiment_ids_to_delete, $nd_experiment_id;
+            $check_protocol_ids{$protocol_id}++;
         }
         print STDERR "GENOTYPE IDS TO DELETE =".Dumper(\@genotype_ids_to_delete)."\n";
         print STDERR "ND EXPERIMENT IDS TO DELETE =".Dumper(\@nd_experiment_ids_to_delete)."\n";
@@ -119,6 +120,16 @@ sub delete {
             my $nd_experiment_ids_delete = "DELETE FROM nd_experiment WHERE nd_experiment_id IN ($nd_experiment_ids);";
             my $h3 = $schema->storage->dbh()->prepare($nd_experiment_ids_delete);
             $h3->execute();
+        }
+
+        foreach my $id (keys %check_protocol_ids) {
+            my $experiment_count = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->search({nd_protocol_id => $id})->count();
+            print STDERR "EXPERIMENT COUNT =".Dumper($experiment_count)."\n";
+            if ($experiment_count == 0) {
+                my $delete_protocol_q = "DELETE from nd_protocol WHERE nd_protocol_id=?;";
+                my $delete_protocol_h = $schema->storage->dbh()->prepare($delete_protocol_q);
+                $delete_protocol_h->execute($id);
+            }
         }
     };
 
