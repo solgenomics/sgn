@@ -27,6 +27,10 @@ The Breedbase Access system provides fine-tuned access to the system through rol
  │ trials           │ generating trials,    │ read, write,                      │
  │                  │ layouts, modifying    │ match_breeding_program            │
  │                  │ trial layouts         │                                   │
+ ├──────────────────┼───────────────────────┼───────────────────────────────────┤
+ │ crossing         │ generating crossing   │ read, write,                      │
+ │                  │ projects, adding      │ match_breeding_program            │
+ │                  │ crosses               │                                   │
  └──────────────────┴───────────────────────┴───────────────────────────────────┘
 
 
@@ -76,6 +80,7 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::Access;
 
 use Moose;
+use List::Util qw| any |;
 use Data::Dumper;
 
 has 'people_schema' => (isa => 'Ref', is => 'rw');
@@ -140,30 +145,107 @@ sub user_privileges {
     my $sp_person_id = shift;
     my $resource = shift || $self->resource();
 
-    my $q = "SELECT sp_access_level.name, require_ownership FROM sgn_people.sp_privilege join sp_access_level using(sp_access_level_id) join sgn_people.sp_person_roles using(sp_role_id) where sp_resource_id = (SELECT sp_resource_id FROM sgn_people.sp_resource where name=?) and sgn_people.sp_person_roles.sp_person_id = ? ";
+    my $q = "SELECT sp_access_level.name, require_ownership, require_breeding_program FROM sgn_people.sp_privilege join sp_access_level using(sp_access_level_id) join sgn_people.sp_person_roles using(sp_role_id) where sp_resource_id = (SELECT sp_resource_id FROM sgn_people.sp_resource where name=?) and sgn_people.sp_person_roles.sp_person_id = ? ";
     my $h = $self->people_schema()->storage()->dbh()->prepare($q);
     $h->execute($resource, $sp_person_id);
     
     my %privileges;
-    while (my ($level, $require_ownership) = $h->fetchrow_array()) {
-	$privileges{$level}= $require_ownership;
+    while (my ($level, $require_ownership, $require_breeding_program) = $h->fetchrow_array()) {
+	$privileges{$level}->{require_ownership} =  $require_ownership;
+	$privileges{$level}->{require_breeding_program} = $require_breeding_program;
     }
     print STDERR "user_privileges for $resource: ".Dumper(\%privileges);
     return \%privileges;
     
 }
 
+sub check_ownership {
+    my $self = shift;
+    my $sp_person_id = shift;
+    my $resource = shift || $self->resource();
+    my $access_level = shift;
+    my $owner_id = shift;
+    my $breeding_program_id = shift;
+
+    my $privileges = $self->user_privileges($sp_person_id, $resource);
+
+    my $require_ownership = $privileges->{$access_level}->{require_ownership};
+    my $require_breeding_program = $privileges->{$access_level}->{require_breeding_program};
+    
+    my $ownership_checks_out;
+    my $bp_checks_out;
+    
+    if ($require_ownership) {
+	print STDERR "OWNERSHIP IS REQUIRED!\n";
+	if ($owner_id == $sp_person_id) {
+	    print STDERR "Ownership checks out\n";
+	    $ownership_checks_out = 1;
+	}
+    }
+
+    my @breeding_program_info = $self->get_breeding_program_ids_for_user($sp_person_id);
+    my @breeding_program_ids = map { $_->[0] } @breeding_program_info;
+    
+    print STDERR "BP INFO: ".Dumper(\@breeding_program_info);
+    
+    if ($require_breeding_program) {
+	print STDERR "BREEDING PROGRAM IS REQUIRED! (required id is $breeding_program_id)\n";
+	if (any { $_ == $breeding_program_id } @breeding_program_ids ) {
+	    print STDERR "Breeding program checks out\n";
+	    $bp_checks_out = 1;
+	}
+    }
+
+    if (!$require_ownership && !$require_breeding_program) {
+	# if either aren't required we can return 1
+	print STDERR "Ownership & bp constraints not required... returning 1\n";
+	return 1;
+    }
+    
+    if ($require_ownership && $require_breeding_program) {
+	return $ownership_checks_out && $bp_checks_out;
+    }
+
+    if ($require_ownership) {
+	return $ownership_checks_out;
+    }
+
+    if ($require_breeding_program) {
+	return $bp_checks_out;
+    }
+}
+
+
+sub get_breeding_program_ids_for_user {
+    my $self = shift;
+    my $sp_person_id = shift;
+
+    my $q = "SELECT project_id, project.name FROM project join projectprop using(project_id) join cvterm on (projectprop.type_id=cvterm_id) join sgn_people.sp_roles on(project.name=sp_roles.name)  join sgn_people.sp_person_roles using(sp_role_id) where  sp_person_roles.sp_person_id = ?";
+    my $h = $self->people_schema()->storage()->dbh()->prepare($q);
+    $h->execute($sp_person_id);
+
+    my @role_info;
+    while (my ($id, $name) = $h->fetchrow_array()) {
+	push @role_info, [ $id, $name ];
+    }
+
+    return @role_info;
+}
+	
+
 =head3 grant()
 
-   Arguments: $sp_person_id (integer), requested_role, resource 
+   Arguments: $sp_person_id (integer), requested_role, resource, owner_id, breeding_program_id 
 
 =cut
 
 sub grant {
     my $self = shift;
     my $sp_person_id = shift;
-    my $requested_role = shift;
+    my $access_level = shift;
     my $resource = shift || $self->resource();
+    my $owner_id = shift;
+    my $breeding_program_id = shift;
 
     my @privileges = $self->check_user($sp_person_id, $resource);
 
@@ -172,12 +254,19 @@ sub grant {
     if (!@privileges) {
 	return 0;
     }
+
+    my $ownerships_check_out = $self->check_ownership($sp_person_id, $resource, $access_level, $owner_id, $breeding_program_id);
+
+    print STDERR "Ownerships check: $ownerships_check_out\n";
     
-    if (grep { /$requested_role/ } @privileges) {
-	return 1;
+    my $privileges_check_out;
+    
+    if (grep { /$access_level/ } @privileges) {
+	print STDERR "Privileges check out\n";
+	$privileges_check_out = 1;
     }
 
-    return 0;
+    return $privileges_check_out && $ownerships_check_out;
 }
 
 =head3 privileges_table()
