@@ -622,7 +622,7 @@ In the table, each tool will report to the user which traits are available to be
 Below the table, there is a button that enables the user to re-calculate tool compatibility. This can be useful if a dataset is created before phenotypes are uploaded to a trial, since phenotype data is used in determining dataset compatibility. Even if the page appears to hang, do not worry; the compatibility check will continue in the background, and you can check later. 
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/tool_compatibility_details_data_summary.png')
+knitr::include_graphics('assets/images/tool_compatibility_data_summary.png')
 ```
 
 Below the tool compatibilities, there is also a summary of the data encompassed by the dataset and the criteria used for determining tool compatibility. Those criteria are used in the following way:
