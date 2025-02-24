@@ -38,7 +38,7 @@ $wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
 <br>
 
 
-<div id="add_new_pops" class="pull-right margin-bottom-lg" style="display:none;">
+<div id="create_new_list_dataset" class="pull-right margin-bottom-lg" style="display:none;">
     <a type="button" class="btn btn-success" href="/solgs/breeder_search/<% $breeder_search_params %>" style="color:#ffffff"><%
     $wizard_link_txt %></a>
 </div>
