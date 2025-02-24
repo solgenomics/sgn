@@ -23,7 +23,7 @@
 <meta name="author" content="Breedbase team" />
 
 
-<meta name="date" content="2024-12-13" />
+<meta name="date" content="2025-02-24" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -334,7 +334,8 @@
 <li class="chapter" data-level="25.12.8" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#faq"><i class="fa fa-check"></i><b>25.12.8</b> FAQ</a></li>
 </ul></li>
 <li class="chapter" data-level="25.13" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#general-mixed-model-tool"><i class="fa fa-check"></i><b>25.13</b> General Mixed Model Tool</a></li>
-<li class="chapter" data-level="25.14" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#genomic-prediction-of-cross-performance-gcpc"><i class="fa fa-check"></i><b>25.14</b> Genomic Prediction of Cross Performance (GCPC)</a></li>
+<li class="chapter" data-level="25.14" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#genomic-prediction-of-cross-performance-gpcp"><i class="fa fa-check"></i><b>25.14</b> Genomic Prediction of Cross Performance (GPCP)</a></li>
+<li class="chapter" data-level="25.15" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#tool-compatibility"><i class="fa fa-check"></i><b>25.15</b> Tool Compatibility</a></li>
 </ul></li>
 <li class="divider"></li>
 <li><a href="https://bookdown.org/" target="blank">Published with bookdown</a></li>
@@ -688,18 +689,38 @@ De Maesschalck, R., D. Jouan-Rimbaud, and D.L. Massart. 2000. The Mahalanobis di
 <p>The result view contains two tabs, one with the raw data, either BLUPS or BLUEs, and the other the adjusted means from the raw data.</p>
 <p>The results can be stored in the database as an analysis, by clicking the button provided on the top of the data.</p>
 </div>
-<div id="genomic-prediction-of-cross-performance-gcpc" class="section level2 hasAnchor" number="25.14">
-<h2><span class="header-section-number">25.14</span> Genomic Prediction of Cross Performance (GCPC)<a href="data-analysis-tools.html#genomic-prediction-of-cross-performance-gcpc" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The GCPC tool is available at <a href="/tools/gcpc">/tools/gcpc</a> and a link is provided from the Analyze menu.
+<div id="genomic-prediction-of-cross-performance-gpcp" class="section level2 hasAnchor" number="25.14">
+<h2><span class="header-section-number">25.14</span> Genomic Prediction of Cross Performance (GPCP)<a href="data-analysis-tools.html#genomic-prediction-of-cross-performance-gpcp" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The GPCP tool is available at <a href="/tools/gcpc">/tools/gcpc</a> and a link is provided from the Analyze menu.
 The GCPC tool implements genomic prediction with additive and directional dominance in the linear mixed model to predict for cross performance.</p>
 <p>Before using the tool, first create a dataset using the Wizard containing the data that you would like to analyze. (The dataset should have genotyping_protocols).
 Second, create Selection Indices for your traits using Selection Index in Analyze Menu.</p>
-<p>To use the tool, Select the GCPC tool from the Analyze menu.</p>
+<p>To use the tool, Select the GPCP tool from the Analyze menu.</p>
 <p>Then, select the dataset with genotyping_protocols that you wish to analyze, click on “Proceed to Factor Selection” to load available factors that can be included in the model.</p>
 <p>Select the factors you wish to include in the model either as Fixed or Random. Click “None” for factors that you don’t want to include in the model. Note that the “germplasmName” is factored as Random by default.</p>
 <p>The next step is to select the selection index for your traits on the dropdown menu.</p>
-<p>Once you are through, click “Run GCPC” to run the model. The output will be presented in form of a table with “ID”, “Parent1”, “Parent2” and their cross prediction merit organized in descending order.
+<p>Once you are through, click “Run GPCP” to run the model. The output will be presented in form of a table with “ID”, “Parent1”, “Parent2” and their cross prediction merit organized in descending order.
 The results will also have sex information based on whether the dataset has plant sexes available in the database.</p>
+</div>
+<div id="tool-compatibility" class="section level2 hasAnchor" number="25.15">
+<h2><span class="header-section-number">25.15</span> Tool Compatibility<a href="data-analysis-tools.html#tool-compatibility" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The dataset definition enables one to predict whether the dataset can be used in various analysis tools.</p>
+<p>Upon creating a dataset, the site will automatically predict its compatibility with the available analysis tools and report these values on the dataset details page.</p>
+<p><img src="assets/images/tool_compatibility_details.png" width="95%" style="display: block; margin: auto;" /></p>
+<p>In the table, each tool will report to the user which traits are available to be analyzed based on phenotype data, and if different types of analyses are available, these will also be reported to the user. Some tools may give a warning sign to indicate that this dataset is compatible, but with potentially low sample sizes. Hover over the warning symbol to get a readout of the reason for the warning.</p>
+<p>Below the table, there is a button that enables the user to re-calculate tool compatibility. This can be useful if a dataset is created before phenotypes are uploaded to a trial, since phenotype data is used in determining dataset compatibility. Even if the page appears to hang, do not worry; the compatibility check will continue in the background, and you can check later.</p>
+<p><img src="assets/images/tool_compatibility_data_summary.png" width="95%" style="display: block; margin: auto;" /></p>
+<p>Below the tool compatibilities, there is also a summary of the data encompassed by the dataset and the criteria used for determining tool compatibility. Those criteria are used in the following way:
+- Correlation: A dataset can be used in a correlation analysis if there are many phenotype measurements for different traits made on the same accession.
+- Population Structure (PCA): A genotype PCA can be run if there are many accessions all genotyped with the same protocol. A phenotype PCA can be run if many accessions all have measurements on many traits.
+- Clustering: Like a PCA, clustering can be done in both phenotype and genotype modes. They have the same requirements as PCA.
+- Kinship &amp; Inbreeding: A dataset with many accessions genotyped with the same protocol can be used for kinship analyses.
+- Stability: A dataset containing many accessions with the same trait measured across multiple locations can be used in stability analyses.
+- Heritability: This requires one or more trials with the same trait measured on the same accession across those trial(s).
+- Mixed Models: This requires sufficient accession numbers, trait measurements, and trial designs.
+- GWAS: A dataset is compatible with GWAS if there are many accessions genotyped for the same genotyping protocol, and the genotyping protocol has enough markers to run a GWAS. In addition, each accession needs to be phenotyped for a trait.
+- Boxplotter: There must be sufficient trait measurements to make a boxplot of the trait.</p>
+<p>In addition to being on the dataset details page, tool compatibilities may be listed on the dataset selection screens for analysis tools. The compatibilities are non-blocking; you may always try using a dataset in an analysis even if there are warnings or if it is deemed non-compatible. As before, you can hover over the warning symbols to see why a dataset may not have statistical power. For analyses with multiple modes, such as clustering and PCA, you can also hover over the compatibliity checkmark to see what types (phenotype or genotype) the dataset is compatible with.</p>
 
 </div>
 </div>
