@@ -48,6 +48,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $only_good_quality = $params->{only_good_quality};
     my $trial_name = $params->{trial_name};
     my $trial_usage = $params->{trial_usage};
+    my $material_type = $params->{material_type};
 
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
@@ -89,6 +90,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         undef,
         $trial_name,
         $trial_usage,
+        $material_type,
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -106,6 +108,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             seedlot_stock_id => $sl->{seedlot_stock_id},
             seedlot_stock_uniquename => $sl->{seedlot_stock_uniquename},
             contents_html => $contents_html,
+            material_type => $sl->{material_type},
             location => $sl->{location},
             location_id => $sl->{location_id},
             count => $sl->{current_count},

@@ -536,7 +536,7 @@ sub list_seedlots {
         phenome_schema=>$phenome_schema,
         stock_id_list=>\@seen_seedlot_ids,
         stock_type_id=>$type_id,
-        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1, 'seedlot_quality'=>1},
+        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1, 'seedlot_quality'=>1, 'material_type'=>1},
         minimal_info=>1,  #for only returning stock_id and uniquenames
         display_pedigree=>0 #to calculate and display pedigree
     });
@@ -561,6 +561,7 @@ sub list_seedlots {
         $unique_seedlots{$_}->{seedlot_quality} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} : '';
         $unique_seedlots{$_}->{current_count} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
         $unique_seedlots{$_}->{current_weight_gram} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
+        $unique_seedlots{$_}->{material_type} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} : 'NA';
 
         push @seedlots, $unique_seedlots{$_};
 
@@ -1387,9 +1388,6 @@ sub _retrieve_quality {
 sub _retrieve_material_type {
     my $self = shift;
     my $material_type = $self->_retrieve_stockprop('seedlot_quality');
-    if (!$material_type) {
-        $material_type = 'seed';
-    }
     $self->material_type($material_type);
 }
 
