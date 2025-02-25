@@ -46,6 +46,26 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
+    my @breeding_programs;
+
+    print STDERR "Figuring out user privileges for trial tree...\n";
+    my $p =  $c->stash->{access}->user_privileges($c->stash->{user_id}, "trials");
+    if (exists($p->{read})) {
+	print STDERR "We can read trials!\n";
+	if ($p->{read}->{require_breeding_program}) {
+	    print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
+	    @breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
+	}
+	
+	else {
+	    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
+	    my $projects = $p->get_breeding_programs();
+	    
+	    @breeding_programs = @$projects;
+	}
+    }
+	
+    print STDERR "BREEDING PROGRAMS NOW: ".Dumper(\@breeding_programs);
     my $dir = catdir($c->config->{static_content_path}, "folder");
     eval { make_path($dir) };
     if ($@) {
@@ -53,7 +73,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     }
     my $filename = $dir."/entire_jstree_html_$tree_type.txt";
 
-    _write_cached_folder_tree($schema, $tree_type, $filename);
+    _write_cached_folder_tree($schema, $tree_type, \@breeding_programs, $filename);
 
     $c->stash->{rest} = { status => 1 };
 }
@@ -62,9 +82,25 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     my $self = shift;
     my $c = shift;
     my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial','genotyping_trial', 'cross', 'genotyping_project', 'activity'
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    #    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    #    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
+    my $schema = $c->stash->{bcs_schema};
+    
+    my @breeding_programs;
+    if ($c->stash->{access}->grant($c->stash->{user_id}, "read", "trials")) {
+	@breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user();
+    }
+    else {
+	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
+
+	my $projects = $p->get_breeding_programs();
+
+	@breeding_programs = @$projects;
+    }
+
+    print STDERR "WORKING WITH BREEDING PROGRAMS: ".Dumper(\@breeding_programs);
+    
     my $dir = catdir($c->config->{static_content_path}, "folder");
     eval { make_path($dir) };
     if ($@) {
@@ -80,7 +116,7 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     close($fh);
 
     if (!$html) {
-        $html = _write_cached_folder_tree($schema, $tree_type, $filename);
+        $html = _write_cached_folder_tree($schema, $tree_type, \@breeding_programs, $filename);
     }
 
     #print STDERR $html;
@@ -90,16 +126,15 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
 sub _write_cached_folder_tree {
     my $schema = shift;
     my $tree_type = shift;
+    my $breeding_programs = shift;
     my $filename = shift;
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
 
-    my $projects = $p->get_breeding_programs();
-
     my $html = "";
-    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
+    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$breeding_programs[0]->[0] });
 
     print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
-    foreach my $project (@$projects) {
+    foreach my $project (@$breeding_programs) {
         my %project = ( "id" => $project->[0], "name" => $project->[1]);
         $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
     }
