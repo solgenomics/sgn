@@ -6,7 +6,8 @@
 
 
 <div>
-  You do not have the privileges to access <% $data_type %> data on this server.
+
+You do not have the privileges to access <% $data_type %> data on this server.
   <br /><br />
 % if ($message) {
       Additional information:
