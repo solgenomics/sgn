@@ -19,7 +19,7 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'seedlot_name', 'accession_name', 'operator_name', 'box_name' ],
+        required_columns => [ 'seedlot_name', 'accession_name', 'operator_name', 'box_name', 'material_type' ],
         optional_columns => ['description', 'quality', 'source', 'amount', 'weight_gram'],
         column_aliases => {
             'seedlot_name' => ['seedlot name'],
@@ -27,6 +27,7 @@ sub _validate_with_plugin {
             'operator_name' => ['operator name', 'operator'],
             'box_name' => ['box name'],
             'weight_gram' => ['weight(g)'],
+            'material_type' => ['material type'],
         },
     );
 
@@ -50,6 +51,14 @@ sub _validate_with_plugin {
         $self->_set_parse_errors(\%errors);
         return;
     }
+
+    #supported material types
+    my %supported_material_types;
+    $supported_material_types{'seed'} = 1;
+    $supported_material_types{'root'} = 1;
+    $supported_material_types{'clone'} = 1;
+    $supported_material_types{'plant'} = 1;
+    $supported_material_types{'tissue_culture'} = 1;
 
     my %duplicated_seedlot_names;
     my @accession_source_pairs;
@@ -89,6 +98,7 @@ sub _validate_with_plugin {
     my $seen_seedlot_names = $parsed_values->{'seedlot_name'};
     my $seen_accession_names = $parsed_values->{'accession_name'};
     my $seen_source_names = $parsed_values->{'source'};
+    my $seen_material_types = $parsed_values->{'material_type'};
 
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions',$seen_accession_names)->{'missing'}};
@@ -103,6 +113,12 @@ sub _validate_with_plugin {
 
         if (scalar(@source_missing) > 0) {
             push @error_messages, "The following source names are not in the database as plot, subplot or plant: ".join(',',@source_missing);
+        }
+    }
+
+    foreach my $type (@$seen_material_types) {
+        if (!exists $supported_material_types{$type}) {
+            push @error_messages, "Material type not supported: $type. Material type should be seed, root, clone, plant or tissue_culture";
         }
     }
 
@@ -183,6 +199,7 @@ sub _parse_with_plugin {
         my $quality;
         my $source;
         my $accession_stock_id;
+        my $material_type;
 
         $row_num = $row->{_row};
         $seedlot_name = $row->{'seedlot_name'};
@@ -194,6 +211,7 @@ sub _parse_with_plugin {
         $box_name = $row->{'box_name'};
         $quality = $row->{'quality'};
         $source = $row->{'source'};
+        $material_type = $row->{'material_type'};
 
         $accession_stock_id = $accession_lookup{$accession_name};
 
@@ -225,6 +243,7 @@ sub _parse_with_plugin {
             quality => $quality,
             source => $source,
             source_id => $source_id,
+            material_type => $material_type
         };
 
     }
