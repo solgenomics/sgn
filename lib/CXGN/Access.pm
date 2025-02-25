@@ -220,7 +220,7 @@ sub get_breeding_program_ids_for_user {
     my $self = shift;
     my $sp_person_id = shift;
 
-    my $q = "SELECT project_id, project.name FROM project join projectprop using(project_id) join cvterm on (projectprop.type_id=cvterm_id) join sgn_people.sp_roles on(project.name=sp_roles.name)  join sgn_people.sp_person_roles using(sp_role_id) where  sp_person_roles.sp_person_id = ?";
+    my $q = "SELECT distinct(project_id), project.name FROM project join projectprop using(project_id) join cvterm on (projectprop.type_id=cvterm_id) join sgn_people.sp_roles on(project.name=sp_roles.name)  join sgn_people.sp_person_roles using(sp_role_id) where  sp_person_roles.sp_person_id = ?";
     my $h = $self->people_schema()->storage()->dbh()->prepare($q);
     $h->execute($sp_person_id);
 
