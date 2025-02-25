@@ -57,7 +57,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
         return;
     }
 
-    if (!$c->grant($c->stash->{user_id}, "read", "phenotyping")) {
+    if (!$c->stash->{access}->grant($c->stash->{user_id}, "read", "phenotyping")) {
 	$c->stash->{template} = "/access/access_denied.mas";
 	return;
     }
