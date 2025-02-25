@@ -129,7 +129,7 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
         metaFile <- grep("meta", inputFiles, value = TRUE)
 
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
-        
+
         if (length(predictedTraits) > 1) {
             clusterData <- rownames_to_column(clusterData, var = "germplasmName")
             clusterData <- clusterData %>%
@@ -216,7 +216,7 @@ dev.off()
 
 clusterMeans <- c()
 if (!grepl('genotype', kResultFile)) {
-    message('adding cluster means to clusters...')
+    message("adding cluster means to clusters...")
     clusterMeans <- aggregate(clusterDataNotScaled, by = list(cluster = kMeansOut$cluster),
     mean)
 
@@ -242,7 +242,7 @@ scores   <- round(scores, 3)
 
 clusterPcScoresGroups <- c()
 if (length(clusterPcScoresFile)) {
-    message('adding cluster groups to pc scores...')
+    message("adding cluster groups to pc scores...")
     scores <- rownames_to_column(scores)
     names(scores)[1] <- c("germplasmName")
 
