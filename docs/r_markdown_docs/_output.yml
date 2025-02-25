@@ -1,5 +1,6 @@
 bookdown::gitbook:
   pandoc_args: ["--lua-filter=conditional-content.lua"]
+  self_contained: false
   split_by: chapter
   css: assets/style.css
   includes:
@@ -25,6 +26,7 @@ bookdown::pdf_book:
   citation_package: natbib
   template: null
   pandoc_args: [--top-level-division=chapter, --wrap=none, "--lua-filter=conditional-content.lua"]
+  self_contained: false
   toc_depth: 3
   toc_unnumbered: no
   toc_appendix: yes
