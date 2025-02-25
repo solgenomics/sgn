@@ -234,7 +234,7 @@ solGS.pca = {
               if ('warn' in tool_compatibility["Population Structure"]) {
                   compatibility_message = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + tool_compatibility["Population Structure"]['warn'] + '"></span></b>';
               } else {
-                  compatibility_message = '<b><span class="glyphicon glyphicon-ok" style="color:green"></span></b>';
+                  compatibility_message = '<b><span class="glyphicon glyphicon-ok" style="color:green" title="'+tool_compatibility["Population Structure"]['types']+'"></span></b>';
               }
           }
       }
@@ -288,9 +288,9 @@ solGS.pca = {
     var list = new solGSList();
     var lists = list.getLists(["accessions", "plots", "trials"]);
     lists = list.addDataStrAttr(lists);
-    lists = list.addDataTypeAttr(lists);
+    lists = list.addDataTypeAttr(lists, "");
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    datasets = solGS.dataset.addDataTypeAttr(datasets);
+    datasets = solGS.dataset.addDataTypeAttr(datasets, "Population Structure");
     var pcaPops = [lists, datasets];
 
     return pcaPops.flat();
