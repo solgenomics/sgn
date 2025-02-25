@@ -336,6 +336,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $seedlot_uniquename = $c->req->param("seedlot_name");
+    my $seedlot_material_type = $c->req->param("seedlot_material_type");
     my $location_code = $c->req->param("seedlot_location");
     my $box_name = $c->req->param("seedlot_box_name");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
@@ -493,6 +494,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     eval {
         my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
         $sl->uniquename($seedlot_uniquename);
+        $sl->material_type($seedlot_material_type);
         $sl->description($description);
         $sl->location_code($location_code);
         $sl->box_name($box_name);

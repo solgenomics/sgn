@@ -22,6 +22,19 @@ $cross_uniquename => ''
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Material Type: </label>
+                    <div class="col-sm-9">
+                        <select class="form-control" id="material_type">
+                            <option value="">Select a material type</option>
+                            <option value="seed">seed</option>
+                            <option value="root">root</option>
+                            <option value="clone">clone</option>
+                            <option value="plant">plant</option>
+                            <option value="tissue_culture">tissue culture</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Seedlot Description: </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_description" placeholder="Optional">
@@ -72,7 +85,9 @@ $cross_uniquename => ''
                                     </div>
                                 </div>
                             </div>
-                            <center><h4>OR</h4></center>
+                            <div style="text-align: center">
+                                <h4>OR</h4>
+                            </div>
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
@@ -94,7 +109,9 @@ $cross_uniquename => ''
                                     </div>
                                 </div>
                             </div>
-                            <center><h4>OR</h4></center>
+                            <div style="text-align: center">
+                                <h4>OR</h4>
+                            </div>
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
@@ -189,6 +206,7 @@ jQuery(document).ready(function(){
 
     jQuery('#create_new_seedlot_button').click( function() {
         var name = jQuery('#seedlot_name').val();
+        const material_type = jQuery('#material_type').val();
         var seedlot_description = jQuery('#seedlot_description').val();
         var location = jQuery('#seedlot_location').val();
         var box_name = jQuery('#seedlot_box_name').val();
@@ -205,6 +223,7 @@ jQuery(document).ready(function(){
         var seedlot_quality = jQuery('#seedlot_quality').val();
 
         if (name == '') { alert("Please provide a name"); return; }
+        else if (material_type == '') { alert("Please provide a material type"); return; }
         else if (location == '') { alert("Please provide a location"); return; }
         else if (box_name == '') { alert("Please provide a box name"); return; }
         else if (amount.trim().length == 0 && weight.trim().length == 0) { alert("Please provide a seed count amount or a weight in grams!"); return; }
@@ -223,6 +242,7 @@ jQuery(document).ready(function(){
                 url: '/ajax/breeders/seedlot-create',
                 data : {
                     'seedlot_name' : name,
+                    'seedlot_material_type' : material_type
                     'seedlot_description': seedlot_description,
                     'seedlot_location': location,
                     'seedlot_box_name':box_name,
@@ -237,7 +257,6 @@ jQuery(document).ready(function(){
                     'seedlot_transaction_description':transaction_description,
                     'seedlot_breeding_program_id':breeding_program_id,
                     'seedlot_quality' : seedlot_quality
-
                 },
                 beforeSend: function(response){
                     jQuery('#working_modal').modal('show');
