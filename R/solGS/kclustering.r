@@ -77,7 +77,7 @@ extractGenotype <- function(inputFiles) {
 
     } else {
         genoFile <- genoFiles
-        genoData <- fread(genoFile, header = TRUE, na.strings = c("NA", " ", "--",
+        genoData <- fread(genoFile, header = TRUE, na.strings = c("NA", "", "--",
             "-", "."))
 
         if (is.null(genoData)) {
@@ -227,7 +227,9 @@ if (!grepl('genotype', kResultFile)) {
 }
 
 pca <- c()
-if (is.null(selectedIndexGenotypes)) {
+if (grepl("genotype", dataType, ignore.case = TRUE)) {
+    pca    <- prcomp(clusterData, retx=TRUE)
+} else if (is.null(selectedIndexGenotypes)) {
     pca    <- prcomp(clusterData, scale=TRUE, retx=TRUE)
 } else {
     pca    <- prcomp(clusterData, retx=TRUE)
