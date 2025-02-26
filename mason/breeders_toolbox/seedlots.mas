@@ -293,7 +293,7 @@ jQuery(document).ready(function(){
         });
 
         seedlots_table.draw();
-        seedlots_table.column(11).visible(false);
+        seedlots_table.column(12).visible(false);
 
     });
 

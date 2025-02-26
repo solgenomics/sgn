@@ -1387,7 +1387,7 @@ sub _retrieve_quality {
 
 sub _retrieve_material_type {
     my $self = shift;
-    my $material_type = $self->_retrieve_stockprop('seedlot_quality');
+    my $material_type = $self->_retrieve_stockprop('material_type');
     $self->material_type($material_type);
 }
 

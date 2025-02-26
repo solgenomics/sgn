@@ -176,6 +176,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
 
     my $saved_seedlot_name = $seedlot->uniquename;
     my $seedlot_name = $c->req->param('uniquename');
+    my $material_type = $c->req->param('material_type');
     my $description = $c->req->param('description');
     my $breeding_program_name = $c->req->param('breeding_program');
     my $organization = $c->req->param('organization');
@@ -232,6 +233,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
 
     $seedlot->name($seedlot_name);
     $seedlot->uniquename($seedlot_name);
+    $seedlot->material_type($material_type);
     $seedlot->description($description);
     $seedlot->breeding_program_id($breeding_program_id);
     $seedlot->organization_name($organization);

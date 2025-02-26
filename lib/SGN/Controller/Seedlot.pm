@@ -66,7 +66,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
         schema => $schema,
         phenome_schema => $phenome_schema,
         seedlot_id => $seedlot_id
-    );
+    );    
     my @content_accession_names;
     my @content_cross_names;
     my $accessions = $sl->accession();
@@ -128,6 +128,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
 
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();
+    $c->stash->{material_type} = $sl->material_type();
     $c->stash->{organization_name} = $sl->organization_name();
     $c->stash->{box_name} = $sl->box_name();
     $c->stash->{population_name} = $populations_html;
