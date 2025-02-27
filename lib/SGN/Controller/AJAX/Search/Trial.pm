@@ -19,6 +19,23 @@ sub search : Path('/ajax/search/trials') Args(0) {
     my $self = shift;
     my $c    = shift;
 
+
+    # if logged in, check what breeding programs can be read by the user and enforce this
+    # (systems must force login to use that feature)
+    #
+    my @breeding_program_ids;
+    if ($c->user() && $c->stash->{access}->grant($c->stash->{user_id}, "trials", "read")) {
+	print STDERR "Figuring out user privileges for trial tree...\n";
+	my $p =  $c->stash->{access}->user_privileges($c->stash->{user_id}, "trials");
+	if (exists($p->{read})) {
+	    if ($p->{read}->{require_breeding_program}) {
+		print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
+		my @breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
+		@breeding_program_ids = map { $_->[0] } @breeding_programs;
+	    }
+	}
+    }
+    
     my @location_ids;
     my $location_id = $c->req->param('location_id');
     if ($location_id && $location_id ne 'not_provided'){
@@ -35,9 +52,11 @@ sub search : Path('/ajax/search/trials') Args(0) {
 
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$schema,
-        location_id_list=>\@location_ids,
-        field_trials_only=>$field_trials_only,
-        trial_design_list=>$trial_design_list
+        location_id_list => \@location_ids,
+        field_trials_only => $field_trials_only,
+        trial_design_list => $trial_design_list,
+	program_id_list => \@breeding_program_ids,
+	    
     });
     my ($data, $total_count) = $trial_search->search();
     my @result;
