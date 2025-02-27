@@ -25,7 +25,6 @@ $cross_uniquename => ''
                     <label class="col-sm-3 control-label">Material Type: </label>
                     <div class="col-sm-9">
                         <select class="form-control" id="material_type">
-                            <option value="">Select a material type</option>
                             <option value="seed">seed</option>
                             <option value="root">root</option>
                             <option value="clone">clone</option>

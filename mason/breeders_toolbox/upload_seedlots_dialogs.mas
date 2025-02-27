@@ -15,8 +15,9 @@
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"What are seedlots?" &>
                             <ul>
-                            <li>Seedlots represent physical seed in packets.</li>
-                            <li>This seed can be from crosses or for named accessions.</li>
+                            <li>Seedlots represent physical plant materials in packets/containers.</li>
+                            <li>Plant material in a seedlot can be seed, root, clone, plant or tissue culture.</li>
+                            <li>This plant material can be from crosses or for named accessions.</li>
                             <li>Seedlots can have a specific location, box, weight_gram, and count.</li>
                             <li>Seedlots can belong to breeding programs and organizations.</li>
                             <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
@@ -36,8 +37,8 @@
                                 <div class="col-sm-9">
                                     <select class="form-control" id="upload_seedlots_type_select" name="upload_seedlots_type_select">
                                         <option value=""></option>
-                                        <option data-desc="If you have seed lots for named accessions, such as seed that was ordered from a vendor, use this option. Use this option if the seed was not harvested from a cross that is in the database." value="from_accession">I have seed lots for named accessions</option>
-                                        <option data-desc="If you have seed lots that were harvested from crosses that are in the database, use this option." value="from_cross">I have seed lots harvested from crosses</option>
+                                        <option data-desc="If you have seedlots for named accessions, such as seed that was ordered from a vendor, use this option. Use this option if the plant material was not harvested from a cross that is in the database." value="from_accession">I have seedlots for named accessions</option>
+                                        <option data-desc="If you have seedlots that were harvested from crosses that are in the database, use this option." value="from_cross">I have seedlots harvested from crosses</option>
                                     </select>
                                 </div>
                             </div>
@@ -58,7 +59,7 @@
                                     <button class="btn btn-info" name="guided_help_seedlot_upload_format_button">Information about file format for uploading seedlots of named accessions</button><br/><br/>
                                 </div>
                                 <div id="upload_seedlots_crosses_template_section" style="display:none">
-                                    <button class="btn btn-info" name="guided_help_seedlot_crosses_upload_format_button">Information about file format for uploading seed lots harvested</button><br/><br/>
+                                    <button class="btn btn-info" name="guided_help_seedlot_crosses_upload_format_button">Information about file format for uploading seedlots harvested</button><br/><br/>
                                 </div>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
                             </center>
@@ -66,9 +67,19 @@
 
                         <&| /util/workflow.mas:step, title=> "Upload seedlots" &>
                             <& /page/page_title.mas, title=>"Provide basic information about the seedlots and upload your file" &>
-
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_seedlot_form" name="upload_seedlot_form">
-
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Material Type: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="upload_seedlot_material_type">
+                                            <option value="seed">seed</option>
+                                            <option value="root">root</option>
+                                            <option value="clone">clone</option>
+                                            <option value="plant">plant</option>
+                                            <option value="tissue_culture">tissue culture</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Breeding Program: </label>
                                     <div class="col-sm-9" >
@@ -397,6 +408,7 @@ jQuery(document).ready(function(){
         var uploadSeedlotsHarvestedFile = jQuery("#seedlot_harvested_uploaded_file").val();
         var location = jQuery("#upload_seedlot_location").val();
         var breeding_program = jQuery("#upload_seedlot_breeding_program_id").val();
+        const = jQuery("#upload_seedlot_material_type").val();
         jQuery('#upload_seedlot_form').attr("action", "/ajax/breeders/seedlot-upload");
         if (breeding_program === '') {
             alert("Please choose a breeding program");
