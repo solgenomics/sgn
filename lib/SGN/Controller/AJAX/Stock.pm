@@ -1484,11 +1484,15 @@ sub add_stock_parent_GET :Args(0) {
 	return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	print STDERR "User does not have sufficient privileges.\n";
-	$c->stash->{rest} = {error =>  "you have insufficient privileges to add pedigree information." };
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "pedigrees", "read")) {
+	alert("Sorry! You do not have sufficient privileges to modify pedigrees.");
 	return;
     }
+#    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {#
+#	print STDERR "User does not have sufficient privileges.\n";
+#	$c->stash->{rest} = {error =>  "you have insufficient privileges to add pedigree information." };
+#	return;
+ #   }
 
     my $stock_id = $c->req->param('stock_id');
     my $parent_name = $c->req->param('parent_name');
