@@ -23,14 +23,8 @@ $cross_uniquename => ''
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Material Type: </label>
-                    <div class="col-sm-9">
-                        <select class="form-control" id="material_type">
-                            <option value="seed">seed</option>
-                            <option value="root">root</option>
-                            <option value="clone">clone</option>
-                            <option value="plant">plant</option>
-                            <option value="tissue_culture">tissue culture</option>
-                        </select>
+                    <div class="col-sm-9" >
+                        <div id="seedlot_material_type_div"></div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -202,11 +196,13 @@ jQuery(document).ready(function(){
     jQuery('[name="add_seedlot_button"]').click( function() {
         jQuery('#add_seedlot_dialog').modal('show');
         get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id' });
+        get_select_box('material_types', 'seedlot_material_type_div', { 'name' : 'seedlot_material_type', 'id' : 'seedlot_material_type' });
+
     });
 
     jQuery('#create_new_seedlot_button').click( function() {
         var name = jQuery('#seedlot_name').val();
-        const material_type = jQuery('#material_type').val();
+        const material_type = jQuery('#seedlot_material_type').val();
         var seedlot_description = jQuery('#seedlot_description').val();
         var location = jQuery('#seedlot_location').val();
         var box_name = jQuery('#seedlot_box_name').val();

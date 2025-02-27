@@ -70,14 +70,8 @@
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_seedlot_form" name="upload_seedlot_form">
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Material Type: </label>
-                                    <div class="col-sm-9">
-                                        <select class="form-control" id="upload_seedlot_material_type">
-                                            <option value="seed">seed</option>
-                                            <option value="root">root</option>
-                                            <option value="clone">clone</option>
-                                            <option value="plant">plant</option>
-                                            <option value="tissue_culture">tissue culture</option>
-                                        </select>
+                                    <div class="col-sm-9" >
+                                        <div id="upload_seedlot_material_type_div"></div>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -390,6 +384,7 @@ jQuery(document).ready(function(){
     jQuery('[name="seedlot_bulk_upload"]').click( function() {
         jQuery('#upload_seedlot_dialog').modal('show');
         get_select_box('breeding_programs', 'upload_seedlot_breeding_program_div', { 'name' : 'upload_seedlot_breeding_program_id', 'id' : 'upload_seedlot_breeding_program_id' });
+        get_select_box('material_types', 'upload_seedlot_material_type_div', { 'name' : 'upload_seedlot_material_type', 'id' : 'upload_seedlot_material_type' });
     });
 
     jQuery("[name='guided_help_seedlot_upload_format_button']").click( function () {

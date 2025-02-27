@@ -14,15 +14,15 @@ $timestamp => localtime()
 
                     <!-- CREATE SEEDLOTS WORKFLOW -->
                     <&| /util/workflow.mas, id=> "create_seedlots_trial_workflow" &>
-                        
-                        
+
+
                         <!-- STEP 1: Intro -->
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Introduction" &>
                             <p>
-                                This workflow will guide you through the process of creating seedlots from the accessions 
-                                in a field trial.  You can create one new seedlot for each plot or unique accession 
-                                in the trial.  You can also set the initial contents (count or weight) of the seedlot 
+                                This workflow will guide you through the process of creating seedlots from the accessions
+                                in a field trial.  You can create one new seedlot for each plot or unique accession
+                                in the trial.  You can also set the initial contents (count or weight) of the seedlot
                                 as the value of a recorded trait from the trial.
                             </p>
                             <br/><br/>
@@ -38,12 +38,21 @@ $timestamp => localtime()
                                 Enter the name of the field trial from which to create the seedlots:
                             </p>
                             <br /><br />
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label" style="text-align: right">Trial: </label>
-                                <div class="col-sm-9" >
-                                    <input class="form-control" id="create_seedlots_trial_name" placeholder="Trial Name..." value="">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" style="text-align: right">Trial: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="create_seedlots_trial_name" placeholder="Trial Name..." value="">
+                                    </div>
                                 </div>
-                            </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Material Type: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="create_seedlots_trial_material_type_div"></div>
+                                    </div>
+                                </div>
+                            </form>
+
                             <br /><br /><br /><br />
                             <div class="alert alert-danger" id="trial_error_message_container" style="display: none">
                                 <p id="trial_error_message"></p>
@@ -85,7 +94,7 @@ $timestamp => localtime()
                                 </div>
                                 <div class="col-sm-3"></div>
                             </div>
-                            
+
                             <br/><br/><br /><br />
                             <center>
                                 <button id="create_seedlots_trial_complete_select_stock_type" class="btn btn-primary">Go to Next Step</button>
@@ -142,12 +151,12 @@ $timestamp => localtime()
                             <& /page/page_title.mas, title=>"Set Seedlot Contents" &>
 
                             <p>
-                                Each seedlot needs to have its initial contents (either a count or a weight) set.  You 
-                                can either set the same initial value for each seedlot, use the value from one of the 
-                                traits recorded for this trial, or compute a new value from the recorded traits for this 
-                                trial.  If you are creating a seedlot for each accession and select a trait or a computed 
-                                value as their initial value, then the sum of the trait values for each of the accession's 
-                                plots will be used.  The contents of each seedlot can be modified in the table below 
+                                Each seedlot needs to have its initial contents (either a count or a weight) set.  You
+                                can either set the same initial value for each seedlot, use the value from one of the
+                                traits recorded for this trial, or compute a new value from the recorded traits for this
+                                trial.  If you are creating a seedlot for each accession and select a trait or a computed
+                                value as their initial value, then the sum of the trait values for each of the accession's
+                                plots will be used.  The contents of each seedlot can be modified in the table below
                                 before its creation.
                             </p>
 
@@ -196,10 +205,10 @@ $timestamp => localtime()
                                 <label class="col-sm-3 control-label" style="text-align: right">Trait Variables: </label>
                                 <div class="col-sm-9">
                                     <p>
-                                        Use the following variables as substitutions for the trait values to compute a new value 
-                                        for the initial seedlot contents.  If you are creating one seedlot <strong>per plot</strong>, then 
-                                        the single plot trait value will be used in the computation.  If you are creating one seedlot 
-                                        <strong>per accession</strong>, then the sum of the trait values for each plot of that accession 
+                                        Use the following variables as substitutions for the trait values to compute a new value
+                                        for the initial seedlot contents.  If you are creating one seedlot <strong>per plot</strong>, then
+                                        the single plot trait value will be used in the computation.  If you are creating one seedlot
+                                        <strong>per accession</strong>, then the sum of the trait values for each plot of that accession
                                         will be used in the computation.
                                     </p>
                                     <table class="table table-striped">
@@ -217,7 +226,7 @@ $timestamp => localtime()
                                 <div class="col-sm-9">
                                     <input class="form-control" id="create_seedlots_trial_contents_computed_formula" value="" placeholder="{trait_1}/10">
                                     <p>
-                                        <strong>NOTE:</strong> The formula is evaluated using javascript, so any basic operators (+-*/) or 
+                                        <strong>NOTE:</strong> The formula is evaluated using javascript, so any basic operators (+-*/) or
                                         javascript Math functions (Math.abs(x)) can be used.
                                     </p>
                                 </div>
@@ -244,8 +253,8 @@ $timestamp => localtime()
                             <& /page/page_title.mas, title=>"Set Seedlot Metadata" &>
 
                             <p>
-                                The following metadata is required for each seedlot.  Fill out the form at the top 
-                                apply the metadata to all of the seedlots.  Then, each seedlot can be manually 
+                                The following metadata is required for each seedlot.  Fill out the form at the top
+                                apply the metadata to all of the seedlots.  Then, each seedlot can be manually
                                 modified in the table below.
                             </p>
 
@@ -335,8 +344,8 @@ $timestamp => localtime()
                             <& /page/page_title.mas, title=>"Confirm Seedlots" &>
 
                             <p>
-                                Confirm the attributes for the new seedlots in the table below.  If something 
-                                is incorrect, navigate to the previous step and correct the information.  Once 
+                                Confirm the attributes for the new seedlots in the table below.  If something
+                                is incorrect, navigate to the previous step and correct the information.  Once
                                 all the information is correct, continue to the next step to create the seedlots.
                             </p>
 
@@ -359,7 +368,7 @@ $timestamp => localtime()
                             <& /page/page_title.mas, title=>"Create Seedlots" &>
 
                             <br /><br />
-                            
+
                             <div id="create_seedlots_trial_uploading">
                                 <p id="create_seedlots_trial_status"><strong>Creating Seedlots...</strong></p>
                                 <div class="progress">
@@ -489,12 +498,14 @@ $timestamp => localtime()
 
         // Breeding Program Select Box
         get_select_box('breeding_programs', 'create_seedlots_trial_breeding_program_div', { 'name' : 'create_seedlots_trial_breeding_program_id', 'id' : 'create_seedlots_trial_breeding_program_id' });
+        //Material Type Select Box
+        get_select_box('material_types', 'create_seedlots_trial_material_type_div', { 'name' : 'create_seedlots_trial_material_type', 'id' : 'create_seedlots_trial_material_type' });
 
     });
 
 
 
-    // 
+    //
     // WORKFLOW FUNCTIONS
     //
 
@@ -563,7 +574,7 @@ $timestamp => localtime()
         jQuery(".subplot_level_variable").css("display", stock_type === 'subplots' ? "list-item" : "none");
         jQuery(".plant_level_variable").css("display", stock_type === 'plants' ? "list-item" : "none");
         jQuery("#create_seedlots_trial_name_template").val(
-            stock_type === "plots" ? "{trial_name}-{accession_name}-{rep}" : 
+            stock_type === "plots" ? "{trial_name}-{accession_name}-{rep}" :
             stock_type === "subplots" ? "{trial_name}-{accession_name}-subplot{subplot_index}" :
             stock_type === "plants" ? "{trial_name}-{accession_name}-plant{plant_index}" :
             "{trial_name}-{accession_name}"
@@ -682,7 +693,7 @@ $timestamp => localtime()
 
     //
     // HELPER FUNCTIONS
-    // 
+    //
 
 
     /**
@@ -772,7 +783,7 @@ $timestamp => localtime()
 
         for ( let i = 0; i < SEEDLOTS.length; i++ ) {
             let contents = 0;
-            
+
             // Set contents value
             if ( value === 'constant' ) {
                 contents = constant;
@@ -793,10 +804,10 @@ $timestamp => localtime()
                 try {
                     let eval_value = eval(seedlot_formula);
                     if ( eval_value ) contents = eval_value;
-                } 
+                }
                 catch (e) {}
             }
-        
+
             html += "<tr>";
             html += "<td>" + SEEDLOTS[i].name + "</td>";
             html += "<td><input class='form-control create_seedlots_trial_contents_seedlot' data-index='" + i + "' value='" + contents + "'></td>";
@@ -818,7 +829,7 @@ $timestamp => localtime()
             let contents = 0;
             for ( let j = 0; j < TRAIT_DATA.length; j++ ) {
                 if ( TRAIT_DATA[j].trait_id + '' === trait_id + '' ) {
-                
+
                     // Sum plots of the same accession
                     if ( stock_type === 'accessions' ) {
                         if ( SEEDLOTS[seedlot_index].accession.id === TRAIT_DATA[j].accession_id ) {
@@ -835,7 +846,7 @@ $timestamp => localtime()
                             contents = TRAIT_DATA[j].trait_value;
                         }
                     }
-                    
+
                 }
             }
             return contents;
@@ -959,7 +970,7 @@ $timestamp => localtime()
 
 
     /**
-     * Upload each of the Seedlots to the Database in batches of up to 
+     * Upload each of the Seedlots to the Database in batches of up to
      * UPLOAD_BATCH_SIZE seedlots per batch
      * @return {Promise<{ upload_count, errors }>} Return a count of successfully uploaded seedlots and error messages
      */
@@ -1231,7 +1242,7 @@ $timestamp => localtime()
                                     error = `This tool only supports trials with plots that contain accessions.  This trial has one or more plots that contain a ${response.accessions[0][i].stock_type}.`;
                                 }
                                 accessions.push({
-                                    id: response.accessions[0][i].stock_id, 
+                                    id: response.accessions[0][i].stock_id,
                                     name: response.accessions[0][i].accession_name
                                 });
                             }
