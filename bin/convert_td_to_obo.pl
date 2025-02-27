@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-convert_rd_to_obo.pl - script to convert trait dictionary file from CO to obo format. Input TD file needs to be in .xls format
+convert_td_to_obo.pl - script to convert trait dictionary file from CO to obo format. Input TD file needs to be in .xls format
 
 =head1 SYNOPSIS
 
