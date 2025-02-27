@@ -48,8 +48,15 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
 
     my @breeding_programs;
 
+    # adjust resource nomenclature
+    #
+    my $resource = "trials";
+    if ($tree_type eq "trial") { $resource = "trials"; }
+    if ($tree_type eq "genotyping_trial") { $resource = "genotyping"; }
+    if ($tree_type eq "cross") { $resource = "crosses"; }
+    
     print STDERR "Figuring out user privileges for trial tree...\n";
-    my $p =  $c->stash->{access}->user_privileges($c->stash->{user_id}, "trials");
+    my $p =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $resource);
     if (exists($p->{read})) {
 	print STDERR "We can read trials!\n";
 	if ($p->{read}->{require_breeding_program}) {
