@@ -561,7 +561,7 @@ sub list_seedlots {
         $unique_seedlots{$_}->{seedlot_quality} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} : '';
         $unique_seedlots{$_}->{current_count} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
         $unique_seedlots{$_}->{current_weight_gram} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
-        $unique_seedlots{$_}->{material_type} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} : 'NA';
+        $unique_seedlots{$_}->{material_type} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} : '';
 
         push @seedlots, $unique_seedlots{$_};
 
