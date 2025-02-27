@@ -142,7 +142,7 @@ if (parseInt(check_outliers) === 1) {
 
 jQuery(document).ready(function() {
   if (isLoggedIn()) {
-    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
+    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox", "analysis_type":"Heritability", "show_compatibility":"yes"});
   }
   else {
     alert('You must be logged in to use Heritability');
