@@ -19,7 +19,7 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'seedlot_name', 'cross_unique_id', 'operator_name', 'box_name', 'material_type' ],
+        required_columns => [ 'seedlot_name', 'cross_unique_id', 'operator_name', 'box_name' ],
         optional_columns => ['description', 'quality', 'amount', 'weight_gram'],
         column_aliases => {
             'seedlot_name' => ['seedlot name'],
@@ -27,7 +27,6 @@ sub _validate_with_plugin {
             'operator_name' => ['operator name', 'operator'],
             'box_name' => ['box name'],
             'weight_gram' => ['weight(g)'],
-            'material_type' => ['material type'],
         },
     );
 
@@ -51,14 +50,6 @@ sub _validate_with_plugin {
         $self->_set_parse_errors(\%errors);
         return;
     }
-
-    #supported material types
-    my %supported_material_types;
-    $supported_material_types{'seed'} = 1;
-    $supported_material_types{'root'} = 1;
-    $supported_material_types{'clone'} = 1;
-    $supported_material_types{'plant'} = 1;
-    $supported_material_types{'tissue_culture'} = 1;
 
     my %duplicated_seedlot_names;
     for my $row ( @$parsed_data ) {
@@ -91,19 +82,12 @@ sub _validate_with_plugin {
 
     my $seen_seedlot_names = $parsed_values->{'seedlot_name'};
     my $seen_cross_names = $parsed_values->{'cross_unique_id'};
-    my $seen_material_types = $parsed_values->{'material_type'};
 
     my $cross_validator = CXGN::List::Validate->new();
     my @crosses_missing = @{$cross_validator->validate($schema,'crosses',$seen_cross_names)->{'missing'}};
 
     if (scalar(@crosses_missing) > 0) {
         push @error_messages, "The following cross unique ids are not in the database as uniquenames: ".join(',',@crosses_missing);
-    }
-
-    foreach my $type (@$seen_material_types) {
-        if (!exists $supported_material_types{$type}) {
-            push @error_messages, "Material type not supported: $type. Material type should be seed, root, clone, plant or tissue_culture";
-        }
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
@@ -174,7 +158,6 @@ sub _parse_with_plugin {
         my $description;
         my $box_name;
         my $quality;
-        my $material_type;
 
         $row_num = $row->{_row};
         $seedlot_name = $row->{'seedlot_name'};
@@ -185,7 +168,6 @@ sub _parse_with_plugin {
         $description = $row->{'description'};
         $box_name = $row->{'box_name'};
         $quality = $row->{'quality'};
-        $material_type = $row->{'material_type'};
 
         if (!$amount || $amount eq '') {
             $amount = 'NA';
@@ -203,8 +185,7 @@ sub _parse_with_plugin {
             weight_gram => $weight,
             description => $description,
             box_name => $box_name,
-            operator_name => $operator_name,
-            material_type => $material_type
+            operator_name => $operator_name
         };
     }
 
