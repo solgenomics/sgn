@@ -302,6 +302,7 @@ sub auto : Private {
     $c->stash->{people_schema} =  $c->dbic_schema('CXGN::People::Schema', undef, $sp_person_id );
     $c->stash->{bcs_schema} = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     $c->stash->{phenome_schema} = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id );
+    $c->stash->{metadata_schema} = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     $c->stash->{dbh} = $c->stash->{bcs_schema}->storage->dbh();
     
     # make access object available

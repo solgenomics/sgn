@@ -55,11 +55,12 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     if ($tree_type eq "genotyping_trial") { $resource = "genotyping"; }
     if ($tree_type eq "cross") { $resource = "crosses"; }
     
-    print STDERR "Figuring out user privileges for trial tree...\n";
-    my $p =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $resource);
-    if (exists($p->{read})) {
+    print STDERR "Figuring out user privileges for $tree_type tree...\n";
+    my $privs =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $resource);
+    print STDERR "PRIVS: ".Dumper($privs);
+    if (exists($privs->{read})) {
 	print STDERR "We can read trials!\n";
-	if ($p->{read}->{require_breeding_program}) {
+	if ($privs->{read}->{require_breeding_program}) {
 	    print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
 	    @breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
 	}
@@ -106,7 +107,7 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
 	@breeding_programs = @$projects;
     }
 
-    print STDERR "WORKING WITH BREEDING PROGRAMS: ".Dumper(\@breeding_programs);
+    print STDERR "WORKING WITH BREEDING PROGRAMS 2: ".Dumper(\@breeding_programs);
     
     my $dir = catdir($c->config->{static_content_path}, "folder");
     eval { make_path($dir) };
@@ -135,10 +136,13 @@ sub _write_cached_folder_tree {
     my $tree_type = shift;
     my $breeding_programs = shift;
     my $filename = shift;
+    
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
-
     my $html = "";
-    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$breeding_programs[0]->[0] });
+    
+    print STDERR "BREEDING PROGRAMS NOW: ".Dumper($breeding_programs);
+    my $breeding_program = ref($breeding_programs) ? $breeding_programs->[0]->[0] : 0;
+    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $breeding_program });
 
     print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
     foreach my $project (@$breeding_programs) {

@@ -111,27 +111,24 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	    $page_size = $current_page_size || $page_size || $DEFAULT_PAGE_SIZE;
 	    $session_token = $current_session_token|| $session_token;
 	}
-	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-	my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
 	push @status, { 'INFO' => "BrAPI base call found with page=$page, pageSize=$page_size" };
 
 	my $brapi = CXGN::BrAPI->new({
 		version => $version,
 		brapi_module_inst => {
 			context => $c,
-			bcs_schema => $bcs_schema,
-			metadata_schema => $metadata_schema,
-			phenome_schema => $phenome_schema,
-			people_schema => $people_schema,
+			bcs_schema => $c->stash->{bcs_schema},
+			metadata_schema => $c->stash->{metadata_schema},
+			phenome_schema => $c->stash->{phenome_schema},
+			people_schema => $c->stash->{people_schema},
 			page_size => $page_size,
 			page => $page,
 			status => \@status
 		}
 	});
 	$self->brapi_module($brapi);
-	$self->bcs_schema($bcs_schema);
+	$self->bcs_schema($c->stash->{bcs_schema});
 
 	$c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
 	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
@@ -3952,6 +3949,13 @@ sub observations_PUT {
 	my $self = shift;
 	my $c = shift;
 	my $version = $c->request->captures->[0];
+	my $version = shift;
+
+	# if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) {
+	#     _standard_response_construction($c, [], 403);
+	#     return;
+	# }
+	
 	my $brapi_package_result;
 	if ($version eq 'v2'){
 		my $force_authenticate = $c->config->{brapi_observations_require_login};

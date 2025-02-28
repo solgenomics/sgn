@@ -64,62 +64,96 @@ insert into sgn_people.sp_resource (name) values ('images');
 insert into sgn_people.sp_resource (name) values ('phenotyping');
 insert into sgn_people.sp_resource (name) values ('trials');
 insert into sgn_people.sp_resource (name) values ('crosses');
+insert into sgn_people.sp_resource (name) values ('wizard');
+insert into sgn_people.sp_resource (name) values ('community');
 
 -- add access levels
+
 insert into sgn_people.sp_access_level (name) values ('read');
 insert into sgn_people.sp_access_level (name) values ('write');
+insert into sgn_people.sp_access_level (name) values ('update');
 insert into sgn_people.sp_access_level (name) values ('delete');
 
 -- add specific privileges
 --
+
+-- curator for privileges: (should be separate role)
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (2, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (2, 1, 2);
+
 -- curator for pedigrees:
+
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (1, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (1, 1, 2);
+
+-- curator for genotyping
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 1, 2);
+
+-- curator for trial
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (6, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (6, 1, 2);
+
+-- curator for phentoyping (read and write):
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (5, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (5, 1, 2);
+
+-- curator for crosses
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 1, 2);
+
 
 -- submitter for pedigrees:
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (1, 3, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (1, 3, 2);
 
--- submitter for phentoyping
--- ... soon
+-- submitter for phentoyping (read and write):
 
--- submitter for trials
--- ... soon
-
--- user for pedigrees
-insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (1, 4, 1);
-
--- curator for privileges:
-insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (2, 1, 1);
-insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (2, 1, 2);
-
--- curator for genotyping
-insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 1, 1);
-insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 1, 2);
-
--- curator for trial
-insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (6, 1, 1);
-insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (6, 1, 2);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (5, 3, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (5, 3, 2);
 
 -- submitter for trial
+
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (6, 3, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (6, 3, 2);
 
-
 -- submitter for genotyping
+
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 3, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 3, 2);
 
+-- submitter for crosses
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 3, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 3, 2);
+
+-- user for pedigrees
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (1, 4, 1);
 
 -- user for genotyping
+
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 4, 1);
 
 -- user for phenotyping
+
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (5, 4, 1);
 
 -- user for trials
+
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (6, 4, 1);
+
+-- user for crosses
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (8, 4, 1);
+
+
 
 EOSQL
 

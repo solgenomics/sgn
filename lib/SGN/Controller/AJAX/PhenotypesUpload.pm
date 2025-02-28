@@ -48,6 +48,12 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) {
+	print STDERR "USER ".$c->stash->{user_id}." does not have write capability for phenotypes\n";
+	$c->stash->{rest} = { success => 0, error => "ARGHGHGHG! You do not have the privileges to upload phenotypes" };
+	return;
+    }
+
     my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
@@ -110,6 +116,12 @@ sub upload_phenotype_store_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) {
+	print STDERR "USER ".$c->stash->{user_id}." does not have write capability for phenotypes\n";
+	$c->stash->{rest} = { error => "BRGHGH! You do not have the privileges to upload phenotypes" };
+	return;
+    }
+	
     my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
@@ -128,6 +140,8 @@ sub upload_phenotype_store_POST : Args(1) {
         $timestamp = 1;
     }
 
+    
+    
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
@@ -369,8 +383,26 @@ sub _prep_upload {
         }
     }
 
+#    my $breeding_program_error = _check_plots_breeding_program_with_user($c, \@plots);
+    
     return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $archived_image_zipfile_with_path, $user_id, $validate_type);
 }
+
+# sub check_plots_breeding_program_with_user {
+#     my $self = shift;
+#     my $c = shift;
+#     my $plots = shift || [];
+    
+#     my @user_bps = $c->stash->{access}->get_breeding_program_roles_for_user($c->stash->{user_id});
+#     $c->stash->{dbh}->do("DROP TABLE IF EXISTS check_obs_unit; CREATE temporary TABLE check_obs_units (obs_unit varchar(200))");
+#     my $h = $c->stash->{dbh}->prepare("INSERT INTO check_obs_units (obs_unit) values (?)");
+#     foreach my $p (@$plots) {
+# 	$h->execute($p);
+#     }
+#     $c->stash->{dbh} = "SELECT distinct(breeding_programsxplots.plot_id) FROM breeding_programsxplots JOIN check
+    
+
+# }
 
 sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }
 sub update_plot_phenotype_POST : Args(0) {
