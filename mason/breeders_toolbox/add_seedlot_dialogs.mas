@@ -252,7 +252,8 @@ jQuery(document).ready(function(){
                     'seedlot_timestamp':timestamp,
                     'seedlot_transaction_description':transaction_description,
                     'seedlot_breeding_program_id':breeding_program_id,
-                    'seedlot_quality' : seedlot_quality
+                    'seedlot_quality' : seedlot_quality,
+                    'no_refresh': 1
                 },
                 beforeSend: function(response){
                     jQuery('#working_modal').modal('show');
