@@ -17,6 +17,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     year_list=>$year_list,
     location_list=>$location_list,
     accession_list=>$accession_list,
+    analysis_result_stock_list=>$analysis_result_stock_list,
     plot_list=>$plot_list,
     plant_list=>$plant_list,
     include_timestamp=>$include_timestamp,
@@ -91,6 +92,11 @@ has 'trait_list' => (
 );
 
 has 'accession_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'analysis_result_stock_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -198,8 +204,10 @@ sub get_phenotype_matrix {
     my $include_timestamp = $self->include_timestamp;
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
 
-    print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
-
+    # print STDERR "GET PHENOMATRIX search type ".$self->search_type."\n";
+    # print STDERR "GET PHENOMATRIX accession list: ".$self->accession_list."\n";
+    # print STDERR "GET PHENOMATRIX plot list: ".$self->plot_list."\n";
+    # print STDERR "GET PHENOMATRIX ananlysis_result_stock_list: ".$self->analysis_result_stock_list."\n";
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         $self->search_type,
         {
@@ -212,6 +220,7 @@ sub get_phenotype_matrix {
             year_list=>$self->year_list,
             location_list=>$self->location_list,
             accession_list=>$self->accession_list,
+            analysis_result_stock_list=>$self->analysis_result_stock_list,
             plot_list=>$self->plot_list,
             plant_list=>$self->plant_list,
             subplot_list=>$self->subplot_list,
@@ -352,8 +361,8 @@ sub get_phenotype_matrix {
         my %obsunit_data;
         my %traits;
 
-        print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
-        print STDERR "Construct Pheno Matrix Start:".localtime."\n";
+        print STDERR "PhenotypeMatrix No of lines retrieved (Native Search): ".scalar(@$data)."\n";
+        print STDERR "PhenotypeMatrix Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
         my %seen_obsunits;        
 
@@ -469,7 +478,7 @@ sub get_phenotype_matrix {
     }
 
     #print STDERR Dumper \@info;
-    print STDERR "Construct Pheno Matrix End:".localtime."\n";
+    print STDERR "PhenotypeMatrix Construct Pheno Matrix End:".localtime."\n";
     return @info;
 }
 
