@@ -224,6 +224,8 @@ has 'seedlot_cvterm_id'  => (isa => 'Int', is => 'rw');
 
 has 'accession_cvterm_id'  => (isa => 'Int', is => 'rw');
 
+has 'analysis_result_cvterm_id'  => (isa => 'Int', is => 'rw');
+
 has 'tissue_sample_cvterm_id'  => (isa => 'Int', is => 'rw');
 
 has 'tissue_sample_of_cvterm_id'  => (isa => 'Int', is => 'rw');
@@ -310,6 +312,8 @@ sub BUILD {
 
     $self->set_accession_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id());
 
+    $self->set_analysis_result_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'analysis_result', 'stock_type')->cvterm_id());
+    
     $self->set_tissue_sample_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id());
 
     $self->set_tissue_sample_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id());
@@ -452,6 +456,7 @@ sub store {
     foreach my $key (keys %design) {
         if ($design{$key}->{stock_name}) {
             my $stock_name = $design{$key}->{stock_name};
+            print STDERR "AbstractTrial Checking stock: $stock_name\n";
             $seen_accessions_hash{$stock_name}++;
         }
         if ($design{$key}->{seedlot_name}) {
@@ -472,6 +477,7 @@ sub store {
         $seedlot_data{$s->uniquename} = $s->stock_id;
     }
 
+    print STDERR "AbstractTrial source_stock_types =".Dumper(\@source_stock_types)."\n";
     my $rs = $chado_schema->resultset('Stock::Stock')->search({
         'is_obsolete' => { '!=' => 't' },
         'type_id' => {-in=>\@source_stock_types},
@@ -612,6 +618,9 @@ sub store {
             }
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
+            
+        
+            
             if ($stock_data{$stock_name}) {
                 $stock_id_checked = $stock_data{$stock_name}[0];
                 $organism_id_checked = $stock_data{$stock_name}[1];
