@@ -15,6 +15,7 @@ use JSON;
 extends 'CXGN::BrAPI::v1::Common';
 
 sub observations_store {
+    #print STDERR "OBSERVATIONS STORE.\n";
     my $self = shift;
     my $params = shift;
     my $c = shift;
@@ -59,7 +60,7 @@ sub observations_store {
 
     if (!$validated_request || $validated_request->{'error'}) {
         my $parse_error = $validated_request ? $validated_request->{'error'} : "Error parsing request structure";
-        print STDERR $parse_error;
+        #print STDERR $parse_error;
         return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
     } elsif ($validated_request->{'success'}) {
         push @$status, {'info' => $validated_request->{'success'} };
@@ -73,7 +74,7 @@ sub observations_store {
 
     if (!$parsed_request || $parsed_request->{'error'}) {
         my $parse_error = $parsed_request ? $parsed_request->{'error'} : "Error parsing request data";
-        print STDERR $parse_error;
+        #print STDERR $parse_error;
         return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
     } elsif ($parsed_request->{'success'}) {
         push @$status, {'info' => $parsed_request->{'success'} };
@@ -106,7 +107,7 @@ sub observations_store {
         push @$status, {'info' => $archive_success_message };
     }
 
-    print STDERR "Archived Request is in $file\n";
+    #print STDERR "Archived Request is in $file\n";
 
     ## Set metadata
     my %phenotype_metadata;
@@ -141,11 +142,11 @@ sub observations_store {
     my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
 
     if ($stored_observation_error) {
-        print STDERR "Error: $stored_observation_error\n";
+        #print STDERR "Error: $stored_observation_error\n";
         return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error);
     }
     if ($stored_observation_success) {
-        print STDERR "Success: $stored_observation_success\n";
+        #print STDERR "Success: $stored_observation_success\n";
         $result{observations} = $stored_observation_details;
     }
 
