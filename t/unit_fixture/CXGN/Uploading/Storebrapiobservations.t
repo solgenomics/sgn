@@ -20,7 +20,7 @@ my $response;
 my $plot_id1 = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial210'})->stock_id;
 my $plot_id2 = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial214'})->stock_id;
 
-$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ], "login post ok");
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
@@ -59,7 +59,7 @@ $req->content( $j );
 my $ua = LWP::UserAgent->new();
 my $res = $ua->request($req);
 $response = decode_json $res->content;
-print STDERR Dumper $response;
+print STDERR Dumper "PUT RESPONSE: ".$response;
 is_deeply($response, {
           'result' => undef,
           'metadata' => {
@@ -77,7 +77,7 @@ is_deeply($response, {
                                             'currentPage' => 0
                                           }
                         }
-        });
+        }, "check observation put response");
 
 my $trait_id1 = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'CO_334:0000092')->cvterm_id();
 my $trait_id2 = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'CO_334:0000016')->cvterm_id();
@@ -193,6 +193,6 @@ is_deeply($response, {
                                             'currentPage' => 0
                                           }
                         }
-        });
+        }, "put response check");
 
 done_testing;
