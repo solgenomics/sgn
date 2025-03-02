@@ -7,6 +7,8 @@ CXGN::Access - manage access rights in Breedbase
 
 The Breedbase Access system provides fine-tuned access to the system through roles and privileges. The database is divided into different resources, for each of which access privileges can be defined. The current resources that are defined are privileges, pedigrees, phenotyping, genotyping, and trials.
 
+=encoding UTF-8
+
  ┌──────────────────┬───────────────────────┬───────────────────────────────────┐
  │ Resource         │ Context               │ Access Levels                     │
  │                  │                       │                                   │
@@ -46,6 +48,8 @@ resource
 
 Currently planned resources are:
 
+=over 3
+
 =item *
 
 pedigrees
@@ -66,7 +70,7 @@ privileges
 
 trials
 
-
+=back
 
 =head1 AUTHOR
 
