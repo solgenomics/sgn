@@ -62,6 +62,16 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 	return;
     }
 
+    my @access = $c->stash->{access}->check_user( $c->stash->{user_id}, "trials" );
+
+    print STDERR "ACCESS: ".Dumper(\@access);
+
+    my $can_write_trials = 0;
+    if (grep {/write/} @access) {
+	print STDERR "CAN WRITE TRIALS!\n";
+	$can_write_trials = 1;
+    }
+    
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
@@ -104,6 +114,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
+    $c->stash->{can_write_trials} = $can_write_trials;
 
     my $locations = $projects->get_all_locations_by_breeding_program();
 
