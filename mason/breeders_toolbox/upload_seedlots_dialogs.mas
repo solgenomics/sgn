@@ -24,9 +24,9 @@
                             </ul>
 
                             <br/><br/>
-                            <center>
+                            <div style="text-align: center">
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <&| /util/workflow.mas:step, title=> "What seedlots do you have?" &>
@@ -46,15 +46,15 @@
                             <div id="upload_seedlots_types_description">
                             </div>
                             <br/>
-                            <center>
+                            <div style="text-align: center">
                                 <button disabled id="seedlot_upload_type_select_button" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <&| /util/workflow.mas:step, title=> "File format" &>
                             <& /page/page_title.mas, title=>"Make sure your file matches the correct file format" &>
                             <br/><br/>
-                            <center>
+                            <div style="text-align: center">
                                 <div id="upload_seedlots_accessions_template_section" style="display:none">
                                     <button class="btn btn-info" name="guided_help_seedlot_upload_format_button">Information about file format for uploading seedlots of named accessions</button><br/><br/>
                                 </div>
@@ -62,7 +62,7 @@
                                     <button class="btn btn-info" name="guided_help_seedlot_crosses_upload_format_button">Information about file format for uploading seedlots harvested</button><br/><br/>
                                 </div>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <&| /util/workflow.mas:step, title=> "Upload seedlots" &>
@@ -120,9 +120,9 @@
                                 </div>
 
                             </form>
-                            <center>
-                            <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" name="upload_seedlot_button" >Upload Seedlots</button><br/><br/>
-                            </center>
+                            <div style="text-align: center">
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" name="upload_seedlot_button" >Upload Seedlots</button><br/><br/>
+                            </div>
 
                         </&>
                         <&| /util/workflow.mas:step, title=> "Fix errors in file" &>
@@ -157,9 +157,9 @@
                                         </ul>
                                     </li>
                                     </ul><br/>
-                                    <center>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your crosses are in the database Click Here</button><br/><br/>
-                                    </center>
+                                    <div style="text-align: center">
+                                        <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your crosses are in the database Click Here</button><br/><br/>
+                                    </div>
                                 </div>
                             </div>
                             <div id="upload_seedlots_error_display" style="display:none">
@@ -173,24 +173,20 @@
                                     </div>
                                 </div>
                             </div>
-                            <center>
-                            <div id="upload_seedlots_no_error_messages_accessions_html">
+                            <div style="text-align: center">
+                                <div id="upload_seedlots_no_error_messages_accessions_html">
+                                </div>
+                                <div name="upload_seedlots_completed_message">
+                                </div>
                             </div>
-                            <div name="upload_seedlots_completed_message">
-                            </div>
-                            </center>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Try submitting seedlots again" &>
                             <& /page/page_title.mas, title=>"Submit your seedlots again. You should have corrected all errors by now, but if not please take a look at the errors in the red box below. You can continue to modify your file and then click Upload until it works." &>
-                            <div id="seedlot_upload_show_repeat_upload_button">
-                                <center>
+                            <div style="text-align: center" id="seedlot_upload_show_repeat_upload_button">
                                 <button type="button" class="btn btn-lg btn-primary" name="upload_seedlot_button" >Upload Seedlots</button><br/><br/>
-                                </center>
                             </div>
-                            <center>
-                            <div name="upload_seedlots_completed_message">
+                            <div style="text-align: center" name="upload_seedlots_completed_message">
                             </div>
-                            </center>
 
                             <div id="upload_seedlots_error_display_second_try" style="display:none">
 
@@ -216,9 +212,9 @@
                                 <li>You can print barcodes for the seedlots.</li>
                             </ul>
                             <br/>
-                            <center>
-                            <button class="btn btn-primary" name="upload_seedlot_success_complete_button">The seedlots were saved to the database with no errors! Congrats Click Here</button><br/><br/>
-                            </center>
+                            <div style="text-align: center">
+                                <button class="btn btn-primary" name="upload_seedlot_success_complete_button">The seedlots were saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            </div>
                         </&>
                     </&>
 

@@ -162,15 +162,15 @@ $user_role => undef
         </div>
 
     </form>
-    <center>
+    <div style="text-align: center">
         <button class="btn btn-primary" id="submit_seedlot_search">Search</button>
-    </center>
+    </div>
 </div>
 </&>
 
-<center>
+<div style="text-align: center">
   Enter search terms and click the "Search" button to view results.
-</center>
+</div>
 
 <br />
 <br />

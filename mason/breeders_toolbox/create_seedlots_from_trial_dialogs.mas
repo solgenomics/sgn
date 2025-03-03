@@ -26,9 +26,9 @@ $timestamp => localtime()
                                 as the value of a recorded trait from the trial.
                             </p>
                             <br/><br/>
-                            <center>
+                            <div style="text-align: center">
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <!-- STEP 2: Select Trial -->
@@ -49,9 +49,9 @@ $timestamp => localtime()
                                 <p id="trial_error_message"></p>
                             </div>
                             <br/><br/>
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_select_trial" class="btn btn-primary">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <!-- STEP 3: Select Seedlots -->
@@ -87,9 +87,9 @@ $timestamp => localtime()
                             </div>
 
                             <br/><br/><br /><br />
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_select_stock_type" class="btn btn-primary">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <!-- STEP 4: Name Seedlots -->
@@ -127,9 +127,9 @@ $timestamp => localtime()
 
                             <br /><br /><br />
 
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_name_seedlots" class="btn btn-primary">Go to Next Step</button>
-                            </center>
+                            </div>
 
                             <br /><br />
 
@@ -229,9 +229,9 @@ $timestamp => localtime()
 
                             <br /><br />
 
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_set_contents" class="btn btn-primary">Go to Next Step</button>
-                            </center>
+                            </div>
 
                             <br /><br />
 
@@ -323,15 +323,11 @@ $timestamp => localtime()
 
                             <br /><br /><br />
 
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_update_metadata" class="btn btn-primary">Update</button>
-                            </center>
-
-                            <br />
-
-                            <center>
+                                <br />
                                 <button id="create_seedlots_trial_complete_set_metadata" class="btn btn-primary" disabled>Go to Next Step</button>
-                            </center>
+                            </div>
 
                             <br /><br />
 
@@ -351,11 +347,11 @@ $timestamp => localtime()
 
                             <br /><br />
 
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_confirm_seedlots" class="btn btn-primary">
                                     <span class="glyphicon glyphicon-ok"></span>&nbsp;Create Seedlots
                                 </button>
-                            </center>
+                            </div>
 
                             <br /><br />
 

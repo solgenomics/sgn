@@ -42,7 +42,6 @@ my $seedlot_id = $return->{seedlot_id};
 
 my $s = CXGN::Stock::Seedlot->new(schema=>$schema, seedlot_id=>$seedlot_id);
 is($s->uniquename, $seedlot_uniquename);
-is($s->material_type, $seedlot_material_type);
 is($s->location_code, $seedlot_location);
 is($s->organization_name, $seedlot_organization);
 is($s->population_name, $seedlot_population_name);
@@ -52,6 +51,7 @@ is($s->breeding_program_name, $seedlot_breeding_program_name);
 is($s->breeding_program_id, $seedlot_breeding_program_id);
 is($s->box_name, $seedlot_box_name);
 is($s->quality, 'MOLD', 'set/get quality test');
+is($s->material_type, $seedlot_material_type);
 
 $s->quality('ROT');
 is($s->quality(), 'ROT', 'quality update test');
