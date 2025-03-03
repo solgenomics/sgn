@@ -50,7 +50,7 @@ sub upload_phenotype_verify_POST : Args(1) {
 
     if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) {
 	print STDERR "USER ".$c->stash->{user_id}." does not have write capability for phenotypes\n";
-	$c->stash->{rest} = { success => 0, error => "ARGHGHGHG! You do not have the privileges to upload phenotypes" };
+	$c->stash->{rest} = { success => 0, error => [ "STOP! You do not have the privileges to upload phenotypes" ] };
 	return;
     }
 
@@ -118,7 +118,7 @@ sub upload_phenotype_store_POST : Args(1) {
 
     if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) {
 	print STDERR "USER ".$c->stash->{user_id}." does not have write capability for phenotypes\n";
-	$c->stash->{rest} = { error => "BRGHGH! You do not have the privileges to upload phenotypes" };
+	$c->stash->{rest} = { error => [ "STOP! You do not have the privileges to upload phenotypes" ] };
 	return;
     }
 	
@@ -140,8 +140,6 @@ sub upload_phenotype_store_POST : Args(1) {
         $timestamp = 1;
     }
 
-    
-    
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
