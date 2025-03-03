@@ -2395,10 +2395,13 @@ sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0)
     push @material_types, ['plant', 'plant'];
     push @material_types, ['tissue_culture', 'tissue culture'];
 
+    my $default = $c->req->param("default") || 'Please select a material type';
+    print STDERR "DEFAULT =".Dumper($default)."\n";
     my $html = simple_selectbox_html(
         name => $name,
         id => $id,
         choices => \@material_types,
+        selected => $default
     );
     $c->stash->{rest} = { select => $html };
 }

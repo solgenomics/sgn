@@ -348,9 +348,10 @@ $material_type => undef
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Material Type: </label>
                     <div class="col-sm-9" >
-                        <input class="form-control" type="text" id="edit_seedlot_details_material_type" value="LOADING..."/>
+                        <div id="edit_seedlot_details_material_type_div"></div>
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Seedlot Description: </label>
                     <div class="col-sm-9" >
@@ -512,7 +513,6 @@ $material_type => undef
                 jQuery('#seedlot_location_code_div').html(response.location_code);
                 jQuery('#seedlot_breeding_program_div').html(response.breeding_program);
                 jQuery('#edit_seedlot_details_uniquename').val(response.uniquename);
-                jQuery('#edit_seedlot_details_material_type').val(response.material_type);
                 jQuery('#edit_seedlot_details_description').val(response.description);
                 jQuery('#edit_seedlot_details_breeding_program').val(response.breeding_program);
                 jQuery('#edit_seedlot_details_organization').val(response.organization_name);
@@ -746,6 +746,8 @@ $material_type => undef
 
     jQuery('#edit_seedlot_details_link').click(function(){
         jQuery('#edit_seedlot_details_dialog').modal('show');
+        default_material_type = "<%$material_type%>";
+        get_select_box('material_types', 'edit_seedlot_details_material_type_div', { 'name' : 'edit_seedlot_details_material_type', 'id' : 'edit_seedlot_details_material_type', 'default' : default_material_type });
     });
 
     jQuery('#edit_seedlot_details_button').click(function(){

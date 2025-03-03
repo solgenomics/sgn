@@ -153,6 +153,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         breeding_program => $c->stash->{seedlot}->breeding_program_name(),
         organization_name => $c->stash->{seedlot}->organization_name(),
         population_name => $c->stash->{seedlot}->population_name(),
+        material_type => $c->stash->{seedlot}->material_type(),        
         accession => $c->stash->{seedlot}->accession(),
         cross => $c->stash->{seedlot}->cross(),
         box_name => $c->stash->{seedlot}->box_name(),
