@@ -61,9 +61,9 @@ $material_type => undef
 
 </&>
 
-<center>
-<h3>Transactions</h3>
-</center>
+<div style="text-align: center">
+    <h3>Transactions</h3>
+</div>
 
 <&| /page/info_section.mas, title=>"Transactions Table",  collapsible => 1, collapsed=>0, subtitle=>$new_transaction_link &>
 
@@ -408,7 +408,7 @@ $material_type => undef
                                     </div>
                                 </div>
                             </div>
-                            <center><h4>OR</h4></center>
+                            <div style="text-align: center"><h4>OR</h4></div>
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
