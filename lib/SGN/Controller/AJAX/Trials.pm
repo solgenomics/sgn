@@ -97,7 +97,7 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     
     my @breeding_programs;
     if ($c->stash->{access}->grant($c->stash->{user_id}, "read", "trials")) {
-	@breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user();
+	@breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
     }
     else {
 	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
@@ -112,7 +112,7 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     my $dir = catdir($c->config->{static_content_path}, "folder");
     eval { make_path($dir) };
     if ($@) {
-        print "Couldn't create $dir: $@";
+        print STDERR "Couldn't create $dir: $@";
     }
     my $filename = $dir."/entire_jstree_html_$tree_type.txt";
     my $html = '';
@@ -141,21 +141,31 @@ sub _write_cached_folder_tree {
     my $html = "";
     
     print STDERR "BREEDING PROGRAMS NOW: ".Dumper($breeding_programs);
-    my $breeding_program = ref($breeding_programs) ? $breeding_programs->[0]->[0] : 0;
-    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $breeding_program });
 
-    print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
-    foreach my $project (@$breeding_programs) {
-        my %project = ( "id" => $project->[0], "name" => $project->[1]);
-        $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
+    
+    if (@$breeding_programs == 0) { 
+	$html = "NOTHING TO DISPLAY";
     }
-    print STDERR "Finished trial tree refresh for $tree_type at time ".localtime()."\n";
-
+    else { 
+	my $breeding_program_id = ref($breeding_programs) ? $breeding_programs->[0]->[0] : 0;
+	
+	my $folder_obj;
+	if ($breeding_program_id) { 
+	    $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $breeding_program_id });
+	}
+	
+	print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
+	foreach my $project (@$breeding_programs) {
+	    my %project = ( "id" => $project->[0], "name" => $project->[1]);
+	    $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
+	}
+	print STDERR "Finished trial tree refresh for $tree_type at time ".localtime()."\n";
+    }	
     my $OUTFILE;
     open $OUTFILE, '> :encoding(UTF-8)', $filename or die "Error opening $filename: $!";
     print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
     close $OUTFILE or croak "Cannot close $filename: $!";
-
+    
     return $html;
 }
 
