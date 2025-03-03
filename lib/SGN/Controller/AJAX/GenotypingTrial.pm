@@ -200,11 +200,16 @@ sub parse_genotype_trial_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping plate." };
-        $c->detach();
-    }
+    # if ($user_role ne 'curator' && $user_role ne 'submitter') {
+    #     $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping plate." };
+    #     $c->detach();
+    # }
 
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "genotyping")) {
+	$c->stash->{data_type} = "genotyping data";
+	$c->stash->{template} = '/access/access_denied.mas';
+    }
+    
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
