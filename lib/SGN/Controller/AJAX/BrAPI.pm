@@ -81,6 +81,9 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $self = shift;
 	my $c = shift;
 	my $version = shift;
+
+	$c->stash->{brapi_version} = $version;
+	
 	my @status;
 
 	my $page = $c->req->param("page") || 0;
@@ -2613,7 +2616,7 @@ sub studies_observations_granular_PUT {
 	my $c = shift;
     my $clean_inputs = $c->stash->{clean_inputs};
     my $observations = $clean_inputs->{observations};
-    #print STDERR "Observations are ". Dumper($observations) . "\n";
+    print STDERR "Observations are ". Dumper($observations) . "\n";
 	save_observation_results($self, $c, $observations, 'v1');
 }
 
@@ -3946,47 +3949,51 @@ sub phenotypes_POST {
 sub observations : Chained('brapi') PathPart('observations') Args(0) : ActionClass('REST') { }
 
 sub observations_PUT {
-	my $self = shift;
-	my $c = shift;
-	my $version = $c->request->captures->[0];
-	my $version = shift;
-
-	# if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) {
-	#     _standard_response_construction($c, [], 403);
-	#     return;
-	# }
-	
-	my $brapi_package_result;
-	if ($version eq 'v2'){
-		my $force_authenticate = $c->config->{brapi_observations_require_login};
-		my ($auth,$user_id,$user_type) = _authenticate_user($c,$force_authenticate);
-	    my $clean_inputs = $c->stash->{clean_inputs};
-	    my %observations = %$clean_inputs;
-	    my @all_observations;
-	    foreach my $observation (keys %observations) {
-	        my $observationDbId = $observation;
-	        my $observations = $observations{$observation};
-	        $observations->{observationDbId} = $observationDbId;
-	        push @all_observations, $observations;
-	    }
-		my $brapi = $self->brapi_module;
-		my $brapi_module = $brapi->brapi_wrapper('Observations');
-		$brapi_package_result = $brapi_module->observations_store({
-			observations => \@all_observations,
-	        user_id => $user_id,
-	        user_type => $user_type,
-	        overwrite => 1,
-	    },$c);
-	} elsif ($version eq 'v1'){
-		my $clean_inputs = $c->stash->{clean_inputs};
-	    my $observations = $clean_inputs->{observations};
-		save_observation_results($self, $c, $observations, 'v1');
+    print STDERR "BRAPI OBSERVATIONS PUT\n";
+    my $self = shift;
+    my $c = shift;
+    #my $version = $c->request->captures->[0];
+    my $version = $c->stash->{brapi_version};
+    
+    # if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) {
+    #     _standard_response_construction($c, [], 403);
+    #     return;
+    # }
+    
+    my $brapi_package_result;
+    if ($version eq 'v2'){
+	print STDERR "OBSERVATION PUT BRAPI V2\n";
+	my $force_authenticate = $c->config->{brapi_observations_require_login};
+	my ($auth,$user_id,$user_type) = _authenticate_user($c,$force_authenticate);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my %observations = %$clean_inputs;
+	my @all_observations;
+	foreach my $observation (keys %observations) {
+	    my $observationDbId = $observation;
+	    my $observations = $observations{$observation};
+	    $observations->{observationDbId} = $observationDbId;
+	    push @all_observations, $observations;
 	}
-
-	my $status = $brapi_package_result->{status};
-	my $http_status_code = _get_http_status_code($status);
-
-	_standard_response_construction($c, $brapi_package_result, $http_status_code);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Observations');
+	$brapi_package_result = $brapi_module->observations_store(
+	    {
+		observations => \@all_observations,
+		user_id => $user_id,
+		user_type => $user_type,
+		overwrite => 1,
+	    },$c);
+    } elsif ($version eq 'v1'){
+	print STDERR "OBSERVATION PUT BRAPI V1\n";
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $observations = $clean_inputs->{observations};
+	save_observation_results($self, $c, $observations, 'v1');
+    }
+    
+    my $status = $brapi_package_result->{status};
+    my $http_status_code = _get_http_status_code($status);
+    
+    _standard_response_construction($c, $brapi_package_result, $http_status_code);
 }
 
 sub observations_GET {
@@ -4115,6 +4122,7 @@ sub observation_search_retrieve  : Chained('brapi') PathPart('search/observation
 }
 
 sub save_observation_results {
+    print STDERR "SAVE OBSERVATION RESULTS\n";
     my $self = shift;
     my $c = shift;
     my $observations = shift;
