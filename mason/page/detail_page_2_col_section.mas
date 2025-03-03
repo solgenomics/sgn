@@ -288,7 +288,9 @@ $field_headers => ()
 % if ($info_section_id eq 'trial_soil_data_section'){
                                 <& /breeders_toolbox/trial/trial_soil_data.mas, trial_id => $trial_id &>
 % } #End trial_soil_data_section
-
+% if ($info_section_id eq 'trial_images_section'){
+                                <& /image/plot_images.mas, trial_id => $trial_id &>
+% } #End trial_images_section
 
 % if ($info_section_id eq 'stock_additional_info_section'){
                                 <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
