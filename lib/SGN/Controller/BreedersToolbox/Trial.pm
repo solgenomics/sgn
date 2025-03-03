@@ -35,8 +35,20 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     $c->stash->{trial_id} = $trial_id;
 #    print STDERR "TRIAL ID = $trial_id\n";
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    $c->stash->{schema} = $schema;
+    #my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->stash->{bcs_schema};
+
+    # use access grant function to check if the user is allowed to see trials
+    #
+    print STDERR "USER ID: ".$c->stash->{user_id}."...\n";
+    
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "read", "trials")) {
+	print STDERR "ACCESS TO TRIAL DETAIL PAGE DENIED!\n";
+	$c->stash->{data_type} = "trial";
+	$c->stash->{template} = "/access/access_denied.mas";
+	$c->detach();
+    }
+
     my $trial;
     eval {
 	    $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
