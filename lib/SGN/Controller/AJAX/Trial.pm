@@ -74,7 +74,14 @@ sub generate_experimental_design : Path('/ajax/trial/generate_experimental_desig
 
 sub generate_experimental_design_POST : Args(0) {
     my ($self, $c) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    #my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $schema = $c->stash->{bcs_schema};
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to create design layouts" };
+	return;
+    }
     my $trial_design = CXGN::Trial::TrialDesign->new();
     my %design;
     my %design_info;
@@ -522,11 +529,16 @@ sub save_experimental_design_POST : Args(0) {
         $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
         return;
     }
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
-        return;
+
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    #    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+    #    return;
+    #}
+
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials" )) {
+	$c->stash->{rest} = { error => "Access Control: You have insufficient privileges to add a trial." };
+	return;
     }
-    
 
     my $user_name = $c->user()->get_object()->get_username();
     my $error;
@@ -959,10 +971,16 @@ sub upload_trial_file_POST : Args(0) {
         $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
         return;
     }
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
-        return;
-    }
+
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    #    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
+    #    return;
+    #}
+
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials")) {
+	$c->stash->{rest} = {error =>  "Access Control: You have insufficient privileges to upload a trial." };
+	return;
+    }	
 
     $user_id = $c->user()->get_object()->get_sp_person_id();
     $user_name = $c->user()->get_object()->get_username();
@@ -1171,7 +1189,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         $c->stash->{rest} = {errors => "You need to be logged in to upload a trial." };
         return;
     }
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
+    #    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials")) { 
         $c->stash->{rest} = {errors =>  "You have insufficient privileges to upload a trial." };
         return;
     }
@@ -1293,13 +1312,14 @@ sub upload_trial_metadata_file_POST : Args(0) {
     my @user_roles = $c->user()->roles();
     my %has_roles = ();
     map { $has_roles{$_} = 1; } @user_roles;
-
+    
     # User must be a curator or submitter
-    if ( !(exists($has_roles{'submitter'}) || exists($has_roles{'curator'}) ) ) {
+    #if ( !(exists($has_roles{'submitter'}) || exists($has_roles{'curator'}) ) ) {
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials")) { 
         $c->stash->{rest} = {errors =>  "You must be a curator or submitter to update a trial." };
         return;
     }
-
+    
     # Check filename for spaces and/or slashes
     if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
         print STDERR "File name must not have spaces or slashes.\n";
@@ -1328,7 +1348,7 @@ sub upload_trial_metadata_file_POST : Args(0) {
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin('TrialMetadataGeneric');
     my $parsed_data = $parser->parse();
-
+    
     my @errors;
     my @warnings;
     if (!$parsed_data) {
@@ -1343,21 +1363,28 @@ sub upload_trial_metadata_file_POST : Args(0) {
         return;
     }
 
-    # Check breeding program permissions, if not a curator
-    if ( ! exists($has_roles{'curator'}) ) {
-        my $breeding_programs = $parsed_data->{'breeding_programs'};
-        my @missing_breeding_programs;
-        foreach my $breeding_program (@$breeding_programs) {
-            if ( ! exists($has_roles{$breeding_program}) ) {
-                push @missing_breeding_programs, $breeding_program;
-            }
-        }
-        if ( scalar(@missing_breeding_programs) > 0 ) {
-            $c->stash->{rest} = { errors => "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s)." };
-            return;
-        }
-    }
 
+    # Check breeding program permissions, if not a curator
+    # if ( ! exists($has_roles{'curator'}) ) {
+    #     my $breeding_programs = $parsed_data->{'breeding_programs'};
+    #     my @missing_breeding_programs;
+    #     foreach my $breeding_program (@$breeding_programs) {
+    #         if ( ! exists($has_roles{$breeding_program}) ) {
+    #             push @missing_breeding_programs, $breeding_program;
+    #         }
+    #     }
+    #     if ( scalar(@missing_breeding_programs) > 0 ) {
+    #         $c->stash->{rest} = { errors => "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s)." };
+    #         return;
+    #     }
+    # }
+
+    my $breeding_programs = $parsed_data->{breeding_programs};
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials", undef, $breeding_programs)) {
+	$c->stash->{rest} = { errors => "Access Control: You do not have the required privileges to add data to the following breeding programs: ".join(", ", @$breeding_programs)  };
+	return;
+    }
+    
     # Update each trial
     eval {
         my $trial_data = $parsed_data->{'trial_data'};
@@ -1441,8 +1468,14 @@ sub upload_soil_data_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload soil data'};
+    my $trial = CXGN::Trial->new( { bcs_schema => $chado_schema, trial_id => $trial_id });
+    my $breeding_programs = $trial->get_breeding_programs();
+    
+    my @breeding_program_ids = map { $_->[0] } @$breeding_programs;
+    
+    #    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials", undef, \@breeding_program_ids)) { 
+        $c->stash->{rest} = {error=>'Access Control: You do not have the necessary privileges to upload soil data for this trial' };
         $c->detach();
     }
 
