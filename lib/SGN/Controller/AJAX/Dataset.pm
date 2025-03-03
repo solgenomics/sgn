@@ -61,10 +61,11 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 	}
     }
 
-    $dataset->store();
-    $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
+    my $new_id = $dataset->store();
+    print STDERR "==========================\nNew dataset ID: $new_id \n=============================\n";
+    # $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
 
-    $c->stash->{rest} = { message => "Stored Dataset Successfully!" };
+    $c->stash->{rest} = { message => "Stored Dataset Successfully!", id => $new_id };
 }
 
 sub store_outliers_in_dataset :Path('/ajax/dataset/store_outliers') Args(1) {

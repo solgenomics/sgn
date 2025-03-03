@@ -26,7 +26,7 @@
 <& /page/page_title.mas, title=>"Stability" &>
 
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/stability" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
   <div class="form-group form-inline">
     <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
@@ -152,7 +152,7 @@ if (parseInt(check_outliers) === 1) {
 
 jQuery(document).ready(function() {
   if (isLoggedIn()) {
-    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
+    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox", "analysis_type":"Stability", "show_compatibility":"yes"});
   }
   else {
     alert('You must be logged in to use Stability');
