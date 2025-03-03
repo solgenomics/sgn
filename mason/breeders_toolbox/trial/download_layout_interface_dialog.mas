@@ -36,7 +36,7 @@ $trial_stock_type => undef
                             <div class="col-sm-9" >
                                 <select class="form-control" id="create_fieldbook_format_<% $download_type %>">
                                     <option value="csv">CSV</option>
-                                    <option value="xls">Excel (xls)</option>
+                                    <option value="xlsx">Excel (xlsx)</option>
                                 </select>
                             </div>
                         </div>
@@ -184,7 +184,7 @@ jQuery(document).ready(function() {
 
     // jQuery("#trial_fieldmap_download_layout_button").click( function () {
     //     jQuery('#management_factore').css("display", "none");
-    //     jQuery("#create_fieldbook_format_TrialFieldMapLayout option[value='xls']").prop('selected', true);
+    //     jQuery("#create_fieldbook_format_TrialFieldMapLayout option[value='xlsx']").prop('selected', true);
     //     jQuery("#create_fieldbook_format_TrialFieldMapLayout").prop('disabled', 'disabled');
     //     jQuery("#create_fieldbook_data_level_TrialFieldMapLayout").prop('disabled', 'disabled');
     //     show_available_columns_TrialFieldMapLayout('plots');
