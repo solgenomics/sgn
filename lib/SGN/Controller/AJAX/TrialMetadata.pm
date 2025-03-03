@@ -542,13 +542,18 @@ sub get_trial_folder :Chained('trial') PathPart('folder') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+    #if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+#	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
+#	return;
+ #   }
+
+    if (!($c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials"))) {
 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
 	return;
     }
-
+    
     my $project_parent = $c->stash->{trial}->get_folder();
-
+    
     $c->stash->{rest} = { folder => [ $project_parent->project_id(), $project_parent->name() ] };
 
 }
@@ -3041,11 +3046,16 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates (row and column numbers)." };
-        $c->detach();
-    }
+#    if ($user_role ne 'curator' && $user_role ne 'submitter') {
+#        $c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates (row and column numbers)." };
+#        $c->detach();
+#    }
 
+    if (! $c->stash->{access}->grant( $user_id, "write", "trials")) {
+	$c->stash->{rest} = { error => "Access Control: You have insufficient privileges to add coordinates (row and column numbers)." };
+	$c->detach();
+    }
+    
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'trial_coords_upload';
@@ -3373,11 +3383,16 @@ sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_
         $c->stash->{rest} = { error => "You must be logged in to delete crosses" };
         $c->detach();
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete crosses. Please contact us." };
-        $c->detach();
-    }
+#    if (!$c->user()->check_roles("curator")) {
+ #       $c->stash->{rest} = { error => "You do not have the correct role to delete crosses. Please contact us." };
+ #       $c->detach();
+ #   }
 
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "crosses")) {
+	$c->stash->{rest} = { error => "Access control: You do not have the correct permissions to delete crosses. Please contact us." };
+	$c->detach();
+    }
+    
     my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_crosses_in_crossing_experiment();
@@ -3593,9 +3608,13 @@ sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype'
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
 
-  if ($self->privileges_denied($c)) {
-    $c->stash->{rest} = { error => "You have insufficient access privileges to suppress this phenotype." };
-    return;
+  #if ($self->privileges_denied($c)) {
+  #  $c->stash->{rest} = { error => "You have insufficient access privileges to suppress this phenotype." };
+  #  return;
+  #}
+  if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping" )) {
+      $c->stash->{rest} = { error => "Access Control: You have insufficient access privileges to suppress this phenotype." };
+      return;
   }
 
   my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id, $user_name, $timestamp);
@@ -3622,9 +3641,14 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
         return;
     }
 
-    if ($self->privileges_denied($c)) {
-        $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
-        return;
+#    if ($self->privileges_denied($c)) {
+#        $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
+#        return;
+#    }
+
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping" )) {
+	$c->stash->{rest} = { error => "Access Control: You have insufficient access privileges to delete assayed trait for this trial." };
+	return;
     }
 
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
@@ -3754,6 +3778,12 @@ sub delete_genotyping_plate_from_field_trial_linkage : Chained('trial') PathPart
         $c->detach();
     }
 
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping" )) {
+	$c->stash->{rest} = { error => "Access Control: You have insufficient privileges to remove field trial linkages." };
+	return;
+    }
+    
+    
     my @roles = $c->user->roles();
     my $result = $c->stash->{trial}->delete_genotyping_plate_from_field_trial_linkage($field_trial_id, $roles[0]);
 
@@ -4851,6 +4881,8 @@ sub upload_entry_number_template_POST : Args(0) {
         return;
     }
 
+    
+    
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_role = $c->user->get_object->get_user_type();
 
