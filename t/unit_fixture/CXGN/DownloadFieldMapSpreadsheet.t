@@ -41,7 +41,7 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
+print STDERR "COORDS UPLOAD RESPONSE: ".Dumper($message_hash);
 
 my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
     schema => $schema,
@@ -55,7 +55,7 @@ my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
 });
 my $output = $trial_layout_download->get_layout_output();
 my %hash = %{$output->{output}};
-print STDERR Dumper \%hash;
+print STDERR "TRIAL LAYOUT DOWNLOAD: ".Dumper \%hash;
 
 is_deeply(\%hash, {
           '4' => {
@@ -83,7 +83,7 @@ is_deeply(\%hash, {
                    '1' => 'test_accession2',
                    '3' => 'test_accession2'
                  }
-        });
+        }, "Trial layout download test");
 
 my $trial_layout = CXGN::Trial::TrialLayout->new({
    schema => $schema,
