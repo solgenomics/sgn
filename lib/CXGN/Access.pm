@@ -33,51 +33,30 @@ The Breedbase Access system provides fine-tuned access to the system through rol
  │ crossing         │ generating crossing   │ read, write,                      │
  │                  │ projects, adding      │ match_breeding_program            │
  │                  │ crosses               │                                   │
+ ├──────────────────┼───────────────────────┼───────────────────────────────────┤
+ │ loci             │ creating/modifying    │ read, write, match_owner          │
+ │                  │ locus pages           │                                   │
+ ├──────────────────┼───────────────────────┼───────────────────────────────────┤
+ │ community        │ forum, calendar       │ read, write, match_owner          │
  └──────────────────┴───────────────────────┴───────────────────────────────────┘
 
 
-=head2 Accessors
-
-people_schema
-
-role
-
-resource
-
-=head2 Resources
-
-Currently planned resources are:
-
-=over 3
-
-=item *
-
-pedigrees
-
-=item * 
-
-genotypes
-
-=item *
-
-phenotypes
-
-=item
-
-privileges
-
-=item
-
-trials
-
-=back
 
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
 
-=head2 Functions
+=head1 FUNCTIONS
 
+=head1 Accessors
+
+people_schema()
+
+role()
+
+resource()
+
+=head1 Other functions
 =cut
 
 
@@ -169,15 +148,20 @@ sub check_ownership {
     my $resource = shift || $self->resource();
     my $access_level = shift;
     my $owner_id = shift;
-    my $breeding_program_id = shift;
+    my $object_breeding_program_ids = shift;
 
+    # breeding_program_ids can also be a scalar
+    #
+    if (! ref($object_breeding_program_ids) && defined($object_breeding_program_ids)) {
+	$object_breeding_program_ids = [ $object_breeding_program_ids ];
+    }
     my $privileges = $self->user_privileges($sp_person_id, $resource);
 
     my $require_ownership = $privileges->{$access_level}->{require_ownership};
     my $require_breeding_program = $privileges->{$access_level}->{require_breeding_program};
     
     my $ownership_checks_out;
-    my $bp_checks_out;
+    my $bps_checks_out;
     
     if ($require_ownership) {
 	print STDERR "OWNERSHIP IS REQUIRED!\n";
@@ -187,16 +171,25 @@ sub check_ownership {
 	}
     }
 
-    my @breeding_program_info = $self->get_breeding_program_ids_for_user($sp_person_id);
-    my @breeding_program_ids = map { $_->[0] } @breeding_program_info;
+    my @user_breeding_program_info = $self->get_breeding_program_ids_for_user($sp_person_id);
+    my @user_breeding_program_ids = map { $_->[0] } @user_breeding_program_info;
     
-    print STDERR "BP INFO: ".Dumper(\@breeding_program_info);
+    print STDERR "BP INFO: ".Dumper(\@user_breeding_program_info);
     
     if ($require_breeding_program) {
-	print STDERR "BREEDING PROGRAM IS REQUIRED! (required id is $breeding_program_id)\n";
-	if (any { $_ == $breeding_program_id } @breeding_program_ids ) {
-	    print STDERR "Breeding program checks out\n";
-	    $bp_checks_out = 1;
+	# user has to be associated to all breeding programs in the list
+	#
+	my $match_count = 0;
+	print STDERR "BREEDING PROGRAM IS REQUIRED! (required breeding program ids: ". join(", ", @user_breeding_program_ids)."\n";
+	foreach my $bp_id (@$object_breeding_program_ids) { 
+	    if (any { $_ == $bp_id } @user_breeding_program_ids ) {
+		print STDERR "Breeding program checks out\n";
+		$match_count++;
+	    }
+	}
+	
+	if ($match_count == @$object_breeding_program_ids) {
+	    $bps_checks_out = 1;
 	}
     }
 
@@ -207,7 +200,7 @@ sub check_ownership {
     }
     
     if ($require_ownership && $require_breeding_program) {
-	return $ownership_checks_out && $bp_checks_out;
+	return $ownership_checks_out && $bps_checks_out;
     }
 
     if ($require_ownership) {
@@ -215,7 +208,7 @@ sub check_ownership {
     }
 
     if ($require_breeding_program) {
-	return $bp_checks_out;
+	return $bps_checks_out;
     }
 }
 
@@ -249,7 +242,7 @@ sub grant {
     my $access_level = shift;
     my $resource = shift || $self->resource();
     my $owner_id = shift;
-    my $breeding_program_id = shift;
+    my $breeding_program_ids = shift;
 
     my @privileges = $self->check_user($sp_person_id, $resource);
 
@@ -259,7 +252,7 @@ sub grant {
 	return 0;
     }
 
-    my $ownerships_check_out = $self->check_ownership($sp_person_id, $resource, $access_level, $owner_id, $breeding_program_id);
+    my $ownerships_check_out = $self->check_ownership($sp_person_id, $resource, $access_level, $owner_id, $breeding_program_ids);
 
     print STDERR "Ownerships check: $ownerships_check_out\n";
     
@@ -386,7 +379,7 @@ sub delete_privilege {
 
 }
 
-=head3 add_resource()
+=head2 add_resource()
 
     Argument: resource name
     Returns:  resource_id
@@ -403,6 +396,10 @@ sub add_resource {
     return $row->sp_resource_id();
 }
 
+=head2 delete_resource
+
+=cut
+
 sub delete_resource {
     my $self = shift;
     my $resource_id = shift;
@@ -418,6 +415,10 @@ sub delete_resource {
     return { error => 'The resource with id $resource_id does not exist and could not be deleted.' };
 }
 
+=head2 add_access_level()
+
+=cut
+
 sub add_access_level {
     my $self = shift;
     my $name = shift;
@@ -427,7 +428,11 @@ sub add_access_level {
 
     return $row->sp_access_level_id();
 }
-    
+
+=head2 delete_access_level()
+
+=cut
+
 sub delete_access_level {
     my $self = shift;
     my $access_level_id = shift;
