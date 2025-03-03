@@ -66,6 +66,7 @@ insert into sgn_people.sp_resource (name) values ('trials');
 insert into sgn_people.sp_resource (name) values ('crosses');
 insert into sgn_people.sp_resource (name) values ('wizard');
 insert into sgn_people.sp_resource (name) values ('community');
+insert into sgn_people.sp_resource (name) values ('loci');
 
 -- add access levels
 
@@ -76,6 +77,8 @@ insert into sgn_people.sp_access_level (name) values ('delete');
 
 -- add specific privileges
 --
+
+-- CURATOR PRIVILEGES
 
 -- curator for privileges: (should be separate role)
 
@@ -92,7 +95,7 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 1, 2);
 
--- curator for trial
+-- curator for trials
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (6, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (6, 1, 2);
@@ -107,6 +110,22 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 1, 2);
 
+--curator for wizard
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (8, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (8, 1, 2);
+
+--curator for community
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (9, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (9, 1, 2);
+
+--curator for loci
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (10, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (10, 1, 2);
+
+--SUBMITTER PRIVILEGES
 
 -- submitter for pedigrees:
 
@@ -132,6 +151,8 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 3, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 3, 2);
+
+-- USER PRIVILEGES
 
 -- user for pedigrees
 
