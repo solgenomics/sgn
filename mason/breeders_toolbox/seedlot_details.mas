@@ -746,8 +746,8 @@ $material_type => undef
 
     jQuery('#edit_seedlot_details_link').click(function(){
         jQuery('#edit_seedlot_details_dialog').modal('show');
-        default_material_type = "<%$material_type%>";
-        get_select_box('material_types', 'edit_seedlot_details_material_type_div', { 'name' : 'edit_seedlot_details_material_type', 'id' : 'edit_seedlot_details_material_type', 'default' : default_material_type });
+        const default_material_type = "<%$material_type%>";
+        get_select_box('material_types', 'edit_seedlot_details_material_type_div', { 'name' : 'edit_seedlot_details_material_type', 'id' : 'edit_seedlot_details_material_type', 'default' : default_material_type, 'empty': 1 });
     });
 
     jQuery('#edit_seedlot_details_button').click(function(){
