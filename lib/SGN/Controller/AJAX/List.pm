@@ -992,7 +992,7 @@ sub get_user : Private {
 	my $user_object = $c->user->get_object();
 	return $user_object->get_sp_person_id();
     }
-    return undef;
+    return;
 }
 
 sub check_user : Private {

@@ -66,7 +66,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
         schema => $schema,
         phenome_schema => $phenome_schema,
         seedlot_id => $seedlot_id
-    );    
+    );
     my @content_accession_names;
     my @content_cross_names;
     my $accessions = $sl->accession();
@@ -194,11 +194,14 @@ sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
     }
 
     # Get cvterm id of event ontology
+    my $dbxref;
+    my $root_cvterm;
+    my $root_cvterm_id;
     my ($db_name, $accession) = split ":", $c->config->{seedlot_maintenance_event_ontology_root};
     my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
-    my $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
-    my $root_cvterm = $dbxref->cvterm if $dbxref;
-    my $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
+    $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
+    $root_cvterm = $dbxref->cvterm if $dbxref;
+    $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
 
     # Get cvterm id(s) of events for seedlot info
     my @info_event_cvterms = ();
