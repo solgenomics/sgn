@@ -2062,7 +2062,9 @@ sub upload_transactions_POST : Args(0) {
                 my $new_seedlot_description = $new_seedlot_info->[2];
                 my $new_seedlot_box_name = $new_seedlot_info->[3];
                 my $new_seedlot_quality = $new_seedlot_info->[4];
-                my $new_seedlot_material_type = $new_seedlot_info->[5];
+
+                my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_seedlot_id);
+                my $new_seedlot_material_type = $from_sl->material_type();
 
                 my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
                 $new_seedlot->uniquename($new_seedlot_name);
