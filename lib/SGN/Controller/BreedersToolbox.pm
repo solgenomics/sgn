@@ -68,7 +68,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $can_write_trials = 0;
     if (grep {/write/} @access) {
-	print STDERR "CAN WRITE TRIALS!\n";
+	#print STDERR "CAN WRITE TRIALS!\n";
 	$can_write_trials = 1;
     }
     
