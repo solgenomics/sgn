@@ -27,10 +27,11 @@ $user_role => undef
             <div class="panel-body">
                 <b><p>What are seedlots?</p></b>
                 <ul>
-                <li>Seedlots represent physical seed in packets.</li>
-                <li>This seed can be from crosses or for named accessions.</li>
+                <li>Seedlots represent physical plant materials in packets/containers.</li>
+                <li>Plant material can be seed, root, clone, plant or tissue culture.</li>
+                <li>These materials can be from crosses or for named accessions.</li>
                 <li>Seedlots can have a specific location, box, weight(g), and count.</li>
-                <li>Seed can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
+                <li>Plant material can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
                 <li>Seedlots can belong to breeding programs and organizations.</li>
                 </ul>
 

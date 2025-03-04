@@ -17,7 +17,7 @@
                             <ul>
                             <li>Seedlots represent physical plant materials in packets/containers.</li>
                             <li>Plant material in a seedlot can be seed, root, clone, plant or tissue culture.</li>
-                            <li>This plant material can be from crosses or for named accessions.</li>
+                            <li>These plant materials can be from crosses or for named accessions.</li>
                             <li>Seedlots can have a specific location, box, weight_gram, and count.</li>
                             <li>Seedlots can belong to breeding programs and organizations.</li>
                             <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
@@ -264,11 +264,11 @@
                     <li>accession_name (must exist in the database. the accession_name is the unique identifier for the named genotype)</li>
                     <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                     <li>
-                    amount (number of seeds in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
+                    amount (number of materials in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
                     <br/><b>AND/OR</b><br/>
                     weight_gram (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight_gram or both.)
                     </li>
-                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
+                    <li>box_name (the box name that the plant material is located in. can be any name.)</li>
                     </ul>
 
                     <b>Optional fields:</b>
@@ -323,11 +323,11 @@
                     <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
                     <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                     <li>
-                    amount (number of seeds in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
+                    amount (number of materials in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
                     <br/><b>AND/OR</b><br/>
                     weight_gram (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight_gram or both.)
                     </li>
-                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
+                    <li>box_name (the box name that the plant material is located in. can be any name.)</li>
                     </ul>
 
                     <b>Optional fields:</b>

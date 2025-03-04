@@ -129,7 +129,7 @@ $cross_uniquename => ''
                 </div>
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Amount (number of seeds): </label>
+                    <label class="col-sm-3 control-label">Amount (number of materials): </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_amount" placeholder="Amount OR Weight(g) Required">
                     </div>

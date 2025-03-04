@@ -2398,7 +2398,7 @@ sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0)
     push @material_types, ['root', 'root'];
     push @material_types, ['clone', 'clone'];
     push @material_types, ['plant', 'plant'];
-    push @material_types, ['tissue_culture', 'tissue culture'];
+    push @material_types, ['tissue culture', 'tissue culture'];
 
     my $html = simple_selectbox_html(
         name => $name,
