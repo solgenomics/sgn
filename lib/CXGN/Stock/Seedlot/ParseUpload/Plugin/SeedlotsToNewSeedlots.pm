@@ -348,7 +348,9 @@ sub _parse_with_plugin {
             'type_id' => $seedlot_cvterm_id,
         });
         my $from_seedlot_id = $from_seedlot_rs->stock_id();
-        my $content_id = CXGN::Stock::Seedlot->get_content_id($schema, $from_seedlot_id);
+        my $seedlot = CXGN::Stock::Seedlot->new($schema, $from_seedlot_id);
+        my $content_id = $seedlot->get_content_id();
+        my $seedlot_material_type = $seedlot->material_type();
 
         push @transactions, {
             from_seedlot_name => $from_seedlot_name,
@@ -358,7 +360,7 @@ sub _parse_with_plugin {
             weight => $weight,
             transaction_description => $transaction_description,
             operator => $operator_name,
-            new_seedlot_info => [$to_new_seedlot_name, $content_id, $new_seedlot_description, $new_seedlot_box_name, $new_seedlot_quality]
+            new_seedlot_info => [$to_new_seedlot_name, $content_id, $new_seedlot_description, $new_seedlot_box_name, $new_seedlot_quality, $seedlot_material_type]
         }
     }
     #print STDERR Dumper \%parsed_seedlots;

@@ -2062,6 +2062,7 @@ sub upload_transactions_POST : Args(0) {
                 my $new_seedlot_description = $new_seedlot_info->[2];
                 my $new_seedlot_box_name = $new_seedlot_info->[3];
                 my $new_seedlot_quality = $new_seedlot_info->[4];
+                my $new_seedlot_material_type = $new_seedlot_info->[5];
 
                 my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
                 $new_seedlot->uniquename($new_seedlot_name);
@@ -2073,6 +2074,8 @@ sub upload_transactions_POST : Args(0) {
                 $new_seedlot->organization_name($new_seedlot_organization);
                 $new_seedlot->breeding_program_id($new_seedlot_breeding_program_id);
                 $new_seedlot->quality($new_seedlot_quality);
+                $new_seedlot->material_type($new_seedlot_material_type);
+
                 my $return = $new_seedlot->store();
                 my $new_seedlot_id = $return->{seedlot_id};
                 push @added_seedlots, $new_seedlot_id;
