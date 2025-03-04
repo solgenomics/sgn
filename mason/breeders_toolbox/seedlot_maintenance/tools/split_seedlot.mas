@@ -254,6 +254,10 @@
         // Breeding Program Select Box
         get_select_box('breeding_programs', 'seedlot_split_new_breeding_program_div', { 'name' : 'seedlot_split_new_breeding_program_id', 'id' : 'seedlot_split_new_breeding_program_id' });
 
+        // Material Type Select Box
+        get_select_box('material_types', 'seedlot_split_new_material_type_div', { 'name' : 'seedlot_split_new_material_type', 'id' : 'seedlot_split_new_material_type', 'empty': 1 });
+
+
     });
 
 
@@ -326,9 +330,6 @@
                 setNewSeedlotName();
             }
         });
-
-        // Material Type Select Box
-        get_select_box('material_types', 'seedlot_split_new_material_type_div', { 'name' : 'seedlot_split_new_material_type', 'id' : 'seedlot_split_new_material_type', 'default' : material_type, 'empty': 1 });
 
     }
 
