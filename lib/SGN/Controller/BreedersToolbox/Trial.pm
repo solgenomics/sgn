@@ -485,7 +485,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         return;
     }
 
-    my $format = $c->req->param("format") || "xls";
+    my $format = $c->req->param("format") || "xlsx";
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
@@ -542,7 +542,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $plugin = "";
-    if ( ($format eq "xls") && ($what eq "layout")) {
+    if ( ($format eq "xlsx") && ($what eq "layout")) {
         $plugin = "TrialLayoutExcel";
     }
     if (($format eq "csv") && ($what eq "layout")) {
