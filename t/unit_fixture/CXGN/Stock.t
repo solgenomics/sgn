@@ -90,4 +90,7 @@ is_deeply(\@trial_list,
         'test_location'
     ]
 ], "trial list check");
+
+$f->clean_up_db();
+
 done_testing();

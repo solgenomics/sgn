@@ -96,7 +96,6 @@ has 'config' => ( isa => "Ref",
 		  is => 'rw',
     );
 
-
 has 'dbh' => (
 		is => 'rw',
     );
@@ -161,7 +160,7 @@ sub dbic_schema {
 	return $self->people_schema();
     }
 
-    return undef;
+    return;
 }
 
 sub get_conf {
@@ -291,6 +290,16 @@ sub get_auditdb_stats {
     return $auditresults;
 }
 
+=head1 FUNCTIONS
+
+=head2 function clean_up_db()
+
+  Usage:   $f->clean_up_db();
+  Effects: removes any rows that were added to the database since the 
+           currently running test started. Should be called at the end of the test
+  Note:    Will not revert deletions or updates occuring during the test
+
+=cut
 
 # for tests that cannot use a transaction, such as unit_mech or selenium tests, this function can be used to bring
 # the database back to approx the state before the test. dbstats_start needs to contain the result of the dbstats function
@@ -413,6 +422,11 @@ sub delete_table_entries {
     }
 
     if ($table eq "metadata") {
+        # delete associated images first
+	my $iq = "DELETE FROM phenome.stock_image where metadata_id > ?";
+	my $ih = $self->dbh()->prepare($iq);
+	$ih->execute($previous_max_id);
+	    
         my $rs = undef;
         my $q = "DELETE FROM metadata.md_files where metadata_id > ?";
         my $h = $self->dbh()->prepare($q);
