@@ -224,6 +224,18 @@ has 'quality' => (
     builder => '_retrieve_quality',
     );
 
+=head2 Accessor material_type()
+
+Material type of this seedlot. Can be seed, root, clone, plant or tissue_culture. Default material type is seed.
+
+=cut
+
+has 'material_type' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy => 1,
+    builder => '_retrieve_material_type',
+);
 
 =head2 Accessor source()
 
@@ -336,6 +348,7 @@ sub list_seedlots {
     my $trial_name = shift;  # name of trial used in a transaction (must also specify trial_usage)
     my $trial_usage = shift; # transaction type (either 'source', 'sink', or 'source|sink')
                              # where the trial is the source, sink, or either of the matching seedlot's seed
+    my $material_type = shift;
 
     select(STDERR);
     $| = 1;
@@ -352,6 +365,7 @@ sub list_seedlots {
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
     my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_quality", "stock_property")->cvterm_id();
     my $location_code_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "location_code", "stock_property")->cvterm_id();
+    my $material_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "material_type", "stock_property")->cvterm_id();
 
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
@@ -410,7 +424,7 @@ sub list_seedlots {
         {'stock_relationship_objects' => 'subject'}
     );
 
-    if ($minimum_count || $minimum_weight || $quality || $only_good_quality || $box_name) {
+    if ($minimum_count || $minimum_weight || $quality || $only_good_quality || $box_name || $material_type) {
         if ($minimum_count) {
             print STDERR "Minimum count $minimum_count\n";
             $search_criteria{'stockprops.value'} = { '<>' => 'NA' };
@@ -432,6 +446,12 @@ sub list_seedlots {
             $search_criteria{'stockprops.value'} = { 'ilike' => '%'.$box_name.'%' };
             $search_criteria{'stockprops.type_id'} = $location_code_cvterm_id;
         }
+        if ($material_type) {
+            print STDERR "Material type $material_type\n";
+            $search_criteria{'stockprops.value' } = { '=' => $material_type };
+            $search_criteria{'stockprops.type_id' } = $material_type_cvterm_id;
+        }
+
         push @seedlot_search_joins, 'stockprops';
     }
 
@@ -516,7 +536,7 @@ sub list_seedlots {
         phenome_schema=>$phenome_schema,
         stock_id_list=>\@seen_seedlot_ids,
         stock_type_id=>$type_id,
-        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1, 'seedlot_quality'=>1},
+        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1, 'seedlot_quality'=>1, 'material_type'=>1},
         minimal_info=>1,  #for only returning stock_id and uniquenames
         display_pedigree=>0 #to calculate and display pedigree
     });
@@ -541,6 +561,7 @@ sub list_seedlots {
         $unique_seedlots{$_}->{seedlot_quality} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} : '';
         $unique_seedlots{$_}->{current_count} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
         $unique_seedlots{$_}->{current_weight_gram} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
+        $unique_seedlots{$_}->{material_type} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} : '';
 
         push @seedlots, $unique_seedlots{$_};
 
@@ -1353,6 +1374,22 @@ sub _retrieve_quality {
     $self->quality($self->_retrieve_stockprop('seedlot_quality'));
 }
 
+=head2 _retrieve_material_type
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub _retrieve_material_type {
+    my $self = shift;
+    my $material_type = $self->_retrieve_stockprop('material_type');
+    $self->material_type($material_type);
+}
 
 
 =head2 Method current_weight()
@@ -1451,9 +1488,12 @@ sub store {
             if ($self->box_name){
                 $self->_store_stockprop('location_code', $self->box_name);
             }
-	    if ($self->quality()) {
-		$self->_store_stockprop('seedlot_quality', $self->quality());
-	    }
+            if ($self->quality()) {
+                $self->_store_stockprop('seedlot_quality', $self->quality());
+            }
+            if ($self->material_type()) {
+                $self->_store_stockprop('material_type', $self->material_type());
+            }
 
         } else { #Updating seedlot
 
@@ -1506,9 +1546,13 @@ sub store {
             if($self->box_name){
                 $self->_update_stockprop('location_code', $self->box_name);
             }
-	    if($self->quality) {
-		$self->_update_stockprop('seedlot_quality', $self->quality());
-	    }
+            if($self->quality) {
+                $self->_update_stockprop('seedlot_quality', $self->quality());
+            }
+            if($self->material_type) {
+                $self->_update_stockprop('material_type', $self->material_type());
+            }
+
         }
     };
 

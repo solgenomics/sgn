@@ -13,6 +13,7 @@ my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
 
 my $seedlot_uniquename = 'seedlot1';
+my $seedlot_material_type = 'root';
 my $seedlot_location = 'seedlot1_location';
 my $seedlot_box_name = 'box1';
 my $seedlot_accession_uniquename = 'test_accession1';
@@ -24,6 +25,7 @@ my $seedlot_population_name = 'seedlot1_pop';
 
 my $sl = CXGN::Stock::Seedlot->new( schema=>$schema );
 $sl->uniquename($seedlot_uniquename);
+$sl->material_type($seedlot_material_type);
 $sl->location_code($seedlot_location);
 $sl->box_name($seedlot_box_name);
 $sl->accession_stock_id($seedlot_accession_id);
@@ -49,9 +51,11 @@ is($s->breeding_program_name, $seedlot_breeding_program_name);
 is($s->breeding_program_id, $seedlot_breeding_program_id);
 is($s->box_name, $seedlot_box_name);
 is($s->quality, 'MOLD', 'set/get quality test');
+is($s->material_type, $seedlot_material_type);
 
 $s->quality('ROT');
 is($s->quality(), 'ROT', 'quality update test');
 
+$f->clean_up_db();
 
 done_testing();

@@ -1,0 +1,134 @@
+
+<%args>
+
+$schema
+$static_content_path
+$username
+$role
+$first_name
+$last_name
+$sp_person_id
+$timestamp
+$phenotype_files => undef
+$breeding_programs => undef
+$locations => undef
+$preferred_species => undef
+$editable_stock_props => {}
+
+</%args>
+
+<div style="text-align: center">
+
+<h3>Welcome back <% $first_name %>!</h3>
+
+Your status is currently "<% $role %>".
+
+<!-- table id="manage_user_role_table" class="table table-bordered" width="100%" >
+<thead>
+<tr><th>User</th><th>Your currently assigned roles</th></tr>
+
+</thead>
+<tbody>
+</tbody>
+</table -->
+
+% if ($role ne "user") {
+
+<&|  /page/info_section.mas, title => "<b><font size=\"3\">Continue where you left off</font></b>", collapsible => 1, collapsed => 1 &>
+
+<h4>Continue where you left off:</h4>
+Interval:&nbsp;
+
+<select id="interval">
+    <option>day</option>
+    <option>week</option>
+    <option>month</option>
+    <option>year</option>
+</select>
+
+<br /><br />
+<h4>10 most recently created trials:</h4>
+
+<table id="recently_created_trial_table" style="width:100%" >
+<thead>
+<tr><th>Trial</th><th>Trial Type</th><th>Breeding Program</th><th>Create date</th></tr>
+</thead>
+</table>
+
+<br /><br />
+<h4>10 most recently modified trials:</h4>
+
+<table id="recently_modified_trial_table" style="width:100%">
+<thead>
+<tr><th>Trial</th><th>Trial Type</th><th>Breeding Program</th><th>Last phenotype added</th></tr>
+</thead>
+</table>
+
+<br /><br />
+<h4>10 most recently added accessions:</h4>
+
+<table id="recently_added_accessions_table" style="width:100%">
+<thead>
+<tr><th>Accession</th><th>Create date</th></tr>
+</thead>
+</table>
+
+
+
+</&>
+
+%} # -- if ($role ne...
+
+</div>
+
+<script>
+    var interval = jQuery('#interval').val()	
+
+    update_tables(interval);
+
+    jQuery('#interval').change( function() {
+        interval = jQuery('#interval').val();
+	update_tables(interval);
+	});
+
+    function update_tables(interval) { 
+        jQuery('#recently_created_trial_table').DataTable({
+	    'destroy': true,
+    	    'columns' : [{ width: '300px' }, { width: '200px'}, { width: '100px'}, null],	
+            'ajax':'/ajax/breeders/recent_trials/'+interval,
+            'order': [[ 3, 'desc']],
+	    'paging': false,
+	    'searching': false,
+	    'bInfo': false
+        });
+
+        jQuery('#recently_modified_trial_table').DataTable({
+	    'destroy' : true,
+            'columns': [{ width: '300px' }, { width: '200px'}, { width: '100px'}, null],
+            'ajax':'/ajax/breeders/recently_modified_trials/'+interval,
+    	    'paging': false,
+	    'searching': false,
+	    'bInfo' : false
+        });
+
+        jQuery('#recently_added_accessions_table').DataTable({
+	    'destroy' : true,
+            'ajax':'/ajax/breeders/recently_added_accessions/'+interval,
+    	    'paging': false,
+	    'searching' : false,
+	    'bInfo': false,
+    	    'columns': [{ width: '680px'}, null ],	
+        });
+
+//   jQuery('#manage_user_role_table').DataTable( {
+//       ajax : '/ajax/roles/list/<% $sp_person_id %>',
+//       searching: false,
+//       paging: false,
+//   });
+
+}
+
+</script>
+
+
+<& /index.mas, schema => $schema, timestamp => $timestamp, static_content_path=> $static_content_path, phenotype_files => $phenotype_files, breeding_programs => $breeding_programs, locations => $locations, preferred_species => $preferred_species, editable_stock_props => $editable_stock_props &>

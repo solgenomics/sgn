@@ -16,7 +16,10 @@ $trial_name
 </div>
 
 <button id="set_entry_numbers_template_btn" class="btn btn-default">Generate Entry Number Template</button>
+
 <button id="set_entry_numbers_upload_btn" class="btn btn-default">Upload Entry Number Template</button>
+
+<button id="delete_entry_numbers_btn" class="btn btn-default" disabled="1">Delete Entry Numbers</button>
 
 <script src="//cdn.datatables.net/plug-ins/1.11.3/sorting/natural.js" defer></script>
 <script type="text/javascript">
@@ -27,6 +30,30 @@ $trial_name
         jQuery("#set_entry_numbers_template_btn").click(function() {
             jQuery("#set_entry_numbers_template_dialog").modal("show");
         });
+
+	jQuery('#delete_entry_numbers_btn').click(function() {
+	    var yes = confirm("Are you sure you would like to remove the entry numbers from this trial? This action cannot be undone.");
+
+	    if (yes) {
+	       var p = jQuery.ajax( {
+	           type : 'async',
+	     	   url : '/ajax/breeders/trial_entry_numbers/delete',
+	     	   data: { trial_id : <% $trial_id %> },
+	       } );
+
+	       p.then( function(value) { loadEntryNumbers(); alert("Success!"); }, function(error) { alert("An error occurred deleting the entry numbers." ) } )
+ 	    }
+	});
+	
+
+	//function resetEntryNumberTable() {
+
+//	     	 alert("NOW DESTROYING TABLE!");
+//		              var table = new DataTable('#trial_entry_numbers_table');		
+  //           table.destroy();
+//	}
+
+
         jQuery("#set_entry_numbers_upload_btn").click(function() {
             jQuery("#trial_entry_numbers_upload_dialog").modal("show");
         });
@@ -88,6 +115,14 @@ $trial_name
             dt.rows.add(entryNumbers);
             dt.draw();
             jQuery("#trial_entry_numbers").show();
+	    jQuery('#delete_entry_numbers_btn').attr("disabled", false); 
+        }
+	else {
+	    let dt = jQuery('#trial_entry_numbers_table').DataTable();
+            dt.clear();
+            dt.rows.add(entryNumbers);
+            dt.draw();
+	    jQuery('#delete_entry_numbers_btn').attr("disabled", true);
         }
     }
 </script>
