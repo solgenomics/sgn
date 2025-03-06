@@ -42,6 +42,11 @@ window.increase.global <<- TRUE;
 window.size.global <<- 100;
 
 while (window.increase.global) {
+  if (window.size.global > 5000) {
+    message("Window size exceeded 5000. Exiting loop.")
+    spec.plot <- NULL
+    break
+  }
   tryCatch(
     expr = {
         spec.plot <- plot_spectra(raw.spectra.temp, num.col.before.spectra = 3, window.size = window.size.global)    
