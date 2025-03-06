@@ -9,6 +9,7 @@ $locations
 $crossing_trials
 $maintenance_enabled => undef
 $user_role => undef
+$default_seedlot_material_type
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -222,17 +223,17 @@ $user_role => undef
 </&>
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
-<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
-<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas, default_seedlot_material_type=>$default_seedlot_material_type&>
+<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp, default_seedlot_material_type=>$default_seedlot_material_type &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 <& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/cross/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
-<& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas &>
+<& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas&>
 <& /breeders_toolbox/delete_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_undo_seedlot_usage.mas &>
-<& /breeders_toolbox/upload_transactions_dialogs.mas &>
+<& /breeders_toolbox/upload_transactions_dialogs.mas&>
 <& /breeders_toolbox/add_transactions_using_list.mas &>
 
 
