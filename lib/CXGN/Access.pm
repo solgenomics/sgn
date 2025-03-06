@@ -339,19 +339,24 @@ sub add_privilege {
 	$error .= "Access level $access_level does not exist. ";
     }
 
-    my $row = {
-	sp_role_id => $role_row->sp_role_id(),
-	sp_access_level_id => $access_level_row->sp_access_level_id(),
-	sp_resource_id => $resource_row->sp_resource_id(),
-    };
-
-    my $row = $self->people_schema->resultset("SpPrivilege")->find_or_create($row);
+    my $row;
+    if (! $error) { 
+	$row = {
+	    sp_role_id => $role_row->sp_role_id(),
+	    sp_access_level_id => $access_level_row->sp_access_level_id(),
+	    sp_resource_id => $resource_row->sp_resource_id(),
+	};
+	
+	$row = $self->people_schema->resultset("SpPrivilege")->find_or_create($row);
+    }
 
     if ($error) {
 	return { error => $error };
     }
 
-    return { success => 1, privilege_id => $row->sp_privilege_id() };
+    my $privilege_id;
+    if (ref($row)) { $privilege_id = $row->sp_privilege_id(); }
+    return { success => 1, privilege_id => $privilege_id };
 }
 
 =head3 delete_privilege($privilege_id)
