@@ -12,6 +12,10 @@ $stockref => undef
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip-utils/0.0.2/jszip-utils.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
 <div class="well well-sm table-responsive">
     <table id="plot_images_results" class="table table-hover table-striped">
     <thead>
@@ -49,8 +53,45 @@ var auth_token;
 
 jQuery(document).ready( function() {
 
+    jQuery('#image_download_button').click(function () {
+        var zip = new JSZip();
+        var zipFilename = "trial_" + trial_id + "_images.zip";
+        var datatable = jQuery('#plot_images_results').DataTable();
+        var imageUrls = [];
+        var fileNames = [];
+
+        datatable.rows().every(function () {
+            var data = this.data();
+            var imageUrl = jQuery(data[0]).find('img').attr('src');
+            var fileName = jQuery('<div>').html(data[1]).find('a').text();
+
+            if (imageUrl) {
+                var fileExtension = imageUrl.split('.').pop();
+                imageUrl = imageUrl.replace('medium', fileName);
+                imageUrls.push(imageUrl);
+                fileNames.push(fileName + '.' + fileExtension);
+            }
+        });
+
+        var count = 0;
+        imageUrls.forEach(function (url, index) {
+            var filename = fileNames[index];
+            JSZipUtils.getBinaryContent(url, function (err, data) {
+                if (err) {
+                    throw err;
+                }
+                zip.file(filename, data, { binary: true });
+                count++;
+                if (count == imageUrls.length) {
+                    zip.generateAsync({ type: 'blob' }).then(function (content) {
+                        saveAs(content, zipFilename);
+                    });
+                }
+            });
+        });
+    });
+
     jQuery('#trial_images_section_onswitch').click(function() {
-        console.log(<% $trial_id %>);
         getObservationUnits()
     });
 
@@ -107,7 +148,7 @@ function _load_stock_image_results() {
             'dataSrc': function(json) {
                 json.data.forEach(function(row) {
                     var imgElement = jQuery(row[0]).find('img');
-                    imgElement.attr('width', '140').attr('height', '120');
+                    imgElement.attr('width', '140');
                     var anchorElement = jQuery(row[0]);
                     anchorElement.html(imgElement.prop('outerHTML'));
                     row[0] = anchorElement.prop('outerHTML');
