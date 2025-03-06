@@ -19,7 +19,8 @@ $default_seedlot_material_type
                             <& /page/page_title.mas, title=>"What are seedlots?" &>
                             <ul>
                             <li>Seedlots represent physical plant materials in packets/containers.</li>
-                            <li>Plant material in a seedlot can be seed, root, clone, plant or tissue culture.</li>
+                            <li>Plant material in a seedlot can be seed, root, clone, plant, tissue culture or gametophype.</li>
+                            <li>If you would like to set a default material type for seedlots, please contact us.</li>
                             <li>These plant materials can be from crosses or for named accessions.</li>
                             <li>Seedlots can have a specific location, box, weight_gram, and count.</li>
                             <li>Seedlots can belong to breeding programs and organizations.</li>
