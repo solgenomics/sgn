@@ -48,6 +48,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $only_good_quality = $params->{only_good_quality};
     my $trial_name = $params->{trial_name};
     my $trial_usage = $params->{trial_usage};
+    my $material_type = $params->{material_type};
 
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
@@ -89,6 +90,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         undef,
         $trial_name,
         $trial_usage,
+        $material_type,
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -106,6 +108,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             seedlot_stock_id => $sl->{seedlot_stock_id},
             seedlot_stock_uniquename => $sl->{seedlot_stock_uniquename},
             contents_html => $contents_html,
+            material_type => $sl->{material_type},
             location => $sl->{location},
             location_id => $sl->{location_id},
             count => $sl->{current_count},
@@ -150,6 +153,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         breeding_program => $c->stash->{seedlot}->breeding_program_name(),
         organization_name => $c->stash->{seedlot}->organization_name(),
         population_name => $c->stash->{seedlot}->population_name(),
+        material_type => $c->stash->{seedlot}->material_type(),
         accession => $c->stash->{seedlot}->accession(),
         cross => $c->stash->{seedlot}->cross(),
         box_name => $c->stash->{seedlot}->box_name(),
@@ -173,6 +177,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
 
     my $saved_seedlot_name = $seedlot->uniquename;
     my $seedlot_name = $c->req->param('uniquename');
+    my $material_type = $c->req->param('material_type');
     my $description = $c->req->param('description');
     my $breeding_program_name = $c->req->param('breeding_program');
     my $organization = $c->req->param('organization');
@@ -229,6 +234,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
 
     $seedlot->name($seedlot_name);
     $seedlot->uniquename($seedlot_name);
+    $seedlot->material_type($material_type);
     $seedlot->description($description);
     $seedlot->breeding_program_id($breeding_program_id);
     $seedlot->organization_name($organization);
@@ -336,6 +342,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $seedlot_uniquename = $c->req->param("seedlot_name");
+    my $seedlot_material_type = $c->req->param("seedlot_material_type");
     my $location_code = $c->req->param("seedlot_location");
     my $box_name = $c->req->param("seedlot_box_name");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
@@ -493,6 +500,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     eval {
         my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
         $sl->uniquename($seedlot_uniquename);
+        $sl->material_type($seedlot_material_type);
         $sl->description($description);
         $sl->location_code($location_code);
         $sl->box_name($box_name);
@@ -594,6 +602,7 @@ sub upload_seedlots_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $material_type = $c->req->param("upload_seedlot_material_type");
     my $breeding_program_id = $c->req->param("upload_seedlot_breeding_program_id");
     my $location = $c->req->param("upload_seedlot_location");
     my $population = $c->req->param("upload_seedlot_population_name");
@@ -676,6 +685,7 @@ sub upload_seedlots_POST : Args(0) {
             }
 
             $sl->uniquename($key);
+            $sl->material_type($material_type);
             $sl->location_code($location);
             $sl->box_name($val->{box_name});
             $sl->accession_stock_id($val->{accession_stock_id});
@@ -2053,6 +2063,9 @@ sub upload_transactions_POST : Args(0) {
                 my $new_seedlot_box_name = $new_seedlot_info->[3];
                 my $new_seedlot_quality = $new_seedlot_info->[4];
 
+                my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_seedlot_id);
+                my $new_seedlot_material_type = $from_sl->material_type();
+
                 my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
                 $new_seedlot->uniquename($new_seedlot_name);
                 $new_seedlot->location_code($new_seedlot_location);
@@ -2063,6 +2076,8 @@ sub upload_transactions_POST : Args(0) {
                 $new_seedlot->organization_name($new_seedlot_organization);
                 $new_seedlot->breeding_program_id($new_seedlot_breeding_program_id);
                 $new_seedlot->quality($new_seedlot_quality);
+                $new_seedlot->material_type($new_seedlot_material_type);
+
                 my $return = $new_seedlot->store();
                 my $new_seedlot_id = $return->{seedlot_id};
                 push @added_seedlots, $new_seedlot_id;

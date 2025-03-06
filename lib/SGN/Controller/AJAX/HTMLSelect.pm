@@ -2380,5 +2380,34 @@ sub get_related_attributes_select : Path('/ajax/html/select/related_attributes')
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "material_types_select";
+    my $name = $c->req->param("name") || "material_types_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @material_types;
+
+    if ($empty && !$default) {
+        push @material_types, ['', 'Please select a material type'];
+    }
+    push @material_types, ['seed', 'seed'];
+    push @material_types, ['root', 'root'];
+    push @material_types, ['clone', 'clone'];
+    push @material_types, ['plant', 'plant'];
+    push @material_types, ['tissue culture', 'tissue culture'];
+    push @material_types, ['gametophyte', 'gametophyte'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@material_types,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 1;

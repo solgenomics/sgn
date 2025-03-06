@@ -27,10 +27,11 @@ $user_role => undef
             <div class="panel-body">
                 <b><p>What are seedlots?</p></b>
                 <ul>
-                <li>Seedlots represent physical seed in packets.</li>
-                <li>This seed can be from crosses or for named accessions.</li>
+                <li>Seedlots represent physical plant materials in packets/containers.</li>
+                <li>Plant material can be seed, root, clone, plant or tissue culture.</li>
+                <li>These materials can be from crosses or for named accessions.</li>
                 <li>Seedlots can have a specific location, box, weight(g), and count.</li>
-                <li>Seed can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
+                <li>Plant material can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
                 <li>Seedlots can belong to breeding programs and organizations.</li>
                 </ul>
 
@@ -101,6 +102,12 @@ $user_role => undef
             </div>
         </div>
         <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Material Type: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_material_type" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Location: </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_location" type="text" />
@@ -156,15 +163,15 @@ $user_role => undef
         </div>
 
     </form>
-    <center>
+    <div style="text-align: center">
         <button class="btn btn-primary" id="submit_seedlot_search">Search</button>
-    </center>
+    </div>
 </div>
 </&>
 
-<center>
-  Enter search terms and click the "Search" button to view results.
-</center>
+<div style="text-align: center">
+    Enter search terms and click the "Search" button to view results.
+</div>
 
 <br />
 <br />
@@ -254,6 +261,7 @@ jQuery(document).ready(function(){
                 { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
                 { title: "Breeding Program", "data": "breeding_program_name" },
                 { title: "Contents", "data": "contents_html" },
+                { title: "Material Type", "data": "material_type" },
                 { title: "Location", "data": "location" },
                 { title: "Count", "data": "count" },
                 { title: "Weight (g)", "data": "weight_gram" },
@@ -280,18 +288,19 @@ jQuery(document).ready(function(){
                     d.only_good_quality = jQuery('#search_seedlot_form_only_good_quality_checkbox').is(":checked") ? 1 : 0;
                     d.trial_name = jQuery('#search_seedlot_form_trial_name').val();
                     d.trial_usage = jQuery('#search_seedlot_form_trial_usage').val();
+                    d.material_type = jQuery('#search_seedlot_form_material_type').val();
                 }
             },
         });
 
         seedlots_table.draw();
-        seedlots_table.column(11).visible(false);
+        seedlots_table.column(12).visible(false);
 
     });
 
 
     jQuery('#available_seedlots_table').on( 'draw.dt', function () {
-        var seedlot_names = seedlots_table.column(11).data();
+        var seedlot_names = seedlots_table.column(12).data();
         var names = "";
 
         for (var i = 0; i < seedlot_names.length; i++) {
