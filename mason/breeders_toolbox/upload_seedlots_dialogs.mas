@@ -407,7 +407,7 @@ jQuery(document).ready(function(){
         upload_seedlot_button();
     });
     function upload_seedlot_button() {
-        let material_type;
+        let material_type = "";
         const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
         if (default_seedlot_material_type) {
             material_type = default_seedlot_material_type;

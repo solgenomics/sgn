@@ -286,6 +286,7 @@
         let name = jQuery("#seedlot_split_name").val();
         let contents = "";
         let material_type = "";
+        let default_seedlot_material_type = "";
         let breeding_program_id = "";
         let location = "";
         let box = "";
@@ -306,6 +307,7 @@
                             contents = jQuery(sl.contents_html).first().html();
                             breeding_program_id = sl.breeding_program_id;
                             material_type = sl.material_type;
+                            default_seedlot_material_type = sl.default_seedlot_material_type;
                             location = sl.location;
                             box = sl.box;
                             organization = sl.organization;
@@ -326,7 +328,15 @@
                 jQuery("#seedlot_split_new_description").val(description);
                 jQuery("#seedlot_split_original_contents_count").html(original_count);
                 jQuery("#seedlot_split_original_contents_weight").html(original_weight);
-                jQuery("#seedlot_split_new_material_type").val(material_type);
+                if (material_type) {
+                    jQuery("#seedlot_split_new_material_type").val(material_type);
+                    jQuery("#seedlot_split_new_material_type").prop("disabled", true);
+                } else if (default_seedlot_material_type) {
+                    jQuery("#seedlot_split_new_material_type").val(default_seedlot_material_type);
+                    jQuery("#seedlot_split_new_material_type").prop("disabled", true);
+                } else {
+                    jQuery("#seedlot_split_new_material_type").val();
+                }
                 setNewSeedlotName();
             }
         });

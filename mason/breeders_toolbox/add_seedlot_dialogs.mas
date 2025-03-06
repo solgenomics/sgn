@@ -213,7 +213,7 @@ jQuery(document).ready(function(){
 
     jQuery('#create_new_seedlot_button').click( function() {
         var name = jQuery('#seedlot_name').val();
-        let material_type;
+        let material_type = "";
         const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
         if (default_seedlot_material_type) {
             material_type = default_seedlot_material_type;

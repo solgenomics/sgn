@@ -869,7 +869,7 @@ $default_seedlot_material_type
         let o = jQuery("#create_seedlots_trial_organization").val();
         let t = jQuery("#create_seedlots_trial_timestamp").val();
         let d = jQuery("#create_seedlots_trial_description").val();
-        let mt;
+        let mt = "";
         const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
         if (default_seedlot_material_type) {
             mt = default_seedlot_material_type;
