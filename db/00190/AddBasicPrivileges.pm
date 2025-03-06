@@ -67,6 +67,8 @@ insert into sgn_people.sp_resource (name) values ('crosses');
 insert into sgn_people.sp_resource (name) values ('wizard');
 insert into sgn_people.sp_resource (name) values ('community');
 insert into sgn_people.sp_resource (name) values ('loci');
+insert into sgn_people.sp_resource (name) values ('breeding_programs');
+insert into sgn_people.sp_resource (name) values ('stocks');
 
 -- add access levels
 
@@ -113,7 +115,6 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 --curator for wizard
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (8, 1, 1);
-insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (8, 1, 2);
 
 --curator for community
 
@@ -124,6 +125,16 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (10, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (10, 1, 2);
+
+-- curator for breeding programs
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (11, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (11, 1, 2);
+
+-- curator for stocks
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 1, 2);
 
 --SUBMITTER PRIVILEGES
 
@@ -152,6 +163,30 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 3, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (7, 3, 2);
 
+-- submitter for wizard
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (8, 3, 1);
+
+-- submitter for community
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (9, 3, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (9, 3, 2);
+
+-- submitter for loci
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (10, 3, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (10, 3, 2);
+
+-- submitter for breeding programs
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (11, 3, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (11, 3, 2);
+
+-- submitter for stocks
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 3, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 3, 2);
+
 -- USER PRIVILEGES
 
 -- user for pedigrees
@@ -174,6 +209,26 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (8, 4, 1);
 
+-- user for wizard
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (8, 4, 1);
+
+-- user for community
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (9, 4, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (9, 4, 2);
+
+-- submitter for loci
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (10, 4, 1);
+
+-- submitter for breeding programs
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (11, 4, 1);
+
+-- submitter for stocks
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 4, 1);
 
 
 EOSQL
