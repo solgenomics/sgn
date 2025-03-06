@@ -10,6 +10,8 @@
     <h4>SORRY, ACCESS DENIED</h4>
     You do not have the privileges to access <% $data_type %> data on this server.
     <br /><br />
+    If you believe this is in error, please contact your <a href="/contact/form">system administrator</a>.
+    <br /><br />
 % if ($message) {	
     Additional	information:
     <% $message %>
