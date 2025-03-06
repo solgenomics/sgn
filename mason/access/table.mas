@@ -4,27 +4,169 @@
 </%args>
 
 
+<style>
+.chip {
+  display: inline-block;
+  padding: 0 15px;
+  height: 30px;
+  font-size: 12px;
+  line-height: 30px;
+  border-radius: 15px;
+  background-color: #f1f1dd;
+}
+
+.chip img {
+  float: left;
+  margin: 0 10px 0 -25px;
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+}
+
+.closebtn {
+  padding-left: 10px;
+  color: #888;
+  font-weight: bold;
+  float: right;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.closebtn:hover {
+  color: #000;
+}
+</style>
+
+
+
+
 <& /page/page_title.mas, title => 'Access table' &>
 
-<button id="add_access_table_row">Add row</button><br /><br />
+<div id="add_new_privilege_modal" class="modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Privilege</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+	<table><tr><th>Role</th><th>Level</th><th>Resource</th></tr>
+	  <tr><td>
+	      <select id="role_select">
+		<option value="curator">curator</option>
+		<option value="submitter">submitter</option>
+		<option value="user">user</option>
+	      </select>
+	    </td><td>
+	      <select id="level_select" >
+		<option value="read">Read</option>
+		<option value="write">Write</option>
+	      </select>
+	    </td><td>
+	      <select id="resource_select">
+		<option value="trials">Trials</option>
+		<option value="phenotyping">Phenotyping</option>
+		<option value="genotyping">Genotyping</option>
+                <option value="stocks">Stocks</option>
+                <option value="pedigrees">Pedigrees</option>
+		<option value="crosses">Crosses</option>
+		<option value="community">Community</option>
+		<option value="loci">Loci</option>
+		<option value="wizard">Wizard</option>
+		<option value="privileges">Privileges</option>
+		<option value="breeding_programs">Breeding Programs</option>
+	      </select>
+	</td></tr></table>
+	
 
-<table id="access_table">
+      </div>
+      <div class="modal-footer">
+        <button id="submit_new_privileges" type="button" class="btn btn-primary">Add</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  
+  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_new_privilege_modal" id="add_new_privilege_button" >Add new privilege</button>
+  <br />
+  <br />
+
+<div id="access_table">
   <thead>
-  <th>Resource</th>
-  <th>Role</th>
-  <th>Level</th>
+    <th>Role</th>
+    <th>Level</th>
+    <th>Resource</th>	
   </thead>
 </table>
 
 
 <script>
 
-  jQuery(document).ready( function() {
-     jQuery('#access_table').DataTable( {
-        ajax : '/ajax/access/table',
-     });
-  });
+jQuery(document).ready( function() {
+    
+    jQuery.ajax( { 
+        url : '/ajax/access/table',
+        success: function(r) { jQuery('#access_table').html(r.data) }
+    });
+
+    jQuery('#submit_new_privileges').click( function() {
+	var resource=jQuery('#resource_select').val();
+	var level = jQuery('#level_select').val();
+	var role = jQuery('#role_select').val();
+
+	add_privilege(resource, level, role);
+    });
+});
+
+
+
+function delete_privilege(privilege_id) {
+    var yes = confirm("Delete privilege entry "+privilege_id+"? ");
+    if (yes !== true) { return; }
+    jQuery.ajax( {
+	url: '/ajax/access/delete_privilege',
+	data: { privilege_id: privilege_id },
+	success: function(r) {
+	    if (r.success) {
+                alert('deleted privilege');
+                window.location.reload();
+	    }
+	    if (r.error) {
+		alert('an error occurred');
+	    }
+	}
+    });
+}
+
+function add_privilege(resource, level, role) {
+    var yes = confirm("Add resource "+resource+" with level "+level+" to role "+role+ "? ");
+    if (yes !== true) { return; }
+    jQuery.ajax( {
+	url: '/ajax/access/add_privilege',
+	data: { resource: resource, level: level, role: role },
+        success: function(r) {
+            alert(JSON.stringify(r));
+	    if (r.success) {
+                alert('added new privilege');
+                jQuery('#add_new_privilege_modal').modal("hide");
+                window.location.reload();
+	    }
+	    if (r.error) {
+		alert('an error occurred');
+	    }
+	},
+	error: function(r) {
+	    alert(JSON.stringify(r));
+	}
+ 
+    });
+    
+}
   
 </script>			       
-
 
