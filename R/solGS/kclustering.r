@@ -77,7 +77,7 @@ extractGenotype <- function(inputFiles) {
 
     } else {
         genoFile <- genoFiles
-        genoData <- fread(genoFile, header = TRUE, na.strings = c("NA", " ", "--",
+        genoData <- fread(genoFile, header = TRUE, na.strings = c("NA", "", "--",
             "-", "."))
 
         if (is.null(genoData)) {
@@ -129,7 +129,7 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
         metaFile <- grep("meta", inputFiles, value = TRUE)
 
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
-        
+
         if (length(predictedTraits) > 1) {
             clusterData <- rownames_to_column(clusterData, var = "germplasmName")
             clusterData <- clusterData %>%
@@ -216,7 +216,7 @@ dev.off()
 
 clusterMeans <- c()
 if (!grepl('genotype', kResultFile)) {
-    message('adding cluster means to clusters...')
+    message("adding cluster means to clusters...")
     clusterMeans <- aggregate(clusterDataNotScaled, by = list(cluster = kMeansOut$cluster),
     mean)
 
@@ -227,7 +227,9 @@ if (!grepl('genotype', kResultFile)) {
 }
 
 pca <- c()
-if (is.null(selectedIndexGenotypes)) {
+if (grepl("genotype", dataType, ignore.case = TRUE)) {
+    pca    <- prcomp(clusterData, retx=TRUE)
+} else if (is.null(selectedIndexGenotypes)) {
     pca    <- prcomp(clusterData, scale=TRUE, retx=TRUE)
 } else {
     pca    <- prcomp(clusterData, retx=TRUE)
@@ -240,7 +242,7 @@ scores   <- round(scores, 3)
 
 clusterPcScoresGroups <- c()
 if (length(clusterPcScoresFile)) {
-    message('adding cluster groups to pc scores...')
+    message("adding cluster groups to pc scores...")
     scores <- rownames_to_column(scores)
     names(scores)[1] <- c("germplasmName")
 

@@ -72,15 +72,16 @@ sub run_prerequisite_jobs {
             $remaining_jobs = $self->wait_till_jobs_end($submitted_priority_jobs);
         }
         else {
-            if ( reftype $pre_jobs eq 'SCALAR' ) {
+            if ( reftype($pre_jobs) eq 'SCALAR' ) {
                 $pre_jobs = [$pre_jobs];
             }
 
             my $submitted_jobs = $self->submit_jobs($pre_jobs);
 
             $remaining_jobs = $self->wait_till_jobs_end($submitted_jobs);
-            print STDERR "\nremaining jobs: $remaining_jobs\n";
-
+	    if (defined $remaining_jobs) {
+                print STDERR "\nremaining jobs: $remaining_jobs\n";
+	    }
         }
     }
 
@@ -126,14 +127,16 @@ sub run_dependent_jobs {
     my $jobs_file = $self->dependent_jobs;
     my $dep_jobs  = retrieve($jobs_file);
 
-    if ( reftype $dep_jobs ne 'ARRAY' ) {
+    if ( reftype($dep_jobs) ne 'ARRAY' ) {
         $dep_jobs = [$dep_jobs];
     }
 
     my $submitted_jobs = $self->submit_jobs($dep_jobs);
 
     my $remaining_jobs = $self->wait_till_jobs_end($submitted_jobs);
-    print STDERR "\nremaining jobs: $remaining_jobs\n";
+    if (defined $remaining_jobs) {
+        print STDERR "\nremaining jobs: $remaining_jobs\n";
+    }
     return $remaining_jobs;
 
 }
