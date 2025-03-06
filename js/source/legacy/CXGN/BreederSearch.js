@@ -197,6 +197,7 @@ window.onload = function initialize() {
 	            alert("Successfully stored the dataset!");
 		    jQuery('#save_wizard_dataset_dialog').modal("hide");
 		    get_select_box('datasets', 'dataset_manage_select');
+        
 		}
 
 	    },

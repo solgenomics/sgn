@@ -12,7 +12,7 @@ export function init(main_div) {
     var dataset_id;
 
     // alert("WELCOME TO MIXED MODELS!");
-    get_select_box("datasets", "mixed_model_dataset_select", { "checkbox_name": "mixed_model_dataset_select_checkbox" });
+    get_select_box("datasets", "mixed_model_dataset_select", { "checkbox_name": "mixed_model_dataset_select_checkbox", "analysis_type":"Mixed Models", "show_compatibility":"yes" });
 
     jQuery('#mixed_model_analysis_prepare_button').removeClass('active').addClass('inactive');
 
