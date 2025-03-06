@@ -31,7 +31,7 @@ __PACKAGE__->config(
 sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
-
+    my $default_seedlot_material_type = $c->config->{default_seedlot_material_type};
     my $params = $c->req->params() || {};
     my $seedlot_name = $params->{seedlot_name} || '';
     my $description = $params->{description};
@@ -109,6 +109,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             seedlot_stock_uniquename => $sl->{seedlot_stock_uniquename},
             contents_html => $contents_html,
             material_type => $sl->{material_type},
+            default_seedlot_material_type => $default_seedlot_material_type,
             location => $sl->{location},
             location_id => $sl->{location_id},
             count => $sl->{current_count},
@@ -1897,6 +1898,7 @@ sub upload_transactions_POST : Args(0) {
     my $user_name;
     my $user_role;
     my $session_id = $c->req->param("sgn_session_id");
+    my $default_seedlot_material_type = $c->config->{default_seedlot_material_type};
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -2065,6 +2067,9 @@ sub upload_transactions_POST : Args(0) {
 
                 my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_seedlot_id);
                 my $new_seedlot_material_type = $from_sl->material_type();
+                if ((!$new_seedlot_material_type) && $default_seedlot_material_type) {
+                    $new_seedlot_material_type = $default_seedlot_material_type;
+                }
 
                 my $new_seedlot = CXGN::Stock::Seedlot->new(schema => $schema);
                 $new_seedlot->uniquename($new_seedlot_name);

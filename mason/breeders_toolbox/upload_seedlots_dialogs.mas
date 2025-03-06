@@ -423,7 +423,6 @@ jQuery(document).ready(function(){
         var uploadSeedlotsHarvestedFile = jQuery("#seedlot_harvested_uploaded_file").val();
         var location = jQuery("#upload_seedlot_location").val();
         var breeding_program = jQuery("#upload_seedlot_breeding_program_id").val();
-        const material_type = jQuery("#upload_seedlot_material_type").val();
         jQuery('#upload_seedlot_form').attr("action", "/ajax/breeders/seedlot-upload");
         if (breeding_program === '') {
             alert("Please choose a breeding program");
