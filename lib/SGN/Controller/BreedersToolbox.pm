@@ -37,6 +37,12 @@ sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) {
 	return;
     }
 
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "read", "breeding_programs" )) {
+	$c->stash->{data_type} = "breeding program";
+	$c->stash->{template} = "/access/access_denied.mas";
+	return;
+    }
+    
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
@@ -62,6 +68,12 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 	return;
     }
 
+    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "read", "trials")) {
+	$c->stash->{data_type} = "trial";
+	$c->stash->{template} = '/access/access_denied.mas';
+	return;
+    }
+    
     my @access = $c->stash->{access}->check_user( $c->stash->{user_id}, "trials" );
 
     print STDERR "ACCESS: ".Dumper(\@access);
