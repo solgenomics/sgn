@@ -92,6 +92,14 @@ $stock_name => undef
 
 <script>
 
+
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('download_stock_phenotypes_exclude_outliers').value = "1";
+    document.getElementById('download_stock_phenotypes_exclude_outliers').checked = true;
+}
+
 jQuery(document).ready(function() {
 
   jQuery('#stock_download_phenotypes_button').click( function () {

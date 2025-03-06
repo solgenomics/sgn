@@ -448,8 +448,12 @@ sub search {
         push @where_clause, "(observationunit.type_id = $plot_type_id OR observationunit.type_id = $plant_type_id OR observationunit.type_id = $subplot_type_id OR observationunit.type_id = $tissue_sample_type_id)"; #plots AND plants AND subplots AND tissue_samples
     }
 
-    if ($self->exclude_phenotype_outlier){
-        push @where_clause, "phenotypeprop.value IS NULL";
+    if ($self->exclude_phenotype_outlier) {
+        push @where_clause, "NOT EXISTS (
+            SELECT 1 FROM phenotypeprop pp 
+            WHERE pp.phenotype_id = phenotype.phenotype_id 
+            AND pp.type_id = $phenotype_outlier_type_id
+        )";
     }
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));

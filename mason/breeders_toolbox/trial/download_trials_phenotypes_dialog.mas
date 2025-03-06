@@ -124,6 +124,13 @@
 
 <script>
 
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('download_trials_phenotype_exclude_outliers').value = "1";
+}
+
+
 jQuery(document).ready(function() {
     var list = new CXGN.List();
 
