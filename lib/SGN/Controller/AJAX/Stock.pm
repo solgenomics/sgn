@@ -67,25 +67,31 @@ sub add_stockprop_POST {
     my ( $self, $c ) = @_;
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    if (!$c->user()) {
-	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
+    
+#    if (!$c->user()) {
+#	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
+ #   }
+    
+    #if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to add stockprops." };
+	$c->detach();
     }
-
-    if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-        my $req = $c->req;
-        my $stock_id = $c->req->param('stock_id');
-        my $prop  = $c->req->param('prop');
-        $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
-        my $prop_type = $c->req->param('prop_type');
-
-	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-
+ 
+    my $req = $c->req;
+    my $stock_id = $c->req->param('stock_id');
+    my $prop  = $c->req->param('prop');
+    $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
+    my $prop_type = $c->req->param('prop_type');
+    
+    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+    
     if ($stock && $prop && $prop_type) {
-
-        my $message = '';
-        if ($prop_type eq 'stock_synonym') {
-            my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
-            my $max_distance = 0.2;
+	
+	my $message = '';
+	if ($prop_type eq 'stock_synonym') {
+	    my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
+	    my $max_distance = 0.2;
             my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance, 'accession');
             #print STDERR Dumper $fuzzy_search_result;
             my $found_accessions = $fuzzy_search_result->{'found'};
@@ -108,10 +114,10 @@ sub add_stockprop_POST {
                 $message = "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: ".join(', ', @fuzzy_match_names).".";
             }
         }
-
+	
         try {
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
-
+	    
             my $stock = CXGN::Stock->new({
                 schema=>$schema,
                 stock_id=>$stock_id,
@@ -119,24 +125,21 @@ sub add_stockprop_POST {
                 sp_person_id => $c->user()->get_object()->get_sp_person_id(),
                 user_name => $c->user()->get_object()->get_username(),
                 modification_note => "Added property: $prop_type = $prop"
-            });
+					 });
             my $added_stock_id = $stock->store();
-
+	    
             my $dbh = $c->dbc->dbh();
             my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
             my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
+	    
             $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
         } catch {
             $c->stash->{rest} = { error => "Failed: $_" }
         };
     } else {
-	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
-	}
-    } else {
-	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+	$c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
     }
-    #$c->stash->{rest} = { message => 'success' };
+
 }
 
 sub add_stockprop_GET {
@@ -192,10 +195,16 @@ sub delete_stockprop_GET {
     my $self = shift;
     my $c = shift;
     my $stockprop_id = $c->req->param("stockprop_id");
-    if (! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-	$c->stash->{rest} = { error => 'Log in required for deletion of stock properties.' };
-	return;
+#    if (! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+#	$c->stash->{rest} = { error => 'Log in required for deletion of stock properties.' };
+#	return;
+    #    }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
     }
+    
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $spr = $schema->resultset("Stock::Stockprop")->find( { stockprop_id => $stockprop_id });
     if (! $spr) {
@@ -228,6 +237,13 @@ sub associate_locus_GET :Args(0) {
     ##my $allele_id = $c->req->param('allele_id');
     #Phytoene synthase 1 (psy1) Allele: 1
     #phytoene synthase 1 (psy1)
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+
+    
     my $locus_input = $c->req->param('loci') ;
     if (!$locus_input) {
         $self->status_bad_request($c, message => 'need loci param' );
@@ -496,6 +512,12 @@ sub associate_ontology_POST :Args(0) {
        evidence_with reference
     /;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to associated terms ($message)" };
+	$c->detach();
+    }
+
+    
     my $stock_id       = $c->req->param('object_id');
     my $ontology_input = $c->req->param('term_name');
     my $relationship   = $c->req->param('relationship'); # a cvterm_id
@@ -664,6 +686,12 @@ sub toggle_obsolete_annotation : Path('/ajax/stock/toggle_obsolete_annotation') 
 
 sub toggle_obsolete_annotation_POST :Args(0) {
     my ($self, $c) = @_;
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+
     my $stock = $c->stash->{stock};
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $obsolete_cvterm = $schema->resultset("Cv::Cvterm")->search(
@@ -1385,6 +1413,11 @@ sub parents_GET : Path('/ajax/stock/parents') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+
     my $stock_id = $c->req->param("stock_id");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -1422,15 +1455,20 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
 
     my $user_id;
 
-    my @privileges =  $c->stash->{access}->check_user("pedigree", $user_id);
-    print STDERR "PRIVILEGES RETRIEVED: ".join(", ", @privileges)."\n";
-    if (!grep { /delete/ } @privileges) {
+#    my @privileges =  $c->stash->{access}->check_user("pedigree", $user_id);
+#    print STDERR "PRIVILEGES RETRIEVED: ".join(", ", @privileges)."\n";
+#    if (!grep { /delete/ } @privileges) {
 	#
 	# incorrect permissions
 	#
-	$c->stash->{rest} = { error => 'You do not have the necessary privileges to delete pedigree information.' };
-	return;
+#	$c->stash->{rest} = { error => 'You do not have the necessary privileges to delete pedigree information.' };
+#	return;
+    #    }
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "pedigrees")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to remove pedigree information ($message)" };
+	$c->detach();
     }
+
 
     
     my $stock_id = $c->req->param("stock_id");
@@ -1478,22 +1516,28 @@ sub add_stock_parent_GET :Args(0) {
     my ($self, $c) = @_;
 
     print STDERR "Add_stock_parent function...\n";
-    if (!$c->user()) {
-	print STDERR "User not logged in... not associating stocks.\n";
-	$c->stash->{rest} = {error => "You need to be logged in to add pedigree information." };
-	return;
-    }
+    # if (!$c->user()) {
+    # 	print STDERR "User not logged in... not associating stocks.\n";
+    # 	$c->stash->{rest} = {error => "You need to be logged in to add pedigree information." };
+    # 	return;
+    # }
 
-    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "pedigrees", "read")) {
-	alert("Sorry! You do not have sufficient privileges to modify pedigrees.");
-	return;
-    }
+    # if (! $c->stash->{access}->grant( $c->stash->{user_id}, "pedigrees", "read")) {
+    # 	alert("Sorry! You do not have sufficient privileges to modify pedigrees.");
+    # 	return;
+    # }
 #    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {#
 #	print STDERR "User does not have sufficient privileges.\n";
 #	$c->stash->{rest} = {error =>  "you have insufficient privileges to add pedigree information." };
 #	return;
  #   }
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "pedigrees")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to remove pedigree information ($message)" };
+	$c->detach();
+    }
+
+    
     my $stock_id = $c->req->param('stock_id');
     my $parent_name = $c->req->param('parent_name');
     my $parent_type = $c->req->param('parent_type');
@@ -1666,7 +1710,11 @@ sub stock_members_phenotypes :Chained('/stock/get_stock') PathPart('datatables/t
     my $self = shift;
     my $c = shift;
     #my $trait_id = shift;
-
+    
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to read phenotyping information ($message)" };
+	$c->detach();
+    }
 
     my $subject_phenotypes = $self->get_phenotypes($c);
 
@@ -1719,6 +1767,12 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
     my $self = shift;
     my $c = shift;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to read phenotyping information ($message)" };
+	$c->detach();
+    }
+
+    
     my @trials = $c->stash->{stock}->get_trials();
 
     my @formatted_trials;
@@ -1767,6 +1821,13 @@ sub get_shared_trials :Path('/stock/get_shared_trials'){
 
     my $self = shift;
     my $c = shift;
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to read phenotyping information ($message)" };
+	$c->detach();
+    }
+
+    
     my @stock_ids = $c->request->param( 'stock_ids[]' );
     my $stock_string = join ",", map { "'$_'" } (@stock_ids);
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -1891,6 +1952,11 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
     my $trial_id = shift;
     my $stock_type = $c->stash->{stock}->get_type()->name();
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to read phenotyping information ($message)" };
+	$c->detach();
+    }
+    
     my $q;
     if ($stock_type eq 'accession'){
         $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
@@ -1939,6 +2005,12 @@ sub get_pedigree :Chained('/stock/get_stock') PathPart('pedigree') Args(0) {
     my $c = shift;
     my $level = $c->req->param("level");
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to read pedigree information ($message)" };
+	$c->detach();
+    }
+
+    
     my $stock = CXGN::Stock->new(
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         stock_id => $c->stash->{stock}->get_stock_id()
@@ -1954,31 +2026,37 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigreestring') 
     my $self = shift;
     my $c = shift;
 
-    my $user_id;
-    if ($c->user()) {
-	$user_id = $c->user()->get_object->get_sp_person_id();
-    }
+    # my $user_id;
+    # if ($c->user()) {
+    # 	$user_id = $c->user()->get_object->get_sp_person_id();
+    # }
 
-    if (!$user_id) {
-	#
-	# not logged in
-	#
-	$c->stash->{rest} = { error => 'You need to be logged in to view a pedigree string and have the appropriate permissions.' };
-	return;
-    }
+    # if (!$user_id) {
+    # 	#
+    # 	# not logged in
+    # 	#
+    # 	$c->stash->{rest} = { error => 'You need to be logged in to view a pedigree string and have the appropriate permissions.' };
+    # 	return;
+    # }
     
-    print STDERR "Checking privileges...\n";
+    # print STDERR "Checking privileges...\n";
 
-    my @privileges =  $c->stash->{access}->check_user($user_id, "pedigree");
-    print STDERR "PRIVILEGES RETRIEVED: ".join(", ", @privileges)."\n";
-    if (!grep { /read/ } @privileges) {
-	#
-	# incorrect permissions
-	#
-	$c->stash->{rest} = { error => 'You do not have the necessary privileges to view the pedigree information.' };
-	return;
+    # my @privileges =  $c->stash->{access}->check_user($user_id, "pedigree");
+    # print STDERR "PRIVILEGES RETRIEVED: ".join(", ", @privileges)."\n";
+    # if (!grep { /read/ } @privileges) {
+    # 	#
+    # 	# incorrect permissions
+    # 	#
+    # 	$c->stash->{rest} = { error => 'You do not have the necessary privileges to view the pedigree information.' };
+    # 	return;
+    # }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to read pedigree information ($message)" };
+	$c->detach();
     }
 
+    
     my $level = $c->req->param("level");
     my $stock_id = $c->stash->{stock}->get_stock_id();
     my $stock_name = $c->stash->{stock}->get_uniquename();
