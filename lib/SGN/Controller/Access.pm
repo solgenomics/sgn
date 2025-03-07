@@ -13,21 +13,20 @@ sub access_table_page :Path('/access/table') {
     my $self = shift;
     my $c = shift;
 
-    if (! (my $user = $c->user())) {
-	$c->stash->{rest} = { error => "You must be logged in to use this resource" };
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-    }
+#    if (! (my $user = $c->user())) {
+#	$c->stash->{rest} = { error => "You must be logged in to use this resource" };
+#	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+ #   }
 
-    if (! $c->user()) {
-	$c->stash->{rest} = { error => "NOT LOGGED IN!\n" };
-	return;
-    }
+#    if (! $c->user()) {
+#	$c->stash->{rest} = { error => "NOT LOGGED IN!\n" };
+#	return;
+#    }
     
-    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "read", "privileges")) { 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "privileges")) { 
     	$c->response->status(401);
-	my $error =  "You do not have the necessary privileges to access this resource";
 	$c->stash->{data_type} = 'privilege';
-	$c->stash->{message} = $error;
+	$c->stash->{message} = $message;
 	$c->stash->{template} = '/access/access_denied.mas';
 	return;
     }
