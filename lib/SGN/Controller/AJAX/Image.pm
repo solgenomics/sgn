@@ -43,6 +43,12 @@ sub basic_ajax_image :Chained('/') PathPart('ajax/image') CaptureArgs(1) ActionC
 sub basic_ajax_image_GET { 
     my $self = shift;
     my $c = shift;
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to retrieve images." };
+	$c->detach();
+    }
+
     
     $c->stash->{image_id} = shift;
     $c->stash->{image} = SGN::Image->new($c->dbc->dbh(), $c->stash->{image_id});    
@@ -51,6 +57,12 @@ sub basic_ajax_image_GET {
 sub basic_ajax_image_POST { 
     my $self = shift;
     my $c = shift;
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "phenotyping")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to upload images." };
+	$c->detach();
+    }
+    
     $c->stash->{image_id} = shift;
 
     $c->stash->{image} = SGN::Image->new($c->dbc->dbh(), $c->stash->{image_id});
