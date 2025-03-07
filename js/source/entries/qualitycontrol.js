@@ -183,11 +183,10 @@ export function init(main_div) {
 
         
     $('#store_outliers_button').click(function () {
-        console.log("The other is:", checkedTraits);
         $.ajax({
             url: '/ajax/qualitycontrol/storeoutliers',  
             method: "POST",  
-            data: {"outliers": JSON.stringify(outliers), "othertraits": JSON.stringify(checkedTraits)
+            data: {"outliers": JSON.stringify(outliers), "trait":trait_selected, "othertraits": JSON.stringify(checkedTraits)
             },
             success: function(response) {
                 if(response.is_curator === 1) {
@@ -276,11 +275,6 @@ function updateBoxplot(isFixed, minValue, maxValue) {
     // Fetch the selected trait and tempfile
     var trait_selected = $('#trait_select').val();
     var tempfile = $('#tempfile').html();
-
-    if (!trait_selected || !tempfile || tempfile.trim() === '') {
-        console.log("Either trait or tempfile is missing!");
-        return;
-    }
 
     const outlierMultiplier = $("#outliers_range").slider("value") || 1.5;
 

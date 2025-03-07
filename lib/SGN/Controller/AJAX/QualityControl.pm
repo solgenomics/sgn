@@ -265,6 +265,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     
     # Now proceed to decode JSON
     my $outliers_data = decode_json($outliers_string);
+    my $main_trait = $c->req->param('trait');
 
     my %trait_ids;
     my %study_names;
@@ -285,8 +286,8 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
         my $study_name = $entry->{studyName};
         $study_names{$study_name} = 1 if defined $study_name;
     }
-    
-    my @alltraits = ($trait, @unique_othertraits);
+
+    my @alltraits = ($main_trait, @unique_othertraits);
     foreach my $sel_trait (@alltraits) {
         $trait_ids{$sel_trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $sel_trait)->cvterm_id;
     }
