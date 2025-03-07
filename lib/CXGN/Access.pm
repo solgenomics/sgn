@@ -64,6 +64,7 @@ package CXGN::Access;
 
 use Moose;
 use List::Util qw| any |;
+use CXGN::Login;
 use Data::Dumper;
 
 has 'people_schema' => (isa => 'Ref', is => 'rw');
@@ -250,8 +251,8 @@ sub grant {
     #
     if (!@privileges) {
 	return 0;
-    }
-
+    }    
+    
     my $ownerships_check_out = $self->check_ownership($sp_person_id, $resource, $access_level, $owner_id, $breeding_program_ids);
 
     print STDERR "Ownerships check: $ownerships_check_out\n";
@@ -265,6 +266,59 @@ sub grant {
 
     return $privileges_check_out && $ownerships_check_out;
 }
+
+=head3 denied()
+
+   Arguments: $sp_person_id, requested role, resource, owner_id, breeding_program_id
+   Summary: the opposite of grant
+   Returns: an error message string if denied, 0 otherwise
+
+=cut
+
+sub denied {
+    my $self = shift;
+    my $sp_person_id = shift;
+    my $access_level = shift;
+    my $resource = shift || $self->resource();
+    my $owner_id = shift;
+    my $breeding_program_ids = shift;
+
+    my @privileges = $self->check_user($sp_person_id, $resource);
+
+    # do not allow anything if no privileges are set
+    #
+    my $denied = 0;
+    
+    if (!@privileges) {
+	return "Log in required for this activity.";
+    }
+
+    # my $login = CXGN::Login->new( $self->people_schema()->storage()->dbh() );
+    # my $logged_in_user_id = $login->has_session();
+
+    # my $denied = 0;
+    # if (!$logged_in_user_id) {
+    # 	$denied = "You need to be logged in to use this feature.";
+    # }
+		
+    my $ownerships_check_out = $self->check_ownership($sp_person_id, $resource, $access_level, $owner_id, $breeding_program_ids);
+
+    print STDERR "Ownerships check: $ownerships_check_out\n";
+    
+    my $privileges_check_out;
+    
+    if (grep { /$access_level/ } @privileges) {
+	print STDERR "Privileges check out ".Dumper(\@privileges)."\n";
+	$privileges_check_out = 1;
+    }
+
+    if (! $privileges_check_out ) { $denied .= "Privileges do not match."; }
+    if (! $ownerships_check_out ) { $denied .= "Ownerships do not match."; }
+	
+    return $denied;
+}
+
+
 
 =head3 privileges_table()
 
