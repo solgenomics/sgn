@@ -45,28 +45,57 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => 1, file_name => $temppath, quotes => 0);
-    $ds->retrieve_phenotypes();
-    my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
+    my $dbh = $c->dbc->dbh();
 
-    # my @traits_select = ();
-    my $traits = $pf->traits();
+    my $trait_sql = "SELECT dataset FROM sgn_people.sp_dataset WHERE sp_dataset_id = $dataset_id";
+    my $sth_trait = $dbh->prepare($trait_sql);
+    $sth_trait->execute();
 
-    my $trait_options = "trait_options";
-    my $trait_html ="";
+    # Fetch the JSON string from the query
+    my ($json_response) = $sth_trait->fetchrow_array;
 
-    foreach my $trait (@$traits) {
-       if ($trait =~ m/.+\d{7}/){
-        $trait_html .= '<input type="checkbox" class= "trait_box" name="'.$trait_options.'" value="'.$trait.'">'.$trait.'</input> </br>';
-       }
-    }
-
-
-    $c->stash->{rest} = {
-        selected_variable => $trait_html,
-        tempfile => $tempfile."_phenotype.txt",
+    my $data;
+    eval {
+        $data = decode_json($json_response);
+        1;
+    } or do {
+        my $error = $@;
+        die "JSON decoding error: $error\n";
     };
+    
+    # Extract traits from categories
+    my $traits = $data->{categories}->{traits};
 
+    # Print extracted traits
+    if ($traits && @$traits) {
+       
+        my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => 1, file_name => $temppath, quotes => 0);
+        $ds->retrieve_phenotypes();
+        my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
+
+        # my @traits_select = ();
+        my $traits = $pf->traits();
+
+        my $trait_options = "trait_options";
+        my $trait_html ="";
+
+        foreach my $trait (@$traits) {
+           if ($trait =~ m/.+\d{7}/){
+            $trait_html .= '<input type="checkbox" class= "trait_box" name="'.$trait_options.'" value="'.$trait.'">'.$trait.'</input> </br>';
+           }
+        }
+
+
+        $c->stash->{rest} = {
+            selected_variable => $trait_html,
+            tempfile => $tempfile."_phenotype.txt",
+        };
+
+    } else {
+        $c->stash->{rest} = {
+            error => "No traits found in the dataset. Please select a dataset with trait(s).",
+        };
+    }
 }
 
 sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
