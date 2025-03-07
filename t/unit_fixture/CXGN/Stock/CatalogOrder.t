@@ -78,8 +78,11 @@ $response = $ua->post(
         ],
         "sgn_session_id" => $sgn_session_id
     ]
-);
-ok($response->is_success);
+    );
+
+print STDERR "RESPONSE FROM CATALOG UPLOAD: ".Dumper($response);
+
+ok($response->is_success, "upload catalog test");
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
 is_deeply($message_hash, { 'success' => 1 });

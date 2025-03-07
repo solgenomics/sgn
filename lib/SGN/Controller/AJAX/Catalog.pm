@@ -41,12 +41,19 @@ sub add_catalog_item_POST : Args(0) {
         $availability = 'available';
     }
 
-    if (!$c->user()) {
-        print STDERR "User not logged in... not adding a catalog item.\n";
-        $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
-        return;
+#    if (!$c->user()) {
+#        print STDERR "User not logged in... not adding a catalog item.\n";
+#        $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
+#        return;
+#    }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "catalog")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to upload stock information. ($message)"};
+	$c->detach();
     }
 
+
+    
     my $item_material_type;
     my $item_type;
     my $item_stock_id;
@@ -191,6 +198,13 @@ sub upload_catalog_items_POST : Args(0) {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
+
+    if (my $message = $c->stash->{access}->denied( $user_id, "write", "catalog")) {
+	print STDERR $user_id ." does not have write privilges for catalog\n";
+	$c->stash->{rest} = { error => "You do not have the privileges to upload stock information. ($message)" };
+	$c->detach();
+    }
+    
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -325,6 +339,12 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my @catalog_items;
 
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "catalog")) {
+	$c->stash->{rest} = { error_message => $message };
+	$c->detach();
+    }
+    
     my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
     my $catalog_ref = $catalog_obj->get_catalog_items();
 #    print STDERR "ITEM RESULTS =".Dumper($catalog_ref)."\n";
@@ -413,6 +433,11 @@ sub edit_catalog_image_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "catalog" )) {
+	$c->stash->{rest} = { error_message => $message };
+	$c->detach();
+    }
+
     my $item_name = $c->req->param('item_name');
     my $item_prop_id = $c->req->param('item_prop_id');
     my $image_id = $c->req->param('image_id');
@@ -461,6 +486,11 @@ sub delete_catalog_item_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "catalog")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+    
     my $item_prop_id = $c->req->param('item_prop_id');
     print STDERR "ITEM PROP ID =".Dumper($item_prop_id)."\n";
     my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema, prop_id => $item_prop_id });
@@ -490,12 +520,17 @@ sub add_catalog_item_list_POST : Args(0) {
     my $list_breeding_program_id = $c->req->param('breeding_program_id');
     my $list_contact_person = $c->req->param('contact_person');
 
-    if (!$c->user()) {
-        print STDERR "User not logged in... not adding catalog items.\n";
-        $c->stash->{rest} = {error_string => "You must be logged in to add catalog items." };
-        return;
-    }
+    # if (!$c->user()) {
+    #     print STDERR "User not logged in... not adding catalog items.\n";
+    #     $c->stash->{rest} = {error_string => "You must be logged in to add catalog items." };
+    #     return;
+    # }
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "catalog" )) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+    
     my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $list_contact_person);
     if (!$sp_person_id) {
         $c->stash->{rest} = {error_string => "Contact person has no record in the database!",};

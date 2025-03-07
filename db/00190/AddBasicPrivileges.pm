@@ -69,6 +69,7 @@ insert into sgn_people.sp_resource (name) values ('community');
 insert into sgn_people.sp_resource (name) values ('loci');
 insert into sgn_people.sp_resource (name) values ('breeding_programs');
 insert into sgn_people.sp_resource (name) values ('stocks');
+insert into sgn_people.sp_resource (name) values ('catalog');
 
 -- add access levels
 
@@ -135,6 +136,12 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 1, 2);
+
+-- curator for vendor
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (13, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (13, 1, 2);
+
 
 --SUBMITTER PRIVILEGES
 
@@ -229,6 +236,12 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 -- submitter for stocks
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 4, 1);
+
+-- VENDOR PRIVLEGES
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (13, (select sp_role_id from sgn_people.sp_roles where name='vendor'), 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (13, (select sp_role_id from sgn_people.sp_roles where name='vendor'), 2);
+
 
 
 EOSQL
