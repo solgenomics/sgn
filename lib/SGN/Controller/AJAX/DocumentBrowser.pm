@@ -48,6 +48,11 @@ sub upload_document_POST : Args(0) {
         $c->stash->{rest} = { error => 'Must be logged in!' };
         $c->detach;
     }
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to upload files." };
+	$c->detach();
+    }
     
     my $user_id = $c->user->get_object->get_sp_person_id;
     my $user_type = $c->user->get_object->get_user_type();
