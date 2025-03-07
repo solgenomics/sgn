@@ -247,6 +247,11 @@ sub grant {
 
     my @privileges = $self->check_user($sp_person_id, $resource);
 
+    # not logged in - no grant!
+    if (! $sp_person_id) {
+	return 0;
+    }
+    
     # do not allow anything if no privileges are set
     #
     if (!@privileges) {
@@ -288,18 +293,13 @@ sub denied {
     # do not allow anything if no privileges are set
     #
     my $denied = 0;
-    
-    if (!@privileges) {
-	return "Log in required for this activity.";
+
+    if (! $sp_person_id) {
+	return "Login required for this activity. ";
     }
-
-    # my $login = CXGN::Login->new( $self->people_schema()->storage()->dbh() );
-    # my $logged_in_user_id = $login->has_session();
-
-    # my $denied = 0;
-    # if (!$logged_in_user_id) {
-    # 	$denied = "You need to be logged in to use this feature.";
-    # }
+    if (!@privileges) {
+	$denied = "No privileges set for this activity. "
+    }
 		
     my $ownerships_check_out = $self->check_ownership($sp_person_id, $resource, $access_level, $owner_id, $breeding_program_ids);
 
@@ -312,7 +312,7 @@ sub denied {
 	$privileges_check_out = 1;
     }
 
-    if (! $privileges_check_out ) { $denied .= "Privileges do not match."; }
+    if (! $privileges_check_out ) { $denied .= "Required privileges not available."; }
     if (! $ownerships_check_out ) { $denied .= "Ownerships do not match."; }
 	
     return $denied;
