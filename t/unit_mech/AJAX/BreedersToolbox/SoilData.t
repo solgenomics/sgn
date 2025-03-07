@@ -51,23 +51,24 @@ for my $extension ("xls", "xlsx") {
     ok($response->is_success);
     my $message = $response->decoded_content;
     my $message_hash = decode_json $message;
-    is_deeply($message_hash, { 'success' => 1 });
+    is_deeply($message_hash, { 'success' => 1 }, "check soil upload");
 
     #test retrieving soil data
-    $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$trial_id/all_soil_data");
+    $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$trial_id/all_soil_data", "check post");
     $response = decode_json $mech->content;
 
     my $data = $response->{'data'};
+    print STDERR "DATA : ".Dumper($data);
     my $soil_data = $data->[0];
-    is($soil_data->{'description'}, 'test soil data');
-    is($soil_data->{'date'}, '2022-Jun-15');
-    is($soil_data->{'gps'}, '-12.654348, -39.080347');
-    is($soil_data->{'type_of_sampling'}, 'Soil 0-30 cm deep');
+    is($soil_data->{'description'},'test soil data', "soil description test");
+    is($soil_data->{'date'}, '2022-Jun-15', "soil date test");
+    is($soil_data->{'gps'}, '-12.654348, -39.080347', "soil gps test");
+    is($soil_data->{'type_of_sampling'}, 'Soil 0-30 cm deep', "type of sampling test");
 
     my $prop_id = $soil_data->{'prop_id'};
 
     #test deleting soil data
-    $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$trial_id/delete_soil_data", [ 'prop_id' => $prop_id ]);
+    $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$trial_id/delete_soil_data", [ 'prop_id' => $prop_id ], "check soil delete post");
     $response = decode_json $mech->content;
     is($response->{'success'}, '1');
 
