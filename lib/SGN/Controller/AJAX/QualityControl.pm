@@ -292,7 +292,6 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
         $trait_ids{$sel_trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $sel_trait)->cvterm_id;
     }
     
-
     $main_trait =~ s/\|.*//;
     my $trait_operator = $main_trait."|".$operator;
 
@@ -301,7 +300,8 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     return $c->response->body('No unique study names found.') unless @unique_study_names;
 
     my $study_names_sql = join(", ", map { $schema->storage->dbh->quote($_) } @unique_study_names);  # Quote each name
-    
+    print("Here are the trials $study_names_sql \n") ;
+
     # Add validated traits to projectprop
     my $trial_sql = qq{
         INSERT INTO projectprop (project_id, type_id, value, rank)
@@ -320,60 +320,62 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
 
     my $experiment_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    # Extract plot names from the outliers data
-    my @plot_names = map { $_->{plotName} } @$outliers_data;
+    # Execute the first query unconditionally
+    eval {
+        my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
+        $sth_trial->execute();
+    };
+
+    my @plot_names  = map { $_->{plotName} } @$outliers_data;
     my @plot_values = map { $_->{value} } @$outliers_data;
 
     my %seen;
     @plot_names = grep { !$seen{$_}++ } @plot_names;
-
-    my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
-    my $trait_ids_sql = join(", ", @unique_trait_ids);
-
     
-    if (@plot_names && %trait_ids) {
-        # print STDERR Dumper \@plot_names;
-        # Convert plot names and traits into comma-separated lists for SQL
-        my $plot_names_sql = join(", ", map { $schema->storage->dbh()->quote($_) } @plot_names);
+    # Proceed only if there are outliers
+    if (@plot_names) {
+        # Extract plot names from the outliers data
+        
 
-        # Build the SQL query
-        my $outlier_data_sql = "
-            INSERT INTO phenotypeprop (phenotype_id, type_id, value)
-            SELECT phenotype.phenotype_id, 
-                   (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier'), 
-                   phenotype.value 
-            FROM phenotype
-            JOIN nd_experiment_phenotype ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id 
-            JOIN nd_experiment_stock ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id 
-            WHERE nd_experiment_stock.stock_id IN (
-                SELECT stock.stock_id FROM stock WHERE uniquename IN ($plot_names_sql)
-            )
-            AND nd_experiment_stock.type_id = $experiment_type
-            AND phenotype.observable_id IN ($trait_ids_sql)
-            AND NOT EXISTS (
-                SELECT 1 FROM phenotypeprop 
-                WHERE phenotypeprop.phenotype_id = phenotype.phenotype_id
-                AND phenotypeprop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
-            );";
+        my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
+        my $trait_ids_sql    = join(", ", @unique_trait_ids);
 
-        if($curator == 1){
-            # Execute the SQL query
-            eval {
-                my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
-                $sth_trial->execute();
+        # Proceed with query only if @plot_names and %trait_ids are valid
+        if (@plot_names && %trait_ids) {
+            my $plot_names_sql = join(", ", map { $schema->storage->dbh()->quote($_) } @plot_names);
 
-                my $sth_outliers = $schema->storage->dbh->prepare($outlier_data_sql);
-                $sth_outliers->execute();
-                
-                $c->stash->{rest} = $response_data;
-            };
-        } else {
-            $c->stash->{rest} = $response_data;
-            
+            # SQL Query to insert outliers
+            my $outlier_data_sql = "
+                INSERT INTO phenotypeprop (phenotype_id, type_id, value)
+                SELECT phenotype.phenotype_id, 
+                       (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier'), 
+                       phenotype.value 
+                FROM phenotype
+                JOIN nd_experiment_phenotype ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id 
+                JOIN nd_experiment_stock ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id 
+                WHERE nd_experiment_stock.stock_id IN (
+                    SELECT stock.stock_id FROM stock WHERE uniquename IN ($plot_names_sql)
+                )
+                AND nd_experiment_stock.type_id = $experiment_type
+                AND phenotype.observable_id IN ($trait_ids_sql)
+                AND NOT EXISTS (
+                    SELECT 1 FROM phenotypeprop 
+                    WHERE phenotypeprop.phenotype_id = phenotype.phenotype_id
+                    AND phenotypeprop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
+                );";
+
+            # If curator flag is set, execute the second query
+            if ($curator == 1) {
+                eval {
+                    my $sth_outliers = $schema->storage->dbh->prepare($outlier_data_sql);
+                    $sth_outliers->execute();
+                };
+            }
         }
-    } else {
-        $c->response->body('No plot names or traits found.');
     }
+
+    $c->stash->{rest} = $response_data;
+
 
     
     ## celaning tempfiles

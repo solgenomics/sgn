@@ -638,7 +638,14 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
     // Return both the boxplot data and the outliers
     return {
         boxplotData: boxplotData,
-        outliers: allOutliers
+        outliers: allOutliers.length > 0 ? allOutliers : [{
+            studyName: data.length > 0 ? data[0].studyName : null, // Preserve study name if data exists
+            trait: selected_trait,
+            locationDbId: null,
+            locationName: null,
+            plotName: null,
+            value: null
+        }]
     };
 
 }
