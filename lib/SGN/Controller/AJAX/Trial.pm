@@ -1474,8 +1474,10 @@ sub upload_soil_data_POST : Args(0) {
     my @breeding_program_ids = map { $_->[0] } @$breeding_programs;
     
     #    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials", undef, \@breeding_program_ids)) { 
-        $c->stash->{rest} = {error=>'Access Control: You do not have the necessary privileges to upload soil data for this trial' };
+    if ($c->stash->{access}->denied( $user_id, "write", "trials", undef, \@breeding_program_ids)) {
+	print STDERR "USER ".$c->stash->{user_id}." DOES NOT HAVE THE PRIVILEGES TO WRITE SOIL DATA\n";
+	
+        $c->stash->{rest} = { error => 'Access Control: You do not have the necessary privileges to upload soil data for this trial' };
         $c->detach();
     }
 
