@@ -233,7 +233,7 @@ sub _validate_with_plugin {
 
     # Stock Names: must exist in the database
     my @entry_names = @{$parsed_values->{'stock_name'}};
-    my @intercrop_names = @{$parsed_values->{'intercrop_stock_name'}};
+    my @intercrop_names = $parsed_values->{'intercrop_stock_name'} ? @{$parsed_values->{'intercrop_stock_name'}} : ();
     my @merged_names = uniq(@entry_names, @intercrop_names);
     my $entry_name_validator = CXGN::List::Validate->new();
     my @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_crosses_or_familynames',\@merged_names)->{'missing'}};
@@ -347,7 +347,7 @@ sub _parse_with_plugin {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my @accessions = @{$values->{'stock_name'}};
-    my @intercrop_accessions = @{$values->{'intercrop_stock_name'}};
+    my @intercrop_accessions = $values->{'intercrop_stock_name'} ? @{$values->{'intercrop_stock_name'}} : ();
     my @merged_accessions = uniq(@accessions, @intercrop_accessions);
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
         'me.is_obsolete' => { '!=' => 't' },

@@ -83,16 +83,19 @@ sub parse {
       my $v = $c ? $c->value() : undef;
       $v = $super->clean_value($v, $hv);
 
-      # Merge with existing data if column occurs more than once and allowed to be an array
-      if ( exists $row_info{$hv} && exists $column_arrays->{$hv} ) {
-        my @merged = uniq(@{$row_info{$hv}}, @$v);
-        $row_info{$hv} = \@merged;
-      }
-      else {
-        $row_info{$hv} = $v;
-      }
-
+      # Only process defined and non-empty values...
       if ( defined($v) && $v ne '' ) {
+
+        # Add value to row info
+        if ( exists $row_info{$hv} && exists $column_arrays->{$hv} ) {
+          my @merged = uniq(@{$row_info{$hv}}, @$v);
+          $row_info{$hv} = \@merged;
+        }
+        else {
+          $row_info{$hv} = $v;
+        }
+
+        # Add value to values map
         if ( ref($v) eq 'ARRAY' ) {
           if ( scalar(@$v) > 0 ) {
             foreach (@$v) {
@@ -105,8 +108,10 @@ sub parse {
           $values_map{$hv}->{$v} = 1;
           $skip_row = 0;
         }
+
       }
     }
+
     $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;
     last if $skips_in_a_row > 5;
     push @{$rtn{data}}, \%row_info if !$skip_row;
