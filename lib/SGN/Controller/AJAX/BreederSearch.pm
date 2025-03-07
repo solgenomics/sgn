@@ -22,6 +22,11 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   my $c = shift;
   my $j = JSON->new;
 
+  if ($c->stash->{access}->denied( $c->stash->{user_id}, "read", "wizard")) {
+      $c->stash->{rest} = { error => "Access Control: Access to wizard denied" };
+      $c->detach();
+  }
+  
   my @criteria_list = $c->req->param('categories[]');
   my @querytypes = $c->req->param('querytypes[]');
 
