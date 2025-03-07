@@ -41,71 +41,78 @@
 
 
 <& /page/page_title.mas, title => 'Access table' &>
+  
 
-<div id="add_new_privilege_modal" class="modal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add Privilege</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-	<table><tr><th>Role</th><th>Level</th><th>Resource</th></tr>
-	  <tr><td>
-	      <select id="role_select">
-		<option value="curator">curator</option>
-		<option value="submitter">submitter</option>
-		<option value="user">user</option>
-	      </select>
-	    </td><td>
-	      <select id="level_select" >
-		<option value="read">Read</option>
-		<option value="write">Write</option>
-	      </select>
-	    </td><td>
-	      <select id="resource_select">
-		<option value="trials">Trials</option>
-		<option value="phenotyping">Phenotyping</option>
-		<option value="genotyping">Genotyping</option>
-                <option value="stocks">Stocks</option>
-                <option value="pedigrees">Pedigrees</option>
-		<option value="crosses">Crosses</option>
-		<option value="community">Community</option>
-		<option value="loci">Loci</option>
-		<option value="wizard">Wizard</option>
-		<option value="privileges">Privileges</option>
-		<option value="breeding_programs">Breeding Programs</option>
-	      </select>
-	</td></tr></table>
-	
-
-      </div>
-      <div class="modal-footer">
-        <button id="submit_new_privileges" type="button" class="btn btn-primary">Add</button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+    
+  <div id="add_new_privilege_modal" class="modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+	<div class="modal-header">
+          <h5 class="modal-title">Add Privilege</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+	</div>
+	<div class="modal-body" style="align: center">
+	  <table style="align:center"><tr><th>Role</th><th>Level</th><th>Resource</th></tr>
+	    <tr><td>
+		<select id="role_select">
+		  <option value="curator">curator</option>
+		  <option value="submitter">submitter</option>
+		  <option value="user">user</option>
+		</select>
+	      </td><td>
+		<select id="level_select" >
+		  <option value="read">Read</option>
+		  <option value="write">Write</option>
+		</select>
+	      </td><td>
+		<select id="resource_select">
+		  <option value="trials">Trials</option>
+		  <option value="phenotyping">Phenotyping</option>
+		  <option value="genotyping">Genotyping</option>
+                  <option value="stocks">Stocks</option>
+                  <option value="pedigrees">Pedigrees</option>
+		  <option value="crosses">Crosses</option>
+		  <option value="community">Community</option>
+		  <option value="loci">Loci</option>
+		  <option value="wizard">Wizard</option>
+		  <option value="privileges">Privileges</option>
+		  <option value="breeding_programs">Breeding Programs</option>
+		</select>
+	  </td></tr></table>
+	  
+	  
+	</div>
+	<div class="modal-footer">
+          <button id="submit_new_privileges" type="button" class="btn btn-primary">Add</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+	</div>
       </div>
     </div>
   </div>
-</div>
-
-
   
+  
+    
   <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_new_privilege_modal" id="add_new_privilege_button" >Add new privilege</button>
   <br />
   <br />
 
-<div id="access_table">
-  <thead>
-    <th>Role</th>
-    <th>Level</th>
-    <th>Resource</th>	
-  </thead>
-</table>
+  <div class="modal-header" style="text-align:center">
+    <div id="access_table">
+      <table>
+	<thead>
+	  <tr>
+	    <th>Role</th>
+	    <th>Level</th>
+	    <th>Resource</th>
+	  </tr>
+	</thead>
+      </table>
+    </div>
+  </div>
 
-
-<script>
+  <script>
 
 jQuery(document).ready( function() {
     
