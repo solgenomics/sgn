@@ -293,8 +293,8 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     }
     
 
-    $trait =~ s/\|.*//;
-    my $trait_operator = $trait."|".$operator;
+    $main_trait =~ s/\|.*//;
+    my $trait_operator = $main_trait."|".$operator;
 
     # Convert unique study names to a comma-separated list in SQL format
     my @unique_study_names = keys %study_names;
