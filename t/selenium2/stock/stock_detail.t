@@ -94,10 +94,10 @@ $t->while_logged_in_as("submitter", sub {
 
     print STDERR "FIND PEDIGREE SECTION 0...\n";
     my $pedigree_section = $t->find_element_ok('stock_pedigree_section_onswitch', 'id', 'find pedigree section');
-    sleep(2);
+    sleep(5);
     print STDERR "OK! \n";
     $t->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100)", $pedigree_section);
-    sleep(2);
+    sleep(5);
     print STDERR "STILL GOING...\n";
     $pedigree_section->click();
     sleep(2);
