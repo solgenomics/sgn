@@ -92,18 +92,27 @@ $t->while_logged_in_as("submitter", sub {
     $t->get_ok('stock/38879/view');
     sleep(2);
 
+    print STDERR "FIND PEDIGREE SECTION 0...\n";
     my $pedigree_section = $t->find_element_ok('stock_pedigree_section_onswitch', 'id', 'find pedigree section');
+    sleep(2);
+    print STDERR "OK! \n";
     $t->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100)", $pedigree_section);
     sleep(2);
+    print STDERR "STILL GOING...\n";
     $pedigree_section->click();
     sleep(2);
 
+    print STDERR "NOW HERE...\n";
+
     my $add_parent_link = $t->find_element_ok('add_parent_link', 'id', 'find add parent link');
+    sleep(2);
     $add_parent_link->click();
     sleep(1);
 
     my $stock_name = $t->find_element_ok("stock_autocomplete", "id", "add parent input");
+    sleep(1);
     $stock_name->send_keys('test_wrong_stock_name');
+    sleep(1);
 
     $t->find_element_ok("male", "id", "find male input")->click();
     $t->find_element_ok("female", "id", "find female input")->click();
@@ -137,12 +146,18 @@ $t->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $pedigree_section = $t->find_element_ok('stock_pedigree_section_onswitch', 'id', 'find pedigree section');
+    print STDERR "FIND ON SWITCH 1\n";
+    sleep(2);
     $t->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100)", $pedigree_section);
+    print STDERR "SCROLL INTO VIEW 1\n";
     sleep(2);
     $pedigree_section->click();
+    print STDERR "CLICK ON SWITCH 1\n";
     sleep(2);
 
     my $add_parent_link = $t->find_element_ok('add_parent_link', 'id', 'find add parent link');
+    sleep(2);
+    print STDERR "CLICK PARENT LINK...\n";
     $add_parent_link->click();
     sleep(1);
 
@@ -165,7 +180,11 @@ $t->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $pedigree_section = $t->find_element_ok('stock_pedigree_section_onswitch', 'id', 'find pedigree section');
+    sleep(1);
+    print STDERR "FIND PEDIGREE SECTION 2...\n";
+
     $t->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100)", $pedigree_section);
+    print STDERR "ETC...\n";
     sleep(2);
     $pedigree_section->click();
     sleep(2);
