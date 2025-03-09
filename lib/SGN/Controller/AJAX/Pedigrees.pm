@@ -61,7 +61,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-#       $user_id = $c->user()->get_object()->get_sp_person_id();
+    $user_id = $user_id || $c->stash->{user_id};
 
     
     if (! $c->stash->{access}->grant($user_id, "write", "pedigrees")) { 
