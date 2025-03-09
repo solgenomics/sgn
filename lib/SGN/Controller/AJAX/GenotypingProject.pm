@@ -43,8 +43,8 @@ sub add_genotyping_project_POST :Args(0){
     #     return;
     # }
 
-    if ($c->stash->{access}->denied( $c->stash->{user}, "write", "genotyping")) {
-	$c->stash->{rest} = { error => "You have insufficient privileges to add a genoyping project." };
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "genotyping")) {
+	$c->stash->{rest} = { error => "NOTICE: ".$message };
 	$c->detach();
     }
     
