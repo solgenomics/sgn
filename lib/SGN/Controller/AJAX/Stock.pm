@@ -2056,7 +2056,6 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigreestring') 
 	$c->detach();
     }
 
-    
     my $level = $c->req->param("level");
     my $stock_id = $c->stash->{stock}->get_stock_id();
     my $stock_name = $c->stash->{stock}->get_uniquename();
@@ -2473,11 +2472,16 @@ sub stock_obsolete_GET {
         $c->stash->{rest} = { error => "Log in required for making stock obsolete." }; return;
     }
 
-    if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-        $c->stash->{rest} = { error => 'Cannot obsolete stock! You do not have a curator, sequencer or submitter account' };
-        $c->detach();
-    }
+#    if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+#        $c->stash->{rest} = { error => 'Cannot obsolete stock! You do not have a curator, sequencer or submitter account' };
+#        $c->detach();
+#    }
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+    
     my $stock_id = $c->req->param('stock_id');
     my $is_obsolete  = $c->req->param('is_obsolete');
     my $obsolete_note  = $c->req->param('obsolete_note');
@@ -2513,6 +2517,12 @@ sub get_accessions_with_pedigree : Path('/ajax/stock/accessions_with_pedigree') 
 sub get_accessions_with_pedigree_GET {
     my $self = shift;
     my $c = shift;
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+    
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $result = CXGN::Cross->get_progeny_info($schema);
@@ -2583,25 +2593,31 @@ sub stock_additional_file_upload :Chained('/stock/get_stock') PathPart('upload_a
     my $session_id = $c->req->param("sgn_session_id");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
+    # THIS NEEDS TO BE LOOKED AT
+    # if ($session_id){
+    #     my $dbh = $c->dbc->dbh;
+    #     my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+    #     if (!$user_info[0]){
+    #         $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+    #         $c->detach();
+    #     }
+    #     $user_id = $user_info[0];
+    #     $user_role = $user_info[1];
+    #     my $p = CXGN::People::Person->new($dbh, $user_id);
+    #     $user_name = $p->get_username;
+    # } else{
+    #     if (!$c->user){
+    #         $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+    #         $c->detach();
+    #     }
+    #     $user_id = $c->user()->get_object()->get_sp_person_id();
+    #     $user_name = $c->user()->get_object()->get_username();
+    #     $user_role = $c->user->get_object->get_user_type();
+    # }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
     }
 
     my $upload = $c->req->upload('accession_upload_additional_file');
@@ -2681,11 +2697,16 @@ sub obsolete_trial_additional_file_uploaded :Chained('/stock/get_stock') PathPar
     my $file_id = shift;
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
-    if (!$c->user) {
-	    $c->stash->{rest} = { error => "You must be logged in to obsolete additional files!" };
-	    $c->detach();
-    }
+    # if (!$c->user) {
+    # 	    $c->stash->{rest} = { error => "You must be logged in to obsolete additional files!" };
+    # 	    $c->detach();
+    # }
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+    
     my $user_id = $c->user->get_object()->get_sp_person_id();
 
     my @roles = $c->user->roles();
@@ -2771,6 +2792,11 @@ sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datata
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
     my $dbh = $c->dbc->dbh;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+    
     my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
     my $result = $related_stocks->get_vector_obsoleted_accessions();
     my @obsoleted_accessions;
@@ -2808,6 +2834,11 @@ sub set_display_image : Path('/ajax/stock/set_display_image') : ActionClass('RES
 sub set_display_image_POST : Args(0) {
     my ($self, $c) = @_;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "phenotyping")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+    
     my $stock_id = $c->req->param('stock_id');
     my $image_id = $c->req->param('image_id');
 
