@@ -64,7 +64,7 @@ is($mech->status,404,'/search/direct_search.pl?search=wombats is a 404');
 for my $type (keys %$type_regex) {
     $mech->get_ok("/search/$type");
     my $regex = $type_regex->{$type};
-    diag $mech->content;
+    #diag $mech->content;
     $mech->content_like($regex); 
 
     # the glossary search was never accessible via direct_search
