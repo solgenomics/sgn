@@ -295,10 +295,7 @@ sub search {
         $design_layout_select = " ,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value";
     }
 
-    if ($self->exclude_phenotype_outlier){
-        $phenotypeprop_sql = " LEFT JOIN phenotypeprop ON (phenotype.phenotype_id = phenotypeprop.phenotype_id AND phenotypeprop.type_id = $phenotype_outlier_type_id)";
-    }
-
+    
     my $from_clause = " FROM stock as observationunit JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id IN ($plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $tissue_sample_of_type_id)
       JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
       JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id,$cross_type_id,$family_name_type_id)
@@ -450,10 +447,13 @@ sub search {
 
     if ($self->exclude_phenotype_outlier) {
         push @where_clause, "NOT EXISTS (
-            SELECT 1 FROM phenotypeprop pp 
-            WHERE pp.phenotype_id = phenotype.phenotype_id 
-            AND pp.type_id = $phenotype_outlier_type_id
-        )";
+            SELECT 1
+            FROM phenotypeprop p
+            JOIN nd_experiment_phenotype nep ON p.phenotype_id = nep.phenotype_id
+            JOIN nd_experiment_stock nes ON nes.nd_experiment_id = nep.nd_experiment_id
+            WHERE nes.stock_id = observationunit.stock_id
+            AND p.type_id = $phenotype_outlier_type_id
+            )";
     }
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
