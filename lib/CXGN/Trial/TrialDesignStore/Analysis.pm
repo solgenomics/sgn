@@ -20,9 +20,8 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
     my $analysis_of_type_id = SGN::Model::Cvterm->get_cvterm_row($self->get_bcs_schema(), 'analysis_of', 'stock_relationship')->cvterm_id();
     $self->set_stock_relationship_type_id($analysis_of_type_id);
     @source_stock_types = ($self->get_accession_cvterm_id, $self->get_analysis_result_cvterm_id);
-    print STDERR "\nabtract trial BUILD setting stock type id etc....@source_stock_types\n";
     $self->set_source_stock_types(\@source_stock_types);
-    # $self->set_source_primary_stock_types( [ "accession", "analysis_result"] );
+
     $self->set_valid_properties( 
 	[
 	 'stock_name',
