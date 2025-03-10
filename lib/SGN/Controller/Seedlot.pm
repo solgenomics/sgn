@@ -129,6 +129,9 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
         $status = 'discarded';
     }
 
+    my $default_seedlot_material_type = $c->config->{default_seedlot_material_type};
+    $c->stash->{default_seedlot_material_type} = $default_seedlot_material_type;
+    
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();
     $c->stash->{material_type} = $sl->material_type();

@@ -19,6 +19,7 @@ $discard_info => undef
 $status => undef
 $user_role => undef
 $material_type => undef
+$default_seedlot_material_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -347,9 +348,15 @@ $material_type => undef
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Material Type: </label>
+% if ($default_seedlot_material_type) {
+                    <div class="col-sm-9">
+                        <input class="form-control" id="edit_seedlot_details_default_material_type" disabled value="<% $default_seedlot_material_type %>">
+                    </div>
+% } else {
                     <div class="col-sm-9" >
                         <div id="edit_seedlot_details_material_type_div"></div>
                     </div>
+% }
                 </div>
 
                 <div class="form-group">
@@ -746,13 +753,12 @@ $material_type => undef
 
     jQuery('#edit_seedlot_details_link').click(function(){
         jQuery('#edit_seedlot_details_dialog').modal('show');
-        const default_material_type = "<%$material_type%>";
-        get_select_box('material_types', 'edit_seedlot_details_material_type_div', { 'name' : 'edit_seedlot_details_material_type', 'id' : 'edit_seedlot_details_material_type', 'default' : default_material_type, 'empty': 1 });
+        const stored_material_type = "<%$material_type%>";
+        get_select_box('material_types', 'edit_seedlot_details_material_type_div', { 'name' : 'edit_seedlot_details_material_type', 'id' : 'edit_seedlot_details_material_type', 'default' : stored_material_type, 'empty': 1 });
     });
 
     jQuery('#edit_seedlot_details_button').click(function(){
         var uniquename = jQuery('#edit_seedlot_details_uniquename').val();
-        var material_type = jQuery('#edit_seedlot_details_material_type').val();
         var description = jQuery('#edit_seedlot_details_description').val();
         var breeding_program = jQuery('#edit_seedlot_details_breeding_program').val();
         var organization = jQuery('#edit_seedlot_details_organization').val();
@@ -762,6 +768,14 @@ $material_type => undef
         var quality = jQuery('#edit_seedlot_details_quality').val();
         var accession = jQuery('#edit_seedlot_details_accession').val();
         var cross = jQuery('#edit_seedlot_details_cross').val();
+        const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
+        let material_type;
+        if (default_seedlot_material_type) {
+            material_type = default_seedlot_material_type;
+        } else {
+            material_type = jQuery('#edit_seedlot_details_material_type').val();
+        }
+
         if (uniquename == ''){
             alert('Seedlot name must not be blank');
         } else if (breeding_program == ''){
@@ -773,6 +787,8 @@ $material_type => undef
         }
         else if (accession != '' && cross != '') {
             alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
+        } else if (material_type == ''){
+            alert('Please select a material type');            
         }
         else {
             jQuery.ajax({
