@@ -19,6 +19,8 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
     analysis_protocol=>$analysis_protocol,
     analysis_dataset_id=>$analysis_dataset_id,
     analysis_accession_names=>$analysis_accession_names,
+    is_analysis_result_stock_type=>$is_analysis_result_stock_type,
+    analysis_result_stock_names=>$analysis_result_stock_names,
     analysis_trait_names=>$analysis_trait_names,
     analysis_statistical_ontology_term=>$analysis_statistical_ontology_term,
     analysis_precomputed_design_optional=>$analysis_precomputed_design_optional,
@@ -169,6 +171,17 @@ has 'analysis_dataset_id' => (
 );
 
 has 'analysis_accession_names' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'is_analysis_result_stock_type' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0,
+);
+
+has 'analysis_result_stock_names' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
@@ -334,6 +347,8 @@ sub store {
     my $analysis_protocol = $self->analysis_protocol();
     my $analysis_dataset_id = $self->analysis_dataset_id();
     my $analysis_accession_names = $self->analysis_accession_names();
+    my $analysis_result_stock_names = $self->analysis_result_stock_names();
+    my $is_analysis_result_stock_type = $self->is_analysis_result_stock_type();
     my $analysis_trait_names = $self->analysis_trait_names();
     my $analysis_statistical_ontology_term = $self->analysis_statistical_ontology_term();
     my $analysis_precomputed_design_optional = $self->analysis_precomputed_design_optional();
@@ -465,6 +480,9 @@ sub store {
         }
         my @composed_trait_names = values %composed_trait_map;
 
+
+        
+
         #Project BUILD inserts project entry
         my $a = CXGN::Analysis->new({
             bcs_schema => $bcs_schema,
@@ -493,7 +511,12 @@ sub store {
 
         $a->year($analysis_year);
         $a->breeding_program_id($analysis_breeding_program_id);
-        $a->accession_names($analysis_accession_names);
+        if (@$analysis_result_stock_names) {
+            $a->analysis_result_stock_names($analysis_result_stock_names);
+        } else {
+            $a->accession_names($analysis_accession_names);
+        }
+        
         $a->description($analysis_description);
         $a->user_id($user_id);
 
@@ -543,6 +566,7 @@ sub store {
             }
         }
         elsif ($analysis_result_values_type eq 'analysis_result_values_match_accession_names') {
+            print STDERR"\n\n\n analysis_result_values_type $analysis_result_values_type\n";
             my %analysis_result_values_fix_plot_names;
             my $design = $a->design();
             foreach (values %$design) {
@@ -556,8 +580,33 @@ sub store {
             }
         }
 
-        my @analysis_instance_names = keys %$analysis_result_values_save;
+        elsif ($analysis_result_values_type eq 'analysis_result_new_stocks') {
+            print STDERR"\n\n\n Start storing analysis_result_stock_names first: @$analysis_result_stock_names[0]\n\n\n";
 
+            # my $stocks_stored = $self->store_analysis_result_stock_names($bcs_schema, $analysis_result_stock_names);
+        
+            my %analysis_result_values_fix_plot_names;
+            my $design = $a->design();
+            foreach (values %$design) {
+                $analysis_result_values_fix_plot_names{$_->{stock_name}} = $_->{plot_name};
+            }
+
+            my $count = 0;
+            while (my ($stock_name, $trait_pheno) = each %$analysis_result_values) {
+                $count++;
+                while (my($trait_name, $val) = each %$trait_pheno) {
+                    if ($count < 3) {
+                        print STDERR"\n\n\n stock_name -- $stock_name -- $trait_name -- $val\n\n\n";
+                    }
+            
+                    $analysis_result_values_save->{$analysis_result_values_fix_plot_names{$stock_name}}->{$composed_trait_map{$trait_name}} = $val;
+                }
+            }
+        }
+        
+
+        my @analysis_instance_names = keys %$analysis_result_values_save;
+    
         eval {
             $a->store_analysis_values(
                 $metadata_schema,
@@ -572,6 +621,7 @@ sub store {
                 $dbuser,
                 $dbpass,
                 $tempfile_for_deleting_nd_experiment_ids,
+                $is_analysis_result_stock_type,
             );
         };
 
@@ -580,8 +630,7 @@ sub store {
             return { error => "An error occurred storing the values ($@).\n" };
         }
 
-        my $bs = CXGN::BreederSearch->new( { dbh=>$bcs_schema->storage->dbh, dbname=>$dbname } );
-        my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'phenotypes', 'concurrent', $basepath);
+        my $refresh = $self->_refresh_matviews($bcs_schema, 'fullview', 'concurrent');
     }
 
     my $analysis_model = CXGN::AnalysisModel::GetModel->new({
@@ -606,6 +655,61 @@ if ($analysis_model_file) {
 }
 
     return { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
+}
+
+
+sub store_analysis_result_stock_names {
+    my ($self, $bcs_schema, $stocks) = @_;
+
+    my $stock_cvterm_id = SGN::Model::Cvterm
+        ->get_cvterm_row($bcs_schema, 'analysis_result','stock_type')
+        ->cvterm_id;
+
+    eval {
+     foreach my $stock_name (@$stocks) {
+
+        my $stock = $bcs_schema->resultset("Stock::Stock")
+	            ->find_or_create({
+		            name => $stock_name,
+		            type_id => $stock_cvterm_id,
+                    uniquename => $stock_name,
+	            });
+
+     }
+
+    };
+
+    if ($@) {
+            print STDERR "An error occurred storing analysis result stocks ($@).\n";
+            return { error => "An error occurred storing nalysis result stocks ($@).\n" };
+    } else {
+        print STDERR "\nDONE storing new analysis result stock!\n";
+        my $refresh = $self->_refresh_matviews($bcs_schema, 'stockprop', 'concurrent');
+        return 1;
+    }
+
+}
+
+sub _refresh_matviews {
+    my ($self, $bcs_schema, $view, $mode) = @_;
+
+    $view = $view ? $view : 'all_but_genoview';
+    $mode = $mode ? $mode : 'concurrent';
+    my $dbh = $bcs_schema->storage->dbh;
+
+    my $bs = CXGN::BreederSearch->new( {dbh=>$dbh, dbname=>$self->dbname,} );
+    my $refresh = $bs->refresh_matviews(
+                                        $self->dbhost, 
+                                        $self->dbname, 
+                                        $self->dbuser, 
+                                        $self->dbpass, 
+                                        $view, 
+                                        $mode, 
+                                        $self->base_path
+                    );
+
+    print Dumper "\n\n\nRefreshed matviews: $refresh\n\n\n";
+    return $refresh;
 }
 
 1;
