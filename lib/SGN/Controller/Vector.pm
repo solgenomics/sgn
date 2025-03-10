@@ -2,8 +2,8 @@ package SGN::Controller::Vector;
 
 =head1 NAME
 
-SGN::Controller::Stock - Catalyst controller for pages dealing with
-stocks (e.g. accession, population, etc.)
+SGN::Controller::Vector - Catalyst controller for pages dealing with
+vectors
 
 =cut
 
@@ -33,7 +33,8 @@ has 'schema' => (
     is       => 'rw',
     isa      => 'DBIx::Class::Schema',
     lazy_build => 1,
-);
+    );
+
 sub _build_schema {
     shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
 }
@@ -41,7 +42,7 @@ sub _build_schema {
 has 'default_page_size' => (
     is      => 'ro',
     default => 20,
-);
+    );
 
 =head1 PUBLIC ACTIONS
 
@@ -53,14 +54,12 @@ sub vector_new :Path('/vector/new') Args(0) {
     my ($self, $c ) = @_;
     my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
     $c->stash(
-        
-
         stock_types => stock_types($self->schema),
         sp_person_autocomplete_uri => '/ajax/people/autocomplete',
         editable_vector_props => \@editable_vector_props,
         template => '/stock/add_vector.mas'
 	);
-
+    
 }
 
 =head2 stock search using jQuery data tables
@@ -70,6 +69,10 @@ sub vector_new :Path('/vector/new') Args(0) {
 sub vector_search :Path('/search/vectors') Args(0) {
     my ($self, $c ) = @_;
 
+    if (! $c->stash->{user_id}) { 
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+    
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
 	$c->stash->{template} = '/access/access_denied.mas';
 	$c->stash->{data_type} = 'stock and vector';
@@ -77,7 +80,6 @@ sub vector_search :Path('/search/vectors') Args(0) {
 	return;
     }
 
-    
     my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
     $c->stash(
 	template => '/search/vectors.mas',
@@ -86,18 +88,6 @@ sub vector_search :Path('/search/vectors') Args(0) {
 	sp_person_autocomplete_uri => '/ajax/people/autocomplete',
     editable_vector_props => \@editable_vector_props
 	);
-
 }
-
-
-
-# sub _validate_pair {
-#     my ($self,$c,$key,$value) = @_;
-#     $c->throw( is_client_error => 1, public_message => "$value is not a valid value for $key" )
-#         if ($key =~ m/_id$/ and $value !~ m/\d+/);
-# }
-
-
-
 
 __PACKAGE__->meta->make_immutable;

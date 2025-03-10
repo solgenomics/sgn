@@ -2,6 +2,7 @@
 package SGN::Controller::Search::Trial;
 
 use Moose;
+use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -9,6 +10,11 @@ sub trial_search_page : Path('/search/trials/') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (! $c->stash->{user_id}) { 
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+
+    
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "trials" )) {
 	$c->stash->{template} = '/access/access_denied.mas';
 	$c->stash->{data_type} = 'trial';
@@ -26,6 +32,11 @@ sub genotyping_trial_search_page : Path('/search/genotyping_trials/') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (! $c->stash->{user_id}) { 
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+
+    
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "genotyping" )) {
 	$c->stash->{template} = '/access/access_denied.mas';
 	$c->stash->{data_type} = 'genotype';
@@ -41,6 +52,11 @@ sub genotyping_data_project_search_page : Path('/search/genotyping_data_projects
     my $self = shift;
     my $c = shift;
 
+    if (! $c->stash->{user_id}) { 
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+
+    
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "genotyping" )) {
 	$c->stash->{template} = '/access/access_denied.mas';
 	$c->stash->{data_type} = 'genotype';

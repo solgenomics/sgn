@@ -37,6 +37,10 @@ sub search_progenies_using_female : Path('/search/progenies_using_female') Args(
     my $self = shift;
     my $c = shift;
 
+    if (! $c->stash->{user_id}) { 
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees" )) {
 	$c->stash->{template} = '/access/access_denied.mas';
 	$c->stash->{data_type} = 'pedigree';
@@ -52,6 +56,11 @@ sub search_progenies_using_male : Path('/search/progenies_using_male') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (! $c->stash->{user_id}) { 
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+
+    
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees" )) {
 	$c->stash->{template} = '/access/access_denied.mas';
 	$c->stash->{data_type} = 'pedigree';
@@ -67,6 +76,10 @@ sub search_crosses_using_female : Path('/search/crosses_using_female') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (! $c->stash->{user_id}) { 
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees" )) {
 	$c->stash->{template} = '/access/access_denied.mas';
 	$c->stash->{data_type} = 'pedigree';
@@ -81,6 +94,10 @@ sub search_crosses_using_female : Path('/search/crosses_using_female') Args(0) {
 sub search_crosses_using_male : Path('/search/crosses_using_male') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (! $c->stash->{user_id}) { 
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
 
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "crosses" )) {
 	$c->stash->{template} = '/access/access_denied.mas';
@@ -98,6 +115,7 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
     my $c = shift;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    
     my $user = $c->user();
     if (!$user) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );

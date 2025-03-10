@@ -53,6 +53,10 @@ has 'default_page_size' => (
 sub stock_search :Path('/search/stocks') Args(0) {
     my ($self, $c ) = @_;
 
+    if (! $c->stash->{user_id}) { 
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+    
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
 	$c->stash->{template} = '/access/access_denied.mas';
 	$c->stash->{data_type} = 'stock';
