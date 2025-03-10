@@ -16,8 +16,14 @@ sub search_stocks_using_genotypes : Path('/search/stocks_using_genotypes') Args(
         return;
     }
 
-    $c->stash->{template} = '/search/stocks_using_genotypes.mas';
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "genotyping" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'genotype';
+	$c->stash->{message} = $message;
+	return;
+    }
 
+    $c->stash->{template} = '/search/stocks_using_genotypes.mas';
 }
 
 1;

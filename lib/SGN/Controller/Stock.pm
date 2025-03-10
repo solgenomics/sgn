@@ -52,6 +52,15 @@ has 'default_page_size' => (
 
 sub stock_search :Path('/search/stocks') Args(0) {
     my ($self, $c ) = @_;
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'stock';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    
     my @editable_stock_props = split ',',$c->get_conf('editable_stock_props');
     $c->stash(
 	template => '/search/stocks.mas',
@@ -79,6 +88,15 @@ Display a stock search form, or handle stock searching.
 
 sub search :Path('/stock/search') Args(0) {
     my ( $self, $c ) = @_;
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'stock';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    
     $c->stash(
 	template => '/search/stocks.mas',
 

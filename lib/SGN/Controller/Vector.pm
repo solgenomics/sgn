@@ -69,6 +69,15 @@ sub vector_new :Path('/vector/new') Args(0) {
 
 sub vector_search :Path('/search/vectors') Args(0) {
     my ($self, $c ) = @_;
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'stock and vector';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    
     my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
     $c->stash(
 	template => '/search/vectors.mas',

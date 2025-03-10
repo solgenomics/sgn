@@ -22,8 +22,14 @@ sub search_page : Path('/search/cross') Args(0) {
         return;
     }
 
-    $c->stash->{template} = '/search/cross.mas';
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "crosses" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'cross';
+	$c->stash->{message} = $message;
+	return;
+    }
 
+    $c->stash->{template} = '/search/cross.mas';
 }
 
 
@@ -31,8 +37,14 @@ sub search_progenies_using_female : Path('/search/progenies_using_female') Args(
     my $self = shift;
     my $c = shift;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'pedigree';
+	$c->stash->{message} = $message;
+	return;
+    }
+    
     $c->stash->{template} = '/search/cross/progeny_search_using_female.mas';
-
 }
 
 
@@ -40,8 +52,14 @@ sub search_progenies_using_male : Path('/search/progenies_using_male') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->stash->{template} = '/search/cross/progeny_search_using_male.mas';
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'pedigree';
+	$c->stash->{message} = $message;
+	return;
+    }
 
+    $c->stash->{template} = '/search/cross/progeny_search_using_male.mas';
 }
 
 
@@ -49,8 +67,14 @@ sub search_crosses_using_female : Path('/search/crosses_using_female') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->stash->{template} = '/search/cross/cross_search_using_female.mas';
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'pedigree';
+	$c->stash->{message} = $message;
+	return;
+    }
 
+    $c->stash->{template} = '/search/cross/cross_search_using_female.mas';
 }
 
 
@@ -58,8 +82,14 @@ sub search_crosses_using_male : Path('/search/crosses_using_male') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->stash->{template} = '/search/cross/cross_search_using_male.mas';
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "crosses" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'cross';
+	$c->stash->{message} = $message;
+	return;
+    }
 
+    $c->stash->{template} = '/search/cross/cross_search_using_male.mas';
 }
 
 
@@ -72,6 +102,13 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
     if (!$user) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
+    }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "crosses" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'cross';
+	$c->stash->{message} = $message;
+	return;
     }
 
     my $cross_properties_string = $c->config->{cross_properties};
@@ -103,8 +140,6 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
     my $output = read_file($tempfile);
 
     $c->res->body($output);
-
-
 }
 
 
@@ -117,6 +152,13 @@ sub download_all_accessions_with_pedigree : Path('/search/download_all_accession
     if (!$user) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
+    }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'pedigree';
+	$c->stash->{message} = $message;
+	return;
     }
 
     my $file_format = "xlsx";
@@ -157,6 +199,13 @@ sub download_parents_and_numbers_of_progenies : Path('/search/download_parents_a
     if (!$user) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
+    }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "pedigrees" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'pedigree';
+	$c->stash->{message} = $message;
+	return;
     }
 
     my $parent_type = $c->req->param("parent_type");

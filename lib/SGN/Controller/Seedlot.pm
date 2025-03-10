@@ -21,7 +21,18 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
     my $user_role;
-    if ($c->user() && $c->user()->check_roles("curator")) {
+#    if ($c->user() && $c->user()->check_roles("curator")) {
+#	$user_role = "curator";
+    #    }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'stock';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "stocks")) {
 	$user_role = "curator";
     }
 
@@ -58,8 +69,17 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;
     my $user_role;
-    if ($c->user() && $c->user()->check_roles("curator")) {
-	    $user_role = "curator";
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'stock and seedlot';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    if ($c->stash->grant( $c->stash->{user_id}, "write", "stocks")) { 
+	#if ($c->user() && $c->user()->check_roles("curator")) {
+	$user_role = "curator";
     }
 
     my $sl = CXGN::Stock::Seedlot->new(
@@ -152,6 +172,14 @@ sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
     my $self = shift;
     my $c = shift;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'stock and seedlot';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    
     # Make sure the seedlot maintenance event ontology is set
     if ( !defined $c->config->{seedlot_maintenance_event_ontology_root} || $c->config->{seedlot_maintenance_event_ontology_root} eq '' ) {
         $c->stash->{template} = '/generic_message.mas';
@@ -178,12 +206,19 @@ sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
         return;
     }
 
-    # Make sure the user has submitter or curator privileges
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'Your account must have either submitter or curator privileges to add seedlot maintenance events.';
-        return;
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'stock and seedlot';
+	$c->stash->{message} = $message;
+	$c->detach();
     }
+
+    # Make sure the user has submitter or curator privileges
+#    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+#        $c->stash->{template} = '/generic_message.mas';
+#        $c->stash->{message} = 'Your account must have either submitter or curator privileges to add seedlot maintenance events.';
+#        return;
+#    }
 
     # Make sure the seedlot maintenance event ontology is set
     if ( !defined $c->config->{seedlot_maintenance_event_ontology_root} || $c->config->{seedlot_maintenance_event_ontology_root} eq '' ) {
