@@ -603,7 +603,14 @@ sub upload_seedlots_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $material_type = $c->req->param("upload_seedlot_material_type");
+    my $material_type;
+    my $default_seedlot_material_type = $c->config->{default_seedlot_material_type};
+    if ($default_seedlot_material_type) {
+        $material_type = $default_seedlot_material_type;
+    } else {
+        $material_type = $c->req->param("upload_seedlot_material_type");        
+    }
+
     my $breeding_program_id = $c->req->param("upload_seedlot_breeding_program_id");
     my $location = $c->req->param("upload_seedlot_location");
     my $population = $c->req->param("upload_seedlot_population_name");
