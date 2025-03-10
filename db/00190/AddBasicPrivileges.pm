@@ -70,6 +70,7 @@ insert into sgn_people.sp_resource (name) values ('loci');
 insert into sgn_people.sp_resource (name) values ('breeding_programs');
 insert into sgn_people.sp_resource (name) values ('stocks');
 insert into sgn_people.sp_resource (name) values ('catalog');
+insert into sgn_people.sp_resource (name) values ('user_roles');
 
 -- add access levels
 
@@ -137,10 +138,15 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 1, 2);
 
--- curator for vendor
+-- curator for catalog
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (13, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (13, 1, 2);
+
+-- curator for user_roles
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (14, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (14, 1, 2);
 
 
 --SUBMITTER PRIVILEGES
@@ -194,6 +200,14 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 3, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 3, 2);
 
+-- curator for user_roles
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (14, 3, 1);
+
+
+--
+
+
 -- USER PRIVILEGES
 
 -- user for pedigrees
@@ -225,15 +239,15 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (9, 4, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (9, 4, 2);
 
--- submitter for loci
+-- user for loci
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (10, 4, 1);
 
--- submitter for breeding programs
+-- user for breeding programs
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (11, 4, 1);
 
--- submitter for stocks
+-- user for stocks
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (12, 4, 1);
 
