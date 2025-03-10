@@ -152,6 +152,13 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
 	return;
     }
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks")) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = "stock";
+	$c->stash->{message} = $message;
+	return;
+    }
+    
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
 
     my $accessions = $ac->get_all_accessions($c);
@@ -187,8 +194,17 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
         return;
     }
 
-    $c->stash->{is_curator} = $c->user->check_roles("curator");
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "user_roles" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'genotype';
+	$c->stash->{message} = $message;
+	return;
+    }
 
+    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "user_roles" )) {
+	$c->stash->{is_curator} = 1; #$c->user->check_roles("curator");
+    }
+    
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $person_roles = CXGN::People::Roles->new({ people_schema=>$people_schema });
@@ -207,6 +223,14 @@ sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'stock';
+	$c->stash->{message} = $message;
+	return;
+    }
+    
     my $genotyping_facilities = $c->config->{genotyping_facilities};
     my @facilities = split ',',$genotyping_facilities;
 
@@ -231,7 +255,7 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
-
+    
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
@@ -248,6 +272,15 @@ sub manage_nurseries : Path("/breeders/nurseries") Args(0) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "trials" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'trial';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
     my $breeding_programs = $bp->get_breeding_programs();
@@ -279,6 +312,15 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "crosses" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'crossing';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
     my $breeding_programs = $bp->get_breeding_programs();
@@ -329,6 +371,14 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 	return;
     }
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'phenotype';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+
     my @file_types = ( 'spreadsheet phenotype file', 'direct phenotyping', 'trial_additional_file_upload', 'brapi observations', 'tablet phenotype file' );
     my $data = $self->get_file_data($c, \@file_types);
 
@@ -347,7 +397,15 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
+    
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'phenotype';
+	$c->stash->{message} = $message;
+	return;
+    }
 
+    
     my @file_types = ( 'nirs spreadsheet' );
     my $all_data = $self->get_file_data($c, \@file_types, 1);
     my $data = $self->get_file_data($c, \@file_types, 0);
@@ -433,6 +491,14 @@ sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
 	     $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	      return;
     }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'phenotype';
+	$c->stash->{message} = $message;
+	return;
+    }
+
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id=>$stock_id })->uniquename();
 
     $c->stash->{plot_name} = $stock;
@@ -451,6 +517,14 @@ sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
 	     $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	      return;
     }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'phenotype';
+	$c->stash->{message} = $message;
+	return;
+    }
+
     my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
 
     my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
@@ -497,6 +571,14 @@ sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1)
     my $c = shift;
     my $file_id = shift;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'phenotype';
+	$c->stash->{message} = $message;
+	return;
+    }
+    
+    
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
@@ -513,6 +595,14 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
     my $c = shift;
     my $file_id = shift;
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'phenotype';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
@@ -528,6 +618,14 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
 
 sub make_cross_form :Path("/stock/cross/new") :Args(0) {
     my ($self, $c) = @_;
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "crosses" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'cross';
+	$c->stash->{message} = $message;
+	return;
+    }
+
     $c->stash->{template} = '/breeders_toolbox/new_cross.mas';
     if ($c->user()) {
       my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -571,6 +669,13 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 
     if (! $c->user()) { # redirect
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "crosses" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'cross';
+	$c->stash->{message} = $message;
 	return;
     }
 
@@ -764,10 +869,19 @@ sub breeder_search : Path('/breeders/search/') :Args(0) {
     	return;
     }
 
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "wizard" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'wizard';
+	$c->stash->{message} = $message;
+	return;
+    }
+
+    
     $c->stash->{dataset_id} = $c->req->param('dataset_id');
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }
+
 sub get_file_data : Private {
     my $self = shift;
     my $c = shift;
@@ -832,12 +946,12 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
-
+    
     print STDERR "USER ID: ". $c->stash->{user_id}."\n";
     
-    if (! $c->stash->{access}->grant($c->stash->{user_id}, "read", "genotyping")) {
-	$c->stash->{message} = 'You do not have the privileges to view genotyping data';
-	$c->stash->{template} = '/generic_message.mas';
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "genotyping")) {
+	$c->stash->{message} = $message;
+	$c->stash->{template} = '/access/access_denied.mas';
 	return;
     }
 
@@ -922,9 +1036,9 @@ sub manage_genotyping_projects : Path("/breeders/genotyping_projects") Args(0) {
 	return;
     }
     
-    if (! $c->stash->{access}->grant($c->stash->{user_id}, "read", "genotyping")) {
-	$c->stash->{message} = 'You do not have the privileges to view genotyping data';
-	$c->stash->{template} = '/generic_message.mas';
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "genotyping")) {
+	$c->stash->{message} = $message;
+	$c->stash->{template} = '/access/access_denied.mas';
 	return;
     }
     
@@ -973,6 +1087,14 @@ sub manage_transformations : Path("/breeders/transformations") Args(0) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "stocks" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'stock';
+	$c->stash->{message} = $message;
+	return;
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $bp = CXGN::BreedersToolbox::Projects->new({ schema=>$schema });
     my $breeding_programs = $bp->get_breeding_programs();
@@ -1018,6 +1140,14 @@ sub manage_activities : Path("/breeders/activities") Args(0) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "trials" )) {
+	$c->stash->{template} = '/access/access_denied.mas';
+	$c->stash->{data_type} = 'trial';
+	$c->stash->{message} = $message;
+	return;
+    }
+
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
     my $activity_project = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
