@@ -410,7 +410,7 @@ $default_seedlot_material_type => undef
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Accession name: </label>
                                         <div class="col-sm-9" >
-                                            <input class="form-control" id="edit_seedlot_details_accession" placeholder="One Content Required">
+                                            <input class="form-control" id="edit_seedlot_details_accession" value="<% $content_accession_name %>">
                                         </div>
                                     </div>
                                 </div>
@@ -421,7 +421,7 @@ $default_seedlot_material_type => undef
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Cross Unique ID: </label>
                                         <div class="col-sm-9" >
-                                            <input class="form-control" id="edit_seedlot_details_cross" placeholder="One Content Required">
+                                            <input class="form-control" id="edit_seedlot_details_cross" value="<% $content_cross_name %>">
                                         </div>
                                     </div>
                                 </div>
@@ -527,16 +527,6 @@ $default_seedlot_material_type => undef
                 jQuery('#edit_seedlot_details_location').val(response.location_code);
                 jQuery('#edit_seedlot_details_box_name').val(response.box_name);
                 jQuery('#edit_seedlot_details_quality').val(response.quality);
-                var accession_name = '';
-                if (response.accession){
-                    accession_name = response.accession[1];
-                }
-                var cross_name = '';
-                if (response.cross){
-                    cross_name = response.cross[1];
-                }
-                jQuery('#edit_seedlot_details_accession').val(accession_name);
-                jQuery('#edit_seedlot_details_cross').val(cross_name);
             }
             if (response.error) {
                 alert(response.error);
@@ -788,7 +778,7 @@ $default_seedlot_material_type => undef
         else if (accession != '' && cross != '') {
             alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
         } else if (material_type == ''){
-            alert('Please select a material type');            
+            alert('Please select a material type');
         }
         else {
             jQuery.ajax({
