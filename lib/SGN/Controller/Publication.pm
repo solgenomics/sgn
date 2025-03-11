@@ -100,9 +100,9 @@ sub view_by_doi : Path('/doi/pub/') CaptureArgs(3) {
 
     my $logged_user = $c->user;
     my $person_id   = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $curator     = $logged_user->check_roles('curator') if $logged_user;
-    my $submitter   = $logged_user->check_roles('submitter') if $logged_user;
-    my $sequencer   = $logged_user->check_roles('sequencer') if $logged_user;
+    my $curator     = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci"); #$logged_user->check_roles('curator') if $logged_user;
+    my $submitter   = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "loci"); # $logged_user->check_roles('submitter') if $logged_user;
+    my $sequencer   = 0; #$logged_user->check_roles('sequencer') if $logged_user;
     my $dbh = $c->dbc->dbh;
     my $dbxrefs = $pub->get_dbxrefs;
     my $stocks = $self->_get_stocks( $c);
@@ -143,9 +143,13 @@ sub view_pub : Chained('get_pub') PathPart('view') Args(0) {
 
     my $logged_user = $c->user;
     my $person_id   = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $curator     = $logged_user->check_roles('curator') if $logged_user;
-    my $submitter   = $logged_user->check_roles('submitter') if $logged_user;
-    my $sequencer   = $logged_user->check_roles('sequencer') if $logged_user;
+    my $curator     = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci"); #$logged_user->check_roles('curator') if $logged_user;
+    my $submitter   = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "loci"); # $logged_user->check_roles('submitter') if $logged_user;
+    my $sequencer   = 0; #$logged_user->check_roles('sequencer') if $logged_user;
+
+#    my $curator     = $logged_user->check_roles('curator') if $logged_user;
+ #   my $submitter   = $logged_user->check_roles('submitter') if $logged_user;
+  #  my $sequencer   = $logged_user->check_roles('sequencer') if $logged_user;
     my $dbh = $c->dbc->dbh;
 
     ##################
