@@ -61,17 +61,16 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!$c->user()) {
-
-	# redirect to login page
+    if (!$c->stash->{user_id}) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
+	$c->detach();
     }
 
-    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "read", "trials")) {
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "trials")) {
 	$c->stash->{data_type} = "trial";
+	$c->stash->{message} = $message;
 	$c->stash->{template} = '/access/access_denied.mas';
-	return;
+	$c->detach();
     }
     
     my @access = $c->stash->{access}->check_user( $c->stash->{user_id}, "trials" );
