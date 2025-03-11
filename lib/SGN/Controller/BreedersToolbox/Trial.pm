@@ -41,10 +41,16 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     # use access grant function to check if the user is allowed to see trials
     #
     print STDERR "USER ID: ".$c->stash->{user_id}."...\n";
-    
-    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "read", "trials")) {
+
+    if (!$c->stash->{user_id}) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->detach();
+    }
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "trials")) {
 	print STDERR "ACCESS TO TRIAL DETAIL PAGE DENIED!\n";
 	$c->stash->{data_type} = "trial";
+	$c->stash->{message} = $message;
 	$c->stash->{template} = "/access/access_denied.mas";
 	$c->detach();
     }
