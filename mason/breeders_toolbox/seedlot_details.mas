@@ -229,7 +229,7 @@ $default_seedlot_material_type => undef
                                             </div>
 
                                             <div class="form-group">
-                                                <label class="col-sm-3 control-label">Starting Amount (number of seeds): </label>
+                                                <label class="col-sm-3 control-label">Starting Amount (number of materials): </label>
                                                 <div class="col-sm-9" >
                                                     <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Amount OR Weight Required" disabled value="0">
                                                 </div>
@@ -275,7 +275,7 @@ $default_seedlot_material_type => undef
                 </div>
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Transaction Amount (number of seeds): </label>
+                    <label class="col-sm-3 control-label">Transaction Amount (number of materials): </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_transaction_amount" placeholder="Amount OR Weight Required">
                     </div>
@@ -832,7 +832,7 @@ function editSeedlotTransaction(transaction_id){
         success: function(response) {
             jQuery('#working_modal').modal('hide');
             if (response.success == 1) {
-                html = '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Transaction ID: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_id" value="'+response.transaction_id+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Operator: </label><div class="col-sm-9" ><input type="text" id="edit_seedlot_transaction_operator" class="form-control" value="'+response.operator+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Type: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_type" value="'+response.transaction_type+'" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Amount (Number of seeds): </label><div class="col-sm-9" ><input type="number" class="form-control" id="edit_seedlot_transaction_amount" value="'+response.amount+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Weight (g): </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_weight" value="'+response.weight_gram+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_timestamp" value="'+response.timestamp+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Description: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_description" value="'+response.description+'" /></div></div></form>';
+                html = '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Transaction ID: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_id" value="'+response.transaction_id+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Operator: </label><div class="col-sm-9" ><input type="text" id="edit_seedlot_transaction_operator" class="form-control" value="'+response.operator+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Type: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_type" value="'+response.transaction_type+'" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Amount (Number of materials): </label><div class="col-sm-9" ><input type="number" class="form-control" id="edit_seedlot_transaction_amount" value="'+response.amount+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Weight (g): </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_weight" value="'+response.weight_gram+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_timestamp" value="'+response.timestamp+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Description: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_description" value="'+response.description+'" /></div></div></form>';
                 jQuery('#edit_seedlot_transaction_div').html(html);
                 jQuery('#edit_seedlot_transaction_dialog').modal('show');
             }

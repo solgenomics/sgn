@@ -608,7 +608,7 @@ sub upload_seedlots_POST : Args(0) {
     if ($default_seedlot_material_type) {
         $material_type = $default_seedlot_material_type;
     } else {
-        $material_type = $c->req->param("upload_seedlot_material_type");        
+        $material_type = $c->req->param("upload_seedlot_material_type");
     }
 
     my $breeding_program_id = $c->req->param("upload_seedlot_breeding_program_id");
@@ -1133,6 +1133,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $default_seedlot_material_type = $c->config->{default_seedlot_material_type};
 
     if (!$c->user){
         $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
@@ -1146,7 +1147,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 
     my $operator = $c->user->get_object->get_username;
     my $user_id = $c->user->get_object->get_sp_person_id;
-
+    my $from_existing_seedlot_id = $c->req->param('from_existing_seedlot_id');
     my $to_new_seedlot_name = $c->req->param('to_new_seedlot_name');
     my $stock_id;
     my $stock_uniquename;
@@ -1201,6 +1202,12 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
                 $c->detach();
             }
 
+            my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_existing_seedlot_id);
+            my $new_seedlot_material_type = $from_sl->material_type();
+            if ((!$new_seedlot_material_type) && $default_seedlot_material_type) {
+                $new_seedlot_material_type = $default_seedlot_material_type;
+            }
+
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             $sl->uniquename($to_new_seedlot_name);
             $sl->location_code($location_code);
@@ -1211,6 +1218,8 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $sl->organization_name($organization);
             $sl->population_name($population_name);
             $sl->breeding_program_id($breeding_program_id);
+            $sl->material_type($new_seedlot_material_type);
+
             #TO DO
             #$sl->cross_id($cross_id);
             my $return = $sl->store();
@@ -1246,7 +1255,6 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         }
     }
     my $existing_sl;
-    my $from_existing_seedlot_id = $c->req->param('from_existing_seedlot_id');
     if ($from_existing_seedlot_id){
         $stock_id = $from_existing_seedlot_id;
         $stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$stock_id})->uniquename();
@@ -2181,7 +2189,7 @@ sub add_transactions_using_list_POST : Args(0) {
     my $timestamp = $time->ymd()."_".$time->hms();
 
     my $new_transaction_data = decode_json $c->req->param('new_transaction_data');
-    print STDERR "NEW TRANSACTION DATA =".Dumper($new_transaction_data)."\n";
+#    print STDERR "NEW TRANSACTION DATA =".Dumper($new_transaction_data)."\n";
 
     foreach my $each_transaction (@$new_transaction_data) {
         my $seedlot_name = $each_transaction->{'seedlot_name'};
@@ -2206,7 +2214,7 @@ sub add_transactions_using_list_POST : Args(0) {
         $transaction->operator($operator);
         $transaction->factor(-1);
         my $transaction_id = $transaction->store();
-        print STDERR "TRANSACTION ID =".Dumper($transaction_id)."\n";
+#        print STDERR "TRANSACTION ID =".Dumper($transaction_id)."\n";
 
         my $seedlot_rs = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_stock_id);
         $seedlot_rs->set_current_count_property();
