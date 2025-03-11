@@ -21,9 +21,18 @@ use Test::Most;
 use lib 't/lib';
 use SGN::Test::Data qw/ create_test /;
 use SGN::Test::WWW::Mechanize skip_cgi => 1;
+use JSON::XS;
 
 my $mech = SGN::Test::WWW::Mechanize->new;
 
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "johndoe", "password"=> "secretpw", "grant_type"=> "password" ], 'log
+in with brapi call');
+
+my $response = decode_json $mech->content;
+
+is($response->{'userDisplayName'}, 'John Doe', 'check login name');
+
+    
 $mech->get_ok("/search/organisms");
 $mech->content_like(qr!Organism/Taxon Search!);
 
@@ -66,7 +75,7 @@ for my $type (keys %$type_regex) {
     my $regex = $type_regex->{$type};
     #diag $mech->content;
     $mech->content_like($regex); 
-
+    
     # the glossary search was never accessible via direct_search
     $mech->get_ok("/search/direct_search.pl?search=$type") if ($type ne 'glossary');
 }
