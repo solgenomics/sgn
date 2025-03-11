@@ -9,7 +9,7 @@ $locations
 $crossing_trials
 $maintenance_enabled => undef
 $user_role => undef
-$default_seedlot_material_type
+$default_seedlot_material_type => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -30,7 +30,7 @@ $default_seedlot_material_type
                 <ul>
                 <li>Seedlots represent physical plant materials in packets/containers.</li>
                 <li>Plant material can be seed, root, clone, plant, tissue culture or gametophyte.</li>
-                <li>If you would like to set a default material type for seedlots, please contact us.</li>                
+                <li>If you would like to set a default material type for seedlots, please contact us.</li>
                 <li>These materials can be from crosses or for named accessions.</li>
                 <li>Seedlots can have a specific location, box, weight(g), and count.</li>
                 <li>Plant material can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>

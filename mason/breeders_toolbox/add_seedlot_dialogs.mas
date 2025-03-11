@@ -2,7 +2,7 @@
 $timestamp => localtime()
 $accession_uniquename => ''
 $cross_uniquename => ''
-$default_seedlot_material_type => ''
+$default_seedlot_material_type => undef
 
 </%args>
 

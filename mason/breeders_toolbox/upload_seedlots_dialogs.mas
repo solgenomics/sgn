@@ -1,6 +1,6 @@
 <%args>
 
-$default_seedlot_material_type
+$default_seedlot_material_type => undef
 
 </%args>
 

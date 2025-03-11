@@ -1,6 +1,6 @@
 <%args>
 $timestamp => localtime()
-$default_seedlot_material_type
+$default_seedlot_material_type => undef
 </%args>
 
 <div class="modal falde" id="create_seedlots_trial_dialog" name="create_seedlots_trial_dialog" tabindex="-1" aria-labelledby="create_seedlots_trial_dialog_title">
