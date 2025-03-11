@@ -33,7 +33,8 @@ solGS.log = {
         'ordering'  : false,
         'processing': true,
         'paging'    : false,
-        'info'      : false
+        'info'      : false,
+        'destroy'   : true
         });
 
         table.rows.add(data).draw();
@@ -52,7 +53,7 @@ solGS.log = {
                     console.log(response);
                 } else {
                     alert("Jobs cleared from recent activity."); 
-                    window.location.reload();  
+                    window.location.reload();
                 }     
     	    },
             error: function(response) {
@@ -74,7 +75,7 @@ solGS.log = {
                     console.log(response);
                 } else {
                     alert("Jobs cleared from recent activity."); 
-                    window.location.reload();  
+                    window.location.reload(); 
                 } 
     	    },
             error: function(response) {
