@@ -40,9 +40,9 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
     my $logged_user = $c->user;
     $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     $user_role = 1 if $logged_user;
-    $curator   = $logged_user->check_roles('curator') if $logged_user;
-    $submitter = $logged_user->check_roles('submitter') if $logged_user;
-    $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
+    $curator   =  $c->stash->{access}->grant( $c->stash->{user_id}, "write", "ontologies");#$logged_user->check_roles('curator') if $logged_user;
+    $submitter =  $c->stash->{access}->grant( $c->stash->{user_id}, "read", "ontologies"); #$logged_user->check_roles('submitter') if $logged_user;
+    $sequencer =  0; #$logged_user->check_roles('sequencer') if $logged_user;
     my $props = $self->_cvtermprops($cvterm);
     my $editable_cvterm_props = "trait_format,trait_default_value,trait_minimum,trait_maximum,trait_details,trait_categories";
    
