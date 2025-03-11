@@ -128,6 +128,7 @@ export function init(main_div) {
                 } else {
                     const result = drawBoxplot(r.data, trait_selected, outlierMultiplier, isFixedMinMax, minVal, maxVal );
                     outliers = result.outliers;  // Extract the outliers
+                    globalOutliers = outliers;
                     allData = r.data;
                     populateOutlierTable(r.data, trait_selected);
                     populateCleanTable(r.data, outliers, trait_selected);
@@ -186,7 +187,7 @@ export function init(main_div) {
         $.ajax({
             url: '/ajax/qualitycontrol/storeoutliers',  
             method: "POST",  
-            data: {"outliers": JSON.stringify(outliers), "trait":trait_selected, "othertraits": JSON.stringify(checkedTraits)
+            data: {"outliers": JSON.stringify(globalOutliers), "trait":trait_selected, "othertraits": JSON.stringify(checkedTraits)
             },
             success: function(response) {
                 if(response.is_curator === 1) {
@@ -270,6 +271,7 @@ function populateOtherTraits(traitsHTML, traitSelected) {
     });
 }
 
+var globalOutliers = [];
 
 function updateBoxplot(isFixed, minValue, maxValue) {
     // Fetch the selected trait and tempfile
@@ -284,10 +286,10 @@ function updateBoxplot(isFixed, minValue, maxValue) {
         data: { 'file': tempfile, 'trait': trait_selected },  // Send both tempfile and trait
         success: function (response) {
             const boxplotData = response.data || [];  // Adjust based on the actual response structure
-            drawBoxplot(boxplotData, trait_selected, outlierMultiplier, outlierMultiplier, isFixed, minValue, maxValue);
             const result = drawBoxplot(boxplotData, trait_selected, outlierMultiplier, isFixed, minValue, maxValue);
             const outliers = result.outliers || [];
             populateCleanTable(boxplotData, outliers, trait_selected);
+            globalOutliers = outliers;
         },
 
         error: function (jqXHR, textStatus, errorThrown) {
@@ -688,4 +690,3 @@ function populateTraitDropdown(selectedVariableHTML) {
         }));
     });
 }
-

@@ -262,9 +262,6 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my %unique_traits = map { $_ => 1 } @$othertraits;
     my @unique_othertraits = keys %unique_traits;
 
-    # @unique_othertraits = map { s/\|.*//r } @unique_othertraits;
-    # print STDERR Dumper \@unique_othertraits;
-
     foreach my $entry (@$outliers_data) { 
         $trait = $entry->{trait};  # Directly use the trait from the entry
         my $study_name = $entry->{studyName};
@@ -275,7 +272,8 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     foreach my $sel_trait (@alltraits) {
         $trait_ids{$sel_trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $sel_trait)->cvterm_id;
     }
-    
+
+        
     $main_trait =~ s/\|.*//;
     my $trait_operator = $main_trait."|".$operator;
 
@@ -314,6 +312,9 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
 
     my %seen;
     @plot_names = grep { !$seen{$_}++ } @plot_names;
+
+    print("here are plots:\n");
+    print Dumper \@plot_names;
     
     # Proceed only if there are outliers
     if (@plot_names) {
