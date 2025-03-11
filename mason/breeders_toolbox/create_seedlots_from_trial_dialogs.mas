@@ -903,7 +903,6 @@ $default_seedlot_material_type
 
         for ( let i = 0; i < SEEDLOTS.length; i++ ) {
             let p_select = jQuery("#create_seedlots_trial_breeding_program_id").html();
-            let mt_select = jQuery("#create_seedlots_trial_material_type").html();
 
             html += "<tr>";
             html += "<td>" + SEEDLOTS[i].name + "</td>";
@@ -911,7 +910,6 @@ $default_seedlot_material_type
             html += "<strong>Breeding Program:</strong><select class='form-control  create_seedlots_trial_metadata_input_seedlot_breeding_program' data-index='" + i + "'>" + p_select + "</select><br />";
             html += "<strong>Location:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='location' data-index='" + i + "' value='" + l + "'><br />";
             html += "<strong>Box Name:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='box_name' data-index='" + i + "' value='" + b + "'><br />";
-            html += "<strong>Material Type:</strong><select class='form-control  create_seedlots_trial_metadata_input_seedlot_material_type' data-index='" + i + "'>" + mt_select + "</select><br />";
             html += "<strong>Quality Issues:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='quality_issues' data-index='" + i + "' value='" + q + "'><br />";
             html += "<strong>Organization:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='organization' data-index='" + i + "' value='" + o + "'><br />";
             html += "<strong>Timestamp:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='timestamp' data-index='" + i + "' value='" + t + "'><br />";
