@@ -1677,7 +1677,7 @@ sub _check_user_login {
         $user_role = $c->user->get_object->get_user_type();
     }
     #if ($user_role ne 'submitter' && $user_role ne 'curator') {
-    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "phenotyping")) { 
+    if ($c->stash->{access}->denied( $user_id, "write", "phenotyping")) { 
         $c->stash->{rest} = { error => 'You do not have permission in the database to add phenotypes.'};
         $c->detach();
     }

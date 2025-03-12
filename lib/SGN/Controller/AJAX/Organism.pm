@@ -78,7 +78,7 @@ sub project_metadata :Chained('/organism/find_organism') :PathPart('metadata') :
 
     if($c->user()) {
         $login_user_id = $c->user()->get_object()->get_sp_person_id();
-        $login_user_can_modify = any { $_ =~ /curator|sequencer|submitter/i } ($c->user()->roles());
+        $login_user_can_modify = $c->stash->{access}->grant( $login_user_id, "write", "stocks"); # any { $_ =~ /curator|sequencer|submitter/i } ($c->user()->roles());
     }
 
     # 1. get all the props associated with the organism

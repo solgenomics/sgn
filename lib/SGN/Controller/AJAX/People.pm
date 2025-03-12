@@ -132,7 +132,9 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
     
     my @rows = $r->list_roles();
     my ($user_role) = $c->user->get_object()->get_roles();
-    my @data = $self->format_role_results($user_role, \@rows, \%roles);
+    my $can_modify_roles = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "user_roles");
+    my $can_view_roles = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "user_roles");
+    my @data = $self->format_role_results($user_role, \@rows, \%roles, $can_modify_roles, $can_view_roles);
     
     $c->stash->{rest} = { data => \@data };
 }
@@ -148,6 +150,9 @@ sub list_roles_for_user :Chained('roles') PathPart('list') Args(1) {
 	return;
     }
 
+    my $can_modify_roles = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "user_roles");
+    my $can_view_roles = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "user_roles");
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     #my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $r = CXGN::People::Roles->new( { people_schema => $people_schema });
@@ -157,7 +162,7 @@ sub list_roles_for_user :Chained('roles') PathPart('list') Args(1) {
 
     my ($user_role) = $c->user->get_object()->get_roles();
 
-    my @data = $self->format_role_results($user_role, \@rows, \%roles);
+    my @data = $self->format_role_results($user_role, \@rows, \%roles, $can_modify_roles, $can_view_roles);
 
     $c->stash->{rest} = { data => \@data };
 }
@@ -168,6 +173,8 @@ sub format_role_results {
     my $user_role = shift;
     my $rows = shift;
     my $roles = shift;
+    my $can_modify_roles = shift;
+    my $can_view_roles = shift;
 
     my @data;
     my @rows;
@@ -196,12 +203,14 @@ sub format_role_results {
 
 	my $role_name = $roles{$row->get_column('sp_role_id')};
 
-	if ($user_role ne "curator") {
+	#if ($user_role ne "curator") {
+	if (! $can_modify_roles) { 
 	    # only show breeding programs
-	    if ($role_name !~ /curator|user|submitter/) {
-		$hash{$row->sp_person_id}->{userroles} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:10px;background-color:'.$default_color.'"><b>'.$role_name."</b></span>";
-	    }
+	    #if ($role_name !~ /curator|user|submitter/) {
+	    
+	    $hash{$row->sp_person_id}->{userroles} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:10px;background-color:'.$default_color.'"><b>'.$role_name."</b></span>";
 	}
+	
 	else {
 	    my $color = $role_colors{$role_name} || $default_color;
 	    $hash{$row->sp_person_id}->{userroles} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:6px;background-color:'.$color.'"><b>'. $delete_link."&nbsp;&nbsp; ".$role_name."</b></span>";
