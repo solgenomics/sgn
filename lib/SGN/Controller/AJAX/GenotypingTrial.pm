@@ -315,12 +315,14 @@ sub store_genotype_trial_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'curator' && $user_role ne 'submitter') {
+    #if ($user_role ne 'curator' && $user_role ne 'submitter') {
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "genotyping")) { 
         $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping plate." };
         $c->detach();
     }
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    #my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $schema = $c->stash->{bcs_schema};
     my $plate_info = decode_json $c->req->param("plate_data");
 #    print STDERR "PLATE INFO =".Dumper($plate_info)."\n";
 
@@ -464,7 +466,8 @@ sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentia
     my $self = shift;
     my $c = shift;
 
-    if ($c->user && ($c->user->check_roles("submitter") || $c->user->check_roles("curator"))) {
+    #if ($c->user && ($c->user->check_roles("submitter") || $c->user->check_roles("curator"))) {
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "genotyping")) { 
         $c->stash->{rest} = {
             host => $c->config->{genotyping_server_host},
             username => $c->config->{genotyping_server_username},
@@ -649,7 +652,8 @@ sub set_project_for_genotyping_plate_POST : Args(0) {
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
     my $genotyping_plate_ids = decode_json $c->req->param("genotyping_plate_ids");
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+    #if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "genotyping")) { 
         $c->stash->{rest} = { error => 'You do not have the required privileges to move genotyping plates to this project.' };
         $c->detach();
     }
