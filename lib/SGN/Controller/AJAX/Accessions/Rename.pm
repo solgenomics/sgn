@@ -179,8 +179,9 @@ sub upload_rename_accessions_store : Path('/ajax/rename_accessions/upload_store'
         $user_role = $c->user->get_object->get_user_type();
     }
     
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($user_role)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to rename accessions." };
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($user_role)  ) {
+    if (my $message = $c->stash->{access}->denied( $user_id, "write", "stocks")) { 
+	$c->stash->{rest} = {error =>  "You have insufficient privileges to rename accessions. ($message)" };
 	return;
     }
 

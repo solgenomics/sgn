@@ -124,8 +124,9 @@ sub do_fuzzy_search {
 	$c->stash->{rest} = {error => "You need to be logged in to add accessions." };
 	return;
     }
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to add accessions." };
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+	$c->stash->{rest} = {error =>  "You have insufficient privileges to add accessions. ($message)" };
 	return;
     }
     #remove all trailing and ending spaces from accessions and organisms
@@ -245,8 +246,9 @@ sub verify_accessions_file_POST : Args(0) {
     #}
 
     # These roles are required by CXGN::UploadFile
-    if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
-        $c->stash->{rest} = {error=>'Only a curator, submitter or sequencer can upload a file'};
+    #if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
+    if (my $message = $c->stash->{access}->denied( $user_id, "write", "stocks")) { 
+        $c->stash->{rest} = { error=> 'You do not have to privileges to upload a file ('.$message.')' };
         $c->detach();
     }
 
@@ -398,8 +400,9 @@ sub add_accession_list_POST : Args(0) {
     
     my $user_name = $c->user()->get_object()->get_username();
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    if (my $message = $c->stash->{access}->denied( $user_id, "write", "stocks")) { 
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions. ($message)" };
         return;
     }
 

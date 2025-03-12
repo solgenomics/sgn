@@ -65,18 +65,18 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
         $c->detach;
     }
     my $folder = CXGN::Trial::Folder->create({
-	    bcs_schema => $schema,
-	    parent_folder_id => $parent_folder_id,
-	    name => $folder_name,
-	    breeding_program_id => $breeding_program_id,
+	bcs_schema => $schema,
+	parent_folder_id => $parent_folder_id,
+	name => $folder_name,
+	breeding_program_id => $breeding_program_id,
         folder_for_trials => $folder_for_trials,
         folder_for_crosses => $folder_for_crosses,
         folder_for_genotyping_trials => $folder_for_genotyping_trials,
         folder_for_genotyping_projects => $folder_for_genotyping_projects,
         folder_for_tracking_activities => $folder_for_tracking_activities,
         folder_for_transformations => $folder_for_transformations,
-	});
-
+    });
+    
     $c->stash->{rest} = {
       success => 1,
       folder_id => $folder->folder_id()
@@ -181,9 +181,12 @@ sub check_privileges {
         $c->detach;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges." };
-        $c->detach;
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    if (! ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials") ||
+	   $c->stash->{access}->denied( $c->stash->{user_id}, "write", "crosses") ||
+	   $c->stash->{access}->denied( $c->stash->{user_id}, "write", "genotyping")) ) { 
+        $c->stash->{rest} = { error =>  "You have insufficient privileges." };
+	$c->detach;
     }
     return 1;
 }
