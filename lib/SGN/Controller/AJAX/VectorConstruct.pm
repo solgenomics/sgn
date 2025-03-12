@@ -278,21 +278,29 @@ sub verify_vectors_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
+    $user_id = $user_id || $c->stash->{user_id};
+
+    print STDERR "USER ID: $user_id\n";
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $upload = $c->req->upload('new_vectors_upload_file');
     my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_vectors') ? 0 : 1;
     my $autogenerate_uniquename = !$c->req->param('autogenerate_uniquename') ? 0 : 1;
 
-    if ($user_role ne 'curator' && !$do_fuzzy_search) {
-        $c->stash->{rest} = {error=>'Only a curator can add vectors without using the fuzzy search!'};
+    #if ($user_role ne 'curator' && !$do_fuzzy_search) {
+    #    $c->stash->{rest} = {error=>'Only a curator can add vectors without using the fuzzy search!'};
+    #    $c->detach();
+    #}
+
+    # These roles are required by CXGN::UploadFile
+    #if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
+    #    $c->stash->{rest} = {error=>'Only a curator, submitter or sequencer can upload a file'};
+    #    $c->detach();
+    #}
+    if ($c->stash->{access}->denied( $user_id, "write", "stocks")) { 
+	$c->stash->{rest} = { error => 'You do not have permission in the database to add a vector.'};
         $c->detach();
     }
 
-    # These roles are required by CXGN::UploadFile
-    if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
-        $c->stash->{rest} = {error=>'Only a curator, submitter or sequencer can upload a file'};
-        $c->detach();
-    }
 
     my $subdirectory = "vectors_spreadsheet_upload";
     my $upload_original_name = $upload->filename();
@@ -308,7 +316,8 @@ sub verify_vectors_file_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        #user_role => $user_role
+	has_upload_permissions => $c->stash->{access}->grant( $user_id, "write", "stocks" ),
     });
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
