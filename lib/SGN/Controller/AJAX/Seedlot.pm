@@ -336,7 +336,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     #}
 
     if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
-	$c->stash->{rest} = { error => "You do not have the correct privileges to add seedlots." };
+	$c->stash->{rest} = { error => "You do not have the privileges to add seedlots." };
 	$c->detach();
     }
     
@@ -493,8 +493,9 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     if ($c->user) {
         $operator = $c->user->get_object->get_username;
     }
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_id = $c->stash->{user_id}; #$c->user()->get_object()->get_sp_person_id();
 
+    
     my $seedlot_id;
 
     eval {
@@ -594,8 +595,10 @@ sub upload_seedlots_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
+    my $user_id = $user_id || $c->stash->{user_id};
+    
     #if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+    if ($c->stash->{access}->denied( $user_id, "write", "stocks")) { 
         $c->stash->{rest} = {error=>'You do not have the privileges to upload seedlots'};
         $c->detach();
     }
@@ -850,7 +853,9 @@ sub upload_seedlots_inventory_POST : Args(0) {
 #        $c->detach();
 #    }
 
-    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+    $user_id = $user_id || $c->stash->{user_id};
+    
+    if ($c->stash->{access}->denied( $user_id, "write", "stocks")) { 
         $c->stash->{rest} = {error=>'You do not have the privileges to upload seedlots'};
         $c->detach();
     }
@@ -1146,7 +1151,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     }
 
     my $operator = $c->user->get_object->get_username;
-    my $user_id = $c->user->get_object->get_sp_person_id;
+    my $user_id = $c->stash->{user_id}; #$c->user->get_object->get_sp_person_id;
 
     my $to_new_seedlot_name = $c->req->param('to_new_seedlot_name');
     my $stock_id;
@@ -1943,7 +1948,9 @@ sub upload_transactions_POST : Args(0) {
 #        $c->detach();
     #    }
 
-    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+    $user_id = $user_id || $c->stash->{user_id};
+    
+    if ($c->stash->{access}->denied( $user_id, "write", "stocks")) { 
 	$c->stash->{rest} = {error => 'You do not have the privileges to upload seedlot transactions'};
         $c->detach();
     }
