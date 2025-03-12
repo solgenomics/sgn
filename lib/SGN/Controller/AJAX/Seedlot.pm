@@ -329,10 +329,17 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
         $c->detach();
     }
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to add seedlots. Please contact us." };
-        $c->detach();
+
+    #if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+    #    $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to add seedlots. Please contact us." };
+    #    $c->detach();
+    #}
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
+	$c->stash->{rest} = { error => "You do not have the correct privileges to add seedlots." };
+	$c->detach();
     }
+    
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $seedlot_uniquename = $c->req->param("seedlot_name");
@@ -587,8 +594,9 @@ sub upload_seedlots_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlots'};
+    #if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+        $c->stash->{rest} = {error=>'You do not have the privileges to upload seedlots'};
         $c->detach();
     }
 
@@ -837,11 +845,17 @@ sub upload_seedlots_inventory_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlot inventory'};
+#    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+#        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlot inventory'};
+#        $c->detach();
+#    }
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+        $c->stash->{rest} = {error=>'You do not have the privileges to upload seedlots'};
         $c->detach();
     }
 
+    
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $upload = $c->req->upload('seedlot_uploaded_inventory_file');
@@ -1121,8 +1135,13 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         $c->detach();
     }
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'Only a submitter or a curator can add seedlot transaction' };
+#    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+#        $c->stash->{rest} = { error => 'Only a submitter or a curator can add seedlot transaction' };
+#        $c->detach();
+#    }
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+        $c->stash->{rest} = {error=>'You do not have the privileges to upload seedlots'};
         $c->detach();
     }
 
@@ -1541,8 +1560,13 @@ sub seedlot_maintenance_events_POST {
     }
 
     # Get user information and check role
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to seedlot maintenance events.' };
+    #if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+    #    $c->stash->{rest} = { error => 'You do not have the required privileges to seedlot maintenance events.' };
+    #    $c->detach();
+    #}
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+        $c->stash->{rest} = {error=>'You do not have the privileges to manage seedlots maintenance events'};
         $c->detach();
     }
 
@@ -1674,8 +1698,13 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_role = $c->user->get_object->get_user_type();
-    if ( $user_role ne 'submitter' && $user_role ne 'curator' ) {
-        $c->stash->{rest} = {error => 'You do not have permission in the database to do this! Please contact us.'};
+#    if ( $user_role ne 'submitter' && $user_role ne 'curator' ) {
+#        $c->stash->{rest} = {error => 'You do not have permission in the database to do this! Please contact us.'};
+#        $c->detach();
+    #    }
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+	$c->stash->{rest} = {error => 'You do not have permission in the database to do this! Please contact us.'};
         $c->detach();
     }
 
@@ -1909,8 +1938,13 @@ sub upload_transactions_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlot transactions'};
+#    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+#        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload seedlot transactions'};
+#        $c->detach();
+    #    }
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+	$c->stash->{rest} = {error => 'You do not have the privileges to upload seedlot transactions'};
         $c->detach();
     }
 
@@ -2143,8 +2177,13 @@ sub add_transactions_using_list_POST : Args(0) {
         $c->detach();
     }
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'Only a submitter or a curator can add seedlot transactions' };
+#    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+#        $c->stash->{rest} = { error => 'Only a submitter or a curator can add seedlot transactions' };
+#        $c->detach();
+    #    }
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+	$c->stash->{rest} = {error => 'You do not have privileges to add seedlot transactions.'};
         $c->detach();
     }
 
