@@ -53,11 +53,11 @@ $response = $ua->post(
         ]
     );
 
-ok($response->is_success);
+ok($response->is_success, "check upload");
 my $message = $response->decoded_content;
 my $message_hash = JSON::XS->new->decode($message);
 
-is_deeply($message_hash->{'success'}, 1);
+is_deeply($message_hash->{'success'}, 1, "check success");
 my $added_seedlot = $message_hash->{'added_seedlot'};
 
 #test uploading with invalid source
@@ -75,10 +75,10 @@ $response = $ua->post(
         ]
     );
 
-ok($response->is_success);
+ok($response->is_success, "check success for upload with error check");
 my $message = $response->decoded_content;
 my $message_hash = JSON::XS->new->decode($message);
-is($message_hash->{'error_string'}, 'The source name: test_trial21 is not linked to the same accession as the access content: test_accession1<br><br>');
+is($message_hash->{'error_string'}, 'The source name: test_trial21 is not linked to the same accession as the access content: test_accession1<br><br>', "check error message");
 
 $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_harvested";
 $ua = LWP::UserAgent->new;
@@ -95,11 +95,11 @@ $response = $ua->post(
     );
 
 #print STDERR Dumper $response;
-ok($response->is_success);
+ok($response->is_success, "check upload success for harvested seedlots");
 my $message = $response->decoded_content;
 my $message_hash = JSON::XS->new()->decode($message);
 
-is_deeply($message_hash->{'success'}, 1);
+is_deeply($message_hash->{'success'}, 1, "check success is 1 for harvested seedlots upload");
 my $added_seedlot2 = $message_hash->{'added_seedlot'};
 
 $file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_android_app";
