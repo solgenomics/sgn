@@ -350,7 +350,9 @@ sub add_cvtermprop_POST {
 	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
     }
 
-    if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    #if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+
+    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "ontologies")) { 
         my $req = $c->req;
         my $cvterm_id = $c->req->param('cvterm_id');
         my $prop  = $c->req->param('prop');
@@ -375,7 +377,7 @@ sub add_cvtermprop_POST {
 	$c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with cvterm $cvterm_id " };
 	}
     } else {
-	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+	$c->stash->{rest} = { error => 'You do not have the privileges to modify ontologies' };
     }
 }
 
@@ -385,9 +387,11 @@ sub delete_cvtermprop_GET {
     my $self = shift;
     my $c = shift;
     my $cvtermprop_id = $c->req->param("cvtermprop_id");
-    if (! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-	$c->stash->{rest} = { error => 'Log in required for deletion of stock properties.' };
-	return;
+
+    #if (! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "ontologies")) { 
+	$c->stash->{rest} = { error => 'Log in and privileges required for deletion of stock properties.' };
+	$c->detach();
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cvtermprop = $schema->resultset("Cv::Cvtermprop")->find( { cvtermprop_id => $cvtermprop_id });
