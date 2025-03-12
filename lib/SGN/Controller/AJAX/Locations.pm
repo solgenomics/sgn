@@ -63,9 +63,14 @@ sub store_location :Path("/ajax/location/store") Args(0) {
         return;
     }
 
-    if (! $c->user->check_roles("submitter") && !$c->user->check_roles("curator")) {
-        $c->stash->{rest} = { error => 'You do not have the necessary privileges to add or edit locations.' };
-        return;
+    #if (! $c->user->check_roles("submitter") && !$c->user->check_roles("curator")) {
+    #    $c->stash->{rest} = { error => 'You do not have the necessary privileges to add or edit locations.' };
+    #    return;
+    #}
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "locations" )) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
     }
 
     print STDERR "Creating location object\n";
@@ -106,9 +111,14 @@ sub delete_location :Path('/ajax/location/delete') Args(1) {
         return;
     }
 
-    if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) { # require curator or submitter roles
-        $c->stash->{rest} = { error => "You don't have the privileges to delete a location." };
-        return;
+    #if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) { # require curator or submitter roles
+    #    $c->stash->{rest} = { error => "You don't have the privileges to delete a location." };
+    #    return;
+    #}
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "locations" )) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
     }
 
     my $location_to_delete = CXGN::Location->new( {
