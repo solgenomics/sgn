@@ -70,7 +70,7 @@ sub analysis_detail :Path('/analyses') Args(1) {
     $c->stash->{has_col_and_row_numbers} = $a->has_col_and_row_numbers();
     $c->stash->{identifier_prefix} = $c->config->{identifier_prefix};
     $c->stash->{analysis_metadata} = $a->metadata();
-    $c->stash->{user_can_modify} = $user->check_roles("submitter") || $user->check_roles("curator");
+    $c->stash->{user_can_modify} = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "trials"); #$user->check_roles("submitter") || $user->check_roles("curator");
     $c->stash->{template} = '/analyses/detail.mas';
 }
 
