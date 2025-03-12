@@ -14,7 +14,8 @@ CXGN::UploadFile - an object to handle uploading files
     archive_filename => 'myfilename.csv',
     timestamp => '2016-09-24_10:30:30',
     user_id => 41,
-    user_role => 'curator'
+    user_role => 'curator', ### deprecated, use has_upload_permissions
+    has_upload_permissions => 1, 
  });
  my $uploaded_file = $uploader->archive();
  my $md5 = $uploader->get_md5($uploaded_file);
@@ -86,6 +87,12 @@ has 'user_role' => (isa => "Str",
     required => 0
 );
 
+has 'has_upload_permissions' => (
+    isa => "Bool",
+    is => 'rw',
+    required => 0,
+);
+
 has 'include_timestamp' => (
     isa => "Bool",
     is => 'rw',
@@ -111,9 +118,11 @@ sub archive {
         die "To archive a tempfile you need to provide: tempfile, subdirectory, archive_filename, timestamp, archive_path, and user_id\n";
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" || $_ eq "sequencer" } ($self->user_role)  ) {
+    if ( !(any { $_ eq "curator" || $_ eq "submitter" || $_ eq "sequencer" } ($self->user_role)) && ! $self->has_upload_permissions()) {
+	print STDERR "USER ROLE: ".$self->user_role()." HAS UPLOAD PERMISSIONS: ".$self->has_upload_permissions()."\n";
         die  "You have insufficient privileges to archive a file.\n". Dumper $self->user_role;
     }
+    
     # if (!$subdirectory || !$tempfile || !$archive_filename ) {
     #     print STDERR "File archive failed: incomplete information to archive file.\n";
     # 	die "File archive failed: incomplete information to archive file.\n";
