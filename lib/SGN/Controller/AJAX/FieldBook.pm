@@ -63,17 +63,21 @@ sub create_fieldbook_from_trial_POST : Args(0) {
 
   chomp($trial_id);
   if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+    $c->stash->{rest} = { error => "You need to be logged in to create a field book" };
     return;
   }
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+
+  #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+  if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "phenotyping")) { 
+      $c->stash->{rest} = { error =>  "You have insufficient privileges to create a field book." };
     return;
   }
+  
   if (!$trial_id) {
     $c->stash->{rest} = {error =>  "No trial ID supplied." };
     return;
   }
+  
   my $trial = $schema->resultset('Project::Project')->find({project_id => $trial_id});
   if (!$trial) {
     $c->stash->{rest} = {error =>  "Trial does not exist with id $trial_id." };
@@ -180,7 +184,8 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
     return;
   }
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+  #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+  if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "phenotyping")) { 
     $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
     return;
   }

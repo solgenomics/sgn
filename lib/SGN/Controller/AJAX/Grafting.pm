@@ -64,7 +64,8 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
         $user_role = $c->user->get_object->get_user_type();
     }
     
-    if (!any { $_ eq "curator" || $_ eq "submitter" }  ($user_role)  ) {
+    #if (!any { $_ eq "curator" || $_ eq "submitter" }  ($user_role)  ) {
+    if ($c->stash->{access}->denied( $user_id, "write", "stocks")) { 
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add grafts." };
 	return;
     }
@@ -164,7 +165,8 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
         $user_role = $c->user->get_object->get_user_type();
     }
     
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($user_role)  ) {
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($user_role)  ) {
+    if ($c->stash->{access}->denied($user_id, "write", "stocks")) { 
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add grafts." };
 	return;
     }

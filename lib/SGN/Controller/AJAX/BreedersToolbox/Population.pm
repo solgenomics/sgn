@@ -48,8 +48,9 @@ sub create_population :Path('/ajax/population/new') Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can create a population'};
+    #if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+    if (my $message = $c->stash->{access}->denied( $user_id, "write", "stocks")) { 
+        $c->stash->{rest} = {error=>'You do not have the privileges to create a population ('.$message.')'};
         $c->detach();
     }
 
@@ -100,8 +101,9 @@ sub add_members_to_population :Path('/ajax/population/add_members') Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can add population members'};
+    #if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+    if (my $message = $c->stash->{access}->denied( $user_id, "write", "stocks")) { 
+        $c->stash->{rest} = { error=> "You do not have the privileges to add population members ($message)" };
         $c->detach();
     }
 

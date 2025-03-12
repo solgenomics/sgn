@@ -714,26 +714,31 @@ sub _check_user_login_nirs {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($check_priv) {
-        if ($user_role eq 'user') {
-            if ($check_priv ne 'user') {
-                return {error=>'You must be logged in and have privileges to do this!'};
-            }
-        }
-        elsif ($user_role eq 'submitter') {
-            if ($check_priv ne 'user' && $check_priv ne 'submitter') {
-                return {error=>'You must be logged in and have privileges to do this!'};
-            }
-        }
-        elsif ($user_role eq 'sequencer') {
-            if ($check_priv ne 'user' && $check_priv ne 'submitter' && $check_priv ne 'sequencer') {
-                return {error=>'You must be logged in and have privileges to do this!'};
-            }
-        }
-        elsif ($user_role eq 'curator') {
-            #max priv
-        }
+
+    if (my $message = $c->stash->{access}->denied( $user_id, "write", "phenotyping")) {
+	return { error => $message };
     }
+    
+    # if ($check_priv) {
+    #     if ($user_role eq 'user') {
+    #         if ($check_priv ne 'user') {
+    #             return {error=>'You must be logged in and have privileges to do this!'};
+    #         }
+    #     }
+    #     elsif ($user_role eq 'submitter') {
+    #         if ($check_priv ne 'user' && $check_priv ne 'submitter') {
+    #             return {error=>'You must be logged in and have privileges to do this!'};
+    #         }
+    #     }
+    #     elsif ($user_role eq 'sequencer') {
+    #         if ($check_priv ne 'user' && $check_priv ne 'submitter' && $check_priv ne 'sequencer') {
+    #             return {error=>'You must be logged in and have privileges to do this!'};
+    #         }
+    #     }
+    #     elsif ($user_role eq 'curator') {
+    #         #max priv
+    #     }
+    # }
 
     return ($user_id, $user_name, $user_role);
 }

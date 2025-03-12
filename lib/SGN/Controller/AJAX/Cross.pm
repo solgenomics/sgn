@@ -132,8 +132,9 @@ sub upload_cross_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload crosses'};
+    #if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+    if ($c->stash->{access}->denied( $user_id, "write", "crosses")) { 
+        $c->stash->{rest} = {error => 'You do not have the privileges to upload crosses' };
         $c->detach();
     }
 

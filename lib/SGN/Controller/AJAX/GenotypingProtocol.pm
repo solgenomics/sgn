@@ -65,7 +65,8 @@ sub genotyping_protocol_delete_GET : Args(1) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'submitter' && $user_role ne 'curator') {
+    #if ($user_role ne 'submitter' && $user_role ne 'curator') {
+    if ($c->stash->{access}->denied( $user_id, "write", "genotyping")) { 
         $c->stash->{rest} = { error => 'Must have correct permissions to delete genotypes! Please contact us.' };
         $c->detach();
     }
@@ -175,8 +176,9 @@ sub genotyping_protocol_details_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'submitter' && $user_role ne 'curator') {
-        $c->stash->{rest} = { error => 'Must have correct permissions to edit genotyping protocol! Please contact us.' };
+    #if ($user_role ne 'submitter' && $user_role ne 'curator') {
+    if ($c->stash->{access}->denied( $user_id, "write", "genotyping")) { 
+        $c->stash->{rest} = { error => 'You do not have the privileges to edit genotypes.' };
         $c->detach();
     }
 
@@ -189,12 +191,14 @@ sub genotyping_protocol_details_POST : Args(0) {
 
     my $program_array = @$program_ref[0];
     my $breeding_program_name = @$program_array[1];
+    my $breeding_program_id = @$program_array[0];
     my @user_roles = $c->user->roles();
     my %has_roles = ();
     map { $has_roles{$_} = 1; } @user_roles;
 
-    if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-      $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to change the details of this protocol." };
+    #if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+    if ($c->stash->{access}->denied( $user_id, "write", "genotyping", undef, [ $breeding_program_id ])) { 
+      $c->stash->{rest} = { error => "You do not have the privileges and/or must be associated with breeding program $breeding_program_name to change the details of this protocol." };
       $c->detach();
     }
 

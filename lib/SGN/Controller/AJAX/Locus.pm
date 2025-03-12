@@ -165,7 +165,8 @@ sub display_ontologies_GET  {
     # need to check if the user is logged in, and has editing privileges
     my $privileged;
     if ($c->user) {
-        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+        #if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+	if ( $c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci" )) { $privileged = 1; }
     }
     my $trait_db_name = $c->config->{trait_ontology_db_name} || 'SP'; 
     #now add all GO PO SP CO annotations to an array
@@ -318,7 +319,8 @@ sub associate_ontology_POST :Args(0) {
         $c->stash->{rest} = { error => 'Must be logged in for associating ontology terms! ' };
         return;
     }
-    if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    #    if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci")) { 
         # if this fails, it will throw an acception and will (probably
         # rightly) be counted as a server error
         #########################################################
@@ -379,7 +381,7 @@ sub associate_ontology_POST :Args(0) {
 	    $c->stash->{rest} = { error => 'need both valid locus_id and cvterm_id for adding an ontology term to this locus! ' };
         }
     } else {
-        $c->stash->{rest} = { error => 'No privileges for adding new ontology terms. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
+        $c->stash->{rest} = { error => 'You do not have the privileges for adding annotations to loci. ' };
     }
     return;
 }
@@ -457,7 +459,8 @@ sub locus_network_GET :Args(0) {
     my $locus_id = $locus->get_locus_id;
     my $privileged;
     if ($c->user) {
-        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+        #if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+	if ($c->stash->{access}->grant($c->stash->{user_id}, "write", "loci")) { $privileged = 1; }
     }
     my $dbh = $c->dbc->dbh;
     my @locus_groups = $locus->get_locusgroups();
@@ -540,7 +543,8 @@ sub associate_locus_POST :Args(0) {
     my $privileged;
     my $response;
     if ($c->user) {
-        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+        #if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+	if ($c->stash->{access}->grant($c->stash->{user_id}, "write", "loci")) { $privileged = 1; }
     }
     my $logged_person_id = $c->user->get_object->get_sp_person_id if $c->user;
     my %params = map { $_ => $c->request->body_parameters->{$_} } qw/
@@ -616,7 +620,7 @@ sub associate_locus_POST :Args(0) {
         };
         $c->forward( $c->view('Email') );
     } else {
-        $response->{ error} = 'No privileges for associating loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' ;
+        $response->{ error} = 'You do not have the privileges for associating loci. ' ;
     }
     $c->stash->{rest} = $response;
 }
@@ -669,7 +673,8 @@ sub locus_unigenes_GET :Args(0) {
     my $locus_id = $locus->get_locus_id;
     my $privileged;
     if ($c->user) {
-        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+        #if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+	if ($c->stash->{access}->grant($c->stash->{user_id}, "write", "loci")) { $privileged = 1; }
     }
     my $dbh = $c->dbc->dbh;
     my $response ={};
@@ -799,7 +804,8 @@ sub associate_unigene_POST :Args(0) {
     my $dbh = $c->dbc->dbh;
     my $privileged;
     if ($c->user) {
-        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+        #if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+	if ($c->stash->{access}->grant($c->stash->{user_id}, "write", "loci")) { $privileged = 1; }
     }
     my $logged_person_id = $c->user->get_object->get_sp_person_id if $c->user;
     if ($privileged) {
@@ -877,8 +883,12 @@ sub assign_owner_POST :Args(0) {
     my $response;
     my $logged_person_id;
     if ($c->user) {
-        if ( $c->user->check_roles('curator') ) { $privileged = 1; }
+        #if ( $c->user->check_roles('curator') ) { $privileged = 1; }
+	if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "user_roles")) { $privileged = 1; }
         $logged_person_id = $c->user->get_object->get_sp_person_id ;
+    }
+    else {
+	$c->stash->{rest} = { error => "You must be logged in to use this function." }
     }
 
     my %params = map { $_ => $c->request->body_parameters->{$_} } qw/

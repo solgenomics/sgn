@@ -94,7 +94,8 @@ sub add_member_POST :Args(0) {
         $c->stash->{rest} = { error => 'Must be logged in for associating loci! ' };
         return;
     }
-    if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    #if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "loci")) { 
         # if this fails, it will throw an acception and will (probably rightly) be counted as a server error
         my $user_id = $c->user->get_object->get_sp_person_id;
         if ($locusgroup && $locus_id) {

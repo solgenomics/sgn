@@ -518,7 +518,8 @@ sub create_profile_template_POST : Args(0) {
         $c->stash->{rest} = {error => "You need to be logged in to create a product profile template" };
         return;
     }
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials")) { 
         $c->stash->{rest} = {error =>  "You have insufficient privileges to create a product profile template." };
         return;
     }
@@ -645,8 +646,9 @@ sub upload_profile_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (!any { $_ eq 'curator' || $_ eq 'submitter' } ($user_role)) {
-        $c->stash->{rest} = {error =>  'You have insufficient privileges to upload product profile.' };
+    #if (!any { $_ eq 'curator' || $_ eq 'submitter' } ($user_role)) {
+    if ($c->stash->{access}->denied( $user_id, "write", "trials")) { 
+        $c->stash->{rest} = { error =>  'You have insufficient privileges to upload product profiles.' };
         return;
     }
 

@@ -77,7 +77,8 @@ sub upload_genotype_qc_verify_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'submitter' && $user_role ne 'curator') {
+    #if ($user_role ne 'submitter' && $user_role ne 'curator') {
+    if ($c->stash->{access}->denied( $user_id, "write", "genotyping")) { 
         $c->stash->{rest} = { error => 'Must have correct permissions to upload VCF genotypes! Please contact us.' };
         $c->detach();
     }

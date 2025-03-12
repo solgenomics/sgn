@@ -89,7 +89,8 @@ sub add_event_POST {
     my $c = shift;
     my $params = $c->req->params();
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) ) {
+    #if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) ) {
+    if (my $message = $c->stash->{access}->denied ($c->stash->{user_id}, "write", "community" )) { 
         $c->stash->{rest} = {status => 3};
         return;
     }
@@ -134,7 +135,8 @@ sub delete_event_POST {
     my $self = shift;
     my $c = shift;
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) ) {
+    #if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) ) {
+    if (my $message = $c->stash->{access}->denied ($c->stash->{user_id}, "write", "community" )) { 
         $c->stash->{rest} = {status => 3};
         return;
     }
@@ -165,7 +167,8 @@ sub drag_or_resize_event_POST {
     my $c = shift;
     my $params = $c->req->params();
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) ) {
+    #if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) ) {
+    if (my $message = $c->stash->{access}->denied ($c->stash->{user_id}, "write", "community" )) { 
         $c->stash->{rest} = {status => 3};
         return;
     }
@@ -223,7 +226,8 @@ sub edit_event_POST {
     my $self = shift;
     my $c = shift;
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) ) {
+    #if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter')) ) {
+    if (my $message = $c->stash->{access}->denied ($c->stash->{user_id}, "write", "community" )) { 
         $c->stash->{rest} = {status => 3};
         return;
     }

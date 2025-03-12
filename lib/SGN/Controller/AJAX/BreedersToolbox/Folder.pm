@@ -181,9 +181,12 @@ sub check_privileges {
         $c->detach;
     }
 
+    # new: allow folder creation for any type if users have write privileges
+    # for any other type as we do not have info on the actual type here.
+    # (needs to be refactored)
     #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    if (! ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials") ||
-	   $c->stash->{access}->denied( $c->stash->{user_id}, "write", "crosses") ||
+    if ( ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials") &&
+	   $c->stash->{access}->denied( $c->stash->{user_id}, "write", "crosses") &&
 	   $c->stash->{access}->denied( $c->stash->{user_id}, "write", "genotyping")) ) { 
         $c->stash->{rest} = { error =>  "You have insufficient privileges." };
 	$c->detach;
