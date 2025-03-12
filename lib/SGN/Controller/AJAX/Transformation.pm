@@ -52,7 +52,8 @@ sub add_transformation_project_POST :Args(0){
         return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials")) { 
         $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation project." };
         return;
     }
@@ -62,7 +63,9 @@ sub add_transformation_project_POST :Args(0){
     my %has_roles = ();
     map { $has_roles{$_} = 1; } @user_roles;
 
-    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+    #if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "breeding_programs")) { 
+  
         $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add new transformation project." };
         return;
     }
@@ -168,14 +171,21 @@ sub add_transformation_identifier_POST :Args(0){
         return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation ID." };
-        return;
-    }
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+#    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks", undef, ")) { 
+ #       $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation ID." };
+ #       return;
+ #   }
 
     my @user_roles = $c->user->roles();
     my %has_roles = ();
     map { $has_roles{$_} = 1; } @user_roles;
+
+    #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks", undef, [ $program_name ])) { 
+	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation ID." };
+        return;
+    }
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
         $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add transformation identifiers." };
