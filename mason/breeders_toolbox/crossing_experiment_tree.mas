@@ -67,8 +67,32 @@ $odk_service => undef
 
 jQuery.noConflict();
 
+
 jQuery(document).ready(function($) {
 
+    alert('get tree from local storage...');
+    var html = localStorage.getItem('html_crosses_tree');
+    if (html !== null) {
+	alert("HTML NOW: "+html);
+	format_crosses_tree(html);
+    }
+
+    //alert(html);
+    if (html === null) {
+	alert('HTML NOT DEFINED! FETCHING...');
+	get_crosses_tree().then( function(r) { 
+	    html = localStorage.getItem('html_crosses_tree');
+	    format_crosses_tree(html);
+	});
+    }
+
+    
+    jQuery('#refresh_crosses_jstree_html_trialtree_button').click(function(){
+	alert('hello!');
+	get_crosses_tree();
+    });
+
+    
     jQuery('#crosses_datatable').DataTable({
         destroy: true,
         scrollY:        '30vh',
@@ -76,39 +100,39 @@ jQuery(document).ready(function($) {
             paging:         false,
     });
 
-    jQuery.ajax( {
-      url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',
-      success: function(response) {
-        var html = '<ul>'+response.html+'</ul>';
+  //   jQuery.ajax( {
+  //     url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',
+  //     success: function(response) {
+  //       var html = '<ul>'+response.html+'</ul>';
 
-        jQuery('#crosses_list').html(html);
-        //console.log(html);
-        jQuery('#crosses_list').jstree( {
-            "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-            "valid_children" : [ "folder", "trial", "breeding_program" ],
-            "types" : {
-                "breeding_program" : {
-                    "icon": 'glyphicon glyphicon-briefcase text-info',
-                },
-                "folder" : {
-                    "icon": 'glyphicon glyphicon-folder-open text-danger',
-                },
-                "cross" : {
-                    "icon": 'glyphicon glyphicon-grain text-success',
-                }
-            },
-            "search" : {
-                 "case_insensitive" : true,
-             },
-          "plugins" : ["html_data","types","search"],
+  //       jQuery('#crosses_list').html(html);
+  //       //console.log(html);
+  //       jQuery('#crosses_list').jstree( {
+  //           "core": { 'themes': { 'name': 'proton', 'responsive': true}},
+  //           "valid_children" : [ "folder", "trial", "breeding_program" ],
+  //           "types" : {
+  //               "breeding_program" : {
+  //                   "icon": 'glyphicon glyphicon-briefcase text-info',
+  //               },
+  //               "folder" : {
+  //                   "icon": 'glyphicon glyphicon-folder-open text-danger',
+  //               },
+  //               "cross" : {
+  //                   "icon": 'glyphicon glyphicon-grain text-success',
+  //               }
+  //           },
+  //           "search" : {
+  //                "case_insensitive" : true,
+  //            },
+  //         "plugins" : ["html_data","types","search"],
 
-        });
+  //       });
 
-      },
-      error: function(response) {
-        alert("An error occurred while loading the trial data.");
-      }
-  });
+  //     },
+  //     error: function(response) {
+  //       alert("An error occurred while loading the trial data.");
+  //     }
+  // });
 
     jQuery("#cross_tree_search").keyup(function() {
         var v = jQuery("#cross_tree_search").val();
@@ -140,5 +164,47 @@ jQuery(document).ready(function($) {
     });
 
 });
+
+
+function get_crosses_tree() {
+    alert('get_trial_tree');
+    return jQuery.ajax( {
+	url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',  
+    }).then(  function(r) { localStorage.setItem('html_crosses_tree', r.html); });
+}
+
+function format_crosses_tree(treehtml) {
+    alert('format_crosses_tree');
+    
+    var html = '<ul>'+treehtml+'</ul>';
+    
+    jQuery('#crosses_list').html(html);
+
+    alert("HTML "+html);
+    //console.log(html);
+    jQuery('#crosses_list').jstree( {
+	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
+	"valid_children" : [ "folder", "trial", "breeding_program" ],
+	"types" : {
+	    "breeding_program" : {
+		"icon": 'glyphicon glyphicon-briefcase text-info',
+	    },
+	    "folder" : {
+		"icon": 'glyphicon glyphicon-folder-open text-danger',
+	    },
+	    "trial" : {
+		"icon": 'glyphicon glyphicon-leaf text-success',
+	    },
+
+	},
+	"search" : {
+	    "case_insensitive" : true,
+	},
+	"plugins" : ["html_data","types","search"],
+	
+    });
+    
+}
+
 
 </script>
