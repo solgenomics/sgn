@@ -68,9 +68,10 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
        return;
      }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	print STDERR "User does not have sufficient privileges.\n";
-	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
+     #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+     if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "crosses")) { 
+	 print STDERR "You do not have sufficient privileges to add crosses.\n";
+	 $c->stash->{rest} = {error =>  "You do not have sufficient privileges to add a cross." };
 	return;
     }
 

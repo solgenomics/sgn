@@ -134,8 +134,12 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
 
     my $logged_user = $c->user;
     my $person_id   = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $curator     = $logged_user->check_roles('curator') if $logged_user;
-    my $submitter   = $logged_user->check_roles('submitter') if $logged_user;
+#    my $curator     = $logged_user->check_roles('curator') if $logged_user;
+    #    my $submitter   = $logged_user->check_roles('submitter') if $logged_user;
+
+    my $curator = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci");
+    my $submitter = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci");
+    
     my $sequencer   = $logged_user->check_roles('sequencer') if $logged_user;
     my $dbh = $c->dbc->dbh;
 

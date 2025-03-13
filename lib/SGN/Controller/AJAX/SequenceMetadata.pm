@@ -193,7 +193,8 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_role = $c->user->get_object->get_user_type();
-    if ( $user_role ne 'submitter' && $user_role ne 'curator' ) {
+    #if ( $user_role ne 'submitter' && $user_role ne 'curator' ) {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "loci")) { 
         $c->stash->{rest} = {error => 'You do not have permission in the database to do this! Please contact us.'};
         $c->detach();
     }
@@ -347,7 +348,8 @@ sub sequence_metadata_store_POST : Args(0) {
         $c->detach();
     }
     my $user_role = $c->user->get_object->get_user_type();
-    if ( $user_role ne 'submitter' && $user_role ne 'curator' ) {
+    #if ( $user_role ne 'submitter' && $user_role ne 'curator' ) {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "loci")) { 
         $c->stash->{rest} = {error => 'You do not have permission in the database to do this! Please contact us.'};
         $c->detach();
     }

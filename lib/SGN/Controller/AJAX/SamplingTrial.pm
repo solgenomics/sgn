@@ -22,7 +22,8 @@ sub generate_sampling_trial_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+    #if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials")) {
         $c->stash->{rest} = { error => 'You do not have the required privileges to create a sampling trial.' };
         $c->detach();
     }
@@ -168,7 +169,8 @@ sub parse_sampling_trial_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'curator' && $user_role ne 'submitter') {
+    #if ($user_role ne 'curator' && $user_role ne 'submitter') {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials")) {
         $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a sampling trial. Please contact us." };
         $c->detach();
     }
@@ -274,7 +276,8 @@ sub store_sampling_trial_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'curator' && $user_role ne 'submitter') {
+    #    if ($user_role ne 'curator' && $user_role ne 'submitter') {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "trials")) {
         $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a sampling trial." };
         $c->detach();
     }

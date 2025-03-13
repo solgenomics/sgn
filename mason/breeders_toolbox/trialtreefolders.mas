@@ -75,100 +75,39 @@ $design_types => ()
 
 <script>
 
-  jQuery.noConflict();
+jQuery.noConflict();
 
-  jQuery(document).ready(function($) {
+jQuery(document).ready(function($) {
+    
+    //    jQuery.ajax( {
+    //    url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',
+    //    success: function(response) {
+    //      var html = '<ul>'+response.html+'</ul>';
+    
+    //alert('get tree from local storage...');
+    var html = localStorage.getItem('html_trial_tree');
+    if (html !== null) {
+	//alert("HTML NOW: "+html);
+	format_trial_tree(html);
+    }
 
-    jQuery.ajax( {
-      url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',
-      success: function(response) {
-        var html = '<ul>'+response.html+'</ul>';
+    //alert(html);
+    if (html === null) {
+	//alert('HTML NOT DEFINED! FETCHING...');
+	get_trial_tree().then( function(r) { 
+	    html = localStorage.getItem('html_trial_tree');
+	    format_trial_tree(html);
+	});
+    }
 
-        jQuery('#trial_list').html(html);
-        //console.log(html);
-        jQuery('#trial_list').jstree( {
-            "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-            "valid_children" : [ "folder", "trial", "breeding_program", "analyses" ],
-            "types" : {
-                "breeding_program" : {
-                    "icon": 'glyphicon glyphicon-briefcase text-info',
-                },
-                "folder" : {
-                    "icon": 'glyphicon glyphicon-folder-open text-danger',
-                },
-                "trial" : {
-                    "icon": 'glyphicon glyphicon-leaf text-success',
-                },
-                "analyses" : {
-                    "icon": 'glyphicon glyphicon-stats text-success',
-                },
-                "sampling_trial" : {
-                    "icon": 'glyphicon glyphicon-th text-success',
-                },
-            },
-            "search" : {
-                 "case_insensitive" : true,
-             },
-          "plugins" : ["html_data","types","search"],
-
-        });
-
-      },
-      error: function(response) {
-        alert("An error occurred while loading the trial data.");
-      }
-  });
-
-  jQuery('#refresh_jstree_html_trialtree_button').click(function(){
-      jQuery.ajax( {
-        url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',
-        success: function(response) {
-          var html = '<ul>'+response.html+'</ul>';
-
-          jQuery('#trial_list').html(html);
-          //console.log(html);
-          jQuery('#trial_list').jstree( {
-              "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-              "valid_children" : [ "folder", "trial", "breeding_program", "analyses", "sampling_trial" ],
-              "types" : {
-                  "breeding_program" : {
-                      "icon": 'glyphicon glyphicon-briefcase text-info',
-                  },
-                  "folder" : {
-                      "icon": 'glyphicon glyphicon-folder-open text-danger',
-                  },
-                  "trial" : {
-                      "icon": 'glyphicon glyphicon-leaf text-success',
-                  },
-                  "analyses" : {
-                      "icon": 'glyphicon glyphicon-stats text-success',
-                  },
-                  "sampling_trial" : {
-                      "icon": 'glyphicon glyphicon-th text-success',
-                  }
-              },
-              "search" : {
-                   "case_insensitive" : true,
-               },
-            "plugins" : ["html_data","types","search"],
-
-          });
-
-        },
-        error: function(response) {
-          alert("An error occurred while loading the trial data.");
-        }
-    });
-  });
-
-    jQuery("#trial_tree_search").keyup(function() {
-        var v = jQuery("#trial_tree_search").val();
-        jQuery("#trial_list").jstree(true).search(v);
+    
+    jQuery('#refresh_jstree_html_trialtree_button').click(function(){
+	//alert('hello!');
+	get_trial_tree();
     });
 
 
-
-  jQuery('#trial_list').on("changed.jstree", function (e, data) {
+      jQuery('#trial_list').on("changed.jstree", function (e, data) {
     //console.log(data);
        if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
          jQuery('#trials_download_phenotypes_button').removeAttr('disabled');
@@ -207,6 +146,58 @@ $design_types => ()
         }
       }
     });
-  });
+
+    jQuery("#trial_tree_search").keyup(function() {
+        var v = jQuery("#trial_tree_search").val();
+        jQuery("#trial_list").jstree(true).search(v);
+    });
+
+});
+
+
+function get_trial_tree() {
+    //alert('get_trial_tree');
+    return jQuery.ajax( {
+	url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',  
+    }).then(  function(r) { localStorage.setItem('html_trial_tree', r.html); });
+}
+
+function format_trial_tree(treehtml) {
+
+    var html = '<ul>'+treehtml+'</ul>';
+    
+    jQuery('#trial_list').html(html);
+    
+    //console.log(html);
+    jQuery('#trial_list').jstree( {
+	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
+	"valid_children" : [ "folder", "trial", "breeding_program", "analyses", "sampling_trial" ],
+	"types" : {
+	    "breeding_program" : {
+		"icon": 'glyphicon glyphicon-briefcase text-info',
+	    },
+	    "folder" : {
+		"icon": 'glyphicon glyphicon-folder-open text-danger',
+	    },
+	    "trial" : {
+		"icon": 'glyphicon glyphicon-leaf text-success',
+	    },
+	    "analyses" : {
+		"icon": 'glyphicon glyphicon-stats text-success',
+	    },
+	    "sampling_trial" : {
+		"icon": 'glyphicon glyphicon-th text-success',
+	    }
+	},
+	"search" : {
+	    "case_insensitive" : true,
+	},
+	"plugins" : ["html_data","types","search"],
+	
+    });
+    
+}
+
+
 
 </script>

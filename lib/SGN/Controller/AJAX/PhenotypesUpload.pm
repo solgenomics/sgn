@@ -267,8 +267,9 @@ sub _prep_upload {
     }
 
     my $user_type = $user->get_object->get_user_type();
-    if ($user_type ne 'submitter' && $user_type ne 'curator') {
-        push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
+    #if ($user_type ne 'submitter' && $user_type ne 'curator') {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "phenotyping")) { 
+        push @error_status, 'You do not have the privileges to upload images and phenotypes.';
         return (\@success_status, \@error_status);
     }
 
@@ -429,7 +430,8 @@ sub update_plot_phenotype_POST : Args(0) {
     $c->stash->{rest} = {error => "You need to be logged in to record phenotype." };
     return;
   }
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+  #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+  if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "phenotyping")) { 
     $c->stash->{rest} = {error =>  "You have insufficient privileges to record phenotype." };
     return;
   }
@@ -439,12 +441,14 @@ sub update_plot_phenotype_POST : Args(0) {
 
   my $program_array = @$program_ref[0];
   my $breeding_program_name = @$program_array[1];
+  my $breeding_program_id = @$program_array[0];
   my @user_roles = $c->user->roles();
   my %has_roles = ();
   map { $has_roles{$_} = 1; } @user_roles;
 
-  if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-    $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to record phenotype." };
+  #  if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+  if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "phenotyping", undef, [ $breeding_program_id ])) { 
+    $c->stash->{rest} = { error => "You do not have the privileges nor the association with the breeding program $breeding_program_name required to record phenotypes." };
     return;
   }
 

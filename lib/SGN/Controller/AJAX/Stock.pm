@@ -276,7 +276,9 @@ sub associate_locus_GET :Args(0) {
         $c->stash->{rest} = { error => 'Must be logged in for associating loci! ' };
         return;
     }
-    if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    #if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "loci")) {
         # if this fails, it will throw an acception and will (probably
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
@@ -295,7 +297,7 @@ sub associate_locus_GET :Args(0) {
             $c->stash->{rest} = { error => 'need both valid stock_id and allele_id for adding the stockprop! ' };
         }
     } else {
-        $c->stash->{rest} = { error => 'No privileges for adding new loci. You must have an sgn submitter account. Please contact sgn-feedback@solgenomics.net for upgrading your user account. ' };
+        $c->stash->{rest} = { error => 'You do not have privileges for adding new loci.' };
     }
 }
 
@@ -363,7 +365,10 @@ sub display_ontologies_GET  {
     # need to check if the user is logged in, and has editing privileges
     my $privileged;
     if ($c->user) {
-        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+	#        if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
+	if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci")) {
+	    $privileged = 1;
+	}
     }
     # the ontology term is a stock_cvterm
     # the evidence details are in stock_cvtermprop (relationship, evidence_code,
@@ -554,7 +559,8 @@ sub associate_ontology_POST :Args(0) {
         $c->stash->{rest} = { error => 'Must be logged in for associating ontology terms! ' };
         return;
     }
-    if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    #if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci")) { 
         # if this fails, it will throw an acception and will (probably
         # rightly) be counted as a server error
         #########################################################
@@ -1479,7 +1485,8 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
 	return;
     }
 
-    if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
+    #if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "pedigrees")) { 
 	$c->stash->{rest} = { error => "Log in is required, or insufficent privileges, for removing parents" };
 	return;
     }
@@ -1643,7 +1650,8 @@ sub add_phenotype_POST {
     my ( $self, $c ) = @_;
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    #if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) { 
         my $req = $c->req;
 
         my $stock_id = $c->req->param('stock_id');
