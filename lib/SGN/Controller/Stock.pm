@@ -169,30 +169,31 @@ our $time;
 
 sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
-
-     if (!$c->user()) {
-
+    
+    if (!$c->user()) {
+	
 	my $url = '/' . $c->req->path;
 	$c->res->redirect("/user/login?goto_url=$url");
-
-     } else { 
+	
+    }
+    else{ 
 	$time = time();
-
+	
 	if( $c->stash->{stock_row} ) {
 	    $c->forward('get_stock_extended_info');
 	}
-
-    my $person_id;
-    my $user_role;
-    my $curator;
-    my $submitter;
-    my $sequencer;
-    my $logged_user = $c->user;
-    $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-    $user_role = 1 if $logged_user;
-    $curator   = $logged_user->check_roles('curator') if $logged_user;
-    $submitter = $logged_user->check_roles('submitter') if $logged_user;
-    $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
+	
+	my $person_id;
+	my $user_role;
+	my $curator;
+	my $submitter;
+	my $sequencer;
+	my $logged_user = $c->user;
+	$person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+	$user_role = 1 if $logged_user;
+	$curator   = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "stocks"); #$logged_user->check_roles('curator') if $logged_user;
+	$submitter = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "stocks", $c->stash->{stock_row}->stock_id ); # may only be able to do things if owner, so provide id of object.  #$logged_user->check_roles('submitter') if $logged_user;
+	$sequencer = 0; #$logged_user->check_roles('sequencer') if $logged_user;
 
 	$c->stash->{can_read_pedigree} = $c->stash->{access}->grant($c->stash->{user_id}, "read", "pedigrees");
 	$c->stash->{can_write_pedigree} = $c->stash->{access}->grant($c->stash->{user_id}, "write", "pedigrees");
