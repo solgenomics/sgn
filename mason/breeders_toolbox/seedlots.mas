@@ -9,6 +9,7 @@ $locations
 $crossing_trials
 $maintenance_enabled => undef
 $user_role => undef
+$default_seedlot_material_type => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -28,7 +29,8 @@ $user_role => undef
                 <b><p>What are seedlots?</p></b>
                 <ul>
                 <li>Seedlots represent physical plant materials in packets/containers.</li>
-                <li>Plant material can be seed, root, clone, plant or tissue culture.</li>
+                <li>Plant material can be seed, root, clone, plant, tissue culture or gametophyte.</li>
+                <li>If you would like to set a default material type for seedlots, please contact us.</li>
                 <li>These materials can be from crosses or for named accessions.</li>
                 <li>Seedlots can have a specific location, box, weight(g), and count.</li>
                 <li>Plant material can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
@@ -101,12 +103,14 @@ $user_role => undef
               <label class="form-check-label" for="exact_cross">exact match</label>
             </div>
         </div>
+% if (!$default_seedlot_material_type) {
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Material Type: </label>
             <div class="col-sm-9" >
-                <input class="form-control" id="search_seedlot_form_material_type" type="text" />
+                <div id="search_seedlot_form_material_type_div"></div>
             </div>
         </div>
+% }
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Location: </label>
             <div class="col-sm-9" >
@@ -127,6 +131,7 @@ $user_role => undef
         </div>
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Minimum Weight (g): </label>
+
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_minimum_weight" type="number" />
             </div>
@@ -222,17 +227,17 @@ $user_role => undef
 </&>
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
-<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
-<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas, default_seedlot_material_type=>$default_seedlot_material_type&>
+<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp, default_seedlot_material_type=>$default_seedlot_material_type &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 <& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/cross/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
-<& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas &>
+<& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas, default_seedlot_material_type=>$default_seedlot_material_type&>
 <& /breeders_toolbox/delete_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_undo_seedlot_usage.mas &>
-<& /breeders_toolbox/upload_transactions_dialogs.mas &>
+<& /breeders_toolbox/upload_transactions_dialogs.mas&>
 <& /breeders_toolbox/add_transactions_using_list.mas &>
 
 
@@ -244,6 +249,9 @@ jQuery(document).ready(function(){
     jQuery("#search_seedlot_form_trial_name").autocomplete({
         source: '/ajax/trials/trial_autocomplete'
     });
+
+    get_select_box('material_types', 'search_seedlot_form_material_type_div', { 'name' : 'search_seedlot_form_material_type', 'id' : 'search_seedlot_form_material_type', 'empty': 1 });
+
 
     var seedlots_table;
 
