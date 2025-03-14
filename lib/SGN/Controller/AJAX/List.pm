@@ -992,7 +992,7 @@ sub get_user : Private {
 	my $user_object = $c->user->get_object();
 	return $user_object->get_sp_person_id();
     }
-    return undef;
+    return;
 }
 
 sub check_user : Private {
@@ -1327,6 +1327,7 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
                 current_count => $seedlot->[7],
                 current_weight => $seedlot->[8],
                 quality => $seedlot->[9],
+                material_type => $seedlot->[10],
             }
         }
     }
@@ -1356,9 +1357,9 @@ sub download_list_details : Path('/list/download_details') {
         my @details = @$result;
         foreach my $seedlot_ref (@details) {
             my @seedlot = @$seedlot_ref;
-            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\t$seedlot[9]\n";
+            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[10]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\t$seedlot[9]\n";
         }
-        $header = "Seedlot_Name\tContent_Name\tContent_type\tDescription\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
+        $header = "Seedlot_Name\tContent_Name\tContent_type\tMaterial_type\tDescription\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
     }
 
     my $dl_token = $c->req->param("list_download_token") || "no_token";
