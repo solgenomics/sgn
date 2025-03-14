@@ -63,37 +63,61 @@ jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    jQuery.ajax( {
-        url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_project',
-        success: function(response) {
-            var html = '<ul>'+response.html+'</ul>';
 
-            jQuery('#genotyping_project_list').html(html);
-            //console.log(html);
-            jQuery('#genotyping_project_list').jstree( {
-                "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-                "valid_children" : [ "folder", "breeding_program", "genotyping_project"],
-                "types" : {
-                    "breeding_program" : {
-                        "icon": 'glyphicon glyphicon-briefcase text-info',
-                    },
-                    "folder" : {
-                        "icon": 'glyphicon glyphicon-folder-open text-danger',
-                    },
-                    "genotyping_project" : {
-                        "icon": 'glyphicon glyphicon-align-left text-warning',
-                    },
-                },
-                "search" : {
-                    "case_insensitive" : true,
-                },
-                "plugins" : ["html_data","types","search"],
-            });
-        },
-        error: function(response) {
-            alert("An error occurred while loading the genotyping projects.");
-        }
+				       alert('get tree from local storage...');
+    var html = localStorage.getItem('html_genotyping_project_tree');
+    if (html !== null) {
+	alert("HTML NOW: "+html);
+	format_genotyping_project_tree(html);
+    }
+
+    //alert(html);
+    if (html === null) {
+	alert('HTML NOT DEFINED! FETCHING...');
+	get_genotyping_project_tree().then( function(r) { 
+	    html = localStorage.getItem('html_genotyping_project_tree');
+	    format_genotyping_project_tree(html);
+	});
+    }
+
+    
+    jQuery('#refresh_genotyping_project_jstree_html_button').click(function(){
+	alert('hello!');
+	get_genotyping_project_tree();
     });
+
+
+    // jQuery.ajax( {
+    //     url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_project',
+    //     success: function(response) {
+    //         var html = '<ul>'+response.html+'</ul>';
+
+    //         jQuery('#genotyping_project_list').html(html);
+    //         //console.log(html);
+    //         jQuery('#genotyping_project_list').jstree( {
+    //             "core": { 'themes': { 'name': 'proton', 'responsive': true}},
+    //             "valid_children" : [ "folder", "breeding_program", "genotyping_project"],
+    //             "types" : {
+    //                 "breeding_program" : {
+    //                     "icon": 'glyphicon glyphicon-briefcase text-info',
+    //                 },
+    //                 "folder" : {
+    //                     "icon": 'glyphicon glyphicon-folder-open text-danger',
+    //                 },
+    //                 "genotyping_project" : {
+    //                     "icon": 'glyphicon glyphicon-align-left text-warning',
+    //                 },
+    //             },
+    //             "search" : {
+    //                 "case_insensitive" : true,
+    //             },
+    //             "plugins" : ["html_data","types","search"],
+    //         });
+    //     },
+    //     error: function(response) {
+    //         alert("An error occurred while loading the genotyping projects.");
+    //     }
+    // });
 
     jQuery("#genotyping_project_tree_search").keyup(function() {
         var v = jQuery("#genotyping_project_tree_search").val();
@@ -114,5 +138,49 @@ jQuery(document).ready(function($) {
     });
 
 });
+
+
+
+function get_genotyping_project_tree() {
+    alert('get_trial_tree');
+    return jQuery.ajax( {
+	url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_project',
+    }).then(  function(r) { localStorage.setItem('html_genotyping_project_tree', r.html); });
+}
+
+function format_genotyping_project_tree(treehtml) {
+    alert('format_genotyping_project_tree');
+    
+    var html = '<ul>'+treehtml+'</ul>';
+    
+    jQuery('#genotyping_project_list').html(html);
+
+    alert("HTML "+html);
+    //console.log(html);
+    jQuery('#genotyping_project_list').jstree( {
+	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
+	"valid_children" : [ "folder", "breeding_program", "genotyping_project" ],
+	"types" : {
+	    "breeding_program" : {
+		"icon": 'glyphicon glyphicon-briefcase text-info',
+	    },
+	    "folder" : {
+		"icon": 'glyphicon glyphicon-folder-open text-danger',
+	    },
+	    "genotyping_project" : {
+                "icon": 'glyphicon glyphicon-align-left text-warning',
+            },	       
+
+	    
+	},
+	"search" : {
+	    "case_insensitive" : true,
+	},
+	"plugins" : ["html_data","types","search"],
+	
+    });
+    
+}
+
 
 </script>
