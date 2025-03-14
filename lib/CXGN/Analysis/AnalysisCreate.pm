@@ -566,7 +566,7 @@ sub store {
             }
         }
         elsif ($analysis_result_values_type eq 'analysis_result_values_match_accession_names') {
-            print STDERR"\n\n\n analysis_result_values_type $analysis_result_values_type\n";
+            print STDERR"\n\n\n analysis_result_values_type: $analysis_result_values_type\n";
             my %analysis_result_values_fix_plot_names;
             my $design = $a->design();
             foreach (values %$design) {
@@ -581,9 +581,8 @@ sub store {
         }
 
         elsif ($analysis_result_values_type eq 'analysis_result_new_stocks') {
-            print STDERR"\n\n\n Start storing analysis_result_stock_names first: @$analysis_result_stock_names[0]\n\n\n";
-
-            # my $stocks_stored = $self->store_analysis_result_stock_names($bcs_schema, $analysis_result_stock_names);
+            print STDERR"\n\n\n analysis_result_values_type: $analysis_result_values_type\n";
+            my $stocks_stored = $self->store_analysis_result_stock_names($bcs_schema, $analysis_result_stock_names);
         
             my %analysis_result_values_fix_plot_names;
             my $design = $a->design();
@@ -591,14 +590,9 @@ sub store {
                 $analysis_result_values_fix_plot_names{$_->{stock_name}} = $_->{plot_name};
             }
 
-            my $count = 0;
             while (my ($stock_name, $trait_pheno) = each %$analysis_result_values) {
                 $count++;
                 while (my($trait_name, $val) = each %$trait_pheno) {
-                    if ($count < 3) {
-                        print STDERR"\n\n\n stock_name -- $stock_name -- $trait_name -- $val\n\n\n";
-                    }
-            
                     $analysis_result_values_save->{$analysis_result_values_fix_plot_names{$stock_name}}->{$composed_trait_map{$trait_name}} = $val;
                 }
             }
@@ -621,7 +615,7 @@ sub store {
                 $dbuser,
                 $dbpass,
                 $tempfile_for_deleting_nd_experiment_ids,
-                $is_analysis_result_stock_type,
+                $is_analysis_result_stock_type
             );
         };
 
@@ -657,7 +651,6 @@ if ($analysis_model_file) {
     return { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
 }
 
-
 sub store_analysis_result_stock_names {
     my ($self, $bcs_schema, $stocks) = @_;
 
@@ -667,14 +660,12 @@ sub store_analysis_result_stock_names {
 
     eval {
      foreach my $stock_name (@$stocks) {
-
         my $stock = $bcs_schema->resultset("Stock::Stock")
 	            ->find_or_create({
 		            name => $stock_name,
 		            type_id => $stock_cvterm_id,
                     uniquename => $stock_name,
 	            });
-
      }
 
     };
@@ -683,7 +674,7 @@ sub store_analysis_result_stock_names {
             print STDERR "An error occurred storing analysis result stocks ($@).\n";
             return { error => "An error occurred storing nalysis result stocks ($@).\n" };
     } else {
-        print STDERR "\nDONE storing new analysis result stock!\n";
+        print STDERR "\nDONE storing new analysis result stocks!\n";
         my $refresh = $self->_refresh_matviews($bcs_schema, 'stockprop', 'concurrent');
         return 1;
     }
