@@ -116,14 +116,18 @@ sub convert_source_stock_types_to_ids {
     my $self = shift;
 
     my @source_cvterm_ids;
-    foreach my $source_stock (@{$self->get_source_stock_types()}) {
+    my @source_stocks = @{$self->get_source_stock_types()};
+
+    foreach my $source_stock (@source_stocks) {
         push @source_cvterm_ids, $self->cvterm_id($source_stock);
     }
-    
+
     $self->set_source_stock_type_ids(\@source_cvterm_ids);
 
     my @source_primary_cvterm_ids;
-    foreach my $source_stock (@{$self->get_source_primary_stock_types()}) {
+    my @primary_source_stocks = @{$self->get_source_primary_stock_types()};
+
+    foreach my $source_stock (@primary_source_stocks) {
         push @source_primary_cvterm_ids, $self->cvterm_id($source_stock);
     }
 
@@ -150,44 +154,57 @@ sub _lookup_trial_id {
     print STDERR "CXGN::Trial::TrialLayout AbstractLayout _lookup_trial_id() ".localtime."\n";
     $self->get_schema->storage->dbh->do('SET search_path TO public,sgn');
 
-  #print STDERR "Check 2.1: ".localtime()."\n";
-  $self->_set_project_from_id();
-  if (!$self->has_project()) {
-      print STDERR "Trial id not found\n";
-    return;
-  }
+    #print STDERR "Check 2.1: ".localtime()."\n";
+    $self->_set_project_from_id();
+    if (!$self->has_project()) {
+        print STDERR "Trial id not found\n";
+        return;
+    }
 
     if (!$self->_get_trial_year_from_project()) {
         print STDERR "Trial has no associated trial year... quitting!\n";
-      #return;
-  } else {
-        $self->_set_trial_year($self->_get_trial_year_from_project());
+    #return;
+    } else {
+            $self->_set_trial_year($self->_get_trial_year_from_project());
     }
 
-  $self->_set_trial_name($self->get_project->name());
-  $self->_set_trial_description($self->get_project->description());
+    $self->_set_trial_name($self->get_project->name());
+    $self->_set_trial_description($self->get_project->description());
 
-  if (!$self->_get_design_type_from_project()) {
-      print STDERR "Trial has no design type... not creating layout object.\n";
-      return;
-  }
+    if (!$self->_get_design_type_from_project()) {
+        print STDERR "Trial has no design type... not creating layout object.\n";
+        return;
+    }
 
     $self->_set_design_type($self->_get_design_type_from_project());
-
     my $design = $self->_set_design($self->_get_design_from_trial());
+    # print STDERR "\n\n_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
 
-###  print STDERR "_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
+    $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
+    # moved to subclass  $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
+    $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
+    $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
+    $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
+    
+    my %design = %{$self->get_design()};
+    #print STDERR "DESIGN: ".Dumper(\%design)."\n";
+    my $design_key = (keys %design)[0];
+    my $sample_entry = $design{$design_key};
 
-  $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
-# moved to subclass  $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
-  $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
-  $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
-  $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
-  $self->_set_accession_names($self->_get_unique_accession_names_from_trial || [] );
-  $self->_set_analysis_result_stock_names($self->_get_unique_analysis_result_stock_names_from_trial || [] );
-  $self->_set_control_names($self->_get_unique_control_accession_names_from_trial || [] );
-  #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
-  print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
+    if ($sample_entry->{'accession_id'}){
+        print STDERR "SETTING ACCESSION NAMES\n";
+        $self->_set_accession_names($self->_get_unique_accession_names_from_trial());
+        if ($self->_get_unique_control_accession_names_from_trial()){
+            $self->_set_control_names($self->_get_unique_control_accession_names_from_trial());
+        }
+    }
+
+    if ($sample_entry->{'analysis_result_stock_id'}){
+        print STDERR "SETTING ANALYSIS RESULT STOCK NAMES\n";
+        $self->_set_analysis_result_stock_names($self->_get_unique_analysis_result_stock_names_from_trial());
+    }
+
+    print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
 }
 
 sub _retrieve_trial_location {
@@ -605,6 +622,7 @@ sub retrieve_plot_info {
     }
 
     my $type = $accession->type;
+    print STDERR "ABSTRACTLayout stock TYPE: ".$type->name."\n";
     if ($type->name eq 'accession'){
         if ($accession_name) {
             $design_info{"accession_name"} = $accession_name;
@@ -617,7 +635,7 @@ sub retrieve_plot_info {
     
     if ($type->name eq 'analysis_result'){
         if ($accession_name) {
-            $design_info{"analysis_result_stock_name"} =$ accession_name;
+            $design_info{"analysis_result_stock_name"} = $accession_name;
         }
 
         if ($accession_id) {
