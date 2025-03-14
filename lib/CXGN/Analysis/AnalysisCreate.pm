@@ -591,7 +591,6 @@ sub store {
             }
 
             while (my ($stock_name, $trait_pheno) = each %$analysis_result_values) {
-                $count++;
                 while (my($trait_name, $val) = each %$trait_pheno) {
                     $analysis_result_values_save->{$analysis_result_values_fix_plot_names{$stock_name}}->{$composed_trait_map{$trait_name}} = $val;
                 }
