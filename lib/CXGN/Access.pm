@@ -213,6 +213,15 @@ sub check_ownership {
     }
 }
 
+=head3 get_breeding_program_ids_for_user()
+
+   Desc: get the breeding program ids the user is associated with; output can be used
+         with the grant function
+
+   Returns: a list of breeding_program ids the user is associated with. Other roles are
+         excluded from the list.
+
+=cut
 
 sub get_breeding_program_ids_for_user {
     my $self = shift;
