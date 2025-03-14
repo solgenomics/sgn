@@ -17,7 +17,7 @@ $trial_id
         <button class="btn btn-default" id="delete_all_genotyping_plates" role="button">Delete all genotyping plates in this project</button><br/><br/>
     </div>
 </&>
-<!--
+
 <&| /page/info_section.mas, id=>'delete_protocol_section', title => 'Delete Genotyping Protocol and All Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
@@ -28,17 +28,6 @@ $trial_id
         </div>
     </div>
 </&>
--->
-<&| /page/info_section.mas, id=>'delete_genotyping_data_section', title => 'Delete Genotyping Data', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <button class="btn btn-primary" id="delete_genotyping_data" role="button">Delete Genotyping Data</button><br/><br/>
-            </div>
-        </div>
-    </div>
-</&>
-
 
 <&| /page/info_section.mas, id=>'delete_genotyping_project_section', title => 'Delete Genotyping Project', subtitle => '<font color="red">Deletion cannot be undone. Please delete genotyping plates and/or genotyping data first</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
@@ -136,40 +125,6 @@ jQuery(document).ready(function(){
             });
         }
     });
-
-    jQuery('#delete_genotyping_data').click(function() {
-        const project_id = "<% $trial_id %>";
-        const confirmation = confirm("Are you sure you want to delete genotyping data in this project? The deletion cannot be undone.");
-        if (confirmation) {
-            jQuery.ajax({
-                url: '/ajax/breeders/project_genotyping_data_delete',
-                dataType: "json",
-                type: 'GET',
-                data:{
-                    'genotyping_project_id': project_id,
-                },
-                beforeSend: function(){
-                    jQuery('#working_modal').modal("show");
-                    jQuery('#working_msg').html("Deleting genotyping data...<br />");
-                },
-                success: function(response) {
-                    jQuery('#working_modal').modal('hide');
-                    if (response.success == 1) {
-                        alert('Deletion was successful');
-                        location.reload();
-                    }
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                },
-                error: function(response) {
-                    jQuery('#working_modal').modal('hide');
-                    alert('An error occurred during deletion');
-                }
-            });
-        }
-
-
 
 
     });
