@@ -10,7 +10,7 @@ $management_factor_types => ()
 $design_types => ()
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree', 'bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
+    <& /util/import_javascript.mas, entries => [ 'htmltree.js' ], classes => [ 'jstree.dist.jstree', 'bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
@@ -77,23 +77,31 @@ $design_types => ()
 
 jQuery.noConflict();
 
-jQuery(document).ready(function($) {
+jQuery(document).ready(function($) {    
     
-    //    jQuery.ajax( {
-    //    url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',
-    //    success: function(response) {
-    //      var html = '<ul>'+response.html+'</ul>';
+    //determine if there are any new trials
+    // for testing: //localStorage.setItem('trial_tree_last_refresh', '2023-01-01');
     
-    //alert('get tree from local storage...');
+    var last_refresh_date = localStorage.getItem('trial_tree_last_refresh');
+    alert("Last refresh timestamp = "+last_refresh_date);
+
+    if (last_refresh_date === null) { alert("refresh date is not set"); }
+
+    jQuery.ajax( {
+    	url: '/ajax/breeders/recently_modified_projects',
+	data: { since_date: last_refresh_date, type: 'phenotyping_trial' },
+    }).then( function(r) { alert("NEW TRIALS: "+JSON.stringify(r)); if (r.data.length > 0) { get_trial_tree().then( function(r) { alert("setting new tree"); format_trial_tree(r.html)  } )} } ) ;
+    
+
+    alert('get tree from local storage...');
     var html = localStorage.getItem('html_trial_tree');
     if (html !== null) {
-	//alert("HTML NOW: "+html);
+	alert("HTML NOW: "+html);
 	format_trial_tree(html);
     }
 
-    //alert(html);
     if (html === null) {
-	//alert('HTML NOT DEFINED! FETCHING...');
+	alert('HTML NOT DEFINED! FETCHING...');
 	get_trial_tree().then( function(r) { 
 	    html = localStorage.getItem('html_trial_tree');
 	    format_trial_tree(html);
@@ -102,8 +110,9 @@ jQuery(document).ready(function($) {
 
     
     jQuery('#refresh_jstree_html_trialtree_button').click(function(){
-	//alert('hello!');
-	get_trial_tree();
+	alert('hello!');
+	get_trial_tree().then( function(r) { alert('now loading new tree'); format_trial_tree(r.html) });
+	
     });
 
 
@@ -155,11 +164,25 @@ jQuery(document).ready(function($) {
 });
 
 
+function get_timestamp() {
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    var timestamp = yyyy + '-'+ mm + '-' + dd;
+    return timestamp;
+}
+
+    
 function get_trial_tree() {
-    //alert('get_trial_tree');
+    alert('get_trial_tree');
     return jQuery.ajax( {
 	url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',  
-    }).then(  function(r) { localStorage.setItem('html_trial_tree', r.html); });
+    }).then(  function(r) {
+	alert("adding new html and timestamp to localstorage");
+	localStorage.setItem('html_trial_tree', r.html);
+	localStorage.setItem('trial_tree_last_refresh', get_timestamp());
+    });
 }
 
 function format_trial_tree(treehtml) {
