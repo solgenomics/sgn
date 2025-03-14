@@ -92,80 +92,82 @@ has 'dbname' => (
 =cut
 
 sub metadata_query {
-  my $self = shift;
-  my $criteria_list = shift;
-  my $dataref = shift;
-  my $queryref = shift;
-  my $h;
-  # print STDERR "criteria_list=" . Dumper($criteria_list);
-  # print STDERR "dataref=" . Dumper($dataref);
-  # print STDERR "queryref=" . Dumper($queryref);
-
-  my $target_table = $criteria_list->[-1];
-  # print STDERR "target_table=". $target_table . "\n";
-  my $target = $target_table;
-  $target =~ s/s$//;
-  # print STDERR "target=$target\n";
-
-  my $select = "SELECT ".$target."_id, ".$target."_name ";
-  my $group = "GROUP BY ".$target."_id, ".$target."_name ";
-
-  my $full_query;
-  if (!$dataref->{"$target_table"}) {
-    my $from = "FROM public.". $target_table;
-    my $where = " WHERE ".$target."_id IS NOT NULL";
-	  $full_query = $select . $from . $where;
-  }
-  else {
-	  my @queries;
-	  foreach my $category (@$criteria_list) {
-
-      # print STDERR "==> BUILDING QUERY FOR CATEGORY: $category\n";
-
-      if ($dataref->{$criteria_list->[-1]}->{$category}) {
-        my $query;
-		    my @categories = ($target_table, $category);
-	      @categories = sort @categories;
-	      my $from = "FROM public.". $categories[0] ."x". $categories[1] . " JOIN public." . $target_table . " USING(" . $target."_id) ";
-        my $criterion = $category;
-        $criterion =~ s/s$//;
-        my $match = $queryref->{$criteria_list->[-1]}->{$category};
-        if ( !$match ) {
-          $match = 0;
-        }
-
-        # print STDERR "... Match: $match\n";
-
-        my $total = scalar(split(',', $dataref->{$criteria_list->[-1]}->{$category}));
-        my $inner_select = $select . ", COUNT(" . $criterion . "_id)/" . $total . "::decimal AS match ";
-        my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
-        $query = $inner_select . $from . $where . $group;
-
-        my $outer_query = "SELECT i." . $target . "_id, i." . $target . "_name, i.match ";
-        $outer_query .= "FROM ($query) AS i ";
-        $outer_query .= "WHERE i.match >= " . $match;
-
-        my $outest_query = "SELECT j." . $target . "_id, j." . $target . "_name ";
-        $outest_query .= "FROM ($outer_query) AS j ";
-
-        # print STDERR "... Query: $outest_query\n";
-        push @queries, $outest_query;
-      }
+    my $self = shift;
+    my $criteria_list = shift;
+    my $dataref = shift;
+    my $queryref = shift;
+    my $limit_to_breeding_programs = shift;
+    my $h;
+    # print STDERR "criteria_list=" . Dumper($criteria_list);
+    # print STDERR "dataref=" . Dumper($dataref);
+    # print STDERR "queryref=" . Dumper($queryref);
+    
+    my $target_table = $criteria_list->[-1];
+    # print STDERR "target_table=". $target_table . "\n";
+    my $target = $target_table;
+    $target =~ s/s$//;
+    # print STDERR "target=$target\n";
+    
+    my $select = "SELECT ".$target."_id, ".$target."_name ";
+    my $group = "GROUP BY ".$target."_id, ".$target."_name ";
+    
+    my $full_query;
+    if (!$dataref->{"$target_table"}) {
+	my $from = "FROM public.". $target_table;
+	my $where = " WHERE ".$target."_id IS NOT NULL";
+	$full_query = $select . $from . $where;
     }
-    $full_query = join (" INTERSECT ", @queries);
-  }
-  $full_query .= " ORDER BY 2";
-  # print STDERR "FULL QUERY: $full_query\n";
-  $h = $self->dbh->prepare($full_query);
-  $h->execute();
-
-  my @results;
-  while (my ($id, $name) = $h->fetchrow_array()) {
-    push @results, [ $id, $name ];
-  }
-
-  return { results => \@results };
-
+    else {
+	my @queries;
+	foreach my $category (@$criteria_list) {
+	    
+	    # print STDERR "==> BUILDING QUERY FOR CATEGORY: $category\n";
+	    
+	    if ($dataref->{$criteria_list->[-1]}->{$category}) {
+		my $query;
+		my @categories = ($target_table, $category);
+		@categories = sort @categories;
+		my $from = "FROM public.". $categories[0] ."x". $categories[1] . " JOIN public." . $target_table . " USING(" . $target."_id) ";
+		my $criterion = $category;
+		$criterion =~ s/s$//;
+		my $match = $queryref->{$criteria_list->[-1]}->{$category};
+		if ( !$match ) {
+		    $match = 0;
+		}
+		
+		# print STDERR "... Match: $match\n";
+		
+		my $total = scalar(split(',', $dataref->{$criteria_list->[-1]}->{$category}));
+		my $inner_select = $select . ", COUNT(" . $criterion . "_id)/" . $total . "::decimal AS match ";
+		my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
+		$query = $inner_select . $from . $where . $group;
+		
+		my $outer_query = "SELECT i." . $target . "_id, i." . $target . "_name, i.match ";
+		$outer_query .= "FROM ($query) AS i ";
+		$outer_query .= "WHERE i.match >= " . $match;
+		
+		my $outest_query = "SELECT j." . $target . "_id, j." . $target . "_name ";
+		$outest_query .= "FROM ($outer_query) AS j ";
+		
+		# print STDERR "... Query: $outest_query\n";
+		push @queries, $outest_query;
+	    }
+	}
+	
+	$full_query = join (" INTERSECT ", @queries);
+    }
+    $full_query .= " ORDER BY 2";
+    # print STDERR "FULL QUERY: $full_query\n";
+    $h = $self->dbh->prepare($full_query);
+    $h->execute();
+    
+    my @results;
+    while (my ($id, $name) = $h->fetchrow_array()) {
+	push @results, [ $id, $name ];
+    }
+    
+    return { results => \@results };
+    
 }
 
 =head2 avg_phenotypes_query
