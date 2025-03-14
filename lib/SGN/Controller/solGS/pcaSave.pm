@@ -32,7 +32,6 @@ sub pca_result_details :Path('/solgs/pca/result/details') Args() {
 	my $stored = $c->controller('solGS::AnalysisSave')->check_stored_analysis($c);
 
 	if (!$stored) {
-		my $params = decode_json($args);
 		my $analysis_details;
 
 		eval {
