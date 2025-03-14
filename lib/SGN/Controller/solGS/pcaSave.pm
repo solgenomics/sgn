@@ -151,7 +151,7 @@ sub structure_pca_result_details {
 	my ($self, $c) = @_;
 
 	my $scores = $self->structure_pca_scores($c);
-	my @accessions = keys %$scores;
+	my @stocks = keys %$scores;
 
 	my $pcs_names		= $self->get_pcs_names($c);
 	my $pca_details     = $self->pca_details($c);
@@ -163,11 +163,11 @@ sub structure_pca_result_details {
     my $data_type = $log->{data_type};
     my $data_str = $log->{data_structure};
 
-    my $analysis_result_stock_names;
-    my $is_analysis_result_stock_type;
+    my $analysis_result_stock_names = '';
+    my $is_analysis_result_stock_type = 0;
     my $analysis_result_values_type = 'analysis_result_values_match_accession_names',
 
-    my $accession_names = encode_json(\@accessions);
+    my $accession_names = encode_json(\@stocks);
     if ($data_type =~ /phenotype/i && $data_str =~ /dataset/) {
         my $dataset = CXGN::Dataset->new({
             people_schema => $c->dbic_schema("CXGN::People::Schema"),
@@ -177,10 +177,10 @@ sub structure_pca_result_details {
 
         my $dataset_data = $dataset->get_dataset_data();
         if (scalar(@{$dataset_data->{categories}->{trials}}) > 1) {
-            $analysis_result_stock_names = $accession_names;
+            $analysis_result_stock_names = encode_json(\@stocks);
             $is_analysis_result_stock_type = 1;
             $analysis_result_values_type = 'analysis_result_new_stocks';
-            $accession_names = undef;
+            $accession_names = '';
         } 
     } 
 
@@ -197,7 +197,7 @@ sub structure_pca_result_details {
         'analysis_precomputed_design_optional' =>'',
         'analysis_result_values' => to_json($scores),
         'analysis_result_values_type' => $analysis_result_values_type,
-        'is_analysis_result_stock_type' => 1,
+        'is_analysis_result_stock_type' => $is_analysis_result_stock_type,
         'analysis_result_stock_names' => $analysis_result_stock_names,
         'analysis_result_summary' => '',
         'analysis_result_trait_compose_info' =>  "",
