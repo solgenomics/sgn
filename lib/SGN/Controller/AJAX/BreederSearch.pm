@@ -26,13 +26,23 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
       $c->stash->{rest} = { error => "Access Control: Access to wizard denied" };
       $c->detach();
   }
+
+  my $privileges = $c->stash->{access}->user_privileges($c->stash->{user_id}, "wizard");
+
+  my @limit_to_breeding_programs = ();
+  if ($privileges->{read}->{require_breeding_program}) { 
+  
+      @limit_to_breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
+
+  }
   
   my @criteria_list = $c->req->param('categories[]');
   my @querytypes = $c->req->param('querytypes[]');
+  my @data = $c->req->param('data');
 
-  #print STDERR "criteria list = " . Dumper(@criteria_list);
-  #print STDERR "querytypes = " . Dumper(@querytypes);
-
+  print STDERR "criteria list = " . Dumper(\@criteria_list);
+  print STDERR "querytypes = " . Dumper(\@querytypes);
+  print STDERR "data = ".Dumper(\@data);
   my $dataref = {};
   my $queryref = {};
 
@@ -62,6 +72,9 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   for (my $i=0; $i<scalar(@$criteria_list); $i++) {
     my @data;
     my $param = $c->req->param("data[$i][]");
+
+    print STDERR "PARAM = ".Dumper($param)." for parameter data[$i][]\n";
+    
     if (defined($param) && ($param ne '')) { @data =  $c->req->param("data[$i][]"); }
 
     if (@data) {
@@ -80,6 +93,10 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     }
   }
 
+      
+  print STDERR "dataref: ".Dumper($dataref);
+  print STDERR "queryref: ".Dumper($queryref);
+
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
   my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
@@ -87,7 +104,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
       $c->stash->{rest} = { error => $status->{'error'}};
       return;
   }
-  my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $queryref);
+  my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $queryref, \@limit_to_breeding_programs);
 
   #print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
   my @results =@{$results_ref->{results}};

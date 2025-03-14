@@ -120,44 +120,24 @@ sub metadata_query {
     else {
 	my @queries;
 	foreach my $category (@$criteria_list) {
-	    
-	    # print STDERR "==> BUILDING QUERY FOR CATEGORY: $category\n";
-	    
 	    if ($dataref->{$criteria_list->[-1]}->{$category}) {
-		my $query;
-		my @categories = ($target_table, $category);
-		@categories = sort @categories;
-		my $from = "FROM public.". $categories[0] ."x". $categories[1] . " JOIN public." . $target_table . " USING(" . $target."_id) ";
-		my $criterion = $category;
-		$criterion =~ s/s$//;
-		my $match = $queryref->{$criteria_list->[-1]}->{$category};
-		if ( !$match ) {
-		    $match = 0;
-		}
-		
-		# print STDERR "... Match: $match\n";
-		
-		my $total = scalar(split(',', $dataref->{$criteria_list->[-1]}->{$category}));
-		my $inner_select = $select . ", COUNT(" . $criterion . "_id)/" . $total . "::decimal AS match ";
-		my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
-		$query = $inner_select . $from . $where . $group;
-		
-		my $outer_query = "SELECT i." . $target . "_id, i." . $target . "_name, i.match ";
-		$outer_query .= "FROM ($query) AS i ";
-		$outer_query .= "WHERE i.match >= " . $match;
-		
-		my $outest_query = "SELECT j." . $target . "_id, j." . $target . "_name ";
-		$outest_query .= "FROM ($outer_query) AS j ";
-		
-		# print STDERR "... Query: $outest_query\n";
+		# print STDERR "==> BUILDING QUERY FOR CATEGORY: $category\n";
+		my $outest_query = $self->build_subquery($dataref->{$criteria_list->[-1]}->{$category}, $queryref->{$criteria_list->[-1]}->{$category}, $target_table, $target, $category, $select, $group);
 		push @queries, $outest_query;
 	    }
+	}
+
+	if (@$limit_to_breeding_programs) {
+	    my $limit_bp_query = $self->build_subquery( join(",", map{ "'$_'" } @$limit_to_breeding_programs), 0, $target_table, $target, "breeding_programs", $select, $group);
+
+	    push @queries, $limit_bp_query;
+
 	}
 	
 	$full_query = join (" INTERSECT ", @queries);
     }
     $full_query .= " ORDER BY 2";
-    # print STDERR "FULL QUERY: $full_query\n";
+    print STDERR "FULL QUERY: $full_query\n";
     $h = $self->dbh->prepare($full_query);
     $h->execute();
     
@@ -169,6 +149,49 @@ sub metadata_query {
     return { results => \@results };
     
 }
+
+sub build_subquery {
+    my $self = shift;
+    #my $dataref =shift;
+    my $data_id_str = shift;
+    #my $queryref = shift;
+    my $match = shift;
+    my $target_table =  shift;
+    my $target = shift;
+    my $category = shift;
+    my $select = shift;
+    my $group = shift;
+
+
+    my $query;
+    my @categories = ($target_table, $category);
+    @categories = sort @categories;
+    my $from = "FROM public.". $categories[0] ."x". $categories[1] . " JOIN public." . $target_table . " USING(" . $target."_id) ";
+    my $criterion = $category;
+    $criterion =~ s/s$//;
+#    my $match = $queryref->{$criteria_list->[-1]}->{$category};
+    if ( !$match ) {
+	$match = 0;
+    }
+    
+    # print STDERR "... Match: $match\n";
+    
+    my $total = scalar(split(',', $data_id_str));
+    my $inner_select = $select . ", COUNT(" . $criterion . "_id)/" . $total . "::decimal AS match ";
+    my $where = "WHERE ". $criterion. "_id IN (" . $data_id_str.")"; #$dataref->{$criteria_list->[-1]}->{$category} . ") ";
+    $query = $inner_select . $from . $where . $group;
+    
+    my $outer_query = "SELECT i." . $target . "_id, i." . $target . "_name, i.match ";
+    $outer_query .= "FROM ($query) AS i ";
+    $outer_query .= "WHERE i.match >= " . $match;
+    
+    my $outest_query = "SELECT j." . $target . "_id, j." . $target . "_name ";
+    $outest_query .= "FROM ($outer_query) AS j ";
+
+    print STDERR "OUTEST QUERY: $outest_query\n\n";
+    return $outest_query;
+}
+
 
 =head2 avg_phenotypes_query
 
