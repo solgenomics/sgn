@@ -87,7 +87,7 @@ sub store_analysis_json_POST {
         $analysis_to_save_boolean,
         $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info,
         $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
-        $user_id, $user_name, $user_role, $analysis_result_stock_names, $is_analysis_result_stock_type,
+        $user_id, $user_name, $user_role, $analysis_result_stock_names, $is_analysis_result_stock_type
     );
 }
 
@@ -629,7 +629,13 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $a = CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema, trial_id => $c->stash->{analysis_id} } );
+    my $a = CXGN::Analysis->new({
+            bcs_schema => $bcs_schema,
+            people_schema => $people_schema,
+            metadata_schema => $metadata_schema,
+            phenome_schema => $phenome_schema,
+            trial_id => $c->stash->{analysis_id}
+    });
 
     my $dataset_id = "";
     my $dataset_name = "";
@@ -662,7 +668,6 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     unshift @$dataref, $header;
 
     # print STDERR "TRAITS : ".Dumper($a->traits());
-
     my $resultref = {
         analysis_name => $a->name(),
         analysis_description => $a->description(),
