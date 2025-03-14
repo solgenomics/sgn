@@ -10,7 +10,7 @@ $management_factor_types => ()
 $design_types => ()
 </%args>
 
-    <& /util/import_javascript.mas, entries => [ 'htmltree.js' ], classes => [ 'jstree.dist.jstree', 'bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
+    <& /util/import_javascript.mas,  classes => [ 'jstree.dist.jstree', 'bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ], entries => [ 'htmltree' ] &>
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
@@ -32,14 +32,14 @@ $design_types => ()
   <thead>
     <tr>
       <th>Information</th>
-      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_jstree_html_trialtree_button" name="refresh_jstree_html">Refresh</button></th>
+      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_trialtree_button" name="refresh_jstree_html">Refresh</button></th>
     </tr>
   </thead>
   <tbody>
   <tr>
     <td>
         <h4>Search</h4>
-        <input type="text" class="form-control input-sm" id="trial_tree_search" placeholder="Search" />
+        <input type="text" class="form-control input-sm" id="trialtree_search" placeholder="Search" />
         <hr>
       <h4>Download Trial Phenotypes</h4>
       <h5><i>Select multiple trials by holding 'Ctrl'.</i></h5>
@@ -66,7 +66,7 @@ $design_types => ()
       <br />
     </td>
     <td>
-        <div id="trial_list" >[loading...]</div>
+        <div id="trialtree_list" >[loading...]</div>
     </td>
   </tr>
   </tbody>
@@ -82,145 +82,148 @@ jQuery(document).ready(function($) {
     //determine if there are any new trials
     // for testing: //localStorage.setItem('trial_tree_last_refresh', '2023-01-01');
     
-    var last_refresh_date = localStorage.getItem('trial_tree_last_refresh');
-    alert("Last refresh timestamp = "+last_refresh_date);
+    // var last_refresh_date = localStorage.getItem('trial_tree_last_refresh');
+    // alert("Last refresh timestamp = "+last_refresh_date);
 
-    if (last_refresh_date === null) { alert("refresh date is not set"); }
+    // if (last_refresh_date === null) { alert("refresh date is not set"); }
 
-    jQuery.ajax( {
-    	url: '/ajax/breeders/recently_modified_projects',
-	data: { since_date: last_refresh_date, type: 'phenotyping_trial' },
-    }).then( function(r) { alert("NEW TRIALS: "+JSON.stringify(r)); if (r.data.length > 0) { get_trial_tree().then( function(r) { alert("setting new tree"); format_trial_tree(r.html)  } )} } ) ;
+    // jQuery.ajax( {
+    // 	url: '/ajax/breeders/recently_modified_projects',
+    // 	data: { since_date: last_refresh_date, type: 'phenotyping_trial' },
+    // }).then( function(r) { alert("NEW TRIALS: "+JSON.stringify(r)); if (r.data.length > 0) { get_trial_tree().then( function(r) { alert("setting new tree"); format_trial_tree(r.html)  } )} } ) ;
     
 
-    alert('get tree from local storage...');
-    var html = localStorage.getItem('html_trial_tree');
-    if (html !== null) {
-	alert("HTML NOW: "+html);
-	format_trial_tree(html);
-    }
+    // alert('get tree from local storage...');
+    // var html = localStorage.getItem('html_trial_tree');
+    // if (html !== null) {
+    // 	alert("HTML NOW: "+html);
+    // 	format_trial_tree(html);
+    // }
 
-    if (html === null) {
-	alert('HTML NOT DEFINED! FETCHING...');
-	get_trial_tree().then( function(r) { 
-	    html = localStorage.getItem('html_trial_tree');
-	    format_trial_tree(html);
-	});
-    }
+    // if (html === null) {
+    // 	alert('HTML NOT DEFINED! FETCHING...');
+    // 	get_trial_tree().then( function(r) { 
+    // 	    html = localStorage.getItem('html_trial_tree');
+    // 	    format_trial_tree(html);
+    // 	});
+    // }
 
     
-    jQuery('#refresh_jstree_html_trialtree_button').click(function(){
-	alert('hello!');
-	get_trial_tree().then( function(r) { alert('now loading new tree'); format_trial_tree(r.html) });
+    // jQuery('#refresh_jstree_html_trialtree_button').click(function(){
+    // 	alert('hello!');
+    // 	get_trial_tree().then( function(r) { alert('now loading new tree'); format_trial_tree(r.html) });
 	
-    });
+    // });
+
+    var htmltree = window.jsMod['htmltree'].init("htmltree");
+
+    htmltree.init_tree('trialtree');
+
+//       jQuery('#trial_list').on("changed.jstree", function (e, data) {
+//     //console.log(data);
+//        if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
+//          jQuery('#trials_download_phenotypes_button').removeAttr('disabled');
+//          jQuery("#folder_edit_options").hide();
+//        }
+//        else if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
+//          jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+//          jQuery("#folder_edit_options").show();
+//        }
+//        else {
+//          jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+//          jQuery("#folder_edit_options").hide();
+//        }
+//     });
 
 
-      jQuery('#trial_list').on("changed.jstree", function (e, data) {
-    //console.log(data);
-       if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
-         jQuery('#trials_download_phenotypes_button').removeAttr('disabled');
-         jQuery("#folder_edit_options").hide();
-       }
-       else if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
-         jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
-         jQuery("#folder_edit_options").show();
-       }
-       else {
-         jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
-         jQuery("#folder_edit_options").hide();
-       }
-    });
+//     $("#trial_list").delegate("li", "dblclick", function(event){
+//       var node = $("#trial_list").jstree("get_node", this);
+//       //console.log(node);
+//       if (node.id.substr(0,1) !== 'j') {
+//         if (node.type == 'folder') {
+//             window.open('/folder/'+node.id);
+//             event.stopPropagation();
+//         } else if (node.type == 'breeding_program') {
+//             window.open('/breeders/program/'+node.id);
+//             event.stopPropagation();
+//         } else if (node.type == 'analyses') {
+//             window.open('/analyses/'+node.id);
+//             event.stopPropagation();
+//         } else if (node.type == 'trial') {
+//             window.open('/breeders_toolbox/trial/'+node.id);
+//             event.stopPropagation();
+//         } else if (node.type == 'sampling_trial') {
+//             window.open('/breeders_toolbox/trial/'+node.id);
+//             event.stopPropagation();
+//         }
+//       }
+//     });
+
+//     jQuery("#trial_tree_search").keyup(function() {
+//         var v = jQuery("#trial_tree_search").val();
+//         jQuery("#trial_list").jstree(true).search(v);
+//     });
+
+// });
 
 
-    $("#trial_list").delegate("li", "dblclick", function(event){
-      var node = $("#trial_list").jstree("get_node", this);
-      //console.log(node);
-      if (node.id.substr(0,1) !== 'j') {
-        if (node.type == 'folder') {
-            window.open('/folder/'+node.id);
-            event.stopPropagation();
-        } else if (node.type == 'breeding_program') {
-            window.open('/breeders/program/'+node.id);
-            event.stopPropagation();
-        } else if (node.type == 'analyses') {
-            window.open('/analyses/'+node.id);
-            event.stopPropagation();
-        } else if (node.type == 'trial') {
-            window.open('/breeders_toolbox/trial/'+node.id);
-            event.stopPropagation();
-        } else if (node.type == 'sampling_trial') {
-            window.open('/breeders_toolbox/trial/'+node.id);
-            event.stopPropagation();
-        }
-      }
-    });
+// function get_timestamp() {
+//     var today = new Date();
+//     var dd = String(today.getDate()).padStart(2, '0');
+//     var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+//     var yyyy = today.getFullYear();
+//     var timestamp = yyyy + '-'+ mm + '-' + dd;
+//     return timestamp;
+// }
 
-    jQuery("#trial_tree_search").keyup(function() {
-        var v = jQuery("#trial_tree_search").val();
-        jQuery("#trial_list").jstree(true).search(v);
-    });
+    
+// function get_trial_tree() {
+//     alert('get_trial_tree');
+//     return jQuery.ajax( {
+// 	url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',  
+//     }).then(  function(r) {
+// 	alert("adding new html and timestamp to localstorage");
+// 	localStorage.setItem('html_trial_tree', r.html);
+// 	localStorage.setItem('trial_tree_last_refresh', get_timestamp());
+//     });
+// }
 
+// function format_trial_tree(treehtml) {
+
+//     var html = '<ul>'+treehtml+'</ul>';
+    
+//     jQuery('#trial_list').html(html);
+    
+//     //console.log(html);
+//     jQuery('#trial_list').jstree( {
+// 	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
+// 	"valid_children" : [ "folder", "trial", "breeding_program", "analyses", "sampling_trial" ],
+// 	"types" : {
+// 	    "breeding_program" : {
+// 		"icon": 'glyphicon glyphicon-briefcase text-info',
+// 	    },
+// 	    "folder" : {
+// 		"icon": 'glyphicon glyphicon-folder-open text-danger',
+// 	    },
+// 	    "trial" : {
+// 		"icon": 'glyphicon glyphicon-leaf text-success',
+// 	    },
+// 	    "analyses" : {
+// 		"icon": 'glyphicon glyphicon-stats text-success',
+// 	    },
+// 	    "sampling_trial" : {
+// 		"icon": 'glyphicon glyphicon-th text-success',
+// 	    }
+// 	},
+// 	"search" : {
+// 	    "case_insensitive" : true,
+// 	},
+// 	"plugins" : ["html_data","types","search"],
+	
+//     });
+    
+// }
 });
-
-
-function get_timestamp() {
-    var today = new Date();
-    var dd = String(today.getDate()).padStart(2, '0');
-    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-    var yyyy = today.getFullYear();
-    var timestamp = yyyy + '-'+ mm + '-' + dd;
-    return timestamp;
-}
-
-    
-function get_trial_tree() {
-    alert('get_trial_tree');
-    return jQuery.ajax( {
-	url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',  
-    }).then(  function(r) {
-	alert("adding new html and timestamp to localstorage");
-	localStorage.setItem('html_trial_tree', r.html);
-	localStorage.setItem('trial_tree_last_refresh', get_timestamp());
-    });
-}
-
-function format_trial_tree(treehtml) {
-
-    var html = '<ul>'+treehtml+'</ul>';
-    
-    jQuery('#trial_list').html(html);
-    
-    //console.log(html);
-    jQuery('#trial_list').jstree( {
-	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
-	"valid_children" : [ "folder", "trial", "breeding_program", "analyses", "sampling_trial" ],
-	"types" : {
-	    "breeding_program" : {
-		"icon": 'glyphicon glyphicon-briefcase text-info',
-	    },
-	    "folder" : {
-		"icon": 'glyphicon glyphicon-folder-open text-danger',
-	    },
-	    "trial" : {
-		"icon": 'glyphicon glyphicon-leaf text-success',
-	    },
-	    "analyses" : {
-		"icon": 'glyphicon glyphicon-stats text-success',
-	    },
-	    "sampling_trial" : {
-		"icon": 'glyphicon glyphicon-th text-success',
-	    }
-	},
-	"search" : {
-	    "case_insensitive" : true,
-	},
-	"plugins" : ["html_data","types","search"],
-	
-    });
-    
-}
-
 
 
 </script>

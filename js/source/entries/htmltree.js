@@ -1,7 +1,11 @@
 
+import '../legacy/jquery.js';
+import '../legacy/d3/d3Min.js';
 
-function init_tree(tree_type) {
-    var last_refresh_date = localStorage.getItem(tree_type);
+var version = '0.01';
+
+export function init(tree_type) {
+    var last_refresh_date = localStorage.getItem(tree_type+'_last_refresh');
     alert("Last refresh timestamp = "+last_refresh_date);
 
     if (last_refresh_date === null) { alert("refresh date is not set"); }
@@ -9,7 +13,7 @@ function init_tree(tree_type) {
     jQuery.ajax( {
     	url: '/ajax/breeders/recently_modified_projects',
 	data: { since_date: last_refresh_date, type: tree_type },
-    }).then( function(r) { alert("NEW TRIALS: "+JSON.stringify(r)); if (r.data.length > 0) { get_html_tree(tree_type).then( function(r) { alert("setting new tree"); format_html_tree(r.html)  } )} } ) ;
+    }).then( function(r) { alert("NEW TRIALS: "+JSON.stringify(r)); if (r.data.length > 0) { get_html_tree(tree_type).then( function(r) { alert("setting new tree"); format_html_tree(r.html, tree_type)  } )} } )  ;
     
 
     alert('get tree from local storage...');
@@ -22,19 +26,16 @@ function init_tree(tree_type) {
     if (html === null) {
 	alert('HTML NOT DEFINED! FETCHING...');
 	get_html_tree(tree_type).then( function(r) { 
-	    html = localStorage.getItem('html_trial_tree');
-	    format_trial_tree(html);
+	    html = localStorage.getItem(tree_type);
+	    format_html_tree(html, tree_type);
 	});
     }
-
-
 }
 
-
-function init_events(tree_type) { 
+export function init_events(tree_type) { 
     jQuery('#refresh_'+tree_type+'_button').click(function(){
 	alert('hello!');
-	get_trial_tree(tree_type).then( function(r) { alert('now loading new tree'); format_trial_tree(r.html) });
+	get_trial_tree(tree_type).then( function(r) { alert('now loading new tree'); format_html_tree(r.html, tree_type) });
 	
     });
 
@@ -84,10 +85,10 @@ function init_events(tree_type) {
         jQuery("#"+tree_type+"_list").jstree(true).search(v);
     });
 
-});
+}
 
 
-function get_timestamp() {
+export function get_timestamp() {
     var today = new Date();
     var dd = String(today.getDate()).padStart(2, '0');
     var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -97,7 +98,7 @@ function get_timestamp() {
 }
 
     
-function get_trial_tree(tree_type) {
+export function get_html_tree(tree_type) {
     alert('get_trial_tree');
     return jQuery.ajax( {
 	url: '/ajax/breeders/get_trials_with_folders_cached?type='+tree_type,  
@@ -108,14 +109,14 @@ function get_trial_tree(tree_type) {
     });
 }
 
-function format_trial_tree(treehtml) {
+export function format_html_tree(treehtml, tree_type) {
 
     var html = '<ul>'+treehtml+'</ul>';
     
-    jQuery('#trial_list').html(html);
+    jQuery('#'+tree_type+'_list').html(html);
     
     //console.log(html);
-    jQuery('#trial_list').jstree( {
+    jQuery('#'+tree_type+'_list').jstree( {
 	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
 	"valid_children" : [ "folder", "trial", "breeding_program", "analyses", "sampling_trial" ],
 	"types" : {
