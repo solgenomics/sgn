@@ -218,6 +218,8 @@ sub check_ownership {
    Desc: get the breeding program ids the user is associated with; output can be used
          with the grant function
 
+   Params: an sp_person_id
+
    Returns: a list of breeding_program ids the user is associated with. Other roles are
          excluded from the list.
 
