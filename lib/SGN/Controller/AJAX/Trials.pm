@@ -237,8 +237,9 @@ sub get_recent_trials : Path('/ajax/breeders/recent_trials') Args(1) {
     my $self = shift;
     my $c = shift;
     my $interval = shift; # 1 day, week, month, or year
+    my $type = $c->req->param('type') || 'phenotyping_trial'; # can be phenotyping_trial, crossing, genotyping_plates, genotyping_project 
     
-    my $trial_table = CXGN::Project::get_recently_added_trials($c->dbic_schema('Bio::Chado::Schema'),  $c->dbic_schema("CXGN::Phenome::Schema"),  $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $interval);
+    my $trial_table = CXGN::Project::get_recently_added_trials($c->dbic_schema('Bio::Chado::Schema'),  $c->dbic_schema("CXGN::Phenome::Schema"),  $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $interval, $type);
 
     $c->stash->{rest} =  { data => $trial_table }
 
@@ -283,4 +284,25 @@ sub get_recently_created_accessions : Path('/ajax/breeders/recently_added_access
     my $accession_table = CXGN::Project::get_recently_added_accessions($c->dbic_schema('Bio::Chado::Schema'), $interval);
 
     $c->stash->{rest} =  { data => $accession_table };
+}
+
+
+=head2 get_recent_project_changes()
+
+  Summary: function used in the trial tree pages to determine if there
+           were any changes in the database that should trigger a refresh
+  Returns: a list of project_ids that where added
+  Notes:   may not detect deletions or renaming
+
+=cut
+
+sub get_recently_modified_projects : Path('/ajax/breeders/recently_modified_projects') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $since_date = $c->req->param('since_date');
+    my $type = $c->req->param('type');
+    
+    my $trial_table = CXGN::Project::get_recently_modified_projects($c->dbic_schema('Bio::Chado::Schema'), $c->dbic_schema("CXGN::Phenome::Schema"), $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $since_date, $type);
+
+    $c->stash->{rest} =  { data => $trial_table };
 }
