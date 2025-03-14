@@ -104,6 +104,18 @@ sub _validate_with_plugin {
         $errors{'missing_species'} = \@species_missing;
     }
 
+    # Check for existing non-accession stocks
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $accession_list = $parsed_values->{'accession_name'};
+    my $stocks_in_db_rs = $schema->resultset("Stock::Stock")->search({ uniquename => { -ilike => $accession_list }, type_id => { '<>' => $accession_type_id } });
+    my @stocks_existing;
+    while ( my $r=$stocks_in_db_rs->next ) {
+      push @stocks_existing, $r->uniquename;
+    }
+    if ( scalar(@stocks_existing) > 0 ) {
+      push @error_messages, "The following accession names are already used in the database (as different stock types): " . join(',', @stocks_existing);
+    }
+
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
