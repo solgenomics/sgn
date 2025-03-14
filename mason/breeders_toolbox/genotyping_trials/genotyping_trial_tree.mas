@@ -60,39 +60,62 @@ jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    jQuery.ajax( {
-      url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_trial',
-      success: function(response) {
-        var html = '<ul>'+response.html+'</ul>';
+    alert('get tree from local storage...');
+    var html = localStorage.getItem('html_genotyping_trial_tree');
+    if (html !== null) {
+	alert("HTML NOW: "+html);
+	format_genotyping_trial_tree(html);
+    }
 
-        jQuery('#genotyping_trial_list').html(html);
-        //console.log(html);
-        jQuery('#genotyping_trial_list').jstree( {
-            "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-            "valid_children" : [ "folder", "genotyping_trial", "breeding_program" ],
-            "types" : {
-                "breeding_program" : {
-                    "icon": 'glyphicon glyphicon-briefcase text-info',
-                },
-                "folder" : {
-                    "icon": 'glyphicon glyphicon-folder-open text-danger',
-                },
-                "genotyping_trial" : {
-                    "icon": 'glyphicon glyphicon-th text-success',
-                }
-            },
-            "search" : {
-                 "case_insensitive" : true,
-             },
-          "plugins" : ["html_data","types","search"],
+    //alert(html);
+    if (html === null) {
+	alert('HTML NOT DEFINED! FETCHING...');
+	get_genotyping_trial_tree().then( function(r) { 
+	    html = localStorage.getItem('html_genotyping_trial_tree');
+	    format_genotyping_trial_tree(html);
+	});
+    }
 
-        });
+    
+    jQuery('#refresh_genotyping_trial_jstree_html').click(function(){
+	alert('hello!');
+	get_genotyping_trial_tree();
+    });
 
-      },
-      error: function(response) {
-        alert("An error occurred while loading the trial data.");
-      }
-  });
+
+  //   jQuery.ajax( {
+  //     url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_trial',
+  //     success: function(response) {
+  //       var html = '<ul>'+response.html+'</ul>';
+
+  //       jQuery('#genotyping_trial_list').html(html);
+  //       //console.log(html);
+  //       jQuery('#genotyping_trial_list').jstree( {
+  //           "core": { 'themes': { 'name': 'proton', 'responsive': true}},
+  //           "valid_children" : [ "folder", "genotyping_trial", "breeding_program" ],
+  //           "types" : {
+  //               "breeding_program" : {
+  //                   "icon": 'glyphicon glyphicon-briefcase text-info',
+  //               },
+  //               "folder" : {
+  //                   "icon": 'glyphicon glyphicon-folder-open text-danger',
+  //               },
+  //               "genotyping_trial" : {
+  //                   "icon": 'glyphicon glyphicon-th text-success',
+  //               }
+  //           },
+  //           "search" : {
+  //                "case_insensitive" : true,
+  //            },
+  //         "plugins" : ["html_data","types","search"],
+
+  //       });
+
+  //     },
+  //     error: function(response) {
+  //       alert("An error occurred while loading the trial data.");
+  //     }
+  // });
 
     jQuery("#genotyping_trial_tree_search").keyup(function() {
         var v = jQuery("#genotyping_trial_tree_search").val();
@@ -125,4 +148,53 @@ jQuery(document).ready(function($) {
 
 });
 
+
+function get_genotyping_trial_tree() {
+    alert('get_trial_tree');
+    return jQuery.ajax( {
+	url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_trial',  
+    }).then(  function(r) { localStorage.setItem('html_genotyping_trial_tree', r.html); });
+}
+
+function format_genotyping_trial_tree(treehtml) {
+    alert('format_genotyping_trial_tree');
+    
+    var html = '<ul>'+treehtml+'</ul>';
+    
+    jQuery('#genotyping_trial_list').html(html);
+
+    alert("HTML "+html);
+    //console.log(html);
+    jQuery('#genotyping_trial_list').jstree( {
+	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
+	"valid_children" : [ "folder", "trial", "breeding_program" ],
+	"types" : {
+	    "breeding_program" : {
+		"icon": 'glyphicon glyphicon-briefcase text-info',
+	    },
+	    "folder" : {
+		"icon": 'glyphicon glyphicon-folder-open text-danger',
+	    },
+	    "trial" : {
+		"icon": 'glyphicon glyphicon-leaf text-success',
+	    },
+
+	},
+	"search" : {
+	    "case_insensitive" : true,
+	},
+	"plugins" : ["html_data","types","search"],
+	
+    });
+    
+}
+
+function get_timestamp() {
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    var timestamp = yyyy + '-'+ mm + '-' + dd;
+    return timestamp;
+}
 </script>
