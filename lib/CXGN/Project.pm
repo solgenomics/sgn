@@ -5522,6 +5522,7 @@ sub get_recently_added_trials {
     my $people_schema = shift;
     my $metadata_schema = shift;
     my $interval = shift;
+    my $type = shift || 'phenotyping_trial'; # all, phenotyping_trial, analysis_experiment, genotyping_plate, genotyping_project, crosses
     my $limit = shift || 10;
     
     if (! grep($interval, qw| day week month year | )) {
@@ -5529,7 +5530,23 @@ sub get_recently_added_trials {
 	return;
     }
 
-    my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
+    if (! grep($type, qw | phenotyping genotyping_plate genotyping_project crosses | )) {
+	print STDERR "Trial type $type not recognized, aborting query\n";
+	return;	
+    }
+
+    my %clause = (
+	all => " ",
+	phenotyping_trial => " cvterm.cv_id in (select cv_id from cv where name='project_type') and (cvterm.name not in ('analysis_metadata_json', 'genotyping_trial', 'genotyping_project', 'crossing_trial', 'folder_for_trials', 'trial_folder', 'breeding_program')) and ",
+	genotyping_plate => "  cvterm.cv_id in (select cv_id where name='project_property')  and projectprop.value = 'genotyping_plate' and ",
+	gentoyping_project => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value = 'genotyping_project' and ",
+	crossing_trial => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value = 'crossing_trial' and ",
+	analysis_experiment => " cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value = 'analysis_experiment' and ",
+    );
+    
+    my $q = "select distinct(project.project_id), project.create_date from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm.cvterm_id) where $clause{$type} create_date + interval '1 $interval' > current_date group by project.project_id order by create_date desc limit ?";
+
+    print STDERR "QUERY = $q\n";
     
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
@@ -5599,6 +5616,74 @@ sub get_recently_modified_trials {
     }
     return \@recent_trials;
 }
+
+
+=head2 get_recently_modified_projects()
+
+  Summary: used for the manage trials pages to determine if the tree needs to be refreshed
+  Params:  bcs_schema, phenome_schema, people_schema, metadata_schema, last_refresh_date, type
+
+  type can be one of phenotyping_trial, crossing_trial, genotyping_plate, gentoyping_project
+  Returns: a list of project_ids
+
+=cut
+
+sub get_recently_modified_projects {
+    my $bcs_schema = shift;
+    my $phenome_schema = shift;
+    my $people_schema = shift;
+    my $metadata_schema = shift;
+    my $last_refresh_date = shift;
+    my $type = shift;
+
+    if (! $last_refresh_date) {
+	print STDERR "No last refresh date provided, skipping.\n";
+	return [];
+    }
+
+    
+    if (! grep($type, qw | phenotyping genotyping_plate genotyping_project crosses | )) {
+	print STDERR "Trial type $type not recognized, aborting query\n";
+	return;	
+    }
+
+    my %clause = (
+	all => " ",
+	phenotyping_trial => " cvterm.cv_id in (select cv_id from cv where name='project_type') and (cvterm.name not in ('analysis_metadata_json', 'genotyping_trial', 'genotyping_project', 'crossing_trial')) and ",
+	genotyping_plate => "  cvterm.cv_id in (select cv_id where name='project_property')  and projectprop.value in ('genotyping_plate', 'folder_for_genotyping_trials', 'breeding_program') and ",
+	gentoyping_project => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value in ('genotyping_project', 'folder_for_genotyping_projects', 'breeding_program') and ",
+	crossing_trial => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value in ('crossing_trial', 'folder_for_crossing_trials', 'breeding_program') and ",
+	analysis_experiment => " cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value = 'analysis_experiment' and ",
+    );
+    
+    my $q = "select distinct(project.project_id), project.create_date from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm.cvterm_id) where $clause{$type} create_date > ?  group by project.project_id order by create_date desc limit ?";
+
+    print STDERR "QUERY = $q\n";
+    
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute($last_refresh_date, 10);
+
+
+    my @recent_trials;
+    while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
+	print STDERR "Formatting entry with trial id $trial_id...\n";
+	my $t = CXGN::Trial->new( { bcs_schema => $bcs_schema, phenome_schema => $phenome_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, trial_id => $trial_id });
+	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
+	my $trial_type = ref($t);
+	$trial_type =~ s/^CXGN\:\://g;
+	
+	my $breeding_program = $t->get_breeding_program();
+	my $breeding_program_id = $t->get_breeding_program_id();
+
+	my $breeding_program_link = "<a href=\"/breeders/program/".$breeding_program_id."\">$breeding_program</a>";
+       push @recent_trials, [ $trial_link, $trial_type, $breeding_program_link, $create_date ];
+    }
+
+    print STDERR "RECENT PROJECTS: ".Dumper(\@recent_trials);
+    return \@recent_trials;
+}
+
 
 =head2 class function get_recently_added_accessions()
 
