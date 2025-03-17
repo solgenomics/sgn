@@ -191,7 +191,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 sub _parse_list_from_json {
     my $list_json = shift;
 #    print STDERR "LIST JSON: ". Dumper $list_json;
-    my $json = new JSON;
+    my $json = JSON->new;
     if ($list_json) {
        # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
         my $decoded_list = decode_json($list_json);
@@ -633,7 +633,9 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         if ($format eq ".csv") {
 
             #build csv with column names
+            ## no critic (RequireBriefOpen)
             open(my $csv_fh, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
+            {
                 my @header = @{$data[0]};
                 my $num_col = scalar(@header);
                 for (my $line =0; $line< @data; $line++) {
@@ -652,6 +654,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
                     }
                     print $csv_fh "\n";
                 }
+            }
             close $csv_fh;
 
         } else {
@@ -768,6 +771,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         my $file_name = basename($file_path);
 
         # Write to csv file
+        ## no critic (RequireBriefOpen)
         open(my $csv_fh, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
         my @header =  @{$rows->[0]};
         my $num_col = scalar(@header);
@@ -827,7 +831,7 @@ sub build_accession_properties_info {
     # Setup Stock Props
     my @stock_props = ("organization", "stock_synonym", "PUI");
     foreach my $esp (@$editable_stock_props) {
-        if ( !grep(/^$esp$/, @stock_props) ) {
+        if (!scalar grep { $_ eq $esp } @stock_props) {
             push(@stock_props, $esp)
         }
     }
@@ -922,6 +926,8 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $dl_cookie = "download".$dl_token;
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
+
+    ## no critic (RequireBriefOpen)
     open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
     my $filename;
 
@@ -1438,7 +1444,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
 
-
+    ## no critic (RequireBriefOpen)
     open my $TEMP, '> :encoding(UTF-8)', $tempfile or die "Cannot open output_test00.txt: $!";
 
 
@@ -1493,6 +1499,9 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
             print $TEMP "\n";
 
 	}
+
+    close $TEMP;
+
     }
 
 
@@ -1522,8 +1531,8 @@ sub trial_download_log {
     my $now = DateTime->now();
 
     if (! $c->user) {
-      return;
       print STDERR "Can't find user id, skipping download logging\n";
+      return;
     }
     if ($c->config->{trial_download_logfile}) {
       my $logfile = $c->config->{trial_download_logfile};
