@@ -31,7 +31,7 @@ Database name
 
 =head1 AUTHOR
 
-Ryan Preble, rsp98@cornell.edu
+Ryan Preble <rsp98@cornell.edu>
 
 =cut
 
