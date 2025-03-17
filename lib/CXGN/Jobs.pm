@@ -5,7 +5,7 @@ CXGN::Jobs - a class to unify background job submission, storage, and reporting
 =head1 DESCRIPTION
 
 CXGN::Jobs is a central location where background jobs can be submitted through cxgn-corelibs/CXGN::Tools::Run. 
-By routing all jobs through this module, all submitted jobs regardless of type can be stored in the sgn_people.sp_jobs 
+By routing all jobs through this module, all submitted jobs regardless of type can be stored in sgn_people.sp_jobs 
 and updated accordingly.
 
 =head1 SYNOPSIS
@@ -15,15 +15,21 @@ my $job = CXGN::Jobs->new({
     schema => $bcs_schema
     args => $args
 });
+
 my $job_id = $job->submit_and_store();
+
 ...
+
 my $job = CXGN::Jobs->new({
     people_schema => $people_schema
     schema => $bcs_schema
     sp_job_id => $job_id
 });
+
 $job->create_date();
+
 $job->status();
+
 $job->result_page();
 
 =head1 AUTHOR
@@ -36,6 +42,7 @@ package CXGN::Jobs;
 
 use Moose;
 use Moose::Util::TypeConstraints;
+use DateTime;
 use Data::Dumper;
 use JSON::Any;
 use CXGN::Tools::Run;
@@ -72,7 +79,7 @@ User ID of the owner (submitter) of the job
 
 =cut 
 
-has 'sp_person_id' => ( isa => 'Maybe[Int]', is => 'rw' );
+has 'sp_person_id' => ( isa => 'Int', is => 'rw' );
 
 =head2 slurm_id()
 
@@ -127,17 +134,37 @@ has 'results_page' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_resul
 Hashref of arguments supplied to the job. Not necessarily needed for job creation, but 
 essential for job submission. Must have keys for cmd and site basename. All other keys
 can be customized for the job type. Stored in the DB as a JSONB. This is the place to 
-include config for CXGN::Tools::Run.
+include config for CXGN::Tools::Run. As an argument to a new object, this will be 
+ignored if an sp_job_id is also supplied. 
 
 Ex:
 
-$args = {
-    cmd => 'perl /bin/script.pl -a arg1 -b arg2',
-    site => 'breedbase.org',
-    config => '...',
-    ...
-};
+my $job = CXGN::Jobs->new({
+    people_schema => $ps,
+    schema => $s,
+    args => {
+        cmd => 'perl /bin/script.pl -a arg1 -b arg2',
+        site => 'breedbase.org',
+        config => '...',
+    }
+});
+
 
 =cut
 
-has 'args' => ( isa => 'Maybe[Str]', is => 'rw' );
+has 'args' => ( isa => 'Maybe[Hashref]', is => 'rw' );
+
+=head1 METHODS
+
+=cut
+
+sub BUILD {
+    my $self = shift;
+    my $args = shift;
+
+    if (!$args->{sp_job_id}) { # New job, no ID yet
+
+    } else { #existing job
+        $self->args($args->{args});
+    }
+}
