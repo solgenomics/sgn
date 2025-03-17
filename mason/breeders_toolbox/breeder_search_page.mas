@@ -504,6 +504,19 @@ $dataset_id => undef
 
 <script>
 
+document.addEventListener("DOMContentLoaded", function() {
+    var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+    if (parseInt(check_outliers) === 1) {
+        // Set the checkbox to checked
+        var outlierCheckbox = document.querySelector('.wizard-download-phenotypes-outliers');
+        if (outlierCheckbox) {
+            outlierCheckbox.checked = true;
+        }
+    }
+});
+
+
   jQuery(document).ready(function (){
 %  if ($dataset_id){
       document.getElementsByClassName("wizard-dataset-select")[0].value = <% $dataset_id %>;

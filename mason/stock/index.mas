@@ -53,6 +53,8 @@ $barcode_tempdir => undef
 $barcode_tempuri => undef
 $identifier_prefix => 'SGN'
 $organism_autocomplete_uri => '/ajax/organism/autocomplete/'
+$image => undef
+$image_url => undef
 </%args>
 
 
@@ -263,7 +265,7 @@ function jqueryStuff() {
 
                 </div>
                 <%perl>
-                if ($type_name eq 'accession') { 
+                if ($type_name eq 'accession') {
                 </%perl>
                 <div class="col-sm-6">
                     <div style="position: relative;">
@@ -282,9 +284,22 @@ function jqueryStuff() {
                     <div style="display: flex; justify-content: center; align-items; height: 100%; margin-top: 20px;">
                         <%perl>
                         use SGN::Image;
-                        my $image_id = $stockref->{image_ids}->[0]->[0];
-                        my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
-                        my $image_url = $image->get_image_url('small');
+                        my $schema = $stockref->{schema};
+                        my $stock_id = $stockref->{stock_id};
+
+                        my $display_image_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'selected_display_image', 'stock_property')->cvterm_id();
+                        my $stockprop = $schema->resultset('Stock::Stockprop')->find({ stock_id => $stock_id, type_id => $display_image_cvterm_id });
+
+                        if ($stockprop) {
+                            my $image_id = $stockprop->value;
+                            my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+                            $image_url = $image->get_image_url('small');
+                        } else {
+                            my $image_id = $stockref->{image_ids}->[0]->[0];
+                            my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+                            $image_url = $image->get_image_url('small');
+                        }
+                        
                         </%perl>
 
                         <img src="<% $image_url %>" alt="No accession image to display" class="img-responsive" style="max-width: 100%; height: auto;" />
@@ -346,7 +361,8 @@ function jqueryStuff() {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => "<h4 style='display:inline'>Additional Info</h4>", info_section_subtitle => 'View and edit additional properties such as synonyms, editors, and all types of properties.', icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_stock_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, info_section_collapsed => 0 &>
 % } else {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => "<h4 style='display:inline'>Additional Info</h4>", info_section_subtitle => 'View and edit additional properties such as synonyms, editors, and all types of properties.', icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_vector_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, info_section_collapsed => 0 &>
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View accessions (transformants) and transformation ids that are linked to this vector construct.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "vector_related_stocks_section", stock_uniquename => $uniquename, type_name => $type_name &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Accessions</h4>", info_section_subtitle => 'View accessions (transformants) and transformation ids related to this vector construct.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "vector_related_accessions_section", stock_uniquename => $uniquename, type_name => $type_name &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Obsoleted Accessions</h4>", info_section_subtitle => 'View obsoleted accessions (transformants) related to this vector construct and metadata.', icon_class => "glyphicon glyphicon-remove", info_section_id => "vector_obsoleted_accessions_section", stock_uniquename => $uniquename, type_name => $type_name &>
 % }
 
 % if ($type_name eq 'accession'){
@@ -390,8 +406,8 @@ function jqueryStuff() {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View any plots, plants, tissue_sample, and/or accessions that are linked to this stock.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
 
 % }
-
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Images</h4>", info_section_subtitle => 'View and add images of this stock and of related stocks.', icon_class => "glyphicon glyphicon-camera", info_section_id => "stock_images_section", image_ids => $image_ids, related_image_ids => $related_image_ids, dbh => $dbh, buttons_html => qq|<a id="add_new_image_button" class="btn btn-sm btn-default" style="margin:3px" href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">Add new image</a><a class="btn btn-sm btn-default" style="margin:3px" id="stock_images_section_compare_images_button">Compare Images</a>| &>
+    
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Images</h4>", info_section_subtitle => 'View and add images of this stock and of related stocks.', icon_class => "glyphicon glyphicon-camera", info_section_id => "stock_images_section", image_ids => $image_ids, related_image_ids => $related_image_ids, dbh => $dbh, curator =>$curator, buttons_html => qq|<a id="add_new_image_button" class="btn btn-sm btn-default" style="margin:3px" href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">Add new image</a><a class="btn btn-sm btn-default" style="margin:3px" id="stock_images_section_compare_images_button">Compare Images</a>| &>
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Upload any additional files for this Accession.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "stock_upload_files" &>
 

@@ -260,7 +260,8 @@ has 'image_plot_full_names' => (
     isa => 'HashRef',
     is => 'rw',
     default => sub { {} },
-);
+    );
+
 
 #build is used for creating hash lookups in this case
 sub create_hash_lookups {
@@ -271,7 +272,8 @@ sub create_hash_lookups {
     #$self->trait_objs({}); #initialize with empty list
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
-    # print STDERR "trait list after filtering @trait_list\n";
+    #print STDERR "trait list after filtering @trait_list\n";
+
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
 
@@ -280,9 +282,15 @@ sub create_hash_lookups {
     $self->stock_id_list($stock_id_list->{'transform'});
 
     foreach my $trait_name (@trait_list) {
-        print STDERR "trait: $trait_name\n";
+        #print STDERR "trait: $trait_name\n";
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
-        $self->trait_objs->{$trait_name} = $trait_cvterm;
+
+    	if (!$trait_cvterm) {
+	    print STDERR "IGNORING TERM $trait_name - IT DOES NOT EXIST IN THE DB (may need to be added to sgn_local.conf?)\n";
+	    next;
+	}
+
+	$self->trait_objs->{$trait_name} = $trait_cvterm;
 
         my $trait_cvterm_id = $trait_cvterm->cvterm_id();
 
@@ -309,20 +317,22 @@ sub create_hash_lookups {
 
         push @cvterm_ids, $trait_cvterm_id;
     }
+    
+
 
     # checking if values in the file are already stored in the database or in the same file
     #
     my $stock_ids_sql = join ("," , @{$self->stock_id_list});
     #print STDERR "Cvterm ids are @cvterm_ids";
-
+    
     if (scalar @cvterm_ids > 0) {
         my $cvterm_ids_sql = join ("," , @cvterm_ids);
         my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype LEFT JOIN nd_experiment_phenotype USING(phenotype_id) LEFT JOIN nd_experiment USING(nd_experiment_id) LEFT JOIN nd_experiment_stock USING(nd_experiment_id) LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
         my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
         $h->execute();
-
+	
         while (my ($previous_value, $cvterm_id, $collect_timestamp, $stock_id) = $h->fetchrow_array()) {
-
+	    
             if ($stock_id){
                 #my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
                 $collect_timestamp = $collect_timestamp || 'NA';
@@ -332,7 +342,7 @@ sub create_hash_lookups {
             }
         }
     }
-
+    
     # $self->check_trait_category($self->get_trait_props('trait_categories'));
     # $self->check_trait_format($self->get_trait_props('trait_format'));
     # $self->check_trait_min_value($self->get_trait_props('trait_minimum'));
@@ -347,10 +357,17 @@ sub verify {
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
+
     # print STDERR Dumper \@trait_list;
     # my %plot_trait_value = %{$self->values_hash};
     # my %phenotype_metadata = %{$self->metadata_hash};
     # my $timestamp_included = $self->has_timestamps;
+
+    #print STDERR Dumper \@trait_list;
+    my %plot_trait_value = %{$self->values_hash};
+    my %phenotype_metadata = %{$self->metadata_hash};
+    my $timestamp_included = $self->has_timestamps;
+
     my $archived_image_zipfile_with_path = $self->image_zipfile_path;
     my $schema = $self->bcs_schema;
     my $transaction_error;
@@ -470,6 +487,39 @@ sub verify {
     return ($all_warnings, $all_errors);
 }
 
+
+=head2 check_measurement()
+
+   Params: $plot_name, $trait_name, $values
+   The values parameter may be:
+    * a arrayref. In that case, the array is assumed to contain: a trait value, a timestamp
+    * a hashref. In that case, the values represent high dimensional data (not checked by this function)
+
+   Returns: a an array containing two arrayrefs, one with warnings and the other with errors.
+
+   Description:
+
+   The function will check:
+   * Are the values an arrayref or hashref? It will return
+   without further checks if it is a hashref (high dimensionality data).
+   * If the trait_name is notes, it skippes any further checks.
+   * Are trait formats defined for the trait? If the trait is numeric, the trait numericness is checked, and
+     whether the values lies between trait_minimum and trait_maximum.
+   * Is the trait an image? The availability of the corresponding image file is checked.
+   * If the trait is categorical, the trait categories are retrieved and the value checked against the
+     categories
+   * The timestamp is checked for format (ISO, YYYY-MM-DD HH:MM::SS).
+   * If the trait is multicat, the multiple values are checked against the defined categories.
+   * If the trait is defined as a multiple of time_series measurement, the presence of a timestamp is checked.
+     Omitted the timestamp for such a trait is considered an error and should break the upload.
+   * If the trait is defined as a single trait, the presence of an older measurement is checked.
+     Depending on the settings, the old trait is either retained or overwritten with the new trait value.
+
+
+=cut
+   
+  
+
 sub check_measurement {
     my $self = shift;
     my $plot_name = shift;
@@ -478,190 +528,225 @@ sub check_measurement {
     
     my $error_message = "";
     my $warning_message = "";
-
+    
     print STDERR "check_measurement for trait $trait_name and values ".Dumper($value_array)."\n";
     
     #print STDERR Dumper $value_array;
     my ($trait_value, $timestamp);
     if (ref($value_array) eq 'ARRAY') {
-	    # the entry represents trait + timestamp
-	    #
-	    $trait_value = $value_array->[0];
-	    $timestamp = $value_array->[1];
+	# the entry represents trait + timestamp
+	#
+	$trait_value = $value_array->[0];
+	$timestamp = $value_array->[1];
     }
     elsif (ref($value_array) eq "HASH") {
-	    # the trait is a high dimensional trait - we can't check
-	    print STDERR "TRAIT VALUE IS HIGH DIMENSIONAL - skipping.\n";
-	    return (undef, undef);
+	# the trait is a high dimensional trait - we can't check
+	print STDERR "TRAIT VALUE IS HIGH DIMENSIONAL - skipping.\n";
+	return (undef, undef);
     }
     else {
-	    # it's a scalar
-	    #
-	    $trait_value = $value_array;
+	# it's a scalar
+	#
+	$trait_value = $value_array;
     }
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
     if ( defined($trait_value) && $trait_name ne "notes" ) {
-	    print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
-	    my $trait_cvterm = $self->trait_objs->{$trait_name};
-	    my $trait_cvterm_id = $trait_cvterm->cvterm_id();
+	print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
+	my $trait_cvterm = $self->trait_objs->{$trait_name};
+	my $trait_cvterm_id = $trait_cvterm->cvterm_id();
         # print STDERR "the trait cvterm id of this trait is: " . $trait_cvterm_id . "\n";
-	    my $stock_id = $self->bcs_schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
-    
-	    #Trait values can be non alphanumeric 
-	    #if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9,.\-\/\_]/ && $trait_value ne '.')){
-	    #    $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-	    #}
-    
-	    #check that trait value is valid for trait name
-	    if (exists($self->check_trait_format->{$trait_cvterm_id})) {
+	my $stock_id = $self->bcs_schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
+	
+	
+	#check that trait value is valid for trait name
+	if (exists($self->check_trait_format()->{$trait_cvterm_id})) {
             # print STDERR "Trait minimum value checks if it exists: " . $self->check_trait_min_value->{$trait_cvterm_id} . "\n";
-	        if ($self->check_trait_format->{$trait_cvterm_id} eq 'numeric') {
-	    	    my $trait_format_checked = looks_like_number($trait_value);
-	    	    if (!$trait_format_checked && $trait_value ne '') {
-	    	        $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-	    	    }
+	    if ($self->check_trait_format()->{$trait_cvterm_id} eq 'numeric') {
+		my $trait_format_checked = looks_like_number($trait_value);
+		if (!$trait_format_checked && $trait_value ne '') {
+		    $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+		}
+
                 my $trait_min = defined $self->check_trait_min_value->{$trait_cvterm_id} ? $self->check_trait_min_value->{$trait_cvterm_id} : undef;
                 my $trait_max = defined $self->check_trait_max_value->{$trait_cvterm_id} ? $self->check_trait_max_value->{$trait_cvterm_id} : undef;
-
+		
                 print STDERR "the trait minimum: Trait Minimum for trait $trait_name: ", (defined $trait_min ? $trait_min : undef), "\n";
                 print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
-
+		
                 if (defined $trait_min && $trait_value < $trait_min) {
                     $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, $trait_min.</small><hr>";
                 } else {
                     print STDERR "the trait min and trait value : No minimum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id).\n";
                 }
-
+		
                 if (defined $trait_max && $trait_value > $trait_max) {
                     $error_message .= "<small>For the trait '$trait_name' the trait value $trait_value should not be larger than the defined trait_maximum, $trait_max.</small><hr>";
                 }else {
                     print STDERR "the trait max and trait value: No maximum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id). \n";
                 }
-
-	    	    # if ($trait_value < $self->check_trait_min_value->{$trait_cvterm_id}) {
-                #     # print STDERR "Trait value: $trait_value, Trait minimum value: ".$self->check_trait_min_value->{$trait_cvterm_id}."\n";
-	    	    #     $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, ". $self->check_trait_min_value->{$trait_cvterm_id}. "</small></hr>";
-	    	    # }
-	    	    # if ($trait_value > $self->check_trait_max_value->{$trait_cvterm_id}) {
-                #     # print STDERR "Trait value: $trait_value, Trait min value: ".$self->check_trait_min_value->{$trait_cvterm_id}."\n";
-	    	    #     $error_message .= "<small>For the trait '$trait_name' The trait value $trait_value should not be larger than the defined trait_maximum, ".$self->check_trait_max_value->{$trait_cvterm_id}."</small></hr>";
-	    	    # }
-	        }
-            
-            #check, if the trait value is an image
-	        if ($self->check_trait_format->{$trait_cvterm_id} eq 'image') {
-	    	    $trait_value =~ s/^.*photos\///;
-	    	    if (!exists($self->image_plot_full_names->{$trait_value})) {
-	    	        $error_message = $error_message."<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile called $trait_value. </small><hr>";
-	    	    }
-	        }
 	    }
-    
-	    if (exists($self->check_trait_category->{$trait_cvterm_id})) {
-	        my @trait_categories = sort(split /\//, $self->check_trait_category->{$trait_cvterm_id});
-	        my %trait_categories_hash;
-            # print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
-            # print STDERR "Trait categories hash: ".Dumper(\%trait_categories_hash)."\n";
-            my @check_values;
-            # print STDERR "Check values: ".Dumper(\@check_values)."\n";     
-            if ($self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
-                @check_values = split /\:/, $trait_value;
-            }else {
-                @check_values = ( $trait_value );
-            }
-	        if ($self->check_trait_format->{$trait_cvterm_id} eq 'Ordinal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Nominal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
-	    	    # Ordinal looks like <value>=<category>
-	    	    foreach my $ordinal_category (@trait_categories) {
-	    	        my @split_value = split('=', $ordinal_category);
-	    	        if (scalar(@split_value) >= 1) {
-	    	    	    $trait_categories_hash{$split_value[0]} = 1;
-	    	        }
-	    	    }
-	        } else {
-	    	    # Catch everything else
-	    	    %trait_categories_hash = map { $_ => 1 } @trait_categories;
-	        }
-
-            foreach my $value (@check_values) {
-	            if ($value ne '' && !exists($trait_categories_hash{$value})) {
-                    my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
-	    	        $error_message = "<small> This trait value should be one of $valid_values: <br/>Plot Name: $plot_name <br/>Trait Name: $trait_name <br/>Value: $trait_value</small><hr>";
-                    print STDERR "The error in the value $error_message \n";
-                }else {
-	    	        print STDERR "Trait value $trait_value is valid\n";
-	            }
-	        }
-        }
-    
-	    my $repeat_type = "single";
-	    if (exists($self->check_trait_repeat_type->{$trait_cvterm_id})) {
-	        if (grep /$repeat_type/, ("single", "multiple", "time_series")) {
-	    	    $repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id};
-                # print STDERR "Trait repeat type: $repeat_type\n";
-	        }else {
-	    	    print STDERR "the trait repeat type of $self->check_trait_repeat_type->{$trait_cvterm_id} has no meaning. Assuming 'single'.\n";
-	        }
+		
+	    #check, if the trait value is an image
+	    if ($self->check_trait_format->{$trait_cvterm_id} eq 'image') {
+		$trait_value =~ s/^.*photos\///;
+		if (!exists($self->image_plot_full_names->{$trait_value})) {
+		    $error_message = $error_message."<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile called $trait_value. </small><hr>";
+		}
 	    }
-    
-	    if ($repeat_type eq "multiple" or $repeat_type eq "time_series") {
-            # print STDERR "Trait repeat type: $repeat_type\n";
-	        if (!$timestamp) {
-                # print STDERR "trait name : $trait_name is multiple without timestamp \n";
-	    	    $error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
-	        }
-	        if (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
-	    	    # print STDERR "trait name : $trait_name  with timestamp \n";
-                $error_message .= "<small>For the multiple measurement trait $trait_name the observation unit $plot_name already has a value associated with it at exactly the same time";
-	        }
+	
+	    my @trait_categories;
+	    my %trait_categories_hash;
+	    my @check_values;
+	    
+	    if (exists($self->check_trait_category()->{$trait_cvterm_id})) {
+	        @trait_categories = sort(split /\//, $self->check_trait_category->{$trait_cvterm_id});
+	        %trait_categories_hash;
+		# print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
+		# print STDERR "Trait categories hash: ".Dumper(\%trait_categories_hash)."\n";
+		my @check_values;
+		# print STDERR "Check values: ".Dumper(\@check_values)."\n";     
+		if ($self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
+		    @check_values = split /\:/, $trait_value;
+		}
+		else {
+		    @check_values = ( $trait_value );
+		}
 	    }
 
+	    
 	    #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
-	    #check if the plot_name, trait_name combination already exists in database.
-	    if ($repeat_type eq "single") { 
-	        if (exists($self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id})) {
-	    	    my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};
-	    	    if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
-	    	        $self->same_value_count($self->same_value_count() + 1);
-	    	    }
-	        } elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
-	    	    my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
-	    	    if ( defined($prev) ) {
-	    	        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
-	    	    }
-	        } elsif (exists($self->unique_trait_stock->{$trait_cvterm_id, $stock_id})) {
-	    	    my $prev = $self->unique_trait_stock->{$trait_cvterm_id, $stock_id};
-	    	    if ( defined($prev) ) {
-	    	        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
-	    	    }
-	        }
+ 	    #check if the plot_name, trait_name combination already exists in database.
+	    # if (exist($self->unique_value_trait_stock()->{$trait_value, $trait_cvterm_id, $stock_id})) {
+	    # 	my $prev = $self->unique_value_trait_stock()->{$trait_value, $trait_cvterm_id, $stock_id};
+	    # 	if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
+	    # 	    $self->same_value_count( $self->same_value_count++ );
+	    # 	}
+	    # }
+	    # elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
+	    # 	my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
+	    # 	if ( defined($prev) ) {
+	    # 	    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+	    # 	}
+	    # } elsif (exists($self->unique_trait_stock()->{$trait_cvterm_id, $stock_id})) {
+	    # 	my $prev = $self->unique_trait_stock()->{$trait_cvterm_id, $stock_id};
+	    # 	if ( defined($prev) ) {
+	    # 	    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+	    # 	}
+	    # }
+	    
+	    #check if the plot_name, trait_name combination already exists in same file.
+	    #if (exists($self->file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id})) {
+	#	$warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
+	 #   }
+	  #  $self->file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
+	    
+	    
+	    if ($self->has_timestamps()) { #timestamp_included) {
+		if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
+		    if ($timestamp) {
+			if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+			    $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+			}
+		    }
+		}
+	    }
+	    if ($self->check_trait_format->{$trait_cvterm_id} eq 'Ordinal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Nominal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
+		# Ordinal looks like <value>=<category>
+		foreach my $ordinal_category (@trait_categories) {
+		    my @split_value = split('=', $ordinal_category);
+		    if (scalar(@split_value) >= 1) {
+			$trait_categories_hash{$split_value[0]} = 1;
+		    }
+		}
+	    } else {
+		# Catch everything else
+		%trait_categories_hash = map { $_ => 1 } @trait_categories;
+	    }
+	    
+	    foreach my $value (@check_values) {
+		if ($value ne '' && !exists($trait_categories_hash{$value})) {
+		    my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
+		    $error_message = "<small> This trait value should be one of $valid_values: <br/>Plot Name: $plot_name <br/>Trait Name: $trait_name <br/>Value: $trait_value</small><hr>";
+		    print STDERR "The error in the value $error_message \n";
+		}
+		else {
+		    print STDERR "Trait value $trait_value is valid\n";
+		}
+	    }
+	}
     
-	        #check if the plot_name, trait_name combination already exists in same file.
-	        if (exists($self->check_file_stock_trait_duplicates->{$trait_cvterm_id, $stock_id})) {
-	    	    $warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
-	        }
-	        $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
-
-	    }else {   ## multiple or time_series - warn only if the timestamp/value are identical
-	        if (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp}) && $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp} eq $trait_value) {
-                $warning_message .= "For trait 'trait_name', the  timepoint $timestamp for stock  $stock_id already has a measurement with the same value $trait_value associated with it.<hr>";
-	        }
+	my $repeat_type = "single";
+	if (exists($self->check_trait_repeat_type->{$trait_cvterm_id})) {
+	    if (grep /$repeat_type/, ("single", "multiple", "time_series")) {
+		$repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id};
+		print STDERR "Trait repeat type: $repeat_type\n";
+	    }else {
+		print STDERR "the trait repeat type of $self->check_trait_repeat_type->{$trait_cvterm_id} has no meaning. Assuming 'single'.\n";
 	    }
-    }
-
-    if ($self->has_timestamps()) {
-	    if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
-	        if ($timestamp) {
-	    	    if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-	    	        $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
-	    	    }
-	        }
+	}
+	
+	if ($repeat_type eq "multiple" or $repeat_type eq "time_series") {
+	    print STDERR "Trait repeat type: $repeat_type\n";
+	    if (!$timestamp) {
+		# print STDERR "trait name : $trait_name is multiple without timestamp \n";
+		$error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
 	    }
+	    if (exists($self->unique_trait_stock_timestamp()->{$trait_cvterm_id, $stock_id, $timestamp})) {
+		# print STDERR "trait name : $trait_name  with timestamp \n";
+		$error_message .= "<small>For the multiple measurement trait $trait_name the observation unit $plot_name already has a value associated with it at exactly the same time";
+	    }
+	}
+	
+    
+	#print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
+	#check if the plot_name, trait_name combination already exists in database.
+	if ($repeat_type eq "single") {
+
+	    print STDERR "Processing this trait as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
+	    if (exists($self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id})) {
+		my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};
+		if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
+		    $self->same_value_count($self->same_value_count() + 1);
+		}
+	    } elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
+		my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
+		if ( defined($prev) ) {
+		    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+		}
+	    } elsif (exists($self->unique_trait_stock->{$trait_cvterm_id, $stock_id})) {
+		my $prev = $self->unique_trait_stock->{$trait_cvterm_id, $stock_id};
+		if ( defined($prev) ) {
+		    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+		}
+	    }
+	    
+	    #check if the plot_name, trait_name combination already exists in same file.
+	    if (exists($self->check_file_stock_trait_duplicates->{$trait_cvterm_id, $stock_id})) {
+		$warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
+	    }
+	    $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
+	    
+	}else {   ## multiple or time_series - warn only if the timestamp/value are identical
+	    if (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp}) && $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp} eq $trait_value) {
+		$warning_message .= "For trait 'trait_name', the  timepoint $timestamp for stock  $stock_id already has a measurement with the same value $trait_value associated with it.<hr>";
+	    }
+	}
     }
+    
+    #if ($self->has_timestamps()) {
+#	if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
+#	    if ($timestamp) {
+#		if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+#		    $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+#		}
+#	    }
+#	}
+ #   }
     # combine all warnings about the same values into a summary count
     if ( defined($self->same_value_count()) && ($self->same_value_count > 0) ) {
         $warning_message = $warning_message."<small>There are ".$self->same_value_count()." values in your file that are the same as values already stored in the database.</small>";
     }
-
+    
     ## Verify metadata
     if ($self->metadata_hash->{'archived_file'} && (!$self->metadata_hash->{'archived_file_type'} || $self->metadata_hash->{'archived_file_type'} eq "")) {
         $error_message = "No file type provided for archived file.";
@@ -675,7 +760,7 @@ sub check_measurement {
         $error_message = "No date provided in file upload metadata.";
         return ($warning_message, $error_message);
     }
-
+    
     # print STDERR "warnings : $warning_message, Errors: $error_message\n";
     return ($warning_message, $error_message);
 }
@@ -724,21 +809,21 @@ sub store {
     my %experiment_ids;
     my @stored_details;
     my %nd_experiment_md_images;
-
+    
     #    my %check_unique_trait_stock = %{$self->unique_trait_stock};
     my $rs;
     my %data;
     $rs = $schema->resultset('Stock::Stock')->search(
         {'type.name' => ['field_layout', 'analysis_experiment', 'sampling_layout'], 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id, $subplot_cvterm_id, $tissue_sample_cvterm_id, $analysis_instance_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
         {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
-	    '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
-	    '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
+	 '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
+	 '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
         }
 	);
     while (my $s = $rs->next()) {
         $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
     }
-
+    
     # print STDERR "DATA: ".Dumper(\%data);
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
     my $coderef = sub {
@@ -748,24 +833,24 @@ sub store {
         my $skip_count = 0;
         my $overwrite_count = 0;
         my $remove_count = 0;
-
-	    # print STDERR "(store) values hash ".Dumper($self->values_hash());
+	
+	# print STDERR "(store) values hash ".Dumper($self->values_hash());
         # foreach my $plot_name (@plot_list) {
         foreach my $plot_name (keys %{$self->values_hash()}) {
-	    
             my $stock_id = $data{$plot_name}[0];
             my $location_id = $data{$plot_name}[1];
             my $project_id = $data{$plot_name}[2];
-	    
+
             # create plot-wide nd_experiment entry
-	    
-            my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
-                nd_geolocation_id => $location_id,
-                type_id => $phenotyping_experiment_cvterm_id,
-                nd_experimentprops => [{type_id => $local_date_cvterm_id, value => $upload_date}, {type_id => $local_operator_cvterm_id, value => $operator}],
-                nd_experiment_projects => [{project_id => $project_id}],
-                nd_experiment_stocks => [{stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id}]
-			});
+
+            my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
+		{
+		    nd_geolocation_id => $location_id,
+		    type_id => $phenotyping_experiment_cvterm_id,
+		    nd_experimentprops => [{type_id => $local_date_cvterm_id, value => $upload_date}, {type_id => $local_operator_cvterm_id, value => $operator}],
+		    nd_experiment_projects => [{project_id => $project_id}],
+		    nd_experiment_stocks => [{stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id}]
+		});
 	    
             $experiment_ids{$experiment->nd_experiment_id()}=1;
 	    
@@ -801,7 +886,7 @@ sub store {
             foreach my $trait_name (keys %{$self->values_hash()->{$plot_name}}) {
                 my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
 		print STDERR "TRAIT: $trait_name\n";
-
+		
 		if ($trait_name eq "notes") {
 		    # we already dealt with notes, which are stored as stockprops...
 		    print STDERR "skipping notes trait (already stored as stockprop)...\n";
@@ -809,219 +894,239 @@ sub store {
 		}
                 my $trait_cvterm = $self->trait_objs->{$trait_name};
 		
-                my $measurements_array = $self->values_hash->{$plot_name}->{$trait_name};
-		        # print STDERR "measurement array : ".Dumper($measurements_array);
-		        # print STDERR "reference measurement array = ".ref($measurements_array->[0])."\n";
-		        if ( (ref($measurements_array) eq "ARRAY") && ref($measurements_array->[0]) ne "ARRAY") {
-		            ## multiple measurements, have structure  [ [ value, timestamp ], [ value, timestamp ]... ] instead of just [ value, timestamp ] for single measurements
-		            # print STDERR "Adding to sub array...\n";
-		            $measurements_array = [ $measurements_array ];
-		        }
-
+		# print STDERR "measurement array : ".Dumper($measurements_array);
+		# print STDERR "reference measurement array = ".ref($measurements_array->[0])."\n";
+		if ( (ref($measurements_array) eq "ARRAY") && ref($measurements_array->[0]) ne "ARRAY") {
+		    ## multiple measurements, have structure  [ [ value, timestamp ], [ value, timestamp ]... ] instead of just [ value, timestamp ] for single measurements
+		    # print STDERR "Adding to sub array...\n";
+		    $measurements_array = [ $measurements_array ];
+		}
+		
                 # print STDERR "MEASUREMENT ARRAY ".Dumper($measurements_array);
-
+		
                 my $value_count = 0;
-		        if (ref($measurements_array) eq "ARRAY") { 
-		            foreach my $value_array(@$measurements_array) { 
-		                # print STDERR "CHECKING $plot_name, $trait_name, ".Dumper($value_array)."\n";
-
-		                # this should not give any $errors now
-
-
-				
-		                my ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
-
-		                if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }
-
-		                # convert to array or array format for single array values to accept old format inputs without refactoring
-		                #if (ref($value_array->[0]) ne 'ARRAY') {
-		                #	push @values, $value_array;
-		                #   } else {
-		                #	@values = @{$value_array};
-		                #   }
-
+		if (ref($measurements_array) eq "ARRAY") { 
+		    foreach my $value_array (@$measurements_array) { 
+			# print STDERR "CHECKING $plot_name, $trait_name, ".Dumper($value_array)."\n";
+						
+			my ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
+##<<<<<<< HEAD
+			if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }
+			
+			# convert to array or array format for single array values to accept old format inputs without refactoring
+			#if (ref($value_array->[0]) ne 'ARRAY') {
+			#	push @values, $value_array;
+			#   } else {
+			#	@values = @{$value_array};
+			#   }
+			
                         # print STDERR "VALUE ARRAY: ".Dumper($value_array);
-
+			
                         #foreach my $value (@$value_array) {
-
-		                my $phenotype_object = CXGN::Phenotype->new( { schema => $schema });
+			
+			my $phenotype_object = CXGN::Phenotype->new( { schema => $schema });
                         # print STDERR "complete phenotype_object: ".Dumper($phenotype_object)."\n";
-		                # perl doesn't have a problem attempting to access possibly non existing indices
-		                my $trait_value = $value_array->[0];
+			# perl doesn't have a problem attempting to access possibly non existing indices
+			my $trait_value = $value_array->[0];
                         # print STDERR "the trait value in the phenotype object: $trait_value\n";
-		                $phenotype_object->value($trait_value);
-		                my $timestamp = $value_array->[1];
+			$phenotype_object->value($trait_value);
+			my $timestamp = $value_array->[1];
                         # print STDERR "the timestamp in the phenotype object: $timestamp\n";
-
+			
                         if ($timestamp eq "") { $timestamp = undef; }
-		                $phenotype_object->collect_date($timestamp);
+			$phenotype_object->collect_date($timestamp);
                         # print STDERR "the collect date in the phenotype object: $timestamp\n";
-		                $operator = $value_array->[2] ? $value_array->[2] : $operator;
-		                $phenotype_object->operator($operator); 
-		                my $observation = $value_array->[3];
+			$operator = $value_array->[2] ? $value_array->[2] : $operator;
+			$phenotype_object->operator($operator); 
+			my $observation = $value_array->[3];
                         # print STDERR "the value array: " . Dumper ($value_array) . "\n";
                         # print STDERR "the observation in the phenotype object: " . Dumper($observation) . "\n";
-		                if ($observation eq "") { $observation = undef; } # special case, not sure where it comes from
-		                $phenotype_object->phenotype_id($observation);
-		                my $image_id = $value_array->[4];
-
+			if ($observation eq "") { $observation = undef; } # special case, not sure where it comes from
+			$phenotype_object->phenotype_id($observation);
+			my $image_id = $value_array->[4];
+			
                         if (defined($image_id) && ($image_id eq "")) { $image_id = undef; }
-				
-				$phenotype_object->image_id($image_id);
-		                my $additional_info = $value_array->[5] || undef;
-		                my $external_references = $value_array->[6] || undef;
-
+			
+			$phenotype_object->image_id($image_id);
+			my $additional_info = $value_array->[5] || undef;
+			my $external_references = $value_array->[6] || undef;
+			
                         my $unique_time = $timestamp && defined($timestamp) ? $timestamp : $upload_date;
                         # print STDERR "the unique time in the phenotype object: $unique_time\n";
-                        $phenotype_object->unique_time($unique_time);
-		                my $existing_trait_value = $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id};
-                        $phenotype_object->existing_trait_value($existing_trait_value);
+			$phenotype_object->unique_time($unique_time);
+			
+			my $existing_trait_value;
+			if (!$trait_cvterm) {
+			    print STDERR "SKIPPING TERM $trait_name. IT IS NOT AVAILABLE IN THE DATABASE\n";
+			}
+			else {
+			    my $existing_trait_value = $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id};
+			    $phenotype_object->existing_trait_value($existing_trait_value);
+			    
+			    $phenotype_object->cvterm_name($trait_cvterm->name());
+			    $phenotype_object->cvterm_id($trait_cvterm->cvterm_id());
+			    $phenotype_object->experiment($experiment);
+			    print STDERR "Existing value $existing_trait_value. New value: ".$phenotype_object->value()."\n";
+			}
+			if (defined($trait_value) && (length($trait_value) || $remove_values)) {
+			    if ($ignore_new_values) {
+				# print STDERR "ignoring new vlaues ...\n";
+				if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
+				    $skip_count++;
+				    next;
+				}
+			    }
+			}
+			
+			my $plot_trait_uniquename = "stock: " .
+			    $stock_id . ", trait: " .
+			    $trait_cvterm->name .
+			    ", date: $unique_time" .
+			    ", operator: $operator" .
+			    ", count: $value_count" .
+			    ", observation: $observation";
+			
+			print STDERR "phenotype uniquename: $plot_trait_uniquename\n";
+			
+			$phenotype_object->uniquename($plot_trait_uniquename);
+			
+			# Remove previous phenotype values for a given stock and trait if $overwrite values is checked, otherwise skip to next
 
-                        $phenotype_object->cvterm_name($trait_cvterm->name());
-		                $phenotype_object->cvterm_id($trait_cvterm->cvterm_id());
-		                $phenotype_object->experiment($experiment);
-		                # print STDERR "Existing value $existing_trait_value. New value: ".$phenotype_object->value()."\n";
+			my $trait_cvterm_id = $trait_cvterm->cvterm_id();
 
-		                if (defined($trait_value) && (length($trait_value) || $remove_values)) {
-		            	    if ($ignore_new_values) {
-		            	        # print STDERR "ignoring new vlaues ...\n";
-		            	        if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
-		            	    	    $skip_count++;
-		            	    	    next;
-		            	        }
-		            	    }
-		                }
-
-                        my $plot_trait_uniquename = "stock: " .
-		            	$stock_id . ", trait: " .
-		            	$trait_cvterm->name .
-		            	", date: $unique_time" .
-		            	", operator: $operator" .
-		            	", count: $value_count" .
-                        ", observation: $observation";
-
-		                print STDERR "phenotype uniquename: $plot_trait_uniquename\n";
-
-		                $phenotype_object->uniquename($plot_trait_uniquename);
-
-		                # Remove previous phenotype values for a given stock and trait if $overwrite values is checked, otherwise skip to next
-		                if ($overwrite_values) {
-		            	    if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
-		            	        #skip when observation is provided since overwriting doesn't create records it updates observations.
-		            	        if (!$observation) {
-		            	    	    push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-		            	    	    push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
-		            	        }
-		            	            $plot_trait_uniquename .= ", overwritten: $upload_date";
-		            	        if ( defined($trait_value) && length($trait_value) ) {
-		            	    	    $overwrite_count++;
-		            	        }elsif ( $existing_trait_value ne "" ) {
-		            	    	    $remove_count++;
-		            	        }
-		            	    } elsif ( length($trait_value) ) {
-		            	        $new_count++;
-		            	    }
-		            	    $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-		                } else {
-		            	    if (!$allow_repeat_measures && exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
-		            	        # print STDERR "skipping this value because (NO REPEAT MEASURES!)\n";
-		            	        $skip_count++;
-		            	        next;
-		            	    } else {
-		            	        $new_count++;
-		            	    }
-		                }
-
-		                if ( !length($trait_value) && !$remove_values && $existing_trait_value ne "" ) {
-		            	    $skip_count++;
-                            next;
-		                }
-
-		                $phenotype_object->store();
-
-		                $experiment_ids{$experiment->nd_experiment_id()} = 1;
-		                if ($image_id) {
-		            	    $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
-		                }
-
-		                my $additional_info_stored;
-		                if($additional_info){
-		            	    # my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
-		            	    #     phenotype_id => $phenotype->phenotype_id,
-		            	    #     type_id       => $phenotype_addtional_info_type_id,
-		            	    # 											   });
-		            	    # $pheno_additional_info = $pheno_additional_info->update({
-		            	    #     value => encode_json $additional_info,
-		            	    # 							});
-		            	    # $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
-		            	    $additional_info_stored = $phenotype_object->store_additional_info($additional_info);
-		                }
-		                my $external_references_stored;
-
-		                # print STDERR "external references from phenotype package: ".Dumper($external_references);
-
-		                if ($external_references) {
-		            	    # my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
-		            	    #     phenotype_id => $phenotype->phenotype_id,
-		            	    #     type_id      => $external_references_type_id,
-		            	    # 												   });
-		            	    # $phenotype_external_references = $phenotype_external_references->update({
-		            	    #     value => encode_json $external_references,
-		            	    # 									});
-		            	    $external_references_stored = $phenotype_object->store_external_references($external_references);
-		                }
-
-		                my $observationVariableDbId = $trait_cvterm->cvterm_id;
-		                my $observation_id = $phenotype_object->phenotype_id;
-		                my %details = (
-		            	    "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
-		            	    "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
-		            	    "observationDbId"=> qq|$observation_id|,
-		            	    "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
-		            	    "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
-		            	    "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
-		            	    "observationVariableDbId"=> qq|$observationVariableDbId|,
-		            	    "observationVariableName"=> $trait_cvterm->name,
-		            	    "studyDbId"=> qq|$project_id|,
-		            	    "uploadedBy"=> $operator ? $operator : "",
-		            	    "additionalInfo" => $additional_info_stored,
-		            	    "externalReferences" => $external_references_stored,
-		            	    "value" => $trait_value
-		            	);
-
-		                if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
-		                if ($operator) { $details{'collector'} = $operator};
-
-		                push @stored_details, \%details;
-
-		                $value_count++;
-		            }
-		        }
-	        }
+			# if the overwrite value is set and the trait is single, and there is an existing value in the database, it is overwritten
+			#
+			my $repeat_type = $self->check_trait_repeat_type()->{$trait_cvterm_id} || "single";
+			
+			print STDERR "\nREPEAT TYPE for $trait_cvterm_id: $repeat_type\n\n";
+			if ($overwrite_values && $repeat_type eq "single") {
+			    print STDERR "STORING SINGLE TRAIT WITH OVERWRITE VALUES!\n";
+			    if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
+				#skip when observation is provided since overwriting doesn't create records it updates observations.
+				if (!$observation) {
+				    push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+				    push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+				}
+				$plot_trait_uniquename .= ", overwritten: $upload_date";
+				if ( $overwrite_values && defined($trait_value) && length($trait_value) ) {
+				    $overwrite_count++;
+				}
+				elsif ( $existing_trait_value ne "" ) {
+				    $remove_count++;
+				}
+			    } elsif ( length($trait_value) ) {
+				$new_count++;
+			    }
+			    $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id} = 1;
+			}
+			elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
+			    # the current values will be saved
+			    $new_count++;
+			}
+			    
+			else {
+			    if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
+				# print STDERR "skipping this value because (NO REPEAT MEASURES!)\n";
+				$skip_count++;
+				next;
+			    } else {
+				$new_count++;
+			    }
+			}
+			
+			if ( !length($trait_value) && !$remove_values && $existing_trait_value ne "" ) {
+			    $skip_count++;
+			    next;
+			}
+			
+			$phenotype_object->store();
+			
+			$experiment_ids{$experiment->nd_experiment_id()} = 1;
+			if ($image_id) {
+			    $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
+			}
+			
+			my $additional_info_stored;
+			if($additional_info){
+			    # my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
+			    #     phenotype_id => $phenotype->phenotype_id,
+			    #     type_id       => $phenotype_addtional_info_type_id,
+			    # 											   });
+			    # $pheno_additional_info = $pheno_additional_info->update({
+			    #     value => encode_json $additional_info,
+			    # 							});
+			    # $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
+			    $additional_info_stored = $phenotype_object->store_additional_info($additional_info);
+			}
+			my $external_references_stored;
+			
+			# print STDERR "external references from phenotype package: ".Dumper($external_references);
+			
+			if ($external_references) {
+			    # my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
+			    #     phenotype_id => $phenotype->phenotype_id,
+			    #     type_id      => $external_references_type_id,
+			    # 												   });
+			    # $phenotype_external_references = $phenotype_external_references->update({
+			    #     value => encode_json $external_references,
+			    # 									});
+			    $external_references_stored = $phenotype_object->store_external_references($external_references);
+			}
+			
+			my $observationVariableDbId = $trait_cvterm->cvterm_id;
+			my $observation_id = $phenotype_object->phenotype_id;
+			my %details = (
+			    "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
+			    "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
+			    "observationDbId"=> qq|$observation_id|,
+			    "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
+			    "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
+			    "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
+			    "observationVariableDbId"=> qq|$observationVariableDbId|,
+			    "observationVariableName"=> $trait_cvterm->name,
+			    "studyDbId"=> qq|$project_id|,
+			    "uploadedBy"=> $operator ? $operator : "",
+			    "additionalInfo" => $additional_info_stored,
+			    "externalReferences" => $external_references_stored,
+			    "value" => $trait_value
+			    );
+			
+			if ($timestamp) { $details{'observationTimeStamp'} = $timestamp }
+			if ($operator) { $details{'collector'} = $operator }
+			
+			push @stored_details, \%details;
+			
+			$value_count++;
+		    }
+		}
+		
 	    }
+	}
         
-	    # print STDERR "the trait stock\n";
-
-	    if (scalar(keys %trait_and_stock_to_overwrite) > 0) {
-	        my @saved_nd_experiment_ids = keys %experiment_ids;
-	        push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite, \@saved_nd_experiment_ids);
+	# print STDERR "the trait stock\n";
+	
+	###>>>>>>> master
+	
+	if (scalar(keys %trait_and_stock_to_overwrite) > 0) {
+	    my @saved_nd_experiment_ids = keys %experiment_ids;
+	    push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite, \@saved_nd_experiment_ids);
+	}
+	
+	$success_message = 'All values in your file have been successfully processed!<br><br>';
+	$success_message .= "$new_count new values stored<br>";
+	$success_message .= "$skip_count previously stored values skipped<br>";
+	$success_message .= "$overwrite_count previously stored values overwritten<br>";
+	$success_message .= "$remove_count previously stored values removed<br><br>";
+	my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
+	my $obsoleted_files = $self->check_overwritten_files_status(keys %files_with_overwritten_values);
+	if (scalar(@$obsoleted_files) > 0){
+	    $success_message .= ' The following previously uploaded files are now obsolete because all values from them were overwritten by your upload: ';
+	    foreach (@$obsoleted_files){
+		$success_message .= " ".$_->[1];
 	    }
-    
-	    $success_message = 'All values in your file have been successfully processed!<br><br>';
-	    $success_message .= "$new_count new values stored<br>";
-	    $success_message .= "$skip_count previously stored values skipped<br>";
-	    $success_message .= "$overwrite_count previously stored values overwritten<br>";
-	    $success_message .= "$remove_count previously stored values removed<br><br>";
-	    my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
-	    my $obsoleted_files = $self->check_overwritten_files_status(keys %files_with_overwritten_values);
-	    if (scalar (@$obsoleted_files) > 0){
-	        $success_message .= ' The following previously uploaded files are now obsolete because all values from them were overwritten by your upload: ';
-	        foreach (@$obsoleted_files){
-	    	    $success_message .= " ".$_->[1];
-	        }
-	    }
+	}
     };
-
+    
     try {
         $schema->txn_do($coderef);
     } catch {
@@ -1037,7 +1142,7 @@ sub store {
     if ($archived_file) {
         $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
     }
-
+    
     if (scalar(keys %nd_experiment_md_images) > 0) {
         $self->save_archived_images_metadata(\%nd_experiment_md_images);
     }
@@ -1111,42 +1216,76 @@ sub delete_previous_phenotypes {
     my $self = shift;
     my $trait_and_stock_to_overwrite = shift;
     my $saved_nd_experiment_ids = shift;
-    my $stocks_sql = join ("," , @{$trait_and_stock_to_overwrite->{stocks}});
-    my $traits_sql = join ("," , @{$trait_and_stock_to_overwrite->{traits}});
-    my $saved_nd_experiment_ids_sql = join (",", @$saved_nd_experiment_ids);
+    my @stocks = @{$trait_and_stock_to_overwrite->{stocks}};
+    my @traits = @{$trait_and_stock_to_overwrite->{traits}};
     my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    my $q_search = "
-        SELECT phenotype_id, nd_experiment_id, file_id
-        FROM phenotype
-        JOIN nd_experiment_phenotype using(phenotype_id)
-        JOIN nd_experiment_stock using(nd_experiment_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
-        JOIN stock using(stock_id)
-        WHERE stock.stock_id IN ($stocks_sql)
-        AND phenotype.cvalue_id IN ($traits_sql)
-        AND nd_experiment_id NOT IN ($saved_nd_experiment_ids_sql)
-        AND nd_experiment.type_id = $nd_experiment_type_id;
-        ";
-
-    my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
-    $h->execute();
-
-    my %phenotype_ids_and_nd_experiment_ids_to_delete;
     my @deleted_phenotypes;
-    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
-        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
-        push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
-    }
+    my $coderef = sub {
+        my $dbh = $self->bcs_schema->storage->dbh();
 
-    if (scalar(@deleted_phenotypes) > 0) {
-        my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($self->dbhost, $self->dbname, $self->dbuser, $self->dbpass, $self->temp_file_nd_experiment_id, $self->basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
-        if ($delete_phenotype_values_error) {
-            die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
+        # create temp table to hold stock and trait combinations to delete
+        $dbh->do("DROP TABLE IF EXISTS pheno_data_to_delete");
+        $dbh->do("CREATE TEMP TABLE pheno_data_to_delete (stock_id BIGINT, cvterm_id BIGINT)");
+
+        # Insert the stock and trait combinations
+        for my $index (0 .. $#stocks) {
+            my $i = "INSERT INTO pheno_data_to_delete (stock_id, cvterm_id) VALUES (?, ?)";
+            my $h = $dbh->prepare($i);
+            $h->execute($stocks[$index], $traits[$index]);
         }
-    }
+
+        # create temp table to hold experiment ids to keep
+        $dbh->do("DROP TABLE IF EXISTS experiments_to_keep");
+        $dbh->do("CREATE TEMP TABLE experiments_to_keep (nd_experiment_id BIGINT)");
+
+        # Insert saved nd_experiment_ids
+        for my $id (@$saved_nd_experiment_ids) {
+            my $i = "INSERT INTO experiments_to_keep (nd_experiment_id) VALUES (?)";
+            my $h = $dbh->prepare($i);
+            $h->execute($id);
+        }
+
+        my $q_search = "
+            SELECT phenotype_id, nd_experiment_id, file_id
+            FROM phenotype
+            JOIN nd_experiment_phenotype using(phenotype_id)
+            JOIN nd_experiment_stock using(nd_experiment_id)
+            JOIN nd_experiment using(nd_experiment_id)
+            LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+            JOIN stock using(stock_id)
+            JOIN pheno_data_to_delete AS temp ON (temp.stock_id = stock.stock_id AND temp.cvterm_id = phenotype.cvalue_id)
+            WHERE nd_experiment_id NOT IN (SELECT DISTINCT(nd_experiment_id) FROM experiments_to_keep)
+            AND nd_experiment.type_id = $nd_experiment_type_id;
+            ";
+
+        my $h = $dbh->prepare($q_search);
+        $h->execute();
+
+        my %phenotype_ids_and_nd_experiment_ids_to_delete;
+        while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+            push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
+            push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
+            push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
+        }
+
+        if (scalar(@deleted_phenotypes) > 0) {
+            my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($self->dbhost, $self->dbname, $self->dbuser, $self->dbpass, $self->temp_file_nd_experiment_id, $self->basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+            if ($delete_phenotype_values_error) {
+                die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
+            }
+        }
+    };
+
+    my $transaction_error;
+    try {
+        $self->bcs_schema->txn_do($coderef);
+    } catch {
+        $transaction_error =  $_;
+    };
+
+    print STDERR "Transaction error deleting observations: $transaction_error\n" if $transaction_error;
+
     return @deleted_phenotypes;
 }
 
@@ -1321,7 +1460,7 @@ sub get_trait_props {
     # print STDERR "PROPERTIES FROM $property_name: ".Dumper(\%property_by_cvterm_id);
     return \%property_by_cvterm_id;
 }
-
+    
 ###
 1;
 ###

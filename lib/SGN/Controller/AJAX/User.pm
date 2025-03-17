@@ -62,7 +62,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     print STDERR "Adding new account...\n";
     if ($c->config->{is_mirror}) {
 	$c->stash->{template} = '/system_message.mas';
@@ -161,7 +161,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 
     # Add user to breeding programs
     if ( $c->config->{user_registration_join_breeding_programs} ) {
-        my $person_roles = CXGN::People::Roles->new({ bcs_schema => $schema });
+        my $person_roles = CXGN::People::Roles->new({ people_schema => $people_schema });
         my $sp_roles = $person_roles->get_sp_roles();
         my %roles = map {$_->[0] => $_->[1]} @$sp_roles;
         foreach my $breeding_program_name (@breeding_program_names) {
@@ -242,7 +242,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	return;
     }
 
-    my $person = new CXGN::People::Login($c->dbc->dbh(), $c->user->get_sp_person_id());
+    my $person = CXGN::People::Login->($c->dbc->dbh(), $c->user->get_sp_person_id());
 
 #    my ($current_password, $change_username, $change_password, $change_email) = $c->req->param({qw(current_password change_username change_password change_email)});
 
@@ -537,7 +537,7 @@ END_HEREDOC
 sub tempname {
     my $self = shift;
     my $rand_string = "";
-    my $dev_urandom = new IO::File "</dev/urandom" || print STDERR "Can't open /dev/urandom";
+    my $dev_urandom = IO::File->new("</dev/urandom") || print STDERR "Can't open /dev/urandom";
     $dev_urandom->read( $rand_string, 16 );
     my @bytes = unpack( "C16", $rand_string );
     $rand_string = "";

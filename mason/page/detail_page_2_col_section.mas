@@ -13,6 +13,7 @@ $info_section_title => "A title"
 $info_section_subtitle => "A subtitle"
 $buttons_html => undef
 $locations_by_program_json => undef
+$curator => undef
 
 #Trying to find the right one
 $project_id => undef
@@ -317,19 +318,22 @@ $field_headers => ()
 % if ($info_section_id eq 'stock_related_stock_section'){
                                 <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End stock_related_stock_section
-% if ($info_section_id eq 'vector_related_stocks_section'){
-                                <& /stock/vector_related_stocks.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_related_stocks_section
+% if ($info_section_id eq 'vector_related_accessions_section'){
+                                <& /stock/vector_related_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_related_accessions_section
+% if ($info_section_id eq 'vector_obsoleted_accessions_section'){
+                                <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_related_accessions_section
 
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>
 
                                 <&| /page/info_section.mas, title=>"Images of This Stock(" .  scalar(@$image_ids)  . ")", collapsible=>1, collapsed=>0 &>
-                                    <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh, additional_image_button_id=>'stock_images' &>
+                                    <& /image/print_images.mas , stock_id=>$stock_id , images=>$image_ids , dbh=>$dbh, additional_image_button_id=>'stock_images', stock_image_flag=>'1' , curator=>$curator &>
                                 </&>
 
                                 <&| /page/info_section.mas, title=>"Images of Related Stock(s) (" .  scalar(@$related_image_ids)  . ")", collapsible=>1, collapsed=>0 &>
-                                    <& /image/print_images.mas , images=>$related_image_ids , dbh=>$dbh, additional_image_button_id=>'related_stock_images' &>
+                                    <& /image/print_images.mas , images=>$related_image_ids , dbh=>$dbh, additional_image_button_id=>'related_stock_images', stock_image_flag=>'0' &>
                                 </&>
 % } #End stock_images_section
 % if ($info_section_id eq 'stock_sequencing_status_section'){

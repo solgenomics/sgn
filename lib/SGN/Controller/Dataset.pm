@@ -3,6 +3,7 @@ package SGN::Controller::Dataset;
 
 use Moose;
 use CXGN::Dataset;
+use Data::Dumper;
 use strict;
 use warnings;
 
@@ -26,6 +27,7 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
         });
     };
     if ($@) {
+        print STDERR "Dataset retrieval error: $@ \n";
         $c->stash->{template} = 'generic_message.mas';
 	    $c->stash->{message} = "The requested dataset does not exist or has been deleted.";
 	    return;
@@ -77,6 +79,9 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
         $html .= "</td></div>\n";
     }
     $html .= "</table>";
+
+    # print STDERR "=======================================================\n";
+    # print STDERR "=======================================================\n";
 
     $c->stash->{dataset_name} = $dataset->name();
     $c->stash->{dataset_id} = $dataset_id;

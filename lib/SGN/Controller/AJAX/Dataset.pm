@@ -61,9 +61,11 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 	}
     }
 
-    $dataset->store();
+    my $new_id = $dataset->store();
+    print STDERR "==========================\nNew dataset ID: $new_id \n=============================\n";
+    # $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
 
-    $c->stash->{rest} = { message => "Stored Dataset Successfully!" };
+    $c->stash->{rest} = { message => "Stored Dataset Successfully!", id => $new_id };
 }
 
 sub store_outliers_in_dataset :Path('/ajax/dataset/store_outliers') Args(1) {
@@ -419,6 +421,36 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
     $c->stash->{rest} = { dataset_id => $dataset_id,
 			  $dimension => $dimension_data,
     };
+}
+
+sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $include_phenotype_primary_key = $c->req->param('include_phenotype_primary_key');
+
+    my $dataset = CXGN::Dataset->new(
+	{
+	    schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
+	    sp_dataset_id=> $dataset_id,
+        include_phenotype_primary_key => $include_phenotype_primary_key,
+	});
+
+    my $tool_compatibility;
+    eval {
+        $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
+        $tool_compatibility = $dataset->tool_compatibility;
+    };
+    if ($@){
+        $c->stash->{rest} = {
+            error => "Error calculating tool compatibility:\n$@"
+        };
+    } else {
+         $c->stash->{rest} = {
+            tool_compatibility => JSON::Any->encode($tool_compatibility)
+        };
+    }
 }
 
 sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {

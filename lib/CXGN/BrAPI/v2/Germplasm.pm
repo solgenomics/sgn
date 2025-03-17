@@ -43,6 +43,9 @@ sub search {
     my $progeny_db_id = $params->{progenyDbId} || ($params->{progenyDbIds} || ());
     my $external_reference_id_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
     my $external_reference_source_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
+    my $acquisitionDate = ref $params->{acquisitionDate} eq 'ARRAY' ? $params->{acquisitionDate}->[0] : $params->{acquisitionDate};
+    my $minAcquisitionDate = ref $params->{minAcquisitionDate} eq 'ARRAY' ? $params->{minAcquisitionDate}->[0] : $params->{minAcquisitionDate};
+    my $maxAcquisitionDate = ref $params->{maxAcquisitionDate} eq 'ARRAY' ? $params->{maxAcquisitionDate}->[0] : $params->{maxAcquisitionDate};
 
     if ( $collection || $progeny_db_id || $parent_db_id ){
         push @$status, { 'error' => 'The following search parameters are not implemented: collection, parentDbId, progenyDbId' };
@@ -148,7 +151,10 @@ sub search {
         external_ref_source_list=>$external_reference_source_arrayref,
         limit=>$limit,
         offset=>$offset,
-        display_pedigree=>1
+        display_pedigree=>1,
+        acquisition_date=>$acquisitionDate,
+        min_acquisition_date=>$minAcquisitionDate,
+        max_acquisition_date=>$maxAcquisitionDate
     });
     my ($result, $total_count) = $stock_search->search();
 
@@ -228,7 +234,7 @@ sub search {
         #Populating data
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? $_->{'create_date'} : $_->{'acquisition date'},
             additionalInfo=>$additional_info,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
@@ -606,7 +612,7 @@ sub germplasm_mcpd {
             subtaxon=>$_->{subtaxa},
             subtaxonAuthority=>$_->{subtaxaAuthority},
             donorInfo=>\@donors,
-            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'}
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? $_->{'create_date'} : $_->{'acquisition date'}
         );
     }
     my $total_count = (%result) ? 1 : 0;
@@ -1202,7 +1208,7 @@ sub _simple_search {
 
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'acquisition date'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? $_->{'create_date'} : $_->{'acquisition date'},
             additionalInfo=> $additional_info,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,

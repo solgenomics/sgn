@@ -173,7 +173,6 @@ solGS.pca = {
     } else {
       pcaPopId = selectedId;
     }
-
     return pcaPopId;
   },
 
@@ -181,6 +180,7 @@ solGS.pca = {
     var popId = pcaPop.id;
     var popName = pcaPop.name;
     var dataStr = pcaPop.data_str;
+    var tool_compatibility = pcaPop.tool_compatibility;
 
     var pcaPopId = solGS.pca.getPcaPopId(popId, dataStr);
    
@@ -221,11 +221,27 @@ solGS.pca = {
       `<button type="button" id=${runPcaBtnId}` +
       ` class="btn btn-success" data-selected-pop='${pcaArgs}'>Run PCA</button>`;
 
+    var compatibility_message = '';
+
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
+      if (tool_compatibility == null || tool_compatibility == "(not calculated)"){
+        compatibility_message = "(not calculated)";
+      } else {
+          if (tool_compatibility["Population Structure"]['compatible'] == 0) {
+          compatibility_message = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
+          } else {
+              if ('warn' in tool_compatibility["Population Structure"]) {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + tool_compatibility["Population Structure"]['warn'] + '"></span></b>';
+              } else {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-ok" style="color:green" title="'+tool_compatibility["Population Structure"]['types']+'"></span></b>';
+              }
+          }
+      }
     }
+
     var rowData = [popName,
-      dataStr, pcaPop.owner, dataTypeOpts, runPcaBtn, `${dataStr}_${popId}`];
+      dataStr, compatibility_message, pcaPop.owner, dataTypeOpts, runPcaBtn, `${dataStr}_${popId}`];
 
     return rowData;
   },
@@ -236,11 +252,14 @@ solGS.pca = {
       'searching': true,
       'ordering': true,
       'processing': true,
-      'paging': true,
       'info': false,
+      'paging': true,
       'pageLength': 5,
+      'lengthMenu': [
+        [5,10,50,100,-1],[5,10,50,100,'All']
+      ],
       'rowId': function (a) {
-        return a[5]
+        return a[6]
       }
     });
 
@@ -269,9 +288,9 @@ solGS.pca = {
     var list = new solGSList();
     var lists = list.getLists(["accessions", "plots", "trials"]);
     lists = list.addDataStrAttr(lists);
-    lists = list.addDataTypeAttr(lists);
+    lists = list.addDataTypeAttr(lists, "");
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    datasets = solGS.dataset.addDataTypeAttr(datasets);
+    datasets = solGS.dataset.addDataTypeAttr(datasets, "Population Structure");
     var pcaPops = [lists, datasets];
 
     return pcaPops.flat();
@@ -379,6 +398,7 @@ solGS.pca = {
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
       "<th>Population</th>" +
       "<th>Data structure type</th>" +
+      "<th>Compatibility</th>" +
       "<th>Ownership</th>" +
       "<th>Data type</th>" +
       "<th>Run PCA</th>" +
@@ -903,13 +923,13 @@ jQuery(document).ready(function () {
     if (runPcaBtnId.match(/run_pca/)) {
     
       var  pcaArgs;
-      if (document.URL.match(/pca\/analysis\//)) {
+      if (document.URL.match(/pca\/analysis/)) {
         pcaArgs = solGS.pca.getSelectedPopPcaArgs(runPcaBtnId);
       } else {
         pcaArgs = solGS.pca.getPcaArgs();
       }
-
       pcaPopId = pcaArgs.pca_pop_id;
+
       var canvas = solGS.pca.canvas;
       var pcaMsgDiv = solGS.pca.pcaMsgDiv;
       var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);

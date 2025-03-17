@@ -124,7 +124,8 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{project_id} = $tracking_project_id;
     $c->stash->{activity_type} = $activity_type;
     $c->stash->{program_name} = $program_name;
-    $c->stash->{source_info} = $source_info_string;    
+    $c->stash->{source_info} = $source_info_string;
+    $c->stash->{stock_type_page} = 'tracking_id';    
     $c->stash->{template} = '/tracking_activities/activity_info_details.mas';
 
 }

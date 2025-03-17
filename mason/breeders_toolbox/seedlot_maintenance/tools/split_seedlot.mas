@@ -8,7 +8,7 @@
     </div>
     <div class="panel-body">
         <p>This tool will split an existing Seedlot - keeping the existing Seedlot and creating a new one with the same Accession as the contents.</p>
-        
+
         <br />
 
         <!-- Seedlot to Split -->
@@ -54,6 +54,16 @@
                         <label class="col-sm-3 control-label" style="text-align: right">Contents</label>
                         <div class="col-sm-9">
                             <input class="form-control" id="seedlot_split_new_contents" type="text" value="" placeholder="Required, must be an existing Accession name">
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Material Type -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Material Type</label>
+                        <div class="col-sm-9">
+                            <div id="seedlot_split_new_material_type_div"></div>
                         </div>
                     </div>
 
@@ -126,7 +136,7 @@
                             <input class="form-control" id="seedlot_split_new_description" type="text" value="" placeholder="Optional">
                         </div>
                     </div>
-                
+
                 </div>
             </div>
 
@@ -244,6 +254,10 @@
         // Breeding Program Select Box
         get_select_box('breeding_programs', 'seedlot_split_new_breeding_program_div', { 'name' : 'seedlot_split_new_breeding_program_id', 'id' : 'seedlot_split_new_breeding_program_id' });
 
+        // Material Type Select Box
+        get_select_box('material_types', 'seedlot_split_new_material_type_div', { 'name' : 'seedlot_split_new_material_type', 'id' : 'seedlot_split_new_material_type', 'empty': 1 });
+
+
     });
 
 
@@ -271,6 +285,8 @@
 
         let name = jQuery("#seedlot_split_name").val();
         let contents = "";
+        let material_type = "";
+        let default_seedlot_material_type = "";
         let breeding_program_id = "";
         let location = "";
         let box = "";
@@ -290,6 +306,8 @@
                             let sl = response.data[i];
                             contents = jQuery(sl.contents_html).first().html();
                             breeding_program_id = sl.breeding_program_id;
+                            material_type = sl.material_type;
+                            default_seedlot_material_type = sl.default_seedlot_material_type;
                             location = sl.location;
                             box = sl.box;
                             organization = sl.organization;
@@ -310,9 +328,19 @@
                 jQuery("#seedlot_split_new_description").val(description);
                 jQuery("#seedlot_split_original_contents_count").html(original_count);
                 jQuery("#seedlot_split_original_contents_weight").html(original_weight);
+                if (material_type) {
+                    jQuery("#seedlot_split_new_material_type").val(material_type);
+                    jQuery("#seedlot_split_new_material_type").prop("disabled", true);
+                } else if (default_seedlot_material_type) {
+                    jQuery("#seedlot_split_new_material_type").val(default_seedlot_material_type);
+                    jQuery("#seedlot_split_new_material_type").prop("disabled", true);
+                } else {
+                    jQuery("#seedlot_split_new_material_type").val();
+                }
                 setNewSeedlotName();
             }
         });
+
     }
 
     /**
@@ -405,7 +433,9 @@
             'seedlot_timestamp': jQuery("#seedlot_split_new_timestamp").val(),
             'seedlot_description': jQuery("#seedlot_split_new_description").val(),
             'seedlot_breeding_program_id': jQuery("#seedlot_split_new_breeding_program_id").val(),
-            'seedlot_quality': jQuery("#seedlot_split_new_quality_issues").val()
+            'seedlot_quality': jQuery("#seedlot_split_new_quality_issues").val(),
+            'seedlot_material_type': jQuery("#seedlot_split_new_material_type").val(),
+
         };
         let contents_type = jQuery("#seedlot_split_new_contents_type").val();
         let contents_value = jQuery("#seedlot_split_new_contents_value").val();
@@ -439,6 +469,10 @@
         if ( add_transaction && (!data.origin_seedlot_uniquename || data.origin_seedlot_uniquename === "") ) {
             return displayError("Original Seedlot name required for initial transaction!");
         }
+        if ( !data.seedlot_material_type || data.seedlot_material_type === "" ) {
+            return displayError("Material type required!");
+        }
+
 
         // Create the Seedlot
         jQuery('#working_modal').modal('show');

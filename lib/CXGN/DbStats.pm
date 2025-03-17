@@ -82,10 +82,10 @@ sub traits {
     
     my $datelessq;
     if ($include_dateless_items == 1) {
-	$datelessq = " create_date IS NULL OR ";
+	$datelessq = " phenotype.create_date IS NULL OR ";
     }
 	
-    my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id) where ( $datelessq ( create_date > ? and create_date < ? )) group by cvterm.name order by count(*) desc";
+    my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id) where ( $datelessq ( phenotype.create_date > ? and phenotype.create_date < ? )) group by cvterm.name order by count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
@@ -101,10 +101,10 @@ sub stocks {
     
     my $datelessq;
     if ($include_dateless_items == 1) {
-	$datelessq = " create_date IS NULL OR ";
+	$datelessq = " stock.create_date IS NULL OR ";
     }
     
-    my $q = "SELECT cvterm.name, count(*) FROM stock join cvterm on(type_id=cvterm_id)  WHERE ( $datelessq ( create_date > ? and create_date < ? )) GROUP BY cvterm.name ORDER BY count(*) desc";
+    my $q = "SELECT cvterm.name, count(*) FROM stock join cvterm on(type_id=cvterm_id)  WHERE ( $datelessq ( stock.create_date > ? and stock.create_date < ? )) GROUP BY cvterm.name ORDER BY count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
@@ -121,7 +121,7 @@ sub projects {
     
     my $datelessq;
     if ($include_dateless_items == 1) {
-	$datelessq = " create_date IS NULL OR ";
+	$datelessq = " project.create_date IS NULL OR ";
     }
 
     my $q = "SELECT project.project_id, project.name FROM project join projectprop using(project_id) where ( $datelessq ( project.create_date > ? and project.create_date < ? )) group by project.project_id, project.name";
