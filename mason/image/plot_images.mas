@@ -37,16 +37,6 @@ my $dbh = $stockref->{dbh};
 
 var trial_id = '<% $trial_id %>';
 var plotNames = [];
-var auth_token;
-    var require_login = "<% $c->get_conf('brapi_require_login') %>";
-    auth_token = "<% CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-
-    if (require_login == '1'){
-        auth_token = "<% CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-        if (!auth_token){
-            alert("Login required to display");
-        }
-    }
 
 jQuery(document).ready( function() {
 
@@ -75,7 +65,7 @@ jQuery(document).ready( function() {
     });
 
     jQuery('#trial_images_section_onswitch').click(function() {
-        getObservationUnits()
+        getObservationUnits();
     });
 
     jQuery('#plot_images_results').on( 'draw.dt', function () {
@@ -87,7 +77,6 @@ function getObservationUnits() {
     var trial_ids = [trial_id];
 
     jQuery.ajax({
-        headers: (auth_token) ? {'Authorization': `Bearer ` + auth_token } : {},
         method: 'GET',
         url: '/brapi/v2/observationunits',
         data: {

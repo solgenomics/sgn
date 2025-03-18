@@ -40,7 +40,12 @@ sub image_search :Path('/ajax/search/images') Args(0) {
 
     my @stock_name_list;
     if (exists($params->{image_stock_uniquename}) && $params->{image_stock_uniquename}) {
-        @stock_name_list = split /,/, $params->{image_stock_uniquename};
+        if (ref($params->{image_stock_uniquename}) eq 'ARRAY') {
+            push @stock_name_list, $params->{image_stock_uniquename};
+        } else {
+            @stock_name_list = split /,/, $params->{image_stock_uniquename};
+        }
+        
     }
 
     my @project_name_list;
