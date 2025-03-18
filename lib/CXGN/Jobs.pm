@@ -6,14 +6,18 @@ CXGN::Jobs - a class to unify background job submission, storage, and reporting
 
 CXGN::Jobs is a central location where background jobs can be submitted through cxgn-corelibs/CXGN::Tools::Run. 
 By routing all jobs through this module, all submitted jobs regardless of type can be stored in sgn_people.sp_jobs 
-and updated accordingly.
+and updated accordingly. To use this module, simply replace all calls to CXGN::Tools:Run with a call to this module,
+supplying the same arguments as keys in the args hash. 
 
 =head1 SYNOPSIS
 
 my $job = CXGN::Jobs->new({
     people_schema => $people_schema
     schema => $bcs_schema
-    args => $args
+    args => {
+        do_not_cleanup => 1,
+        is_cluster => 1 
+    }
 });
 
 my $job_id = $job->submit_and_store();
@@ -26,11 +30,16 @@ my $job = CXGN::Jobs->new({
     sp_job_id => $job_id
 });
 
-$job->create_date();
+my $create_date = $job->create_timestamp();
 
-$job->status();
+my $current_status = $job->retrieve_status();
 
-$job->result_page();
+my $result_page = $job->result_page();
+
+To create a job object representing an already submitted job, supply a job ID as sp_job_id. 
+If constructing a new job to submit_and_store(), do not supply an sp_job_id. To specify 
+instance variables as arguments, either supply them in the args hash with the appropriate
+name or specify them using the class mutator methods (same as accessors). 
 
 =head1 AUTHOR
 
@@ -46,6 +55,7 @@ use DateTime;
 use Data::Dumper;
 use JSON::Any;
 use CXGN::Tools::Run;
+use CXGN::People::Schema;
 
 =head1 ACCESSORS
 
@@ -129,6 +139,15 @@ The URL of the page for viewing results (if any)
 
 has 'results_page' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_results_page');
 
+=head2 type()
+
+CVTerm describing what type of submitted job this is. Gathered using the CVTerm ID stored 
+in the database row. 
+
+=cut
+
+has 'type' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_type' );
+
 =head2 args()
 
 Hashref of arguments supplied to the job. Not necessarily needed for job creation, but 
@@ -146,6 +165,8 @@ my $job = CXGN::Jobs->new({
         cmd => 'perl /bin/script.pl -a arg1 -b arg2',
         site => 'breedbase.org',
         config => '...',
+        submit_page => '...',
+        results_page => '...'
     }
 });
 
@@ -162,9 +183,69 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    if (!$args->{sp_job_id}) { # New job, no ID yet
+    my $bcs_schema = $args->{schema};
+    my $people_schema = $args->{people_schema};
 
-    } else { #existing job
+    if (!$args->{sp_job_id}) { # New job, no ID yet
         $self->args($args->{args});
+    } else { #existing job, retrieve from DB
+        $self->sp_job_id($args->{sp_job_id});
+        my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+        if (!$row) { die "The job with id ".$self->sp_jb_id()." does not exist"; }
+
     }
+}
+
+=head2 retrieve_status()
+
+Returns the status of the job.
+
+=cut
+
+sub retrieve_status {
+    my $self = shift;
+
+    my $slurm_id = $self->slurm_id();
+
+    if (!$slurm_id) {
+        return "";
+    } else {
+        # ... determine status
+    }
+}
+
+=head2 retrieve_argument(argument) 
+
+Returns the specified job argument stored in the args hashref. For example:
+
+$job->retrieve_argument('cmd');
+
+retrieves the command line code of the job. May return undefined arguments!
+
+=cut
+
+sub retrieve_argument {
+    my $self = shift;
+    my $arg_string = shift;
+
+    my $args = $self->args();
+    return $args->{$arg_string};
+}
+
+=head1 CLASS METHODS
+
+=head2 get_user_submitted_jobs()
+
+Returns a listref of hashrefs containing the jobs submitted by the current user. 
+All keys are named according to the value they denote. Arguments in the args hashref
+are flattened. 
+
+=cut
+
+sub get_user_submitted_jobs {
+    my $self = shift;
+    my $bcs_schema = $self->schema;
+    my $people_schema = $self->people_schema;
+
+
 }
