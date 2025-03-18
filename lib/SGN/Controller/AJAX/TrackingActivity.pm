@@ -469,7 +469,7 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
     my $obsoleted_transformant_count;
     if ($material_stock_type eq 'transformation') {
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$material_stock_id});
-        my $obsoleted_transformants = $transformation_obj->get_obsoleted_transformants();
+        my $obsoleted_transformants = $transformation_obj->obsoleted_transformants();
         if ($obsoleted_transformants) {
             $obsoleted_transformant_count = scalar @$obsoleted_transformants;
         }
@@ -652,26 +652,19 @@ sub update_status_POST : Args(0) {
         return;
     }
 
-    my @user_roles = $c->user->roles();
-    my %has_roles = ();
-    map { $has_roles{$_} = 1; } @user_roles;
-
-    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to update status." };
-        return;
-    }
-
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", 'stock_type')->cvterm_id();
     my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
 
-    my $identifier_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $identifier_id, type_id => $tracking_identifier_type_id });
-    if (!$identifier_rs) {
-        $c->stash->{rest} = { error_string => 'Error. No tracking identifier entry found in the database.' };
-	    return;
-    } else {
-        push @stocks_to_update, $identifier_id;
+    if ($identifier_id ne 'NA') {
+        my $identifier_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $identifier_id, type_id => $tracking_identifier_type_id });
+        if (!$identifier_rs) {
+            $c->stash->{rest} = { error_string => 'Error. No tracking identifier entry found in the database.' };
+    	    return;
+        } else {
+            push @stocks_to_update, $identifier_id;
+        }
     }
 
     my $material_stock_type_id;
@@ -736,15 +729,6 @@ sub reverse_status_POST : Args(0) {
     }
     if (!$c->user()->check_roles("curator")) {
         $c->stash->{rest} = { error_string => "You do not have the correct role to reverse status of this tracking identifier. Please contact us." };
-        return;
-    }
-
-    my @user_roles = $c->user->roles();
-    my %has_roles = ();
-    map { $has_roles{$_} = 1; } @user_roles;
-
-    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to update status." };
         return;
     }
 
