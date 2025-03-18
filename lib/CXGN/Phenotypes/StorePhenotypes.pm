@@ -6,31 +6,51 @@ CXGN::Phenotypes::StorePhenotypes - an object to handle storing phenotypes for S
 
 =head1 USAGE
 
-my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-    basepath=>basepath,
-    dbhost=>dbhost,
-    dbname=>dbname,
-    dbuser=>dbuser,
-    dbpass=>dbpass,
-    temp_file_nd_experiment_id=>$temp_file_nd_experiment_id, #tempfile full name for deleting nd_experiment_ids asynchronously
-    bcs_schema=>$schema,
-    metadata_schema=>$metadata_schema,
-    phenome_schema=>$phenome_schema,
-    user_id=>$user_id,
-    stock_list=>$plots,
-    trait_list=>$traits,
-    values_hash=>$parsed_data,
-    has_timestamps=>$timestamp_included,
-    overwrite_values=>$overwrite,
-    ignore_new_values=>$ignore_new_values,
-    metadata_hash=>$phenotype_metadata,
-    image_zipfile_path=>$image_zip
-);
-my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
+  my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new( {
+      basepath=>basepath,
+      dbhost=>dbhost,
+      dbname=>dbname,
+      dbuser=>dbuser,
+      dbpass=>dbpass,
+      temp_file_nd_experiment_id=>$temp_file_nd_experiment_id, #tempfile full name for deleting nd_experiment_ids asynchronously
+      bcs_schema=>$schema,
+      metadata_schema=>$metadata_schema,
+      phenome_schema=>$phenome_schema,
+      user_id=>$user_id,
+      stock_list=>$plots,
+      trait_list=>$traits,
+      values_hash=>$parsed_data,
+      has_timestamps=>$timestamp_included,
+      overwrite_values=>$overwrite_flag,
+      remove_values => $remove_values_flag,
+      ignore_new_values=>$ignore_new_values,
+      metadata_hash=>$phenotype_metadata,
+      image_zipfile_path=>$image_zip
+  } );
+  my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+  my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
 
 =head1 DESCRIPTION
 
+CXGN::Phenotypes::StorePhenotypes is the central facility for storing phenotypes. All phenotyping storage activities should use this module.
+
+To store phenotypes, instantiate a new CXGN::Phenotypes::StorePhenotypes object; you can provide the necessary data and metadata in the constructor as shown in the example above.
+
+When all the data has been provided to the object, you should then call the verify() function, followed by store() if there were no errors in verify.
+
+Verify returns a list of two elements; the first element contains a string with warnings; these are issues that should be non-breaking. The second element is an error string; if an error string is present, store() should not be called and the error reported to the user.
+
+Most parameters are self explanatory. The db connection parameters are given in dbhost, dbname, dbuser and dbpass, which can be obtained from the catalyst config parameter ($c->{config}), as well as basepath, temp_file_nd_experiment_id, etc. These parameters are needed because the object will run some functions, such as deletions, in the background using a script, to which is will feed this information.
+
+For traits that are defined as single, there are a number of parameters that will modulate how data is saved.
+
+overwrite_values, if set to true, will cause the old values to be overwritten. This is only the case for single values on a given observation unit and trait, and for repetitive measures that have the exact same timestamp and the same observation unit and trait.
+
+remove_values will affect single measurement trait for which new, empty observations are loaded. In this case, the old observation is simply removed and the empty observation becomes the new value for that observation unit and trait.
+
+ignore_new_values remains as a parameter but has no effect.
+
+allow_repeat_measures is outdated and has no effect. In this version, the repeat measure capability is set on a trait level, using a trait property called 'trait_repeat_type'. This property can have the values 'single' (assumed to be the default), 'multiple', and 'time_series'.
 
 =head1 AUTHORS
 
@@ -38,6 +58,8 @@ my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->sto
  Naama Menda (nm249@cornell.edu)
  Nicolas Morales (nm529@cornell.edu)
  Bryan Ellerbrock (bje24@cornell.edu)
+ Lukas Mueller (lam87@cornell.edu)
+ Srikanth Karaikal (sk2783@cornell.edu)
 
 =cut
 
@@ -350,6 +372,20 @@ sub create_hash_lookups {
     # $self->check_trait_repeat_type($self->get_trait_props('trait_repeat_type'));
 }
 
+=head2 verify()
+
+   Params: none
+   Returns: a list of two elements, the first contains warnings, the second errors.
+           errors should be breaking, warnings not.
+   Desc:   uses the data provided to the object, so the corresponding parameters have to be set.
+           This includes the values_hash, metadata_hash, triat_list, and stock_list.
+           The function will check if all the provided identifiers are in teh database use list
+           validators. Then each measurement is submitted to the check_measurement function, which
+           checks additional properties (see description there).
+
+=cut
+
+
 sub verify {
     my $self = shift;
     # print STDERR "CXGN::Phenotypes::StorePhenotypes verify\n";
@@ -545,7 +581,7 @@ sub check_measurement {
 	return (undef, undef);
     }
     else {
-	# it's a scalar
+	# it's a scalar. It really shouldn't be I guess?
 	#
 	$trait_value = $value_array;
     }
@@ -676,6 +712,7 @@ sub check_measurement {
 	}
     
 	my $repeat_type = "single";
+	
 	if (exists($self->check_trait_repeat_type->{$trait_cvterm_id})) {
 	    if (grep /$repeat_type/, ("single", "multiple", "time_series")) {
 		$repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id};
@@ -969,13 +1006,13 @@ sub store {
 			    print STDERR "Existing value $existing_trait_value. New value: ".$phenotype_object->value()."\n";
 			}
 			if (defined($trait_value) && (length($trait_value) || $remove_values)) {
-			    if ($ignore_new_values) {
+			    #if ($ignore_new_values) {
 				# print STDERR "ignoring new vlaues ...\n";
 				if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
 				    $skip_count++;
 				    next;
 				}
-			    }
+			    #}
 			}
 			
 			my $plot_trait_uniquename = "stock: " .
