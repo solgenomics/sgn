@@ -25,10 +25,9 @@ solGS.pca = {
         var url = location.pathname;
 
         if (url.match(/pca\/analysis/)) {
-            if (pcaAnalysisElemId != "undefined") {
+            if (pcaAnalysisElemId) {
                 pcaArgs = solGS.pca.getSelectedPopPcaArgs(pcaAnalysisElemId);
             }
-
             if (!pcaArgs) {
                 pcaArgs = this.getArgsFromPcaUrl();
             }
@@ -118,7 +117,6 @@ solGS.pca = {
         }
 
         var urlArgs = page.replace("/pca/analysis", "");
-
         var pcaPopId;
         var traitId;
         var protocolId;
@@ -160,10 +158,13 @@ solGS.pca = {
                 dataset_id: datasetId,
                 data_structure: dataStr,
                 data_type: dataType,
-                genotyping_protocol_id: protocolId,
                 analysis_type: "pca analysis",
                 analysis_page: page,
             };
+
+            if (protocolId) {
+                args.genotyping_protocol_id = protocolId;
+            }
 
             var reg = /\d+-+\d+/;
             if (pcaPopId.match(reg)) {
@@ -171,7 +172,7 @@ solGS.pca = {
                 args["training_pop_id"] = ids[0];
                 args["selection_pop_id"] = ids[1];
             }
-
+            
             return args;
         } else {
             return {};
@@ -197,7 +198,6 @@ solGS.pca = {
 
             var pcaArgs = selectedPopData.selectedPop;
             pcaArgs = JSON.parse(pcaArgs);
-
             if (!selectedPop.data_type) {
                 pcaArgs["data_type"] = this.getSelectedDataType(pcaPopId);
             }
@@ -494,7 +494,13 @@ solGS.pca = {
         var pcaPlotDivId = this.pcaPlotDivId(res.file_id).replace(/#/, "");
         var pcaPlotLink = `<a href='#'  onclick='event.preventDefault();' id='download_${pcaPlotDivId}'>PCA plot</a>`;
 
-        var runPcaBtnId = this.getRunPcaId(res.pca_pop_id);
+        var runPcaBtnId;
+        if (pcaPlotDivId.match(/pca_plot/)) {
+            runPcaBtnId = pcaPlotDivId.replace('pca_plot', 'run_pca')   
+        } else {
+            runPcaBtnId = this.getRunPcaId(res.pca_pop_id);
+        }
+        
         var pcaArgs = this.getPcaAnalysisArgs(runPcaBtnId);
         pcaArgs["file_id"] = res.file_id;
         pcaArgs = JSON.stringify(pcaArgs);
@@ -556,15 +562,17 @@ solGS.pca = {
 
         var url = "/pca/analysis/" + pcaPopId;
 
-        var dataType;
+ 
         if (location.pathname.match(solgsPages)) {
             url = url + "/trait/" + traitId;
         }
 
-        var pcaDataSelectedId = this.pcaDataTypeSelectId(pcaPopId);
-        dataType = jQuery("#" + pcaDataSelectedId).val();
+        if (!dataType) {
+            var pcaDataSelectedId = this.pcaDataTypeSelectId(pcaPopId);
+            dataType = jQuery("#" + pcaDataSelectedId).val();
+        }
 
-        if (dataType.match(/genotype/i)) {
+        if (dataType.match(/genotype/i) && protocolId) {
             url = url + "/gp/" + protocolId;
         }
 
