@@ -36,8 +36,8 @@ has 'stock_id' => (
     is => 'rw',
     );
 
-has 'nd_experiment_id' => (
-    isa => 'Str',
+has 'observationunit_id' => (
+    isa => 'Int',
     is => 'rw',
     );
 
@@ -76,22 +76,80 @@ has 'experiment' => (
     is => 'rw',
     );
 
+has 'nd_experiment_id' => (
+    isa => 'Int',
+    is => 'rw',
+    );
+
 has 'trait_repeat_type' => (
-    isa => 'Str',
+    isa => 'Maybe[Str]',
     is => 'rw',
     default => undef,
     );
 
-has 'check_trait_format' => (
-    isa => 'HashRef',
+has 'trait_format' => (
+    isa => 'Maybe[Str]',
     is => 'rw',
-    default => { {} },
     );
+
+has 'trait_categories' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+has 'trait_format' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+has 'trait_min_value' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+
+has 'trait_max_value' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+has 'trait_repeat_type' => (
+    isa => 'Maybe[Str]',
+    is => 'rw'
+    );
+
+
+
 
 #has 'plot_trait_uniquename' => (
 #    isa => 'Str|Undef',
 #    is => 'rw',
 #    );
+
+sub BUILD {
+    my $self = shift;
+
+    if ($self->phenotype_id()) { 
+
+	my $q = "SELECT cvalue_id, uniquename, collect_date, value, nd_experiment_phenotype.nd_experiment_id, operator FROM phenotype join nd_experiment_phenotype using(phenotype_id) where phenotype.phenotype_id=?";
+
+	my $h = $self->schema->storage->dbh()->prepare($q);
+	$h->execute($self->phenotype_id());
+	
+	my ($cvterm_id, $uniquename, $collect_date, $value, $nd_experiment_id, $operator) = $h->fetchrow_array();
+
+	$self->cvterm_id($cvterm_id);
+	$self->uniquename($uniquename);
+	$self->collect_date($collect_date);
+	$self->value($value);
+	$self->nd_experiment_id($nd_experiment_id);
+	$self->operator($operator);
+	$self->experiment( $self->schema()->resultset("NaturalDiversity::NdExperiment")->find( { nd_experiment_id => $nd_experiment_id }) );
+    }
+    else {
+	print STDERR "no phenotype_id - creating empty object\n";
+    }
+}
 
 sub store {
     my $self = shift;
@@ -150,7 +208,8 @@ sub store {
 	        }
 	    }
         return { success => 1, overwritten_values => \@overwritten_values, experiment_ids => \%experiment_ids, nd_experiment_md_images => \%nd_experiment_md_images };
-    }else { # INSERT
+    }
+    else { # INSERT
         my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->create({
 		    cvalue_id     => $self->cvterm_id(),
 		    observable_id => $self->cvterm_id(),
@@ -161,17 +220,27 @@ sub store {
 	    });
 	
 	    #$self->handle_timestamp($timestamp, $phenotype->phenotype_id);
-	    #$self->handle_operator($operator, $phenotype->phenotype_id);
+	#$self->handle_operator($operator, $phenotype->phenotype_id);
 
-	    $self->experiment->create_related('nd_experiment_phenotypes',{
-	        phenotype_id => $phenotype_row->phenotype_id });
-	    $experiment_ids{$self->experiment->nd_experiment_id()} = 1;
-	    if ($self->image_id) {
-	        $nd_experiment_md_images{$self->experiment->nd_experiment_id()} = $self->image_id;
-	    }
-	    $self->phenotype_id($phenotype_row->phenotype_id());
+	if (!$self->nd_experiment_id()) {
+	    die "NEED AN ND_EXPERIMENT ID FOR NEW PHENOTYPES!\n";
+	}
+	my $experiment = $self->schema->resultset("NaturalDiversity::NdExperiment")->find( { nd_experiment_id => $self->nd_experiment_id() });
+
+	$self->experiment($experiment);
+
+	$self->experiment->create_related('nd_experiment_phenotypes',{
+	    phenotype_id => $phenotype_row->phenotype_id });
+
+	$experiment_ids{$self->experiment->nd_experiment_id()} = 1;
+
+	if ($self->image_id) {
+	    $nd_experiment_md_images{$self->experiment->nd_experiment_id()} = $self->image_id;
+	}
+
+	$self->phenotype_id($phenotype_row->phenotype_id());
     }
-    return { success => 1 };
+    return { success => 1, phenotype_id => $self->phenotype_id() };
 }
 
 sub store_external_references {
@@ -278,14 +347,6 @@ sub check_categories {
 	    }
 	}
     }
-}
-
-sub check_trait_min_value {
-
-}
-
-sub check_trait_max_value {
-
 }
 
 =head2 check_measurement()
@@ -570,23 +631,58 @@ sub check {
 
 sub get_trait_props {
     my $self = shift;
-    my $cvterm_id = shift;
     my $property_name = shift;
 
-    my %property_by_cvterm_id;
-    my $sql = "SELECT cvtermprop.value, cvterm.cvterm_id, cvterm.name FROM cvterm join cvtermprop on(cvterm.cvterm_id=cvtermprop.cvterm_id) join cvterm as proptype on(cvtermprop.type_id=proptype.cvterm_id) where proptype.name=? ";
-    my $sth= $self->bcs_schema()->storage()->dbh()->prepare($sql);
-    $sth->execute($property_name);
-    while (my ($property_value, $cvterm_id, $cvterm_name) = $sth->fetchrow_array) {
+    my $sql = "SELECT cvtermprop.value, cvterm.name FROM cvterm join cvtermprop on(cvterm.cvterm_id=cvtermprop.cvterm_id) join cvterm as proptype on(cvtermprop.type_id=proptype.cvterm_id) where proptype.name in ('trait_categories', 'trait_format', 'trait_minimum', 'trait_maximum', 'trait_repeat_type') and cvterm.cvterm_id=? ";
+    my $sth= $self->schema()->storage()->dbh()->prepare($sql);
+    $sth->execute($self->cvterm_id());
+
+    my %properties;
+    while (my ($property_value, $property_name) = $sth->fetchrow_array) {
         if (defined $property_value) {
-            $property_by_cvterm_id{$cvterm_id} = $property_value;
-        } else {
-            # print STDERR "Warning: property '$property_name' not found for trait '$cvterm_name' (cvterm_id: '$cvterm_id') is not defined \n";
-        }
+	    $properties{$property_name} = $property_value;
+	}
     }
-    # print STDERR "PROPERTIES FROM $property_name: ".Dumper(\%property_by_cvterm_id);
-    return \%property_by_cvterm_id;
+
+    $self->trait_categories($properties{trait_categories});
+    $self->trait_format($properties{trait_format});
+    $self->trait_min_value($properties{trait_minimum});
+    $self->trait_max_value($properties{trait_maximum});
+    $self->trait_repeat_type($properties{trait_repeat_type});
 }
 
+sub check_trait_minimum {
+    my $self = shift;
+
+    if (! $self->trait_format() ne "numeric") {
+	print STDERR "Format is not numeric, can't check minimum\n";
+	return 1;
+    }
+    if (! defined($self->trait_minimum()) ) {
+	print STDERR "Warning. Checking trait minimum but is not set.\n";
+	return 1;
+    }
+    if ($self->trait_minimum() < $self->value()) {
+	return 0;
+    }
+    return 1;
+}
+
+sub check_trait_maximum {
+    my $self = shift;
+    
+    if (! $self->trait_format() ne "numeric") {
+	print STDERR "Format is not numeric, can't check maximum.";
+	return 1;	
+    }
+    if (! defined($self->trait_maximum())) {
+	print STDERR "Warning. Checking trait maximum but is not set\n";
+	return 1;
+    }
+    if ($self->value() > $self->trait_maximum()) {
+	return 0;
+    }
+    return 1;
+}
 
 1;
