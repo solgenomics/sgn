@@ -369,7 +369,7 @@ $d->while_logged_in_as("submitter", sub {
     my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
     sleep(2);
-    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store phenotype pc scores')->click();
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store genotype pc scores')->click();
 	sleep(80);
 	$d->find_element_ok('View stored PC', 'partial_link_text',  'view stored pcs')->click();
 	sleep(20);
@@ -628,7 +628,7 @@ $d->while_logged_in_as("submitter", sub {
     my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
     sleep(2);
-    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store geno pc scores')->click();
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store pheno pc scores')->click();
 	sleep(80);
 	$d->find_element_ok('View stored PC', 'partial_link_text',  'view stored pcs')->click();
 	sleep(20);
