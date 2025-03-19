@@ -161,7 +161,7 @@ sub BUILD {
 
 sub store {
     my $self = shift;
-    print STDERR "CXGN::Phenotype store \n";
+    #print STDERR "CXGN::Phenotype store \n";
 
     my %experiment_ids = ();
     my %nd_experiment_md_images;
@@ -178,7 +178,7 @@ sub store {
     }
 
     if ($self->phenotype_id) {   ### UPDATE
-	print STDERR "UPDATING ".$self->phenotype_id()." with new value ".$self->value()."\n";
+	#print STDERR "UPDATING ".$self->phenotype_id()." with new value ".$self->value()."\n";
 	my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->
 	    find( { phenotype_id  => $self->phenotype_id() });
 	## should check that unit and variable (also checked here) are conserved in parse step,
@@ -255,11 +255,11 @@ sub store {
 
 sub store_external_references {
     my $self = shift;
-    print STDERR "the CXGN::Phenotype store_external_references function\n";
+    # print STDERR "the CXGN::Phenotype store_external_references function\n";
     my $external_references = shift;
 
     if (! $self->phenotype_id()) {
-	print STDERR "Can't store external references on this phenotype because there is no phenotype_id\n";
+	#print STDERR "Can't store external references on this phenotype because there is no phenotype_id\n";
     }
 
     my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_external_references', 'phenotype_property')->cvterm_id();
@@ -308,12 +308,12 @@ sub delete_phenotype {
     my $self = shift;
 
     if ($self->phenotype_id()) {
-	print STDERR "Removing phenotype with phenotype_id ".$self->phenotype_id()."\n";
+	#print STDERR "Removing phenotype with phenotype_id ".$self->phenotype_id()."\n";
 	my $row = $self->schema->resultset("Phenotype::Phenotype")->find( { phenotype_id => $self->phenotype_id() });
 	$row->delete();
     }
     else {
-	print STDERR "Trying to delete a phenotype without phenotype_id\n";
+	#print STDERR "Trying to delete a phenotype without phenotype_id\n";
     }
 }
 
