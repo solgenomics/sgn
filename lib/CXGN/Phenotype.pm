@@ -76,6 +76,14 @@ has 'experiment' => (
     is => 'rw',
     );
 
+after 'experiment' => sub {
+    my $self = shift;
+    my $exp = shift;
+
+    if ($exp) { $self->nd_experiment_id($exp->nd_experiment_id()); }
+
+};
+
 has 'nd_experiment_id' => (
     isa => 'Int',
     is => 'rw',
@@ -160,35 +168,36 @@ sub store {
     my @overwritten_values;
 
     if (! $self->cvterm_id()) {
-	    my $row = $self->schema->resultset("Cv::Cvterm")->find( { name => $self->cvterm_name() });
-	    if ($row) {
-	        $self->cvterm_id($row->cvterm_id);
-	    }
-	    else {
-	        die "The cvterm ".$self->cvterm_name()." does not exist. Exiting.\n";
-	    }
+	my $row = $self->schema->resultset("Cv::Cvterm")->find( { name => $self->cvterm_name() });
+	if ($row) {
+	    $self->cvterm_id($row->cvterm_id);
+	}
+	else {
+	    die "The cvterm ".$self->cvterm_name()." does not exist. Exiting.\n";
+	}
     }
-    
+
     if ($self->phenotype_id) {   ### UPDATE
-	    my $phenotype = $self->schema->resultset('Phenotype::Phenotype')->
+	print STDERR "UPDATING ".$self->phenotype_id()." with new value ".$self->value()."\n";
+	my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->
 	    find( { phenotype_id  => $self->phenotype_id() });
-	    ## should check that unit and variable (also checked here) are conserved in parse step,
-	    ## if not reject before store
-	    ## should also update operator in nd_experimentprops
-	
-	    $phenotype->update({
-	    	value      => $self->value(),
-	    	cvalue_id  => $self->cvterm_id(),
-	    	observable_id => $self->cvterm_id(),
-	    	uniquename => $self->uniquename(),
-	    	collect_date => $self->collect_date(),
-	    	operator => $self->operator(),
-	    });
+	## should check that unit and variable (also checked here) are conserved in parse step,
+	## if not reject before store
+	## should also update operator in nd_experimentprops
+
+	$phenotype_row->update({
+	    value      => $self->value(),
+	    cvalue_id  => $self->cvterm_id(),
+	    observable_id => $self->cvterm_id(),
+	    uniquename => $self->uniquename(),
+	    collect_date => $self->collect_date(),
+	    operator => $self->operator(),
+			   });
 
         #	$self->handle_timestamp($timestamp, $observation);
         #	$self->handle_operator($operator, $observation);
-	
-	    my $q = "SELECT phenotype_id, nd_experiment_id, file_id
+
+	my $q = "SELECT phenotype_id, nd_experiment_id, file_id
                 FROM phenotype
                 JOIN nd_experiment_phenotype using(phenotype_id)
                 JOIN nd_experiment_stock using(nd_experiment_id)
@@ -197,29 +206,30 @@ sub store {
                 WHERE stock.stock_id=?
                 AND phenotype.cvalue_id=?";
 
-	    my $h = $self->schema->storage->dbh()->prepare($q);
-	    $h->execute($self->stock_id, $self->cvterm_id);
+	my $h = $self->schema->storage->dbh()->prepare($q);
+	$h->execute($self->stock_id, $self->cvterm_id);
 
-	    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-	        push @overwritten_values, [ $file_id, $phenotype_id, $nd_experiment_id ];
-	        $experiment_ids{$nd_experiment_id} = 1;
-	        if ($self->image_id) {
-	    	    $nd_experiment_md_images{$nd_experiment_id} = $self->image_id;
-	        }
+	while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+	    push @overwritten_values, [ $file_id, $phenotype_id, $nd_experiment_id ];
+	    $experiment_ids{$nd_experiment_id} = 1;
+	    if ($self->image_id) {
+		$nd_experiment_md_images{$nd_experiment_id} = $self->image_id;
 	    }
+	}
         return { success => 1, overwritten_values => \@overwritten_values, experiment_ids => \%experiment_ids, nd_experiment_md_images => \%nd_experiment_md_images };
     }
     else { # INSERT
+	#print STDERR "INSERTING new value ...\n";
         my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->create({
-		    cvalue_id     => $self->cvterm_id(),
-		    observable_id => $self->cvterm_id(),
-		    value         => $self->value(),
-		    uniquename    => $self->uniquename(),
-		    collect_date  => $self->collect_date(),
-		    operator      => $self->operator(),
-	    });
-	
-	    #$self->handle_timestamp($timestamp, $phenotype->phenotype_id);
+	    cvalue_id     => $self->cvterm_id(),
+	    observable_id => $self->cvterm_id(),
+	    value         => $self->value(),
+	    uniquename    => $self->uniquename(),
+	    collect_date  => $self->collect_date(),
+	    operator      => $self->operator(),
+										     });
+
+	#$self->handle_timestamp($timestamp, $phenotype->phenotype_id);
 	#$self->handle_operator($operator, $phenotype->phenotype_id);
 
 	if (!$self->nd_experiment_id()) {
@@ -231,7 +241,7 @@ sub store {
 
 	$self->experiment->create_related('nd_experiment_phenotypes',{
 	    phenotype_id => $phenotype_row->phenotype_id });
-
+	
 	$experiment_ids{$self->experiment->nd_experiment_id()} = 1;
 
 	if ($self->image_id) {
@@ -251,9 +261,9 @@ sub store_external_references {
     if (! $self->phenotype_id()) {
 	print STDERR "Can't store external references on this phenotype because there is no phenotype_id\n";
     }
-    
+
     my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_external_references', 'phenotype_property')->cvterm_id();
-    
+
     my $external_references_stored;
     my $phenotype_external_references = $self->schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
 	    phenotype_id => $self->phenotype_id,
@@ -275,31 +285,35 @@ sub store_additional_info {
     if (! $self->phenotype_id()) {
 	print STDERR "Can't store additional info on this phenotype because there is no phenotype_id\n";
     }
-    
+
     my $phenotype_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
-    
-    my $pheno_additional_info = $self->schema()->resultset("Phenotype::Phenotypeprop")->find_or_create({
+
+    my $pheno_additional_info = $self->schema()->resultset("Phenotype::Phenotypeprop")->find_or_create(
+	{
 	    phenotype_id => $self->phenotype_id,
 	    type_id => $phenotype_additional_info_type_id,
-    });
-    $pheno_additional_info = $pheno_additional_info->update({
+	});
+    
+    $pheno_additional_info = $pheno_additional_info->update(
+	{
 	    value => encode_json $additional_info,
 	});
     
     my $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
+
     return $additional_info_stored;
 }
 
 sub delete_phenotype {
     my $self = shift;
 
-    if ($self->phentoype_id()) {
+    if ($self->phenotype_id()) {
 	print STDERR "Removing phenotype with phenotype_id ".$self->phenotype_id()."\n";
 	my $row = $self->schema->resultset("Phenotype::Phenotype")->find( { phenotype_id => $self->phenotype_id() });
 	$row->delete();
     }
     else {
-	print STDERR "Trying to delete a phenotype without phentoype_id\n";
+	print STDERR "Trying to delete a phenotype without phenotype_id\n";
     }
 }
 
@@ -307,13 +321,13 @@ sub check_categories {
     my $self = shift;
 
     my $error_message;
-    
+
     my %trait_categories_hash;
     if ($self->trait_format() eq 'Ordinal' || $self->check_trait() eq 'Nominal' || $self->trait_format() eq 'Multicat') {
 	# Ordinal looks like <value>=<category>
-	
+
 	my @check_values;
-	
+
 	my @trait_categories = sort(split /\//, $self->check_trait_category());
 
 	# print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
@@ -325,7 +339,7 @@ sub check_categories {
 	else {
 	    @check_values = ( $self->value() );
 	}
-	
+
 	foreach my $ordinal_category (@{ $self->trait_categories }) {
 	    my @split_value = split('=', $ordinal_category);
 	    if (scalar(@split_value) >= 1) {
@@ -379,11 +393,9 @@ sub check_categories {
 
 =cut
    
-  
-
 sub check { 
     my $self = shift;
-    
+
     my $error_message = "";
     my $warning_message = "";
     
