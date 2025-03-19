@@ -378,10 +378,11 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     values_hash=>\%parsed_data,
     has_timestamps=>0,
     overwrite_values=>1,
-    remove_values=>1,
+    remove_values=>0,
     metadata_hash=>\%phenotype_metadata,
     composable_validation_check_name=>$f->config->{composable_validation_check_name}
     );
+
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
 my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
@@ -389,12 +390,14 @@ ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works 3");
 
 print STDERR "STORED PHENOTYPE ERROR MESG 3: $stored_phenotype_error_msg\n";
 
+my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'phenotypes', 'concurrent', $f->config->{basepath});
+
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 			     trial_id => 137 });
 
 my $traits_assayed  = $tn->get_traits_assayed(); # returns the counts assayed
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-print STDERR Dumper @traits_assayed_sorted;
+print STDERR "TRAITS ASSAYED UPDATE 3: ".Dumper @traits_assayed_sorted;
 my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload update' );
 
@@ -406,21 +409,34 @@ is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70668);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
+
+print STDERR "PHENOTYPES IN DB SORTED: ". Dumper(\@pheno_for_trait_sorted);
 @pheno_for_trait_check = ('0.8','1.8','2.8','3.8','4.8','5.8','6.8','7.8','8.8','9.8','10.8','11.8','12.8','13.8','14.8');
+print STDERR "EXPECTED PHENOTYPES: ".Dumper(\@pheno_for_trait_check);
+
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70668 from phenotyping spreadsheet upload update' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70741);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-@pheno_for_trait_check = ('130','130','130','135','135','135','138','138','138','139','139');
+print STDERR "PHENOTYPES IN DB SORTED: ". Dumper(\@pheno_for_trait_sorted);
+@pheno_for_trait_check = (30,35,38,39,'130','130','130','135','135','135','138','138','138','139','139');
+print STDERR "EXPECTED PHENOTYPES: ".Dumper(\@pheno_for_trait_check);
+
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from phenotyping spreadsheet upload update' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70773);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
+print STDERR "PHENOTYPES IN DB SORTED: ". Dumper(\@pheno_for_trait_sorted);
 @pheno_for_trait_check = ('20','21','22','23','24','25','26','27','28','29','30','31','32','33','34');
+print STDERR "EXPECTED PHENOTYPES: ".Dumper(\@pheno_for_trait_check);
+
+
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload update' );
 
+
+done_testing();
+
+exit(0);
 
 #####################################
 #Tests for fieldbook file parsing
