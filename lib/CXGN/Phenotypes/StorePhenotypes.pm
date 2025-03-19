@@ -46,7 +46,7 @@ For traits that are defined as single, there are a number of parameters that wil
 
 overwrite_values, if set to true, will cause the old values to be overwritten. This is only the case for single values on a given observation unit and trait, and for repetitive measures that have the exact same timestamp and the same observation unit and trait.
 
-remove_values will affect single measurement trait for which new, empty observations are loaded. In this case, the old observation is simply removed and the empty observation becomes the new value for that observation unit and trait.
+remove_values will affect single measurement trait for which new, empty observations are loaded. In this case, the old observation is simply removed and the empty observation becomes the new value for that observation unit and trait. If remove_values is not set, the original value will remain in the database; the entry is essentially ignored.
 
 ignore_new_values remains as a parameter but has no effect.
 
@@ -579,7 +579,7 @@ sub check_measurement {
     my $error_message = "";
     my $warning_message = "";
     
-    print STDERR "check_measurement for trait $trait_name and values ".Dumper($value_array)."\n";
+    #print STDERR "check_measurement for trait $trait_name and values ".Dumper($value_array)."\n";
     
     #print STDERR Dumper $value_array;
     my ($trait_value, $timestamp);
@@ -601,7 +601,7 @@ sub check_measurement {
     }
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
     if ( defined($trait_value) && $trait_name ne "notes" ) {
-	print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
+	#print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
 	my $trait_cvterm = $self->trait_objs->{$trait_name};
 	my $trait_cvterm_id = $trait_cvterm->cvterm_id();
         # print STDERR "the trait cvterm id of this trait is: " . $trait_cvterm_id . "\n";
@@ -729,14 +729,14 @@ sub check_measurement {
 	if (exists($self->check_trait_repeat_type->{$trait_cvterm_id})) {
 	    if (grep /$repeat_type/, ("single", "multiple", "time_series")) {
 		$repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id};
-		print STDERR "Trait repeat type: $repeat_type\n";
+		#print STDERR "Trait repeat type: $repeat_type\n";
 	    }else {
 		print STDERR "the trait repeat type of $self->check_trait_repeat_type->{$trait_cvterm_id} has no meaning. Assuming 'single'.\n";
 	    }
 	}
 	
 	if ($repeat_type eq "multiple" or $repeat_type eq "time_series") {
-	    print STDERR "Trait repeat type: $repeat_type\n";
+	    #print STDERR "Trait repeat type: $repeat_type\n";
 	    if (!$timestamp) {
 		# print STDERR "trait name : $trait_name is multiple without timestamp \n";
 		$error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
@@ -752,7 +752,7 @@ sub check_measurement {
 	#check if the plot_name, trait_name combination already exists in database.
 	if ($repeat_type eq "single") {
 
-	    print STDERR "Processing this trait as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
+	    #print STDERR "Processing this trait with value $trait_value as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
 	    if (exists($self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id})) {
 		my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};
 
@@ -779,7 +779,8 @@ sub check_measurement {
 	    }
 	    $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
 	    
-	}else {   ## multiple or time_series - warn only if the timestamp/value are identical
+	}
+	else {   ## multiple or time_series - warn only if the timestamp/value are identical
 	    if (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp}) && $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp} eq $trait_value) {
 		$warning_message .= "For trait 'trait_name', the  timepoint $timestamp for stock  $stock_id already has a measurement with the same value $trait_value associated with it.<hr>";
 	    }
@@ -911,7 +912,7 @@ sub store {
 	    
             # Check if there is a note for this plot, If so add it using dedicated function
             my $note_array = $self->values_hash->{$plot_name}->{'notes'};
-            print STDERR "check note array is defined: " . Dumper($note_array) . "\n";
+            #print STDERR "check note array is defined: " . Dumper($note_array) . "\n";
             if (defined $note_array) {
                 $self->store_stock_note($stock_id, $note_array, $operator);
             }
@@ -940,7 +941,7 @@ sub store {
             # foreach my $trait_name (@trait_list) {
             foreach my $trait_name (keys %{$self->values_hash()->{$plot_name}}) {
                 my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
-		print STDERR "TRAIT: $trait_name\n";
+		#print STDERR "TRAIT: $trait_name\n";
 		
 		if ($trait_name eq "notes") {
 		    # we already dealt with notes, which are stored as stockprops...
@@ -948,6 +949,11 @@ sub store {
 		    next;
 		}
                 my $trait_cvterm = $self->trait_objs->{$trait_name};
+
+		if (!$trait_cvterm) {
+		    print STDERR "SKIPPING TERM $trait_name. IT IS NOT AVAILABLE IN THE DATABASE\n";
+		    next();
+		}
 		
 		# print STDERR "measurement array : ".Dumper($measurements_array);
 		# print STDERR "reference measurement array = ".ref($measurements_array->[0])."\n";
@@ -956,14 +962,15 @@ sub store {
 		    # print STDERR "Adding to sub array...\n";
 		    $measurements_array = [ $measurements_array ];
 		}
+
 		
                 # print STDERR "MEASUREMENT ARRAY ".Dumper($measurements_array);
 		
                 my $value_count = 0;
 		if (ref($measurements_array) eq "ARRAY") { 
 		    foreach my $value_array (@$measurements_array) { 
-			# print STDERR "CHECKING $plot_name, $trait_name, ".Dumper($value_array)."\n";
-						
+			print STDERR "ABOUT TO STORE $plot_name, $trait_name, ".Dumper($value_array)."\n";
+
 			my ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
 ##<<<<<<< HEAD
 			if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }
@@ -990,8 +997,8 @@ sub store {
 
 			my $observation = $value_array->[3];
 
-			if ($observation eq "") { $observation = undef; } # special case, not sure where it comes from
-			$phenotype_object->phenotype_id($observation);
+			#if ($observation eq "") { $observation = undef; } # special case, not sure where it comes from
+			#$phenotype_object->phenotype_id($observation);
 			my $image_id = $value_array->[4];
 			
                         if (defined($image_id) && ($image_id eq "")) { $image_id = undef; }
@@ -1003,21 +1010,23 @@ sub store {
                         my $unique_time = $timestamp && defined($timestamp) ? $timestamp : $upload_date;
                         # print STDERR "the unique time in the phenotype object: $unique_time\n";
 			$phenotype_object->unique_time($unique_time);
-			
+
 			my $existing_trait_value;
-			if (!$trait_cvterm) {
-			    print STDERR "SKIPPING TERM $trait_name. IT IS NOT AVAILABLE IN THE DATABASE\n";
-			    next();
+			
+			$existing_trait_value = $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id};
+			$phenotype_object->existing_trait_value($existing_trait_value);
+
+			my $phenotype_id;
+			if (exists($self->unique_trait_stock_phenotype_id->{$trait_cvterm->cvterm_id(), $stock_id})) {
+			    $phenotype_id = $self->unique_trait_stock_phenotype_id->{$trait_cvterm->cvterm_id(), $stock_id};
+			    print STDERR "FOUND THIS EXISTING PHENOTYPE ID ($phenotype_id) for the trait/obs_unit combination\n";
+			    $phenotype_object->phenotype_id($phenotype_id);
 			}
-			else {
-			    my $existing_trait_value = $self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id};
-			    $phenotype_object->existing_trait_value($existing_trait_value);
-			    
-			    $phenotype_object->cvterm_name($trait_cvterm->name());
-			    $phenotype_object->cvterm_id($trait_cvterm->cvterm_id());
-			    $phenotype_object->experiment($experiment);
-			    print STDERR "Existing value $existing_trait_value. New value: ".$phenotype_object->value()."\n";
-			}
+			$phenotype_object->cvterm_name($trait_cvterm->name());
+			$phenotype_object->cvterm_id($trait_cvterm->cvterm_id());
+			$phenotype_object->experiment($experiment);
+			#print STDERR "Existing value $existing_trait_value. New value: ".$phenotype_object->value()."\n";
+			
 
 			my $plot_trait_uniquename = "stock: " .
 			    $stock_id . ", trait: " .
@@ -1027,7 +1036,7 @@ sub store {
 			    ", count: $value_count" .
 			    ", observation: $observation";
 			
-			print STDERR "phenotype uniquename: $plot_trait_uniquename\n";
+			#print STDERR "phenotype uniquename: $plot_trait_uniquename\n";
 			
 			$phenotype_object->uniquename($plot_trait_uniquename);
 			
@@ -1039,47 +1048,46 @@ sub store {
 			#
 			my $repeat_type = $self->check_trait_repeat_type()->{$trait_cvterm_id} || "single";
 
-			print STDERR "\nREPEAT TYPE for $trait_cvterm_id: $repeat_type\n\n";
+			#print STDERR "\nREPEAT TYPE for $trait_cvterm_id: $repeat_type\n\n";
 
 			if ($overwrite_values && $repeat_type eq "single") {
-			    print STDERR "STORING SINGLE TRAIT WITH OVERWRITE VALUES!\n";
+			    #print STDERR "STORING SINGLE TRAIT WITH OVERWRITE VALUES!\n";
 			    if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
 				# we already have a value that needs to be overwritten
-				# let's get the phenotype_id of that stored observation so that
-				# we can update that entry using the phenotype object
+				# we already have the phenotype_id of the stored value in the object 
+				# we can update that entry using the phenotype object store function
 				#
-				if (my $phenotype_id = $self->unique_trait_stock_phenotype_id()->{$trait_cvterm->cvterm_id(), $stock_id}) {
-				    
 				#skip when observation is provided since overwriting doesn't create records it updates observations.
-				    #if (!$observation) {
-				    #push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-				    #push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
-				    #}
-
-				    # if remove_values is set and the trait_value is undef or "", we update the value, otherwise we skip
-				    # the saving of the value
-				    if ($remove_values && ($trait_value eq "" || ! defined($trait_value))) {
-					# we are skipping this save. Do nothing except accounting.
-					#
-					$skip_count++;
-				    }
-				    if ( $overwrite_values && defined($trait_value) && length($trait_value) ) {
-					$overwrite_count++;
-					$plot_trait_uniquename .= ", overwritten: $upload_date";
-					$phenotype_object->uniquename($plot_trait_uniquename);
-					$phenotype_object->phenotype_id($phenotype_id);
-					$phenotype_object->store();
-				    }
-				}
-				else {
-				    # we don't have an existing measurement in the database, so just add it
-				    # and keep track of it
+				#if (!$observation) {
+				#push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+				#push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+				#}
+				
+				# if remove_values is set and the trait_value is undef or "", we update the value, otherwise we skip
+				# the saving of the value
+				if ($remove_values && ($trait_value eq "" || ! defined($trait_value))) {
+				    # we are removing this entry from the database
 				    #
+				    #print STDERR "Removing $trait_value because of remove_values = $remove_values\n";
+				    $phenotype_object->delete_phenotype();
+				    $remove_count++;
+				}
+				if ( $overwrite_values && defined($trait_value) && length($trait_value) ) {
+				    #print STDERR "OVERWRITING VALUE..,\n";
+				    $overwrite_count++;
+				    $plot_trait_uniquename .= ", overwritten: $upload_date";
+				    $phenotype_object->uniquename($plot_trait_uniquename);
 				    $phenotype_object->store();
-				    $new_count++;
 				}
 			    }
-			}
+			    else {
+				# we don't have an existing measurement in the database, so just add it
+				# and keep track of it
+				#
+				$phenotype_object->store();
+				$new_count++;
+			    }
+			}		    
 
 			# if the repeat_type is single, but no overwrite values,
 			# we add a new measurement if there is no measurement present yet
@@ -1093,7 +1101,7 @@ sub store {
 			# if there is no other exact same value with exactly the same timestamp
 			#
 			elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
-			    if (my $phenotype_id = $self->unique_trait_stock_timestamp_phenotype_id()->{$trait_cvterm->cvterm_id(), $stock_id, $timestamp}) { 
+			    if ($phenotype_id) { 
 				if ($self->overwrite_values()) {
 				    $phenotype_object->phenotype_id($phenotype_id);
 				    $phenotype_object->store();
