@@ -317,7 +317,7 @@ solGS.pca = {
             processing: true,
             paging: true,
             info: false,
-            pageLength: 15,
+            pageLength: 5,
             'lengthMenu': [
                 [5,10,50,100,-1],[5,10,50,100,'All']
             ],
@@ -902,15 +902,14 @@ solGS.pca = {
 
             trialsIds.forEach(function (id) {
                 var groupName = [];
-
-                if (id.match(/\d+-\d+/)) {
+                if (id.match(/-/)) {
                     var ids = id.split("-");
 
                     ids.forEach(function (id) {
                         groupName.push(trialsNames[id]);
                     });
 
-                    groupName = "common: " + groupName.join(",");
+                    groupName = "common to: " + groupName.join(", ");
                 } else {
                     groupName = trialsNames[id];
                 }
