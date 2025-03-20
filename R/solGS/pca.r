@@ -32,6 +32,11 @@ loadingsFile     <- grep("pca_loadings", outputFiles, value = TRUE)
 varianceFile     <- grep("pca_variance", outputFiles, value = TRUE)
 combinedDataFile <- grep("combined_pca_data_file", outputFiles, value = TRUE)
 
+if (is.null(inputFiles)) {
+  stop("Input files are missing.")
+  q("no", 1, FALSE)
+}
+
 if (is.null(scoresFile)) {
   stop("Scores output file is missing.")
   q("no", 1, FALSE)
@@ -124,7 +129,6 @@ if (is.null(genoData) && is.null(phenoData)) {
 genoDataMissing <- c()
 if (dataType == 'genotype') {
    # if (is.null(filteredGenoFile) == TRUE) {
-        ##genoDataFilter::filterGenoData
         genoData <- genoDataFilter::convertToNumeric(genoData)
         genoData <- genoDataFilter::filterGenoData(genoData, maf=0.01)
         genoData <- genoDataFilter::roundAlleleDosage(genoData)

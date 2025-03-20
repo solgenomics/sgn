@@ -151,7 +151,7 @@ solGS.listTypeSelectionPopulation = {
       'processing': true,
       'paging': true,
       'info': false,
-      'pageLength': 5,
+      'pageLength': 15,
       'rowId': function (a) {
         return a[4]
       },
