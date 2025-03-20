@@ -70,6 +70,9 @@ CREATE TABLE sgn_people.sp_job(
     args JSONB
 );
 
+INSERT INTO public.cv (name, definition)
+    VALUES ('background_job_type', 'The type of a background job. Could be download, cluster_analysis, etc.');
+
 EOSQL
 
 print "You're done!\n";
