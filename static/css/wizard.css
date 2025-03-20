@@ -28,10 +28,29 @@ ul.wizard-list li{
   display:inline-block;
 }
 
+.wizard-search {
+  height: 3em !important;
+  transition: height 0.5s ease-in-out;
+}
+.wizard-search-container:focus-within > .wizard-search {
+  height: 10em !important;
+}
+.wizard-search-options {
+  display: flex;
+  justify-content: space-between;
+  height: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+.wizard-search-container:focus-within > .wizard-search-options {
+  height: auto;
+  opacity: 1;
+}
+
 .wizard-loader {
   position: absolute;
   z-index: 100;
-  top: 6em;
+  top: 2em;
   left: 0;
   font-size: 2em;
   text-align: center;
