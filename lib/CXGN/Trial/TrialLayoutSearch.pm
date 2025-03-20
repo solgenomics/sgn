@@ -259,8 +259,8 @@ sub search {
         my $location_name = $location_id ? $location_id_lookup{$location_id} : undef;
 
         # Split treatment names and descriptions on | and parse into an array
-        my @names = split(/\|/, $treatment_name);
-        my @descriptions = split(/\|/, $treatment_description);
+        my @names = split(/\|/, $treatment_name || '');
+        my @descriptions = split(/\|/, $treatment_description || '');
         my @treatments;
         for my $i (0 .. $#names) {
             my $n = $names[$i];
@@ -296,8 +296,8 @@ sub search {
             $accession_name = $germplasm_uniquename;
         }
 
-        my @intercrop_stock_ids = split(/\|/, $intercrop_stock_id);
-        my @intercrop_stock_names = split(',', $intercrop_stock_name);
+        my @intercrop_stock_ids = split(/\|/, $intercrop_stock_id || '');
+        my @intercrop_stock_names = split(',', $intercrop_stock_name || '');
         my @intercrop_stocks;
         for my $i (0 .. $#intercrop_stock_ids) {
             my $id = $intercrop_stock_ids[$i];
