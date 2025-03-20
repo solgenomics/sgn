@@ -16,7 +16,10 @@ my $job = CXGN::Jobs->new({
     schema => $bcs_schema
     args => {
         do_not_cleanup => 1,
-        is_cluster => 1 
+        is_cluster => 1,
+        type => 'download',
+        submit_page => 'https://www.breedbase.org/submit_page_url'
+        result_page => 'https://www.breedbase.org/result_page_url's
     }
 });
 
@@ -188,11 +191,13 @@ sub BUILD {
 
     if (!$args->{sp_job_id}) { # New job, no ID yet
         $self->args($args->{args});
+
+        # parse through args...
     } else { #existing job, retrieve from DB
         $self->sp_job_id($args->{sp_job_id});
         my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
         if (!$row) { die "The job with id ".$self->sp_jb_id()." does not exist"; }
-
+        #connect to db and find job...
     }
 }
 
@@ -220,7 +225,7 @@ Returns the specified job argument stored in the args hashref. For example:
 
 $job->retrieve_argument('cmd');
 
-retrieves the command line code of the job. May return undefined arguments!
+retrieves the command line code of the job. May return nothing for  undefined arguments!
 
 =cut
 
