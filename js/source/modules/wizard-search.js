@@ -300,7 +300,7 @@ export function Wizard(main_id,col_number){
       d.items.forEach(i=>{
           var val = i.name.replace(/\s+/g, "").toLowerCase();
           if (!i.selected) {
-              i.selected = search_terms ? search_terms.some((st) => st && st !== "" && d.filterType === 'exact' ? val === st : val.includes(st)) : true;
+              i.selected = search_terms ? search_terms.some((st) => st && st !== "" && (d.filterType === 'exact' ? val === st : val.includes(st))) : true;
           }
       });
       reflow(d.index,true);
@@ -344,7 +344,7 @@ export function Wizard(main_id,col_number){
     var search_terms = search_txt ? search_txt.split(/,|\n/).map((e) => e.replace(/\s+/g, "").toLowerCase()) : undefined;
     d.filter = (item)=>{
       var val = item.name.replace(/\s+/g, "").toLowerCase();
-      var included = search_terms ? search_terms.some((st) => st && st !== "" && d.filterType === 'exact' ? val === st : val.includes(st)) : true;
+      var included = search_terms ? search_terms.some((st) => st && st !== "" && (d.filterType === 'exact' ? val === st : val.includes(st))) : true;
       return included;
     }
     reflow(d.index, false, true);
