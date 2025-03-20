@@ -267,6 +267,8 @@ export function Wizard(main_id,col_number){
   allCols.select('.wizard-search-options-clear').on("click", function(d) {
     var thiscol = allCols.filter(c_d=>c_d==d);
     thiscol.select(".wizard-search").property("value", "");
+    d.filter = () => true;
+    reflow(d.index, true);
   });
 
   allCols.select('.wizard-union-toggle-btn-any').on("click", function(d) {
