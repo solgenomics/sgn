@@ -76,7 +76,11 @@ sub patch {
             'anova_analysis',
             'heritability_analysis',
             'stability_analysis',
-            'blast'
+            'blastn',
+            'blastp',
+            'blastx',
+            'tblastn',
+            'tblastx'
         ],
     };
 
