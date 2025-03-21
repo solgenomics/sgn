@@ -33,6 +33,8 @@ it under the same terms as Perl itself.
 package TestDbpatchMoose;
 
 use Moose;
+use Bio::Chado::Schema;
+
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -54,9 +56,38 @@ sub patch {
 
     print STDOUT "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
 
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
+
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
     print STDOUT "\nExecuting the SQL commands.\n";
+
+    my $terms = {
+        'background_job_type' => [
+            'download',
+            'pca_analysis',
+            'kinship_analysis',
+            'tool_compatibility',
+            'cluster_analysis',
+            'correlation_analysis',
+            'training_dataset',
+            'training_model',
+            'training_prediction',
+            'anova_analysis',
+            'heritability_analysis',
+            'stability_analysis',
+            'blast'
+        ],
+    };
+
+    foreach my $t (keys %$terms){
+        foreach (@{$terms->{$t}}){
+            $schema->resultset("Cv::Cvterm")->create_with({
+                name => $_,
+                cv => $t
+            });
+        }
+    }
 
     $self->dbh->do(<<EOSQL);
 CREATE TABLE sgn_people.sp_job(
@@ -66,16 +97,13 @@ CREATE TABLE sgn_people.sp_job(
     status VARCHAR(100),
     create_timestamp VARCHAR(100) NOT NULL,
     finish_timestamp VARCHAR(100), 
-    type INT REFERENCES public.cvterm(id)
+    type INT REFERENCES public.cvterm(id),
     args JSONB
 );
 
-INSERT INTO public.cv (name, definition)
-    VALUES ('background_job_type', 'The type of a background job. Could be download, cluster_analysis, etc.');
-
 EOSQL
 
-print "You're done!\n";
+    print "You're done!\n";
 }
 
 

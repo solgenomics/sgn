@@ -5,7 +5,7 @@ CXGN::Jobs - a class to unify background job submission, storage, and reporting
 =head1 DESCRIPTION
 
 CXGN::Jobs is a central location where background jobs can be submitted through cxgn-corelibs/CXGN::Tools::Run. 
-By routing all jobs through this module, all submitted jobs regardless of type can be stored in sgn_people.sp_jobs 
+By routing all jobs through this module, all submitted jobs regardless of type can be stored in sgn_people.sp_job 
 and updated accordingly. To use this module, simply replace all calls to CXGN::Tools:Run with a call to this module,
 supplying the same arguments as keys in the args hash. 
 
@@ -18,6 +18,7 @@ my $job = CXGN::Jobs->new({
         do_not_cleanup => 1,
         is_cluster => 1,
         type => 'download',
+        site => 'breedbase.org',
         submit_page => 'https://www.breedbase.org/submit_page_url'
         result_page => 'https://www.breedbase.org/result_page_url's
     }
@@ -167,6 +168,7 @@ my $job = CXGN::Jobs->new({
     args => {
         cmd => 'perl /bin/script.pl -a arg1 -b arg2',
         site => 'breedbase.org',
+        type => 'download',
         config => '...',
         submit_page => '...',
         results_page => '...'
