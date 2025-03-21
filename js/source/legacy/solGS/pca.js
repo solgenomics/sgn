@@ -28,9 +28,12 @@ solGS.pca = {
             if (pcaAnalysisElemId) {
                 pcaArgs = solGS.pca.getSelectedPopPcaArgs(pcaAnalysisElemId);
             }
+            
             if (!pcaArgs) {
                 pcaArgs = this.getArgsFromPcaUrl();
             }
+            
+
         } else {
             pcaArgs = this.getArgsFromOtherUrls();
         }
@@ -253,15 +256,23 @@ solGS.pca = {
         var pcaArgs = {
             pca_pop_id: pcaPopId,
             data_structure: dataStr,
-            dataset_id: datasetId,
-            list_id: listId,
-            pca_pop_name: popName,
-            genotyping_protocol_id: protocolId,
+            pca_pop_name: popName,    
             analysis_type: "pca analysis",
         };
 
-        pcaArgs = JSON.stringify(pcaArgs);
+        if (datasetId) {
+            pcaArgs.dataset_id = datasetId;
+        }
 
+        if (listId) {
+            pcaArgs.list_id = listId;
+        }
+
+        if (protocolId) {
+            pcaArgs.genotyping_protocol_id = protocolId;
+        }
+
+        pcaArgs = JSON.stringify(pcaArgs);
         var runPcaBtn =
             `<button type="button" id=${runPcaBtnId}` +
             ` class="btn btn-success" data-selected-pop='${pcaArgs}'>Run PCA</button>`;
@@ -494,8 +505,11 @@ solGS.pca = {
         var pcaPlotDivId = this.pcaPlotDivId(res.file_id).replace(/#/, "");
         var pcaPlotLink = `<a href='#'  onclick='event.preventDefault();' id='download_${pcaPlotDivId}'>PCA plot</a>`;
 
-        var runPcaBtnId;
-        if (pcaPlotDivId.match(/pca_plot/)) {
+        var runPcaBtnId;// = this.getRunPcaId(res.pca_pop_id);
+
+        var isPcaResultPage = location.pathname.replace(/pca\/analysis/, "");
+        isPcaResultPage = isPcaResultPage.replace(/\//g, "");
+        if (isPcaResultPage) {
             runPcaBtnId = pcaPlotDivId.replace('pca_plot', 'run_pca')   
         } else {
             runPcaBtnId = this.getRunPcaId(res.pca_pop_id);
