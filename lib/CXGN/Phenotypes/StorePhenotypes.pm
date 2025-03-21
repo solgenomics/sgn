@@ -646,23 +646,21 @@ sub check_measurement {
 		}
 	    }
 	
-	    my @trait_categories;
-	    my %trait_categories_hash;
-	    my @check_values;
+	    # my @check_values;
 	    
-	    if (exists($self->check_trait_category()->{$trait_cvterm_id})) {
-	        @trait_categories = sort(split /\//, $self->check_trait_category->{$trait_cvterm_id});
-		# print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
-		# print STDERR "Trait categories hash: ".Dumper(\%trait_categories_hash)."\n";
-		my @check_values;
-		# print STDERR "Check values: ".Dumper(\@check_values)."\n";     
-		if ($self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
-		    @check_values = split /\:/, $trait_value;
-		}
-		else {
-		    @check_values = ( $trait_value );
-		}
-	    }
+	    # if (exists($self->check_trait_category()->{$trait_cvterm_id})) {
+	    #     @trait_categories = sort(split /\//, $self->check_trait_category->{$trait_cvterm_id});
+	    # 	# print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
+	    # 	# print STDERR "Trait categories hash: ".Dumper(\%trait_categories_hash)."\n";
+	    # 	my @check_values;
+	    # 	# print STDERR "Check values: ".Dumper(\@check_values)."\n";     
+	    # 	if ($self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
+	    # 	    @check_values = split /\:/, $trait_value;
+	    # 	}
+	    # 	else {
+	    # 	    @check_values = ( $trait_value );
+	    # 	}
+	    # }
 
 	    
 	    #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
@@ -701,7 +699,13 @@ sub check_measurement {
 		    }
 		}
 	    }
+	    my @trait_categories;
+	    my %trait_categories_hash;
+	    
+	    @trait_categories = sort(split /\//, $self->check_trait_category->{$trait_cvterm_id});
+	    print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
 	    if ($self->check_trait_format->{$trait_cvterm_id} eq 'Ordinal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Nominal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
+		# we are dealing with a multicat trait - split it into individual values and check each against the categories.
 		# Ordinal looks like <value>=<category>
 		foreach my $ordinal_category (@trait_categories) {
 		    my @split_value = split('=', $ordinal_category);
@@ -710,18 +714,39 @@ sub check_measurement {
 		    }
 		}
 	    } else {
-		# Catch everything else
+		# Catch everything else ## not sure what this is for
 		%trait_categories_hash = map { $_ => 1 } @trait_categories;
 	    }
 	    
-	    foreach my $value (@check_values) {
-		if ($value ne '' && !exists($trait_categories_hash{$value})) {
-		    my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
-		    $error_message = "<small> This trait value should be one of $valid_values: <br/>Plot Name: $plot_name <br/>Trait Name: $trait_name <br/>Value: $trait_value</small><hr>";
-		    print STDERR "The error in the value $error_message \n";
+	    print STDERR "TRAIT CATEGORIES: ".Dumper(\%trait_categories_hash)."\n";
+
+
+	    my @check_values;
+	    if (exists($self->check_trait_category()->{$trait_cvterm_id}) &&
+		$self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
+		
+		print STDERR "Dealing with a categorical trait!\n\n";
+		
+
+		print STDERR "Trait categories hash: ".Dumper(\%trait_categories_hash)."\n";
+		if ($trait_value =~ /\:/) { 		
+		    @check_values = split /\:/, $trait_value;
 		}
 		else {
-		    print STDERR "Trait value $trait_value is valid\n";
+		    @check_values = ( $trait_value );
+		}
+	    	
+		print STDERR "CHECK VALUES : ".Dumper(\@check_values);
+		
+		foreach my $value (@check_values) {
+		    if ($value ne '' && !exists($trait_categories_hash{$value})) {
+			my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
+			$error_message = "<small> This trait value should be one of $valid_values: $valid_values<br/>Plot Name: $plot_name <br/>Trait Name: $trait_name <br/>Value: $trait_value</small><hr>";
+			print STDERR "The error in the value $error_message \n";
+		    }
+		    else {
+			print STDERR "Trait value $trait_value is valid\n";
+		    }
 		}
 	    }
 	}

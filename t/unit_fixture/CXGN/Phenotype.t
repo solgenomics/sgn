@@ -85,6 +85,8 @@ ok($p2->check_trait_minimum(), "check trait minimum");
 
 ok($p2->check_trait_maximum(), "check trait maximum");
 
+$f->clean_up_db();
+
 done_testing();
 
 
