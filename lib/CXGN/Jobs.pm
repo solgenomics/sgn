@@ -85,7 +85,7 @@ Database ID for submitted job
 
 =cut 
 
-has 'sp_job_id' => ( isa => 'Int', is => 'rw' );
+has 'sp_job_id' => ( isa => 'Int', is => 'rw', predicate => 'has_sp_job_id' );
 
 =head2 sp_person_id()
 
@@ -191,15 +191,26 @@ sub BUILD {
     my $bcs_schema = $args->{schema};
     my $people_schema = $args->{people_schema};
 
-    if (!$args->{sp_job_id}) { # New job, no ID yet
-        $self->args($args->{args});
+    if (!$self->has_sp_job_id()) { # New job, no ID yet
+        my $job_args = $args->{args};
+        $self->args($job_args);
 
         # parse through args...
     } else { #existing job, retrieve from DB
         $self->sp_job_id($args->{sp_job_id});
         my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
         if (!$row) { die "The job with id ".$self->sp_jb_id()." does not exist"; }
-        #connect to db and find job...
+        my $job_args = JSON::Any->decode($row->args());
+        $self->args($job_args);
+        my $cvterm_row = $self->schema()->resultset("CV::Cvterm")->search({cvterm_id => $row->type()});
+        $self->type($cvterm_row->name());
+        $self->create_timestamp($row->create_timestamp());
+        $self->finish_timestamp($row->finish_timestamp());
+        $self->sp_person_id($row->sp_person_id());
+        $self->slurm_id($row->slurm_id());
+        $self->status($row->status());
+        $self->submit_page($job_args->{submit_page});
+        $self->results_page($job_args->{results_page});
     }
 }
 
