@@ -52,6 +52,8 @@ ignore_new_values remains as a parameter but has no effect.
 
 allow_repeat_measures is outdated and has no effect. In this version, the repeat measure capability is set on a trait level, using a trait property called 'trait_repeat_type'. This property can have the values 'single' (assumed to be the default), 'multiple', and 'time_series'.
 
+Some functionality has been more from the StorePhenotypes object to the CXGN::Phenotype object, on which the former relies. 
+
 =head1 AUTHORS
 
  Jeremy D. Edwards (jde22@cornell.edu)
@@ -1020,7 +1022,7 @@ sub store {
 			if (exists($self->unique_trait_stock_phenotype_id->{$trait_cvterm->cvterm_id(), $stock_id})) {
 			    $phenotype_id = $self->unique_trait_stock_phenotype_id->{$trait_cvterm->cvterm_id(), $stock_id};
 			    print STDERR "FOUND THIS EXISTING PHENOTYPE ID ($phenotype_id) for the trait/obs_unit combination\n";
-			    $phenotype_object->phenotype_id($phenotype_id);
+			    #$phenotype_object->phenotype_id($phenotype_id); ### add later when known if insert or update
 			}
 			$phenotype_object->cvterm_name($trait_cvterm->name());
 			$phenotype_object->cvterm_id($trait_cvterm->cvterm_id());
@@ -1051,8 +1053,10 @@ sub store {
 			#print STDERR "\nREPEAT TYPE for $trait_cvterm_id: $repeat_type\n\n";
 
 			if ($overwrite_values && $repeat_type eq "single") {
+			    
 			    #print STDERR "STORING SINGLE TRAIT WITH OVERWRITE VALUES!\n";
 			    if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
+				$phenotype_object->phenotype_id($phenotype_id); # we need to phenotype_id to overwrite
 				# we already have a value that needs to be overwritten
 				# we already have the phenotype_id of the stored value in the object 
 				# we can update that entry using the phenotype object store function
@@ -1088,19 +1092,18 @@ sub store {
 				$new_count++;
 			    }
 			}		    
-
-			# if the repeat_type is single, but no overwrite values,
-			# we add a new measurement if there is no measurement present yet
-			#
 			elsif ($repeat_type eq "single") {
+			    # if the repeat_type is single, but no overwrite values,
+			    # we add a new measurement if there is no measurement present yet
+			    #
 			    $new_count++;
 			    $phenotype_object->store();
 			}
 			    
-			# otherwise, we deal with a time series and we add a new value
-			# if there is no other exact same value with exactly the same timestamp
-			#
 			elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
+			    # otherwise, we deal with a time series and we add a new value
+			    # if there is no other exact same value with exactly the same timestamp
+			    #
 			    if ($phenotype_id) { 
 				if ($self->overwrite_values()) {
 				    $phenotype_object->phenotype_id($phenotype_id);
@@ -1111,6 +1114,7 @@ sub store {
 				    # if observations are emtpy, with this option,
 				    # remove the measurement from the database
 				    #
+				    $phenotype_object->phenotype_id($phenotype_id);
 				    if ($trait_value eq "" || ! defined($trait_value)) {
 					$phenotype_object->delete_phenotype();
 				    }

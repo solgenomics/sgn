@@ -151,7 +151,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     trait_list=>\@traits,
     values_hash=>\%parsed_data,
     has_timestamps=>1,
-    overwrite_values=>0,
+    overwrite_values=>1,
     metadata_hash=>\%phenotype_metadata,
     composable_validation_check_name=>$f->config->{composable_validation_check_name}
     );
@@ -288,7 +288,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     trait_list=>\@traits,
     values_hash=>\%parsed_data,
     has_timestamps=>0,
-    overwrite_values=>0,
+    overwrite_values=>1,
     metadata_hash=>\%phenotype_metadata,
     composable_validation_check_name=>$f->config->{composable_validation_check_name}
     );
@@ -434,9 +434,9 @@ print STDERR "EXPECTED PHENOTYPES: ".Dumper(\@pheno_for_trait_check);
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload update' );
 
 
-done_testing();
+#done_testing();
 
-exit(0);
+#exit(0);
 
 #####################################
 #Tests for fieldbook file parsing
@@ -554,7 +554,9 @@ ok(!$image_error, "check no error in image upload");
  my @pheno_for_trait = $tn->get_phenotypes_for_trait(70741);
  my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 print STDERR "values for dry matter content now: ".Dumper \@pheno_for_trait_sorted;
-my @pheno_for_trait_check = sort (42, 45, 41, 14, 25, 52, 41, 12, 13,42, 35, 32, 31);
+my @pheno_for_trait_check = sort {$a <=> $b} (42, 45, 30, 41, 14, 25, 52, 41, 12, 13,42, 35, 32, 31, 135);
+
+print STDERR "EXPECTED: ".Dumper(\@pheno_for_trait_check);
 
  is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from phenotyping spreadsheet upload' );
 
@@ -975,7 +977,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     values_hash=>\%parsed_data,
     has_timestamps=>0,
     overwrite_values=> 1,
-    remove_values => 0,
+    remove_values => 1,
     metadata_hash=>\%phenotype_metadata,
     composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
@@ -1009,43 +1011,42 @@ print STDERR "DATA COLLECTOR CHECK STORED DATA: ". Dumper \@traits_assayed_sorte
 
 #         );
 
-@traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012',[],15,undef,undef],[70668,'harvest index variable|CO_334:0000015',[],15,undef,undef],[70727,'dry yield|CO_334:0000014',[],15,undef,undef],[70741,'dry matter content percentage|CO_334:0000092',[],15,undef,undef],[70773,'fresh shoot weight measurement in kg|CO_334:0000016',[],15,undef,undef]);
+@traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012',[],14,undef,undef],[70668,'harvest index variable|CO_334:0000015',[],15,undef,undef],[70727,'dry yield|CO_334:0000014',[],15,undef,undef],[70741,'dry matter content percentage|CO_334:0000092',[],13,undef,undef],[70773,'fresh shoot weight measurement in kg|CO_334:0000016',[],15,undef,undef]);
 
 
-is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload 4' );
+is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from data collector upload 4' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666); # fresh root weight
 
 print STDERR "PHENO_FOR TRAIT: ".Dumper(\@pheno_for_trait);
 
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-print STDERR "Pheno for trait 70666 check: ".Dumper(\@pheno_for_trait_sorted);
-my @pheno_for_trait_check = (15,15,15,15,15,15,15,15,15,15,15,15,15,15,15); #('15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','36','37','38','39','40','41','42','43','45','46','47','48','49','50');
-is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70666 from phenotyping spreadsheet upload 3' );
+print STDERR "Pheno for trait 70666 check for data collector: ".Dumper(\@pheno_for_trait_sorted);
+
+my @pheno_for_trait_check = sort { $a <=> $b } (42,50,36,37,43,49,39,40,47,48,45,46,41,38);
+
+is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70666 from data collector upload 4' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70668); # harvet index
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 print STDERR "pheno for trait 70668: ".Dumper(\@pheno_for_trait_sorted);
 @pheno_for_trait_check = (0, 0,'0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8'); #'0.8','1.8','2.8','3.8','4.8','5.8','6.8','7.8','8.8','9.8','10.8','11.8','12.8','13.8','14.8');
 #('0','0','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','1.8','1.8','2.8','2.8','3.8','3.8','4.8','4.8','5.8','5.8','6.8','6.8','7.8','7.8','8.8','8.8','9.8','9.8','10.8','10.8','11.8','11.8','12.8','12.8','13.8','13.8','14.8','14.8');
-is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70668 from phenotyping spreadsheet upload 3' );
+is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70668 from data collector upload 4' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70741); # dry matter content percentage
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 print STDERR "Pheno for trait 70741: ".Dumper(\@pheno_for_trait_sorted);
-@pheno_for_trait_check = (35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 48, 49); #(12,13,14,25,31,32,35,41,41,42,42,45,52); #135 removed    #('12','13','14','25','30','30','30','30','30','30','30','30','31','32','35','35','35','35','35','35','35','35','35','35','36','37','38','38','38','38','38','38','38','38','38','39','39','39','39','39','39','39','41','41','42','42','42','43','44','45','45','46','47','48','49','52');
-is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from phenotyping spreadsheet upload 3' );
+@pheno_for_trait_check = (35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 48, 49);
+print STDERR "EXPECTED: ".Dumper(\@pheno_for_trait_check);
+is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from data collector upload 4' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70773); # fresh shoot weight
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-print STDERR "Pheno for trait 70773: ".Dumper(\@pheno_for_trait_sorted);
-@pheno_for_trait_check = (20,21,22,23,24,25,26,27,28,29,30,31,32,33,34); #('10','11','12','13','14','15','16','17','18','19','20','20','20','21','21','21','22','22','22','23','23','23','24','24','24','25','25','26','26','27','27','28','28','29','29','30','30','31','31','32','32','33','33','34','34');
+print STDERR "Pheno for trait 70773 after data collector: ".Dumper(\@pheno_for_trait_sorted);
+@pheno_for_trait_check = (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24);
+print STDERR "EXPECTED: ".Dumper(\@pheno_for_trait_check);
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload 3' );
-
-done_testing();
-
-exit(0);
-
 
 # $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
 # $post1_experiment_count = $experiment->count();
@@ -1687,7 +1688,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     trait_list=>\@traits,
     values_hash=>\%parsed_data,
     has_timestamps=>0,
-    overwrite_values=>0,
+    overwrite_values=>1,
     metadata_hash=>\%phenotype_metadata,
     composable_validation_check_name=>$f->config->{composable_validation_check_name}
 );
@@ -1957,7 +1958,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     trait_list=>\@traits,
     values_hash=>\%parsed_data,
     has_timestamps=>0,
-    overwrite_values=>0,
+    overwrite_values=>1,
     metadata_hash=>\%phenotype_metadata,
     composable_validation_check_name=>$f->config->{composable_validation_check_name}
     );
@@ -2061,7 +2062,7 @@ $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 print STDERR "TRAITS ASSAYED NOW: ".Dumper \@traits_assayed_sorted;
 
-is_deeply(\@traits_assayed_sorted, [[70666,'fresh root weight|CO_334:0000012',[],45,undef,undef],[70668,'harvest index variable|CO_334:0000015',[],15,undef,undef],[70681,'top yield|CO_334:0000017',[],15,undef,undef],[70700,'sprouting proportion|CO_334:0000008',[],15,undef,undef],[70706,'root number counting|CO_334:0000011',[],14,undef,undef],[70713,'flower|CO_334:0000111',[],15,undef,undef],[70727,'dry yield|CO_334:0000014',[],19,undef,undef],[70741,'dry matter content percentage|CO_334:0000092',[],44,undef,undef],[70773,'fresh shoot weight measurement in kg|CO_334:0000016',[],15,undef,undef]], 'check traits assayed after plant upload' );
+is_deeply(\@traits_assayed_sorted, [[70666,'fresh root weight|CO_334:0000012',[],45,undef,undef],[70668,'harvest index variable|CO_334:0000015',[],15,undef,undef],[70681,'top yield|CO_334:0000017',[],15,undef,undef],[70700,'sprouting proportion|CO_334:0000008',[],15,undef,undef],[70706,'root number counting|CO_334:0000011',[],14,undef,undef],[70713,'flower|CO_334:0000111',[],15,undef,undef],[70727,'dry yield|CO_334:0000014',[],19,undef,undef],[70741,'dry matter content percentage|CO_334:0000092',[],44,undef,undef],[70773,'fresh shoot weight measurement in kg|CO_334:0000016',[],15,undef,undef]], 'check traits assayed after plant upload 2' );
 
 
 	#   [

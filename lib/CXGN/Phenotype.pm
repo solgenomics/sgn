@@ -1,3 +1,36 @@
+
+=head1
+
+CXGN::Phenotype - a class for handling of individual phenotype values
+
+=head1 DESCRIPTION
+
+CXGN::Phenotype handles individual phentoypic observations and maps to the phenotype table in the database schema.
+
+Phenotypes can have different types:
+
+=over 3
+
+=item * They can contain numbers, strings, dates, or booleans. If they are numbers, a upper and a lower limit can be defined. The date format is enforced to an ISO date format.
+
+=item * Phenotypes can also be associated with categories. In this case, the phenotypic value needs to be one of the defined values in the categories.
+
+=item * Multicat phenotypes can contain more than one value selected from a list of categories. Multiple values are stored in the value field separated by a colon.
+
+=item * the check() function can be used to check the value against all applicable constraints.
+
+=item * the constraints are stored as cvtermprops 
+
+
+=head1 AUTHORS
+
+ Lukas Mueller
+ Srikanth Karaikal
+
+=head1 FUNCTIONS
+
+=cut
+
 package CXGN::Phenotype;
 
 use Moose;
@@ -5,16 +38,45 @@ use Data::Dumper;
 use Bio::Chado::Schema;
 use JSON qw | encode_json decode_json |;
 
+=head2 Constructor
+
+=head3 new()
+
+Creates a new object; provide any accessor as a parameter in a hashref.
+Required parameters: schema
+
+=head2 Accessors
+
+=head3 schema()
+
+Defined the Bio::Chado::Schema object for database access
+
+=cut
+
 has 'schema' => (
     isa => 'Ref',
     is => 'rw',
     required => 1,
     );
 
+=head3 phenotype_id()
+
+Sets the phenotype_id. If present, will update that phenotype
+when store() is called. Otherwise, a new row will be inserted into the database.
+
+=cut
+
 has 'phenotype_id' => (
     isa => 'Int|Undef',
     is => 'rw',
     );
+
+=head3 cvterm_id()
+
+Sets the cvterm_id of the phenotype ontology that this phenotype
+refers to.
+
+=cut
 
 has 'cvterm_id' => (
     isa => 'Int|Undef',
@@ -26,6 +88,12 @@ has 'cvterm_name' => (
     is => 'rw'
 );
 
+=head3 value()
+
+Sets the value of the phenotype. This can be a number, string, date, boolean, or one or more values from predefined categories.
+
+=cut
+
 has 'value' => (
     isa => 'Str|Undef',
     is => 'rw',
@@ -36,20 +104,44 @@ has 'stock_id' => (
     is => 'rw',
     );
 
+=head3 observationunit_id()
+
+Defines the observation unit that was observed in this measurement. It points to an entry in the stock table of the appropriate type.
+
+=cut
+
 has 'observationunit_id' => (
     isa => 'Int',
     is => 'rw',
     );
+
+=head3 operator()
+
+A string with the operator name. This value is read from the fieldbook operator field.
+
+=cut
 
 has 'operator' => (
     isa => 'Str',
     is => 'rw',
     );
 
+=head3 collect_date()
+
+The date and time the observation was collected in ISO format. For example, Fieldbook provides this information.
+
+=cut
+
 has 'collect_date' => (
     isa => 'Str|Undef',
     is => 'rw',
     );
+
+=head3 image_id()
+
+An optional image_id for an associated image.
+
+=cut
 
 has 'image_id' => (
     isa => 'Int|Undef',
@@ -66,10 +158,22 @@ has 'unique_time' => (
     is => 'rw',
     );
 
+=head3 uniquename
+
+a construct of different elements containing all the information in a string format that should be unique in the database.
+
+=cut
+
 has 'uniquename' => (
     isa => 'Str',
     is => 'rw',
     );
+
+=head3 experiment
+
+the associated nd_experiment Bio::Chado::Schema object
+
+=cut
 
 has 'experiment' => (
     isa => 'Bio::Chado::Schema::Result::NaturalDiversity::NdExperiment',
@@ -84,10 +188,23 @@ after 'experiment' => sub {
 
 };
 
+=head3 nd_experiment_id()
+
+The nd_experiment_id of the associated nd_experiment entry.
+Required as a parameter for new phenotypes.
+
+=cut
+
 has 'nd_experiment_id' => (
     isa => 'Int',
     is => 'rw',
     );
+
+=head3 trait_repeat_type()
+
+specifies whether the trait is measured once ("single"), multiple times ("multiple"), or as a time series ("time_series").
+
+=cut
 
 has 'trait_repeat_type' => (
     isa => 'Maybe[Str]',
@@ -95,44 +212,51 @@ has 'trait_repeat_type' => (
     default => undef,
     );
 
+=head3 trait_format()
+
+specified the format of the trait, including numeric, date, boolean etc.
+
+=cut
+
 has 'trait_format' => (
     isa => 'Maybe[Str]',
     is => 'rw',
     );
+
+=head3 trait_categories()
+
+Lists all the trait categories as a string, with the different categories separated by a slash ("/").
+
+=cut
 
 has 'trait_categories' => (
     isa => 'Maybe[Str]',
     is => 'rw',
     );
 
-has 'trait_format' => (
-    isa => 'Maybe[Str]',
-    is => 'rw',
-    );
+=head3 trait_min_value()
+
+The minimal value allowed for the trait, for numeric traits.
+
+=cut
 
 has 'trait_min_value' => (
     isa => 'Maybe[Str]',
     is => 'rw',
     );
 
+=head3 trait_max_value()
+
+The maximal value allowed for the trait, for numeric traits.
+
+=cut
 
 has 'trait_max_value' => (
     isa => 'Maybe[Str]',
     is => 'rw',
     );
 
-has 'trait_repeat_type' => (
-    isa => 'Maybe[Str]',
-    is => 'rw'
-    );
 
-
-
-
-#has 'plot_trait_uniquename' => (
-#    isa => 'Str|Undef',
-#    is => 'rw',
-#    );
 
 sub BUILD {
     my $self = shift;
@@ -158,6 +282,15 @@ sub BUILD {
 	print STDERR "no phenotype_id - creating empty object\n";
     }
 }
+
+=head3 function store()
+
+    Params: none
+    Returns: a hashref with success => $boolean and the
+        phenotype_id of the new phenotype, if applicable
+    Desc:
+
+=cut
 
 sub store {
     my $self = shift;
@@ -219,6 +352,11 @@ sub store {
         return { success => 1, overwritten_values => \@overwritten_values, experiment_ids => \%experiment_ids, nd_experiment_md_images => \%nd_experiment_md_images };
     }
     else { # INSERT
+
+	if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
+	    print STDERR "NOT STORING EMTPY VALUE\n";
+	    return { success => 0, message => "Not storing empty values" };
+	}
 	#print STDERR "INSERTING new value ...\n";
         my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->create({
 	    cvalue_id     => $self->cvterm_id(),
@@ -253,6 +391,12 @@ sub store {
     return { success => 1, phenotype_id => $self->phenotype_id() };
 }
 
+=head3 store_external_references()
+
+Params: external references
+
+=cut
+
 sub store_external_references {
     my $self = shift;
     # print STDERR "the CXGN::Phenotype store_external_references function\n";
@@ -277,6 +421,12 @@ sub store_external_references {
 
     return $external_references_stored;
 }
+
+=head3 store_additional_info
+
+Params: additional_info
+
+=cut
 
 sub store_additional_info {
     my $self = shift;
@@ -304,6 +454,13 @@ sub store_additional_info {
     return $additional_info_stored;
 }
 
+=head3 delete_phenotype()
+
+Deletes the current phenotype.
+Side effect: Removes the database row from the database.
+
+=cut
+
 sub delete_phenotype {
     my $self = shift;
 
@@ -316,6 +473,10 @@ sub delete_phenotype {
 	#print STDERR "Trying to delete a phenotype without phenotype_id\n";
     }
 }
+
+=head3 function check_categories()
+
+=cut
 
 sub check_categories {
     my $self = shift;
@@ -363,7 +524,9 @@ sub check_categories {
     }
 }
 
-=head2 check_measurement()
+=head2 check
+
+STATUS: NOT YET IMPLEMENTED.
 
    Params: $plot_name, $trait_name, $values
    The values parameter may be:
