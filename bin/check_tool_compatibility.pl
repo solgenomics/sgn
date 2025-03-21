@@ -45,19 +45,21 @@ use CXGN::DB::InsertDBH;
 use Bio::Chado::Schema;
 use CXGN::People::Schema;
 
-our ($opt_d, $opt_G, $opt_H, $opt_D);
+our ($opt_d, $opt_G, $opt_H, $opt_D, $opt_P, $opt_U);
 
-getopts('d:G:H:D');
+getopts('d:G:H:D:P:U');
 
 my $dataset_id = $opt_d || die "Dataset ID is required for tool compatibility calculation.";
 my $genotyping_protocol = $opt_G;
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 
-my $dbh = CXGN::DB::InsertDBH->new(
+my $dbh = CXGN::DB::Connection->new(
     { 
         dbhost=>$dbhost,
 		dbname=>$dbname,
+        dbuser=>$user,
+        dbpass=>$password,
 		dbargs => {
             AutoCommit => 0,
 			RaiseError => 1

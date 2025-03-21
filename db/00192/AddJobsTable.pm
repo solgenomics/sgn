@@ -65,22 +65,27 @@ sub patch {
     my $terms = {
         'background_job_type' => [
             'download',
-            'pca_analysis',
-            'kinship_analysis',
-            'tool_compatibility',
-            'cluster_analysis',
-            'correlation_analysis',
-            'training_dataset',
-            'training_model',
-            'training_prediction',
-            'anova_analysis',
-            'heritability_analysis',
-            'stability_analysis',
-            'blastn',
-            'blastp',
-            'blastx',
-            'tblastn',
-            'tblastx'
+            'upload',
+            # 'pca_analysis',
+            # 'kinship_analysis',
+            # 'tool_compatibility',
+            # 'cluster_analysis',
+            # 'correlation_analysis',
+            # 'training_dataset',
+            # 'training_model',
+            # 'training_prediction',
+            # 'anova_analysis',
+            # 'heritability_analysis',
+            # 'stability_analysis',
+            # 'blastn',
+            # 'blastp',
+            # 'blastx',
+            # 'tblastn',
+            # 'tblastx',
+            'phenotypic_analysis',
+            'genotypic_analysis',
+            'genomic_prediction',
+            'sequence_analysis'
         ],
     };
 
@@ -88,20 +93,21 @@ sub patch {
         foreach (@{$terms->{$t}}){
             $schema->resultset("Cv::Cvterm")->create_with({
                 name => $_,
-                cv => $t
+                cv => $t,
+                definition => #TODO
             });
         }
     }
 
     $self->dbh->do(<<EOSQL);
 CREATE TABLE sgn_people.sp_job(
-    id SERIAL PRIMARY KEY,
-    sp_person_id INT REFERENCES sgn_people.sp_person(id),
+    sp_job_id SERIAL PRIMARY KEY,
+    sp_person_id BIGINT REFERENCES sgn_people.sp_person,
     slurm_id VARCHAR(255) NOT NULL,
     status VARCHAR(100),
     create_timestamp VARCHAR(100) NOT NULL,
     finish_timestamp VARCHAR(100), 
-    type INT REFERENCES public.cvterm(id),
+    type_id BIGINT REFERENCES public.cvterm,
     args JSONB
 );
 

@@ -202,7 +202,7 @@ sub BUILD {
         if (!$row) { die "The job with id ".$self->sp_jb_id()." does not exist"; }
         my $job_args = JSON::Any->decode($row->args());
         $self->args($job_args);
-        my $cvterm_row = $self->schema()->resultset("CV::Cvterm")->search({cvterm_id => $row->type()});
+        my $cvterm_row = $self->schema()->resultset("CV::Cvterm")->search({cvterm_id => $row->type_id()});
         $self->type($cvterm_row->name());
         $self->create_timestamp($row->create_timestamp());
         $self->finish_timestamp($row->finish_timestamp());
@@ -228,7 +228,7 @@ sub retrieve_status {
     if (!$slurm_id) {
         return "";
     } else {
-        # ... determine status
+        # ... determine status, check for end status vs curre
     }
 }
 
