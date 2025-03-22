@@ -21,6 +21,7 @@ Phenotypes can have different types:
 
 =item * the constraints are stored as cvtermprops 
 
+=back
 
 =head1 AUTHORS
 
@@ -36,6 +37,7 @@ package CXGN::Phenotype;
 use Moose;
 use Data::Dumper;
 use Bio::Chado::Schema;
+use Scalar::Util qw | looks_like_number |;
 use JSON qw | encode_json decode_json |;
 
 =head2 Constructor
@@ -514,14 +516,14 @@ sub check_categories {
 	foreach my $value (@check_values) {
 	    if ($value ne '' && !exists($trait_categories_hash{$value})) {
 		my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
-		$error_message = "<small> This trait value should be one of $valid_values: <br/>Value: ".$self->value()."</small><hr>";
-		print STDERR "The error in the value $error_message \n";
+		$error_message =  "<small> This trait value should be one of $valid_values: <br/>Value: ".$self->value()."</small><hr>";
 	    }
 	    else {
 		print STDERR "Trait value ".$self->value()." is valid\n";
 	    }
 	}
     }
+    return $error_message;
 }
 
 =head2 check
@@ -538,9 +540,6 @@ STATUS: NOT YET IMPLEMENTED.
    Description:
 
    The function will check:
-   * Are the values an arrayref or hashref? It will return
-   without further checks if it is a hashref (high dimensionality data).
-   * If the trait_name is notes, it skippes any further checks.
    * Are trait formats defined for the trait? If the trait is numeric, the trait numericness is checked, and
      whether the values lies between trait_minimum and trait_maximum.
    * Is the trait an image? The availability of the corresponding image file is checked.
@@ -549,256 +548,72 @@ STATUS: NOT YET IMPLEMENTED.
    * The timestamp is checked for format (ISO, YYYY-MM-DD HH:MM::SS).
    * If the trait is multicat, the multiple values are checked against the defined categories.
    * If the trait is defined as a multiple of time_series measurement, the presence of a timestamp is checked.
-     Omitted the timestamp for such a trait is considered an error and should break the upload.
-   * If the trait is defined as a single trait, the presence of an older measurement is checked.
-     Depending on the settings, the old trait is either retained or overwritten with the new trait value.
-
+     Omitting the timestamp for a multiple trait is considered an error and should break the upload.
+   * (NOT YET)If the trait is defined as a single trait, the presence of an older measurement is checked.
+     Depending on the settings, the old trait is either retained or overwritten with the new trait value.\
 
 =cut
    
 sub check { 
     my $self = shift;
 
-    my $error_message = "";
-    my $warning_message = "";
+    my @errors;
+    my @warnings;
     
-#     print STDERR "check  for trait $trait_name and values ".Dumper($value_array)."\n";
+    my $trait_value = $self->value();
     
-#     #print STDERR Dumper $value_array;
-#     my ($trait_value, $timestamp);
-#     if (ref($value_array) eq 'ARRAY') {
-# 	# the entry represents trait + timestamp
-# 	#
-# 	$trait_value = $value_array->[0];
-# 	$timestamp = $value_array->[1];
-#     }
-#     elsif (ref($value_array) eq "HASH") {
-# 	# the trait is a high dimensional trait - we can't check
-# 	print STDERR "TRAIT VALUE IS HIGH DIMENSIONAL - skipping.\n";
-# 	return (undef, undef);
-#     }
-#     else {
-# 	# it's a scalar. It really shouldn't be I guess?
-# 	#
-# 	$trait_value = $value_array;
-#     }
-#     #print STDERR "$plot_name, $trait_name, $trait_value\n";
-#     if ( defined($trait_value) && $trait_name ne "notes" ) {
-# 	print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
-# 	my $trait_cvterm = $self->trait_objs->{$trait_name};
-# 	my $trait_cvterm_id = $trait_cvterm->cvterm_id();
-#         # print STDERR "the trait cvterm id of this trait is: " . $trait_cvterm_id . "\n";
-# 	my $stock_id = $self->bcs_schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
-	
-	
-# 	#check that trait value is valid for trait name
-# 	if (exists($self->check_trait_format()->{$trait_cvterm_id})) {
-#             # print STDERR "Trait minimum value checks if it exists: " . $self->check_trait_min_value->{$trait_cvterm_id} . "\n";
-# 	    if ($self->check_trait_format()->{$trait_cvterm_id} eq 'numeric') {
-# 		my $trait_format_checked = looks_like_number($trait_value);
-# 		if (!$trait_format_checked && $trait_value ne '') {
-# 		    $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-# 		}
+    if ($self->trait_format() eq 'numeric') {
+	if (! looks_like_number($trait_value)) {
+	    push @errors, "Trait format is numeric but value is not a number ($trait_value)\n";
+	}
 
-#                 my $trait_min = defined $self->check_trait_min_value->{$trait_cvterm_id} ? $self->check_trait_min_value->{$trait_cvterm_id} : undef;
-#                 my $trait_max = defined $self->check_trait_max_value->{$trait_cvterm_id} ? $self->check_trait_max_value->{$trait_cvterm_id} : undef;
-		
-#                 print STDERR "the trait minimum: Trait Minimum for trait $trait_name: ", (defined $trait_min ? $trait_min : undef), "\n";
-#                 print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
-		
-#                 if (defined $trait_min && $trait_value < $trait_min) {
-#                     $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, $trait_min.</small><hr>";
-#                 } else {
-#                     print STDERR "the trait min and trait value : No minimum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id).\n";
-#                 }
-		
-#                 if (defined $trait_max && $trait_value > $trait_max) {
-#                     $error_message .= "<small>For the trait '$trait_name' the trait value $trait_value should not be larger than the defined trait_maximum, $trait_max.</small><hr>";
-#                 }else {
-#                     print STDERR "the trait max and trait value: No maximum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id). \n";
-#                 }
-# 	    }
-		
-# 	    #check, if the trait value is an image
-# 	    if ($self->check_trait_format->{$trait_cvterm_id} eq 'image') {
-# 		$trait_value =~ s/^.*photos\///;
-# 		if (!exists($self->image_plot_full_names->{$trait_value})) {
-# 		    $error_message = $error_message."<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile called $trait_value. </small><hr>";
-# 		}
-# 	    }
+	if ($self->check_trait_minimum()) {
+	    push @errors, "Trait value $trait_value is smaller than defined minimum ".$self->trait_min_value()."\n";
+	}
 	
-# 	    my @trait_categories;
-# 	    my %trait_categories_hash;
-# 	    my @check_values;
-	    
-# 	    if (exists($self->check_trait_category()->{$trait_cvterm_id})) {
-# 	        @trait_categories = sort(split /\//, $self->check_trait_category->{$trait_cvterm_id});
-# 		# print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
-# 		# print STDERR "Trait categories hash: ".Dumper(\%trait_categories_hash)."\n";
-# 		my @check_values;
-# 		# print STDERR "Check values: ".Dumper(\@check_values)."\n";     
-# 		if ($self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
-# 		    @check_values = split /\:/, $trait_value;
-# 		}
-# 		else {
-# 		    @check_values = ( $trait_value );
-# 		}
-# 	    }
+	if ($self->check_trait_maximum()) {
+	    push @errors, "Trait value $trait_value is larger than defined maximum ".$self->trait_max_value()."\n";
+	}
+    }
+    
+    #check, if the trait value is an image
+    if ($self->trait_format eq 'image') {
+	$trait_value =~ s/^.*photos\///;
+	#if (!exists($self->image_plot_full_names->{$trait_value})) {
+	#    $error_message = $error_message."<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile called $trait_value. </small><hr>";
+	#}
+    }
 
-	    
-# 	    #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
-#  	    #check if the plot_name, trait_name combination already exists in database.
-# 	    # if (exist($self->unique_value_trait_stock()->{$trait_value, $trait_cvterm_id, $stock_id})) {
-# 	    # 	my $prev = $self->unique_value_trait_stock()->{$trait_value, $trait_cvterm_id, $stock_id};
-# 	    # 	if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
-# 	    # 	    $self->same_value_count( $self->same_value_count++ );
-# 	    # 	}
-# 	    # }
-# 	    # elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
-# 	    # 	my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
-# 	    # 	if ( defined($prev) ) {
-# 	    # 	    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
-# 	    # 	}
-# 	    # } elsif (exists($self->unique_trait_stock()->{$trait_cvterm_id, $stock_id})) {
-# 	    # 	my $prev = $self->unique_trait_stock()->{$trait_cvterm_id, $stock_id};
-# 	    # 	if ( defined($prev) ) {
-# 	    # 	    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
-# 	    # 	}
-# 	    # }
-	    
-# 	    #check if the plot_name, trait_name combination already exists in same file.
-# 	    #if (exists($self->file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id})) {
-# 	#	$warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
-# 	 #   }
-# 	  #  $self->file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
-	    
-	    
-# 	    if ($self->has_timestamps()) { #timestamp_included) {
-# 		if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
-# 		    if ($timestamp) {
-# 			if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-# 			    $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
-# 			}
-# 		    }
-# 		}
-# 	    }
-# 	    if ($self->check_trait_format->{$trait_cvterm_id} eq 'Ordinal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Nominal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
-# 		# Ordinal looks like <value>=<category>
-# 		foreach my $ordinal_category (@trait_categories) {
-# 		    my @split_value = split('=', $ordinal_category);
-# 		    if (scalar(@split_value) >= 1) {
-# 			$trait_categories_hash{$split_value[0]} = 1;
-# 		    }
-# 		}
-# 	    } else {
-# 		# Catch everything else
-# 		%trait_categories_hash = map { $_ => 1 } @trait_categories;
-# 	    }
-	    
-# 	    foreach my $value (@check_values) {
-# 		if ($value ne '' && !exists($trait_categories_hash{$value})) {
-# 		    my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
-# 		    $error_message = "<small> This trait value should be one of $valid_values: <br/>Plot Name: $plot_name <br/>Trait Name: $trait_name <br/>Value: $trait_value</small><hr>";
-# 		    print STDERR "The error in the value $error_message \n";
-# 		}
-# 		else {
-# 		    print STDERR "Trait value $trait_value is valid\n";
-# 		}
-# 	    }
-# 	}
-    
-# 	my $repeat_type = "single";
-	
-# 	if (exists($self->check_trait_repeat_type->{$trait_cvterm_id})) {
-# 	    if (grep /$repeat_type/, ("single", "multiple", "time_series")) {
-# 		$repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id};
-# 		print STDERR "Trait repeat type: $repeat_type\n";
-# 	    }else {
-# 		print STDERR "the trait repeat type of $self->check_trait_repeat_type->{$trait_cvterm_id} has no meaning. Assuming 'single'.\n";
-# 	    }
-# 	}
-	
-# 	if ($repeat_type eq "multiple" or $repeat_type eq "time_series") {
-# 	    print STDERR "Trait repeat type: $repeat_type\n";
-# 	    if (!$timestamp) {
-# 		# print STDERR "trait name : $trait_name is multiple without timestamp \n";
-# 		$error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
-# 	    }
-# 	    if (exists($self->unique_trait_stock_timestamp()->{$trait_cvterm_id, $stock_id, $timestamp})) {
-# 		# print STDERR "trait name : $trait_name  with timestamp \n";
-# 		$error_message .= "<small>For the multiple measurement trait $trait_name the observation unit $plot_name already has a value associated with it at exactly the same time";
-# 	    }
-# 	}
-	
-    
-# 	#print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
-# 	#check if the plot_name, trait_name combination already exists in database.
-# 	if ($repeat_type eq "single") {
+    if ($self->trait_format() eq "categorical") {
+	my $error = $self->check_categories();
+	push @errors, $error;
+    }
 
-# 	    print STDERR "Processing this trait as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
-# 	    if (exists($self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id})) {
-# 		my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};
+    if ($self->collect_date()) { #timestamp_included) {
+	push @errors, $self->collect_date();
+    }
 
-# 		if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
-# 		    $self->same_value_count($self->same_value_count() + 1);
-# 		}
-# 	    }
-# 	    elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
-# 		my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
-# 		if ( defined($prev) ) {
-# 		    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
-# 		}
-# 	    }
-# 	    elsif (exists($self->unique_trait_stock->{$trait_cvterm_id, $stock_id})) {
-# 		my $prev = $self->unique_trait_stock->{$trait_cvterm_id, $stock_id};
-# 		if ( defined($prev) ) {
-# 		    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
-# 		}
-# 	    }
-	    
-# 	    #check if the plot_name, trait_name combination already exists in same file.
-# 	    if (exists($self->check_file_stock_trait_duplicates->{$trait_cvterm_id, $stock_id})) {
-# 		$warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
-# 	    }
-# 	    $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
-	    
-# 	}else {   ## multiple or time_series - warn only if the timestamp/value are identical
-# 	    if (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp}) && $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp} eq $trait_value) {
-# 		$warning_message .= "For trait 'trait_name', the  timepoint $timestamp for stock  $stock_id already has a measurement with the same value $trait_value associated with it.<hr>";
-# 	    }
-# 	}
-#     }
+    if ($self->trait_repeat_type() eq "multiple" or $self->trait_repeat_type() eq "time_series") {
+	print STDERR "Trait repeat type: ".$self->trait_repeat_type()."\n";
+	if (!$self->collect_date()) {
+	    # print STDERR "cvterm_id : ".$self->cvterm_id()." is multiple without timestamp \n";
+	    push @errors, "For trait with cvterm_id ".$self->cvterm_id()." that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
+	}
+    }
     
-#     #if ($self->has_timestamps()) {
-# #	if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
-# #	    if ($timestamp) {
-# #		if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-# #		    $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
-# #		}
-# #	    }
-# #	}
-#  #   }
-#     # combine all warnings about the same values into a summary count
-#     if ( defined($self->same_value_count()) && ($self->same_value_count > 0) ) {
-#         $warning_message = $warning_message."<small>There are ".$self->same_value_count()." values in your file that are the same as values already stored in the database.</small>";
-#     }
+    ## Verify metadata
+#    if ($self->metadata_hash->{'archived_file'} && (!$self->metadata_hash->{'archived_file_type'} || $self->metadata_hash->{'archived_file_type'} eq "")) {
+ #       push @errors, "No file type provided for archived file.";
+  #  }
+    if (!$self->operator()) {
+        push @warnings, "No operator provided in file upload metadata.";
+
+    }
+#    if (!$self->metadata_hash->{'date'} || $self->metadata_hash->{'date'} eq "") {
+#        push @errors, "No date provided in file upload metadata.";
+#    }
     
-#     ## Verify metadata
-#     if ($self->metadata_hash->{'archived_file'} && (!$self->metadata_hash->{'archived_file_type'} || $self->metadata_hash->{'archived_file_type'} eq "")) {
-#         $error_message = "No file type provided for archived file.";
-#         return ($warning_message, $error_message);
-#     }
-#     if (!$self->metadata_hash->{'operator'} || $self->metadata_hash->{'operator'} eq "") {
-#         $warning_message = "No operator provided in file upload metadata.";
-#         return ($warning_message, $error_message);
-#     }
-#     if (!$self->metadata_hash->{'date'} || $self->metadata_hash->{'date'} eq "") {
-#         $error_message = "No date provided in file upload metadata.";
-#         return ($warning_message, $error_message);
-#     }
-    
-#     # print STDERR "warnings : $warning_message, Errors: $error_message\n";
-    return ($warning_message, $error_message);
+    return @errors;
 }
 
 
@@ -829,15 +644,15 @@ sub get_trait_props {
 sub check_trait_minimum {
     my $self = shift;
 
-    if (! $self->trait_format() ne "numeric") {
+    if ($self->trait_format() ne "numeric") {
 	print STDERR "Format is not numeric, can't check minimum\n";
 	return 1;
     }
-    if (! defined($self->trait_minimum()) ) {
-	print STDERR "Warning. Checking trait minimum but is not set.\n";
+    if (! defined($self->trait_min_value()) ) {
+	print STDERR "Warning. Checking trait minimum but minimum value is not set.\n";
 	return 1;
     }
-    if ($self->trait_minimum() < $self->value()) {
+    elsif ($self->value() < $self->trait_min_value()) {
 	return 0;
     }
     return 1;
@@ -846,18 +661,40 @@ sub check_trait_minimum {
 sub check_trait_maximum {
     my $self = shift;
     
-    if (! $self->trait_format() ne "numeric") {
+    if ($self->trait_format() ne "numeric") {
 	print STDERR "Format is not numeric, can't check maximum.";
 	return 1;	
     }
-    if (! defined($self->trait_maximum())) {
-	print STDERR "Warning. Checking trait maximum but is not set\n";
+    if (! defined($self->trait_max_value())) {
+	print STDERR "Warning. Checking trait maximum but maximum value is not set\n";
 	return 1;
     }
-    if ($self->value() > $self->trait_maximum()) {
+    if ($self->value() > $self->trait_max_value()) {
 	return 0;
     }
     return 1;
+}
+
+sub check_collect_date {
+    my $self = shift;
+
+    my $error_message = ""; 
+    my $timestamp = $self->collect_date();
+    my $trait_value = $self->trait_value();
+    my $trait_name = $self->trait_name();
+    if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
+	if ($timestamp) {
+	    if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+		$error_message = $error_message."<small>Bad timestamp for value for observation unit id: ".$self->observationunit_id()."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+		return 0;
+	    }
+	    else {
+		return 1;
+	    }
+	}
+	
+    }
+    return undef;
 }
 
 1;

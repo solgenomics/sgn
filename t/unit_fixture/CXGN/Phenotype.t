@@ -3,9 +3,9 @@ use strict;
 
 use Test::More;
 
-
 use lib 't/lib';
 
+use Data::Dumper;
 use SGN::Test::Fixture;
 use SGN::Model::Cvterm;
 use CXGN::Phenotype;
@@ -13,7 +13,6 @@ use CXGN::Phenotype;
 my $f = SGN::Test::Fixture->new();
 
 my $p = CXGN::Phenotype->new( { schema => $f->bcs_schema() });
-
 
 $p->cvterm_name('dry matter content percentage');
 is($p->cvterm_name(), "dry matter content percentage", "cvterm_name check");
@@ -81,14 +80,34 @@ is($p2->collect_date(), "2025-03-18 22:00:00", "collect date test");
 
 $p2->get_trait_props();
 
-ok($p2->check_trait_minimum(), "check trait minimum");
+$p2->trait_format("numeric");
 
+$p2->trait_min_value(10);
+$p2->trait_max_value(80);
+
+ok($p2->check_trait_minimum(), "check trait minimum");
 ok($p2->check_trait_maximum(), "check trait maximum");
 
-$f->clean_up_db();
+print STDERR "CHECKING THE CHECK FUNCTIONS...\n";
+
+$p2->value(-20);
+
+is($p2->check_trait_minimum(), 0, "check trait minimum with a value too low");
+
+$p2->value(100);
+
+is($p2->check_trait_maximum(), 0,  "check trait maximum with a value too high");
+
+my @errors = $p2->check();
+
+print STDERR "ERRORS: ".Dumper(@errors);
+
+$p2->value(40);
+
+@errors = $p2->check();
+
+print STDERR "ERRORS: ".Dumper(\@errors);
 
 done_testing();
 
-
-
-
+$f->clean_up_db();
