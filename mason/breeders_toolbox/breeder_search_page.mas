@@ -54,7 +54,14 @@ $dataset_id => undef
                 <button type="button" class="btn btn-xs btn-primary active wizard-search-options-btn wizard-search-options-contains">Contains</button>
                 <button type="button" class="btn btn-xs btn-default wizard-search-options-btn wizard-search-options-exact">Exact</button>
               </div>
-              <button type="button" class="btn btn-xs btn-default wizard-search-options-clear">Clear</button>
+              <div class="btn-group" role="group">
+                <button type="button" class="btn btn-xs btn-danger wizard-search-options-clear">
+                  &nbsp;<span class="glyphicon glyphicon-erase"></span>&nbsp;
+                </button>
+                <button type="button" class="btn btn-xs btn-info wizard-search-options-done">
+                  &nbsp;<span class="glyphicon glyphicon-triangle-top"></span>&nbsp;
+                </button>
+              </div>
             </div>
           </div>
 
