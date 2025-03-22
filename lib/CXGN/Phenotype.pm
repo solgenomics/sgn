@@ -694,7 +694,7 @@ sub check_collect_date {
 	}
 	
     }
-    return undef;
+    return;
 }
 
 1;
