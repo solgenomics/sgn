@@ -258,6 +258,10 @@ export function Wizard(main_id,col_number){
     reflow(d.index);
   }).filter(d=>d.index>0).select(".wizard-lists-group").remove();
 
+  allCols.select('.wizard-search').on("focus", function(d) {
+    var thiscol = allCols.filter(c_d=>c_d==d);
+    thiscol.select('.wizard-search-container').classed('wizard-search-container-active', true);
+  });
   allCols.select('.wizard-search-options-contains').on("click", function(d) {
     toggleSearchOptionsMatch(this, d, "contains");
   });
@@ -269,6 +273,11 @@ export function Wizard(main_id,col_number){
     thiscol.select(".wizard-search").property("value", "");
     d.filter = () => true;
     reflow(d.index, true);
+  });
+  allCols.select('.wizard-search-options-done').on("click", function(d) {
+    var thiscol = allCols.filter(c_d=>c_d==d);
+    thiscol.select('.wizard-search-container').classed('wizard-search-container-active', false);
+    d3.select(this).node().blur();
   });
 
   allCols.select('.wizard-union-toggle-btn-any').on("click", function(d) {
