@@ -7,6 +7,7 @@ use Data::Dumper;
 
 my $fix = SGN::Test::Fixture->new();
 
+
 is(ref($fix->config()), "HASH", 'hashref check');
 
 BEGIN {use_ok('CXGN::Trial::TrialCreate');}
@@ -119,5 +120,8 @@ foreach my $acc (@$accession_names) {
 }
 
 }
+
+$fix->clean_up_db();
+
 
 done_testing();

@@ -652,7 +652,7 @@ sub store {
     }
 
     ###Check first if the name  exists in te database
-    my $exists;
+    $exists = 0;
     if ($self->check_name_exists){
 	print STDERR "Checking stock uniquename \n";
         $exists= $self->exists_in_database();
