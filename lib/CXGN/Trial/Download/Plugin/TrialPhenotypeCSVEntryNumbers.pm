@@ -9,7 +9,7 @@ CXGN::Trial::Download::Plugin::TrialPhenotypeCSVEntryNumbers
 
 This plugin module is loaded from CXGN::Trial::Download
 
-------------------------------------------------------------------
+=head1 DESCRIPTION
 
 For downloading phenotypes in a matrix where columns contain the phenotypes
 and rows contain the observation unit (as used from
@@ -24,40 +24,46 @@ if you don't need to filter by them.
 THIS PLUGIN IS MODIFIED TO INCLUDE A COLUMN FOR ACCESSION-LEVEL ENTRY NUMBERS
 
 As a CSV:
-my $plugin = 'TrialPhenotypeCSVEntryNumbers';
+
+    my $plugin = 'TrialPhenotypeCSVEntryNumbers';
 
 As a xls:
-my $plugin = 'TrialPhenotypeExcelEntryNumbers';
 
-my $download = CXGN::Trial::Download->new({
-    bcs_schema => $schema,
-    trait_list => \@trait_list_int,
-    year_list => \@year_list,
-    location_list => \@location_list_int,
-    trial_list => \@trial_list_int,
-    accession_list => \@accession_list_int,
-    plot_list => \@plot_list_int,
-    plant_list => \@plant_list_int,
-    filename => $tempfile,
-    format => $plugin,
-    data_level => $data_level,
-    include_timestamp => $timestamp_option,
-    trait_contains => \@trait_contains_list,
-    phenotype_min_value => $phenotype_min_value,
-    phenotype_max_value => $phenotype_max_value,
-    has_header=>$has_header,
-    exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-    include_pedigree_parents=>$include_pedigree_parents
-});
-my $error = $download->download();
-my $file_name = "phenotype.$format";
-$c->res->content_type('Application/'.$format);
-$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-my $output = read_file($tempfile);
-$c->res->body($output);
+    my $plugin = 'TrialPhenotypeExcelEntryNumbers';
+
+Then:
+
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema => $schema,
+        trait_list => \@trait_list_int,
+        year_list => \@year_list,
+        location_list => \@location_list_int,
+        trial_list => \@trial_list_int,
+        accession_list => \@accession_list_int,
+        plot_list => \@plot_list_int,
+        plant_list => \@plant_list_int,
+        filename => $tempfile,
+        format => $plugin,
+        data_level => $data_level,
+        include_timestamp => $timestamp_option,
+        trait_contains => \@trait_contains_list,
+        phenotype_min_value => $phenotype_min_value,
+        phenotype_max_value => $phenotype_max_value,
+        has_header=>$has_header,
+        exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+        include_pedigree_parents=>$include_pedigree_parents
+    });
+    my $error = $download->download();
+    my $file_name = "phenotype.$format";
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    my $output = read_file($tempfile);
+    $c->res->body($output);
 
 
-=head1 AUTHORS
+=head1 AUTHOR
+
+David Waring
 
 =cut
 
@@ -102,6 +108,7 @@ sub download {
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $search_type = $self->search_type();
+    my $repetitive_measurements = $self->repetitive_measurements();
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
@@ -134,7 +141,8 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
-            include_pedigree_parents=>$include_pedigree_parents
+            include_pedigree_parents=>$include_pedigree_parents,
+	    repetitive_measurements => $repetitive_measurements,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }
@@ -193,7 +201,11 @@ sub download {
                 my $entry_number = $trial_entry_numbers{$trial_id}{$stock_id};
                 splice(@$columns, $ENTRY_NUMBER_COLUMN, 0, $entry_number);
             }
-            print $F join ',', map { $_ =~ s/"/""/g; qq!"$_"! } @$columns;
+            print $F join ',', map {
+                my $field = $_;
+                $field =~ s/"/""/g;
+                qq!"$field"!;
+            } @$columns;
             print $F "\n";
         }
     close($F);

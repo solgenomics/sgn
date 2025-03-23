@@ -185,7 +185,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 sub _parse_list_from_json {
     my $list_json = shift;
 #    print STDERR "LIST JSON: ". Dumper $list_json;
-    my $json = new JSON;
+    my $json = JSON->new();
     if ($list_json) {
        # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
         my $decoded_list = decode_json($list_json);
@@ -222,6 +222,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $search_type = $c->req->param("speed") && $c->req->param("speed") ne 'null' ? $c->req->param("speed") : "Native";
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xlsx";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
+    my $repetitive_measurements = $c->req->param("repetitive_measurements") || "average";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
@@ -237,6 +238,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
+    my $phenotype_start_date = $c->req->param("phenotype_start_date");
+    my $phenotype_end_date = $c->req->param("phenotype_end_date");
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') {
@@ -415,9 +418,13 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
         has_header => $has_header,
-        search_type => $search_type
+        search_type => $search_type,
+	    repetitive_measurements => $repetitive_measurements,
+	    phenotype_start_date => $phenotype_start_date,
+	    phenotype_end_date => $phenotype_end_date,
     });
 
+    # print STDERR "Repetitive_measurements option recieved" .$repetitive_measurements  ."\n";
     my $error = $download->download();
 
     $c->res->content_type('Application/'.$format);
@@ -430,7 +437,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
 
 #Deprecated. Look to download_phenotypes_action
-#sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download') Args(1) {
+#sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/downoad') Args(1) {
 #    my $self = shift;
 #    my $c = shift;
 #    my $trial_id = shift;
@@ -584,7 +591,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-            dataset_exluded_outliers=>$outliers,
+            dataset_excluded_outliers=>$outliers,
     		data_level=>$datalevel,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
@@ -627,26 +634,26 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         if ($format eq ".csv") {
 
             #build csv with column names
-            open(CSV, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
-                my @header = @{$data[0]};
-                my $num_col = scalar(@header);
-                for (my $line =0; $line< @data; $line++) {
-                    my @columns = @{$data[$line]};
-                    my $step = 1;
-                    for(my $i=0; $i<$num_col; $i++) {
-                        if (defined($columns[$i])) {
-                            print CSV "\"$columns[$i]\"";
-                        } else {
-                            print CSV "\"\"";
-                        }
-                        if ($step < $num_col) {
-                            print CSV ",";
-                        }
-                        $step++;
+            open(my $csv_fh, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
+            my @header = @{$data[0]};
+            my $num_col = scalar(@header);
+            for (my $line =0; $line< @data; $line++) {
+                my @columns = @{$data[$line]};
+                my $step = 1;
+                for(my $i=0; $i<$num_col; $i++) {
+                    if (defined($columns[$i])) {
+                        print $csv_fh "\"$columns[$i]\"";
+                    } else {
+                        print $csv_fh "\"\"";
                     }
-                    print CSV "\n";
+                    if ($step < $num_col) {
+                        print $csv_fh ",";
+                    }
+                    $step++;
                 }
-            close CSV;
+                print $csv_fh "\n";
+            }
+            close $csv_fh;
 
         } else {
             my $ss = Excel::Writer::XLSX->new($tempfile);
@@ -762,7 +769,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         my $file_name = basename($file_path);
 
         # Write to csv file
-        open(CSV, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
+        open(my $csv_fh, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
         my @header =  @{$rows->[0]};
         my $num_col = scalar(@header);
 
@@ -771,18 +778,18 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
             my $step = 1;
             for ( my $i = 0; $i < $num_col; $i++ ) {
                 if ($columns->[$i]) {
-                    print CSV "\"$columns->[$i]\"";
+                    print $csv_fh "\"$columns->[$i]\"";
                 } else {
-                    print CSV "\"\"";
+                    print $csv_fh "\"\"";
                 }
                 if ($step < $num_col) {
-                    print CSV ",";
+                    print $csv_fh ",";
                 }
                 $step++;
             }
-            print CSV "\n";
+            print $csv_fh "\n";
         }
-        close CSV;
+        close $csv_fh;
 
         # Return the csv file
         $c->res->content_type('text/csv');
