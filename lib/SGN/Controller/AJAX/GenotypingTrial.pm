@@ -709,12 +709,6 @@ sub plate_genotyping_data_delete_GET : Args(0) {
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
-    my $basepath = $c->config->{basepath};
-    my $dbhost = $c->config->{dbhost};
-    my $dbname = $c->config->{dbname};
-    my $dbuser = $c->config->{dbuser};
-    my $dbpass = $c->config->{dbpass};
-
     my $genotyping_data = CXGN::Genotype::GenotypingDataDelete->new( { bcs_schema => $schema, genotyping_plate_id => $genotyping_plate_id });
     my $error = $genotyping_data->delete();
 
@@ -724,6 +718,14 @@ sub plate_genotyping_data_delete_GET : Args(0) {
         $c->stash->{rest} = { error => "An error occurred attempting to delete genotyping data. ($@)" };
         return;
     }
+
+    my $basepath = $c->config->{basepath};
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$dbname, } );
+    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath);
 
     my $async_refresh = CXGN::Tools::Run->new();
     $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
