@@ -15,6 +15,7 @@ see the perldoc of parent class for more details.
 =head1 DESCRIPTION
 
 This DB patch adds an sp_job table to sgn_people. This table tracks background job submissions.
+This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
@@ -30,24 +31,21 @@ it under the same terms as Perl itself.
 =cut
 
 
-package TestDbpatchMoose;
+package AddJobsTable;
 
 use Moose;
 use Bio::Chado::Schema;
+use Try::Tiny;
 
 extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-Adds sp_job table to sgn_people. This table tracks background job submissions (managed by Slurm).
-Table includes sp_job_id, sp_person_id, slurm_id, create_timestamp, finish_timestamp, status, args. 
-All are simple integers or strings except args, which is a JSON holding extended information about
-the job, including job type, submission parameters, cmd, submission URL, results URL, and any other
-data that may need to be stored. 
+Adds sp_job table to sgn_people for slurm job tracking
 
 has '+prereq' => (
     default => sub {
-        [''],
+        [],
     },
   );
 
@@ -56,11 +54,11 @@ sub patch {
 
     print STDOUT "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
 
-    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
-
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
     print STDOUT "\nExecuting the SQL commands.\n";
+
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
     my $terms = {
         'background_job_type' => [
@@ -82,19 +80,19 @@ sub patch {
             # 'blastx',
             # 'tblastn',
             # 'tblastx',
-            ['phenotypic_analysis','Any analysis done on phenotypes, such as calculating adjusted means. Includes phenotypic correlation, trait stability, heritability, etc.'],
+            ['phenotypic_analysis','Any analysis done on phenotypes, such as calculating adjusted means. Includes phenotypic correlation, trait stability, heritability, etc'],
             ['genotypic_analysis','Any analysis using genotypic data, such as GWAS or genotype clustering'],
             ['genomic_prediction','Any analysis to predict breeding value or phenotype from genomic data, such as solGS'],
             ['sequence_analysis','Any BLAST analysis or other analysis using sequence alignments']
-        ],
+        ]
     };
 
     foreach my $cv (keys %$terms){
         foreach my $term (@{$terms->{$cv}}){
             $schema->resultset("Cv::Cvterm")->create_with({
-                name => $term[0],
+                name => $term->[0],
                 cv => $cv,
-                definition => $term[1]
+                definition => $term->[1]
             });
         }
     }

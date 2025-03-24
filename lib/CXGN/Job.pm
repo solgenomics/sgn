@@ -1,17 +1,17 @@
 =head1 NAME
 
-CXGN::Jobs - a class to unify background job submission, storage, and reporting
+CXGN::Job - a class to unify background job submission, storage, and reporting
 
 =head1 DESCRIPTION
 
-CXGN::Jobs is a central location where background jobs can be submitted through cxgn-corelibs/CXGN::Tools::Run. 
+CXGN::Job is a central location where background jobs can be submitted through cxgn-corelibs/CXGN::Tools::Run. 
 By routing all jobs through this module, all submitted jobs regardless of type can be stored in sgn_people.sp_job 
 and updated accordingly. To use this module, simply replace all calls to CXGN::Tools:Run with a call to this module,
 supplying the same arguments as keys in the args hash. 
 
 =head1 SYNOPSIS
 
-my $job = CXGN::Jobs->new({
+my $job = CXGN::Job->new({
     people_schema => $people_schema
     schema => $bcs_schema
     args => {
