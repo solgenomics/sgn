@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::TrialMetadata;
 use Moose;
 use Data::Dumper;
 use Bio::Chado::Schema;
+use CXGN::People::Schema;
 use CXGN::Trial;
 use CXGN::Trial::TrialLookup;
 use CXGN::Trial::Search;
@@ -61,12 +62,15 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{schema} =  $bcs_schema;
     $c->stash->{trial} = CXGN::Trial->new({
         bcs_schema => $bcs_schema,
         metadata_schema => $metadata_schema,
         phenome_schema => $phenome_schema,
+        people_schema => $people_schema,
         trial_id => $trial_id
     });
 
