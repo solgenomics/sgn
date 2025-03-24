@@ -15,12 +15,11 @@ my $job = CXGN::Job->new({
     people_schema => $people_schema
     schema => $bcs_schema
     args => {
-        do_not_cleanup => 1,
-        is_cluster => 1,
+        cxgn_tools_run_config => {$config},
+        cmd => $cmd,
         type => 'download',
         submit_page => 'https://www.breedbase.org/submit_page_url'
         result_page => 'https://www.breedbase.org/result_page_url',
-        cxgn_tools_run_config => {$config}
     }
 });
 
@@ -174,8 +173,8 @@ my $job = CXGN::Jobs->new({
     schema => $s,
     args => {
         cmd => 'perl /bin/script.pl -a arg1 -b arg2',
-        type => 'download',
         cxgn_tools_run_config => {$config},
+        type => 'download',
         submit_page => '...',
         results_page => '...'
     }
@@ -268,8 +267,15 @@ sub submit_and_store {
     if (!$self->args->{cmd}) {
         die "Background jobs must have a command to run.\n";
     }
+    my $cmd = $self->args->{cmd};
+    if (!$self->args->{cxgn_tools_run_config}) {
+        die "Must submit a cxgn_tools_run_config hash!\n";
+    }
 
+    my $job = CXGN::Tools::Run->new($self->args->{cxgn_tools_run_config});
+    $job->run_cluster($cmd);
 
+    #get backend_id and submit new row to db...
 }
 
 =head1 CLASS METHODS
