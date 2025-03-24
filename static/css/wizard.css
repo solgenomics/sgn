@@ -17,14 +17,17 @@ ul.wizard-list li{
   text-align:center; 
   white-space:nowrap;
 }
+
 .wizard-btn-center *{
   white-space:nowrap;
 }
+
 .wizard-btn-center .btn-group{
   display:inline-block;
 }
+
 .wizard-btn-center .btn-group .btn{
-  margin: 0px;
+  margin: 0;
   display:inline-block;
 }
 
@@ -32,9 +35,11 @@ ul.wizard-list li{
   height: 3em !important;
   transition: height 0.25s ease-in-out;
 }
-.wizard-search-container:focus-within > .wizard-search, .wizard-search-container-active > .wizard-search {
+
+.wizard-search-container-active > .wizard-search, .wizard-search-container:focus-within > .wizard-search {
   height: 10em !important;
 }
+
 .wizard-search-options {
   margin-top: 5px;
   display: flex;
@@ -43,7 +48,8 @@ ul.wizard-list li{
   opacity: 0;
   transition: opacity 0.25s ease-in-out;
 }
-.wizard-search-container:focus-within > .wizard-search-options, .wizard-search-container-active > .wizard-search-options {
+
+.wizard-search-container-active > .wizard-search-options, .wizard-search-container:focus-within > .wizard-search-options {
   height: auto;
   opacity: 1;
 }
@@ -57,35 +63,15 @@ ul.wizard-list li{
   text-align: center;
   width: 100%;
   display: block;
-  -webkit-transform-origin: 50% 47%;
-  transform-origin:50% 47%;
-  -ms-transform-origin:50% 47%;
-  -webkit-animation: wizard-loading 2s infinite linear;
-  -moz-animation: wizard-loading 2s infinite linear;
-  -o-animation: wizard-loading 2s infinite linear;
+  transform-origin: 50% 47%;
   animation: wizard-loading 2s infinite linear;
 }
 
-@-moz-keyframes wizard-loading {
-  from {
-    -moz-transform: rotate(0deg);
-  }
-  to {
-    -moz-transform: rotate(360deg);
-  }
-}
-@-webkit-keyframes wizard-loading {
-  from {
-    -webkit-transform: rotate(0deg);
-  }
-  to {
-    -webkit-transform: rotate(360deg);
-  }
-}
 @keyframes wizard-loading {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -97,36 +83,45 @@ ul.wizard-list{
   padding: 4px;
   margin-top: 6px;
 }
+
 .wizard-panel .wizard-union-toggle{
   margin-top: 6px;
 }
+
 .wizard-panel .wizard-union-toggle-min-group {
   max-width: 150px;
   margin: 0 auto;
   display: none;
 }
+
 .wizard-panel .wizard-union-toggle-min-group input {
   height: 22px;
 }
+
 .wizard-panel .wizard-union-toggle-min-group .input-group-btn .btn {
   height: 22px;
   padding: 0 10px;
 }
+
 button.wizard-list-add{
   width:2.45em;
   z-index:100;
 }
+
 button.wizard-list-rem{
   width:2.45em;
   z-index:100;
 }
+
 .wizard-list-name{
   width:calc(100% - 2.45em);
 }
+
 div.wizard-panel{
   min-width: 140px;
   overflow: hidden;
 }
+
 div.wizard-panel .panel-body{
   padding:6px;
 }
