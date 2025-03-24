@@ -101,7 +101,7 @@ sub patch {
 CREATE TABLE sgn_people.sp_job(
     sp_job_id SERIAL PRIMARY KEY,
     sp_person_id BIGINT REFERENCES sgn_people.sp_person,
-    slurm_id VARCHAR(255) NOT NULL,
+    backend_id VARCHAR(255) NOT NULL,
     status VARCHAR(100),
     create_timestamp VARCHAR(100) NOT NULL,
     finish_timestamp VARCHAR(100), 
