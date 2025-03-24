@@ -244,6 +244,7 @@ sub search {
             my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_, experiment_type=>$self->experiment_type()});
             my $tl = $trial_layout->get_design();
 
+            my @plots_list;
             while(my($key,$val) = each %$tl){
                 $design_layout_hash{$val->{plot_id}} = $val;
                 if($val->{plant_ids}){
@@ -261,8 +262,20 @@ sub search {
                         $design_layout_hash{$p} = $val;
                     }
                 }
+
+                if($val->{plot_id}){
+                    push @plots_list, $val->{plot_id};
+                }
             }
+
+            
             #For performace reasons it is faster to include specific stock_ids in the query.
+            if ($self->data_level eq 'analysis_instance'){
+                if (!$self->plot_list){
+                    $self->plot_list(\@plots_list);
+                }
+            }
+            
             if ($self->data_level eq 'plot'){
                 if (!$self->plot_list){
                     $self->plot_list([]);
@@ -290,8 +303,11 @@ sub search {
                     push @{$self->subplot_list}, $_->[0];
                 }
             }
+
+
         }
     } else {
+        print STDERR "\n\n design_layout_sql for  ".$self->data_level. " time: ".  localtime ."\n";
         $design_layout_sql = " LEFT JOIN stockprop AS rep ON (observationunit.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
             LEFT JOIN stockprop AS block_number ON (observationunit.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
             LEFT JOIN stockprop AS plot_number ON (observationunit.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
@@ -315,7 +331,7 @@ sub search {
             ON not_outliers.phenotype_id = nd_experiment_phenotype.phenotype_id"
     };
 
-    my $from_clause = " FROM stock as observationunit JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id IN ($plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $tissue_sample_of_type_id)
+    my $from_clause = " FROM stock as observationunit JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id IN ($analysis_instance_of_type_id, $plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $tissue_sample_of_type_id)
       JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
       JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $analysis_result_type_id, $cross_type_id, $family_name_type_id)
       $design_layout_sql
