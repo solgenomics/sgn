@@ -925,6 +925,7 @@ sub add_crossingtrial : Path('/ajax/cross/add_crossingtrial') : ActionClass('RES
 sub add_crossingtrial_POST :Args(0){
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
     my $crossingtrial_name = $c->req->param('crossingtrial_name');
     my $breeding_program_id = $c->req->param('crossingtrial_program_id');
@@ -940,7 +941,7 @@ sub add_crossingtrial_POST :Args(0){
     }
 
     my @user_roles = $c->user->roles();
-    my $check_roles = CXGN::People::Roles->new({bcs_schema => $schema});
+    my $check_roles = CXGN::People::Roles->new({ people_schema => $people_schema});
     my $invalid_roles = $check_roles->check_sp_roles(\@user_roles, $program_name);
     if ($invalid_roles->{'invalid_role'}) {
         $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossing experiment." };

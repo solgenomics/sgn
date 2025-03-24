@@ -167,7 +167,8 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
     $c->stash->{is_curator} = $c->user->check_roles("curator");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $person_roles = CXGN::People::Roles->new({ people_schema=>$people_schema });
     my $ascii_chars = 1;
     my $breeding_programs = $person_roles->get_breeding_program_roles($ascii_chars);
 

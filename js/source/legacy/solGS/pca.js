@@ -51,11 +51,8 @@ solGS.pca = {
         var dataStr;
 
         var page = location.pathname;
-        if (
-            page.match(
-                /solgs\/trait\/|solgs\/model\/combined\/trials\/|\/breeders\/trial\//
-            )
-        ) {
+        if ( page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\/|\/breeders\/trial\//)
+) {
             trainingPopId = jQuery("#training_pop_id").val();
             if (!trainingPopId) {
                 trainingPopId = jQuery("#trial_id").val();
@@ -224,74 +221,96 @@ solGS.pca = {
         return pcaPopId;
     },
 
-    createRowElements: function (pcaPop) {
-        var popId = pcaPop.id;
-        var popName = pcaPop.name;
-        var dataStr = pcaPop.data_str;
 
-        var pcaPopId = solGS.pca.getPcaPopId(popId, dataStr);
 
-        var dataTypes;
-        if (location.pathname.match(/pca\/analysis/)) {
-            dataTypes = pcaPop.data_type;
+  createRowElements: function (pcaPop) {
+    var popId = pcaPop.id;
+    var popName = pcaPop.name;
+    var dataStr = pcaPop.data_str;
+    
+    var pcaPopId = solGS.pca.getPcaPopId(popId, dataStr);
+
+    var dataTypes;
+    if (location.pathname.match(/pca\/analysis/)) {
+        dataTypes = pcaPop.data_type;
+    } else {
+        dataTypes = this.getDataTypeOpts();
+    }
+
+    var dataTypeOpts = this.createDataTypeSelect(dataTypes, pcaPopId);
+
+    var runPcaBtnId = this.getRunPcaId(pcaPopId);
+
+    var listId;
+    var datasetId;
+
+    if (dataStr.match(/dataset/)) {
+        datasetId = popId;
+    } else if (dataStr.match(/list/)) {
+        listId = popId;
+    }
+    var protocolId =
+        solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+
+    var pcaArgs = {
+        pca_pop_id: pcaPopId,
+        data_structure: dataStr,
+        dataset_id: datasetId,
+        list_id: listId,
+        pca_pop_name: popName,
+        genotyping_protocol_id: protocolId,
+        analysis_type: "pca analysis",
+    };
+
+    pcaArgs = JSON.stringify(pcaArgs);
+
+    var runPcaBtn =
+        `<button type="button" id=${runPcaBtnId}` +
+        ` class="btn btn-success" data-selected-pop='${pcaArgs}'>Run PCA</button>`;
+
+    var compatibilityMessage = '';
+    if (dataStr.match(/dataset/)) {
+        popName = `<a href="/dataset/${popId}">${popName}</a>`;
+        var toolCompatibility = pcaPop.toolCompatibility;
+        compatibilityMessage = this.toolCompatibilityMessage(toolCompatibility, dataStr);
+
+    }
+
+    var trId = pcaPopId;
+    var rowData = [
+        popName,
+        dataStr,
+        compatibilityMessage, 
+        pcaPop.owner,
+        dataTypeOpts,
+        runPcaBtn,
+        trId,
+    ];
+
+    return rowData;
+
+    },
+
+    toolCompatibilityMessage: function (toolCompatibility, dataStr) {
+        var compatibilityMessage = '';
+
+        if (dataStr.match(/dataset/)) {
+            if (toolCompatibility == null || toolCompatibility == "(not calculated)"){
+            compatibilityMessage = "(not calculated)";
         } else {
-            dataTypes = this.getDataTypeOpts();
+            if (toolCompatibility["Population Structure"]['compatible'] == 0) {
+            compatibilityMessage = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
+            } else {
+                if ('warn' in toolCompatibility["Population Structure"]) {
+                    compatibilityMessage = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + toolCompatibility["Population Structure"]['warn'] + '"></span></b>';
+                } else {
+                    compatibilityMessage = '<b><span class="glyphicon glyphicon-ok" style="color:green" title="'+toolCompatibility["Population Structure"]['types']+'"></span></b>';
+                }
+            }
         }
-
-        var dataTypeOpts = this.createDataTypeSelect(dataTypes, pcaPopId);
-
-        var runPcaBtnId = this.getRunPcaId(pcaPopId);
-
-        var listId;
-        var datasetId;
-
-        if (dataStr.match(/dataset/)) {
-            datasetId = popId;
-        } else if (dataStr.match(/list/)) {
-            listId = popId;
         }
-        var protocolId =
-            solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
-
-        var pcaArgs = {
-            pca_pop_id: pcaPopId,
-            data_structure: dataStr,
-            pca_pop_name: popName,    
-            analysis_type: "pca analysis",
-        };
-
-        if (datasetId) {
-            pcaArgs.dataset_id = datasetId;
-        }
-
-        if (listId) {
-            pcaArgs.list_id = listId;
-        }
-
-        if (protocolId) {
-            pcaArgs.genotyping_protocol_id = protocolId;
-        }
-
-        pcaArgs = JSON.stringify(pcaArgs);
-        var runPcaBtn =
-            `<button type="button" id=${runPcaBtnId}` +
-            ` class="btn btn-success" data-selected-pop='${pcaArgs}'>Run PCA</button>`;
-
-        if (dataStr.match(/dataset/)) {
-            popName = `<a href="/dataset/${popId}">${popName}</a>`;
-        }
-
-        var trId = pcaPopId;
-        var rowData = [
-            popName,
-            dataStr,
-            pcaPop.owner,
-            dataTypeOpts,
-            runPcaBtn,
-            trId,
-        ];
-
-        return rowData;
+        console.log(`compatibilityMessage: ${compatibilityMessage}`);
+        return compatibilityMessage;
     },
 
     displayPcaPopsTable: function (tableId, data) {
@@ -302,9 +321,13 @@ solGS.pca = {
             paging: true,
             info: false,
             pageLength: 5,
-            rowId: function (a) {
-                return a[5];
-            },
+            'lengthMenu': [
+                [5,10,50,100,-1],[5,10,50,100,'All']
+            ],
+            'rowId': function (a) {
+                return a[6];
+            }
+       
         });
 
         table.rows.add(data).draw();
@@ -327,10 +350,10 @@ solGS.pca = {
         var list = new solGSList();
         var lists = list.getLists(["accessions", "plots", "trials"]);
         lists = list.addDataStrAttr(lists);
-        lists = list.addDataTypeAttr(lists);
+        lists = list.addDataTypeAttr(lists, "");
         var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
 
-        datasets = solGS.dataset.addDataTypeAttr(datasets);
+        datasets = solGS.dataset.addDataTypeAttr(datasets, "Population Structure");
         var pcaPops = [lists, datasets];
 
         return pcaPops.flat();
@@ -446,7 +469,8 @@ solGS.pca = {
             `<table id="${tableId}" class="table table-striped"><thead><tr>` +
             "<th>Population</th>" +
             "<th>Data structure type</th>" +
-            "<th>Ownership</th>" +
+            "<th>Compatibility</th>" +
+      "<th>Ownership</th>" +
             "<th>Data type</th>" +
             "<th>Run PCA</th>" +
             "</tr></thead></table>";
@@ -891,15 +915,14 @@ solGS.pca = {
 
             trialsIds.forEach(function (id) {
                 var groupName = [];
-
-                if (id.match(/\d+-\d+/)) {
+                if (id.match(/-/)) {
                     var ids = id.split("-");
 
                     ids.forEach(function (id) {
                         groupName.push(trialsNames[id]);
                     });
 
-                    groupName = "common: " + groupName.join(",");
+                    groupName = "common to: " + groupName.join(", ");
                 } else {
                     groupName = trialsNames[id];
                 }

@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::TrialMetadata;
 use Moose;
 use Data::Dumper;
 use Bio::Chado::Schema;
+use CXGN::People::Schema;
 use CXGN::Trial;
 use CXGN::Trial::TrialLookup;
 use CXGN::Trial::Search;
@@ -61,12 +62,15 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{schema} =  $bcs_schema;
     $c->stash->{trial} = CXGN::Trial->new({
         bcs_schema => $bcs_schema,
         metadata_schema => $metadata_schema,
         phenome_schema => $phenome_schema,
+        people_schema => $people_schema,
         trial_id => $trial_id
     });
 
@@ -4834,7 +4838,7 @@ sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/do
     my $tempfile = $c->req->param('file');
 
     $c->res->content_type('application/vnd.ms-excel');
-    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xls"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xlsx"]);
     my $output = read_file($tempfile);
     $c->res->body($output);
 }
@@ -4934,6 +4938,47 @@ sub upload_entry_number_template_POST : Args(0) {
         warning => $parse_warnings->{'warning_messages'}
     };
     return;
+}
+
+sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    my $trial_id = $c->req->param("trial_id");
+
+    if (! $trial_id) {
+	$c->stash->{rest} = { error_string => 'A trial id must be provided to delete the entry numbers.' };
+	return;
+    }
+    
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
+        return;
+    }
+
+    if (!$c->user()->check_roles("curator")) {
+	$c->stash->{rest} = {error_string => "Your account must have the curator role to delete entry numbers" };
+	return;
+    }
+    
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $project_entry_number_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_entry_number_map', 'project_property')->cvterm_id();
+
+    
+    my $row = $schema->resultset("Project::Projectprop")->find( { type_id => $project_entry_number_map_cvterm_id, project_id => $trial_id });
+
+    eval { 
+	$row->delete();
+    };
+
+    if ($@) {
+	$c->stash->{rest} = { error_string => "The following error occurred when trying to delete an entry map: $@\n" };
+	return;
+    }
+    else {
+	$c->stash->{rest} = { success => 1 };
+    }
 }
 
 

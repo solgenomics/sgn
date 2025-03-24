@@ -73,7 +73,8 @@ sub people_and_roles_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $person_roles = CXGN::People::Roles->new({ people_schema=>$people_schema });
     my $sp_persons = $person_roles->get_sp_persons();
     my $sp_roles = $person_roles->get_sp_roles();
     my %results = ( sp_persons => $sp_persons, sp_roles => $sp_roles );
@@ -97,7 +98,8 @@ sub add_person_role_GET : Args(0) {
     my $sp_person_id = $c->req->param('sp_person_id');
     my $sp_role_id = $c->req->param('sp_role_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $person_roles = CXGN::People::Roles->new({ people_schema=>$people_schema });
     my $add_role = $person_roles->add_sp_person_role($sp_person_id, $sp_role_id);
     $c->stash->{rest} = {success=>1};
 }
@@ -120,34 +122,69 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
 	$c->stash->{rest} = { error => "You must be logged in to use this function." };
 	return;
     }
+    
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $r = CXGN::People::Roles->new( { people_schema => $people_schema });
+    
+    my %roles = $r->role_hash();
 
-    my $schema = $c->dbic_schema("CXGN::People::Schema");
+    print STDERR "ROLE HASH: ".Dumper(\%roles);
+    
+    my @rows = $r->list_roles();
+    my ($user_role) = $c->user->get_object()->get_roles();
+    my @data = $self->format_role_results($user_role, \@rows, \%roles);
+    
+    $c->stash->{rest} = { data => \@data };
+}
 
-    my %roles;
-    my $rs1 = $schema->resultset("SpRole")->search( { } );
-    while (my $row = $rs1->next()) {
-	$roles{$row->sp_role_id} = $row->name();
+sub list_roles_for_user :Chained('roles') PathPart('list') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = shift;
+
+    print STDERR "roles list\n";
+    if (! $c->user()) {
+	$c->stash->{rest} = { error => "You must be logged in to use this function." };
+	return;
     }
 
-    my $rs2 = $schema->resultset("SpPerson")->search(
-	{ censor => 0, disabled => undef },
-	{ join => 'sp_person_roles',
-	  '+select' => ['sp_person_roles.sp_role_id', 'sp_person_roles.sp_person_role_id' ],
-	  '+as'     => ['sp_role_id', 'sp_person_role_id' ],
-	  order_by => 'sp_role_id' });
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    #my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $r = CXGN::People::Roles->new( { people_schema => $people_schema });
+
+    my %roles = $r->role_hash();
+    my @rows = $r->list_roles( $c->user->get_object()->get_sp_person_id() );
+
+    my ($user_role) = $c->user->get_object()->get_roles();
+
+    my @data = $self->format_role_results($user_role, \@rows, \%roles);
+
+    $c->stash->{rest} = { data => \@data };
+}
+
+
+sub format_role_results {
+    my $self = shift;
+    my $user_role = shift;
+    my $rows = shift;
+    my $roles = shift;
 
     my @data;
+    my @rows;
     my %hash;
+    my %roles;
+
+    if (ref($rows)) { @rows = @$rows; }
+    if (ref($roles)) { %roles = %$roles; }
 
     my %role_colors = ( curator => 'red', submitter => 'orange', user => 'green' );
     my $default_color = "#0275d8";
 
-
-    while (my $row = $rs2->next()) {
+    foreach my $row (@rows) { 
 	my $person_name = $row->first_name." ".$row->last_name();
 	my $delete_link = "";
 	my $add_user_link = '&nbsp;&nbsp;<a href="#" onclick="javascript:add_user_role('.$row->get_column('sp_person_id').", \'".$person_name."\')\"><span style=\"color:darkgrey;width:8px;height:8px;border:solid;border-width:1px;padding:1px;\"><b>+</b></a></span>";
-	if ($c->user()->has_role("curator")) {
+	if ($user_role eq "curator") {
 	    $delete_link = '<a href="javascript:delete_user_role('.$row->get_column('sp_person_role_id').')"><b>X</b></a>';
 	}
 
@@ -159,9 +196,7 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
 
 	my $role_name = $roles{$row->get_column('sp_role_id')};
 
-	print STDERR "ROLE : $role_name\n";
-
-	if (! $c->user()->has_role("curator")) {
+	if ($user_role ne "curator") {
 	    # only show breeding programs
 	    if ($role_name !~ /curator|user|submitter/) {
 		$hash{$row->sp_person_id}->{userroles} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:10px;background-color:'.$default_color.'"><b>'.$role_name."</b></span>";
@@ -172,16 +207,16 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
 	    $hash{$row->sp_person_id}->{userroles} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:6px;background-color:'.$color.'"><b>'. $delete_link."&nbsp;&nbsp; ".$role_name."</b></span>";
 	    $hash{$row->sp_person_id}->{add_user_link} = $add_user_link;
 	}
-
     }
 
     foreach my $k (keys %hash) {
 	$hash{$k}->{userroles} .= $hash{$k}->{add_user_link};
 	push @data, [ $hash{$k}->{userlink}, $hash{$k}->{userroles} ];
     }
-
-    $c->stash->{rest} = { data => \@data };
+    return @data;
 }
+
+
 
 # sub add_user :Chained('roles') PathPart('add/association/user') CaptureArgs(1) {
 #     my $self = shift;

@@ -22,7 +22,7 @@ $stock_name => undef
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_stock_phenotypes_format">
                         <option value="csv">CSV</option>
-                        <option value="xls">Excel (xls)</option>
+                        <option value="xlsx">Excel (xlsx)</option>
                     </select>
                 </div>
 	        </div>
@@ -91,6 +91,14 @@ $stock_name => undef
 </div>
 
 <script>
+
+
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('download_stock_phenotypes_exclude_outliers').value = "1";
+    document.getElementById('download_stock_phenotypes_exclude_outliers').checked = true;
+}
 
 jQuery(document).ready(function() {
 

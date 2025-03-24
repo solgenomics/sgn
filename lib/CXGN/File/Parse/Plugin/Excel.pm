@@ -1,5 +1,6 @@
 package CXGN::File::Parse::Plugin::Excel;
 
+use strict;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 
@@ -42,35 +43,46 @@ sub parse {
   my $worksheet = ( $workbook->worksheets() )[0];
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
-  my %values_map;
+
+  my %values_map;     # map of values by column
+  my @col_indices;    # array of column indices to process
 
   # Get column / header information
+  my $skips_in_a_row = 0;
   for my $col ( 0 .. $col_max ) {
     my $c = $worksheet->get_cell(0, $col);
-    my $v = $c->value() if $c;
+    my $v = $c ? $c->value() : undef;
     $v = $super->clean_header($v);
 
     if ( $v && $v ne '' ) {
       push @{$rtn{columns}}, $v;
+      push @col_indices, $col;
       $values_map{$v} = {};
+      $skips_in_a_row = 0;
     }
+    else {
+      $skips_in_a_row++;
+    }
+
+    last if $skips_in_a_row >= 5;
   }
 
   # Parse each row
-  my $skips_in_a_row = 0;
+  $skips_in_a_row = 0;
   for my $row ( 1 .. $row_max ) {
     my %row_info = (
       _row => $row+1
     );
     my $skip_row = 1;
-    for my $col ( 0 .. $col_max ) {
-      my $hv = $rtn{columns}->[$col];
+    for my $col (@col_indices) {
+      my $h = $worksheet->get_cell(0, $col)->value();
+      my $hv = $super->clean_header($h);
       my $c = $worksheet->get_cell($row, $col);
       my $v = $c ? $c->value() : undef;
       $v = $super->clean_value($v, $hv);
       $row_info{$hv} = $v;
 
-      if ( $v && $v ne '' ) {
+      if ( defined($v) && $v ne '' ) {
         if ( ref($v) eq 'ARRAY' ) {
           if ( scalar(@$v) > 0 ) {
             foreach (@$v) {
