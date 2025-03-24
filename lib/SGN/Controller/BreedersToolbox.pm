@@ -342,6 +342,32 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
 
 }
 
+sub manage_transcriptomics :Path("/breeders/transcriptomics") Args(0) {
+    my $self =shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    my @file_types = ( 'transcriptomics spreadsheet' );
+    my $all_data = $self->get_file_data($c, \@file_types, 1);
+    my $data = $self->get_file_data($c, \@file_types, 0);
+
+    my $sampling_facilities = $c->config->{sampling_facilities};
+    my @sampling_facilities = split ',',$sampling_facilities;
+
+    $c->stash->{sampling_facilities} = \@sampling_facilities;
+    $c->stash->{transcriptomics_files} = $data->{files};
+    $c->stash->{deleted_transcriptomics_files} = $data->{deleted_files};
+    $c->stash->{all_transcriptomics_files} = $all_data->{files};
+    $c->stash->{all_deleted_transcriptomics_files} = $all_data->{deleted_files};
+
+    $c->stash->{template} = '/breeders_toolbox/manage_transcriptomics.mas';
+
+}
+
 sub manage_upload :Path("/breeders/upload") Args(0) {
     my $self =shift;
     my $c = shift;
