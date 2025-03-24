@@ -78,10 +78,10 @@ sub delete {
         } elsif ($genotyping_project_id) {
             $where_clause = "nd_experiment_project.project_id = $genotyping_project_id";
         } elsif ($genotyping_protocol_id) {
-            $where_clause = "nd_experiment_protocol.protocol_id = $genotyping_protocol_id";
+            $where_clause = "nd_experiment_protocol.nd_protocol_id = $genotyping_protocol_id";
         }
 
-        my $q = "SELECT nd_experiment_genotype.nd_experiment_id, nd_experiment_genotype.genotype_id, nd_experiment_protocol.protocol.id
+        my $q = "SELECT nd_experiment_genotype.nd_experiment_id, nd_experiment_genotype.genotype_id, nd_experiment_protocol.nd_protocol_id
             FROM nd_experiment
             JOIN nd_experiment_genotype ON (nd_experiment.nd_experiment_id = nd_experiment_genotype.nd_experiment_id) AND nd_experiment.type_id = ?
             JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -101,8 +101,8 @@ sub delete {
             push @nd_experiment_ids_to_delete, $nd_experiment_id;
             $check_protocol_ids{$protocol_id}++;
         }
-        print STDERR "GENOTYPE IDS TO DELETE =".Dumper(\@genotype_ids_to_delete)."\n";
-        print STDERR "ND EXPERIMENT IDS TO DELETE =".Dumper(\@nd_experiment_ids_to_delete)."\n";
+#        print STDERR "GENOTYPE IDS TO DELETE =".Dumper(\@genotype_ids_to_delete)."\n";
+#        print STDERR "ND EXPERIMENT IDS TO DELETE =".Dumper(\@nd_experiment_ids_to_delete)."\n";
 
         if (scalar (@genotype_ids_to_delete) > 0) {
             my $genotype_ids = join ("," , @genotype_ids_to_delete);
