@@ -326,16 +326,12 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
 
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
     my $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
-    my $plots = $c->stash->{trial}->get_plots();
-    my @plots_list =  map { $_->[0] } @$plots;
     
-
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
         search_type => "Native",
         data_level => $display,
         trait_list=> [$trait],
-        plot_list => \@plots_list,
         trial_list => [$c->stash->{trial_id}],
 	start_date => $start_date,
 	end_date => $end_date,
@@ -418,10 +414,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     if ($display eq 'analysis_instance') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
-        my $plots = $c->stash->{trial}->get_plots();
-        # print STDERR "phenotype summary Plots: ".Dumper($plots)."\n";
-        $total_complete_number = scalar (@$plots);
     }
+    
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
@@ -5509,7 +5503,10 @@ sub get_analysis_instance_stock_type {
     my $c = shift;
     my $trial_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $project = $schema->resultset('Project::Project')->find({project_id => $trial_id});
+    my $project = $schema->resultset('Project::Project')->find({
+        project_id => $trial_id, 
+    });
+
     my $trial_layout_json_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
 
     my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_type_id });
