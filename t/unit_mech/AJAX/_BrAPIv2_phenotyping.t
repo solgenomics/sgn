@@ -285,7 +285,22 @@ is_deeply($response->{metadata}, {'status' => [{'message' => 'BrAPI base call fo
 
 $data = '{  "additionalInfo": {},  "copyright": "Copyright 2019 Bob",  "description": "picture of a tomato",  "descriptiveOntologyTerms": [],  "externalReferences": [],  "imageFileName": "image_0AA0231.jpg",  "imageFileSize": 50000,  "imageHeight": 550,  "imageLocation": {"geometry": {  "coordinates": [-76.506042,42.417373,123  ],  "type": "Point"},"type": "Feature"  },  "imageName": "Tomato Image-x1",  "imageTimeStamp": "2020-06-17T16:08:42.015Z",  "imageURL": "https://breedbase.org/images/tomato",  "imageWidth": 700,  "mimeType": "image/jpeg",  "observationDbIds": [],  "observationUnitDbId": "38843"}';
 
-$resp = $ua->put("http://localhost:3010/brapi/v2/images/2425", Content => $data);
+my $dbh = SGN::Test::Fixture->new()->dbh();
+
+my $sth = $dbh->prepare('SELECT image_id FROM metadata.md_image WHERE name = ?');
+$sth->execute('Tomato Imag-10');
+my ($image_id) = $sth->fetchrow_array();
+
+$sth->finish;
+$dbh->disconnect;
+
+if (defined $image_id) {
+    print "Image ID: $image_id\n";
+} else {
+    die "Image ID not found for image name 'image_0AA0231.jpg'.\n";
+}
+
+$resp = $ua->put("http://localhost:3010/brapi/v2/images/$image_id", Content => $data);
 $response = decode_json $resp->{_content};
 #print STDERR "\n\n" . Dumper$response;
 is_deeply($response->{result}->{observationUnitDbId} , '38843');
@@ -294,7 +309,7 @@ my $image_timestamp = $response->{result}->{imageTimeStamp} ;
 $mech->get_ok('http://localhost:3010/brapi/v2/images');
 $response = decode_json $mech->content;
 #print STDERR "\n\n" . Dumper$response;
-is_deeply($response, {'result' => {'data' => [{'descriptiveOntologyTerms' => [],'imageWidth' => undef,'imageLocation' => undef,'imageFileName' => 'image_0AA0231.jpg','imageFileSize' => undef,'imageURL' => 'localhost/data/images/image_files/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/medium.jpg','description' => 'picture of a tomato','copyright' => 'janedoe '.DateTime->now->year,'imageDbId' => '2425','imageTimeStamp' => $image_timestamp,'mimeType' => 'image/jpeg','additionalInfo' => {'observationLevel' => 'accession','tags' => [],'observationUnitName' => 'test_accession4'},'imageHeight' => undef,'observationUnitDbId' => '38843','observationDbIds' => [],'imageName' => 'Tomato Image-x1','externalReferences' => []}]},'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Images','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Image search result constructed'}],'pagination' => {'currentPage' => 0,'totalCount' => 1,'totalPages' => 1,'pageSize' => 10}}} );
+is_deeply($response, {'result' => {'data' => [{'descriptiveOntologyTerms' => [],'imageWidth' => undef,'imageLocation' => undef,'imageFileName' => 'image_0AA0231.jpg','imageFileSize' => undef,'imageURL' => 'localhost/data/images/image_files/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/medium.jpg','description' => 'picture of a tomato','copyright' => 'janedoe '.DateTime->now->year,'imageDbId' => "$image_id",'imageTimeStamp' => $image_timestamp,'mimeType' => 'image/jpeg','additionalInfo' => {'observationLevel' => 'accession','tags' => [],'observationUnitName' => 'test_accession4'},'imageHeight' => undef,'observationUnitDbId' => '38843','observationDbIds' => [],'imageName' => 'Tomato Image-x1','externalReferences' => []}]},'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Images','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Image search result constructed'}],'pagination' => {'currentPage' => 0,'totalCount' => 1,'totalPages' => 1,'pageSize' => 10}}} );
 
 ####### ObsverationUnits
 # Test OU plant creation
