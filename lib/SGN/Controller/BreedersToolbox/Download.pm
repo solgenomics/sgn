@@ -1090,6 +1090,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $dl_cookie = "download".$dl_token;
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
     my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    my $sample_name_as_primary_identifier = defined($c->req->param('sample_name_as_primary_identifier')) ? $c->req->param('sample_name_as_primary_identifier') : 0;
     my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
     my $associated_protocol;
 
@@ -1203,6 +1204,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #markerprofile_id_list=>$markerprofile_id_list,
             genotype_data_project_list=>\@genotyping_project_list,
             genotyping_plate_list=>\@genotyping_plate_list,
+            sample_name_as_primary_identifier=>$sample_name_as_primary_identifier,
             #limit=>$limit,
             #offset=>$offset
         }

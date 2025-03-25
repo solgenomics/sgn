@@ -171,6 +171,13 @@ has 'offset' => (
     is => 'rw',
 );
 
+has 'sample_name_as_primary_identifier' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
+
 sub download {
     my $self = shift;
     my $cluster_shared_tempdir_config = shift;
@@ -200,6 +207,7 @@ sub download {
     my $end_position = $self->end_position;
     my $forbid_cache = $self->forbid_cache;
     my $compute_from_parents = $self->compute_from_parents;
+    my $sample_name_as_primary_identifier = $self->sample_name_as_primary_identifier;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
@@ -212,6 +220,7 @@ sub download {
         markerprofile_id_list=>$markerprofile_id_list,
         genotype_data_project_list=>$genotype_data_project_list,
         genotyping_plate_list=>$genotyping_plate_list,
+        sample_name_as_primary_identifier=>$sample_name_as_primary_identifier,
         marker_name_list=>$marker_name_list,
         genotypeprop_hash_select=>$genotypeprop_hash_select,
         protocolprop_top_key_select=>$protocolprop_top_key_select,

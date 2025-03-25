@@ -176,6 +176,12 @@ has 'offset' => (
     is => 'rw',
 );
 
+has 'sample_name_as_primary_identifier' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 sub download {
     my $self = shift;
     my $cluster_shared_tempdir_config = shift;
@@ -189,6 +195,7 @@ sub download {
     my $trial_list = $self->trial_list;
     my $genotype_data_project_list = $self->genotype_data_project_list;
     my $genotyping_plate_list = $self->genotyping_plate_list;
+    my $sample_name_as_primary_identifier = $self->sample_name_as_primary_identifier;
     my $protocol_id_list = $self->protocol_id_list;
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
@@ -218,6 +225,7 @@ sub download {
         markerprofile_id_list=>$markerprofile_id_list,
         genotype_data_project_list=>$genotype_data_project_list,
         genotyping_plate_list=>$genotyping_plate_list,
+        sample_name_as_primary_identifier=>$sample_name_as_primary_identifier,
         marker_name_list=>$marker_name_list,
         genotypeprop_hash_select=>$genotypeprop_hash_select,
         protocolprop_top_key_select=>$protocolprop_top_key_select,

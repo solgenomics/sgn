@@ -336,6 +336,13 @@ has 'offset' => (
     is => 'rw',
 );
 
+has 'sample_name_as_primary_identifier' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
+
 =head2 get_genotype_info
 
 returns: an array with genotype information
@@ -744,6 +751,7 @@ sub init_genotype_iterator {
     my $return_only_first_genotypeprop_for_stock = $self->return_only_first_genotypeprop_for_stock;
     my $limit = $self->limit;
     my $offset = $self->offset;
+    my $sample_name_as_primary_identifier = $self->sample_name_as_primary_identifier;
     my @data;
     my %search_params;
     my @where_clause;
@@ -955,6 +963,7 @@ sub init_genotype_iterator {
 
         my $germplasmName = '';
         my $germplasmDbId = '';
+        my $stock_obj_id = '';
 
         my $igd_number_hash = $igd_number_json ? decode_json $igd_number_json : undef;
         my $igd_number = $igd_number_hash ? $igd_number_hash->{'igd number'} : undef;
@@ -963,13 +972,21 @@ sub init_genotype_iterator {
         if ($stock_type_name eq 'accession'){
             $germplasmName = $stock_name;
             $germplasmDbId = $stock_id;
+            $stock_obj_id = $stock_id;
         }
         if ($stock_type_name eq 'tissue_sample'){
-            $germplasmName = $accession_uniquename;
-            $germplasmDbId = $accession_id;
+            if ($sample_name_as_primary_identifier) {
+                $germplasmName = $stock_name;
+                $germplasmDbId = $stock_id;
+                $stock_obj_id = $accession_id;
+            } else {
+                $germplasmName = $accession_uniquename;
+                $germplasmDbId = $accession_id;
+                $stock_obj_id = $accession_id;
+            }
         }
 
-        my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$germplasmDbId});
+        my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_obj_id});
 
         my %genotypeprop_info = (
             markerProfileDbId => $genotype_id,
