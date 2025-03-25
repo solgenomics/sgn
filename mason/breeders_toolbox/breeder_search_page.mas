@@ -59,10 +59,10 @@ $dataset_id => undef
               </div>
               <div class="btn-group" role="group">
                 <button type="button" class="btn btn-xs btn-danger wizard-search-options-clear">
-                  &nbsp;<span class="glyphicon glyphicon-erase"></span>&nbsp;
+                  &nbsp;<span class="glyphicon glyphicon-remove" style="top: 2px"></span>&nbsp;
                 </button>
                 <button type="button" class="btn btn-xs btn-info wizard-search-options-done">
-                  &nbsp;<span class="glyphicon glyphicon-triangle-top"></span>&nbsp;
+                  &nbsp;<span class="glyphicon glyphicon-chevron-up" style="top: 2px"></span>&nbsp;
                 </button>
               </div>
             </div>
