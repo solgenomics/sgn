@@ -23,7 +23,7 @@ my $job = CXGN::Job->new({
     }
 });
 
-my $job_id = $job->submit_and_store();
+my $job_id = $job->submit();
 
 ...
 
@@ -33,14 +33,14 @@ my $job = CXGN::Jobs->new({
     sp_job_id => $job_id
 });
 
-my $create_date = $job->create_timestamp();
+my $create_time = $job->create_timestamp();
 
 my $current_status = $job->retrieve_status();
 
 my $result_page = $job->result_page();
 
 To create a job object representing an already submitted job, supply a job ID as sp_job_id. 
-If constructing a new job to submit_and_store(), do not supply an sp_job_id. To specify 
+If constructing a new job to submit(), do not supply an sp_job_id. To specify 
 instance variables as arguments, either supply them in the args hash with the appropriate
 name or specify them using the class mutator methods (same as accessors). 
 
@@ -96,7 +96,7 @@ has 'sp_person_id' => ( isa => 'Int', is => 'rw' );
 
 =head2 backend_id()
 
-ID of the running process, as used by the workload manager (probably Slurm). Useful for checking job status. 
+ID of the running process, as used by the workload manager (assumed to be Slurm). Useful for checking job status. 
 
 =cut
 
@@ -254,13 +254,13 @@ sub retrieve_argument {
     return $args->{$arg_string};
 }
 
-=head2 submit_and_store()
+=head2 submit()
 
 Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a new db row.
 
 =cut
 
-sub submit_and_store {
+sub submit {
     my $self = shift;
 
     #check for necessary parameters
@@ -272,10 +272,41 @@ sub submit_and_store {
         die "Must submit a cxgn_tools_run_config hash!\n";
     }
 
-    my $job = CXGN::Tools::Run->new($self->args->{cxgn_tools_run_config});
-    $job->run_cluster($cmd);
+    my $job;
+    my $create_time;
+    my $backend_id;
+    my $status;
 
-    #get backend_id and submit new row to db...
+    eval {
+        $job = CXGN::Tools::Run->new($self->args->{cxgn_tools_run_config});
+        $create_time = localtime();
+
+        $job->run_cluster($cmd);
+
+        $backend_id = $job->jobid();
+        $status = 'Submitted';
+    };
+
+    $self->backend_id($backend_id);
+    $self->status($status);
+    $self->create_time($create_time)
+    
+    if ($@) {
+        die "An error occured trying to submit a background job, sorry: $@\n";
+    }
+
+
+}
+
+=head2 store()
+
+Stores job data in a new db row.
+
+=cut
+
+sub store {
+    my $self = shift;
+
 }
 
 =head1 CLASS METHODS
