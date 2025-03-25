@@ -224,16 +224,16 @@ sub BUILD {
 
 =head2 check_status()
 
-Checks the status of the job and updates it (including finish_timestamp) as necessary. Returns current job status.
+Checks the status of the job and updates it (including finish_timestamp) as necessary. Returns current job status, or nothing if job is not yet submitted.
 
 =cut
 
 sub check_status {
     my $self = shift;
 
-    my $slurm_id = $self->slurm_id();
+    my $backend_id = $self->backend_id();
 
-    if (!$slurm_id) {
+    if (!$backend_id) {
         return "";
     } else {
         # ... determine status, check sacct for slurm statuses on current jobs. Maybe update finish times, etc
