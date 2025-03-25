@@ -13,7 +13,8 @@ supplying the Run arguments to the cxgn_tools_run_config hash.
 
 my $job = CXGN::Job->new({
     people_schema => $people_schema
-    schema => $bcs_schema
+    schema => $bcs_schema,
+    sp_person_id => $c->user->get_object()->get_sp_person_id(),
     args => {
         cxgn_tools_run_config => {$config},
         cmd => $cmd,
@@ -116,7 +117,7 @@ Timestamp of job finishing, either successfully or on job failure
 
 =cut
 
-has 'finish_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_finish_timestamp' );
+has 'finish_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_finish_timestamp', default => '' );
 
 =head2 status()
 
@@ -171,6 +172,7 @@ Ex:
 my $job = CXGN::Jobs->new({
     people_schema => $ps,
     schema => $s,
+    sp_person_id => $c->user->get_object->get_sp_person_id(),
     args => {
         cmd => 'perl /bin/script.pl -a arg1 -b arg2',
         cxgn_tools_run_config => {$config},
@@ -194,11 +196,13 @@ sub BUILD {
 
     my $bcs_schema = $args->{schema};
     my $people_schema = $args->{people_schema};
+    my $user_id = $args->{sp_person_id};
 
-    if (!$self->has_sp_job_id()) { # New job, no ID yet
+    if (!$self->has_sp_job_id()) { # New job, no ID yet. Can only get the args supplied and 
         my $job_args = $args->{args};
         $self->args($job_args);
-
+        $self->sp_person_id($user_id);
+        $self->create_timestamp(localtime());
         
     } else { #existing job, retrieve from DB
         $self->sp_job_id($args->{sp_job_id});
@@ -218,13 +222,13 @@ sub BUILD {
     }
 }
 
-=head2 retrieve_status()
+=head2 check_status()
 
-Returns the status of the job.
+Checks the status of the job and updates it (including finish_timestamp) as necessary. Returns current job status.
 
 =cut
 
-sub retrieve_status {
+sub check_status {
     my $self = shift;
 
     my $slurm_id = $self->slurm_id();
@@ -232,7 +236,7 @@ sub retrieve_status {
     if (!$slurm_id) {
         return "";
     } else {
-        # ... determine status, check for end status vs curre
+        # ... determine status, check sacct for slurm statuses on current jobs. Maybe update finish times, etc
     }
 }
 
@@ -263,7 +267,6 @@ Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a
 sub submit {
     my $self = shift;
 
-    #check for necessary parameters
     if (!$self->args->{cmd}) {
         die "Background jobs must have a command to run.\n";
     }
@@ -273,29 +276,27 @@ sub submit {
     }
 
     my $job;
-    my $create_time;
     my $backend_id;
     my $status;
 
     eval {
         $job = CXGN::Tools::Run->new($self->args->{cxgn_tools_run_config});
-        $create_time = localtime();
 
         $job->run_cluster($cmd);
 
         $backend_id = $job->jobid();
-        $status = 'Submitted';
+        $status = 'submitted';
     };
 
     $self->backend_id($backend_id);
     $self->status($status);
-    $self->create_time($create_time)
     
     if ($@) {
         die "An error occured trying to submit a background job, sorry: $@\n";
-    }
+    } 
 
-
+    my $sp_job_id = $self->store();
+    return $sp_job_id;
 }
 
 =head2 store()
@@ -307,6 +308,23 @@ Stores job data in a new db row.
 sub store {
     my $self = shift;
 
+    eval {
+        my $row = $self->people_schema()->resultset("SpJob")->create({
+            backend_id => $self->backend_id(),
+            args => JSON::Any->encode($self->args()),
+            sp_person_id => $self->sp_person_id(),
+            create_timestamp => $self->create_timestamp(),
+            status => $self->status(),
+            finish_timestamp => $self->finish_timestamp()
+        });
+        $self->sp_job_id($row->sp_job_id());
+    };
+
+    if ($@) {
+        die "Error storing new job in database!$@\n";
+    } else {
+        return $self->sp_job_id();
+    }
 }
 
 =head1 CLASS METHODS
