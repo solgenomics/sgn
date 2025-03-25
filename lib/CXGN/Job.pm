@@ -57,6 +57,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use DateTime;
 use Data::Dumper;
+use File::Slurp 'read_file';
 use JSON::Any;
 use CXGN::Tools::Run;
 use CXGN::People::Schema;
@@ -157,12 +158,20 @@ in the database row. Can be one of:
 
 =cut
 
-has 'type' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_type' );
+has 'type' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_type', isa => enum([qw[ download upload tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction                            ]]) );
+
+=head2 type_id()
+
+The cvterm_id stored in the database.
+
+=cut
+
+has 'type_id' => ( isa => 'Maybe[Int]', is => 'rw');
 
 =head2 args()
 
 Hashref of arguments supplied to the job. Not necessarily needed for job creation, but 
-essential for job submission. Must have keys for cmd and cxgn_tools_run_config. All other keys
+essential for job submission. Must have keys for cmd, cxgn_tools_run_config, and logfile. All other keys
 can be customized for the job type. Stored in the DB as a JSONB. This is the place to 
 include config for CXGN::Tools::Run. As an argument to a new object, this will be 
 ignored if an sp_job_id is also supplied. 
@@ -176,6 +185,7 @@ my $job = CXGN::Jobs->new({
     args => {
         cmd => 'perl /bin/script.pl -a arg1 -b arg2',
         cxgn_tools_run_config => {$config},
+        logfile => $c->config->{job_finish_log},
         type => 'download',
         submit_page => '...',
         results_page => '...'
@@ -213,6 +223,7 @@ sub BUILD {
         if (!$row) { die "The job with id ".$self->sp_jb_id()." does not exist"; }
         my $job_args = JSON::Any->decode($row->args());
         $self->args($job_args);
+        $self->type_id($row->type_id());
         my $cvterm_row = $self->schema()->resultset("CV::Cvterm")->search({cvterm_id => $row->type_id()});
         $self->type($cvterm_row->name());
         $self->create_timestamp($row->create_timestamp());
@@ -239,7 +250,10 @@ sub check_status {
     if (!$backend_id) {
         return "";
     } else {
-        # ... determine status, check sacct for slurm statuses on current jobs. Maybe update finish times, etc
+        my $status = $self->status();
+        if ($status eq "submitted") {
+
+        }
     }
 }
 
@@ -277,11 +291,13 @@ sub submit {
     if (!$self->args->{cxgn_tools_run_config}) {
         die "Must submit a cxgn_tools_run_config hash!\n";
     }
+    if (!$self->args->{logfile}) {
+        die "Must supply a logfile in args hash. Use \$c->config->{job_finish_log}";
+    }
 
     my $sp_job_id = $self->store();
 
-    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S"); echo "'.$sp_jb_id.' $FINISH_TIMESTAMP" >> /home/production/volume/logs/job_finish_timestamps';
-    $self->args->{cmd} = $self->args->cmd . $finish_timestamp_cmd;
+    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S"); echo "'.$sp_jb_id.' $FINISH_TIMESTAMP" >> '.$self->args->{logfile};
 
     my $job;
     my $backend_id;
@@ -290,7 +306,7 @@ sub submit {
     eval {
         $job = CXGN::Tools::Run->new($self->args->{cxgn_tools_run_config});
 
-        $job->run_cluster($cmd);
+        $job->run_cluster($cmd.$finish_timestamp_cmd);
 
         $backend_id = $job->jobid();
         $status = 'submitted';
@@ -316,8 +332,7 @@ Stores job data in a new db row.
 sub store {
     my $self = shift;
     eval {
-        my $cvterm_row =$schema->resultset('Cv::Cvterm')->find({ name => $self->type() });
-        my $cvterm_id = $cvterm_row->cvterm_id();
+        
         if ($self->has_sp_job_id()) {
             my $row = $self->people_schema()->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
             $row->backend_id($self->backend_id());
@@ -326,10 +341,11 @@ sub store {
             $row->sp_person_id($self->sp_person_id());
             $row->status($self->status());
             $row->finish_timestamp($self->finish_timestamp());
-            $row->type_id($cvterm_id);
+            $row->type_id($self->type_id());
             $row->update();
         } else {
-            
+            my $cvterm_row = $self->schema->resultset('Cv::Cvterm')->find({ name => $self->type() });
+            my $cvterm_id = $cvterm_row->cvterm_id();
             my $row = $self->people_schema()->resultset("SpJob")->create({
                 backend_id => $self->backend_id(),
                 args => JSON::Any->encode($self->args()),
