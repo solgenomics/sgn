@@ -101,7 +101,7 @@ ID of the running process, as used by the workload manager (assumed to be Slurm)
 
 =cut
 
-has 'backend_id' => ( isa => 'Maybe[Int]', is => 'rw' );
+has 'backend_id' => ( isa => 'Maybe[Int]', is => 'rw', default => undef );
 
 =head2 create_timestamp()
 
@@ -109,7 +109,7 @@ Timestamp of job submission
 
 =cut
 
-has 'create_timestamp' => ( isa => 'Maybe[Str]', is => 'rw');
+has 'create_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', default => '');
 
 =head2 finish_timestamp()
 
@@ -125,7 +125,7 @@ Current status of the job. May be stored in DB or may be gathered from Slurm (an
 
 =cut 
 
-has 'status' => ( isa => 'Maybe[Str]', is => 'rw');
+has 'status' => ( isa => 'Maybe[Str]', is => 'rw', default => '');
 
 =head2 submit_page()
 
@@ -198,11 +198,14 @@ sub BUILD {
     my $people_schema = $args->{people_schema};
     my $user_id = $args->{sp_person_id};
 
-    if (!$self->has_sp_job_id()) { # New job, no ID yet. Can only get the args supplied and 
+    if (!$self->has_sp_job_id()) { # New job, no ID yet.
         my $job_args = $args->{args};
         $self->args($job_args);
+        $self->type($self->args->{type});
         $self->sp_person_id($user_id);
-        $self->create_timestamp(localtime());
+        my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime();
+        my $formatted_time = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+        $self->create_timestamp($formatted_time);
         
     } else { #existing job, retrieve from DB
         $self->sp_job_id($args->{sp_job_id});
@@ -260,7 +263,7 @@ sub retrieve_argument {
 
 =head2 submit()
 
-Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a new db row.
+Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a new db row. Returns sp_job_id
 
 =cut
 
@@ -275,6 +278,11 @@ sub submit {
         die "Must submit a cxgn_tools_run_config hash!\n";
     }
 
+    my $sp_job_id = $self->store();
+
+    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S"); echo "'.$sp_jb_id.' $FINISH_TIMESTAMP" >> /home/production/volume/logs/job_finish_timestamps';
+    $self->args->{cmd} = $self->args->cmd . $finish_timestamp_cmd;
+
     my $job;
     my $backend_id;
     my $status;
@@ -288,14 +296,14 @@ sub submit {
         $status = 'submitted';
     };
 
-    $self->backend_id($backend_id);
-    $self->status($status);
-    
     if ($@) {
         die "An error occured trying to submit a background job, sorry: $@\n";
     } 
 
-    my $sp_job_id = $self->store();
+    $self->backend_id($backend_id);
+    $self->status($status);
+    $self->store();
+
     return $sp_job_id;
 }
 
@@ -307,24 +315,39 @@ Stores job data in a new db row.
 
 sub store {
     my $self = shift;
-
     eval {
-        my $row = $self->people_schema()->resultset("SpJob")->create({
-            backend_id => $self->backend_id(),
-            args => JSON::Any->encode($self->args()),
-            sp_person_id => $self->sp_person_id(),
-            create_timestamp => $self->create_timestamp(),
-            status => $self->status(),
-            finish_timestamp => $self->finish_timestamp()
-        });
-        $self->sp_job_id($row->sp_job_id());
+        my $cvterm_row =$schema->resultset('Cv::Cvterm')->find({ name => $self->type() });
+        my $cvterm_id = $cvterm_row->cvterm_id();
+        if ($self->has_sp_job_id()) {
+            my $row = $self->people_schema()->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
+            $row->backend_id($self->backend_id());
+            $row->create_timestamp($self->create_timestamp());
+            $row->args(JSON::Any->encode($self->args()));
+            $row->sp_person_id($self->sp_person_id());
+            $row->status($self->status());
+            $row->finish_timestamp($self->finish_timestamp());
+            $row->type_id($cvterm_id);
+            $row->update();
+        } else {
+            
+            my $row = $self->people_schema()->resultset("SpJob")->create({
+                backend_id => $self->backend_id(),
+                args => JSON::Any->encode($self->args()),
+                sp_person_id => $self->sp_person_id(),
+                create_timestamp => $self->create_timestamp(),
+                status => $self->status(),
+                finish_timestamp => $self->finish_timestamp(),
+                type_id => $cvterm_id
+            });
+            $self->sp_job_id($row->sp_job_id());
+        }
     };
 
     if ($@) {
-        die "Error storing new job in database!$@\n";
-    } else {
-        return $self->sp_job_id();
-    }
+        die "Error storing job in database!$@\n";
+    } 
+    
+    return $self->sp_job_id();
 }
 
 =head1 CLASS METHODS
