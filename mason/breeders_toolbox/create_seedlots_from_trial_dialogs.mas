@@ -1,5 +1,6 @@
 <%args>
 $timestamp => localtime()
+$default_seedlot_material_type => undef
 </%args>
 
 <div class="modal falde" id="create_seedlots_trial_dialog" name="create_seedlots_trial_dialog" tabindex="-1" aria-labelledby="create_seedlots_trial_dialog_title">
@@ -277,14 +278,21 @@ $timestamp => localtime()
                             </div>
 
                             <br /><br />
-
+%if ($default_seedlot_material_type) {
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Material Type: </label>
+                                <div class="col-sm-9">
+                                    <input class="form-control" name="create_seedlots_trial_default_material_type" id="create_seedlots_trial_default_material_type" disabled value="<% $default_seedlot_material_type %>">
+                                </div>
+                            </div>
+% } else {
                             <div class="form-group">
                                 <label class="col-sm-3 control-label" style="text-align: right">Material Type: </label>
                                 <div class="col-sm-9" >
                                     <div id="create_seedlots_trial_material_type_div"></div>
                                 </div>
                             </div>
-
+% }
                             <br /><br />
 
                             <div class="form-group">
@@ -857,11 +865,17 @@ $timestamp => localtime()
         let p_name = jQuery("#create_seedlots_trial_breeding_program_id option:selected").text();
         let l = jQuery("#create_seedlots_trial_location").val();
         let b = jQuery("#create_seedlots_trial_box_name").val();
-        let mt = jQuery("#create_seedlots_trial_material_type").val();
         let q = jQuery("#create_seedlots_trial_quality_issues").val();
         let o = jQuery("#create_seedlots_trial_organization").val();
         let t = jQuery("#create_seedlots_trial_timestamp").val();
         let d = jQuery("#create_seedlots_trial_description").val();
+        let mt = "";
+        const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
+        if (default_seedlot_material_type) {
+            mt = default_seedlot_material_type;
+        } else {
+            mt = jQuery("#create_seedlots_trial_material_type").val();
+        }
 
         // Check for required fields
         if ( !p_id || p_id === '' ) {
@@ -889,7 +903,6 @@ $timestamp => localtime()
 
         for ( let i = 0; i < SEEDLOTS.length; i++ ) {
             let p_select = jQuery("#create_seedlots_trial_breeding_program_id").html();
-            let mt_select = jQuery("#create_seedlots_trial_material_type").html();
 
             html += "<tr>";
             html += "<td>" + SEEDLOTS[i].name + "</td>";
@@ -897,7 +910,6 @@ $timestamp => localtime()
             html += "<strong>Breeding Program:</strong><select class='form-control  create_seedlots_trial_metadata_input_seedlot_breeding_program' data-index='" + i + "'>" + p_select + "</select><br />";
             html += "<strong>Location:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='location' data-index='" + i + "' value='" + l + "'><br />";
             html += "<strong>Box Name:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='box_name' data-index='" + i + "' value='" + b + "'><br />";
-            html += "<strong>Material Type:</strong><select class='form-control  create_seedlots_trial_metadata_input_seedlot_material_type' data-index='" + i + "'>" + mt_select + "</select><br />";
             html += "<strong>Quality Issues:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='quality_issues' data-index='" + i + "' value='" + q + "'><br />";
             html += "<strong>Organization:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='organization' data-index='" + i + "' value='" + o + "'><br />";
             html += "<strong>Timestamp:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='timestamp' data-index='" + i + "' value='" + t + "'><br />";

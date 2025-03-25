@@ -128,6 +128,7 @@ export function init(main_div) {
                 } else {
                     const result = drawBoxplot(r.data, trait_selected, outlierMultiplier, isFixedMinMax, minVal, maxVal );
                     outliers = result.outliers;  // Extract the outliers
+                    globalOutliers = outliers;
                     allData = r.data;
                     populateOutlierTable(r.data, trait_selected);
                     populateCleanTable(r.data, outliers, trait_selected);
@@ -183,11 +184,10 @@ export function init(main_div) {
 
         
     $('#store_outliers_button').click(function () {
-        console.log("The other is:", checkedTraits);
         $.ajax({
             url: '/ajax/qualitycontrol/storeoutliers',  
             method: "POST",  
-            data: {"outliers": JSON.stringify(outliers), "othertraits": JSON.stringify(checkedTraits)
+            data: {"outliers": JSON.stringify(globalOutliers), "trait":trait_selected, "othertraits": JSON.stringify(checkedTraits)
             },
             success: function(response) {
                 if(response.is_curator === 1) {
@@ -271,16 +271,12 @@ function populateOtherTraits(traitsHTML, traitSelected) {
     });
 }
 
+var globalOutliers = [];
 
 function updateBoxplot(isFixed, minValue, maxValue) {
     // Fetch the selected trait and tempfile
     var trait_selected = $('#trait_select').val();
     var tempfile = $('#tempfile').html();
-
-    if (!trait_selected || !tempfile || tempfile.trim() === '') {
-        console.log("Either trait or tempfile is missing!");
-        return;
-    }
 
     const outlierMultiplier = $("#outliers_range").slider("value") || 1.5;
 
@@ -290,10 +286,10 @@ function updateBoxplot(isFixed, minValue, maxValue) {
         data: { 'file': tempfile, 'trait': trait_selected },  // Send both tempfile and trait
         success: function (response) {
             const boxplotData = response.data || [];  // Adjust based on the actual response structure
-            drawBoxplot(boxplotData, trait_selected, outlierMultiplier, outlierMultiplier, isFixed, minValue, maxValue);
             const result = drawBoxplot(boxplotData, trait_selected, outlierMultiplier, isFixed, minValue, maxValue);
             const outliers = result.outliers || [];
             populateCleanTable(boxplotData, outliers, trait_selected);
+            globalOutliers = outliers;
         },
 
         error: function (jqXHR, textStatus, errorThrown) {
@@ -644,7 +640,14 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
     // Return both the boxplot data and the outliers
     return {
         boxplotData: boxplotData,
-        outliers: allOutliers
+        outliers: allOutliers.length > 0 ? allOutliers : [{
+            studyName: data.length > 0 ? data[0].studyName : null, // Preserve study name if data exists
+            trait: selected_trait,
+            locationDbId: null,
+            locationName: null,
+            plotName: null,
+            value: null
+        }]
     };
 
 }
@@ -687,4 +690,3 @@ function populateTraitDropdown(selectedVariableHTML) {
         }));
     });
 }
-

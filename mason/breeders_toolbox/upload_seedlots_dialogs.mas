@@ -1,4 +1,7 @@
 <%args>
+
+$default_seedlot_material_type => undef
+
 </%args>
 
 <div class="modal fade" id="upload_seedlot_dialog" name="upload_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_upload_dialog">
@@ -16,7 +19,8 @@
                             <& /page/page_title.mas, title=>"What are seedlots?" &>
                             <ul>
                             <li>Seedlots represent physical plant materials in packets/containers.</li>
-                            <li>Plant material in a seedlot can be seed, root, clone, plant or tissue culture.</li>
+                            <li>Plant material in a seedlot can be seed, root, clone, plant, tissue culture or gametophype.</li>
+                            <li>If you would like to set a default material type for seedlots, please contact us.</li>
                             <li>These plant materials can be from crosses or for named accessions.</li>
                             <li>Seedlots can have a specific location, box, weight_gram, and count.</li>
                             <li>Seedlots can belong to breeding programs and organizations.</li>
@@ -68,12 +72,21 @@
                         <&| /util/workflow.mas:step, title=> "Upload seedlots" &>
                             <& /page/page_title.mas, title=>"Provide basic information about the seedlots and upload your file" &>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_seedlot_form" name="upload_seedlot_form">
+%if ($default_seedlot_material_type) {
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" >Material Type: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" name="upload_seedlots_default_material_type" id="upload_seedlots_default_material_type" disabled value="<% $default_seedlot_material_type %>">
+                                    </div>
+                                </div>
+% } else {
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Material Type: </label>
                                     <div class="col-sm-9" >
                                         <div id="upload_seedlot_material_type_div"></div>
                                     </div>
                                 </div>
+% }
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Breeding Program: </label>
                                     <div class="col-sm-9" >
@@ -395,11 +408,22 @@ jQuery(document).ready(function(){
         upload_seedlot_button();
     });
     function upload_seedlot_button() {
+        let material_type = "";
+        const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
+        if (default_seedlot_material_type) {
+            material_type = default_seedlot_material_type;
+        } else {
+            material_type = jQuery('#upload_seedlot_material_type').val();
+        }
+        if (material_type === '') {
+            alert("Please select a material type");
+            return;
+        }
+
         var uploadSeedlotAccessionsFile = jQuery("#seedlot_uploaded_file").val();
         var uploadSeedlotsHarvestedFile = jQuery("#seedlot_harvested_uploaded_file").val();
         var location = jQuery("#upload_seedlot_location").val();
         var breeding_program = jQuery("#upload_seedlot_breeding_program_id").val();
-        const material_type = jQuery("#upload_seedlot_material_type").val();
         jQuery('#upload_seedlot_form').attr("action", "/ajax/breeders/seedlot-upload");
         if (breeding_program === '') {
             alert("Please choose a breeding program");

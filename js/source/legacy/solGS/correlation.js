@@ -546,7 +546,7 @@ jQuery(document).ready(function () {
 
     solGS.correlation.displayCorrPopsTable(tableId, corrPopsRows);
 
-    jQuery("#add_new_pops").show();
+    jQuery("#create_new_list_dataset").show();
 
   }
 });
