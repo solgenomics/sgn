@@ -19,9 +19,10 @@ my $job = CXGN::Job->new({
         cxgn_tools_run_config => {$config},
         cmd => $cmd,
         logfile => $c->config->{job_finish_log},
+        name => 'Sample download',
         type => 'download',
         submit_page => 'https://www.breedbase.org/submit_page_url'
-        result_page => 'https://www.breedbase.org/result_page_url',
+        results_page => 'https://www.breedbase.org/results_page_url',
     }
 });
 
@@ -39,7 +40,7 @@ my $create_time = $job->create_timestamp();
 
 my $current_status = $job->retrieve_status();
 
-my $result_page = $job->result_page();
+my $results_page = $job->results_page();
 
 To create a job object representing an already submitted job, supply a job ID as sp_job_id. 
 If constructing a new job to submit(), do not supply an sp_job_id. To specify 
@@ -198,6 +199,7 @@ my $job = CXGN::Jobs->new({
         cmd => 'perl /bin/script.pl -a arg1 -b arg2',
         cxgn_tools_run_config => {$config},
         logfile => $c->config->{job_finish_log},
+        name => 'Sample download',
         type => 'download',
         submit_page => '...',
         results_page => '...'
@@ -295,6 +297,16 @@ sub check_status {
         } 
         return $self->status()
     }
+}
+
+=head2 delete()
+
+Deletes the job from the database and the log finish file
+
+=cut
+
+sub delete {
+    #...
 }
 
 =head2 retrieve_argument(arg) 
@@ -413,9 +425,7 @@ sub store {
 
 =head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id)
 
-Returns a listref of hashrefs containing the jobs submitted by the current user. 
-All keys are named according to the value they denote. Arguments in the args hashref
-are flattened. Expects db schemas and a user id.
+Returns a listref of sp_job_ids submitted by the given user id
 
 =cut
 
@@ -429,18 +439,8 @@ sub get_user_submitted_jobs {
 
     my $rs = $people_schema->resultset("SpJob")->find( { sp_person_id => $sp_person_id });
     while (my $row = $rs->next()){
-        my $args = JSON::Any->decode($row->args());
-        my $cvterm_row = $self->schema()->resultset("CV::Cvterm")->search({cvterm_id => $row->type_id()});
-        my $type = $cvterm_row->name();
-        $args->{sp_person_id} = $sp_person_id
-        $args->{sp_job_id} = $row->sp_job_id();
-        $args->{create_timestamp} = $row->create_timestamp();
-        $args->{finish_timestamp} = $row->finish_timestamp();
-        $args->{backend_id} = $row->backend_id();
-        $args->{type} = $type;
-
-        push @user_jobs, $args;
+        push @user_jobs, $row->sp_job_id();
     }
 
-    return \@user_jobs;
+    return [@user_jobs];
 }
