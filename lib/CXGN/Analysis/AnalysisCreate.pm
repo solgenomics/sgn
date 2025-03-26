@@ -184,6 +184,7 @@ has 'is_analysis_result_stock_type' => (
 has 'analysis_result_stock_names' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
+    default => sub { [] },
 );
 
 has 'analysis_trait_names' => (
@@ -511,7 +512,8 @@ sub store {
 
         $a->year($analysis_year);
         $a->breeding_program_id($analysis_breeding_program_id);
-        if (@$analysis_result_stock_names) {
+        
+        if (defined $analysis_result_stock_names && @$analysis_result_stock_names) {
             $a->analysis_result_stock_names($analysis_result_stock_names);
         } else {
             $a->accession_names($analysis_accession_names);
