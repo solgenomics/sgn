@@ -47,7 +47,7 @@ $dataset_id => undef
             </select>
           </div>
 
-          <div class="wizard-search-container panel-heading">
+          <div class="wizard-search-container">
             <textarea class="wizard-search form-control" placeholder="Search"></textarea>
             <div class="wizard-search-options">
               <div class="wizard-search-options-group btn-group" role="group">
