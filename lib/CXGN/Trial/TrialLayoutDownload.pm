@@ -234,7 +234,7 @@ sub get_layout_output {
 
     my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
     my $has_plants = $selected_trial->has_plant_entries();
-    my $has_subplots = $selected_trial->has_tissue_sample_entries();
+    my $has_subplots = $selected_trial->has_subplot_entries();
     my $has_tissue_samples = $selected_trial->has_tissue_sample_entries();
     
     my $accessions = $selected_trial->get_accessions();
