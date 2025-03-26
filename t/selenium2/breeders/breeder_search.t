@@ -2,7 +2,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests' => 128;
+use Test::More 'tests' => 132;
 
 use SGN::Test::WWW::WebDriver;
 use Selenium::Remote::WDKeys 'KEYS';
@@ -36,6 +36,20 @@ $t->while_logged_in_as("submitter", sub {
     ok($search_unselected =~ /Kasese solgs trial/, "Verify if unselected panel after search contain: 'Kasese solgs trial'");
     ok($search_unselected !~ /CASS_6Genotypes_Sampling_2015/, "Verify if unselected panel after search NOT contain: 'CASS_6Genotypes_Sampling_2015'");
     ok($search_unselected !~ /trial2 NaCRRI/, "Verify if unselected panel after search NOT contain: 'trial2 NaCRRI'");
+
+    # ADD A SECOND FILTER ITEM
+    $search_column->send_keys(KEYS->{'return'});
+    $search_column->send_keys('trial2 NaCRRI');
+
+    # check if both "Kasese solgs trial" and "trial2 NaCRRI" are in the unselect panel field
+    $search_unselected = $t->find_element_ok(
+        '(//div[@class="panel-body"])[1]//ul[contains(@class, "wizard-list-unselected")]',
+        'xpath',
+        'find a content of "unselected trials panel" to test searchbox in first column')->get_attribute('innerHTML');
+
+    ok($search_unselected =~ /Kasese solgs trial/, "Verify if unselected panel after search contain: 'Kasese solgs trial'");
+    ok($search_unselected !~ /CASS_6Genotypes_Sampling_2015/, "Verify if unselected panel after search NOT contain: 'CASS_6Genotypes_Sampling_2015'");
+    ok($search_unselected =~ /trial2 NaCRRI/, "Verify if unselected panel after search contain: 'trial2 NaCRRI'");
 
     sleep(1);
     $t->find_element_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Kasese solgs trial")]//preceding-sibling::button' , 'xpath', 'find and add "Kasese solgs trial" trial in first column with search filter active')->click();
@@ -461,10 +475,8 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
     # DONE TESTING
-    print STDERR "\n\n====> DONE\n";
     }
 );
 
-print STDERR "\n====> CLOSING\n";
 $t->driver()->close();
 done_testing();
