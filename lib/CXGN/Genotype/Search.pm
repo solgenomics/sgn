@@ -336,10 +336,10 @@ has 'offset' => (
     is => 'rw',
 );
 
-has 'sample_name_as_primary_identifier' => (
-    isa => 'Bool',
-    is => 'ro',
-    default => 0
+has 'sample_unit_level' => (
+    isa => 'Str',
+    is => 'rw',
+    default => 'accession',
 );
 
 
@@ -751,7 +751,7 @@ sub init_genotype_iterator {
     my $return_only_first_genotypeprop_for_stock = $self->return_only_first_genotypeprop_for_stock;
     my $limit = $self->limit;
     my $offset = $self->offset;
-    my $sample_name_as_primary_identifier = $self->sample_name_as_primary_identifier;
+    my $sample_unit_level = $self->sample_unit_level;
     my @data;
     my %search_params;
     my @where_clause;
@@ -975,8 +975,12 @@ sub init_genotype_iterator {
             $stock_obj_id = $stock_id;
         }
         if ($stock_type_name eq 'tissue_sample'){
-            if ($sample_name_as_primary_identifier) {
+            if ($sample_unit_level eq 'genotyping_plate_sample_name') {
                 $germplasmName = $stock_name;
+                $germplasmDbId = $stock_id;
+                $stock_obj_id = $accession_id;
+            } elsif ($sample_unit_level eq 'sample_name_and_accession') {
+                $germplasmName = $stock_name."|".$accession_uniquename;
                 $germplasmDbId = $stock_id;
                 $stock_obj_id = $accession_id;
             } else {

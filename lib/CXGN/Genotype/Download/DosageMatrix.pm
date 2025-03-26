@@ -176,11 +176,12 @@ has 'offset' => (
     is => 'rw',
 );
 
-has 'sample_name_as_primary_identifier' => (
-    isa => 'Bool',
-    is => 'ro',
-    default => 0
+has 'sample_unit_level' => (
+    isa => 'Str',
+    is => 'rw',
+    default => 'accession',
 );
+
 
 sub download {
     my $self = shift;
@@ -195,7 +196,7 @@ sub download {
     my $trial_list = $self->trial_list;
     my $genotype_data_project_list = $self->genotype_data_project_list;
     my $genotyping_plate_list = $self->genotyping_plate_list;
-    my $sample_name_as_primary_identifier = $self->sample_name_as_primary_identifier;
+    my $sample_unit_level = $self->sample_unit_level;
     my $protocol_id_list = $self->protocol_id_list;
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
@@ -225,7 +226,7 @@ sub download {
         markerprofile_id_list=>$markerprofile_id_list,
         genotype_data_project_list=>$genotype_data_project_list,
         genotyping_plate_list=>$genotyping_plate_list,
-        sample_name_as_primary_identifier=>$sample_name_as_primary_identifier,
+        sample_unit_level=>$sample_unit_level,
         marker_name_list=>$marker_name_list,
         genotypeprop_hash_select=>$genotypeprop_hash_select,
         protocolprop_top_key_select=>$protocolprop_top_key_select,
