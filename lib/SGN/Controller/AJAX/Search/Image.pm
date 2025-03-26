@@ -16,8 +16,9 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON' },
    );
 
+sub image_search : Path('/ajax/search/images') : ActionClass('REST') { }
 
-sub image_search :Path('/ajax/search/images') Args(0) {
+sub image_search_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR "Image search AJAX\n";
@@ -94,7 +95,6 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         $draw =~ s/\D//g; # cast to int
     }
 
-    #print STDERR Dumper $result;
     my @return;
     foreach (@$result){
         my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
