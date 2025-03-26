@@ -133,7 +133,11 @@ has 'accession_names' => (is => 'rw', isa => 'Maybe[ArrayRef]|Undef', lazy => 1,
 
 =cut
 
-has 'analysis_result_stock_names' => (is => 'rw', isa => 'Maybe[ArrayRef]|Undef', lazy => 1, builder => '_load_analysis_result_stock_names');
+has 'analysis_result_stock_names' => (
+    is => 'rw', 
+    isa => 'Maybe[ArrayRef]|Undef',
+    lazy => 1, 
+    builder => '_load_analysis_result_stock_names');
 
 =head2 design()
 
@@ -586,7 +590,6 @@ sub _load_analysis_result_stock_names {
     my $self = shift;
 
     my $design = $self->design();
-    #print STDERR "Design = ".Dumper($design);
     return $self->design()->get_analysis_result_stock_names();
 }
 
