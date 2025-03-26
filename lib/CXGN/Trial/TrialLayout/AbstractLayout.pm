@@ -177,34 +177,33 @@ sub _lookup_trial_id {
     }
 
     $self->_set_design_type($self->_get_design_type_from_project());
-    my $design = $self->_set_design($self->_get_design_from_trial());
-    # print STDERR "\n\n_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
+    $self->_set_design($self->_get_design_from_trial());
+    # print STDERR "DESIGN: ".Dumper($design)."\n";
 
     $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
     # moved to subclass  $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
     $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
     $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
     $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
+    $self->_set_accession_names($self->_get_unique_accession_names_from_trial() || []);        
+    $self->_set_control_names($self->_get_unique_control_accession_names_from_trial() || []);
+    $self->set_analysis_result_stock_names();
     
+    print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
+}
+
+sub set_analysis_result_stock_names {
+    my $self = shift;
     my %design = %{$self->get_design()};
-    #print STDERR "DESIGN: ".Dumper(\%design)."\n";
     my $design_key = (keys %design)[0];
     my $sample_entry = $design{$design_key};
-
-    if ($sample_entry->{'accession_id'}){
-        print STDERR "SETTING ACCESSION NAMES\n";
-        $self->_set_accession_names($self->_get_unique_accession_names_from_trial());
-        if ($self->_get_unique_control_accession_names_from_trial()){
-            $self->_set_control_names($self->_get_unique_control_accession_names_from_trial());
-        }
-    }
-
-    if ($sample_entry->{'analysis_result_stock_id'}){
+    if ($sample_entry->{'analysis_result_stock_id'}) {
         print STDERR "SETTING ANALYSIS RESULT STOCK NAMES\n";
-        $self->_set_analysis_result_stock_names($self->_get_unique_analysis_result_stock_names_from_trial());
-    }
+        $self->_set_analysis_result_stock_names($self->_get_unique_analysis_result_stock_names_from_trial() || []);
+        $self->_set_accession_names([]);        
+        $self->_set_control_names([]);
+    } 
 
-    print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
 }
 
 sub _retrieve_trial_location {
@@ -242,15 +241,16 @@ sub _get_unique_accession_names_from_trial {
     my %unique_acc;
     no warnings 'numeric'; #for genotyping plate so that wells don't give warning
 
-    #print STDERR "DESIGN (AbstractTrial): ".Dumper(\%design);
-
+    # print STDERR "DESIGN (AbstractTrial): ".Dumper(\%design);
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
-        $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
+        $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"};
     }
+
     foreach (sort keys %unique_acc){
         push @acc_names, {accession_name=>$_, stock_id=>$unique_acc{$_}};
     }
+
     if (!scalar(@acc_names) >= 1){
         return;
     }
@@ -623,16 +623,7 @@ sub retrieve_plot_info {
 
     my $type = $accession->type;
     print STDERR "ABSTRACTLayout stock TYPE: ".$type->name."\n";
-    if ($type->name eq 'accession'){
-        if ($accession_name) {
-            $design_info{"accession_name"} = $accession_name;
-        }
-
-        if ($accession_id) {
-	        $design_info{"accession_id"} = $accession_id;
-        }
-    }
-    
+    print STDERR "ABSTRACTLayout stock name: ".$accession_name."\n";
     if ($type->name eq 'analysis_result'){
         if ($accession_name) {
             $design_info{"analysis_result_stock_name"} = $accession_name;
@@ -640,6 +631,14 @@ sub retrieve_plot_info {
 
         if ($accession_id) {
             $design_info{"analysis_result_stock_id"} = $accession_id;
+        }
+    } else {
+        if ($accession_name) {
+            $design_info{"accession_name"} = $accession_name;
+        }
+
+        if ($accession_id) {
+            $design_info{"accession_id"} = $accession_id;
         }
     }
 
