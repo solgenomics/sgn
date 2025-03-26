@@ -18,6 +18,7 @@ my $job = CXGN::Job->new({
     args => {
         cxgn_tools_run_config => {$config},
         cmd => $cmd,
+        logfile => $c->config->{job_finish_log},
         type => 'download',
         submit_page => 'https://www.breedbase.org/submit_page_url'
         result_page => 'https://www.breedbase.org/result_page_url',
@@ -86,7 +87,7 @@ Database ID for submitted job
 
 =cut 
 
-has 'sp_job_id' => ( isa => 'Int', is => 'rw', predicate => 'has_sp_job_id' );
+has 'sp_job_id' => ( isa => 'Maybe[Int]', is => 'rw', predicate => 'has_sp_job_id' );
 
 =head2 sp_person_id()
 
@@ -102,7 +103,7 @@ ID of the running process, as used by the workload manager (assumed to be Slurm)
 
 =cut
 
-has 'backend_id' => ( isa => 'Maybe[Int]', is => 'rw', default => undef );
+has 'backend_id' => ( isa => 'Maybe[Int]', is => 'rw');
 
 =head2 create_timestamp()
 
@@ -110,7 +111,7 @@ Timestamp of job submission
 
 =cut
 
-has 'create_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', default => '');
+has 'create_timestamp' => ( isa => 'Maybe[Str]', is => 'rw');
 
 =head2 finish_timestamp()
 
@@ -118,7 +119,7 @@ Timestamp of job finishing, either successfully or on job failure
 
 =cut
 
-has 'finish_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_finish_timestamp', default => '' );
+has 'finish_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_finish_timestamp');
 
 =head2 status()
 
@@ -126,7 +127,12 @@ Current status of the job. May be stored in DB or may be gathered from Slurm (an
 
 =cut 
 
-has 'status' => ( isa => 'Maybe[Str]', is => 'rw', default => '');
+enum 'ValidStatus', [qw( submitted finished failed timeout )];
+
+has 'status' => ( 
+    isa => 'Maybe[ValidStatus]', 
+    is => 'rw'
+);
 
 =head2 submit_page()
 
@@ -158,7 +164,13 @@ in the database row. Can be one of:
 
 =cut
 
-has 'type' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_type', isa => enum([qw[ download upload tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction                            ]]) );
+enum 'ValidType', [qw( download upload tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )];
+
+has 'type' => ( 
+    isa => 'Maybe[ValidType]', 
+    is => 'rw', 
+    predicate => 'has_type'
+);
 
 =head2 type_id()
 
@@ -247,13 +259,41 @@ sub check_status {
 
     my $backend_id = $self->backend_id();
 
-    if (!$backend_id) {
+    if (!$backend_id || !$self->has_sp_job_id()) {
         return "";
     } else {
-        my $status = $self->status();
-        if ($status eq "submitted") {
+        if ($self->status() eq "submitted") {
+            my $squeue = `squeue --job=$backend_id`;
+            my @job_results = split("\n", $squeue);
+            if (scalar(@job_results) < 2) { #Squeue gives at least two lines, a header and data, if the job is live
+                my @rows = read_file( $self->args->{logfile}, { binmode => ':utf8' } );
+                my $db_id = $self->sp_job_id();
+                my $finish_row = grep {/$db_id\s+/} @rows;
 
-        }
+                if (!$finish_row) { #If no row, job did not finish executing, but is not in squeue, so it failed. 
+                    $self->status("failed");
+                    $self->store();
+                } else { #there is a row, so I get the finish timestamp and store it.
+                    $self->status("finished");
+                    $finish_row =~ m/$backend_id\s+(?<FINISH_TIMESTAMP>\d+-\d+-\d+ \d+:\d+:\d+)/;
+                    $self->finish_timestamp($+{FINISH_TIMESTAMP});
+                    $self->store();
+                }
+            } else { #job is live 
+                my ($JOBID,$PARTITION,$NAME,$USER,$ST,$TIME,$NODES,$NODELIST) = split(/\s+/, $job_results[1]);
+                my @timestamp = split("-", $TIME);#squeue time outputs look like Days-Hours:Mins:Seconds, but days are ommitted for short lived jobs. 
+
+                if (scalar(@timestamp) > 1) {#The length will be greater than one if the job has been running greater than 24 hours
+
+                    if (int($timestamp[0]) >= 2) { #job is timed out!
+                        $self->status("timed_out");
+                        system("scancel $backend_id");
+                        $self->store();
+                    }
+                }
+            }
+        } 
+        return $self->status()
     }
 }
 
@@ -297,7 +337,7 @@ sub submit {
 
     my $sp_job_id = $self->store();
 
-    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S"); echo "'.$sp_jb_id.' $FINISH_TIMESTAMP" >> '.$self->args->{logfile};
+    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S"); echo "'.$sp_jb_id.'    $FINISH_TIMESTAMP" >> '.$self->args->{logfile};
 
     my $job;
     my $backend_id;
@@ -305,6 +345,9 @@ sub submit {
 
     eval {
         $job = CXGN::Tools::Run->new($self->args->{cxgn_tools_run_config});
+
+        $job->do_not_cleanup(1);
+        $job->is_cluster(1);
 
         $job->run_cluster($cmd.$finish_timestamp_cmd);
 
@@ -368,19 +411,36 @@ sub store {
 
 =head1 CLASS METHODS
 
-=head2 get_user_submitted_jobs(user_id)
+=head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id)
 
 Returns a listref of hashrefs containing the jobs submitted by the current user. 
 All keys are named according to the value they denote. Arguments in the args hashref
-are flattened. 
+are flattened. Expects db schemas and a user id.
 
 =cut
 
 sub get_user_submitted_jobs {
-    my $self = shift;
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
     my $sp_person_id = shift;
-    my $bcs_schema = $self->schema;
-    my $people_schema = $self->people_schema;
 
+    my @user_jobs = ();
 
+    my $rs = $people_schema->resultset("SpJob")->find( { sp_person_id => $sp_person_id });
+    while (my $row = $rs->next()){
+        my $args = JSON::Any->decode($row->args());
+        my $cvterm_row = $self->schema()->resultset("CV::Cvterm")->search({cvterm_id => $row->type_id()});
+        my $type = $cvterm_row->name();
+        $args->{sp_person_id} = $sp_person_id
+        $args->{sp_job_id} = $row->sp_job_id();
+        $args->{create_timestamp} = $row->create_timestamp();
+        $args->{finish_timestamp} = $row->finish_timestamp();
+        $args->{backend_id} = $row->backend_id();
+        $args->{type} = $type;
+
+        push @user_jobs, $args;
+    }
+
+    return \@user_jobs;
 }
