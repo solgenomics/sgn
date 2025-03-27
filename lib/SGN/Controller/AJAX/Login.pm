@@ -79,7 +79,9 @@ sub get_roles :Path('/user/get_roles') Args(0) {
 sub log_in :Path('/user/login') Args(0) {
     my $self = shift;
     my $c = shift;
-
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+    $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
     my $login = CXGN::Login->new();
 
     # implement
