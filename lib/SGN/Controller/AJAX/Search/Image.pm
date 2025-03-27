@@ -95,7 +95,7 @@ sub image_search_POST : Args(0) {
         $draw =~ s/\D//g; # cast to int
     }
 
-    #print STDERR Dumper $result
+    #print STDERR Dumper $result;
     my @return;
     foreach (@$result){
         my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
