@@ -126,9 +126,6 @@ jQuery(document).ready(function(){
         }
     });
 
-
-    });
-
 });
 
 function deletePlate(plate_id){
