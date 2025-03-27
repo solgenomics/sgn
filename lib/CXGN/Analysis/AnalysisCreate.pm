@@ -495,7 +495,7 @@ sub store {
 
         $saved_analysis_id = $a->get_trial_id();
         if ($analysis_dataset_id !~ /^\d+$/) {
-            print STDERR "Dataset ID $analysis_dataset_id not accetable.\n";
+            print STDERR "Dataset ID $analysis_dataset_id not acceptable.\n";
             $analysis_dataset_id = undef;
         }
 
@@ -533,6 +533,11 @@ sub store {
                 $plot_obj->{plot_name} = $analysis_name."_".$plot_obj->{plot_name};
                 $analysis_precomputed_design_optional->{$plot_number} = $plot_obj;
             }
+        }
+
+        if ($analysis_result_values_type eq 'analysis_result_new_stocks') {
+            print STDERR"\n\n\n Storing analysis_result_new_stocks: $analysis_result_values_type\n";
+            my $stocks_stored = $self->store_analysis_result_stock_names($bcs_schema, $analysis_result_stock_names);
         }
 
         my ($verified_warning, $verified_error);
@@ -581,11 +586,8 @@ sub store {
                 }
             }
         }
-
         elsif ($analysis_result_values_type eq 'analysis_result_new_stocks') {
-            print STDERR"\n\n\n analysis_result_values_type: $analysis_result_values_type\n";
-            my $stocks_stored = $self->store_analysis_result_stock_names($bcs_schema, $analysis_result_stock_names);
-        
+    
             my %analysis_result_values_fix_plot_names;
             my $design = $a->design();
             foreach (values %$design) {
@@ -599,7 +601,6 @@ sub store {
             }
         }
         
-
         my @analysis_instance_names = keys %$analysis_result_values_save;
     
         eval {
