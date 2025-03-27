@@ -99,8 +99,9 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#plate_genotype_download').click(function(){
-        const sample_unit_level = jQuery('#genotyping_plate_sample_unit_level').val();
-        window.location.replace("/breeders/download_gbs_action/?genotyping_plate_id=<% $trial_id %>&download_format="+download_format+"&forbid_cache=1&sample_unit_level="+sample_unit_level+"");
+        sample_unit_level = jQuery('#genotyping_plate_sample_unit_level').val();
+        window.open("/breeders/download_gbs_action/?genotyping_plate_id=<% $trial_id %>&download_format="+download_format+"&forbid_cache=1&sample_unit_level="+sample_unit_level+"");
+        jQuery('#plate_sample_unit_level_select_dialog').modal('hide');
     });
 
     jQuery('#plate_kasp_genotype_data_download_csv').click(function(){
