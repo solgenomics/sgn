@@ -81,3 +81,20 @@ sub delete :Path('/ajax/job/delete') Args(1) {
 
     $job->delete();
 }
+
+sub cancel :Path('/ajax/job/cancel') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_job_id = shift;
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
+    my $job = CXGN::Job->new({
+            schema => $bcs_schema,
+            people_schema => $people_schema,
+            sp_job_id => $sp_job_id
+    });
+
+    $job->cancel();
+}

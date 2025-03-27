@@ -126,7 +126,7 @@ $user_status => undef
 
     <&| /page/info_section.mas, title=>'solGS analyses jobs', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
         <div class="well">
-            <& /solgs/jobs/log.mas &>
+            <& /jobs/log.mas &>
         </div>
     </&>
 
