@@ -57,7 +57,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             create_timestamp => $job->create_timestamp(),
             finish_timestamp => $job->finish_timestamp(),
             results_page => $job->args->{results_page},
-            actions => "<span id=\"$job_id\" style=\"display: none;\"></span><button ...>Delete</button>"
+            actions => "<span id=\"$job_id\" style=\"display: none;\"></span><button class=\"btn btn-small btn-danger\">Dismiss</button>"
         };
 
         push @{$data->{data}}, $row;
@@ -76,7 +76,7 @@ sub delete :Path('/ajax/job/delete') Args(1) {
     my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $job_id
+            sp_job_id => $sp_job_id
     });
 
     $job->delete();

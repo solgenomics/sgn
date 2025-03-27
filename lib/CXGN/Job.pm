@@ -59,7 +59,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use DateTime;
 use Data::Dumper;
-use File::Slurp 'read_file';
+use File::Slurp qw( write_file read_file );
 use JSON::Any;
 use CXGN::Tools::Run;
 use CXGN::People::Schema;
@@ -104,7 +104,7 @@ ID of the running process, as used by the workload manager (assumed to be Slurm)
 
 =cut
 
-has 'backend_id' => ( isa => 'Maybe[Int]', is => 'rw');
+has 'backend_id' => ( isa => 'Maybe[Int]', is => 'rw', predicate => 'has_backend_id');
 
 =head2 create_timestamp()
 
@@ -128,7 +128,7 @@ Current status of the job. May be stored in DB or may be gathered from Slurm (an
 
 =cut 
 
-enum 'ValidStatus', [qw( submitted finished failed timeout )];
+enum 'ValidStatus', [qw( submitted finished failed timeout canceled )];
 
 has 'status' => ( 
     isa => 'Maybe[ValidStatus]', 
@@ -306,7 +306,56 @@ Deletes the job from the database and the log finish file
 =cut
 
 sub delete {
-    #...
+    my $self = shift;
+
+    if (!$self->has_sp_job_id()) {
+        die "Deletion has no meaning for jobs that have not yet been submitted.\n";
+    } 
+
+    my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+
+    if (!$row){
+        die "The specified job does not exist in the database.\n";
+    }
+
+    eval {
+        $row->delete();
+    };
+    if ($@) {
+        die "An error occurred deleting job from database: $@\n";
+    }
+
+    #... delete row from job log...
+
+}
+
+=head2 cancel()
+
+If the job is still alive and running, runs scancel to kill it. 
+
+=cut
+
+sub cancel {
+    my $self = shift;
+
+    if (!$self->has_backend_id()) {
+        die "Cannot cancel a job without a backend ID.\n";
+    }
+
+    my $backend_id = $self->backend_id();
+
+    eval {
+        system("scancel $backend_id");
+        $self->status('canceled');
+        my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime();
+        my $formatted_time = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+        $self->finish_timestamp($formatted_time);
+        system('echo "'.$formatted_time.'" >> '.$self->args->{logfile});
+        $self->store();
+    };
+    if ($@){
+        die "Error canceling job: $@\n";
+    }
 }
 
 =head2 retrieve_argument(arg) 
@@ -323,8 +372,7 @@ sub retrieve_argument {
     my $self = shift;
     my $arg_string = shift;
 
-    my $args = $self->args();
-    return $args->{$arg_string};
+    return $self->args->{$arg_string};
 }
 
 =head2 submit()
@@ -349,7 +397,7 @@ sub submit {
 
     my $sp_job_id = $self->store();
 
-    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S"); echo "'.$sp_jb_id.'    $FINISH_TIMESTAMP" >> '.$self->args->{logfile};
+    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S"); echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$self->args->{logfile};
 
     my $job;
     my $backend_id;
@@ -444,3 +492,5 @@ sub get_user_submitted_jobs {
 
     return [@user_jobs];
 }
+
+1;

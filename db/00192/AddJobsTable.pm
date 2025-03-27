@@ -61,7 +61,7 @@ sub patch {
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
     my $terms = {
-        'background_job_type' => [
+        'job_type' => [
             ['download','A background job downloading data from the server'],
             ['upload', 'A background job uploading data to the server'],
             # 'pca_analysis',
