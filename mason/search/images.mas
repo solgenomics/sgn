@@ -108,6 +108,7 @@ function _load_image_search_results() {
         'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url':  '/ajax/search/images',
+            'type': 'POST',
             'data': function(d) {
               d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();
               d.image_person = jQuery('#image_submitter').val();
