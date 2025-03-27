@@ -1,11 +1,9 @@
 package SGN::Controller::AJAX::Job;
 
 use Moose;
+use CXGN::Job;
 
 BEGIN {extends 'Catalyst::Controller::REST'};
-
-use CXGN::Job;
-use JSON::Any;
 
 use strict;
 use warnings;
@@ -62,7 +60,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
 
         push @{$data->{data}}, $row;
     }
-    $c->stash->{rest} = JSON::Any->encode($data);
+    $c->stash->{rest} = {data => $data};
 }
 
 sub delete :Path('/ajax/job/delete') Args(1) {

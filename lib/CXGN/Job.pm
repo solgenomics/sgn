@@ -53,7 +53,7 @@ Ryan Preble <rsp98@cornell.edu>
 
 =cut 
 
-package CXGN::Jobs;
+package CXGN::Job;
 
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -483,14 +483,19 @@ sub get_user_submitted_jobs {
     my $people_schema = shift;
     my $sp_person_id = shift;
 
+    if (!$sp_person_id) {
+        die "Need a user id\n";
+    }
+
     my @user_jobs = ();
 
     my $rs = $people_schema->resultset("SpJob")->find( { sp_person_id => $sp_person_id });
     while (my $row = $rs->next()){
+        print STDERR $row->sp_job_id(), "\n";
         push @user_jobs, $row->sp_job_id();
     }
 
-    return [@user_jobs];
+    return \@user_jobs;
 }
 
 1;

@@ -124,9 +124,9 @@ $user_status => undef
         </div>
     </&>
 
-    <&| /page/info_section.mas, title=>'solGS analyses jobs', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
+    <&| /page/info_section.mas, title=>'Job Submissions', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
         <div class="well">
-            <& /jobs/log.mas &>
+            <& /jobs/log.mas, sp_person_id => $sp_person_id &>
         </div>
     </&>
 

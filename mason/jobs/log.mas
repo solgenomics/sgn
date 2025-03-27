@@ -12,6 +12,10 @@ Ryan Preble <rsp98@cornell.edu>
 
 </%doc>
 
+<%args>
+$sp_person_id
+</%args>
+
 <& /util/import_javascript.mas, classes => ["jquery.dataTables"] &>
 
 <div id = job_log_div style="display:none;">
@@ -27,3 +31,24 @@ Ryan Preble <rsp98@cornell.edu>
     <table id="user_job_log_table" class="table" style="text-align:left;">
     </table>
 </div>
+
+<script>
+jQuery(document).ready(function (){
+    $.ajax({
+        url: '/ajax/job/jobs_by_user/<% $sp_person_id %>',
+        success: function(response) {
+            if (response.error) {
+                alert("Error fetching submitted jobs, check console.");
+                console.error(response.error);
+            } else {
+                jQuery('#job_log_div').removeAttr('style');
+                jQuery('#user_job_log_table').DataTable(response.data);
+                console.log(response.data);
+            }
+        }, 
+        error: function(response) {
+            alert("Error fetching submitted jobs");
+        }
+    });
+});
+</script>
