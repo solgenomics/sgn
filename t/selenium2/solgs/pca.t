@@ -88,7 +88,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
     sleep(3);
-    $d->find_element_ok('analysis_name', 'id', 'trials dataset job name')->send_keys('pheno pca job march 21');
+    $d->find_element_ok('analysis_name', 'id', 'trials dataset job name')->send_keys('trials dataset pheno pca job');
     sleep(2);
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
@@ -106,7 +106,7 @@ $d->while_logged_in_as("submitter", sub {
 
     my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
-    sleep(2);
+    sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store pc scores')->click();
     sleep(80);
     $d->find_element_ok('View stored PC', 'partial_link_text',  'view store pca')->click();
@@ -123,7 +123,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
     sleep(3);
-    $d->find_element_ok('analysis_name', 'id', 'trials dataset job name')->send_keys('geno pca job');
+    $d->find_element_ok('analysis_name', 'id', 'trials dataset job name')->send_keys('trials dataset geno pca job');
     sleep(2);
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
@@ -150,7 +150,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(15);
 
-    `rm -r $pca_dir`;
+    `rm -r $cache_dir`;
 
 
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();

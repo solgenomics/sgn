@@ -456,7 +456,6 @@ sub store {
     foreach my $key (keys %design) {
         if ($design{$key}->{stock_name}) {
             my $stock_name = $design{$key}->{stock_name};
-            print STDERR "AbstractTrial Checking stock: $stock_name\n";
             $seen_accessions_hash{$stock_name}++;
         }
         if ($design{$key}->{seedlot_name}) {
@@ -477,7 +476,6 @@ sub store {
         $seedlot_data{$s->uniquename} = $s->stock_id;
     }
 
-    print STDERR "AbstractTrial source_stock_types =".Dumper(\@source_stock_types)."\n";
     my $rs = $chado_schema->resultset('Stock::Stock')->search({
         'is_obsolete' => { '!=' => 't' },
         'type_id' => {-in=>\@source_stock_types},
@@ -501,7 +499,6 @@ sub store {
         my $stock_rs = $chado_schema->resultset("Stock::Stock");
 
         foreach my $key (keys %design) {
-
             if ($key eq 'treatments'){
                 next;
             }
@@ -528,6 +525,7 @@ sub store {
             if ($design{$key}->{subplots_plant_names}) {
                 $subplots_plant_names = $design{$key}->{subplots_plant_names};
             }
+            
             my $stock_name;
             if ($design{$key}->{stock_name}) {
                 $stock_name = $design{$key}->{stock_name};
@@ -618,8 +616,6 @@ sub store {
             }
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
-            
-        
             
             if ($stock_data{$stock_name}) {
                 $stock_id_checked = $stock_data{$stock_name}[0];
