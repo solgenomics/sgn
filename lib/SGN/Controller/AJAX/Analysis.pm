@@ -46,6 +46,8 @@ sub store_analysis_json_POST {
     my $analysis_protocol = $c->req->param("analysis_protocol");
     my $analysis_dataset_id = $c->req->param("analysis_dataset_id");
     my $analysis_accession_names = $c->req->param("analysis_accession_names") ? decode_json $c->req->param("analysis_accession_names") : [];
+    my $analysis_result_stock_names = $c->req->param("analysis_result_stock_names") ? decode_json $c->req->param("analysis_result_stock_names") : [];
+    my $is_analysis_result_stock_type = $c->req->param("is_analysis_result_stock_type");
     my $analysis_trait_names = $c->req->param("analysis_trait_names") ? decode_json $c->req->param("analysis_trait_names") : [];
     my $analysis_statistical_ontology_term = $c->req->param('analysis_statistical_ontology_term');
     my $analysis_precomputed_design_optional = $c->req->param("analysis_precomputed_design_optional") ? decode_json $c->req->param("analysis_precomputed_design_optional") : undef;
@@ -85,7 +87,7 @@ sub store_analysis_json_POST {
         $analysis_to_save_boolean,
         $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info,
         $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
-        $user_id, $user_name, $user_role
+        $user_id, $user_name, $user_role, $analysis_result_stock_names, $is_analysis_result_stock_type
     );
 }
 
@@ -421,7 +423,18 @@ sub store_analysis_spreadsheet_POST {
 
 sub store_data {
     my $self = shift;
-    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info, $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
+    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, 
+    $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, 
+    $analysis_accession_names, $analysis_trait_names, 
+    $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, 
+    $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, 
+    $analysis_result_trait_compose_info, $analysis_model_id, $analysis_model_name, 
+    $analysis_model_description, $analysis_model_is_public, 
+    $analysis_model_language, $analysis_model_type, $analysis_model_properties, 
+    $analysis_model_application_name, $analysis_model_application_version, 
+    $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, 
+    $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, 
+    $user_id, $user_name, $user_role, $analysis_result_stock_names, $is_analysis_result_stock_type) = @_;
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
@@ -456,6 +469,8 @@ sub store_data {
         analysis_protocol=>$analysis_protocol,
         analysis_dataset_id=>$analysis_dataset_id,
         analysis_accession_names=>$analysis_accession_names,
+        analysis_result_stock_names=>$analysis_result_stock_names,
+        is_analysis_result_stock_type=>$is_analysis_result_stock_type,
         analysis_trait_names=>$analysis_trait_names,
         analysis_statistical_ontology_term=>$analysis_statistical_ontology_term,
         analysis_precomputed_design_optional=>$analysis_precomputed_design_optional,
@@ -614,7 +629,13 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $a = CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema, trial_id => $c->stash->{analysis_id} } );
+    my $a = CXGN::Analysis->new({
+            bcs_schema => $bcs_schema,
+            people_schema => $people_schema,
+            metadata_schema => $metadata_schema,
+            phenome_schema => $phenome_schema,
+            trial_id => $c->stash->{analysis_id}
+    });
 
     my $dataset_id = "";
     my $dataset_name = "";
@@ -647,7 +668,6 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     unshift @$dataref, $header;
 
     # print STDERR "TRAITS : ".Dumper($a->traits());
-
     my $resultref = {
         analysis_name => $a->name(),
         analysis_description => $a->description(),
