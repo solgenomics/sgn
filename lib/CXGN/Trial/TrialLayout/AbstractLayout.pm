@@ -343,7 +343,7 @@ sub _get_design_from_trial {
     my $trial_layout_json = $project->projectprops->find({ 'type_id' => $self->cvterm_id('trial_layout_json') });
     my $trial_has_plants = $project->projectprops->find({ 'type_id' => $self->cvterm_id('project_has_plant_entries') });
 
-    my $design = decode_json $trial_layout_json->value if ($trial_layout_json);
+    my $design = decode_json $trial_layout_json->value if $trial_layout_json;
     # print STDERR "\n_get_design_from_trial design: ".Dumper($design)."\n";
     if (keys(%$design)) {
         # print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
