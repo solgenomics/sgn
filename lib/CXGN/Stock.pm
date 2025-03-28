@@ -702,7 +702,7 @@ sub store {
         if ($self->description){ $row->description($self->description()) };
         if ($self->type_id){ $row->type_id($self->type_id()) };
         if ($self->organism_id){ $row->organism_id($self->organism_id()) };
-        if ($self->is_obsolete){ $row->is_obsolete($self->is_obsolete()) };
+        if (defined($self->is_obsolete)){ $row->is_obsolete($self->is_obsolete()) };
         $row->update();
         if ($self->organization_name){
             $self->_update_stockprop('organization', $self->organization_name());

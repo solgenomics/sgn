@@ -25,7 +25,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $params = $c->req->params() || {};
-    #print STDERR Dumper $params;
+    # print STDERR Dumper $params;
 
     my $owner_first_name;
     my $owner_last_name;
@@ -83,7 +83,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         limit=>$limit,
         offset=>$offset,
         minimal_info=>$params->{minimal_info},
-        display_pedigree=>0
+        display_pedigree=>0,
+        is_obsolete=>$params->{is_obsolete} eq 'true'
     });
     my ($result, $records_total) = $stock_search->search();
 

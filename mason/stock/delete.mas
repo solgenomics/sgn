@@ -2,20 +2,28 @@
 <%args>
 $stock_id
 $stock_uniquename
+$is_obsolete
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.Stock' ] &>
 
-<button class="btn btn-primary" id="stock_detail_page_obsolete_stock">Obsolete This Stock</button>
+% if ($is_obsolete) { 
+    <button class="btn btn-primary" id="stock_detail_page_unobsolete_stock">Un-Obsolete This Stock</button>
+% } else {
+    <button class="btn btn-primary" id="stock_detail_page_obsolete_stock">Obsolete This Stock</button>
+% }
 
 <& /transformation/obsolete_stock_dialog.mas &>
 
 <script>
 
 jQuery(document).ready(function () {
+    const stock_id = "<%$stock_id%>";
+    const stock_name = "<%$stock_uniquename%>";
+    jQuery('#stock_detail_page_unobsolete_stock').click(function(){
+        unObsoleteStock(stock_id, stock_name);
+    });
     jQuery('#stock_detail_page_obsolete_stock').click(function(){
-        const stock_id = "<%$stock_id%>";
-        const stock_name = "<%$stock_uniquename%>";
         obsoleteStock(stock_id, stock_name);
     });
 });

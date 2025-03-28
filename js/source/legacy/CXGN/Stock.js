@@ -84,11 +84,22 @@ function remove_parents(stock_id, parent_id) {
 }
 
 function obsoleteStock(stock_id, stock_name){
+    showObsoleteDialog(stock_id, stock_name, true);
+}
+
+function unObsoleteStock(stock_id, stock_name){
+    showObsoleteDialog(stock_id, stock_name, false);
+}
+
+function showObsoleteDialog(stock_id, stock_name, obsolete) {
     let html = '';
     html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">Stock Name: </label><div class="col-sm-8" ><input class="form-control" id="obsolete_stock_name" name="obsolete_stock_name" value="'+stock_name+'" disabled></div></div>';
     html = html + '<div class="form-group"><label class="col-sm-4 control-label">Note: </label><div class="col-sm-8" ><input class="form-control" id="obsolete_note" name="obsolete_note" placeholder="Optional"></div></div></form>';
     html = html + '<div class="form-group"><input id="obsolete_stock_id" type="hidden" value="'+stock_id+'"/>';
 
+    jQuery("#obsoleteStockDialog").html(obsolete ? "Obsolete This Stock" : "Un-Obsolete This Stock");
+    jQuery("#obsolete_stock_submit").html(obsolete ? "Obsolete" : "Un-Obsolete");
+    jQuery("#obsolete_stock_submit").data("obsolete", obsolete ? 'true' : 'false');
     jQuery('#obsolete_stock_div').html(html);
     jQuery('#obsolete_stock_dialog').modal('show');
 }
@@ -96,6 +107,7 @@ function obsoleteStock(stock_id, stock_name){
 jQuery(document).ready(function($) {
 
     jQuery('#obsolete_stock_submit').click( function() {
+        const obsolete = jQuery(this).data("obsolete") === 'true';
         const note = jQuery('#obsolete_note').val();
         const stock_id = jQuery('#obsolete_stock_id').val();
         if (!stock_id) {
@@ -109,14 +121,14 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        const confirmation = confirm('Are you sure you want to obsolete this stock?' + "  " + stock_name);
+        const confirmation = confirm('Are you sure you want to ' + (obsolete ? 'obsolete' : 'un-obsolete') + ' this stock?' + "  " + stock_name);
 
         if (confirmation) {
             jQuery.ajax({
                 url: '/stock/obsolete',
                 data : {
                     'stock_id' : stock_id,
-                    'is_obsolete': 1,
+                    'is_obsolete': obsolete ? 1 : 0,
                     'obsolete_note': note,
                 },
                 beforeSend: function(response){
@@ -144,6 +156,5 @@ jQuery(document).ready(function($) {
     jQuery("#dismiss_obsolete_stock_message_dialog").click(function(){
         location.reload();
     });
-
 
 });
