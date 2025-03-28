@@ -227,18 +227,18 @@ sub BUILD {
         $self->args($job_args);
         $self->type($self->args->{type});
         $self->sp_person_id($user_id);
-        my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime();
-        my $formatted_time = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
-        $self->create_timestamp($formatted_time);
+        # my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime();
+        # my $formatted_time = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+        # $self->create_timestamp($formatted_time);
         
     } else { #existing job, retrieve from DB
         $self->sp_job_id($args->{sp_job_id});
         my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
         if (!$row) { die "The job with id ".$self->sp_jb_id()." does not exist"; }
-        my $job_args = JSON::Any->decode($row->args());
+        my $job_args = $row->args() ? JSON::Any->decode($row->args()) : undef;
         $self->args($job_args);
         $self->type_id($row->type_id());
-        my $cvterm_row = $self->schema()->resultset("CV::Cvterm")->search({cvterm_id => $row->type_id()});
+        my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({cvterm_id => $row->type_id()});
         $self->type($cvterm_row->name());
         $self->create_timestamp($row->create_timestamp());
         $self->finish_timestamp($row->finish_timestamp());
@@ -277,7 +277,7 @@ sub check_status {
                     $self->store();
                 } else { #there is a row, so I get the finish timestamp and store it.
                     $self->status("finished");
-                    $finish_row =~ m/$backend_id\s+(?<FINISH_TIMESTAMP>\d+-\d+-\d+ \d+:\d+:\d+)/;
+                    $finish_row =~ m/$db_id\s+(?<FINISH_TIMESTAMP>\d+-\d+-\d+ \d+:\d+:\d+)/;
                     $self->finish_timestamp($+{FINISH_TIMESTAMP});
                     $self->store();
                 }
@@ -311,6 +311,9 @@ sub delete {
     if (!$self->has_sp_job_id()) {
         die "Deletion has no meaning for jobs that have not yet been submitted.\n";
     } 
+    if (!$self->args() || !$self->args->{logfile}) {
+        die "No job finish logfile found!\n";
+    }
 
     my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
@@ -320,12 +323,14 @@ sub delete {
 
     eval {
         $row->delete();
+        my $job_id = $self->sp_jb_id();
+        my @rows = read_file( $self->args->{logfile}, { binmode => ':utf8' } );
+        my @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
+        write_file($self->args->{logfile},{binmode => ':utf8'},@rows);
     };
     if ($@) {
         die "An error occurred deleting job from database: $@\n";
     }
-
-    #... delete row from job log...
 
 }
 
@@ -350,7 +355,7 @@ sub cancel {
         my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime();
         my $formatted_time = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
         $self->finish_timestamp($formatted_time);
-        system('echo "'.$formatted_time.'" >> '.$self->args->{logfile});
+        system('echo "'.$self->sp_job_id().'    '.$formatted_time.'" >> '.$self->args->{logfile});
         $self->store();
     };
     if ($@){
@@ -372,6 +377,10 @@ sub retrieve_argument {
     my $self = shift;
     my $arg_string = shift;
 
+    if (!$self->args() || !defined($self->args->{$arg_string})) {
+        return "";
+    } 
+
     return $self->args->{$arg_string};
 }
 
@@ -383,6 +392,10 @@ Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a
 
 sub submit {
     my $self = shift;
+
+    if ($self->args()) {
+        die "Pertinent arguments must be supplied before job submission.\n";
+    }
 
     if (!$self->args->{cmd}) {
         die "Background jobs must have a command to run.\n";
@@ -416,7 +429,7 @@ sub submit {
     };
 
     if ($@) {
-        die "An error occured trying to submit a background job, sorry: $@\n";
+        die "An error occured trying to submit a background job: $@\n";
     } 
 
     $self->backend_id($backend_id);
@@ -489,9 +502,8 @@ sub get_user_submitted_jobs {
 
     my @user_jobs = ();
 
-    my $rs = $people_schema->resultset("SpJob")->find( { sp_person_id => $sp_person_id });
+    my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
     while (my $row = $rs->next()){
-        print STDERR $row->sp_job_id(), "\n";
         push @user_jobs, $row->sp_job_id();
     }
 

@@ -97,17 +97,23 @@ sub patch {
         }
     }
 
+    my $dbuser = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep dbuser | sed -r 's/\w+\s//'`;
+
     $self->dbh->do(<<EOSQL);
 CREATE TABLE sgn_people.sp_job(
     sp_job_id SERIAL PRIMARY KEY,
     sp_person_id BIGINT REFERENCES sgn_people.sp_person,
     backend_id VARCHAR(255) NOT NULL,
     status VARCHAR(100),
-    create_timestamp VARCHAR(100) NOT NULL,
-    finish_timestamp VARCHAR(100), 
+    create_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    finish_timestamp TIMESTAMPTZ, 
     type_id BIGINT REFERENCES public.cvterm,
     args JSONB
 );
+
+GRANT SELECT,UPDATE,DELETE,INSERT ON sgn_people.sp_job TO $dbuser ;
+
+GRANT USAGE ON SEQUENCE sgn_people.sp_job_sp_job_id_seq TO $dbuser ;
 
 EOSQL
 

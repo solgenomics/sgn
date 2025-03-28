@@ -26,6 +26,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     <option value='six_months'>Six months</option>
     <option value='one_year'>One year</option>
   </select>
+  <br>
   <table class="table" id="analysis_list" style="text-align: left;">
     <thead>
       <tr>

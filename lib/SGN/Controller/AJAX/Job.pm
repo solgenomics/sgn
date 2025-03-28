@@ -19,6 +19,8 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
     my $c = shift;
     my $sp_person_id = shift;
 
+    #check logged in user and proceed if ok
+
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
 
@@ -45,17 +47,27 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
         my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $job_id
+            sp_job_id => $job_id,
+            args => {
+                logfile => $c->config->{job_finish_log}
+            }
         });
+        my $actions_html = "<span id=\"$job_id\" style=\"display: none;\"></span><button id=\"dismiss_job_$job_id\" class=\"btn btn-small btn-danger\">Dismiss</button>";
+        my $status = $job->check_status();
+        if ($status eq "finished" && $job->retrieve_argument('type') =~ /analysis/) {
+            $actions_html .= "<button id=\"save_job_$job_id\" class=\"btn btn-small btn-success\">";
+        } elsif ($status eq "submitted") {
+            $actions_html .= "<button id=\"cancel_job_$job_id\" class=\"btn btn-small btn-danger\">Cancel</button>"
+        }
         my $row = {
             id => $job_id,
-            name => $job->args->{name},
-            type => $job->args->{type},
-            status => $job->check_status(),
+            name => $job->retrieve_argument('name'),
+            type => $job->type(),
+            status => $status,
             create_timestamp => $job->create_timestamp(),
             finish_timestamp => $job->finish_timestamp(),
-            results_page => $job->args->{results_page},
-            actions => "<span id=\"$job_id\" style=\"display: none;\"></span><button class=\"btn btn-small btn-danger\">Dismiss</button>"
+            results_page => $job->retrieve_argument('results_page'),
+            actions => $actions_html
         };
 
         push @{$data->{data}}, $row;
