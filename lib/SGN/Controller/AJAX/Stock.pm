@@ -2369,7 +2369,7 @@ sub stock_obsolete_GET {
                 is_saving=>1,
                 sp_person_id => $c->user()->get_object()->get_sp_person_id(),
                 user_name => $c->user()->get_object()->get_username(),
-                modification_note => "Obsolete at ".localtime,
+                modification_note => $is_obsolete ? "Obsolete at ".localtime : "Un-Obsolete at ".localtime,
                 is_obsolete => $is_obsolete,
                 obsolete_note => $obsolete_note,
             });
