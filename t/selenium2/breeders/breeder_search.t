@@ -39,6 +39,7 @@ $t->while_logged_in_as("submitter", sub {
     # ADD A SECOND FILTER ITEM
     $search_column->send_keys(KEYS->{'return'});
     $search_column->send_keys('trial2 NaCRRI');
+    sleep(2);
 
     # check if both "Kasese solgs trial" and "trial2 NaCRRI" are in the unselect panel field
     $search_unselected = $t->find_element_ok(
