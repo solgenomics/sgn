@@ -320,6 +320,40 @@ is($protocol_edited->protocol_name, 'kasp_protocol_1_edited');
 is($protocol_edited->protocol_description, 'test editing description');
 is($protocol_edited->reference_genome_name, 'Mesculenta_511_v8');
 
+#retrieve genotype data for each genotyping plate
+my $kasp_genotyping_plate_response = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate_id");
+my $kasp_genotyping_plate_message = $kasp_genotyping_plate_response->decoded_content;
+my $plate_genotype_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+"S01_0001","2023_plate_1_A01","T,T","1.36",".58"
+"S01_0001","2023_plate_1_A02","T,T","1.25",".49"
+"S01_0001","2023_plate_1_A03","T,G","1.57","1.38"
+"S01_0001","2023_plate_1_A05","./.",".65",".58"
+"S01_0002","2023_plate_1_A01","A,A","1.43",".59"
+"S01_0002","2023_plate_1_A02","A,G","1.25","1.43"
+"S01_0002","2023_plate_1_A03","A,G","1.22","1.41"
+"S01_0002","2023_plate_1_A05","A,A","1.65",".62"
+"S02_0001","2023_plate_1_A01","T,T","1.75",".75"
+"S02_0001","2023_plate_1_A02","T,T","1.21",".61"
+"S02_0001","2023_plate_1_A03","T,T","1.17",".46"
+"S02_0001","2023_plate_1_A05","T,C","1.26","1.31"
+"S02_0002","2023_plate_1_A01","A,A","1.75",".32"
+"S02_0002","2023_plate_1_A02","A,A","1.38",".59"
+"S02_0002","2023_plate_1_A03","A,C","1.36","1.47"
+"S02_0002","2023_plate_1_A05","A,C","1.32","1.46"
+"S03_0001","2023_plate_1_A01","C,C","1.76",".38"
+"S03_0001","2023_plate_1_A02","C,C","1.47",".24"
+"S03_0001","2023_plate_1_A03","C,T","1.86","1.48"
+"S03_0001","2023_plate_1_A05","C,T","1.11","1.23"
+';
+
+is($kasp_genotyping_plate_message, $plate_genotype_data);
+
+#delete genotyping data from each plate
+$mech->get_ok('http://localhost:3010/ajax/breeders/plate_genotyping_data_delete?genotyping_plate_id='.$plate_id);
+$response = decode_json $mech->content;
+is_deeply($response, {success=>1});
+
+
 ## DELETE genotyping protocols, data, plate and projects
 $mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_1?sgn_session_id=$sgn_session_id");
 $response = decode_json $mech->content;
