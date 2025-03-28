@@ -176,7 +176,7 @@ jQuery(document).ready(function () {
     var traitId = jQuery("#anova_selected_trait_id").val();
     if (traitId) {
       jQuery(runDiv).hide();
-      solGS.anova.showMessage("Please wait...Querying the database for trait data...");
+      solGS.anova.showMessage("Please wait...querying the database for the trait data...");
       jQuery(`${canvas} .multi-spinner-container`).show();
 
       solGS.anova.queryPhenoData(traitId).done(function (queryRes) {
@@ -187,7 +187,7 @@ jQuery(document).ready(function () {
         } else {
           var traitsAbbrs = queryRes.traits_abbrs;
           traitsAbbrs = JSON.parse(traitsAbbrs);
-          solGS.anova.showMessage("Validated trait data...Now running ANOVA...");
+          solGS.anova.showMessage("Validated trait data...now running ANOVA...");
 
           solGS.anova
             .runAnovaAnalysis(traitsAbbrs)

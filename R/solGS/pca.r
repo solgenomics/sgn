@@ -26,20 +26,23 @@ inputFile  <- grep("input_files", allArgs, value = TRUE)
 inputFiles <- scan(inputFile, what = "character")
 
 scoresFile       <- grep("pca_scores", outputFiles, value = TRUE)
-screeDataFile       <- grep("pca_scree_data", outputFiles, value = TRUE)
-screeFile       <- grep("pca_scree_plot", outputFiles, value = TRUE)
+screeDataFile    <- grep("pca_scree_data", outputFiles, value = TRUE)
+screeFile        <- grep("pca_scree_plot", outputFiles, value = TRUE)
 loadingsFile     <- grep("pca_loadings", outputFiles, value = TRUE)
 varianceFile     <- grep("pca_variance", outputFiles, value = TRUE)
 combinedDataFile <- grep("combined_pca_data_file", outputFiles, value = TRUE)
 
-if (is.null(scoresFile))
-{
+if (is.null(inputFiles)) {
+  stop("Input files are missing.")
+  q("no", 1, FALSE)
+}
+
+if (is.null(scoresFile)) {
   stop("Scores output file is missing.")
   q("no", 1, FALSE)
 }
 
-if (is.null(loadingsFile))
-{
+if (is.null(loadingsFile)) {
   stop("Laodings file is missing.")
   q("no", 1, FALSE)
 }
@@ -55,10 +58,8 @@ pcF <- grepl("genotype", ignore.case=TRUE, inputFiles)
 dataType <- ifelse(isTRUE(pcF[1]), 'genotype', 'phenotype')
 
 if (dataType == 'genotype') {
-    if (length(inputFiles) > 1 ) {
-        allGenoFiles <- inputFiles
-        genoData <- combineGenoData(allGenoFiles)
-
+    if (length(inputFiles) > 1) {
+        genoData <- genoDataFilter::combineGenoData(inputFiles)
         genoMetaData   <- genoData$trial
         genoData$trial <- NULL
 
@@ -102,7 +103,7 @@ if (dataType == 'genotype') {
         phenoData <- na.omit(phenoData)
         genoMetaData <- phenoData$studyDbId
 
-        phenoData <- phenoData %>% mutate(germplasmName = paste0(germplasmName, '_', studyDbId))
+        phenoData <- phenoData %>% mutate(germplasmName = paste0(germplasmName, '_trial_', studyDbId))
         dropCols = c('replicate', 'blockNumber', 'locationName', 'studyDbId', 'studyYear')
         phenoData <- phenoData %>% select(-dropCols)
         rownames(phenoData) <- NULL
@@ -125,14 +126,12 @@ if (is.null(genoData) && is.null(phenoData)) {
   q("no", 1, FALSE)
 }
 
-
 genoDataMissing <- c()
 if (dataType == 'genotype') {
    # if (is.null(filteredGenoFile) == TRUE) {
-        ##genoDataFilter::filterGenoData
-        genoData <- convertToNumeric(genoData)
-        genoData <- filterGenoData(genoData, maf=0.01)
-        genoData <- roundAlleleDosage(genoData)
+        genoData <- genoDataFilter::convertToNumeric(genoData)
+        genoData <- genoDataFilter::filterGenoData(genoData, maf=0.01)
+        genoData <- genoDataFilter::roundAlleleDosage(genoData)
 
         message("No. of geno missing values, ", sum(is.na(genoData)) )
         if (sum(is.na(genoData)) > 0) {
@@ -164,7 +163,6 @@ message("No. of missing values, ", sum(is.na(pcaData)) )
 if (sum(is.na(pcaData)) > 0) {
     pcaData <- na.roughfix(pcaData)
 }
-
 pcsCnt <- ifelse(ncol(pcaData) < 10, ncol(pcaData), 10)
 pca    <- prcomp(pcaData, retx=TRUE)
 pca    <- summary(pca)
@@ -175,7 +173,8 @@ scores   <- round(scores, 3)
 
 if (!is.null(genoMetaData)) {
     scores$trial <- genoMetaData
-    scores       <- scores %>% select(trial, everything()) %>% data.frame
+    scores <- scores %>% data.frame
+    scores <- scores %>% select(trial, everything()) %>% data.frame
 } else {
   scores$trial <- 1000
   scores <- scores %>% select(trial, everything()) %>% data.frame
