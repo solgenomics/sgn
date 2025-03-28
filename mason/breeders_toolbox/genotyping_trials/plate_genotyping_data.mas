@@ -105,7 +105,7 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#plate_kasp_genotype_data_download_csv').click(function(){
-        window.location.replace("/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=<% $trial_id %>");
+        window.open("/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=<% $trial_id %>");
     });
 
 
