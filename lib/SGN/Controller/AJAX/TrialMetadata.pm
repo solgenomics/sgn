@@ -5511,14 +5511,21 @@ sub get_analysis_instance_stock_type {
 
     my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_type_id });
 
-    my $design = decode_json $trial_layout_json->value if $trial_layout_json;
-    my $sample_design_key = (keys %{$design})[0];
-    my $sample_trial_entry = $design->{$sample_design_key};
+    my $design;
 
-    if ($sample_trial_entry->{'accession_name'}) {
-        return 'accession';
-    } elsif($sample_trial_entry->{'analysis_result_stock_name'}) {
-        return 'analysis_result';
+    if ($trial_layout_json) {
+        $design = decode_json $trial_layout_json->value;
+    }
+
+    if (keys %{$design}) {
+        my $sample_design_key = (keys %{$design})[0];
+        my $sample_trial_entry = $design->{$sample_design_key};
+
+        if ($sample_trial_entry->{'accession_name'}) {
+            return 'accession';
+        } elsif($sample_trial_entry->{'analysis_result_stock_name'}) {
+            return 'analysis_result';
+        }
     }
 
 }
