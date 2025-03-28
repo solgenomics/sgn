@@ -23,7 +23,6 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="trials"]', 'xpath', 'find and select "trials" in first column')->click();
     sleep(1);
     my $search_column = $t->find_element_ok('(//div[contains(@class, "wizard-column")])[1]//textarea', 'xpath', 'find a search box');
-    # $t->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $search_column);
     $search_column->send_keys('Kasese solgs trial');
     sleep(2);
 
@@ -64,12 +63,12 @@ $t->while_logged_in_as("submitter", sub {
 
     # COLUMN 1 AND 2 - test for all / any / default values / check if numbers off possible combinations are changing
     my $active_union_button = $t->find_element_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(@class, "active")]' , 'xpath', 'find active union button in first column');
-    ok (lc($active_union_button->get_attribute('innerHTML')) eq "any", "default active union button for selection shall be ANY");
+    ok(lc($active_union_button->get_attribute('innerHTML')) eq "any", "default active union button for selection shall be ANY");
 
     my $button_count_all_second_column_xpath = '(//div[@class="panel-body"])[2]//div[@class="btn-group"]//span[contains(@class, "wizard-count-all")]';
 
     my $button_count_all_second_column = $t->find_element_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
-    ok ($button_count_all_second_column->get_text() eq "3", "number of traits with 'ANY button' in second panel from 'Kasese solgs trial' should be 3");
+    ok($button_count_all_second_column->get_text() eq "3", "number of traits with 'ANY button' in second panel from 'Kasese solgs trial' should be 3");
 
     $t->find_element_ok('(//div[contains(@class, "wizard-column")])[1]//button[contains(@class, "wizard-search-options-clear")]' , 'xpath', 'clear search input in first column, for union test')->click();
     sleep(2);
@@ -80,10 +79,10 @@ $t->while_logged_in_as("submitter", sub {
     my $unselected_traits_second_column_xpath = '(//div[@class="panel-body"])[2]//ul[contains(@class, "wizard-list-unselected")]';
 
     my $unselected_traits_content = $t->find_element_ok($unselected_traits_second_column_xpath, 'xpath', 'find content of unselected list from second column')->get_attribute('innerHTML');
-    ok ($unselected_traits_content =~ /harvest index variable|CO_334:0000015/, 'find new trait for two trials and ANY union "harvest index variable|CO_334:0000015"');
+    ok($unselected_traits_content =~ /harvest index variable|CO_334:0000015/, 'find new trait for two trials and ANY union "harvest index variable|CO_334:0000015"');
 
     $button_count_all_second_column = $t->find_element_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
-    ok ($button_count_all_second_column->get_text() eq "4", "number of traits with 'ANY button' in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 4");
+    ok($button_count_all_second_column->get_text() eq "4", "number of traits with 'ANY button' in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 4");
 
     my $all_union_button = $t->find_element_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ALL")]' , 'xpath', 'find "ALL" button');
     my $any_union_button = $t->find_element_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ANY")]' , 'xpath', 'find "ANY" button');
@@ -91,27 +90,29 @@ $t->while_logged_in_as("submitter", sub {
     $all_union_button->click();
     sleep(1);
     $button_count_all_second_column = $t->find_element_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
-    ok ($button_count_all_second_column->get_text() eq "3", "ALL traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 3");
+    ok($button_count_all_second_column->get_text() eq "3", "ALL traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 3");
 
     $unselected_traits_content = $t->find_element_ok($unselected_traits_second_column_xpath, 'xpath', 'find content of unselected list from second column"')->get_attribute('innerHTML');
-    ok ($unselected_traits_content !~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for two trials and ALL union cannot be displayed in unselected traits');
+    ok($unselected_traits_content !~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for two trials and ALL union cannot be displayed in unselected traits');
 
     $any_union_button->click();
     sleep(1);
     $button_count_all_second_column = $t->find_element_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
-    ok ($button_count_all_second_column->get_text() eq "4", "ANY traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 4");
+    ok($button_count_all_second_column->get_text() eq "4", "ANY traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 4");
 
     $unselected_traits_content = $t->find_element_ok($unselected_traits_second_column_xpath, 'xpath', 'find content of unselected list from second column"')->get_attribute('innerHTML');
-    ok ($unselected_traits_content =~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for two trials and ANY union shall be displayed in unselected traits');
+    ok($unselected_traits_content =~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for two trials and ANY union shall be displayed in unselected traits');
 
     $t->find_element_ok('(//div[@class="panel-body"])[1]//ul[contains(@class, "wizard-list-selected wizard-list")]//a[contains(text(), "trial2 NaCRRI")]//preceding-sibling::button' , 'xpath', 'first select')->click();
     sleep(1);
     $unselected_traits_content = $t->find_element_ok($unselected_traits_second_column_xpath, 'xpath', 'find content of unselected list from second column"')->get_attribute('innerHTML');
-    ok ($unselected_traits_content !~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for one trial after "trial2 NaCRRI" removed should not be displayed in unselected traits');
+    ok($unselected_traits_content !~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for one trial after "trial2 NaCRRI" removed should not be displayed in unselected traits');
 
     # COLUMN 3 WIZARD SEARCH - select years and save first dataset with 3 list
     $t->find_element_ok('(//div[@class="panel-heading"]/select)[3]', 'xpath', 'find select column type in third column')->click();
+    sleep(1);
     $t->find_element_ok('(//div[@class="panel-heading"]/select)[3]//option[@value="years"]', 'xpath', 'find and select "years" in third column')->click();
+    sleep(1);
     $t->find_element_ok('(//div[@class="panel-body"])[3]//a[contains(text(), "2014")]//preceding-sibling::button' , 'xpath', 'find and add "2014" year in third column')->click();
     sleep(1);
 
@@ -126,9 +127,12 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
     ok($t->driver->get_alert_text() =~ m/Dataset another_dataset_3_columns created/i, 'Created dataset another_dataset_3_columns');
     $t->driver()->accept_alert();
+    sleep(2);
 
     # COLUMN 4 WIZARD SEARCH - select accessions and save second dataset
-    $t->find_element_ok('(//div[@class="panel-heading"]/select)[4]', 'xpath', 'find select column type in fourth column')->click();
+    my $type_column_4 = $t->find_element_ok('(//div[@class="panel-heading"]/select)[4]', 'xpath', 'find select column type in fourth column');
+    $t->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $type_column_4);
+    $type_column_4->click();
     sleep(1);
     $t->find_element_ok('(//div[@class="panel-heading"]/select)[4]//option[@value="accessions"]', 'xpath', 'find and select "accessions" in fourth column')->click();
     sleep(1);
