@@ -368,23 +368,22 @@ sub generate_model_spl2D {
 	}
 
 	
-	print STDERR "DEPENDENT VARIABLES: ".Dumper($dependent_variables);
-	
 	$mmer_fixed_factors = make_R_variable_name($dependent_variables->[0]) ." ~ ". $mmer_fixed_factors;
 	
 
-
-	if (scalar(@$random_factors)== 0) {
-		$mmer_random_factors = "~ vsr(locationDbId, Rowf) + vsr(locationDbId, Colf) + spl2Da(rowNumber,colNumber, at.var = locationDbId)"; }
-
-	else {
+	if (!defined $random_factors || $random_factors eq "" || $random_factors eq '""' || (ref($random_factors) eq 'ARRAY' && !grep { defined $_ } @$random_factors)) {
+	    print STDERR "No random factors provided, using only location-based random effects...\n";
+	    $mmer_random_factors = "~ vsr(locationDbId, Rowf) + vsr(locationDbId, Colf) + spl2Da(rowNumber,colNumber, at.var = locationDbId)"; 
+	} else {
+	    # Not empty and contains defined elements, proceed to join the random factors into the model string
 	    print STDERR "Preparing random factors...\n";
-	    $mmer_random_factors = "~" . join(" + ", map { "vsr($_)" } @$random_factors) ." + vsr(locationDbId, Rowf) + vsr(locationDbId, Colf) + spl2Da(rowNumber,colNumber, at.var = locationDbId)";
+	    $mmer_random_factors = "~" . join(" + ", map { "vsr($_)" } grep { defined $_ } @$random_factors) . " + vsr(locationDbId, Rowf) + vsr(locationDbId, Colf) + spl2Da(rowNumber,colNumber, at.var = locationDbId)";
 	}
+
 	
-	if (scalar(@$fixed_factors_interaction)== 0) {$mmer_fixed_factors_interaction = ""; }
-	
-	else {
+	if (scalar(@$fixed_factors_interaction)== 0) {
+		$mmer_fixed_factors_interaction = "";
+    }else {
 	    
 	    foreach my $interaction(@$fixed_factors_interaction){
 			
@@ -394,15 +393,15 @@ sub generate_model_spl2D {
 	    }
 	}
 
-	if (scalar(@$variable_slope_intersects)== 0) {$mmer_variable_slope_intersects = ""; }
-	
-	else {
-	    
+	if (scalar(@$variable_slope_intersects)== 0) {
+		$mmer_variable_slope_intersects = "";
+	}else {
 	    foreach my $intersects(@$variable_slope_intersects){
-		
-		if (scalar(@$intersects) != 2) { $error = "intersects needs to be pairs :-(";}
-
-		else { $mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";} # vsr(Days, Subject)
+			if (scalar(@$intersects) != 2) { 
+				$error = "intersects needs to be pairs :-(";
+			}else { 
+				$mmer_variable_slope_intersects .= " + vsr(". join(",", @$intersects) . ")";
+			} # vsr(Days, Subject)
 	    }
 	}
 	
@@ -416,13 +415,6 @@ sub generate_model_spl2D {
 	    $formula.=" ".$mmer_variable_slope_intersects;
 	}
     
-	print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
-	print STDERR "mmer_random_factors = $formula\n";
-	
-	#my $data = { fixed_factors => $mmer_fixed_factors,
-	#	 random_factors => $mmer_random_factors,
-	#};
-	
 	my $model = [ $mmer_fixed_factors, $formula ];
 
 	return ($model, $error);
