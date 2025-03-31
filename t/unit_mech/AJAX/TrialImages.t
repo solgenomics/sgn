@@ -75,7 +75,7 @@ if ($uri =~ /\/(\d+)$/) {
 
 diag "Image ID: $image_id";
 
-$m->get_ok("/ajax/search/images?image_stock_uniquename=test_trial212");
+$m->post_ok("/ajax/search/images?image_stock_uniquename=test_trial212");
 my $search_response = eval { decode_json $m->content };
 
 diag "Search response: " . Dumper($search_response);
