@@ -1,0 +1,82 @@
+<%args>
+$transcriptomics_files => undef
+$deleted_transcriptomics_files => undef
+$all_transcriptomics_files => undef
+$all_deleted_transcriptomics_files => undef
+$locations => undef
+$sampling_facilities => ()
+</%args>
+
+<& /tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas &>
+<& /tools/high_dimensional_phenotypes/download_high_dim_phenotypes_dialogs.mas &>
+<& /breeders_toolbox/sampling_trials/create_sampling_trials_dialogs.mas, sampling_facilities=>$sampling_facilities &>
+
+<div class="well">
+<&| /page/info_section.mas, title=>'Uploaded Transcriptomic Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage uploaded transcriptomic data files' &>
+
+    <&| /page/info_section.mas, title=>'Your Uploaded Transcriptomic Data', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$transcriptomics_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title=>'Your Obsoleted Transcriptomic Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'These are deleted transcriptomic files' &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$deleted_transcriptomics_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title=>'All Uploaded Transcriptomic Data', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$all_transcriptomics_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title=>'All Obsoleted Transcriptomic Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'These are deleted transcriptomic files' &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$all_deleted_transcriptomics_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+</&>
+</div>
+
+<div class="well">
+<&| /page/info_section.mas, title=>'Transcriptomic Analyses', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage your transcriptomic analyses' &>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <table class="table table-bordered table-hover" id="analyses_by_user_table">
+              <thead>
+              <tr>
+                <th>
+                  Analysis Name
+                </th>
+                <th>
+                  Description
+                </th>
+                <th>
+                  Model Type
+                </th>
+                <th>
+                  Protocol
+                </th>
+                <th>
+                  Application
+                </th>
+                <th>
+                  Language
+                </th>
+              </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+        </div>
+    </div>
+</&>
+</div>
+

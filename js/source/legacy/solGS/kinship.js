@@ -590,6 +590,6 @@ jQuery(document).ready(function () {
     var kinshipPopsRows = solGS.kinship.getKinshipPopsRows(kinshipPops);
 
     solGS.kinship.displayKinshipPopsTable(tableId, kinshipPopsRows);
-    jQuery("#add_new_pops").show();
+    jQuery("#create_new_list_dataset").show();
   }
 });

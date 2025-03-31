@@ -57,6 +57,8 @@ $trial_stock_count => undef
 $management_factor_types => ()
 $trial_owner => undef
 $latest_trial_activity => undef
+$stock_id => undef
+$stockref => undef
 
 
 $project_id => undef
@@ -118,6 +120,9 @@ $project_id => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Soil Data</h4>", info_section_subtitle => 'View and upload soil data for this trial.', icon_class => "glyphicon glyphicon-info-sign", buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_upload_soil_data_button' >Upload Soil Data</button>", info_section_id => "trial_soil_data_section"&>
 
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Images</h4>", info_section_subtitle => 'View images of this trial.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='upload_images_link'>Add New Image</button> <button class='btn btn-sm btn-primary' style='margin:3px' id='image_download_button'>Download Images</button>", icon_class => "glyphicon glyphicon-camera", info_section_id => "trial_images_section" &>
+
+
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>JBrowse Genome Alignments For this Experiment</h4>", info_section_subtitle => 'View JBrowse alignments for accessions in this trial.', icon_class => "glyphicon glyphicon-align-left", info_section_id => "trial_jbrowse_data" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_type => $trial_type, info_section_title => "<h4 style='display:inline'>Experiment Linkage</h4>", info_section_subtitle => 'View other experiments, crosses, and genotyping plates linked to this experiment.', icon_class => "glyphicon glyphicon-link", info_section_id => "trial_linkage_section" &>
@@ -161,6 +166,8 @@ $project_id => undef
 <& /breeders_toolbox/trial/upload_soil_data_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 <& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
+
+<& /breeders_toolbox/upload_images.mas &>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
