@@ -45,7 +45,7 @@ $locations => undef
 
 jQuery(document).ready(function() {
 
-    jQuery('button[name=delete_pheno_file_link]').click( function() {
+    jQuery('.files_datatables').on('click', 'button[name=delete_pheno_file_link]', function() {
         var delete_phenotypes_file_id = jQuery(this).data('file_id');
         if (confirm('Are you sure you want to delete all phenotype values related to this file from the database and make this file obsolete?')){
             jQuery.ajax ( {
