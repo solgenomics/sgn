@@ -349,10 +349,40 @@ my $plate_genotype_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE
 is($kasp_genotyping_plate_message, $plate_genotype_data);
 
 #delete genotyping data from each plate
+
+my $before_deleting_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
+my $before_deleting_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
+my $before_deleting_genotype = $schema->resultset("Genetic::Genotype")->search({})->count();
+my $before_deleting_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->search({})->count();
+my $before_deleting_experiment_genotype = $schema->resultset("NaturalDiversity::NdExperimentGenotype")->search({})->count();
+my $before_deleting_experiment_project = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({})->count();
+my $before_deleting_experiment_protocol = $schema->resultset("NaturalDiversity::NdExperimentProtocol")->search({})->count();
+my $before_deleting_protocol = $schema->resultset("NaturalDiversity::NdProtocol")->search({})->count();
+my $before_deleting_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({})->count();
+
 $mech->get_ok('http://localhost:3010/ajax/breeders/plate_genotyping_data_delete?genotyping_plate_id='.$plate_id);
 $response = decode_json $mech->content;
 is_deeply($response, {success=>1});
 
+my $after_deleting_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
+my $after_deleting_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
+my $after_deleting_genotype = $schema->resultset("Genetic::Genotype")->search({})->count();
+my $after_deleting_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->search({})->count();
+my $after_deleting_experiment_genotype = $schema->resultset("NaturalDiversity::NdExperimentGenotype")->search({})->count();
+my $after_deleting_experiment_project = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({})->count();
+my $after_deleting_experiment_protocol = $schema->resultset("NaturalDiversity::NdExperimentProtocol")->search({})->count();
+my $after_deleting_protocol = $schema->resultset("NaturalDiversity::NdProtocol")->search({})->count();
+my $after_deleting_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({})->count();
+
+is($after_deleting_experiment, $before_deleting_experiment-4); #4 samples
+is($after_deleting_experiment_stock, $before_deleting_experiment_stock-4);
+is($after_deleting_genotype, $before_deleting_genotype-4);
+is($after_deleting_genotypeprop, $before_deleting_genotypeprop-12); #3 chromosomes
+is($after_deleting_experiment_genotype, $before_deleting_experiment_genotype-4);
+is($after_deleting_experiment_project, $before_deleting_experiment_project-4);
+is($after_deleting_experiment_protocol, $before_deleting_experiment_protocol-4);
+is($after_deleting_protocol, $before_deleting_protocol-1);
+is($after_deleting_protocolprop, $before_deleting_protocolprop-7); #3 chromosome
 
 ## DELETE genotyping protocols, data, plate and projects
 $mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_1?sgn_session_id=$sgn_session_id");
