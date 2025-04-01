@@ -105,8 +105,8 @@ CREATE TABLE sgn_people.sp_job(
     sp_person_id BIGINT REFERENCES sgn_people.sp_person,
     backend_id VARCHAR(255) NOT NULL,
     status VARCHAR(100),
-    create_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    finish_timestamp TIMESTAMPTZ, 
+    create_timestamp TIMESTAMPTZ(0) NOT NULL DEFAULT NOW(),
+    finish_timestamp TIMESTAMPTZ(0), 
     type_id BIGINT REFERENCES public.cvterm,
     args JSONB
 );

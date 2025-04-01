@@ -58,6 +58,7 @@ package CXGN::Job;
 use Moose;
 use Moose::Util::TypeConstraints;
 use DateTime;
+use DateTime::Format::ISO8601;
 use Data::Dumper;
 use File::Slurp qw( write_file read_file );
 use JSON::Any;
@@ -208,7 +209,7 @@ my $job = CXGN::Jobs->new({
 
 =cut
 
-has 'args' => ( isa => 'Maybe[Hashref]', is => 'rw' );
+has 'args' => ( isa => 'Maybe[HashRef]', is => 'rw' );
 
 =head1 INSTANCE METHODS
 
@@ -260,6 +261,10 @@ sub check_status {
     my $self = shift;
 
     my $backend_id = $self->backend_id();
+
+    if (!$self->retrieve_argument('logfile')) {
+        die "No logfile. Cannot get finish timestamp.\n";
+    }
 
     if (!$backend_id || !$self->has_sp_job_id()) {
         return "";
@@ -323,9 +328,9 @@ sub delete {
 
     eval {
         $row->delete();
-        my $job_id = $self->sp_jb_id();
+        my $job_id = $self->sp_job_id();
         my @rows = read_file( $self->args->{logfile}, { binmode => ':utf8' } );
-        my @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
+        @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
         write_file($self->args->{logfile},{binmode => ':utf8'},@rows);
     };
     if ($@) {
@@ -410,7 +415,7 @@ sub submit {
 
     my $sp_job_id = $self->store();
 
-    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S"); echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$self->args->{logfile};
+    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S+%z"); echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$self->args->{logfile};
 
     my $job;
     my $backend_id;
@@ -466,7 +471,6 @@ sub store {
                 backend_id => $self->backend_id(),
                 args => JSON::Any->encode($self->args()),
                 sp_person_id => $self->sp_person_id(),
-                create_timestamp => $self->create_timestamp(),
                 status => $self->status(),
                 finish_timestamp => $self->finish_timestamp(),
                 type_id => $cvterm_id
@@ -508,6 +512,100 @@ sub get_user_submitted_jobs {
     }
 
     return \@user_jobs;
+}
+
+=head2 delete_dead_jobs(bcs_schema, people_schema, user_id)
+
+Deletes dead jobs (failed or timed out) belonging to a user_id
+
+=cut
+
+sub delete_dead_jobs {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.\n";
+    } 
+
+    eval {
+        my @job_ids;
+        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+        while(my $row = $rs->next()) {
+            push @job_ids, $row->sp_job_id();
+        }
+        foreach my $job_id (@job_ids){
+            my $job = $class->new({
+                people_schema => $people_schema,
+                schema => $bcs_schema,
+                sp_job_id => $job_id
+            });
+            $job->delete();
+        }
+    };
+
+    if ($@) {
+        die "Encountered an error trying to delete jobs: $@\n";
+    }
+} 
+
+=head2 delete_jobs_older_than(bcs_schema, people_schema, user_id, time_limit)
+
+Deletes jobs belonging to user_id older than the given time string.
+
+=cut
+
+sub delete_jobs_older_than {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+    my $time_limit = shift;
+
+    if (!$sp_person_id || !$time_limit) {
+        die "Need to supply a user id and a time interval.\n";
+    } 
+
+    my $timetable = {
+        'one_week' => 7,
+        'one_month' => 30,
+        'six_months' => 180,
+        'one_year' => 365
+    };
+
+    $time_limit = $timetable->{$time_limit};
+
+    eval {
+        my @job_ids;
+        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+        while(my $row = $rs->next()) {
+            my $create_timestamp = $row->create_timestamp();
+            $create_timestamp =~ s/ /T/;
+            my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+            my $now = DateTime->now();
+            my $age = ( $now->epoch - $start_time->epoch ) / 86400;
+
+            print STDERR "[SERVER]",$now, "||", $start_time, " || ", $age, "\n";
+
+            if ($age > $time_limit) {
+                push @job_ids, $row->sp_job_id();
+            }
+        }
+        foreach my $job_id (@job_ids) {
+            my $job = $class->new({
+                people_schema => $people_schema,
+                schema => $bcs_schema,
+                sp_job_id => $job_id
+            });
+            $job->delete();
+        }
+    };
+
+    if ($@) {
+        die "Encountered an error trying to delete jobs: $@\n";
+    }
 }
 
 1;

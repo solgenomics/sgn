@@ -16,12 +16,12 @@ Ryan Preble <rsp98@cornell.edu>
 $sp_person_id
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery.dataTables"] &>
+<& /util/import_javascript.mas, entries => ["job"], classes => ["jquery.dataTables"] &>
 
 <div id = job_log_div style="display:none;">
     <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Dismiss failed and timed out jobs</button>
     <br>
-    <button id="clear_jobs_cache_button" class='btn btn-sm btn-primary'>Dismiss all jobs older than</button> 
+    <button id="clear_old_jobs_button" class='btn btn-sm btn-primary'>Dismiss all jobs older than</button> 
     <select id="keep_recent_jobs_select">
         <option value='one_week'>One week</option>
         <option value='one_month'>One month</option>
@@ -44,6 +44,12 @@ jQuery(document).ready(function (){
                 jQuery('#job_log_div').removeAttr('style');
                 jQuery('#user_job_log_table').DataTable(response.data);
                 console.log(response.data);
+                jQuery('#clear_dead_jobs_button').click(function() {
+                    jsMod['job'].dismiss_dead_jobs(<% $sp_person_id %>);
+                });
+                jQuery('#clear_old_jobs_button').click(function() {
+                    jsMod['job'].keep_recent_jobs(<% $sp_person_id %>);
+                });
             }
         }, 
         error: function(response) {
