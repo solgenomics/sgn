@@ -301,7 +301,8 @@ sub generate_model_sommer {
 	}
 	
 	if ($mmer_random_factors){
-	    $formula .=" ~ vsr(" .$mmer_random_factors . ")" ;
+		$mmer_random_factors = join(" + ", map { "vsr($_)" } map { s/^\s+|\s+$//gr } split(/\+/, $mmer_random_factors));
+	    $formula .=" ~ " .$mmer_random_factors ;
 	}
 	if ($mmer_fixed_factors_interaction) {
 	    $formula.=" ".$mmer_fixed_factors_interaction;
