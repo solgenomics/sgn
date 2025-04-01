@@ -772,7 +772,7 @@ sub seedlot_list_details {
             $content_type = 'cross';
         }
 
-        push @seedlot_details, [$id, $seedlot_obj->uniquename(), $content_id, $content_name, $content_type, $seedlot_obj->description(), $seedlot_obj->box_name(), $seedlot_obj->get_current_count_property(), $seedlot_obj->get_current_weight_property(), $seedlot_obj->quality()];
+        push @seedlot_details, [$id, $seedlot_obj->uniquename(), $content_id, $content_name, $content_type, $seedlot_obj->description(), $seedlot_obj->box_name(), $seedlot_obj->get_current_count_property(), $seedlot_obj->get_current_weight_property(), $seedlot_obj->quality(), $seedlot_obj->material_type()];
 
     }
 

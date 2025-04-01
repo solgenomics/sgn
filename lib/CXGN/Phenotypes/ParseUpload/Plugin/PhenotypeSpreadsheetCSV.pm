@@ -183,7 +183,7 @@ sub parse {
             if ($trait_name) {
                 $traits_seen{$trait_name} = 1;
                 my $value_string = '';
-                if ($columns[$col_num]){
+                if ($columns[$col_num] || $columns[$col_num] == 0){
                     $value_string = $columns[$col_num];
                 }
                 #print STDERR $value_string."\n";
