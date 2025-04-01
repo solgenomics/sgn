@@ -48,13 +48,15 @@ has 'genotyping_plate_id' => (
 );
 
 
-sub delete {
+sub delete_genotype_data {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $genotyping_project_id = $self->genotyping_project_id();
     my $genotyping_plate_id = $self->genotyping_plate_id();
     my $genotyping_protocol_id = $self->protocol_id();
     my $dbh = $schema->storage->dbh;
+    my $empty_protocol_name;
+    my $empty_protocol_id;
 
     eval {
         $dbh->begin_work();
@@ -122,15 +124,30 @@ sub delete {
             $h3->execute();
         }
 
-        foreach my $id (keys %check_protocol_ids) {
-            my $experiment_count = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->search({nd_protocol_id => $id})->count();
+        my @protocol_ids = keys %check_protocol_ids;
+        if (scalar (@protocol_ids) > 1) {
+
+        } else {
+            my $protocol_id = $protocol_ids[0];
+            print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+            my $experiment_count = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->search({nd_protocol_id => $protocol_id})->count();
             print STDERR "EXPERIMENT COUNT =".Dumper($experiment_count)."\n";
             if ($experiment_count == 0) {
-                my $delete_protocol_q = "DELETE from nd_protocol WHERE nd_protocol_id=?;";
-                my $delete_protocol_h = $schema->storage->dbh()->prepare($delete_protocol_q);
-                $delete_protocol_h->execute($id);
+                $empty_protocol_name = $schema->resultset("NaturalDiversity::NdProtocol")->find({nd_protocol_id => $protocol_id })->name();
+                $empty_protocol_id = $protocol_id;
+                print STDERR "EMPTY PROTOCOL NAME =".Dumper($empty_protocol_name)."\n";
             }
         }
+
+#        foreach my $id (keys %check_protocol_ids) {
+#            my $experiment_count = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->search({nd_protocol_id => $id})->count();
+#            print STDERR "EXPERIMENT COUNT =".Dumper($experiment_count)."\n";
+#            if ($experiment_count == 0) {
+#                my $delete_protocol_q = "DELETE from nd_protocol WHERE nd_protocol_id=?;";
+#                my $delete_protocol_h = $schema->storage->dbh()->prepare($delete_protocol_q);
+#                $delete_protocol_h->execute($id);
+#            }
+#        }
     };
 
     if ($@) {
@@ -139,9 +156,12 @@ sub delete {
         return $@;
     } else {
         $dbh->commit();
-        return 0;
+        if ($empty_protocol_id) {
+            return {empty_protocol_name => $empty_protocol_name, empty_protocol_id => $empty_protocol_id};
+        } else {
+            return 0;
+        }
     }
-
 }
 
 

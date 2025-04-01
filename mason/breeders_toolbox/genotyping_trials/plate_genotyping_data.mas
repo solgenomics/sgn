@@ -39,8 +39,8 @@ $trial_id
                             <div class="col-sm-8">
                                 <select class="form-control" id="genotyping_plate_sample_unit_level">
                                     <option value="accession">accession</option>
-                                    <option value="genotyping_plate_sample_name">genotyping plate sample name</option>
-                                    <option value="sample_name_and_accession">genotyping plate sample name and accession</option>
+                                    <option value="genotyping_plate_sample_name">sample name</option>
+                                    <option value="sample_name_and_accession">sample name and accession name</option>
                                 </select>
                             </div>
                         </div>

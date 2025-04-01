@@ -710,13 +710,19 @@ sub plate_genotyping_data_delete_GET : Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $genotyping_data = CXGN::Genotype::GenotypingDataDelete->new( { bcs_schema => $schema, genotyping_plate_id => $genotyping_plate_id });
-    my $error = $genotyping_data->delete();
+    my $response = $genotyping_data->delete_genotype_data();
 
-    print STDERR "ERROR = $error\n";
-
-    if ($error) {
-        $c->stash->{rest} = { error => "An error occurred attempting to delete genotyping data. ($@)" };
-        return;
+    print STDERR "RESPONSE = $response\n";
+    my $empty_protocol_name;
+    my $empty_protocol_id;
+    if ($response) {
+        if ($response->{empty_protocol_id}) {
+            $empty_protocol_id = $response->{empty_protocol_id};
+            $empty_protocol_name = $response->{empty_protocol_name};
+        } else {
+            $c->stash->{rest} = { error => "An error occurred attempting to delete genotyping data. ($@)" };
+            return;
+        }
     }
 
     my $basepath = $c->config->{basepath};
@@ -730,7 +736,11 @@ sub plate_genotyping_data_delete_GET : Args(0) {
     my $async_refresh = CXGN::Tools::Run->new();
     $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
 
-    $c->stash->{rest} = { success => 1 };
+    if ($empty_protocol_id) {
+        $c->stash->{rest} = { empty_protocol_id => $empty_protocol_id, empty_protocol_name => $empty_protocol_name };
+    } else {
+        $c->stash->{rest} = { success => 1 };
+    }
 
 }
 

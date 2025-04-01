@@ -389,6 +389,9 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    let empty_protocol_id;
+    let empty_protocol_name;
+
     jQuery('#delete_plate_genotyping_data').click(function() {
         const trial_id = get_trial_id();
         const confirmation = confirm("Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone.");
@@ -406,6 +409,11 @@ jQuery(document).ready(function ($) {
                 },
                 success: function(response) {
                     jQuery('#working_modal').modal('hide');
+                    if (response.empty_protocol_id) {
+                        empty_protocol_id = response.empty_protocol_id;
+                        empty_protocol_name = response.empty_protocol_name;
+                        alert(empty_protocol_name);                        
+                    }
                     if (response.success == 1) {
                         alert('Deletion was successful');
                         location.reload();
