@@ -52,27 +52,33 @@ sub get_matches {
     
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
-    print STDERR "stocklist: @stock_list";
-    print STDERR "max distance: $max_distance";
 
     foreach my $stock_name (@stock_list) {
-        print STDERR "is this triggering 1\n";
         my $exact_query = "SELECT stock.uniquename FROM stock WHERE stock.type_id = ? AND LOWER(stock.uniquename) = LOWER(?)";
         my $exact_sth = $schema->storage->dbh()->prepare($exact_query);
         $exact_sth->execute($stock_type_id, $stock_name);
         my $exact_matches = $exact_sth->fetchall_arrayref({});
-        print STDERR "is this triggering\n";
+
         if (@$exact_matches) {
             foreach my $match (@$exact_matches) {
                 push @found_stocks, {matched_string => $stock_name, unique_name => $match->{uniquename}};
             }
-            #print STDERR "Found Stocks: @found_stocks";
             next;
         }
 
-        # my $synonym_query = "SELECT stockprop.value FROM stock LEFT JOIN stockprop USING(stock_id) WHERE";
+        my $synonym_query = "SELECT stock.uniquename, stockprop.value FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$stock_type_id AND LOWER(stock.uniquename) = LOWER(?) AND stockprop.value IS NOT NULL";
+        my $synonym_sth = $schema->storage->dbh()->prepare($synonym_query);
+        $synonym_sth->execute($stock_name);
+        my $synonym_matches = $synonym_sth->fetchall_arrayref({});
 
-        my $stockname_length = length($_);
+        if (@$synonym_matches) {
+            foreach my $match (@$synonym_matches) {
+                push @found_stocks, {matched_string => $stock_name . "(SYNONYM OF)" . $match->{uniquename}, is_synonym => 1, unique_name => $match->{uniquename}};
+            }
+            next;
+        }
+
+        my $stockname_length = length($stock_name);
 
         if ($stockname_length <= 10) {
             $max_distance = 2;
