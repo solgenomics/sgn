@@ -22,5 +22,13 @@ Isaak Y Tecle (iyt2@cornell.edu)
  		 <button id="save_gebvs" class="btn btn-success">Save GEBVs</button>	
 		<& /solgs/spinner/spinner.mas &>
 		<div id="gebvs_save_message" class="message"" style="display:none"></div>
+
+ 		<button id="save_adjusted_means" class="btn btn-success">Save adjustmed means</button>	
+		<& /solgs/spinner/spinner.mas &>
+		<div id="gebvs_save_message" class="message"" style="display:none"></div>
+
+        <button id="save_gebvs_adjusted_means" class="btn btn-success">Save both</button>	
+		<& /solgs/spinner/spinner.mas &>
+		<div id="gebvs_save_message" class="message"" style="display:none"></div>
 </div>
 <br />
