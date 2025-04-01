@@ -412,11 +412,13 @@ jQuery(document).ready(function ($) {
                     if (response.empty_protocol_id) {
                         empty_protocol_id = response.empty_protocol_id;
                         empty_protocol_name = response.empty_protocol_name;
-                        alert(empty_protocol_name);                        
+
+                        const empty_protocol_message_string = "The protocol: " +empty_protocol_name+ " has no associated genotyping data.";
+                        jQuery('#empty_protocol_message').html(empty_protocol_message_string);
+                        jQuery("#empty_protocol_message_dialog").modal("show");
                     }
                     if (response.success == 1) {
-                        alert('Deletion was successful');
-                        location.reload();
+                        jQuery("#genotyping_data_delete_message_dialog").modal("show");
                     }
                     if (response.error) {
                         alert(response.error);

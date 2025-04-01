@@ -47,6 +47,10 @@ has 'genotyping_plate_id' => (
     is => 'rw',
 );
 
+has 'empty_protocol_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
 
 sub delete_genotype_data {
     my $self = shift;
