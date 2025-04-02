@@ -472,7 +472,7 @@ sub store {
         if ($self->has_sp_job_id()) {
             my $row = $self->people_schema()->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
             $row->backend_id($self->backend_id());
-            $row->create_timestamp($self->create_timestamp());
+            $row->create_timestamp($self->create_timestamp() ? $self->create_timestamp() : DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
             $row->args(JSON::Any->encode($self->args()));
             $row->sp_person_id($self->sp_person_id());
             $row->status($self->status());
@@ -480,6 +480,7 @@ sub store {
             $row->type_id($self->type_id());
             $row->update();
         } else {
+            print STDERR "[SERVER] Current time: ".DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S')."\n";
             my $cvterm_row = $self->schema->resultset('Cv::Cvterm')->find({ name => $self->type() });
             my $cvterm_id = $cvterm_row->cvterm_id();
             my $row = $self->people_schema()->resultset("SpJob")->create({
@@ -488,7 +489,8 @@ sub store {
                 sp_person_id => $self->sp_person_id(),
                 status => $self->status(),
                 finish_timestamp => $self->finish_timestamp(),
-                type_id => $cvterm_id
+                type_id => $cvterm_id,
+                create_timestamp => DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S')
             });
             $self->sp_job_id($row->sp_job_id());
         }
