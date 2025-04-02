@@ -53,9 +53,18 @@ sub get_matches {
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
 
+    my $exact_query = "SELECT stock.uniquename FROM stock WHERE stock.type_id = ? AND LOWER(stock.uniquename) = LOWER(?)";
+    my $exact_sth = $schema->storage->dbh()->prepare($exact_query);
+
+    my $synonym_query = "SELECT stock.uniquename, stockprop.value FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$stock_type_id AND LOWER(stock.uniquename) = LOWER(?) AND stockprop.value IS NOT NULL";
+    my $synonym_sth = $schema->storage->dbh()->prepare($synonym_query);
+
+    my $fuzzy_query = "SELECT stock.uniquename, levenshtein(LOWER(stock.uniquename), LOWER(?)) AS distance
+                    FROM stock
+                    WHERE stock.type_id = ? AND levenshtein(LOWER(stock.uniquename), LOWER(?)) <=?";
+    my $fuzzy_sth = $schema->storage->dbh->prepare($fuzzy_query);
+
     foreach my $stock_name (@stock_list) {
-        my $exact_query = "SELECT stock.uniquename FROM stock WHERE stock.type_id = ? AND LOWER(stock.uniquename) = LOWER(?)";
-        my $exact_sth = $schema->storage->dbh()->prepare($exact_query);
         $exact_sth->execute($stock_type_id, $stock_name);
         my $exact_matches = $exact_sth->fetchall_arrayref({});
 
@@ -66,8 +75,6 @@ sub get_matches {
             next;
         }
 
-        my $synonym_query = "SELECT stock.uniquename, stockprop.value FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$stock_type_id AND LOWER(stock.uniquename) = LOWER(?) AND stockprop.value IS NOT NULL";
-        my $synonym_sth = $schema->storage->dbh()->prepare($synonym_query);
         $synonym_sth->execute($stock_name);
         my $synonym_matches = $synonym_sth->fetchall_arrayref({});
 
@@ -88,10 +95,6 @@ sub get_matches {
             $max_distance = 5;
         }
 
-        my $fuzzy_query = "SELECT stock.uniquename, levenshtein(LOWER(stock.uniquename), LOWER(?)) AS distance
-                           FROM stock
-                           WHERE stock.type_id = ? AND levenshtein(LOWER(stock.uniquename), LOWER(?)) <=?";
-        my $fuzzy_sth = $schema->storage->dbh->prepare($fuzzy_query);
         $fuzzy_sth->execute($stock_name, $stock_type_id, $stock_name, $max_distance);
         my $fuzzy_matches = $fuzzy_sth->fetchall_arrayref({});
 
