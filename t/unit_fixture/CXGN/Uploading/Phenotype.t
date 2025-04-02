@@ -1330,6 +1330,9 @@ is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits
 
 done_testing();
 
+$f->clean_up_db();
+
+
 #check that parse fails for plant spreadsheet file when using plot parser
 # $parser = CXGN::Phenotypes::ParseUpload->new();
 # $filename = "t/data/trial/upload_phenotypin_spreadsheet_plants.xlsx";
