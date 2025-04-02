@@ -36,7 +36,6 @@ export function init() {
             this.plot_object = Object;
             this.meta_data = {};
             this.brapi_plots = Object;
-            this.heatmap_queried = false;
             this.heatmap_selected = false;
             this.heatmap_selection = String;
             this.heatmap_object = Object;
@@ -742,7 +741,7 @@ export function init() {
             var local_this = this;
 
             if (this.heatmap_selected) {
-                let plots_with_selected_trait = heatmap_object[trait_name];
+                let plots_with_selected_trait = heatmap_object[trait_name] || {};
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
                     trait_vals.push(obs_unit.val);
                 }
@@ -851,6 +850,7 @@ export function init() {
                                 v = heatmap_object[trait_name][plot.observationUnitDbId].val;
                                 v = isNaN(v) ? v : Math.round((parseFloat(v) + Number.EPSILON) * 100) / 100;
                             }
+                            html += `<br /><strong>Trait Name:</strong> ${local_this.heatmap_selection}`;
                             html += `<br /><strong>Trait Value:</strong> ${v}`;
                         }
                     }
