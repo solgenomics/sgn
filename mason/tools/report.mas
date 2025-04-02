@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
 
 
-<& /page/page_title.mas, title=>"Database Report" &>
+<& /page/page_title.mas, title => "Personalized Report Generator" &>
 
 <div id="mixedmodel_tool">
 </div>
@@ -64,17 +64,31 @@
     font-size: 14px;
     resize: vertical;
   }
+  #loading-message {
+    display: none;
+    color: blue;
+    font-weight: bold;
+    margin-top: 15px;
+  }
+
+  #final-message {
+    display: none;
+    color: green;
+    font-weight: bold;
+    margin-top: 15px;
+  }
+
+  .form-section {
+    margin-bottom: 20px;
+  }
+
+  .date-pair {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
 </style>
 
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personalized Report Generator</title>
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-</head>
 
 <body>
   <div>
