@@ -1,11 +1,11 @@
 
 =head1 NAME
 
-CXGN::Genotype::GenotypingDataDelete - an object to delete plate, project or protocol genotyping data
+CXGN::Genotype::Delete - an object to delete plate, project or protocol genotyping data
 
 =head1 DESCRIPTION
 
-    my $genotyping_data_delete = CXGN::Genotype::GenotypingDataDelete->new( { schema => $schema, plate_id => 37347 });
+    my $genotyping_data_delete = CXGN::Genotype::Delete->new( { schema => $schema, plate_id => 37347 });
 
 
 =head1 AUTHORS
@@ -15,7 +15,7 @@ CXGN::Genotype::GenotypingDataDelete - an object to delete plate, project or pro
 =head1 METHODS
 
 =cut
-package CXGN::Genotype::GenotypingDataDelete;
+package CXGN::Genotype::Delete;
 
 use Moose;
 use SGN::Model::Cvterm;

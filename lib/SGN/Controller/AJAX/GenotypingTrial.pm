@@ -13,7 +13,7 @@ use CXGN::Genotype::Protocol;
 use CXGN::Genotype::CreatePlateOrder;
 use CXGN::Genotype::StoreGenotypingProject;
 use CXGN::Stock::TissueSample::Search;
-use CXGN::Genotype::GenotypingDataDelete;
+use CXGN::Genotype::Delete;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -709,10 +709,9 @@ sub plate_genotyping_data_delete_GET : Args(0) {
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
-    my $genotyping_data = CXGN::Genotype::GenotypingDataDelete->new( { bcs_schema => $schema, genotyping_plate_id => $genotyping_plate_id });
+    my $genotyping_data = CXGN::Genotype::Delete->new( { bcs_schema => $schema, genotyping_plate_id => $genotyping_plate_id });
     my $response = $genotyping_data->delete_genotype_data();
 
-    print STDERR "RESPONSE = $response\n";
     my $empty_protocol_name;
     my $empty_protocol_id;
     if ($response) {

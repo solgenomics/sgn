@@ -108,7 +108,6 @@ jQuery(document).ready(function(){
                     if (response.empty_protocol_id) {
                         empty_protocol_id = response.empty_protocol_id;
                         empty_protocol_name = response.empty_protocol_name;
-                        alert(empty_protocol_id);
 
                         const empty_protocol_message_string = "The protocol: " +empty_protocol_name+ " has no associated genotyping data.";
                         jQuery('#empty_protocol_message').html(empty_protocol_message_string);

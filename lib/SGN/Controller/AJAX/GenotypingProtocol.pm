@@ -323,7 +323,7 @@ sub empty_protocol_delete_GET : Args(0) {
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
-    my $protocol = CXGN::Genotype::GenotypingDataDelete->new( { bcs_schema => $schema, empty_protocol_id => $empty_protocol_id });
+    my $protocol = CXGN::Genotype::Delete->new( { bcs_schema => $schema, empty_protocol_id => $empty_protocol_id });
     my $error = $protocol->delete_empty_protocol();
 
     if ($error) {
