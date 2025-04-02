@@ -5,7 +5,7 @@ convert_td_to_obo.pl - script to convert trait dictionary file from CO to obo fo
 
 =head1 SYNOPSIS
 
-perl convert_td_to_obo.pl  -f trait dictionary file <.xls format>  -o output file name <.obo format> 
+perl convert_td_to_obo.pl  -f trait dictionary file <.xls format>  -o output file name <.obo format>
 
 =head1 DESCRIPTION
 
@@ -95,7 +95,6 @@ my $worksheet = $workbook->worksheet(0);
      'Variable synonyms'    => 'variable_synonyms_col',
      'Variable status'      => 'variable_status_col',
      'Variable label'       => 'variable_label_col',
-     'Variable name'        => 'variable_name_col',
      'Variable description' => 'variable_def_col',
      'Variable Xref'        => 'variable_xref_col',
      'Trait ID'             => 'trait_id_col',
@@ -132,7 +131,7 @@ my $worksheet = $workbook->worksheet(0);
 foreach my $col (0 .. $worksheet->col_range()) {
     my $header = $worksheet->get_cell(0, $col)->value();
     if (exists $column_map{$header}) {
-        no strict 'refs'; # Allow dynamic variable names
+        no warnings;
         ${ $column_map{$header} } = $col;
     }
 }
