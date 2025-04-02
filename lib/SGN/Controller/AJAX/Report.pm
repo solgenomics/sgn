@@ -13,13 +13,14 @@ use Excel::Writer::XLSX;
 use POSIX qw(strftime);
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
-BEGIN { extends 'Catalyst::Controller::REST' };
+BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
-    default => 'application/json',
-    stash_key => 'rest',
-    map => { 'application/json' => 'JSON' },
-   );
+    default    => 'application/json',
+    stash_key  => 'rest',
+    map        => { 'application/json' => 'JSON' }
+);
+
 
 # Assume $c is available from Catalyst.
 
@@ -86,9 +87,6 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
     my @user_roles = $c->user ? $c->user->roles : ();
     my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
 
-    print("Here are roles:\n");
-    print Dumper \$curator;
-
     unless ($curator) {
         $c->stash->{rest} = {
             success => JSON::false,
@@ -125,75 +123,65 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
     ##Creating directory ###
     make_path($out_directory);
 
-    ## === Background process === ###
-    # my $pid = fork();
-    # if (!defined $pid) {
-    #     die "Could not fork: $!";
-    # }
 
-    # if ($pid == 0) {
-        # Child process
-        close(STDOUT);
-        close(STDERR);
+    # Child process
+    close(STDOUT);
+    close(STDERR);
 
-        open STDOUT, '>>', '/tmp/report_runner.log';
-        open STDERR, '>>', '/tmp/report_runner.log';
+    open STDOUT, '>>', '/tmp/report_runner.log';
+    open STDERR, '>>', '/tmp/report_runner.log';
 
-        my @excel_files_to_zip;  # <--- to collect all xlsx files
-        my $zip_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);
+    my @excel_files_to_zip;  # <--- to collect all xlsx files
+    my $zip_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);
+    
+    print("aui os scripts:\n");
+    print Dumper \$report_scripts;
+    foreach my $script (@$report_scripts) {
+        my $script_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);  # one time
+
+        my $json_filename   = "${script}_${script_date}.json";
+        my $excel_filename  = "${script}_${script_date}.xlsx";
         
-        print("aui os scripts:\n");
-        print Dumper \$report_scripts;
-        foreach my $script (@$report_scripts) {
-            my $script_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);  # one time
+        my $script_cmd = "script -q /dev/null -c \"perl ${basepath}${reports_dir}${script}.pl -U $dbuser -H $dbhost -P $dbpass -D $dbname -o '$out_directory' -f '$json_filename' -s '$start_date' -e '$end_date'\"";
 
-            my $json_filename   = "${script}_${script_date}.json";
-            my $excel_filename  = "${script}_${script_date}.xlsx";
-            
-            my $script_cmd = "script -q /dev/null -c \"perl ${basepath}${reports_dir}${script}.pl -U $dbuser -H $dbhost -P $dbpass -D $dbname -o '$out_directory' -f '$json_filename' -s '$start_date' -e '$end_date'\"";
+        print("Starting command $script_cmd \n");
 
-            print("Starting command $script_cmd \n");
+        my $run_script = CXGN::Tools::Run->new();
+        my $result_hash = $run_script->run($script_cmd);
 
-            my $run_script = CXGN::Tools::Run->new();
-            my $result_hash = $run_script->run($script_cmd);
+        my $json_file = File::Spec->catfile($out_directory, $json_filename);
+        print("Reading output from file: $json_file \n");
 
-            my $json_file = File::Spec->catfile($out_directory, $json_filename);
-            print("Reading output from file: $json_file \n");
-
-            my $json_text = '';
-            if (-e $json_file) {
-                $json_text = read_file($json_file);
-            } else {
-                warn "JSON file $json_file does not exist.";
-            }
-
-            my $decoded_json;
-            eval {
-                $decoded_json = decode_json($json_text);
-            };
-            if ($@) {
-                warn "Failed to decode JSON from script $script: $@";
-                $decoded_json = {};
-            }
-
-            my $excel_file = write_json_to_excel($out_directory, $excel_filename, $decoded_json);
-            push @excel_files_to_zip, $excel_filename;
-
-            print "Excel file created: $excel_file\n";
+        my $json_text = '';
+        if (-e $json_file) {
+            $json_text = read_file($json_file);
+        } else {
+            warn "JSON file $json_file does not exist.";
         }
 
+        my $decoded_json;
+        eval {
+            $decoded_json = decode_json($json_text);
+        };
+        if ($@) {
+            warn "Failed to decode JSON from script $script: $@";
+            $decoded_json = {};
+        }
 
-        my $zip_filename = "report_${zip_date}.zip";
-        my $zip_path = $out_directory . $zip_filename;
-        zip_excel_reports($out_directory, \@excel_files_to_zip, $zip_path);
+        my $excel_file = write_json_to_excel($out_directory, $excel_filename, $decoded_json);
+        push @excel_files_to_zip, $excel_filename;
 
-        print "All Excel files zipped into: $zip_path\n";
-
-        send_report_zip_to_emails($emails, $zip_path, $zip_filename);
+        print "Excel file created: $excel_file\n";
+    }
 
 
-        # exit(0); # child done
-    # }
+    my $zip_filename = "report_${zip_date}.zip";
+    my $zip_path = $out_directory . $zip_filename;
+    zip_excel_reports($out_directory, \@excel_files_to_zip, $zip_path);
+
+    print "All Excel files zipped into: $zip_path\n";
+
+    send_report_zip_to_emails($emails, $zip_path, $zip_filename);
 
     ### === Parent process returns immediately === ###
     $c->stash->{rest} = {
@@ -245,8 +233,6 @@ sub send_report_zip_to_emails {
         print STDERR "Sent report ZIP to: $email\n";
     }
 }
-
-
 
 
 1;

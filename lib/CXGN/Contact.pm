@@ -11,6 +11,12 @@ use CXGN::Apache::Request;
 use CXGN::Tools::Text;
 use SGN::Context;
 
+=head1 AUTHOR
+
+john binns - John Binns <zombieite@gmail.com>
+
+=cut
+
 =head2 send_email
 
   Usage:
@@ -156,10 +162,5 @@ sub send_email {
     }
 }
 
-=head1 AUTHOR
 
-john binns - John Binns <zombieite@gmail.com>
-
-=cut
-
-1; # do not remove
+1;
