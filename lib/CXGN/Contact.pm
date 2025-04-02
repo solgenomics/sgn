@@ -33,20 +33,21 @@ john binns - John Binns <zombieite@gmail.com>
 sub send_email {
     my ( $subject, $body, $mailto, $replyto, $attachment_file ) = @_;
 
-    my $request_info = "";
+    my $request_info = '';
     my $vhost_conf   = SGN::Context->new;
 
-    my @main_production_site_url = split "\:\/\/", $vhost_conf->get_conf('main_production_site_url');
-    my $hostname = $main_production_site_url[1];
-    chomp($hostname);
+    my @main_production_site_url = split /:\/\//, $vhost_conf->get_conf('main_production_site_url');
+    my $hostname = $main_production_site_url[1] || 'localhost';
+    chomp $hostname;
+
     my $mailfrom = $vhost_conf->get_conf('www_user') . '@' . $hostname;
 
-    if ( $mailto and eval { $vhost_conf->get_conf($mailto) } ) {
+    if ( $mailto && eval { $vhost_conf->get_conf($mailto) } ) {
         $mailto = $vhost_conf->get_conf($mailto);
     }
 
-    unless ($mailto) {
-        $mailto = $vhost_conf->get_conf('bugs_email');
+    if ( !$mailto ) {
+        $mailto = $vhost_conf->get_conf('bugs_email') || 'sgn-bugs@sgn.cornell.edu';
     }
 
     $subject ||= 'No subject specified';
@@ -70,71 +71,38 @@ sub send_email {
     my $smtp_from   = $vhost_conf->get_conf('smtp_from') || $mailfrom;
 
     if ( $smtp_server && $smtp_login && $smtp_pass ) {
-
-        my ($mail, $error) = Email::Send::SMTP::Gmail->new(
+        my ( $mail, $error ) = Email::Send::SMTP::Gmail->new(
             -smtp  => $smtp_server,
             -layer => $smtp_layer,
             -port  => $smtp_port,
             -login => $smtp_login,
             -pass  => $smtp_pass,
-            -auth  => $smtp_auth
+            -auth  => $smtp_auth,
         );
 
-        if ($mail == -1) {
+        if ( $mail == -1 ) {
             print STDERR "CXGN::Contact: SMTP error: $error\n";
             return;
         }
 
-        if ($attachment_file && -e $attachment_file) {
-            $mail->send(
-                -from        => $smtp_from,
-                -to          => $mailto,
-                -subject     => $subject,
-                -body        => $body,
-                -attachments => $attachment_file
-            );
-        } else {
-            $mail->send(
-                -from    => $smtp_from,
-                -to      => $mailto,
-                -subject => $subject,
-                -body    => $body
-            );
-        }
-
-    } elsif ( $smtp_server ) {
-
-        my ($mail, $error) = Email::Send::SMTP::Gmail->new(
+        _send_email_with_optional_attachment($mail, $smtp_from, $mailto, $subject, $body, $attachment_file);
+    }
+    elsif ($smtp_server) {
+        my ( $mail, $error ) = Email::Send::SMTP::Gmail->new(
             -smtp  => $smtp_server,
             -layer => $smtp_layer,
             -port  => $smtp_port,
-            -auth  => 'none'
+            -auth  => 'none',
         );
 
-        if ($mail == -1) {
+        if ( $mail == -1 ) {
             print STDERR "CXGN::Contact: SMTP error: $error\n";
             return;
         }
 
-        if ($attachment_file && -e $attachment_file) {
-            $mail->send(
-                -from        => $smtp_from,
-                -to          => $mailto,
-                -subject     => $subject,
-                -body        => $body,
-                -attachments => $attachment_file
-            );
-        } else {
-            $mail->send(
-                -from    => $smtp_from,
-                -to      => $mailto,
-                -subject => $subject,
-                -body    => $body
-            );
-        }
-
-    } else {
-        # Local sendmail fallback
+        _send_email_with_optional_attachment($mail, $smtp_from, $mailto, $subject, $body, $attachment_file);
+    }
+    else {
         my %mail = (
             To      => $mailto,
             From    => $mailfrom,
@@ -144,7 +112,7 @@ sub send_email {
 
         $mail{'Reply-To'} = $replyto if $replyto;
 
-        if ($attachment_file && -e $attachment_file) {
+        if ( $attachment_file && -e $attachment_file ) {
             $mail{content_type} = 'multipart/mixed';
             $mail{body} = {
                 text => $body,
@@ -152,15 +120,41 @@ sub send_email {
             };
         }
 
-        print STDERR "MAIL = " . Dumper(\%mail);
+        print STDERR "MAIL = " . Dumper( \%mail );
 
         if ( sendmail(%mail) ) {
             print STDERR "CXGN::Contact: Email notification sent from $mailfrom to $mailto.\n";
-        } else {
+        }
+        else {
             print STDERR "CXGN::Contact: UNABLE TO SEND EMAIL NOTIFICATION\n";
         }
     }
+
+    return 1;
 }
 
+sub _send_email_with_optional_attachment {
+    my ( $mail, $from, $to, $subject, $body, $attachment ) = @_;
+
+    if ( $attachment && -e $attachment ) {
+        $mail->send(
+            -from        => $from,
+            -to          => $to,
+            -subject     => $subject,
+            -body        => $body,
+            -attachments => $attachment,
+        );
+    }
+    else {
+        $mail->send(
+            -from    => $from,
+            -to      => $to,
+            -subject => $subject,
+            -body    => $body,
+        );
+    }
+
+    return;
+}
 
 1;
