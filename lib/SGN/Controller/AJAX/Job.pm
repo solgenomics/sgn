@@ -68,7 +68,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             status => $status,
             create_timestamp => $job->create_timestamp(),
             finish_timestamp => $job->finish_timestamp(),
-            results_page => $job->retrieve_argument('results_page'),
+            results_page => '<a href="'.$job->retrieve_argument('results_page').'>'.$job->retrieve_argument('results_page').'</a>',
             actions => $actions_html
         };
 

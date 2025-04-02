@@ -198,7 +198,9 @@ my $job = CXGN::Jobs->new({
     sp_person_id => $c->user->get_object->get_sp_person_id(),
     args => {
         cmd => 'perl /bin/script.pl -a arg1 -b arg2',
-        cxgn_tools_run_config => {$config},
+        cxgn_tools_run_config => {
+            die_on_destroy => 0
+        },
         logfile => $c->config->{job_finish_log},
         name => 'Sample download',
         type => 'download',
@@ -227,10 +229,14 @@ sub BUILD {
         my $job_args = $args->{args};
         $self->args($job_args);
         $self->type($self->args->{type});
+        my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({name => $self->type()});
+        $self->type_id($cvterm_row->cvterm_id());
         $self->sp_person_id($user_id);
-        # my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime();
-        # my $formatted_time = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
-        # $self->create_timestamp($formatted_time);
+        my $logfile;
+        if (!$self->retrieve_argument('logfile')) {
+            $logfile = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep job_finish_log | sed -r 's/\\w+\\s//'`;
+            $self->args->{logfile} = $logfile;
+        }
         
     } else { #existing job, retrieve from DB
         $self->sp_job_id($args->{sp_job_id});
@@ -267,7 +273,7 @@ sub check_status {
     }
 
     if (!$backend_id || !$self->has_sp_job_id()) {
-        return "";
+        return $self->status() ? $self->status() : "";
     } else {
         if ($self->status() eq "submitted") {
             my $squeue = `squeue --job=$backend_id`;
@@ -398,19 +404,21 @@ Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a
 sub submit {
     my $self = shift;
 
-    if ($self->args()) {
-        die "Pertinent arguments must be supplied before job submission.\n";
+    if ($self->has_sp_job_id()) {
+        die "This job has already been submitted!\n";
     }
 
-    if (!$self->args->{cmd}) {
+    if (!$self->retrieve_argument('cmd')) {
         die "Background jobs must have a command to run.\n";
     }
     my $cmd = $self->args->{cmd};
-    if (!$self->args->{cxgn_tools_run_config}) {
-        die "Must submit a cxgn_tools_run_config hash!\n";
-    }
-    if (!$self->args->{logfile}) {
-        die "Must supply a logfile in args hash. Use \$c->config->{job_finish_log}";
+    my $cxgn_tools_run_config;
+    if (!$self->retrieve_argument('cxgn_tools_run_config')) {
+        $cxgn_tools_run_config = {
+            die_on_destroy => 0
+        };
+    } else {
+        $cxgn_tools_run_config = $self->args->{cxgn_tools_run_config};
     }
 
     my $sp_job_id = $self->store();
@@ -422,19 +430,25 @@ sub submit {
     my $status;
 
     eval {
-        $job = CXGN::Tools::Run->new($self->args->{cxgn_tools_run_config});
+        print STDERR "[SERVER] making CXGN::Tools::Run...\n";
+        $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
 
         $job->do_not_cleanup(1);
         $job->is_cluster(1);
-
-        $job->run_cluster($cmd.$finish_timestamp_cmd);
+        
+        print STDERR "[SERVER] running command...\n";
+        $job->run_cluster($cmd.$finish_timestamp_cmd); #this fails...
 
         $backend_id = $job->jobid();
+        print STDERR "[SERVER] Submitted job with backend id: $backend_id\n";
         $status = 'submitted';
     };
 
     if ($@) {
-        die "An error occured trying to submit a background job: $@\n";
+        $self->status('failed');
+        $self->store();
+        print STDERR "[SERVER] error: $@\n";
+        die "An error occured trying to submit a background job. $@\n";
     } 
 
     $self->backend_id($backend_id);
@@ -586,8 +600,6 @@ sub delete_jobs_older_than {
             my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
             my $now = DateTime->now();
             my $age = ( $now->epoch - $start_time->epoch ) / 86400;
-
-            print STDERR "[SERVER]",$now, "||", $start_time, " || ", $age, "\n";
 
             if ($age > $time_limit) {
                 push @job_ids, $row->sp_job_id();

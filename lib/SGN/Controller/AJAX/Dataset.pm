@@ -9,6 +9,7 @@ use File::Temp qw| tempfile tempdir |;
 use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
+use CXGN::Job;
 use Text::CSV ("csv");
 use strict;
 use warnings;
@@ -54,16 +55,16 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
     foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols genotyping_projects trial_types trial_designs category_order |) {
 	#print STDERR "Storing data: $type\n";
 
-	my $json = $c->req->param($type);
-	if ($json) {
-	    my $obj = JSON::Any->jsonToObj($json);
-	    $dataset->$type($obj);
-	}
+        my $json = $c->req->param($type);
+        if ($json) {
+            my $obj = JSON::Any->jsonToObj($json);
+            $dataset->$type($obj);
+        }
     }
 
     my $new_id = $dataset->store();
-    print STDERR "==========================\nNew dataset ID: $new_id \n=============================\n";
-    # $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
+
+
 
     $c->stash->{rest} = { message => "Stored Dataset Successfully!", id => $new_id };
 }
@@ -434,21 +435,48 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
 	    schema => $c->dbic_schema("Bio::Chado::Schema"),
 	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
 	    sp_dataset_id=> $dataset_id,
-        include_phenotype_primary_key => $include_phenotype_primary_key,
+        include_phenotype_primary_key => $include_phenotype_primary_key
 	});
 
-    my $tool_compatibility;
-    eval {
-        $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
-        $tool_compatibility = $dataset->tool_compatibility;
+    my $genotyping_protocol = $c->config->{default_genotyping_protocol}; 
+    my $dbhost = $c->config->{dbhost};
+    my $dbuser = $c->config->{dbuser};
+    my $dbname = $c->config->{dbname};
+    my $dbpass = $c->config->{dbpass};
+    
+    my $cmd = "./bin/check_tool_compatibility.pl -d $dataset_id -G $genotyping_protocol -H $dbhost -U $dbuser -D $dbname -P $dbpass";
+
+    my $cxgn_tools_run_config = {
+        die_on_destroy => 0
     };
+    my $logfile = $c->config->{job_finish_log};
+    my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
+    eval {
+        my $job = CXGN::Job->new({
+            schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            sp_person_id => $user,
+            args => {
+                logfile => $logfile,
+                name => $dataset->name()." tool compatibility check",
+                cxgn_tools_run_config => $cxgn_tools_run_config,
+                results_page => "/dataset/$dataset_id",
+                type => 'tool_compatibility',
+                cmd => $cmd
+            }
+        });
+
+        $job->submit();
+    };
+
     if ($@){
         $c->stash->{rest} = {
             error => "Error calculating tool compatibility:\n$@"
         };
     } else {
          $c->stash->{rest} = {
-            tool_compatibility => JSON::Any->encode($tool_compatibility)
+            tool_compatibility => JSON::Any->encode($dataset->tool_compatibility)
         };
     }
 }

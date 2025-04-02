@@ -1,3 +1,4 @@
+#! /user/bin/env perl
 
 =head1 NAME
 
@@ -5,7 +6,7 @@ check_tool_compatibility.pl - script to determine tool compatibility of a datase
 
 =head1 SYNOPSIS
 
-perl check_tool_compatibility.pl -d dataset_id -G [default genotyping protocol] -H [host] -D [dbname]
+perl check_tool_compatibility.pl -d dataset_id -G [default genotyping protocol] -H [host] -D [dbname] -P [dbpassword] -U [dbuser]
 
 =head1 OPTIONS
 
@@ -26,6 +27,14 @@ The database hostname
 =item -D
 
 Database name
+
+=item -U
+
+Database user (postgres by default)
+
+=item -P 
+
+Database password
 
 =back
 
@@ -49,10 +58,15 @@ our ($opt_d, $opt_G, $opt_H, $opt_D, $opt_P, $opt_U);
 
 getopts('d:G:H:D:P:U');
 
-my $dataset_id = $opt_d || die "Dataset ID is required for tool compatibility calculation.";
+my $dataset_id = $opt_d || die "Dataset ID is required for tool compatibility calculation.\n";
 my $genotyping_protocol = $opt_G;
-my $dbhost = $opt_H;
-my $dbname = $opt_D;
+if (!$genotyping_protocol) {
+    $genotyping_protocol = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep default_genotyping_protocol | sed -r 's/\\w+\\s//'`;
+}
+my $dbhost = $opt_H || die "Need db host.\n";
+my $dbname = $opt_D || die "Need db name.\n";
+my $user = $opt_U ? $opt_U : "postgres";
+my $password = $opt_P || die "Need db password.\n";
 
 my $dbh = CXGN::DB::Connection->new(
     { 
