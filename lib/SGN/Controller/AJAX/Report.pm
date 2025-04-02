@@ -3,13 +3,15 @@ package SGN::Controller::AJAX::Report;
 use Moose;
 use strict;
 use warnings;
-use File::Slurp 'read_file';
+use JSON;
+use File::Slurp;
 use File::Path qw(make_path);
-use JSON qw(decode_json);
+use File::Spec;
 use Data::Dumper;
 use CXGN::Tools::Run;
 use Excel::Writer::XLSX;
 use POSIX qw(strftime);
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -22,19 +24,9 @@ __PACKAGE__->config(
 # Assume $c is available from Catalyst.
 
 sub write_json_to_excel {
-    my ($excel_directory, $script, $decoded_json) = @_;
+    my ($excel_directory, $excel_name, $decoded_json) = @_;
     
-    # Ensure the directory exists; create if not.
-    unless (-d $excel_directory) {
-        make_path($excel_directory) or die "Failed to create directory $excel_directory: $!";
-    }
-    
-    # Get current date as YYYY-MM-DD
-    my $date_str = strftime("%Y-%m-%d", localtime);
-    
-    # Build the filename: <script>_<date>.xlsx
-    my $filename = $script . "_" . $date_str . ".xlsx";
-    my $full_path = $excel_directory . $filename;
+    my $full_path = $excel_directory . $excel_name;
     
     # Create a new Excel workbook and add a worksheet.
     my $workbook  = Excel::Writer::XLSX->new($full_path);
@@ -69,107 +61,192 @@ sub write_json_to_excel {
     return $full_path;
 }
 
+sub convert_ui_date_to_sql_timestamp {
+    my ($ui_date, $is_start) = @_;
+
+    return undef unless $ui_date;
+
+    # Match dd/mm/yyyy format
+    if ($ui_date =~ m{^(\d{2})/(\d{2})/(\d{4})$}) {
+        my ($dd, $mm, $yyyy) = ($1, $2, $3);
+        return "$yyyy-$mm-$dd";
+    }
+
+    return undef;  # Invalid format
+}
+
+
+
+
+
 sub generatereport_POST :Path('generatereport') :Args(0) {
     my ($self, $c) = @_;
 
-    # Retrieve the incoming JSON data from the AJAX call
-    my $data = $c->req->param('reportData');
-    $data = decode_json($data);
+    ## checking the user role
+    my @user_roles = $c->user ? $c->user->roles : ();
+    my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
 
+    print("Here are roles:\n");
+    print Dumper \$curator;
 
-    $c->log->debug("Received report generation data: " . Dumper($data));
-
-    # Extract parameters from the JSON payload
-    my $dbname    = $c->config->{dbname};
-    my $dbhost    = $c->config->{dbhost};
-    my $dbuser    = $c->config->{dbuser};
-    my $dbpass    = $c->config->{dbpass};
-    my $start_date    = $data->{start_date}    // '';
-    my $end_date      = $data->{end_date}      // '';
-    my $emails        = $data->{emails}        // [];
-    my $report_scripts = $data->{report_scripts} // [];
-    my $basepath = $c->config->{basepath};
-    my $tempfiles_path = $c->config->{tempfiles_base};
-    my $excel_directory = $tempfiles_path . "/reports/";
-
-    
-    my $reports_dir = '/bin/Reports/';
-    my @script_results;
-    my $run_script;
-
-    foreach my $script (@$report_scripts) {
-
-        # Build the full script command; pipe the dbuser and dbpass as input.
-        my $script_cmd = "script -q /dev/null -c \"perl ${basepath}${reports_dir}${script}.pl -U $dbuser -H $dbhost -P $dbpass -D $dbname\"";
-        
-        print("Starting command $script_cmd \n");
-
-        # Create a new run object and run the script
-        my $run_script = CXGN::Tools::Run->new();
-        my $result_hash = $run_script->run($script_cmd);
-
-        my $out_file = $run_script->{out_file};
-        print("Reading output from file: $out_file \n");
-
-        my $json_text = '';
-        if (-e $out_file) {
-            my @lines = read_file($out_file, chomp => 1);
-
-            # Keep only likely JSON lines (start of object/array or key-value lines)
-            my @json_lines = grep {
-                /^\s*[{[]/         ||   # Opening of JSON object/array
-                /^\s*"[^"]+"\s*:/  ||   # JSON key-value line
-                /^\s*}[,]?\s*$/    ||   # Closing brace
-                /^\s*][,]?\s*$/    ||   # Closing bracket
-                /^\s*$/                 # Blank lines (optional)
-            } @lines;
-
-            if (!@json_lines) {
-                warn "No JSON content found in $out_file for $script.";
-            }
-
-            $json_text = join("\n", @json_lines);
-        } else {
-            warn "Output file $out_file does not exist.";
-        }
-
-        # Attempt to decode the JSON from the file's content
-        my $decoded_json;
-        eval {
-            $decoded_json = decode_json($json_text);
+    unless ($curator) {
+        $c->stash->{rest} = {
+            success => JSON::false,
+            error   => "This is a curator tool, please contact the datase responsible to generate a report for you",
         };
-        if ($@) {
-            warn "Failed to decode JSON from script $script: $@";
-            $decoded_json = {};
-        }
-
-        # Write the decoded JSON into an Excel file within the specified directory
-        my $excel_file = write_json_to_excel($excel_directory, $script, $decoded_json);
-        print "Excel file created: $excel_file\n";
-
-        push @script_results, {
-            script    => $script,
-            output    => $json_text,
-            json_data => $decoded_json,
-        };
+        $c->detach;
     }
 
 
+    my $data = decode_json($c->req->param('reportData'));
+    $c->log->debug("Received report generation data: " . Dumper($data));
 
-    # Here you can add your logic to generate the report based on the provided data.
-    # For demonstration purposes, we simply return the captured data.
+    # Extract parameters
+    my $dbname          = $c->config->{dbname};
+    my $dbhost          = $c->config->{dbhost};
+    my $dbuser          = $c->config->{dbuser};
+    my $dbpass          = $c->config->{dbpass};
+    my $basepath        = $c->config->{basepath};
+    my $tempfiles_path  = $c->config->{tempfiles_base};
+    my $out_directory   = "$tempfiles_path/reports/";
+    my $reports_dir     = '/bin/Reports/';
 
+    my $start_raw      = $data->{start_date}    // '';
+    my $end_raw        = $data->{end_date}      // '';
+    
+    # Putting dates in sql format
+    my $start_date = convert_ui_date_to_sql_timestamp($start_raw, 1);  # 1 = start of day
+    my $end_date   = convert_ui_date_to_sql_timestamp($end_raw,   0);  # 0 = end of day
+
+
+    my $emails          = $data->{emails}        // [];
+    my $report_scripts  = $data->{report_scripts} // [];
+
+    ##Creating directory ###
+    make_path($out_directory);
+
+    ## === Background process === ###
+    # my $pid = fork();
+    # if (!defined $pid) {
+    #     die "Could not fork: $!";
+    # }
+
+    # if ($pid == 0) {
+        # Child process
+        close(STDOUT);
+        close(STDERR);
+
+        open STDOUT, '>>', '/tmp/report_runner.log';
+        open STDERR, '>>', '/tmp/report_runner.log';
+
+        my @excel_files_to_zip;  # <--- to collect all xlsx files
+        my $zip_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);
+        
+        print("aui os scripts:\n");
+        print Dumper \$report_scripts;
+        foreach my $script (@$report_scripts) {
+            my $script_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);  # one time
+
+            my $json_filename   = "${script}_${script_date}.json";
+            my $excel_filename  = "${script}_${script_date}.xlsx";
+            
+            my $script_cmd = "script -q /dev/null -c \"perl ${basepath}${reports_dir}${script}.pl -U $dbuser -H $dbhost -P $dbpass -D $dbname -o '$out_directory' -f '$json_filename' -s '$start_date' -e '$end_date'\"";
+
+            print("Starting command $script_cmd \n");
+
+            my $run_script = CXGN::Tools::Run->new();
+            my $result_hash = $run_script->run($script_cmd);
+
+            my $json_file = File::Spec->catfile($out_directory, $json_filename);
+            print("Reading output from file: $json_file \n");
+
+            my $json_text = '';
+            if (-e $json_file) {
+                $json_text = read_file($json_file);
+            } else {
+                warn "JSON file $json_file does not exist.";
+            }
+
+            my $decoded_json;
+            eval {
+                $decoded_json = decode_json($json_text);
+            };
+            if ($@) {
+                warn "Failed to decode JSON from script $script: $@";
+                $decoded_json = {};
+            }
+
+            my $excel_file = write_json_to_excel($out_directory, $excel_filename, $decoded_json);
+            push @excel_files_to_zip, $excel_filename;
+
+            print "Excel file created: $excel_file\n";
+        }
+
+
+        my $zip_filename = "report_${zip_date}.zip";
+        my $zip_path = $out_directory . $zip_filename;
+        zip_excel_reports($out_directory, \@excel_files_to_zip, $zip_path);
+
+        print "All Excel files zipped into: $zip_path\n";
+
+        send_report_zip_to_emails($emails, $zip_path, $zip_filename);
+
+
+        # exit(0); # child done
+    # }
+
+    ### === Parent process returns immediately === ###
     $c->stash->{rest} = {
-        success  => JSON::true,
-        message  => 'Report generation data received.',
-        data     => {
-            start_date    => $start_date,
-            end_date      => $end_date,
-            emails        => $emails,
-            report_scripts => $report_scripts,
-        },
+        success => JSON::true,
+        message => "Your request was successfully processed. Please check selected emails for the results.",
     };
 }
+
+
+sub zip_excel_reports {
+    my ($excel_dir, $excel_filenames, $zip_output_path) = @_;
+
+    my $zip = Archive::Zip->new();
+
+    foreach my $file (@$excel_filenames) {
+        my $full_path = File::Spec->catfile($excel_dir, $file);
+        unless (-e $full_path) {
+            warn "File not found, skipping: $full_path";
+            next;
+        }
+
+        my $member = $zip->addFile($full_path, $file);
+        unless ($member) {
+            warn "Could not add $file to zip";
+        }
+    }
+
+    unless ($zip->writeToFileNamed($zip_output_path) == AZ_OK) {
+        die "Failed to write zip archive to $zip_output_path";
+    }
+
+    print STDERR "ZIP archive created: $zip_output_path\n";
+    return $zip_output_path;
+}
+
+sub send_report_zip_to_emails {
+    my ($emails_ref, $zip_file_path, $report_name) = @_;
+
+    return unless $zip_file_path && -e $zip_file_path;
+    return unless $emails_ref && ref($emails_ref) eq 'ARRAY';
+
+    foreach my $email (@$emails_ref) {
+        next unless $email;  # skip blank entries
+
+        my $subject = "Breedbase Report: $report_name";
+        my $body    = "Dear user,\n\nAttached is your generated report ZIP file: $report_name\n\nBest regards,\nThe Breedbase Team";
+
+        CXGN::Contact::send_email($subject, $body, $email, 'noreply@breedbase.org', $zip_file_path);
+        print STDERR "Sent report ZIP to: $email\n";
+    }
+}
+
+
 
 
 1;
