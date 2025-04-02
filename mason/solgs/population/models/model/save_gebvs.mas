@@ -18,17 +18,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
  <& /util/import_javascript.mas, classes => ["solGS.analysisSave", "solGS.gebvsSave"] &>
- <div id="gebvs_output">
- 		 <button id="save_gebvs" class="btn btn-success">Save GEBVs</button>	
-		<& /solgs/spinner/spinner.mas &>
-		<div id="gebvs_save_message" class="message"" style="display:none"></div>
-
- 		<button id="save_adjusted_means" class="btn btn-success">Save adjustmed means</button>	
-		<& /solgs/spinner/spinner.mas &>
-		<div id="gebvs_save_message" class="message"" style="display:none"></div>
-
+ <div id="gebvs_output" class="mb-2">
+ 		<button id="save_gebvs" class="btn btn-success">Save GEBVs</button>	
+ 		<button id="save_adjusted_means" class="btn btn-success">Save adjusted means</button>	
         <button id="save_gebvs_adjusted_means" class="btn btn-success">Save both</button>	
-		<& /solgs/spinner/spinner.mas &>
-		<div id="gebvs_save_message" class="message"" style="display:none"></div>
+		
+        <div id="gebvs_save_message" class="message"" style="display:none"></div>
+        <& /solgs/spinner/spinner.mas &>
 </div>
-<br />
