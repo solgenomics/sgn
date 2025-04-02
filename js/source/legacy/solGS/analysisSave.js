@@ -6,7 +6,7 @@
 
 var solGS = solGS || function solGS() {};
 
-solGS.save = {
+solGS.analysisSave = {
   checkStoredAnalysis: function (analysisArgs) {
     analysisArgs = JSON.stringify(analysisArgs);
     var stored = jQuery.ajax({
