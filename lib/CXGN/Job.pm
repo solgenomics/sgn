@@ -431,7 +431,8 @@ sub submit {
 
     eval {
         print STDERR "[SERVER] making CXGN::Tools::Run...\n";
-        $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
+        # $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
+        $job = CXGN::Tools::Run->new();
 
         $job->do_not_cleanup(1);
         $job->is_cluster(1);
