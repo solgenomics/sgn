@@ -6,6 +6,7 @@ use namespace::autoclean;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use File::Copy;
+use Data::Dumper;
 use File::Basename;
 use CXGN::Tools::Run;
 
@@ -772,6 +773,10 @@ sub submit_job_cluster {
 
     my $job;
 
+    print STDERR "[CONTROLLER] Cluster job config:\n";
+    print STDERR Dumper $args->{config};
+    print STDERR "\n====================\n";
+
     eval {
         $job = CXGN::Tools::Run->new( $args->{config} );
         $job->do_not_cleanup(1);
@@ -881,6 +886,9 @@ sub run_r_script {
     else {
         $self->get_cluster_r_job_args($c);
         my $cluster_job_args = $c->stash->{cluster_r_job_args};
+        print STDERR "[CONTROLLER] Getting cluster job args:\n";
+        print STDERR Dumper $c->stash->{cluster_r_job_args};
+        print STDERR "\n\n";
         $self->submit_job_cluster( $c, $cluster_job_args );
     }
 

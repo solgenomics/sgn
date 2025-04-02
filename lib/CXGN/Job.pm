@@ -105,7 +105,7 @@ ID of the running process, as used by the workload manager (assumed to be Slurm)
 
 =cut
 
-has 'backend_id' => ( isa => 'Maybe[Int]', is => 'rw', predicate => 'has_backend_id');
+has 'backend_id' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_backend_id');
 
 =head2 create_timestamp()
 
@@ -185,8 +185,9 @@ has 'type_id' => ( isa => 'Maybe[Int]', is => 'rw');
 =head2 args()
 
 Hashref of arguments supplied to the job. Not necessarily needed for job creation, but 
-essential for job submission. Must have keys for cmd, cxgn_tools_run_config, and logfile. All other keys
-can be customized for the job type. Stored in the DB as a JSONB. This is the place to 
+essential for job submission. Must have keys for cmd, cxgn_tools_run_config, and logfile. 
+All other keys can be customized for the job type. Sensible defaults will be used for logfile
+and cxgn_tools_run_config. Stored in the DB as a JSONB. This is the place to 
 include config for CXGN::Tools::Run. As an argument to a new object, this will be 
 ignored if an sp_job_id is also supplied. 
 
@@ -198,9 +199,7 @@ my $job = CXGN::Jobs->new({
     sp_person_id => $c->user->get_object->get_sp_person_id(),
     args => {
         cmd => 'perl /bin/script.pl -a arg1 -b arg2',
-        cxgn_tools_run_config => {
-            die_on_destroy => 0
-        },
+        cxgn_tools_run_config => {$config},
         logfile => $c->config->{job_finish_log},
         name => 'Sample download',
         type => 'download',
@@ -414,8 +413,18 @@ sub submit {
     my $cmd = $self->args->{cmd};
     my $cxgn_tools_run_config;
     if (!$self->retrieve_argument('cxgn_tools_run_config')) {
+        my $name = $self->retrieve_argument('name') =~ s/ /_/gr;
         $cxgn_tools_run_config = {
-            die_on_destroy => 0
+            'err_file' => "/home/production/volume/tmp/$name/$name.err",
+            'sleep' => undef,
+            'submit_host' => 'localhost',
+            'queue' => 'batch',
+            'is_async' => 0,
+            'out_file' => "/home/production/volume/tmp/$name/$name.out",
+            'temp_base' => "/home/production/volume/tmp/$name/",
+            'max_cluster_jobs' => 1000000000,
+            'do_cleanup' => 0,
+            'backend' => 'Slurm'
         };
     } else {
         $cxgn_tools_run_config = $self->args->{cxgn_tools_run_config};
@@ -423,7 +432,9 @@ sub submit {
 
     my $sp_job_id = $self->store();
 
-    my $finish_timestamp_cmd = '; FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S+%z"); echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$self->args->{logfile};
+    my $finish_timestamp_cmd = ';
+FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z"); 
+echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" ';
 
     my $job;
     my $backend_id;
@@ -431,8 +442,7 @@ sub submit {
 
     eval {
         print STDERR "[SERVER] making CXGN::Tools::Run...\n";
-        # $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
-        $job = CXGN::Tools::Run->new();
+        $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
 
         $job->do_not_cleanup(1);
         $job->is_cluster(1);
@@ -440,7 +450,7 @@ sub submit {
         print STDERR "[SERVER] running command...\n";
         $job->run_cluster($cmd.$finish_timestamp_cmd); #this fails...
 
-        $backend_id = $job->jobid();
+        $backend_id = $job->cluster_job_id();
         print STDERR "[SERVER] Submitted job with backend id: $backend_id\n";
         $status = 'submitted';
     };

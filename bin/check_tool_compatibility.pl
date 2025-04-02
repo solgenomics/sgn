@@ -1,4 +1,4 @@
-#! /user/bin/env perl
+#! /usr/bin/env perl
 
 =head1 NAME
 
@@ -6,13 +6,13 @@ check_tool_compatibility.pl - script to determine tool compatibility of a datase
 
 =head1 SYNOPSIS
 
-perl check_tool_compatibility.pl -d dataset_id -G [default genotyping protocol] -H [host] -D [dbname] -P [dbpassword] -U [dbuser]
+perl check_tool_compatibility.pl -i dataset_id -G [default genotyping protocol] -H [host] -D [dbname] -U [dbuser] -P [dbpassword] 
 
 =head1 OPTIONS
 
 =over 3
 
-=item -d
+=item -i
 
 The ID of the dataset, as stored in the database
 
@@ -54,11 +54,13 @@ use CXGN::DB::InsertDBH;
 use Bio::Chado::Schema;
 use CXGN::People::Schema;
 
-our ($opt_d, $opt_G, $opt_H, $opt_D, $opt_P, $opt_U);
+our ($opt_i, $opt_G, $opt_H, $opt_D, $opt_P, $opt_U);
 
-getopts('d:G:H:D:P:U');
+getopts('i:G:H:D:U:P');
 
-my $dataset_id = $opt_d || die "Dataset ID is required for tool compatibility calculation.\n";
+print STDERR "Starting tool compatibility check.\n";
+
+my $dataset_id = $opt_i || die "Dataset ID is required for tool compatibility calculation.\n";
 my $genotyping_protocol = $opt_G;
 if (!$genotyping_protocol) {
     $genotyping_protocol = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep default_genotyping_protocol | sed -r 's/\\w+\\s//'`;
@@ -67,6 +69,8 @@ my $dbhost = $opt_H || die "Need db host.\n";
 my $dbname = $opt_D || die "Need db name.\n";
 my $user = $opt_U ? $opt_U : "postgres";
 my $password = $opt_P || die "Need db password.\n";
+
+print "Checking tool compatibility for dataset ID $dataset_id\n";
 
 my $dbh = CXGN::DB::Connection->new(
     { 
