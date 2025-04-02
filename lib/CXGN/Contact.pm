@@ -14,6 +14,7 @@ use SGN::Context;
 =head1 AUTHOR
 
 john binns - John Binns <zombieite@gmail.com>
+chris simoes <ccs263@cornell.edu>
 
 =cut
 

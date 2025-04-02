@@ -65,7 +65,7 @@ sub write_json_to_excel {
 sub convert_ui_date_to_sql_timestamp {
     my ($ui_date, $is_start) = @_;
 
-    return undef unless $ui_date;
+    return unless $ui_date;
 
     # Match dd/mm/yyyy format
     if ($ui_date =~ m{^(\d{2})/(\d{2})/(\d{4})$}) {
@@ -73,7 +73,7 @@ sub convert_ui_date_to_sql_timestamp {
         return "$yyyy-$mm-$dd";
     }
 
-    return undef;  # Invalid format
+    return;  # Invalid format
 }
 
 
