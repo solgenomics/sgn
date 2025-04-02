@@ -85,6 +85,50 @@ $number_of_samples_with_data => undef
 
 jQuery(document).ready(function(){
 
+    let empty_protocol_id;
+    let empty_protocol_name;
+
+    jQuery('#delete_plate_genotyping_data').click(function() {
+        const trial_id = get_trial_id();
+        const confirmation = confirm("Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/plate_genotyping_data_delete',
+                dataType: "json",
+                type: 'GET',
+                data:{
+                    'genotyping_plate_id': trial_id,
+                },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#working_msg').html("Deleting genotyping data...<br />");
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.empty_protocol_id) {
+                        empty_protocol_id = response.empty_protocol_id;
+                        empty_protocol_name = response.empty_protocol_name;
+                        alert(empty_protocol_id);
+
+                        const empty_protocol_message_string = "The protocol: " +empty_protocol_name+ " has no associated genotyping data.";
+                        jQuery('#empty_protocol_message').html(empty_protocol_message_string);
+                        jQuery("#empty_protocol_message_dialog").modal("show");
+                    }
+                    if (response.success == 1) {
+                        jQuery("#genotyping_data_delete_message_dialog").modal("show");
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
+    });
+
     jQuery(document).on('click', '[name="genotyping_data_delete_dismiss_button"]', function(){
         jQuery('#genotyping_data_delete_message_dialog').modal('hide');
         location.reload();
@@ -93,6 +137,38 @@ jQuery(document).ready(function(){
     jQuery(document).on('click', '[name="empty_protocol_dismiss_button"]', function(){
         jQuery('#empty_protocol_message_dialog').modal('hide');
         location.reload();
+    });
+
+    jQuery('#delete_empty_protocol_submit').click(function() {
+        const confirmation = confirm("Are you sure you want to delete this genotyping protocol? This action cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/empty_protocol_delete',
+                dataType: "json",
+                type: 'GET',
+                data:{
+                    'empty_protocol_id': empty_protocol_id,
+                },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#working_msg').html("Deleting genotyping protocol...<br />");
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert("The genotyping protocol was deleted successfully.");
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
     });
 
 

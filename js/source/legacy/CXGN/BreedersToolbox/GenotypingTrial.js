@@ -389,49 +389,6 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    let empty_protocol_id;
-    let empty_protocol_name;
-
-    jQuery('#delete_plate_genotyping_data').click(function() {
-        const trial_id = get_trial_id();
-        const confirmation = confirm("Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone.");
-        if (confirmation) {
-            jQuery.ajax({
-                url: '/ajax/breeders/plate_genotyping_data_delete',
-                dataType: "json",
-                type: 'GET',
-                data:{
-                    'genotyping_plate_id': trial_id,
-                },
-                beforeSend: function(){
-                    jQuery('#working_modal').modal("show");
-                    jQuery('#working_msg').html("Deleting genotyping data...<br />");
-                },
-                success: function(response) {
-                    jQuery('#working_modal').modal('hide');
-                    if (response.empty_protocol_id) {
-                        empty_protocol_id = response.empty_protocol_id;
-                        empty_protocol_name = response.empty_protocol_name;
-
-                        const empty_protocol_message_string = "The protocol: " +empty_protocol_name+ " has no associated genotyping data.";
-                        jQuery('#empty_protocol_message').html(empty_protocol_message_string);
-                        jQuery("#empty_protocol_message_dialog").modal("show");
-                    }
-                    if (response.success == 1) {
-                        jQuery("#genotyping_data_delete_message_dialog").modal("show");
-                    }
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                },
-                error: function(response) {
-                    jQuery('#working_modal').modal('hide');
-                    alert('An error occurred during deletion');
-                }
-            });
-        }
-    });
-
     jQuery('#generate_genotyping_trial_barcode_link').click(function () {
         jQuery('#generate_genotyping_trial_barcode_button_dialog').modal("show");
     });

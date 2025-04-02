@@ -169,6 +169,35 @@ sub delete_genotype_data {
 }
 
 
+sub delete_empty_protocol {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $dbh = $schema->storage->dbh;
+    my $empty_protocol_id = $self->empty_protocol_id();
+
+    eval {
+        $dbh->begin_work();
+
+        my $experiment_count = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->search({nd_protocol_id => $empty_protocol_id})->count();
+        print STDERR "EXPERIMENT COUNT =".Dumper($experiment_count)."\n";
+        if ($experiment_count == 0) {
+            my $delete_protocol_q = "DELETE from nd_protocol WHERE nd_protocol_id=?;";
+            my $delete_protocol_h = $schema->storage->dbh()->prepare($delete_protocol_q);
+            $delete_protocol_h->execute($empty_protocol_id);
+        }
+    };
+
+    if ($@) {
+        print STDERR "An error occurred while deleting genotyping protocol"."$@\n";
+        $dbh->rollback();
+        return $@;
+    } else {
+        $dbh->commit();
+        return 0;
+    }
+
+}
+
 
 
 1;
