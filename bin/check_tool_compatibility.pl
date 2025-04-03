@@ -58,9 +58,8 @@ our ($opt_i, $opt_G, $opt_H, $opt_D, $opt_P, $opt_U);
 
 getopts('i:G:H:D:U:P');
 
-print STDERR "Starting tool compatibility check.\n";
-
 my $dataset_id = $opt_i || die "Dataset ID is required for tool compatibility calculation.\n";
+print STDERR "Starting tool compatibility check for ID $dataset_id.\n";
 my $genotyping_protocol = $opt_G;
 if (!$genotyping_protocol) {
     $genotyping_protocol = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep default_genotyping_protocol | sed -r 's/\\w+\\s//'`;
@@ -70,14 +69,14 @@ my $dbname = $opt_D || die "Need db name.\n";
 my $user = $opt_U ? $opt_U : "postgres";
 my $password = $opt_P || die "Need db password.\n";
 
-print "Checking tool compatibility for dataset ID $dataset_id\n";
+print STDERR "Connecting to DB.x\n";
 
 my $dbh = CXGN::DB::Connection->new(
     { 
         dbhost=>$dbhost,
 		dbname=>$dbname,
         dbuser=>$user,
-        dbpass=>$password,
+        # dbpass=>$password,
 		dbargs => {
             AutoCommit => 0,
 			RaiseError => 1
@@ -94,6 +93,16 @@ my $dataset = CXGN::Dataset->new({
     sp_dataset_id => $dataset_id
 }); 
 
-$dataset->update_tool_compatibility($genotyping_protocol);
+eval {
+    $dataset->update_tool_compatibility($genotyping_protocol);
+};
+if ($@) {
+    $dbh->rollback();
+    print STDERR "Tool compatibility failed.$@\n";
+} else {
+    $dbh->commit();
+    $dbh->disconnect();
+    print STDERR "Done.\n";
+}
 
 1; 
