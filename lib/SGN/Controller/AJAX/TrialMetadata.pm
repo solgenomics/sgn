@@ -492,22 +492,23 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $date_params
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
+    $order_by_additional ";
         
     my $h1 = $dbh->prepare($q1);
-
+    
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-
+    
     # print STDERR "TRIAL ID = ".$c->stash->{trial_id}." REGEX: $numeric_regex REL_TYPE_ID $rel_type_id STOCK TYPE ID $stock_type_id DATE PLACE HOLDERS: ".join(", ", @date_placeholders)."\n";
-
+    
     $h1->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     my @phenotype_data;
     my @numeric_trait_ids;
 
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h1->fetchrow_array()) {
-
+	
 	push @numeric_trait_ids, $trait_id;
-
+	
         my $cv = 0;
         if ($stddev && $average != 0) {
             $cv = ($stddev /  $average) * 100;
@@ -569,9 +570,9 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional ";
 
         # print STDERR "QUERY = $q\n";
-
+    
     my $h = $dbh->prepare($q);
-
+    
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
@@ -579,7 +580,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 	push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
-
+    
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
@@ -5572,9 +5573,10 @@ sub trial_collect_date_range :Chained('trial') :PathPart('collect_date_range') A
 	     start_date => $start_date,
 	     end_date => $end_date,
     };
+}
 
 sub get_analysis_instance_stock_type {
-    my $self = shift;
+	my $self = shift;
     my $c = shift;
     my $trial_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
