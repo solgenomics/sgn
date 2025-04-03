@@ -180,7 +180,11 @@ sub delete_empty_protocol {
 
         my $experiment_count = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->search({nd_protocol_id => $empty_protocol_id})->count();
         print STDERR "EXPERIMENT COUNT =".Dumper($experiment_count)."\n";
-        if ($experiment_count == 0) {
+
+        if ($experiment_count > 0) {
+            print STDERR "This protocol has associated genotyping data. Cannot delete.\n";
+            die "This protocol has associated genotyping data. Cannot delete.\n";
+        } elsif ($experiment_count == 0) {
             my $delete_protocol_q = "DELETE from nd_protocol WHERE nd_protocol_id=?;";
             my $delete_protocol_h = $schema->storage->dbh()->prepare($delete_protocol_q);
             $delete_protocol_h->execute($empty_protocol_id);
