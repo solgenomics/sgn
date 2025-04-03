@@ -325,6 +325,10 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $display = $c->req->param('display');
     my $trait = $c->req->param('trait');
+
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
+    my $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
+    
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
         search_type => "Native",
@@ -335,8 +339,6 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
 	    end_date => $end_date,
 	    include_dateless_items => $include_dateless_items,
     );
-
-    # print STDERR "get data \n";
 
     my @data = $phenotypes_search->get_phenotype_matrix();
     $c->stash->{rest} = {
@@ -414,23 +416,33 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
         $order_by_additional = ' ,accession.uniquename DESC';
     }
+
     if ($display eq 'analysis_instance') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
-        # my $plots = $c->stash->{trial}->get_plots();
-        # $total_complete_number = scalar (@$plots);
     }
-    my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    
     my $trial_stock_type_id;
+    
     if ($trial_stock_type eq 'family_name') {
         $trial_stock_type_id = $family_name_type_id;
     } elsif ($trial_stock_type eq 'cross') {
         $trial_stock_type_id = $cross_type_id;
-    } else {
-        $trial_stock_type_id = $accesion_type_id;
-    }
+    } 
+    else {
+        $trial_stock_type_id = $accession_type_id;
+        if ($display eq 'analysis_instance') {
+            my $analysis_stock_type = $self->get_analysis_instance_stock_type($c, $trial_id);
+            if ($analysis_stock_type eq 'analysis_result') {
+                my $analysis_result_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_result', 'stock_type')->cvterm_id();
+                $trial_stock_type_id = $analysis_result_type_id;
+            } 
+        }    
+    }    
 
     my $date_params = "";
     my @date_placeholders = ();
@@ -480,12 +492,9 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $date_params
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
-        $order_by_additional";
-    
-    # print STDERR "run numeric query: $q1\n";
-
+        
     my $h1 = $dbh->prepare($q1);
-   
+
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 
     # print STDERR "TRIAL ID = ".$c->stash->{trial_id}." REGEX: $numeric_regex REL_TYPE_ID $rel_type_id STOCK TYPE ID $stock_type_id DATE PLACE HOLDERS: ".join(", ", @date_placeholders)."\n";
@@ -493,7 +502,6 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     $h1->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     my @phenotype_data;
-
     my @numeric_trait_ids;
 
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h1->fetchrow_array()) {
@@ -2361,6 +2369,8 @@ sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
         include_measured => "false"
     });
     my $output = $trial_layout_download->get_layout_output();
+
+    print STDERR "\nDone getting layout output CXGN::Trial::TrialLayoutDownload..\n";
 
     $c->stash->{rest} = $output;
 }
@@ -5562,6 +5572,37 @@ sub trial_collect_date_range :Chained('trial') :PathPart('collect_date_range') A
 	     start_date => $start_date,
 	     end_date => $end_date,
     };
+
+sub get_analysis_instance_stock_type {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $project = $schema->resultset('Project::Project')->find({
+        project_id => $trial_id, 
+    });
+
+    my $trial_layout_json_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
+
+    my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_type_id });
+
+    my $design;
+
+    if ($trial_layout_json) {
+        $design = decode_json $trial_layout_json->value;
+    }
+
+    if (keys %{$design}) {
+        my $sample_design_key = (keys %{$design})[0];
+        my $sample_trial_entry = $design->{$sample_design_key};
+
+        if ($sample_trial_entry->{'accession_name'}) {
+            return 'accession';
+        } elsif($sample_trial_entry->{'analysis_result_stock_name'}) {
+            return 'analysis_result';
+        }
+    }
+
 }
 
 1;
