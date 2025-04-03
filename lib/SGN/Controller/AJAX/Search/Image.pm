@@ -16,8 +16,9 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON' },
    );
 
+sub image_search : Path('/ajax/search/images') : ActionClass('REST') { }
 
-sub image_search :Path('/ajax/search/images') Args(0) {
+sub image_search_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR "Image search AJAX\n";
@@ -40,7 +41,12 @@ sub image_search :Path('/ajax/search/images') Args(0) {
 
     my @stock_name_list;
     if (exists($params->{image_stock_uniquename}) && $params->{image_stock_uniquename}) {
-        push @stock_name_list, $params->{image_stock_uniquename};
+        if (ref($params->{image_stock_uniquename}) eq 'ARRAY') {
+            push @stock_name_list, $params->{image_stock_uniquename};
+        } else {
+            @stock_name_list = split /,/, $params->{image_stock_uniquename};
+        }
+        
     }
 
     my @project_name_list;
@@ -109,7 +115,25 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         my $original_img = $image->get_image_url("large");
         my $small_image = $image->get_image_url("tiny");
         my $image_page = "/image/view/$image_id";
-        my $colorbox = qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="image_search_group" rel="gallery-figures"><img src="$small_image" width="40" height="30" border="0" alt="$image_description" /></a>|;
+        my $colorbox = qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="image_search_group" rel="gallery-figures"><img src="$small_image" width="40" border="0" alt="$image_description" /></a>|;
+
+        my $plot_name = $_->{stock_uniquename};
+        my $accession_name;
+        if ($plot_name) {
+            my $plot_stock = $schema->resultset('Stock::Stock')->find({uniquename => $plot_name});
+            if ($plot_stock) {
+                my $accession_stock = $plot_stock->search_related('stock_relationship_subjects', {
+                    'type.name' => 'plot_of',
+                }, {
+                    join => 'type',
+                })-> single;
+                if ($accession_stock) {
+                    my $accession_id = $accession_stock->object->stock_id;
+                    my $accession_uniquename = $accession_stock->object->uniquename;
+                    $accession_name = "<a href='/stock/$accession_id/view'>$accession_uniquename</a>";
+                }
+            }
+        }
 
         my @line;
         if ($params->{html_select_box}) {
@@ -121,6 +145,7 @@ sub image_search :Path('/ajax/search/images') Args(0) {
             $_->{image_description},
             "<a href='/solpeople/personal-info.pl?sp_person_id=".$_->{image_sp_person_id}."' >".$_->{image_username}."</a>",
             $associations,
+            $accession_name,
             $observations,
             (join ', ', @tags)
         );
