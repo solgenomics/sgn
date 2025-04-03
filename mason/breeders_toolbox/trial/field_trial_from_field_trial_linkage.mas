@@ -6,6 +6,8 @@ $trial_name
 </%args>
 
 <& /util/import_javascript.mas, legacy => [ "d3/d3-pedigree-tree.js", "d3/d3Min.js" ] &>
+<& /util/import_javascript.mas, node_modules => [ "d3-shape.js", "dist/d3-sankey.js", "sankey.js", "d3-array.js", "d3-path.js" ]  &>
+
 
 <div id="field_trial_to_field_trial_html">
 </div>
