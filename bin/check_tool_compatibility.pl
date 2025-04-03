@@ -98,7 +98,7 @@ eval {
 };
 if ($@) {
     $dbh->rollback();
-    print STDERR "Tool compatibility failed.$@\n";
+    die "Tool compatibility failed.$@\n";
 } else {
     $dbh->commit();
     $dbh->disconnect();

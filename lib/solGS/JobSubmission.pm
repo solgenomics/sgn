@@ -160,7 +160,7 @@ sub submit_job {
     ###my $config = $self->config_file;
     ###$config = retrieve($config);
 
-    print STDERR "submitting job... $args->{cmd}\n";
+    print STDERR "[SERVER] submitting job... $args->{cmd}\n";
 
     eval {
         $job = CXGN::Tools::Run->new( $args->{config} );

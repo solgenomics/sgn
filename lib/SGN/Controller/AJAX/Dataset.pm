@@ -444,9 +444,8 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
     my $dbname = $c->config->{dbname};
     my $dbpass = $c->config->{dbpass};
     
-    my $cmd = "perl home/production/cxgn/sgn/bin/check_tool_compatibility.pl -i $dataset_id -G '$genotyping_protocol' -H $dbhost -U $dbuser -D $dbname -P $dbpass";
+    my $cmd = "perl home/production/cxgn/sgn/bin/check_tool_compatibility.pl -i $dataset_id -G '$genotyping_protocol' -H $dbhost -D $dbname -U $dbuser -P $dbpass";
 
-    my $logfile = $c->config->{job_finish_log};
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     eval {
@@ -455,11 +454,11 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
             people_schema => $c->dbic_schema("CXGN::People::Schema"),
             sp_person_id => $user,
             args => {
-                logfile => $logfile,
                 name => $dataset->name()." tool compatibility check",
                 results_page => "/dataset/$dataset_id",
                 type => 'tool_compatibility',
-                cmd => $cmd
+                cmd => $cmd,
+                logfile => $c->config->{job_finish_log}
             }
         });
 
@@ -471,7 +470,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
             error => "Error calculating tool compatibility:\n$@"
         };
     } else {
-        sleep 5;
+        sleep 3;
         if ($dataset->tool_compatibility){
             $c->stash->{rest} = {
                 tool_compatibility => JSON::Any->encode($dataset->tool_compatibility)

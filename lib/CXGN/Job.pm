@@ -166,7 +166,7 @@ in the database row. Can be one of:
 
 =cut
 
-enum 'ValidType', [qw( download upload tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )];
+enum 'ValidType', [qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )];
 
 has 'type' => ( 
     isa => 'Maybe[ValidType]', 
@@ -253,6 +253,11 @@ sub BUILD {
         $self->status($row->status());
         $self->submit_page($job_args->{submit_page});
         $self->results_page($job_args->{results_page});
+        my $logfile;
+        if (!$self->retrieve_argument('logfile')) {
+            $logfile = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep job_finish_log | sed -r 's/\\w+\\s//'`;
+            $self->args->{logfile} = $logfile;
+        }
     }
 }
 
@@ -266,10 +271,7 @@ sub check_status {
     my $self = shift;
 
     my $backend_id = $self->backend_id();
-
-    if (!$self->retrieve_argument('logfile')) {
-        die "No logfile. Cannot get finish timestamp.\n";
-    }
+    my $logfile = $self->retrieve_argument('logfile');
 
     if (!$backend_id || !$self->has_sp_job_id()) {
         return $self->status() ? $self->status() : "";
@@ -278,7 +280,7 @@ sub check_status {
             my $squeue = `squeue --job=$backend_id`;
             my @job_results = split("\n", $squeue);
             if (scalar(@job_results) < 2) { #Squeue gives at least two lines, a header and data, if the job is live
-                my @rows = read_file( $self->args->{logfile}, { binmode => ':utf8' } );
+                my @rows = read_file( $logfile, { binmode => ':utf8' } );
                 my $db_id = $self->sp_job_id();
                 my $finish_row = grep {/$db_id\s+/} @rows;
 
@@ -321,9 +323,8 @@ sub delete {
     if (!$self->has_sp_job_id()) {
         die "Deletion has no meaning for jobs that have not yet been submitted.\n";
     } 
-    if (!$self->args() || !$self->args->{logfile}) {
-        die "No job finish logfile found!\n";
-    }
+
+    my $logfile = $self->retrieve_argument('logfile');
 
     my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
@@ -334,9 +335,9 @@ sub delete {
     eval {
         $row->delete();
         my $job_id = $self->sp_job_id();
-        my @rows = read_file( $self->args->{logfile}, { binmode => ':utf8' } );
+        my @rows = read_file( $logfile, { binmode => ':utf8' } );
         @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
-        write_file($self->args->{logfile},{binmode => ':utf8'},@rows);
+        write_file($logfile,{binmode => ':utf8'},@rows);
     };
     if ($@) {
         die "An error occurred deleting job from database: $@\n";
@@ -356,6 +357,7 @@ sub cancel {
     if (!$self->has_backend_id()) {
         die "Cannot cancel a job without a backend ID.\n";
     }
+    my $logfile = $self->retrieve_argument('logfile');
 
     my $backend_id = $self->backend_id();
 
@@ -365,7 +367,7 @@ sub cancel {
         my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime();
         my $formatted_time = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
         $self->finish_timestamp($formatted_time);
-        system('echo "'.$self->sp_job_id().'    '.$formatted_time.'" >> '.$self->args->{logfile});
+        system('echo "'.$self->sp_job_id().'    '.$formatted_time.'" >> '.$logfile.' >/dev/null 2>&1');
         $self->store();
     };
     if ($@){
@@ -410,45 +412,62 @@ sub submit {
     if (!$self->retrieve_argument('cmd')) {
         die "Background jobs must have a command to run.\n";
     }
+
+    my $logfile = $self->retrieve_argument('logfile');
     my $cmd = $self->args->{cmd};
     my $cxgn_tools_run_config;
+    my $user_id = $self->sp_person_id() ? $self->sp_person_id() : "unknown_user";
+    my $name = $self->retrieve_argument('name') =~ s/ /_/gr;
+    my $err_file = "/home/production/volume/tmp/$user_id/$name/$name.err";
+    my $out_file = "/home/production/volume/tmp/$user_id/$name/$name.out";
+    my $temp_base = "/home/production/volume/tmp/$user_id/$name/";
     if (!$self->retrieve_argument('cxgn_tools_run_config')) {
-        my $name = $self->retrieve_argument('name') =~ s/ /_/gr;
         $cxgn_tools_run_config = {
-            'err_file' => "/home/production/volume/tmp/$name/$name.err",
-            'sleep' => undef,
+            'err_file' => $err_file,
+            #'sleep' => undef,
             'submit_host' => 'localhost',
-            'queue' => 'batch',
-            'is_async' => 0,
-            'out_file' => "/home/production/volume/tmp/$name/$name.out",
-            'temp_base' => "/home/production/volume/tmp/$name/",
-            'max_cluster_jobs' => 1000000000,
-            'do_cleanup' => 0,
-            'backend' => 'Slurm'
+            #'queue' => 'batch',
+            #'is_async' => 0,
+            'out_file' => $out_file,
+            'temp_base' => $temp_base,
+            #'max_cluster_jobs' => 1000000000,
+            #'do_cleanup' => 0,
+            'backend' => 'slurm'
         };
     } else {
+        if (!$self->args->{cxgn_tools_run_config}->{'err_file'}) {
+            $self->args->{cxgn_tools_run_config}->{'err_file'} = $err_file;
+        }
+        if (!$self->args->{cxgn_tools_run_config}->{'out_file'}) {
+            $self->args->{cxgn_tools_run_config}->{'out_file'} = $out_file;
+        }
+        if (!$self->args->{cxgn_tools_run_config}->{'temp_base'}) {
+            $self->args->{cxgn_tools_run_config}->{'temp_base'} = $temp_base;
+        }
         $cxgn_tools_run_config = $self->args->{cxgn_tools_run_config};
     }
 
     my $sp_job_id = $self->store();
 
-    my $finish_timestamp_cmd = ';
-FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z"); 
-echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" ';
+    my $finish_timestamp_cmd = $self->generate_finish_timestamp_cmd();
 
     my $job;
     my $backend_id;
     my $status;
 
     eval {
-        print STDERR "[SERVER] making CXGN::Tools::Run...\n";
-        $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
+        print STDERR "[SERVER] making CXGN::Tools::Run with config:\n";
+        print STDERR Dumper $cxgn_tools_run_config;
+        $job = CXGN::Tools::Run->new($cxgn_tools_run_config); 
 
-        $job->do_not_cleanup(1);
-        $job->is_cluster(1);
-        
         print STDERR "[SERVER] running command...\n";
-        $job->run_cluster($cmd.$finish_timestamp_cmd); #this fails...
+        if ($self->retrieve_argument('not_background')) {
+            $job->run($cmd.$finish_timestamp_cmd);
+        } else {
+            #$job->do_not_cleanup(1);
+
+            $job->run_cluster($cmd.$finish_timestamp_cmd);
+        }
 
         $backend_id = $job->cluster_job_id();
         print STDERR "[SERVER] Submitted job with backend id: $backend_id\n";
@@ -459,7 +478,7 @@ echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" ';
         $self->status('failed');
         $self->store();
         print STDERR "[SERVER] error: $@\n";
-        die "An error occured trying to submit a background job. $@\n";
+        die "An error occured trying to submit a background job.\n";
     } 
 
     $self->backend_id($backend_id);
@@ -490,7 +509,6 @@ sub store {
             $row->type_id($self->type_id());
             $row->update();
         } else {
-            print STDERR "[SERVER] Current time: ".DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S')."\n";
             my $cvterm_row = $self->schema->resultset('Cv::Cvterm')->find({ name => $self->type() });
             my $cvterm_id = $cvterm_row->cvterm_id();
             my $row = $self->people_schema()->resultset("SpJob")->create({
@@ -511,6 +529,31 @@ sub store {
     } 
     
     return $self->sp_job_id();
+}
+
+=head2 generate_finish_timestamp_cmd();
+
+Generates a command that gives the finish timestamp. Use to append to a cmd before submitting a job. 
+
+=cut
+
+sub generate_finish_timestamp_cmd {
+    my $self = shift;
+
+    my $logfile = $self->retrieve_argument('logfile');
+
+    if (!$self->has_sp_job_id()) {
+        die "Can't generate a finish timestamp if job has no id.\n";
+    } 
+
+    my $sp_job_id = $self->sp_job_id();
+
+    return ';
+
+FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z"); 
+echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$logfile.' > /dev/null 2>&1;
+
+';
 }
 
 =head1 CLASS METHODS

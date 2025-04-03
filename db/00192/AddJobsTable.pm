@@ -64,6 +64,7 @@ sub patch {
         'job_type' => [
             ['download','A background job downloading data from the server'],
             ['upload', 'A background job uploading data to the server'],
+            ['report', 'A background job for generating personalized reports']
             # 'pca_analysis',
             # 'kinship_analysis',
             ['tool_compatibility','A background job for determining which analysis tools can be used on a dataset'],
