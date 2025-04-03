@@ -770,7 +770,8 @@ sub check_measurement {
 	    }
 	    if (exists($self->unique_trait_stock_timestamp()->{$trait_cvterm_id, $stock_id, $timestamp})) {
 		# print STDERR "trait name : $trait_name  with timestamp \n";
-		$error_message .= "<small>For the multiple measurement trait $trait_name the observation unit $plot_name already has a value associated with it at exactly the same time";
+		$warning_message .= "<small>For the multiple measurement trait $trait_name the observation unit $plot_name already has a value associated with it at exactly the same time. Skipping.";
+		$self->same_value_count($self->same_value_count() +1);
 	    }
 	}
 	
@@ -779,37 +780,39 @@ sub check_measurement {
 	#check if the plot_name, trait_name combination already exists in database.
 	if ($repeat_type eq "single") {
 
-	    #print STDERR "Processing this trait with value $trait_value as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
+	    print STDERR "Processing this trait with value $trait_value as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
 	    if (exists($self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id})) {
 		my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};
 
 		if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
 		    $self->same_value_count($self->same_value_count() + 1);
+		    $warning_message .= "For single trait with id $trait_cvterm_id the same value ($trait_value) is already recorded in the database, skipping!\n";
 		}
 	    }
 	    elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
 		my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
 		if ( defined($prev) ) {
-		    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+		    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
 		}
 	    }
 	    elsif (exists($self->unique_trait_stock->{$trait_cvterm_id, $stock_id})) {
 		my $prev = $self->unique_trait_stock->{$trait_cvterm_id, $stock_id};
 		if ( defined($prev) ) {
-		    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+		    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
 		}
 	    }
 	    
 	    #check if the plot_name, trait_name combination already exists in same file.
 	    if (exists($self->check_file_stock_trait_duplicates->{$trait_cvterm_id, $stock_id})) {
-		$warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
+		$warning_message .= "<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
 	    }
 	    $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
 	    
 	}
 	else {   ## multiple or time_series - warn only if the timestamp/value are identical
 	    if (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp}) && $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp} eq $trait_value) {
-		$warning_message .= "For trait 'trait_name', the  timepoint $timestamp for stock  $stock_id already has a measurement with the same value $trait_value associated with it.<hr>";
+		$warning_message .= "For multiple trait with id $trait_cvterm_id, the  timepoint $timestamp for stock  $stock_id already has a measurement with the same value $trait_value associated with it.<hr>";
+		$self->same_value_count($self->same_value_count() + 1);
 	    }
 	}
     }
@@ -825,7 +828,7 @@ sub check_measurement {
  #   }
     # combine all warnings about the same values into a summary count
     if ( defined($self->same_value_count()) && ($self->same_value_count > 0) ) {
-        $warning_message = $warning_message."<small>There are ".$self->same_value_count()." values in your file that are the same as values already stored in the database.</small>";
+        $warning_message .= "<small>There are ".$self->same_value_count()." values in your file that are the same as values already stored in the database.</small>";
     }
     
     ## Verify metadata
@@ -999,7 +1002,7 @@ sub store {
 			print STDERR "ABOUT TO STORE $plot_name, $trait_name, ".Dumper($value_array)."\n";
 
 			my ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
-##<<<<<<< HEAD
+			
 			if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }
 			
 			# convert to array or array format for single array values to accept old format inputs without refactoring
@@ -1077,7 +1080,10 @@ sub store {
 
 			#print STDERR "\nREPEAT TYPE for $trait_cvterm_id: $repeat_type\n\n";
 
-			if ($overwrite_values && $repeat_type eq "single") {
+			# deal with the case where overwrite_values is selected, the trait is of type single, and
+			# the same value for the trait does not exist in the database yet.
+			#
+			if ($overwrite_values && $repeat_type eq "single") {   
 			    
 			    #print STDERR "STORING SINGLE TRAIT WITH OVERWRITE VALUES!\n";
 			    if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
@@ -1102,27 +1108,54 @@ sub store {
 				    $remove_count++;
 				}
 				if ( $overwrite_values && defined($trait_value) && length($trait_value) ) {
-				    #print STDERR "OVERWRITING VALUE..,\n";
-				    $overwrite_count++;
-				    $plot_trait_uniquename .= ", overwritten: $upload_date";
-				    $phenotype_object->uniquename($plot_trait_uniquename);
-				    $phenotype_object->store();
+				    print STDERR "OVERWRITING VALUE..,\n";
+
+				    # do we have a previous measurement with the same value - do not store
+				    #
+				    my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};  # boolean, not trait value
+				    my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
+
+				    if ($prev || $prev_with_timestamp eq $trait_value) {
+					# this value is already in the database - skip this save
+					print STDERR "SKIPPING THIS SAVE AS VALUE $prev or $prev_with_timestamp ARE ALREADY STORED.\n";
+				    }
+				    else {
+					print STDERR "STORING THE VALUE $trait_value FOR TRAIT $trait_cvterm_id\n";
+					$overwrite_count++;
+					$plot_trait_uniquename .= ", overwritten: $upload_date";
+					$phenotype_object->uniquename($plot_trait_uniquename);
+					$phenotype_object->store();
+				    }
 				}
 			    }
 			    else {
 				# we don't have an existing measurement in the database, so just add it
 				# and keep track of it
 				#
+				print STDERR "DID NOT FIND PREVIOUS ENTRY, JUST STORING $trait_cvterm_id, VALUE $trait_value!\n";
 				$phenotype_object->store();
 				$new_count++;
 			    }
 			}		    
 			elsif ($repeat_type eq "single") {
 			    # if the repeat_type is single, but no overwrite values,
-			    # we add a new measurement if there is no measurement present yet
+			    # we add a new measurement if there is no measurement present yet with the same value
 			    #
-			    $new_count++;
-			    $phenotype_object->store();
+			    my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};  # just a boolean, not trait_value
+			    my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
+
+			    print STDERR "PREV: $prev. PREV_WITH_TIMESTAMP: $prev_with_timestamp (timestamp is $timestamp)\n";
+			    
+			    if ($prev || $prev_with_timestamp eq $trait_value) {
+				# this value is already in the database - skip this save
+				print STDERR "SKIPPING THIS SAVE AS VALUE $prev or $prev_with_timestamp ARE ALREADY STORED (SECOND CASE).\n";
+				$skip_count++;
+			    }
+			    else {
+				print STDERR "STORING VALUE WITH OVERWRITE CONDITION\n";
+				$new_count++;
+				$phenotype_object->store();
+			    }
 			}
 			    
 			elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
@@ -1146,10 +1179,16 @@ sub store {
 				    $remove_count++;
 				}
 				else {
-				    # add a completely new measurement
+				    # add a completely new measurement if it doesn't exist yet
 				    #
-				    $phenotype_object->store();
-				    $new_count++;
+				    my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
+				    if ($prev_with_timestamp ne $trait_value) { 
+					$phenotype_object->store();
+					$new_count++;
+				    }
+				    else {
+					$skip_count++;
+				    }
 				}
 			    }
 			    

@@ -96,11 +96,13 @@ $t->while_logged_in_as("submitter", sub {
         "upload_phenotype_fieldbook_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
 
+    print STDERR "VERIFY STATUS: $verify_status\n";
+    
     ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation");
-    ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
-    ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
-    ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
-    ok($verify_status =~ /There are 28 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
+    ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify plot names and trait names after store validation");
+    ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify yellow warnings after store validation");
+    ok($verify_status =~ /To overwrite previously stored values instead/, "Verify overwrite values after store validation");
+    ok($verify_status =~ /There are 28 values in your file that are the same as values already stored in the database./, "Verify 28 values in your file after store validation");
 
     $t->find_element_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
     sleep(10);
@@ -108,11 +110,14 @@ $t->while_logged_in_as("submitter", sub {
     $verify_status = $t->find_element_ok(
         "upload_phenotype_fieldbook_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
-    ok($verify_status =~ /0 new values stored/, "Verify warnings after store validation");
-    ok($verify_status =~ /30 previously stored values skipped/, "Verify warnings after store validation");
-    ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation");
-    ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation");
-    ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation");
+
+    print STDERR "VERIFY STATUS 2: $verify_status\n";
+    
+    ok($verify_status =~ /0 new values stored/, "Verify warnings: 0 new values stored");
+    ok($verify_status =~ /30 previously stored values skipped/, "Verify warnings: 30 previously stored values skipped");
+    ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings: 0 previously stored values overwritten");
+    ok($verify_status =~ /0 previously stored values removed/, "Verify warnings: 0 previously stored values removed");
+    ok($verify_status =~ /Upload Successfull!/, "Verify warnings: Upload successful");
 
     $t->get_ok('/fieldbook');
     sleep(2);
