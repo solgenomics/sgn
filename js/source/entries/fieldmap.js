@@ -38,6 +38,7 @@ export function init() {
             this.brapi_plots = Object;
             this.heatmap_selected = false;
             this.heatmap_selection = String;
+            this.heatmap_cached_data = {};
             this.heatmap_object = Object;
             this.display_borders = true;
             this.linked_trials = {};

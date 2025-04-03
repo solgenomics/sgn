@@ -763,6 +763,10 @@ jQuery(document).ready( function() {
 
     async function get_heatmap_observations(observationVariableDbId, pageSize=5000, page=0, observations=[]) {
         return new Promise((resolve, reject) => {
+            if ( FieldMap.heatmap_cached_data.hasOwnProperty(observationVariableDbId) ) {
+                return resolve(FieldMap.heatmap_cached_data[observationVariableDbId]);
+            }
+
             jQuery.ajax({
                 headers: (auth_token) ? {'Authorization': `Bearer ` + auth_token } : {},
                 method: 'GET',
@@ -783,6 +787,7 @@ jQuery(document).ready( function() {
                             observations = await get_heatmap_observations(observationVariableDbId, pageSize, page+1, observations);
                         }
 
+                        FieldMap.heatmap_cached_data[observationVariableDbId] = observations;
                         resolve(observations);
                     }
                     else {
