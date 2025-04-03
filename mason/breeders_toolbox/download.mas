@@ -652,7 +652,7 @@ $(document).ready(function() {
       $('#genotype').click(function() {
 
       var accession_list_id = $('#genotype_accession_list_list_select').val();
-      var protocol_list_id = $('#protocol_list').val();
+      var protocol_list_id = $('#gtp_select').val();
 
       var accession_validation = 1;
       if (accession_list_id) {

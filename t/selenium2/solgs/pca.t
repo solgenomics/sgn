@@ -80,6 +80,79 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get_ok('/pca/analysis', 'pca home page');
     sleep(5);
+
+
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    sleep(5);
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'trials dataset job name')->send_keys('trials dataset pheno pca job');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca page')->click();
+    sleep(3);
+
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    sleep(2);
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca trials dataset (phenotype)')->click();
+    sleep(5);
+    $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials dataset pheno  pca plot')->click();
+    sleep(5);
+
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(3);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store pc scores')->click();
+    sleep(80);
+    $d->find_element_ok('View stored PC', 'partial_link_text',  'view store pca')->click();
+    sleep(20);
+
+    $d->driver->go_back();
+    sleep(15);
+
+    `rm -r $cache_dir`;
+
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(5);
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'trials dataset job name')->send_keys('trials dataset geno pca job');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca page')->click();
+    sleep(3);
+
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(2);
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca trials dataset (genotype)')->click();
+    sleep(5);
+    $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials dataset geno  pca plot')->click();
+    sleep(5);
+
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(2);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store pc scores')->click();
+    sleep(80);
+    $d->find_element_ok('View stored PC', 'partial_link_text',  'view store pca')->click();
+    sleep(20);
+
+    $d->driver->go_back();
+    sleep(15);
+
+    `rm -r $cache_dir`;
+
+
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
