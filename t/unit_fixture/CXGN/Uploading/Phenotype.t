@@ -1041,6 +1041,12 @@ print STDERR "Pheno for trait 70773 after data collector: ".Dumper(\@pheno_for_t
 print STDERR "EXPECTED: ".Dumper(\@pheno_for_trait_check);
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload 3' );
 
+
+done_testing();
+
+$f->clean_up_db();
+
+
 # $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
 # $post1_experiment_count = $experiment->count();
 # $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
@@ -1328,7 +1334,7 @@ is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits
 # 	$nd_experiment_stock_number = 105;
 # }
 
-done_testing();
+#done_testing();
 
 $f->clean_up_db();
 
