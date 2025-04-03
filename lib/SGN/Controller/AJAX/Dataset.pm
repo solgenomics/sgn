@@ -444,7 +444,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
     my $dbname = $c->config->{dbname};
     my $dbpass = $c->config->{dbpass};
     
-    my $cmd = "perl home/production/cxgn/sgn/bin/check_tool_compatibility.pl -i $dataset_id -G '$genotyping_protocol' -H $dbhost -D $dbname -U $dbuser -P $dbpass";
+    my $cmd = "perl /home/production/cxgn/sgn/bin/check_tool_compatibility.pl -i $dataset_id -G '$genotyping_protocol' -H $dbhost -D $dbname -U $dbuser -P $dbpass";
 
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 

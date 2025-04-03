@@ -102,7 +102,6 @@ if ($@) {
 } else {
     $dbh->commit();
     $dbh->disconnect();
-    print STDERR "Done.\n";
 }
 
 1; 
