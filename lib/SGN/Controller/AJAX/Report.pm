@@ -123,18 +123,9 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
     ##Creating directory ###
     make_path($out_directory);
 
-
-    # Child process
-    close(STDOUT);
-    close(STDERR);
-
-    open STDOUT, '>>', '/tmp/report_runner.log';
-    open STDERR, '>>', '/tmp/report_runner.log';
-
     my @excel_files_to_zip;  # <--- to collect all xlsx files
     my $zip_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);
     
-    print("aui os scripts:\n");
     print Dumper \$report_scripts;
     foreach my $script (@$report_scripts) {
         my $script_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);  # one time
@@ -182,8 +173,6 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
     print "All Excel files zipped into: $zip_path\n";
 
     send_report_zip_to_emails($emails, $zip_path, $zip_filename);
-
-    ### === Parent process returns immediately === ###
     $c->stash->{rest} = {
         success => JSON::true,
         message => "Your request was successfully processed. Please check selected emails for the results.",
