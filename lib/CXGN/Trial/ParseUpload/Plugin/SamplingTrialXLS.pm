@@ -260,7 +260,7 @@ sub _validate_with_plugin {
 
         #tissue_type must not be blank and must be either leaf, root, stem, fruit, seed, tuber
         if (!$tissue_type || $tissue_type eq '' || ($tissue_type ne 'leaf' && $tissue_type ne 'root' && $tissue_type ne 'stem' && $tissue_type ne 'fruit' && $tissue_type ne 'seed' && $tissue_type ne 'tuber' && $tissue_type ne 'sink leaf' && $tissue_type ne 'source leaf' && $tissue_type ne 'petiole' && $tissue_type ne 'apex' && $tissue_type ne 'upper stem (bulk)' && $tissue_type ne 'middle stem (bulk)' && $tissue_type ne 'middle stem core' && $tissue_type ne 'middle stem peel' && $tissue_type ne 'lower stem (bulk)' && $tissue_type ne 'lower stem core' && $tissue_type ne 'lower stem peel' && $tissue_type ne 'storage root' && $tissue_type ne 'storage root core' && $tissue_type ne 'storage root peel' && $tissue_type ne 'fibrous root')) {
-            push @error_messages, "Cell F$row_name: column tissue type and must be either leaf, root, stem, seed, fruit, tuber, sink leaf, source leaf, petiole, apex, upper stem (bulk), middle stem (bulk), middle stem core, middle stem peel, lower stem (bulk), lower stem core, lower stem peel, storage root, storage root core, storage root peel, or fibrous root";
+            push @error_messages, "Cell F$row_name: column tissue type value must be either leaf, root, stem, seed, fruit, tuber, sink leaf, source leaf, petiole, apex, upper stem (bulk), middle stem (bulk), middle stem core, middle stem peel, lower stem (bulk), lower stem core, lower stem peel, storage root, storage root core, storage root peel, or fibrous root";
         }
 
     }
