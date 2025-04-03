@@ -39,6 +39,13 @@ source(paramfile)  # should give us dependent_variable and the model
 
 trait = dependent_variables
 pd$studyYear = as.factor(pd$studyYear)
+
+##Replacing location name to locationDbId
+fixed_model <- gsub("locationName", "locationDbId", fixed_model)
+random_model <- gsub("locationName", "locationDbId", random_model)
+fixed_factors <- gsub("locationName", "locationDbId", fixed_factors)
+random_factors <- gsub("locationName", "locationDbId", random_factors)
+
 print(paste("FIXED MODEL :", fixed_model))
 print(paste("RANDOM MODEL: ", random_model))
 print(paste("FIXED FACTORS: ", fixed_factors))
@@ -54,6 +61,10 @@ adjusted_means = BLUE
 
 for(i in 1:length(trait)){
 
+    Rowf = as.factor(as.numeric(pd$rowNumber))
+    Colf = as.factor(as.numeric(pd$colNumber))
+    pd$rowNumber = as.numeric(pd$rowNumber)
+    pd$colNumber = as.numeric(pd$colNumber)
 
     #print(paste("processing trait", trait[i]))
     dependent_variables = trait[i]
@@ -67,61 +78,58 @@ for(i in 1:length(trait)){
 
     pd <- pd[!(is.na(pd[c(dependent_variables)])), ]
 
-
+ 
 
     genotypeEffectType = as.vector(str_match(random_model, 'germplasmName'))
     genotypeEffectType = ifelse(is.na(genotypeEffectType), 'fixed', 'random')
     print(paste('modeling genotypes as: ', genotypeEffectType))
 
+
     if (genotypeEffectType=="random") {
 
-        mixmodel = mmer(as.formula(fixed_model), random = as.formula(random_model), rcov = ~ units, data=pd)
-        # print(paste("MIXED MODEL: ", mixmodel))
-	    #   varcomp<- summary(mixmodel)$varcomp
-        # print(varcomp)
+        mixmodel = mmer(as.formula(fixed_model), random = as.formula(random_model), rcov = ~ vsr(units), dateWarning = F, data=pd)
 
-        # print("---------")
+        print(paste("MIXED MODEL: ", mixmodel))
+	      varcomp<- summary(mixmodel)$varcomp
+        print(varcomp)
 
-        # print("---------")
+        print("---------")
 
-        ##BLUPS
-        res <- randef(mixmodel) ##obtain the blups
+        print("---------")
+
+        res <- mixmodel$U[["u:germplasmName"]] 
         BLUP <- as.data.frame(res)
-        BLUP <- tibble::rownames_to_column(BLUP, var = 'accession name')
-        print(BLUP)
+        BLUP <- tibble::rownames_to_column(BLUP, var="germplasmName")
+        # print(BLUP)
 
         ##ajusted means
-        p0 = predict.mmer(mixmodel, D="germplasmName") ##runs the prediction
-        summary(p0)
-        adj = p0$pvals                                        ##obtains the predictions
-        adjusted_means = as.data.frame(adj)
-        #print(paste("adj", adj))
-        # print(adjusted_means)
+        adjusted_means = BLUP
+        adjusted_means[,2] = adjusted_means[,2] +as.numeric(mixmodel$Beta$Estimate[1])
+
+        print(adjusted_means)
 
 
     } else {
-        if (random_model!="") {
-        mixmodel = mmer(as.formula(fixed_model), random = as.formula(random_model), rcov = ~ units, data=pd)
-        } else {
-        mixmodel = mmer(as.formula(fixed_model),  rcov = ~ units, data=pd)
+        
+        mixmodel = mmer(as.formula(fixed_model), random = as.formula(random_model), rcov = ~ vsr(units), dateWarning = F, data=pd)
+        
+        Blues <- summary(mixmodel)$beta
+        BLUE<-as.data.frame(Blues)
+        BLUE <- BLUE[,-1]
+        colnames(BLUE)[1] <- "accession name"
 
-        }
+        Blues$Effect <- gsub("germplasmName","",Blues$Effect)
+        inter_name <- as.character(unique(pd$germplasmName[!unique(pd$germplasmName) %in% Blues$Effect]))
+        Blues$Effect[Blues$Effect == "(Intercept)"] <- inter_name[1]
+        
+        ##obtains adjusted blues
+        adjustedBLUE <- Blues[,c("Effect", "Estimate", "Std.Error")]
+        colnames(adjustedBLUE) <- c("accession name", "predicted value", "std.Error")
+        adjustedBLUE$`predicted value`[2:nrow(adjustedBLUE)] <- adjustedBLUE$`predicted value`[2:nrow(adjustedBLUE)] + mixmodel$Beta$Estimate[1]
 
-        varcomp<-summary(mixmodel)$varcomp
-        print(paste("MIXED MODEL: ", mixmodel))
 
-        #Computing fixed effects
-        blue = summary(mixmodel)$beta
-        BLUE<-as.data.frame(blue)
-        #print(BLUE)
-        #BLUE = merge(x = BLUE, y = fixedeff, by="germplasmName", all=TRUE)
-
-        # compute adjusted blues
-        p0 = predict.mmer(mixmodel, D="germplasmName") ##runs the prediction
-        summary(p0)
-        adj = p0$pvals                                        ##obtains the predictions
-        adjustedBLUE = as.data.frame(adj)
-        #print(paste("adj", adj))
+        BLUE$`accession name` <- adjustedBLUE$`accession name`
+        
         print(adjustedBLUE)
 
     }
