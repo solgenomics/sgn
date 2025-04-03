@@ -156,8 +156,7 @@
 
     // Define the report_scripts variable (semicolon-separated list)
     var report_scripts = "<% $c->get_conf('report_engine') || 0 %>";
-    console.log("Report Scripts Variable: ", report_scripts);
-
+    
     // Split the report_scripts string by ";" and add a checkbox for each script
     var scriptsArray = report_scripts.split(";");
     scriptsArray.forEach(function(script) {
@@ -201,15 +200,12 @@
         report_scripts: selectedScripts
       };
 
-      console.log("Sending the following data to the controller:", formData);
-
       $.ajax({
         url: "/ajax/report/generatereport",
         type: "POST",
         data: { reportData: JSON.stringify(formData) },
         dataType: "json",
         success: function(response) {
-          console.log("Controller response:", response);
           $("#loading-message").hide();
           $("#final-message").text("Your code was successfully processed! Please check results by email.").show();
         },
