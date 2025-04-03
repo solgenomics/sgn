@@ -228,24 +228,21 @@ sub get_layout_output {
             push @rows, $row_num;
             push @cols, $col_num;
         }
-        print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
+
         return {output => \%hash, rows => \@rows, cols => \@cols};
     }
-
-    print STDERR "TrialLayoutDownload running stock type checks ".localtime."\n";
 
     my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
     my $has_plants = $selected_trial->has_plant_entries();
     my $has_subplots = $selected_trial->has_subplot_entries();
     my $has_tissue_samples = $selected_trial->has_tissue_sample_entries();
-
-    print STDERR "TrialLayoutDownload retrieving accessions ".localtime."\n";
-
+    
     my $accessions = $selected_trial->get_accessions();
     my @accession_ids;
     foreach (@$accessions){
         push @accession_ids, $_->{stock_id};
     }
+
     print STDERR "TrialLayoutDownload retrieving trait performance if requested ".localtime."\n";
     my $summary_values = [];
     if (scalar(@selected_traits)>0){
@@ -395,7 +392,6 @@ sub get_layout_output {
         }
     }
 
-
     my $layout_build = {
         schema => $schema,
         trial_id => $trial_id,
@@ -411,10 +407,8 @@ sub get_layout_output {
         all_stats => $all_stats,
         trial_stock_type => $trial_stock_type
     };
+
     my $layout_output;
-
-    print STDERR "TrialLayoutDownload getting output object".localtime."\n";
-
     if ($data_level eq 'plots' ) {
         $layout_output = CXGN::Trial::TrialLayoutDownload::PlotLayout->new($layout_build);
     }
@@ -434,11 +428,7 @@ sub get_layout_output {
         $layout_output = CXGN::Trial::TrialLayoutDownload::SamplingTrialLayout->new($layout_build);
     }
 
-    print STDERR "TrialLayoutDownload retrieving output ".localtime."\n";
-
     my $output = $layout_output->retrieve();
-
-    print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
     return {output => $output};
 }
 
@@ -484,29 +474,33 @@ sub _get_all_pedigrees {
     my %design = %{$design};
 
     print STDERR "TrialLayoutDownload running get_all_pedigrees ".localtime()."\n";
+    my $design_key = (keys %design)[0];
+    my $sample_entry = $design{$design_key};
 
-    # collect all unique accession ids for pedigree retrieval
-    my %accession_id_hash;
-    foreach my $key (keys %design) {
-        $accession_id_hash{$design{$key}{'accession_id'}} = $design{$key}{'accession_name'};
-    }
-    my @accession_ids = keys %accession_id_hash;
-
-    my %pedigree_strings;
-    if (scalar(@accession_ids)>0) {
-        # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
-        my $stock = CXGN::Stock->new ( schema => $schema);
-        my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
-        foreach my $row (@$pedigree_rows) {
-            my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
-            my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
-            $pedigree_strings{$progeny} = $string;
+    if (!$sample_entry->{'analysis_result_stock_id'}) {
+        # collect all unique accession ids for pedigree retrieval
+        my %accession_id_hash;
+        foreach my $key (keys %design) {
+            $accession_id_hash{$design{$key}{'accession_id'}} = $design{$key}{'accession_name'};
         }
-    }
 
-    print STDERR "TrialLayoutDownload get_all_pedigrees finished at ".localtime()."\n";
+        my @accession_ids = keys %accession_id_hash;
+        my %pedigree_strings;
+        if (scalar(@accession_ids)>0) {
+            # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
+            my $stock = CXGN::Stock->new ( schema => $schema);
+            my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
+            foreach my $row (@$pedigree_rows) {
+                my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+                my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
+                $pedigree_strings{$progeny} = $string;
+            }
+        }
 
     return \%pedigree_strings;
+    } else {
+        return {};
+    }
 }
 
 sub _add_exact_performance_to_line {
