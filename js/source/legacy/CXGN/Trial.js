@@ -377,7 +377,7 @@ function edit_trial_details(){
             var new_value = changed_elements[i].value;
             if (type.match(/date/)){
                 if (new_value){
-                    new_value = moment(new_value).format('YYYY/MM/DD HH:mm:ss') || 'remove' ;
+                    new_value = moment(new_value).format('YYYY-MMMM-DD') || 'remove' ;
                 } else {
                     new_value = 'remove';
                 }
@@ -547,7 +547,10 @@ jQuery('#update_field_map_link').click(function () {
 function set_daterangepicker_default (date_element) {
   var date = date_element.val() || '';
   if (date) {
-    date = moment(date, 'YYYY-MMMM-DD').format('MM/DD/YYYY');
+    var format;
+    if ( date.includes('/') ) format = "MM/DD/YYYY";
+    if ( date.includes('-') ) format = "YYYY-MMMM-DD";
+    date = moment(date, format).format('MM/DD/YYYY');
   }
   date_element.val(date);
 }
