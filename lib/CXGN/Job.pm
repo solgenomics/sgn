@@ -172,7 +172,7 @@ in the database row. Can be one of:
 
 has 'job_type' => ( 
     isa => 'Maybe[Str]', 
-    isa => enum([qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )]),
+    # isa => enum([qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )]),
     is => 'rw', 
     predicate => 'has_type'
 );
@@ -282,20 +282,17 @@ sub check_status {
         if ($self->status() eq "submitted") {
             my $squeue = `squeue --job=$backend_id`;
             my @job_results = split("\n", $squeue);
-            if (scalar(@job_results) < 2) { #Squeue gives at least two lines, a header and data, if the job is live
-                my @rows = read_file( $logfile, { binmode => ':utf8' } );
-                my $db_id = $self->sp_job_id();
-                my $finish_row = grep {/$db_id\s+/} @rows;
+            if (scalar(@job_results) < 2) { #Squeue gives only header line if no job to show
+                my $finish_timestamp = $self->read_finish_timestamp();
 
-                if (!$finish_row) { #If no row, job did not finish executing, but is not in squeue, so it failed. 
+                if (!$finish_timestamp) {
                     $self->status("failed");
                     $self->store();
-                } else { #there is a row, so I get the finish timestamp and store it.
+                } else {
                     $self->status("finished");
-                    $finish_row =~ m/$db_id\s+(?<FINISH_TIMESTAMP>\d+-\d+-\d+ \d+:\d+:\d+)/;
-                    $self->finish_timestamp($+{FINISH_TIMESTAMP});
                     $self->store();
                 }
+
             } else { #job is live 
                 my ($JOBID,$PARTITION,$NAME,$USER,$ST,$TIME,$NODES,$NODELIST) = split(/\s+/, $job_results[1]);
                 my @timestamp = split("-", $TIME);#squeue time outputs look like Days-Hours:Mins:Seconds, but days are ommitted for short lived jobs. 
@@ -312,6 +309,41 @@ sub check_status {
         } 
         return $self->status()
     }
+}
+
+=head2 read_finish_timestamp()
+
+Returns the finish timestamp if already recorded. Otherwise, reads the logfile, stores the timestamp, and returns the time.
+
+=cut
+
+sub read_finish_timestamp {
+    my $self = shift;
+    my $logfile = $self->retrieve_argument('logfile');
+
+    if ($self->finish_timestamp()) {
+        return $self->finish_timestamp();
+    }
+
+    if (!$logfile) {
+        return "";
+    }
+
+    my @rows = read_file( $logfile, { binmode => ':utf8' } );
+
+    my $db_id = $self->sp_job_id();
+    my @finish_row = grep {/$db_id\s+/} @rows;
+    my $finish_row = pop(@finish_row);
+
+    $finish_row =~ m/$db_id\s+(?<FINISH_TIMESTAMP>\d+-\d+-\d+ \d+:\d+:\d+.*)/;
+
+    if ($+{FINISH_TIMESTAMP}) {
+        $self->finish_timestamp($+{FINISH_TIMESTAMP});
+        $self->store();
+        return $+{FINISH_TIMESTAMP};
+    }
+
+    return "";
 }
 
 =head2 delete()
@@ -421,20 +453,25 @@ sub submit {
     my $cxgn_tools_run_config;
     my $user_id = $self->sp_person_id() ? $self->sp_person_id() : "unknown_user";
     my $name = $self->retrieve_argument('name') =~ s/ /_/gr;
-    my $err_file = "/home/production/volume/tmp/$user_id/$name/$name.err";
-    my $out_file = "/home/production/volume/tmp/$user_id/$name/$name.out";
-    my $temp_base = "/home/production/volume/tmp/$user_id/$name/";
+    if (!$name) {
+        $name = "job";
+    }
+    my $temp_base = "/home/production/volume/tmp/user_$user_id/$name";
+    `mkdir -p $temp_base`;
+    my $err_file = "$temp_base/job.err";
+    my $out_file = "$temp_base/job.out";
     if (!$self->retrieve_argument('cxgn_tools_run_config')) {
         $cxgn_tools_run_config = {
             'err_file' => $err_file,
-            #'sleep' => undef,
             'submit_host' => 'localhost',
-            #'queue' => 'batch',
-            #'is_async' => 0,
             'out_file' => $out_file,
-            'temp_base' => $temp_base,
-            #'max_cluster_jobs' => 1000000000,
-            #'do_cleanup' => 0,
+            'temp_base' => $temp_base, 
+            'queue' => 'batch',
+            'max_cluster_jobs' => 1000000000,
+            'is_async' => 0,
+            'is_cluster' => 1,
+            'do_cleanup' => 0,
+            'sleep' => undef,
             'backend' => 'Slurm'
         };
     } else {
@@ -462,9 +499,8 @@ sub submit {
         print STDERR "[SERVER] making CXGN::Tools::Run with config:\n";
         print STDERR Dumper $cxgn_tools_run_config;
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
-        #$job = CXGN::Tools::Run->new(); 
         print STDERR "[SERVER] running command:\n$cmd\n";
-        $job->run_cluster($cmd);
+        $job->run_cluster($cmd.$finish_timestamp_cmd);
 
         $backend_id = $job->cluster_job_id();
         print STDERR "[SERVER] Submitted job with backend id: $backend_id\n";
@@ -548,7 +584,7 @@ sub generate_finish_timestamp_cmd {
     return ';
 
 FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z"); 
-echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$logfile.' > /dev/null 2>&1;
+echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$logfile.' ;
 
 ';
 }

@@ -69,7 +69,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             type => $job->job_type(),
             status => $status,
             create_timestamp => $job->create_timestamp(),
-            finish_timestamp => $job->finish_timestamp(),
+            finish_timestamp => $job->read_finish_timestamp(),
             results_page => $results_page,
             actions => $actions_html
         };
