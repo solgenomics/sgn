@@ -232,13 +232,14 @@ sub _search {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    
 
     # my $observation_db_ids = $params->{observationDbId};
     my $observation_db_ids = $params->{observationDbId} || ($params->{observationDbIds} || ());
 
-    my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
-    my @observation_variable_names = $params->{observationVariableNames} ? @{$params->{observationVariableNames}} : ();
+    my @observation_variable_db_ids = $params->{observationVariableDbId} ? @{$params->{observationVariableDbId}} :
+        ($params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}}: ());
+    my @observation_variable_names = $params->{observationVariableName} ? @{$params->{observationVariableName}} :
+        ($params->{observationVariableNames} ? @{$params->{observationVariableNames}}: ());
     # externalReferenceID
     # externalReferenceSource
     my $observation_level = $params->{observationLevel}->[0] || 'all'; # need to be changed in v2
