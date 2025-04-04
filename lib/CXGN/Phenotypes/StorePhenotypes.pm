@@ -440,8 +440,8 @@ sub verify {
         # print STDERR "Plots or traits not valid\n";
         # print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
         # print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
-        $error_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
-        $error_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
+        $error_message .= "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
+        $error_message .= "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
 
         # Display matches of traits with the wrong id
         if ( scalar(@traits_wrong_ids) > 0 ) {
@@ -475,7 +475,7 @@ sub verify {
         my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
         my @archived_zipfile_return = $archived_zip->file_names();
         if (!@archived_zipfile_return){
-            $error_message = $error_message."<small>Image zipfile could not be read. Is it .zip format?</small><hr>";
+            $error_message .= "<small>Image zipfile could not be read. Is it .zip format?</small><hr>";
         } else {
             my $file_names_stripped = $archived_zipfile_return[0];
             my $file_names_full = $archived_zipfile_return[1];
@@ -616,7 +616,7 @@ sub check_measurement {
 	    if ($self->check_trait_format()->{$trait_cvterm_id} eq 'numeric') {
 		my $trait_format_checked = looks_like_number($trait_value);
 		if (!$trait_format_checked && $trait_value ne '') {
-		    $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+		    $error_message .= "<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
 		}
 
                 my $trait_min = defined $self->check_trait_min_value->{$trait_cvterm_id} ? $self->check_trait_min_value->{$trait_cvterm_id} : undef;
@@ -642,59 +642,15 @@ sub check_measurement {
 	    if ($self->check_trait_format->{$trait_cvterm_id} eq 'image') {
 		$trait_value =~ s/^.*photos\///;
 		if (!exists($self->image_plot_full_names->{$trait_value})) {
-		    $error_message = $error_message."<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile called $trait_value. </small><hr>";
+		    $error_message .= "<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile called $trait_value. </small><hr>";
 		}
 	    }
-	
-	    # my @check_values;
 	    
-	    # if (exists($self->check_trait_category()->{$trait_cvterm_id})) {
-	    #     @trait_categories = sort(split /\//, $self->check_trait_category->{$trait_cvterm_id});
-	    # 	# print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
-	    # 	# print STDERR "Trait categories hash: ".Dumper(\%trait_categories_hash)."\n";
-	    # 	my @check_values;
-	    # 	# print STDERR "Check values: ".Dumper(\@check_values)."\n";     
-	    # 	if ($self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
-	    # 	    @check_values = split /\:/, $trait_value;
-	    # 	}
-	    # 	else {
-	    # 	    @check_values = ( $trait_value );
-	    # 	}
-	    # }
-
-	    
-	    #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
- 	    #check if the plot_name, trait_name combination already exists in database.
-	    # if (exist($self->unique_value_trait_stock()->{$trait_value, $trait_cvterm_id, $stock_id})) {
-	    # 	my $prev = $self->unique_value_trait_stock()->{$trait_value, $trait_cvterm_id, $stock_id};
-	    # 	if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
-	    # 	    $self->same_value_count( $self->same_value_count++ );
-	    # 	}
-	    # }
-	    # elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
-	    # 	my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
-	    # 	if ( defined($prev) ) {
-	    # 	    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
-	    # 	}
-	    # } elsif (exists($self->unique_trait_stock()->{$trait_cvterm_id, $stock_id})) {
-	    # 	my $prev = $self->unique_trait_stock()->{$trait_cvterm_id, $stock_id};
-	    # 	if ( defined($prev) ) {
-	    # 	    $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
-	    # 	}
-	    # }
-	    
-	    #check if the plot_name, trait_name combination already exists in same file.
-	    #if (exists($self->file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id})) {
-	#	$warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
-	 #   }
-	  #  $self->file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
-	    
-	    
-	    if ($self->has_timestamps()) { #timestamp_included) {
+	    if ($timestamp) { #timestamp_included) {
 		if ( (!$timestamp && !$trait_value) || ($timestamp && !$trait_value) || ($timestamp && $trait_value) ) {
 		    if ($timestamp) {
 			if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-			    $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
+			    $error_message .= "<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
 			}
 		    }
 		}
@@ -1159,16 +1115,21 @@ sub store {
 			}
 			    
 			elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
+
+			    print STDERR "TYPE IS MULTIPE OR TIME SERIES...\n";
 			    # otherwise, we deal with a time series and we add a new value
 			    # if there is no other exact same value with exactly the same timestamp
 			    #
 			    if ($phenotype_id) { 
 				if ($self->overwrite_values()) {
+				    print STDERR "OVERWRITE VALUES IS SET...\n";
 				    $phenotype_object->phenotype_id($phenotype_id);
 				    $phenotype_object->store();
 				    $overwrite_count++;
 				}
 				elsif ($self->remove_values()) {
+
+				    print STDERR "REMOVE VALUES IS SET...\n";
 				    # if observations are emtpy, with this option,
 				    # remove the measurement from the database
 				    #
@@ -1178,20 +1139,23 @@ sub store {
 				    }
 				    $remove_count++;
 				}
+			    }
+			    else {
+				# add a completely new measurement if it doesn't exist yet
+				#
+				my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
+				print STDERR "COMPARING $prev_with_timestamp to $trait_value... \n";
+				
+				
+				if ($prev_with_timestamp ne $trait_value) {
+				    print STDERR "REALLY STORING...\n";
+				    $phenotype_object->store();
+				    $new_count++;
+				}
 				else {
-				    # add a completely new measurement if it doesn't exist yet
-				    #
-				    my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
-				    if ($prev_with_timestamp ne $trait_value) { 
-					$phenotype_object->store();
-					$new_count++;
-				    }
-				    else {
-					$skip_count++;
-				    }
+				    $skip_count++;
 				}
 			    }
-			    
 			}
 			
 			my $additional_info_stored;
