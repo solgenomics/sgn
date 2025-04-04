@@ -83,9 +83,9 @@ sub get_matches {
         #print STDERR "Stockname length: $stockname_length\n";
         if ($stockname_length <= 5) {
             $max_distance = 1;
-        } elsif ($stockname_length <= 10) {
+        } elsif ($stockname_length >= 10) {
             $max_distance = 2;
-        } elsif ($stockname_length <= 20) {
+        } elsif ($stockname_length >= 20) {
             $max_distance = 4;
         } else {
             $max_distance = 5;
