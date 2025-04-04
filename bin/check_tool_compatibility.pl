@@ -76,7 +76,7 @@ my $dbh = CXGN::DB::Connection->new(
         dbhost=>$dbhost,
 		dbname=>$dbname,
         dbuser=>$user,
-        # dbpass=>$password,
+        #dbpass=>$password,
 		dbargs => {
             AutoCommit => 0,
 			RaiseError => 1
@@ -99,9 +99,9 @@ eval {
 if ($@) {
     $dbh->rollback();
     die "Tool compatibility failed.$@\n";
-} else {
-    $dbh->commit();
-    $dbh->disconnect();
 }
+
+$dbh->commit();
+$dbh->disconnect();
 
 1; 

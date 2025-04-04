@@ -276,7 +276,7 @@ sub check_status {
     my $backend_id = $self->backend_id();
     my $logfile = $self->retrieve_argument('logfile');
 
-    if (!$backend_id || !$self->has_sp_job_id()) {
+    if (!$backend_id && !$self->has_sp_job_id()) {
         return $self->status() ? $self->status() : "";
     } else {
         if ($self->status() eq "submitted") {
@@ -497,6 +497,7 @@ sub submit {
 
     eval {
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
+        print STDERR "[SERVER] submitting job: \n$cmd\n";
         $job->run_cluster($cmd.$finish_timestamp_cmd);
 
         $backend_id = $job->cluster_job_id();
@@ -577,7 +578,7 @@ sub generate_finish_timestamp_cmd {
 
     my $sp_job_id = $self->sp_job_id();
 
-    return ';
+    return ' ;
 
 FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z"); 
 echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$logfile.' ;
