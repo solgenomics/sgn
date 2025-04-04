@@ -178,6 +178,22 @@ $sampling_facilities => ();
                                                 <option value="seed">Seed</option>
                                                 <option value="fruit">Fruit</option>
                                                 <option value="tuber">Tuber</option>
+                                                <option value="sink leaf">Sink Leaf</option>
+                                                <option value="source leaf">Source Leaf</option>
+                                                <option value="petiole">Petiole</option>
+                                                <option value="apex">Apex</option>
+                                                <option value="upper stem (bulk)">Upper Stem (Bulk)</option>
+                                                <option value="middle stem (bulk)">Middle Stem (Bulk)</option>
+                                                <option value="middle stem core">Middle Stem Core</option>
+                                                <option value="middle stem peel">Middle Stem Peel</option>
+                                                <option value="lower stem (bulk)">Lower Stem (Bulk)</option>
+                                                <option value="lower stem core">Lower Stem Core</option>
+                                                <option value="lower stem peel">Lower Stem Peel</option>
+                                                <option value="storage root">Storage Root</option>
+                                                <option value="storage root core">Storage Root Core</option>
+                                                <option value="storage root peel">Storage Root Peel</option>
+                                                <option value="fibrous root">Fibrous Root</option>
+
                                             </select>
                                         </div>
                                     </div>
@@ -301,7 +317,7 @@ $sampling_facilities => ();
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
                     <li>sample_number (the sample number for the sample. Must be unique within this sampling trial)</li>
                     <li>replicate (the replicate number for the sample)</li>
-                    <li>tissue_type (must be either leaf, root, stem, seed, fruit or tuber)</li>
+                    <li>tissue_type (must be either leaf, root, stem, seed, fruit, tuber, sink leaf, source leaf, petiole, apex, upper stem (bulk), middle stem (bulk), middle stem core, middle stem peel, lower stem (bulk), lower stem core, lower stem peel, storage root, storage root core, storage root peel, or fibrous root)</li>
                     </ul>
 
                     <b>Optional fields:</b>
