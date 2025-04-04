@@ -56,13 +56,23 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
         });
         my $actions_html = "<span id=\"$job_id\" style=\"display: none;\"></span><button id=\"dismiss_job_$job_id\" onclick=\"jsMod['job'].dismiss_job($job_id);\" class=\"btn btn-small btn-danger\">Dismiss</button>";
         my $status = $job->check_status();
+        my $results_page = "";
         # if ($status eq "finished" && $job->retrieve_argument('type') =~ /analysis/) {
         #     $actions_html .= "<button id=\"save_job_$job_id\" class=\"btn btn-small btn-success\">Save Results</button>";
         # } 
         if ($status eq "submitted") {
-            $actions_html .= "<button id=\"cancel_job_$job_id\" onclick=\"jsMod['job'].cancel_job($job_id)\" class=\"btn btn-small btn-danger\">Cancel</button>"
+            $actions_html .= "<button id=\"cancel_job_$job_id\" onclick=\"jsMod['job'].cancel_job($job_id)\" class=\"btn btn-small btn-danger\">Cancel</button>";
         }
-        my $results_page = $job->retrieve_argument('results_page') ? '<a href="'.$job->retrieve_argument('results_page').'">View</a>' : '';
+        if ($status eq "finished") {
+            $results_page = $job->results_page();
+            if ($results_page) {
+                $results_page =~ s/http[s]*:\/\///;
+                $results_page =~ s/localhost[:0-9]*//;
+                $results_page = '<a href="'.$results_page.'">View</a>';
+            } else {
+                $results_page = '';
+            }
+        }
         my $row = {
             id => $job_id,
             name => $job->retrieve_argument('name'),

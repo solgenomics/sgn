@@ -5,9 +5,12 @@ use namespace::autoclean;
 
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
+use Data::Dumper;
 use File::Copy;
 use File::Basename;
 use CXGN::Tools::Run;
+use CXGN::Job;
+use JSON::Any;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -770,7 +773,43 @@ sub create_cluster_config {
 sub submit_job_cluster {
     my ( $self, $c, $args ) = @_;
 
+    # print STDERR "[APOCALYPSE] catalyst stash:\n";
+    # print STDERR Dumper $c->stash;
+
     my $job;
+
+    my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
+    my $name = $c->stash->{analysis_profile}->{analysis_name};
+    my $results_page = $c->stash->{analysis_profile}->{analysis_page};
+    $results_page =~ s/http[s]*:\/\///;
+    $results_page =~ s/localhost[:0-9]*//;
+    my $job_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
+    my $data_type = $job_arguments->{data_type};
+    if ($data_type =~ m/phenotype/i) {
+      $data_type = "phenotypic_analysis";
+    } elsif ($data_type =~ m/genotype/i) {
+      $data_type = "genotypic_analysis";
+    } else {
+      $data_type = "";
+    }
+
+    my $job_record = CXGN::Job->new({
+      schema => $c->dbic_schema("Bio::Chado::Schema"),
+      people_schema => $c->dbic_schema("CXGN::People::Schema"),
+      sp_person_id => $user,
+      args => {
+        job_type => $data_type,
+        name => $name,
+        results_page => $results_page,
+        cmd => $args->{cmd},
+        cxgn_tools_run_config => $args->{config},
+        logfile => $c->config->{job_finish_log}
+      }
+    });
+    $job_record->status("submitted");
+    $job_record->store();
+    my $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
 
     eval {
         $job = CXGN::Tools::Run->new( $args->{config} );
@@ -778,20 +817,25 @@ sub submit_job_cluster {
 
         if ( $args->{background_job} ) {
             $job->is_async(1);
-            $job->run_async( $args->{cmd} );
+            $job->run_async( $args->{cmd}.$finish_timestamp_cmd );
 
             $c->stash->{r_job_tempdir}  = $job->job_tempdir();
             $c->stash->{r_job_id}       = $job->jobid();
             $c->stash->{cluster_job_id} = $job->cluster_job_id();
             $c->stash->{cluster_job}    = $job;
+
+            $job_record->backend_id($job->cluster_job_id());
+            $job_record->store();
         }
         else {
-            $job->run_async( $args->{cmd} );
+            $job->run_async( $args->{cmd}.$finish_timestamp_cmd );
             $job->wait();
         }
     };
 
     if ($@) {
+      $job_record->status("failed");
+      $job_record->store();
         $c->stash->{Error} =
           'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
         $c->stash->{status} =

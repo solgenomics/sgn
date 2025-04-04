@@ -496,14 +496,10 @@ sub submit {
     my $status;
 
     eval {
-        print STDERR "[SERVER] making CXGN::Tools::Run with config:\n";
-        print STDERR Dumper $cxgn_tools_run_config;
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
-        print STDERR "[SERVER] running command:\n$cmd\n";
         $job->run_cluster($cmd.$finish_timestamp_cmd);
 
         $backend_id = $job->cluster_job_id();
-        print STDERR "[SERVER] Submitted job with backend id: $backend_id\n";
         $status = 'submitted';
     };
 
