@@ -32,7 +32,6 @@ sub pca_result_details :Path('/solgs/pca/result/details') Args() {
 	my $stored = $c->controller('solGS::AnalysisSave')->check_stored_analysis($c);
 
 	if (!$stored) {
-		my $params = decode_json($args);
 		my $analysis_details;
 
 		eval {
@@ -43,7 +42,7 @@ sub pca_result_details :Path('/solgs/pca/result/details') Args() {
 
 		if ($@) {
 			print STDERR "\n$@\n";
-			$c->stash->{rest}{error} = 'Something went wrong structuring the analysis result';
+			$c->stash->{rest}{error} = 'Something went wrong structuring pca analysis result for storage.';
 		} else {
 			$c->stash->{rest}{analysis_details} = $analysis_details;
 		}
@@ -151,7 +150,7 @@ sub structure_pca_result_details {
 	my ($self, $c) = @_;
 
 	my $scores = $self->structure_pca_scores($c);
-	my @accessions = keys %$scores;
+	my @stocks = keys %$scores;
 
 	my $pcs_names		= $self->get_pcs_names($c);
 	my $pca_details     = $self->pca_details($c);
@@ -160,31 +159,56 @@ sub structure_pca_result_details {
     my $breeding_prog_id = $c->controller('solGS::AnalysisSave')->analysis_breeding_prog($c);
     my $log			    = $c->controller('solGS::AnalysisSave')->get_analysis_job_info($c);
 	my $analysis_name   = $log->{analysis_name};
+    my $data_type = $log->{data_type};
+    my $data_str = $log->{data_structure};
+
+    my $analysis_result_stock_names = '';
+    my $is_analysis_result_stock_type = 0;
+    my $analysis_result_values_type = 'analysis_result_values_match_accession_names',
+
+    my $accession_names = encode_json(\@stocks);
+    if ($data_type =~ /phenotype/i && $data_str =~ /dataset/) {
+        my $dataset = CXGN::Dataset->new({
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            schema => $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
+            sp_dataset_id => $log->{dataset_id},
+        });
+
+        my $dataset_data = $dataset->get_dataset_data();
+        if (scalar(@{$dataset_data->{categories}->{trials}}) > 1) {
+            $analysis_result_stock_names = encode_json(\@stocks);
+            $is_analysis_result_stock_type = 1;
+            $analysis_result_values_type = 'analysis_result_new_stocks';
+            $accession_names = '';
+        } 
+    } 
 
     my $details = {
-		'analysis_to_save_boolean' => 'yes',
-		'analysis_name' => $log->{analysis_name},
-		'analysis_description' => $log->{pca_desc} || 'test pca load',
-		'analysis_year' => $analysis_year,
-		'analysis_breeding_program_id' => $breeding_prog_id,
-		'analysis_protocol' => $pca_details->{protocol},
-		'analysis_dataset_id' => $log->{dataset_id},
-		'analysis_accession_names' => encode_json(\@accessions),
-		'analysis_trait_names' => encode_json($pcs_names),
-		'analysis_precomputed_design_optional' =>'',
-		'analysis_result_values' => to_json($scores),
-		'analysis_result_values_type' => 'analysis_result_values_match_accession_names',
-		'analysis_result_summary' => '',
-		'analysis_result_trait_compose_info' =>  "",
-		'analysis_statistical_ontology_term' =>  $pca_details->{stat_ont_term},
-		'analysis_model_application_version' => $app_details->{version},
-		'analysis_model_application_name' => $app_details->{name},
-		'analysis_model_language' => $pca_details->{pca_lang},
-		'analysis_model_is_public' => 'yes',
-		'analysis_model_description' =>  $pca_details->{pca_desc},
-		'analysis_model_name' => $log->{analysis_name},
-		'analysis_model_type' => $pca_details->{pca_type},
-	};
+        'analysis_to_save_boolean' => 'yes',
+        'analysis_name' => $log->{analysis_name},
+        'analysis_description' => $log->{pca_desc} || 'test pca load',
+        'analysis_year' => $analysis_year,
+        'analysis_breeding_program_id' => $breeding_prog_id,
+        'analysis_protocol' => $pca_details->{protocol},
+        'analysis_dataset_id' => $log->{dataset_id},
+        'analysis_accession_names' => $accession_names,
+        'analysis_trait_names' => encode_json($pcs_names),
+        'analysis_precomputed_design_optional' =>'',
+        'analysis_result_values' => to_json($scores),
+        'analysis_result_values_type' => $analysis_result_values_type,
+        'is_analysis_result_stock_type' => $is_analysis_result_stock_type,
+        'analysis_result_stock_names' => $analysis_result_stock_names,
+        'analysis_result_summary' => '',
+        'analysis_result_trait_compose_info' =>  "",
+        'analysis_statistical_ontology_term' =>  $pca_details->{stat_ont_term},
+        'analysis_model_application_version' => $app_details->{version},
+        'analysis_model_application_name' => $app_details->{name},
+        'analysis_model_language' => $pca_details->{pca_lang},
+        'analysis_model_is_public' => 'yes',
+        'analysis_model_description' =>  $pca_details->{pca_desc},
+        'analysis_model_name' => $log->{analysis_name},
+        'analysis_model_type' => $pca_details->{pca_type},
+    };
 
 	return $details;
 

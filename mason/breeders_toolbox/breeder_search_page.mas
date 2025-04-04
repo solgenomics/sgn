@@ -39,8 +39,6 @@ $dataset_id => undef
       <div class="wizard-column">
         <div class="wizard-panel panel panel-default">
 
-          <span class="wizard-loader glyphicon glyphicon-refresh" aria-hidden="true"></span>
-
           <div class="panel-heading">
             <select class="wizard-type-select form-control input-sm form-inline">
               <option value="" disabled selected>Select Column Type</option>
@@ -49,8 +47,22 @@ $dataset_id => undef
             </select>
           </div>
 
-          <div class="panel-heading">
-            <input type="text" class="wizard-search form-control input-sm" placeholder="Search">
+          <div class="wizard-search-container">
+            <textarea class="wizard-search form-control" placeholder="Search"></textarea>
+            <div class="wizard-search-options">
+              <div class="wizard-search-options-group btn-group" role="group">
+                <button type="button" class="btn btn-xs btn-primary active wizard-search-options-btn wizard-search-options-contains">Contains</button>
+                <button type="button" class="btn btn-xs btn-default wizard-search-options-btn wizard-search-options-exact">Exact</button>
+              </div>
+              <div class="btn-group" role="group">
+                <button type="button" class="btn btn-xs btn-danger wizard-search-options-clear">
+                  &nbsp;<span class="glyphicon glyphicon-remove" style="top: 2px"></span>&nbsp;
+                </button>
+                <button type="button" class="btn btn-xs btn-info wizard-search-options-done">
+                  &nbsp;<span class="glyphicon glyphicon-chevron-up" style="top: 2px"></span>&nbsp;
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="panel-body">
@@ -65,8 +77,11 @@ $dataset_id => undef
               </div>
             </div>
 
-            <ul class="wizard-list-unselected wizard-list well"></ul>
-            <ul class="wizard-list-selected wizard-list well"></ul>
+            <div style="position: relative">
+              <span class="wizard-loader glyphicon glyphicon-refresh" aria-hidden="true"></span>
+              <ul class="wizard-list-unselected wizard-list well"></ul>
+              <ul class="wizard-list-selected wizard-list well"></ul>
+            </div>
 
             <div class="wizard-btn-center wizard-union-toggle">
               <div class="btn-group wizard-union-toggle-btn-group">
@@ -654,7 +669,6 @@ document.addEventListener("DOMContentLoaded", function() {
     } else if ( selected_genotyping_projects.length >= 1 ) {
       var selected_genotyping_project = selected_genotyping_projects[0].id;
       if ( selected_genotyping_project !== SELECTED_GENOTYPING_PROJECT ) {
-        console.log("project new " + selected_genotyping_project);
         SELECTED_GENOTYPING_PROJECT = selected_genotyping_project;
         jQuery.ajax({
           url: '/ajax/genotyping_project/protocols',
@@ -674,7 +688,6 @@ document.addEventListener("DOMContentLoaded", function() {
               SELECTED_GENOTYPING_PROTOCOL = genotyping_protocol[0]["protocol_id"];
               // console.log(genotyping_protocol[0]["protocol_id"]);
               // console.log(genotyping_protocol[0]["protocol_name"]);
-              console.log("genotype protocol from project = " + SELECTED_GENOTYPING_PROTOCOL);
               if ( selected_genotyping_protocols.length < 1 ) {
                 $(".wizard-download-genotypes-info3").show();
                 $(".wizard-download-genotypes-info3").val("genotype protocol \"" + genotyping_protocol[0]["protocol_name"] + "\""); 
@@ -738,7 +751,6 @@ document.addEventListener("DOMContentLoaded", function() {
               console.log(repsonse.error);
             } else {
               SELECTED_GENOTYPING_PROTOCOL = response.default_protocol.protocol_id;
-              console.log(response.default_protocol.protocol_id);
               jQuery.ajax({
                 url: '/ajax/genotyping_protocol/num_markers',
                 method: "GET",

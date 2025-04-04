@@ -258,6 +258,28 @@ export function Wizard(main_id,col_number){
     reflow(d.index);
   }).filter(d=>d.index>0).select(".wizard-lists-group").remove();
 
+  allCols.select('.wizard-search').on("focus", function(d) {
+    var thiscol = allCols.filter(c_d=>c_d==d);
+    thiscol.select('.wizard-search-container').classed('wizard-search-container-active', true);
+  });
+  allCols.select('.wizard-search-options-contains').on("click", function(d) {
+    toggleSearchOptionsMatch(this, d, "contains");
+  });
+  allCols.select('.wizard-search-options-exact').on("click", function(d) {
+    toggleSearchOptionsMatch(this, d, "exact");
+  });
+  allCols.select('.wizard-search-options-clear').on("click", function(d) {
+    var thiscol = allCols.filter(c_d=>c_d==d);
+    thiscol.select(".wizard-search").property("value", "");
+    d.filter = () => true;
+    reflow(d.index, true);
+  });
+  allCols.select('.wizard-search-options-done').on("click", function(d) {
+    var thiscol = allCols.filter(c_d=>c_d==d);
+    thiscol.select('.wizard-search-container').classed('wizard-search-container-active', false);
+    d3.select(this).node().blur();
+  });
+
   allCols.select('.wizard-union-toggle-btn-any').on("click", function(d) {
     toggleMatch(this, d, "any");
   });
@@ -282,11 +304,12 @@ export function Wizard(main_id,col_number){
 
   allCols.select(".wizard-select-all").on("click",function(d){
       var s = d3.selectAll(".wizard-search").filter(function(e, i) { return i === d.index });
-      var search_txt = s ? s.property("value").replace(/\s+/g, "").toLowerCase() : undefined;
+      var search_txt = s ? s.property("value") : undefined;
+      var search_terms = search_txt ? search_txt.split(/,|\n/).map((e) => e.replace(/\s+/g, "").toLowerCase()) : undefined;
       d.items.forEach(i=>{
           var val = i.name.replace(/\s+/g, "").toLowerCase();
           if (!i.selected) {
-              i.selected = search_txt ? val.indexOf(search_txt) != -1 : true;
+              i.selected = search_terms ? search_terms.some((st) => st && st !== "" && (d.filterType === 'exact' ? val === st : val.includes(st))) : true;
           }
       });
       reflow(d.index,true);
@@ -326,16 +349,12 @@ export function Wizard(main_id,col_number){
     }
   });
   allCols.select(".wizard-search").on("input",function(d){
-    var search_txt = d3.select(this).property("value").replace(/\s+/g, "")
-      .toLowerCase();
+    var search_txt = d3.select(this).property("value");
+    var search_terms = search_txt ? search_txt.split(/,|\n/).map((e) => e.replace(/\s+/g, "").toLowerCase()) : undefined;
     d.filter = (item)=>{
       var val = item.name.replace(/\s+/g, "").toLowerCase();
-      if(val.indexOf(search_txt)!=-1){
-        return true;
-      }
-      else {
-        return false;
-      }
+      var included = search_terms ? search_terms.some((st) => st && st !== "" && (d.filterType === 'exact' ? val === st : val.includes(st))) : true;
+      return included;
     }
     reflow(d.index, false, true);
   });
@@ -549,6 +568,27 @@ export function Wizard(main_id,col_number){
       opts.exit().remove();
     })
   }
+
+  /**
+   * Handle the selection of a search options match toggle button
+   * @param {Element} el DOM element that was selected
+   * @param {Object} d Data propagated from selected element
+   * @param {string} type Toggle type selected ("contains", "exact")
+   */
+    function toggleSearchOptionsMatch(el, d, type) {
+      el = d3.select(el);
+      var bg = el.select(function() { return this.parentNode; });
+
+      bg.selectAll('.wizard-search-options-btn')
+        .classed('btn-primary', false)
+        .classed('btn-default', true)
+        .classed('active', false);
+      el.classed('btn-primary', true).classed('active', true);
+
+      d.filterType = type;
+
+      reflow(d.index, true);
+    }
 
   /**
    * Handle the selection of a match toggle button

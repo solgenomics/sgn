@@ -223,7 +223,15 @@ has 'offset' => (
     is => 'rw',
 );
 
+# when true, include both non-obsolete and obsolete stocks
 has 'include_obsolete' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0
+);
+
+# when true, include only obsolete stocks
+has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
     default => 0
@@ -563,6 +571,9 @@ sub search {
     };
     if (!$self->include_obsolete) {
         $search_query->{'me.is_obsolete'} = 'f';
+    }
+    if ($self->is_obsolete) {
+        $search_query->{'me.is_obsolete'} = 't';
     }
     if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};

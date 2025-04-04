@@ -419,10 +419,10 @@ function jqueryStuff() {
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Audit Table</h4>", info_section_subtitle => 'Track audit information for this stock.', icon_class => "glyphicon glyphicon-time", info_section_id => "audit_table_section", stock_uniquename => $uniquename, referer => $this_page &>
 
-% if ($type_name eq 'population') {
+% if ($edit_privs && $type_name eq 'population') {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => "<h4 style='display:inline'>Delete This Stock</h4>", info_section_subtitle => 'Delete this population.', icon_class => "glyphicon glyphicon-trash", info_section_id => "population_delete_section" &>
-% } elsif (($type_name ne 'population') && (!$is_obsolete)) {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => "<h4 style='display:inline'>Obsolete This Stock</h4>", info_section_subtitle => 'Make a stock obsolete so that it does not show in searches.', icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
+% } elsif ($edit_privs && $type_name ne 'population') {
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, is_obsolete=> $is_obsolete, info_section_title => "<h4 style='display:inline'>" . ($is_obsolete ? "Un-Obsolete This Stock" : "Obsolete This Stock") . "</h4>", info_section_subtitle => ($is_obsolete ? "Make a stock not obsolete so that it does show in searches" : "Make a stock obsolete so that it does not show in searches"), icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
 % }
 
 </&>

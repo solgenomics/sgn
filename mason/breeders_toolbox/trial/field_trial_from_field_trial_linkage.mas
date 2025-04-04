@@ -5,7 +5,8 @@ $trial_type
 $trial_name
 </%args>
 
-<!-- <& /util/import_javascript.mas, legacy => [ "d3/d3-shape/dist/d3-shape.js", "d3/d3-pedigree-tree.js", "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankey.js", "d3/d3-sankey/src/sankey.js", "d3/d3-array/dist/d3-array.js", "d3/d3-path/dist/d3-path.js" ]  &> -->
+<& /util/import_javascript.mas, legacy => [ "d3/d3-pedigree-tree.js", "d3/d3Min.js" ] &>
+<& /util/import_javascript.mas, node_modules => [ "d3-shape.js", "dist/d3-sankey.js", "sankey.js", "d3-array.js", "d3-path.js" ]  &>
 
 
 <div id="field_trial_to_field_trial_html">
