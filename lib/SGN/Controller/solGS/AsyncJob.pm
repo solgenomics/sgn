@@ -6,10 +6,8 @@ use namespace::autoclean;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use File::Copy;
-use Data::Dumper;
 use File::Basename;
 use CXGN::Tools::Run;
-use CXGN::Job;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -774,35 +772,13 @@ sub submit_job_cluster {
 
     my $job;
 
-    print STDERR "[CONTROLLER] Cluster job config:\n";
-    print STDERR Dumper $args->{config};
-    print STDERR "\n====================\n";
-
     eval {
         $job = CXGN::Tools::Run->new( $args->{config} );
         $job->do_not_cleanup(1);
 
-        my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-        my $job_record = CXGN::Job->new({
-          sp_person_id => $user,
-          schema => $c->dbic_schema("Bio::Chado::Schema"),
-          people_schema => $c->dbic_schema("CXGN::People::Schema"),
-          args => {
-            type => 'phenotypic_analysis',
-            cmd => $args->{cmd},
-            cxgn_tools_run_config => $args->{config},
-            logfile => $c->config->{job_finish_log}
-          }
-        });
-        $job_record->status("submitted");
-        my $record_id = $job_record->store();
-
         if ( $args->{background_job} ) {
             $job->is_async(1);
             $job->run_async( $args->{cmd} );
-
-            $job_record->backend_id($job->cluster_job_id());
-            $job_record->store();
 
             $c->stash->{r_job_tempdir}  = $job->job_tempdir();
             $c->stash->{r_job_id}       = $job->jobid();
@@ -905,9 +881,6 @@ sub run_r_script {
     else {
         $self->get_cluster_r_job_args($c);
         my $cluster_job_args = $c->stash->{cluster_r_job_args};
-        print STDERR "[CONTROLLER] Getting cluster job args:\n";
-        print STDERR Dumper $c->stash->{cluster_r_job_args};
-        print STDERR "\n\n";
         $self->submit_job_cluster( $c, $cluster_job_args );
     }
 

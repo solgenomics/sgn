@@ -66,7 +66,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
         my $row = {
             id => $job_id,
             name => $job->retrieve_argument('name'),
-            type => $job->type(),
+            type => $job->job_type(),
             status => $status,
             create_timestamp => $job->create_timestamp(),
             finish_timestamp => $job->finish_timestamp(),

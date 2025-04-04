@@ -20,7 +20,7 @@ my $job = CXGN::Job->new({
         cmd => $cmd,
         logfile => $c->config->{job_finish_log},
         name => 'Sample download',
-        type => 'download',
+        job_type => 'download',
         submit_page => 'https://www.breedbase.org/submit_page_url'
         results_page => 'https://www.breedbase.org/results_page_url',
     }
@@ -129,10 +129,11 @@ Current status of the job. May be stored in DB or may be gathered from Slurm (an
 
 =cut 
 
-enum 'ValidStatus', [qw( submitted finished failed timeout canceled )];
+# enum 'ValidStatus', [qw( submitted finished failed timeout canceled )];
 
 has 'status' => ( 
-    isa => 'Maybe[ValidStatus]', 
+    isa => 'Maybe[Str]',
+    isa => enum([qw( submitted finished failed timeout canceled )]), 
     is => 'rw'
 );
 
@@ -152,12 +153,13 @@ The URL of the page for viewing results (if any)
 
 has 'results_page' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_results_page');
 
-=head2 type()
+=head2 job_type()
 
 CVTerm describing what type of submitted job this is. Gathered using the CVTerm ID stored 
 in the database row. Can be one of:
 - download
 - upload
+- report
 - genotypic_analysis
 - phenotypic_analysis
 - genomic_prediction
@@ -166,10 +168,11 @@ in the database row. Can be one of:
 
 =cut
 
-enum 'ValidType', [qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )];
+# enum 'ValidType', [qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )];
 
-has 'type' => ( 
-    isa => 'Maybe[ValidType]', 
+has 'job_type' => ( 
+    isa => 'Maybe[Str]', 
+    isa => enum([qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )]),
     is => 'rw', 
     predicate => 'has_type'
 );
@@ -202,7 +205,7 @@ my $job = CXGN::Jobs->new({
         cxgn_tools_run_config => {$config},
         logfile => $c->config->{job_finish_log},
         name => 'Sample download',
-        type => 'download',
+        job_type => 'download',
         submit_page => '...',
         results_page => '...'
     }
@@ -227,8 +230,8 @@ sub BUILD {
     if (!$self->has_sp_job_id()) { # New job, no ID yet.
         my $job_args = $args->{args};
         $self->args($job_args);
-        $self->type($self->args->{type});
-        my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({name => $self->type()});
+        $self->job_type($self->args->{job_type});
+        my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({name => $self->job_type()});
         $self->type_id($cvterm_row->cvterm_id());
         $self->sp_person_id($user_id);
         my $logfile;
@@ -245,7 +248,7 @@ sub BUILD {
         $self->args($job_args);
         $self->type_id($row->type_id());
         my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({cvterm_id => $row->type_id()});
-        $self->type($cvterm_row->name());
+        $self->job_type($cvterm_row->name());
         $self->create_timestamp($row->create_timestamp());
         $self->finish_timestamp($row->finish_timestamp());
         $self->sp_person_id($row->sp_person_id());
@@ -432,7 +435,7 @@ sub submit {
             'temp_base' => $temp_base,
             #'max_cluster_jobs' => 1000000000,
             #'do_cleanup' => 0,
-            'backend' => 'slurm'
+            'backend' => 'Slurm'
         };
     } else {
         if (!$self->args->{cxgn_tools_run_config}->{'err_file'}) {
@@ -458,7 +461,8 @@ sub submit {
     eval {
         print STDERR "[SERVER] making CXGN::Tools::Run with config:\n";
         print STDERR Dumper $cxgn_tools_run_config;
-        $job = CXGN::Tools::Run->new($cxgn_tools_run_config); 
+        $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
+        #$job = CXGN::Tools::Run->new(); 
         print STDERR "[SERVER] running command:\n$cmd\n";
         $job->run_cluster($cmd);
 
@@ -502,7 +506,7 @@ sub store {
             $row->type_id($self->type_id());
             $row->update();
         } else {
-            my $cvterm_row = $self->schema->resultset('Cv::Cvterm')->find({ name => $self->type() });
+            my $cvterm_row = $self->schema->resultset('Cv::Cvterm')->find({ name => $self->job_type() });
             my $cvterm_id = $cvterm_row->cvterm_id();
             my $row = $self->people_schema()->resultset("SpJob")->create({
                 backend_id => $self->backend_id(),

@@ -456,7 +456,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
             args => {
                 name => $dataset->name()." tool compatibility check",
                 results_page => "/dataset/$dataset_id",
-                type => 'tool_compatibility',
+                job_type => 'tool_compatibility',
                 cmd => $cmd,
                 logfile => $c->config->{job_finish_log}
             }
