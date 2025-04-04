@@ -390,6 +390,7 @@ sub get_genotype_info {
     my $return_only_first_genotypeprop_for_stock = $self->return_only_first_genotypeprop_for_stock;
     my $limit = $self->limit;
     my $offset = $self->offset;
+    my $sample_unit_level = $self->sample_unit_level;
     my @data;
     my %search_params;
     my @where_clause;
@@ -537,16 +538,30 @@ sub get_genotype_info {
 
         my $germplasmName = '';
         my $germplasmDbId = '';
+        my $stock_obj_id = '';
+
         if ($stock_type_name eq 'accession'){
             $germplasmName = $stock_name;
             $germplasmDbId = $stock_id;
         }
+
         if ($stock_type_name eq 'tissue_sample'){
-            $germplasmName = $accession_uniquename;
-            $germplasmDbId = $accession_id;
+            if ($sample_unit_level eq 'genotyping_plate_sample_name') {
+                $germplasmName = $stock_name;
+                $germplasmDbId = $stock_id;
+                $stock_obj_id = $accession_id;
+            } elsif ($sample_unit_level eq 'sample_name_and_accession') {
+                $germplasmName = $stock_name."|".$accession_uniquename;
+                $germplasmDbId = $stock_id;
+                $stock_obj_id = $accession_id;
+            } else {
+                $germplasmName = $accession_uniquename;
+                $germplasmDbId = $accession_id;
+                $stock_obj_id = $accession_id;
+            }
         }
 
-        my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$germplasmDbId});
+        my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_obj_id});
 
         push @genotype_id_array, $genotype_id;
 

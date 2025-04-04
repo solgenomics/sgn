@@ -98,17 +98,20 @@ jQuery(document).ready(function () {
         jQuery('#plate_sample_unit_level_select_dialog').modal('show');
     });
 
+    jQuery('#plate_kasp_genotype_data_download_csv').click(function(){
+        download_format = 'KASPdata';
+        jQuery('#plate_sample_unit_level_select_dialog').modal('show');
+    });
+
     jQuery('#plate_genotype_download').click(function(){
         sample_unit_level = jQuery('#genotyping_plate_sample_unit_level').val();
-        window.open("/breeders/download_gbs_action/?genotyping_plate_id=<% $trial_id %>&download_format="+download_format+"&forbid_cache=1&sample_unit_level="+sample_unit_level+"");
+        if (download_format == 'KASPdata') {
+            window.open("/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=<% $trial_id %>&sample_unit_level="+sample_unit_level+"");
+        } else {
+            window.open("/breeders/download_gbs_action/?genotyping_plate_id=<% $trial_id %>&download_format="+download_format+"&forbid_cache=1&sample_unit_level="+sample_unit_level+"");
+        }
         jQuery('#plate_sample_unit_level_select_dialog').modal('hide');
     });
-
-    jQuery('#plate_kasp_genotype_data_download_csv').click(function(){
-        window.open("/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=<% $trial_id %>");
-    });
-
-
 
 });
 

@@ -1757,6 +1757,7 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
     my $protocol_id = $c->req->param("protocol_id");
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
     my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
 
     my @protocol_list;
     if (defined $protocol_id) {
@@ -1791,6 +1792,7 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
             genotype_data_project_list=>\@genotyping_project_list,
             genotyping_plate_list=>\@genotyping_plate_list,
             filename => $tempfile,
+            sample_unit_level=>$sample_unit_level,
         }
     );
 
@@ -1815,9 +1817,9 @@ sub download_images_POST : Args(0) {
     my $trial_id = $c->req->param('trial_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $trial = CXGN::Trial->new({ 
-        bcs_schema => $schema, 
-        trial_id => $trial_id, 
+    my $trial = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
         }
     );
 
