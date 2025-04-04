@@ -107,8 +107,6 @@ sub delete_genotype_data {
             push @nd_experiment_ids_to_delete, $nd_experiment_id;
             $check_protocol_ids{$protocol_id}++;
         }
-#        print STDERR "GENOTYPE IDS TO DELETE =".Dumper(\@genotype_ids_to_delete)."\n";
-#        print STDERR "ND EXPERIMENT IDS TO DELETE =".Dumper(\@nd_experiment_ids_to_delete)."\n";
 
         if (scalar (@genotype_ids_to_delete) > 0) {
             my $genotype_ids = join ("," , @genotype_ids_to_delete);
@@ -133,25 +131,13 @@ sub delete_genotype_data {
 
         } else {
             my $protocol_id = $protocol_ids[0];
-            print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
             my $experiment_count = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->search({nd_protocol_id => $protocol_id})->count();
-            print STDERR "EXPERIMENT COUNT =".Dumper($experiment_count)."\n";
             if ($experiment_count == 0) {
                 $empty_protocol_name = $schema->resultset("NaturalDiversity::NdProtocol")->find({nd_protocol_id => $protocol_id })->name();
                 $empty_protocol_id = $protocol_id;
-                print STDERR "EMPTY PROTOCOL NAME =".Dumper($empty_protocol_name)."\n";
             }
         }
 
-#        foreach my $id (keys %check_protocol_ids) {
-#            my $experiment_count = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->search({nd_protocol_id => $id})->count();
-#            print STDERR "EXPERIMENT COUNT =".Dumper($experiment_count)."\n";
-#            if ($experiment_count == 0) {
-#                my $delete_protocol_q = "DELETE from nd_protocol WHERE nd_protocol_id=?;";
-#                my $delete_protocol_h = $schema->storage->dbh()->prepare($delete_protocol_q);
-#                $delete_protocol_h->execute($id);
-#            }
-#        }
     };
 
     if ($@) {
@@ -179,7 +165,6 @@ sub delete_empty_protocol {
         $dbh->begin_work();
 
         my $experiment_count = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->search({nd_protocol_id => $empty_protocol_id})->count();
-        print STDERR "EXPERIMENT COUNT =".Dumper($experiment_count)."\n";
 
         if ($experiment_count > 0) {
             print STDERR "This protocol has associated genotyping data. Cannot delete.\n";

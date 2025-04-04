@@ -280,7 +280,6 @@ ok($message_hash->{nd_protocol_id});
 
 my $kasp_project_id_2 = $message_hash->{project_id};
 my $kasp_protocol_id_2 = $message_hash->{nd_protocol_id};
-print STDERR "KASP PROTOCOL ID 2 A =".Dumper($kasp_protocol_id_2)."\n";
 
 #upload data for plate no.2 with previously stored protocol
 my $facility_file_2 = $f->config->{basepath}."/t/data/genotype_data/kasp_results_with_facility_names_3.csv";
@@ -478,8 +477,11 @@ is($after_deleting_protocolprop, $before_deleting_protocolprop); #protocol still
 #delete genotyping data from plate no. 2
 $mech->get_ok('http://localhost:3010/ajax/breeders/plate_genotyping_data_delete?genotyping_plate_id='.$plate2_id);
 $response = decode_json $mech->content;
-is($response->{'empty_protocol_name'},'kasp_protocol_2');
-is($response->{'empty_protocol_id'},'4');
+my $empty_protocol_name = $response->{'empty_protocol_name'};
+my $empty_protocol_id = $response->{'empty_protocol_id'};
+
+is($empty_protocol_name,'kasp_protocol_2');
+is($empty_protocol_id,'4');
 
 my $after_deleting_experiment_2 = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
 my $after_deleting_experiment_stock_2 = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
@@ -501,17 +503,33 @@ is($after_deleting_experiment_protocol_2, $before_deleting_experiment_protocol-8
 is($after_deleting_protocol_2, $before_deleting_protocol); # before deleting empty protocol
 is($after_deleting_protocolprop_2, $before_deleting_protocolprop); # before deleting empty protocol
 
+# option to delete empty protocol
+$mech->get_ok('http://localhost:3010/ajax/breeders/empty_protocol_delete?empty_protocol_id='.$empty_protocol_id);
+$response = decode_json $mech->content;
+is($response->{'success'},'1');
 
+my $after_deleting_empty_protocol_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
+my $after_deleting_empty_protocol_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
+my $after_deleting_empty_protocol_genotype = $schema->resultset("Genetic::Genotype")->search({})->count();
+my $after_deleting_empty_protocol_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->search({})->count();
+my $after_deleting_empty_protocol_experiment_genotype = $schema->resultset("NaturalDiversity::NdExperimentGenotype")->search({})->count();
+my $after_deleting_empty_protocol_experiment_project = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({})->count();
+my $after_deleting_empty_protocol_experiment_protocol = $schema->resultset("NaturalDiversity::NdExperimentProtocol")->search({})->count();
+my $after_deleting_empty_protocol = $schema->resultset("NaturalDiversity::NdProtocol")->search({})->count();
+my $after_deleting_empty_protocol_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({})->count();
 
-
-
+is($after_deleting_empty_protocol_experiment, $after_deleting_experiment_2); #unchanged
+is($after_deleting_empty_protocol_experiment_stock, $after_deleting_experiment_stock_2); #unchanged
+is($after_deleting_empty_protocol_genotype, $after_deleting_genotype_2); #unchanged
+is($after_deleting_empty_protocol_genotypeprop, $after_deleting_genotypeprop_2); #unchanged
+is($after_deleting_empty_protocol_experiment_genotype, $after_deleting_experiment_genotype_2); #unchanged
+is($after_deleting_empty_protocol_experiment_project, $after_deleting_experiment_project_2); #unchanged
+is($after_deleting_empty_protocol_experiment_protocol, $after_deleting_experiment_protocol_2); #unchanged
+is($after_deleting_empty_protocol, $after_deleting_protocol_2-1);
+is($after_deleting_empty_protocol_protocolprop, $after_deleting_protocolprop_2-7); # 3 chromosome
 
 ## DELETE genotyping protocols, data, plate and projects
 $mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_1?sgn_session_id=$sgn_session_id");
-$response = decode_json $mech->content;
-is_deeply($response, {success=>1});
-
-$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_2?sgn_session_id=$sgn_session_id");
 $response = decode_json $mech->content;
 is_deeply($response, {success=>1});
 
