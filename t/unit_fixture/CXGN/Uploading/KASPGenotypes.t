@@ -143,7 +143,7 @@ is($total_count_1, 5);
 my $kasp_project_response = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_project_id=$genotyping_project_id_1");
 my $kasp_project_message = $kasp_project_response->decoded_content;
 
-my $kasp_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+my $kasp_data = '"MARKER NAME","ACCESSION NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
 "S01_0001","new_accession_1","T,T","1.36",".58"
 "S01_0001","new_accession_2","T,T","1.25",".49"
 "S01_0001","new_accession_3","T,G","1.57","1.38"
@@ -383,8 +383,9 @@ is($protocol_edited->protocol_name, 'kasp_protocol_1_edited');
 is($protocol_edited->protocol_description, 'test editing description');
 is($protocol_edited->reference_genome_name, 'Mesculenta_511_v8');
 
-#retrieve genotype data for plate no.1
-my $kasp_genotyping_plate_response = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate_id");
+#retrieve genotyping data for plate no.1 with different sample unit levels (sample name, accession name, sample name and accession name)
+my $sample_unit_level = 'genotyping_plate_sample_name';
+my $kasp_genotyping_plate_response = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate_id&sample_unit_level=$sample_unit_level");
 my $kasp_genotyping_plate_message = $kasp_genotyping_plate_response->decoded_content;
 my $plate_genotype_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
 "S01_0001","2023_plate_1_A01","T,T","1.36",".58"
@@ -411,9 +412,66 @@ my $plate_genotype_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE
 
 is($kasp_genotyping_plate_message, $plate_genotype_data);
 
-#retrieve genotype data for plate no.2
-my $kasp_genotyping_plate_response_2 = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate2_id");
+my $sample_unit_level = 'accession';
+my $kasp_genotyping_plate_response_2 = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate_id&sample_unit_level=$sample_unit_level");
 my $kasp_genotyping_plate_message_2 = $kasp_genotyping_plate_response_2->decoded_content;
+my $plate_genotype_data_accession_level = '"MARKER NAME","ACCESSION NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+"S01_0001","new_accession_10","./.",".65",".58"
+"S01_0001","new_accession_6","T,T","1.36",".58"
+"S01_0001","new_accession_7","T,T","1.25",".49"
+"S01_0001","new_accession_8","T,G","1.57","1.38"
+"S01_0002","new_accession_10","A,A","1.65",".62"
+"S01_0002","new_accession_6","A,A","1.43",".59"
+"S01_0002","new_accession_7","A,G","1.25","1.43"
+"S01_0002","new_accession_8","A,G","1.22","1.41"
+"S02_0001","new_accession_10","T,C","1.26","1.31"
+"S02_0001","new_accession_6","T,T","1.75",".75"
+"S02_0001","new_accession_7","T,T","1.21",".61"
+"S02_0001","new_accession_8","T,T","1.17",".46"
+"S02_0002","new_accession_10","A,C","1.32","1.46"
+"S02_0002","new_accession_6","A,A","1.75",".32"
+"S02_0002","new_accession_7","A,A","1.38",".59"
+"S02_0002","new_accession_8","A,C","1.36","1.47"
+"S03_0001","new_accession_10","C,T","1.11","1.23"
+"S03_0001","new_accession_6","C,C","1.76",".38"
+"S03_0001","new_accession_7","C,C","1.47",".24"
+"S03_0001","new_accession_8","C,T","1.86","1.48"
+';
+
+is($kasp_genotyping_plate_message_2, $plate_genotype_data_accession_level);
+
+my $sample_unit_level = 'sample_name_and_accession';
+my $kasp_genotyping_plate_response_3 = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate_id&sample_unit_level=$sample_unit_level");
+my $kasp_genotyping_plate_message_3 = $kasp_genotyping_plate_response_3->decoded_content;
+my $plate_genotype_data_sample_name_and_accession_level = '"MARKER NAME","SAMPLE NAME|ACCESSION NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+"S01_0001","2023_plate_1_A01|new_accession_6","T,T","1.36",".58"
+"S01_0001","2023_plate_1_A02|new_accession_7","T,T","1.25",".49"
+"S01_0001","2023_plate_1_A03|new_accession_8","T,G","1.57","1.38"
+"S01_0001","2023_plate_1_A05|new_accession_10","./.",".65",".58"
+"S01_0002","2023_plate_1_A01|new_accession_6","A,A","1.43",".59"
+"S01_0002","2023_plate_1_A02|new_accession_7","A,G","1.25","1.43"
+"S01_0002","2023_plate_1_A03|new_accession_8","A,G","1.22","1.41"
+"S01_0002","2023_plate_1_A05|new_accession_10","A,A","1.65",".62"
+"S02_0001","2023_plate_1_A01|new_accession_6","T,T","1.75",".75"
+"S02_0001","2023_plate_1_A02|new_accession_7","T,T","1.21",".61"
+"S02_0001","2023_plate_1_A03|new_accession_8","T,T","1.17",".46"
+"S02_0001","2023_plate_1_A05|new_accession_10","T,C","1.26","1.31"
+"S02_0002","2023_plate_1_A01|new_accession_6","A,A","1.75",".32"
+"S02_0002","2023_plate_1_A02|new_accession_7","A,A","1.38",".59"
+"S02_0002","2023_plate_1_A03|new_accession_8","A,C","1.36","1.47"
+"S02_0002","2023_plate_1_A05|new_accession_10","A,C","1.32","1.46"
+"S03_0001","2023_plate_1_A01|new_accession_6","C,C","1.76",".38"
+"S03_0001","2023_plate_1_A02|new_accession_7","C,C","1.47",".24"
+"S03_0001","2023_plate_1_A03|new_accession_8","C,T","1.86","1.48"
+"S03_0001","2023_plate_1_A05|new_accession_10","C,T","1.11","1.23"
+';
+
+is($kasp_genotyping_plate_message_3, $plate_genotype_data_sample_name_and_accession_level);
+
+#retrieve genotype data for plate no.2
+my $sample_unit_level = 'genotyping_plate_sample_name';
+my $kasp_genotyping_plate_response_4 = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate2_id&sample_unit_level=$sample_unit_level");
+my $kasp_genotyping_plate_message_4 = $kasp_genotyping_plate_response_4->decoded_content;
 my $plate_2_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
 "S01_0001","2023_plate_2_A01","T,T","1.36",".58"
 "S01_0001","2023_plate_2_A02","T,T","1.25",".49"
@@ -437,7 +495,7 @@ my $plate_2_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE","Y VA
 "S03_0001","2023_plate_2_A04","C,T","1.11","1.23"
 ';
 
-is($kasp_genotyping_plate_message_2, $plate_2_data);
+is($kasp_genotyping_plate_message_4, $plate_2_data);
 
 #delete genotyping data from plate no. 1
 my $before_deleting_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();

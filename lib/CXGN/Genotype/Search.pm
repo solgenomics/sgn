@@ -543,6 +543,7 @@ sub get_genotype_info {
         if ($stock_type_name eq 'accession'){
             $germplasmName = $stock_name;
             $germplasmDbId = $stock_id;
+            $stock_obj_id = $stock_id;
         }
 
         if ($stock_type_name eq 'tissue_sample'){
