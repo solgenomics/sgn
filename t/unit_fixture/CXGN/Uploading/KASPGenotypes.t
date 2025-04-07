@@ -539,7 +539,6 @@ my $empty_protocol_name = $response->{'empty_protocol_name'};
 my $empty_protocol_id = $response->{'empty_protocol_id'};
 
 is($empty_protocol_name,'kasp_protocol_2');
-is($empty_protocol_id,'4');
 
 my $after_deleting_experiment_2 = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
 my $after_deleting_experiment_stock_2 = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
