@@ -205,7 +205,7 @@ has '_filtered_markers' => (
 );
 
 has '_vcf_genotyping_cvterm_id' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw'
 );
 
