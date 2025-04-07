@@ -5110,7 +5110,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         $c->stash->{rest} = { error => "No trial_ids provided!" };
         return;
     }
-    if ( $type ne 'planting' && $type ne 'harvest' && $type ne 'harvestmaster' ) {
+    if ( $type ne 'planting' && $type ne 'collection' && $type ne 'harvest' && $type ne 'harvestmaster' ) {
         $c->stash->{rest} = { error => "Unrecognized type!" };
         return;
     }
@@ -5160,7 +5160,7 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     # Generate CSV file
     my $filename;
     my @data;
-    if ( $type eq 'planting' || $type eq 'harvest' ) {
+    if ( $type eq 'planting' || $type eq 'collection' || $type eq 'harvest' ) {
         $filename = $type . "_order_" . join("-", @trial_ids) . ".csv";
         my $col = $type . "_order";
 

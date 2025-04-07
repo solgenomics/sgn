@@ -213,6 +213,7 @@ $has_col_and_row_numbers => undef
                 <select class="form-control" name="plot_download_type" id="plot_download_type">
                     <option value="">--Select Type--</option>
                     <option value="planting">Planting Order</option>
+                    <option value="collection">Collection Order</option>
                     <option value="harvest">Harvest Order</option>
                     <option value="harvestmaster">HarvestMaster</option>
                 </select>
