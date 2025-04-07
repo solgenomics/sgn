@@ -4,7 +4,15 @@ $identifier_id => undef
 $activity_select => undef
 $type_select_options => undef
 $timestamp => undef
-$activity_headers
+$date => undef
+$activity_headers => undef
+$material_stock_id => undef
+$material_name => undef
+$material_type => undef
+$project_id => undef
+$activity_type => undef
+$program_name => undef
+$source_info => undef
 
 </%args>
 
@@ -26,8 +34,16 @@ $activity_headers
                 <button id="identifier_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Scan Barcode</button>
             </div>
         </div>
+
         <div class="form-group">
-            <label class="col-sm-3 control-label">Type: </label>
+            <label class="col-sm-3 control-label">Material Name: </label>
+            <div class="col-sm-5" >
+                <input class="form-control" name="record_page_material_name" id="record_page_material_name" disabled value="<% $material_name %>">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Input Type: </label>
             <div class="col-sm-5">
 % if ($type_select_options) {
                 <select id="record_page_type_select">
@@ -51,7 +67,7 @@ $activity_headers
                 <textarea class="form-control" id="record_page_notes" name="record_page_notes" ></textarea>
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="display:none">
             <label class="col-sm-3 control-label">Timestamp: </label>
             <div class="col-sm-5">
                 <input class="form-control" id="record_timestamp_record_page" name="record_timestamp_record_page" type="text" disabled value="<%$timestamp%>">
@@ -65,6 +81,10 @@ $activity_headers
 
 
 % if ($identifier_id) {
+    <td>
+        <a href='/breeders/trial/<%$project_id%>'><p>Go to Project Page</p></a>
+    </td>
+
     <&| /page/info_section.mas, title => 'Summary', collapsible => 1, collapsed => 0, subtitle => '' &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
@@ -84,28 +104,31 @@ $activity_headers
             </div>
         </div>
     </&>
-% }
-
-<&| /page/info_section.mas, title => 'Activity Details', collapsible => 1, collapsed => 0, subtitle => '' &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <div style="overflow:scroll">
-                    <table id = "record_page_activity_details_table" class="table table-hover table-striped">
-                        <thead>
-                            <tr>
+    <&| /page/info_section.mas, title => 'Activity Details', collapsible => 1, collapsed => 0, subtitle => '' &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <div style="overflow:scroll">
+                        <table id = "record_page_activity_details_table" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
 % foreach my $header(@$activity_headers){
-                                <th><%$header%></th>
+                                    <th><%$header%></th>
 %}
-                            </tr>
-                        </thead>
-                    </table>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</&>
+    </&>
+% }
 
+% if ($identifier_id && ($material_type eq 'transformation')) {
+    <& /transformation/transformants_section.mas, transformation_id => $material_stock_id &>
+    <& /transformation/obsoleted_transformants_section.mas, transformation_id => $material_stock_id &>
+% }
 
 <div class="modal fade" id="record_page_saved_dialog_message" name="record_page_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="recordPageSavedDialog">
     <div class="modal-dialog" role="document">
@@ -134,7 +157,8 @@ $activity_headers
 
 $(window).ready( function() {
 
-    var identifier_id = "<%$identifier_id%>";
+    const identifier_id = "<%$identifier_id%>";
+    const date = "<%$date%>";
 
     if (identifier_id) {
         jQuery('#record_page_activity_info_table').DataTable({
@@ -171,6 +195,14 @@ $(window).ready( function() {
         }
     }
 
+    jQuery('#record_page_type_select').change(function() {
+        jQuery('#record_page_info_input').val('');
+        let input_type = jQuery('#record_page_type_select').val();
+        if (input_type.indexOf('date') != -1) {
+            jQuery('#record_page_info_input').val(date);
+        }
+    });
+
     jQuery('#record_page_activity_info_submit').click( function(e) {
         e.preventDefault();
 
@@ -179,6 +211,8 @@ $(window).ready( function() {
         var input = jQuery('#record_page_info_input').val();
         var record_timestamp = jQuery('#record_timestamp_record_page').val();
         var notes = jQuery('#record_page_notes').val();
+        var activity_type = "<%$activity_type%>";
+        var program_name = "<%$program_name%>";
 
         if (identifier_name == '') {
             alert("Please scan an identifier name barcode");
@@ -199,11 +233,15 @@ $(window).ready( function() {
             dataType: "json",
             type: 'POST',
             data : {
-                'tracking_identifier' : identifier_name,
+                'tracking_identifier_name': identifier_name,
+                'tracking_identifier_id': identifier_id,
                 'selected_type': selected_type,
                 'input': input,
                 'record_timestamp': record_timestamp,
                 'notes': notes,
+                'activity_type': activity_type,
+                'program_name': program_name,
+                'source_info': '<%$source_info%>'
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -231,7 +269,6 @@ $(window).ready( function() {
         jQuery('#record_page_notes').val('');
         location.reload();
     });
-
 
 });
 

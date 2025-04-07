@@ -395,8 +395,10 @@ sub display_ontologies_GET  {
                 'type.name' => 'obsolete',
             },
             { join =>  'type' } , );
+        my $unobsolete;
+        my $obsolete_link;
         if ($obsolete_prop) {
-            my $unobsolete =  qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value = "unobsolete" /> | if $privileged ;
+            $unobsolete =  qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value = "unobsolete" /> | if $privileged ;
 
             # generate the list of obsolete annotations
             push @obs_annot,
@@ -408,7 +410,7 @@ sub display_ontologies_GET  {
             my $ontology_details = $rel_name
                 . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
             # build the obsolete link if the user has  editing privileges
-            my $obsolete_link =  qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value ="delete" /> | if $privileged ;
+            $obsolete_link =  qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$stock_cvterm_id\',  \'/ajax/stock/toggle_obsolete_annotation\', \'/stock/$stock_id/ontologies\')" value ="delete" /> | if $privileged ;
 
             my ($ev_with) = $props->search( {'type.name' => 'evidence_with'} , { join => 'type'  } )->single;
             my $ev_with_dbxref = $ev_with ? $schema->resultset("General::Dbxref")->find( { dbxref_id=> $ev_with->value } ) : undef;
@@ -501,7 +503,8 @@ sub associate_ontology_POST :Args(0) {
     my $evidence_description = $c->req->param('evidence_description') || undef; # a cvterm_id
     my $evidence_with  = $c->req->param('evidence_with') || undef; # a dbxref_id (type='evidence_with' value = 'dbxref_id'
     my $logged_user = $c->user;
-    my $logged_person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $logged_person_id;
+    $logged_person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
 
     my $reference = $c->req->param('reference'); # a pub_id
 
@@ -673,7 +676,8 @@ sub toggle_obsolete_annotation_POST :Args(0) {
     if ($stock_cvterm_id && $c->user ) {
         my $stock_cvterm = $schema->resultset("Stock::StockCvterm")->find( { stock_cvterm_id => $stock_cvterm_id } );
         if ($stock_cvterm) {
-            my ($prop) = $stock_cvterm->stock_cvtermprops( { type_id => $obsolete_cvterm->cvterm_id } ) if $obsolete_cvterm;
+            my $prop;
+            $prop = $stock_cvterm->stock_cvtermprops( { type_id => $obsolete_cvterm->cvterm_id } ) if $obsolete_cvterm;
             if ($prop) {
                 $prop->update( { value => $obsolete } ) ;
             } else {
@@ -1705,6 +1709,29 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
     $c->stash->{rest} = { data => \@formatted_trials };
 }
 
+=head2 action get_stored_analyses()
+
+ Usage:        /stock/<stock_id>/datatables/stored_analyses
+ Desc:         retrieves analyses associated with the stock (accession)
+ Ret:          a table in json suitable for datatables
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_stock_stored_analyses :Chained('/stock/get_stock') PathPart('datatables/stored_analyses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+	my @stored_analyses = $c->stash->{stock}->get_stored_analyses();
+
+    my @formatted_analyses;
+    foreach my $t (@stored_analyses) {
+	push @formatted_analyses, [ '<a href="/analyses/'.$t->[0].'">'.$t->[1].'</a>' ];
+    }
+    $c->stash->{rest} = { data => \@formatted_analyses };
+}
 
 =head2 action get_shared_trials()
 
@@ -1717,13 +1744,7 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
 
 =cut
 
-sub get_shared_trials :Path('/stock/get_shared_trials') : ActionClass('REST'){
-
-sub get_shared_trials_POST :Args(1) {
-    my ($self, $c) = @_;
-    $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
-}
-sub get_shared_trials_GET :Args(1) {
+sub get_shared_trials :Path('/stock/get_shared_trials'){
 
     my $self = shift;
     my $c = shift;
@@ -1759,33 +1780,55 @@ sub get_shared_trials_GET :Args(1) {
     my @shared_trials = @{$trial_query->{results}};
 
     my @formatted_rows = ();
+    my @all_analyses = ();
+
+    my $analysis_q = "select DISTINCT project.project_id FROM nd_experiment_project
+    JOIN project USING (project_id)
+    JOIN nd_experiment ON nd_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id
+    JOIN cvterm ON cvterm.cvterm_id=nd_experiment.type_id
+    WHERE cvterm.name='analysis_experiment';";
+    my $h = $dbh->prepare($analysis_q);
+    $h->execute();
+
+    while (my $analysis_id = $h->fetchrow_array()){
+        push @all_analyses, $analysis_id;
+    }
 
     foreach my $stock_id (@stock_ids) {
-	     my $trials_string ='';
-       my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
-       my $uniquename = $stock->uniquename;
-       $dataref = {
+	    my $trials_string ='';
+        my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
+        my $uniquename = $stock->uniquename;
+        $dataref = {
              'trials' => {
                          'accessions' => $stock_id
                        }
                 };
+
         $trial_query = $bs->metadata_query($criteria_list, $dataref, $queryref);
         my @current_trials = @{$trial_query->{results}};
-	      my $num_trials = scalar @current_trials;
+	    my $num_trials = scalar @current_trials;
 
-	      foreach my $t (@current_trials) {
-          print STDERR "t = " . Dumper($t);
-          $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
-	      }
-	      $trials_string =~ s/,\s+$//;
-	      push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $num_trials, $trials_string ];
+        foreach my $t (@current_trials) {
+            #print STDERR "t = " . Dumper($t);
+            if (grep {$t->[0] == $_} @all_analyses){
+                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: limegreen">'.$t->[1].' (Analysis)'.'</a>,  ';
+            } else {
+                $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+            }
+        }
+        $trials_string =~ s/,\s+$//;
+        push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $num_trials, $trials_string ];
     }
 
     my $num_trials = scalar @shared_trials;
     if ($num_trials > 0) {
 	    my $trials_string = '';
 	    foreach my $t (@shared_trials) {
-	       $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+            if (grep {$t->[0] == $_} @all_analyses){
+                $trials_string = $trials_string . '<a href="/analyses/'.$t->[0].'" style="color: limegreen">'.$t->[1].' (Analysis)'.'</a>,  ';
+            } else {
+                $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+            }
       }
 	    $trials_string  =~ s/,\s+$//;
 	    push @formatted_rows, [ "Trials in Common", $num_trials, $trials_string];
@@ -1794,7 +1837,6 @@ sub get_shared_trials_GET :Args(1) {
     }
 
     $c->stash->{rest} = { data => \@formatted_rows, shared_trials => \@shared_trials };
-  }
 }
 
 =head2 action get_stock_trait_list()
@@ -1916,12 +1958,12 @@ sub get_pedigree_string_ :Chained('/stock/get_stock') PathPart('pedigreestring')
     }
     elsif ($level eq "Great-Grandparents") {
         my $m_maternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'mother'}}{'3'}{'mother'} || 'NA';
-        my $m_maternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
-        my $p_maternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $m_maternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $p_maternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
         my $p_maternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'father'}}{'3'}{'father'} || 'NA';
         my $m_paternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'mother'}}{'3'}{'mother'} || 'NA';
-        my $m_paternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
-        my $p_paternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $m_paternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $p_paternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
         my $p_paternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'father'}}{'3'}{'father'} || 'NA';
         my $mm_parent_string = "$m_maternal_mother/$m_maternal_father";
         my $mf_parent_string = "$p_maternal_mother/$p_maternal_father";
@@ -2309,14 +2351,14 @@ sub stock_obsolete_GET {
     }
 
     if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-        $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+        $c->stash->{rest} = { error => 'Cannot obsolete stock! You do not have a curator, sequencer or submitter account' };
         $c->detach();
     }
 
     my $stock_id = $c->req->param('stock_id');
     my $is_obsolete  = $c->req->param('is_obsolete');
-
-	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+    my $obsolete_note  = $c->req->param('obsolete_note');
+    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
     if ($stock) {
 
@@ -2327,16 +2369,12 @@ sub stock_obsolete_GET {
                 is_saving=>1,
                 sp_person_id => $c->user()->get_object()->get_sp_person_id(),
                 user_name => $c->user()->get_object()->get_username(),
-                modification_note => "Obsolete at ".localtime,
-                is_obsolete => $is_obsolete
+                modification_note => $is_obsolete ? "Obsolete at ".localtime : "Un-Obsolete at ".localtime,
+                is_obsolete => $is_obsolete,
+                obsolete_note => $obsolete_note,
             });
             my $saved_stock_id = $stock->store();
-
-            my $dbh = $c->dbc->dbh();
-            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-            $c->stash->{rest} = { message => "Stock obsoleted" };
+            $c->stash->{rest} = { success => 1 };
         } catch {
             $c->stash->{rest} = { error => "Failed: $_" }
         };
@@ -2344,7 +2382,6 @@ sub stock_obsolete_GET {
 	    $c->stash->{rest} = { error => "Not a valid stock $stock_id " };
 	}
 
-    #$c->stash->{rest} = { message => 'success' };
 }
 
 
@@ -2575,24 +2612,116 @@ sub accession_or_seedlot_or_population_or_vector_construct_autocomplete_GET :Arg
 }
 
 
-sub get_vector_related_stocks:Chained('/stock/get_stock') PathPart('datatables/vector_related_stocks') Args(0){
+sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatables/vector_related_accessions') Args(0){
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
-    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $progenies->get_vector_related_stocks();
-    my @related_stocks;
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_stocks->get_vector_related_accessions();
+    my @related_accessions;
 
     foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
-        push @related_stocks, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $vector_name, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name];
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
+        push @related_accessions, {
+            transformant_id => $transformant_id,
+            transformant_name => $transformant_name,
+            plant_id => $plant_id,
+            plant_name => $plant_name,
+            transformation_id => $transformation_id,
+            transformation_name => $transformation_name,
+        };
     }
 
-    $c->stash->{rest}={data=>\@related_stocks};
+    $c->stash->{rest}={data=>\@related_accessions};
 }
 
+
+sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datatables/vector_obsoleted_accessions') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $dbh = $c->dbc->dbh;
+
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_stocks->get_vector_obsoleted_accessions();
+    my @obsoleted_accessions;
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
+        my $transformation_info;
+        if ($transformation_id) {
+            $transformation_info = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
+        } else {
+            $transformation_info = 'NA';
+        }
+        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
+        my $full_name = $person->get_first_name()." ".$person->get_last_name();
+
+        push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
+    }
+
+    $c->stash->{rest}={data=>\@obsoleted_accessions};
+}
+
+=head2 set_display_image
+
+Usage: /stock/set_display_image
+Desc: Updates stockprop with selected image_id
+Ret: Success or error string
+Args:
+Side Effects:
+Example:
+
+=cut
+
+sub set_display_image : Path('/ajax/stock/set_display_image') : ActionClass('REST') { }
+
+sub set_display_image_POST : Args(0) {
+    my ($self, $c) = @_;
+
+    my $stock_id = $c->req->param('stock_id');
+    my $image_id = $c->req->param('image_id');
+
+    if (!$stock_id) {
+        $c->stash->{rest} = { error_string=> 'Missing stock_id' };
+        return;
+    }
+
+    if (!$image_id) {
+        $c->stash->{rest} = { error_string=> 'Missing image_id' };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+
+    my $display_image_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'selected_display_image', 'stock_property')->cvterm_id();
+
+    my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
+    if (!$stock) {
+        $c->stash->{rest} = { error_string => 'Stock not found' };
+        return;
+    }
+
+    my $stockprop = $schema->resultset('Stock::Stockprop')->find_or_create({
+        stock_id => $stock_id,
+        type_id => $display_image_cvterm_id,
+    });
+    $stockprop->update({ value => $image_id });
+
+    if ($stockprop->value != $image_id) {
+        $c->stash->{rest} = { error_string => 'Error setting display image' };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
 
 1;

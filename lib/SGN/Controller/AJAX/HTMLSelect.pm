@@ -138,6 +138,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $folder_for_genotyping_trials = 1 ? $c->req->param("folder_for_genotyping_trials") eq 'true' : 0;
     my $folder_for_genotyping_projects = 1 ? $c->req->param("folder_for_genotyping_projects") eq 'true' : 0;
     my $folder_for_tracking_activities = 1 ? $c->req->param("folder_for_tracking_activities") eq 'true' : 0;
+    my $folder_for_transformations = 1 ? $c->req->param("folder_for_transformations") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -152,7 +153,8 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
         folder_for_crosses => $folder_for_crosses,
         folder_for_genotyping_trials => $folder_for_genotyping_trials,
         folder_for_genotyping_projects => $folder_for_genotyping_projects,
-        folder_for_tracking_activities => $folder_for_tracking_activities
+        folder_for_tracking_activities => $folder_for_tracking_activities,
+        folder_for_transformations => $folder_for_transformations,
     });
 
     if (scalar(@folders)>0){
@@ -257,6 +259,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
     my $get_genotyping_projects = $c->req->param("get_genotyping_projects");
     my $get_tracking_activities_projects = $c->req->param("get_tracking_activities_projects");
+    my $get_transformation_projects = $c->req->param("get_transformation_projects");
     my $include_analyses = $c->req->param("include_analyses");
     my $excluded_plates_in_project_id = $c->req->param("excluded_plates_in_project_id");
 
@@ -332,6 +335,12 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
         if ($get_tracking_activities_projects){
             if ($tracking_activities_projects && scalar(@$tracking_activities_projects)>0){
                 my @g_projects = sort { $a->[1] cmp $b->[1] } @$tracking_activities_projects;
+                push @projects, @g_projects;
+            }
+        }
+        if ($get_transformation_projects){
+            if ($transformation_projects && scalar(@$transformation_projects)>0){
+                my @g_projects = sort { $a->[1] cmp $b->[1] } @$transformation_projects;
                 push @projects, @g_projects;
             }
         }
@@ -680,7 +689,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
     }
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-	
+
     my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id),
 		people_schema=>$c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
@@ -1649,6 +1658,8 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
     my $self = shift;
     my $c = shift;
     my $checkbox_name = $c->request->param("checkbox_name") || 'dataset_select_checkbox';
+    my $show_compatibility = $c->request->param("show_compatibility") || undef;
+    my $analysis_type = $c->request->param("analysis_type") || undef;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
@@ -1677,11 +1688,30 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
                 });
                 my $info = $ds->get_dataset_data();
 
+                my $tool_compatibility;
+                if ($show_compatibility) {
+                    $tool_compatibility = $ds->tool_compatibility();
+                    if (!$tool_compatibility) {
+                        $tool_compatibility = '(not calculated)'
+                    } else {
+                        if ($tool_compatibility->{$analysis_type}->{'compatible'} == 0){
+                            $tool_compatibility = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>';
+                        } else {
+                            if ($tool_compatibility->{$analysis_type}->{"warn"}) {
+                                $tool_compatibility = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="'.$tool_compatibility->{$analysis_type}->{'warn'}.'"></span></b>';
+                            } else {
+                                $tool_compatibility = '<b><span class="glyphicon glyphicon-ok" style="color:green"></span></b>';
+                            }
+                        }
+                    }
+                }
+
                 my $dataset_info = {
                     id => $dataset_id,
                     name => $dataset_name,
                     description => $dataset_description,
-                    info => $info
+                    info => $info,
+                    tool_compatibility => $tool_compatibility
                 };
 
                 push @datasets, $dataset_info;
@@ -1703,7 +1733,11 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
         'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
     );
 
-    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
+    my $compatibility_header;
+    if ($show_compatibility){
+        $compatibility_header = '<th>Compatibility</th>';
+    }
+    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th>'.$compatibility_header.'</tr></thead><tbody>';
     foreach my $ds (@datasets) {
         $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td><a href="/dataset/'.$ds->{id}.'">'.$ds->{name}.'</a></td><td>';
 
@@ -1735,6 +1769,9 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
             $html .= "</td></div>";
         }
         $html .= "</tr></tbody></table>";
+        if ($show_compatibility) {
+            $html .= '</td><td><p id="compatibility_glyph_'.$ds->{id}.'">'.$ds->{tool_compatibility}.'</p>';
+        }
         $html .= '</td></tr>';
     }
 
@@ -2345,5 +2382,60 @@ sub _clean_inputs {
 	return $params;
 }
 
+
+sub get_related_attributes_select : Path('/ajax/html/select/related_attributes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "related_attributes_select";
+    my $name = $c->req->param("name") || "related_attributes_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my @related_attributes;
+    push @related_attributes, ["", "Select Attribute"];
+    push @related_attributes, ['breedingProgram', 'breeding program'];
+    push @related_attributes, ['transformationProject', 'transformation project'];
+    push @related_attributes, ['transfomationID', 'transformation id'];
+    push @related_attributes, ['vectorConstruct', 'vector construct'];
+    push @related_attributes, ['plantMaterial', 'plant material'];
+    push @related_attributes, ['text', 'text'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@related_attributes,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "material_types_select";
+    my $name = $c->req->param("name") || "material_types_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @material_types;
+
+    if ($empty && !$default) {
+        push @material_types, ['', 'Please select a material type'];
+    }
+    push @material_types, ['seed', 'seed'];
+    push @material_types, ['root', 'root'];
+    push @material_types, ['clone', 'clone'];
+    push @material_types, ['plant', 'plant'];
+    push @material_types, ['tissue culture', 'tissue culture'];
+    push @material_types, ['gametophyte', 'gametophyte'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@material_types,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 1;

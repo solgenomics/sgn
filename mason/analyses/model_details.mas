@@ -73,6 +73,7 @@ jQuery(document).ready(function(){
                 jQuery('#model_name').html("<a href=\"/analyses_model/"+response.model_info.model_id+"\">"+response.model_info.model_name+"</a>");
                 jQuery('#model_description').html(response.model_info.model_description);
                 jQuery('#model_type').html(response.model_info.model_type_name);
+                jQuery('#analysis_dataset_id').html("<a href=\"/dataset/"+response.dataset.dataset_id+"\">"+response.dataset.dataset_name+"</a>");
 
                 var model_properties_string = '';
                 for (var key in response.model_info.model_properties) {

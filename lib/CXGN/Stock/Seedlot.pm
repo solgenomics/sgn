@@ -224,6 +224,18 @@ has 'quality' => (
     builder => '_retrieve_quality',
     );
 
+=head2 Accessor material_type()
+
+Material type of this seedlot. Can be seed, root, clone, plant or tissue_culture. Default material type is seed.
+
+=cut
+
+has 'material_type' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy => 1,
+    builder => '_retrieve_material_type',
+);
 
 =head2 Accessor source()
 
@@ -333,6 +345,10 @@ sub list_seedlots {
     my $only_good_quality = shift;
     my $box_name = shift;
     my $contents_cross_db_id = shift;
+    my $trial_name = shift;  # name of trial used in a transaction (must also specify trial_usage)
+    my $trial_usage = shift; # transaction type (either 'source', 'sink', or 'source|sink')
+                             # where the trial is the source, sink, or either of the matching seedlot's seed
+    my $material_type = shift;
 
     select(STDERR);
     $| = 1;
@@ -349,28 +365,29 @@ sub list_seedlots {
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
     my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_quality", "stock_property")->cvterm_id();
     my $location_code_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "location_code", "stock_property")->cvterm_id();
+    my $material_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "material_type", "stock_property")->cvterm_id();
 
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
     $search_criteria{'stock_relationship_objects.type_id'} = $collection_of_cvterm_id;
     if ($seedlot_name) {
-	print STDERR "Adding seedlot name ($seedlot_name) to query...\n";
+        # print STDERR "Adding seedlot name ($seedlot_name) to query...\n";
         $search_criteria{'me.uniquename'} = { 'ilike' => '%'.$seedlot_name.'%' };
     }
     if ($seedlot_id) {
-	print STDERR "Adding seedlot_id ($seedlot_id) to query...\n";
+        # print STDERR "Adding seedlot_id ($seedlot_id) to query...\n";
         $search_criteria{'me.stock_id'} = { -in => $seedlot_id };
     }
     if ($breeding_program) {
-	print STDERR "Adding breeding_program $breeding_program to query...\n";
+        # print STDERR "Adding breeding_program $breeding_program to query...\n";
         $search_criteria{'project.name'} = { 'ilike' => '%'.$breeding_program.'%' };
     }
     if ($location) {
-	print STDERR "Adding location $location to query...\n";
+        # print STDERR "Adding location $location to query...\n";
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
     if ($contents_accession && scalar(@$contents_accession)>0) {
-	print STDERR "Adding contents accession: $contents_accession ...\n";
+        # print STDERR "Adding contents accession: $contents_accession ...\n";
         $search_criteria{'subject.type_id'} = $accession_type_id;
         if ($exact_match_uniquenames){
             $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
@@ -407,27 +424,75 @@ sub list_seedlots {
         {'stock_relationship_objects' => 'subject'}
     );
 
-    if ($minimum_count || $minimum_weight || $quality || $only_good_quality || $box_name) {
+    if ($minimum_count || $minimum_weight || $quality || $only_good_quality || $box_name || $material_type) {
         if ($minimum_count) {
-	    print STDERR "Minimum count $minimum_count\n";
-            $search_criteria{'stockprops.value' }  = { '>=' => $minimum_count };
-            $search_criteria{'stockprops.type_id' }  = $current_count_cvterm_id;
+            print STDERR "Minimum count $minimum_count\n";
+            $search_criteria{'stockprops.value'} = { '<>' => 'NA' };
+            $search_criteria{'stockprops.value::numeric'}  = { '>=' => $minimum_count };
+            $search_criteria{'stockprops.type_id'}  = $current_count_cvterm_id;
         } elsif ($minimum_weight) {
-	    print STDERR "Minimum weight $minimum_weight\n";
-            $search_criteria{'stockprops.value' }  = { '>=' => $minimum_weight };
-            $search_criteria{'stockprops.type_id' }  = $current_weight_cvterm_id;
+            print STDERR "Minimum weight $minimum_weight\n";
+            $search_criteria{'stockprops.value'} = { '<>' => 'NA' };
+            $search_criteria{'stockprops.value::numeric'}  = { '>=' => $minimum_weight };
+            $search_criteria{'stockprops.type_id'}  = $current_weight_cvterm_id;
         }
-	if ($quality) {
-	    print STDERR "Quality $quality\n";
-	     $search_criteria{'stockprops.value' } = { '=' => $quality };
-	     $search_criteria{'stockprops.type_id' } = $seedlot_quality_cvterm_id;
-	}
+        if ($quality) {
+            print STDERR "Quality $quality\n";
+            $search_criteria{'stockprops.value' } = { '=' => $quality };
+            $search_criteria{'stockprops.type_id' } = $seedlot_quality_cvterm_id;
+        }
         if ($box_name) {
             print STDERR "Box Name $box_name\n";
             $search_criteria{'stockprops.value'} = { 'ilike' => '%'.$box_name.'%' };
             $search_criteria{'stockprops.type_id'} = $location_code_cvterm_id;
         }
+        if ($material_type) {
+            print STDERR "Material type $material_type\n";
+            $search_criteria{'stockprops.value' } = { '=' => $material_type };
+            $search_criteria{'stockprops.type_id' } = $material_type_cvterm_id;
+        }
+
         push @seedlot_search_joins, 'stockprops';
+    }
+
+    if ($trial_name && $trial_usage) {
+
+        # Build query to get stocks that match the requested transactions
+        my @phs;
+        my $q = "SELECT subject_id, object_id";
+        $q .= " FROM public.stock_relationship";
+        $q .= " WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'seed transaction')";
+
+        # Subquery to get stocks (plots, etc) in requested trial
+        my $sq = "SELECT DISTINCT(observationunit_stock_id) FROM public.materialized_phenotype_jsonb_table WHERE trial_name = ?";
+        my @filters;
+
+        # Add source transaction (plot --> seedlot)
+        if ( $trial_usage =~ m/source/ ) {
+            push @filters, "object_id IN ($sq)";
+            push @phs, $trial_name;
+        }
+
+        # Add sink transaction (seedlot --> plot)
+        if ( $trial_usage =~ m/sink/ ) {
+            push @filters, "subject_id IN ($sq)";
+            push @phs, $trial_name;
+        }
+
+        # Add filters to main query
+        $q .= " AND (" . join(" OR ", @filters) . ")";
+
+        # Execute query
+        my @seedlot_ids;
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute(@phs);
+        while ( my ($subject_id, $object_id) = $h->fetchrow_array() ) {
+            push @seedlot_ids, $subject_id;
+            push @seedlot_ids, $object_id;
+        }
+
+        # Add Seedlot IDs as filter to overall seedlot query
+        $search_criteria{'me.stock_id'} = { -in => \@seedlot_ids };
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search(
@@ -450,7 +515,7 @@ sub list_seedlots {
     while (my $row = $rs->next()) {
         $seen_seedlot_ids{$row->stock_id}++;
 
-	$unique_seedlots{$row->uniquename}->{seedlot_stock_id} = $row->stock_id;
+        $unique_seedlots{$row->uniquename}->{seedlot_stock_id} = $row->stock_id;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_uniquename} = $row->uniquename;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_description} = $row->description;
         $unique_seedlots{$row->uniquename}->{breeding_program_name} = $row->get_column('breeding_program_name');
@@ -471,7 +536,7 @@ sub list_seedlots {
         phenome_schema=>$phenome_schema,
         stock_id_list=>\@seen_seedlot_ids,
         stock_type_id=>$type_id,
-        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1, 'seedlot_quality'=>1},
+        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1, 'seedlot_quality'=>1, 'material_type'=>1},
         minimal_info=>1,  #for only returning stock_id and uniquenames
         display_pedigree=>0 #to calculate and display pedigree
     });
@@ -493,11 +558,12 @@ sub list_seedlots {
         $unique_seedlots{$_}->{owners_string} = $owners_string;
         $unique_seedlots{$_}->{organization} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} : 'NA';
         $unique_seedlots{$_}->{box} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} : 'NA';
-	$unique_seedlots{$_}->{seedlot_quality} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} : '';
-        $unique_seedlots{$_}->{current_count} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
-        $unique_seedlots{$_}->{current_weight_gram} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
+        $unique_seedlots{$_}->{seedlot_quality} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{seedlot_quality} : '';
+        $unique_seedlots{$_}->{current_count} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
+        $unique_seedlots{$_}->{current_weight_gram} = defined($stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram}) ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
+        $unique_seedlots{$_}->{material_type} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{material_type} : '';
 
-	push @seedlots, $unique_seedlots{$_};
+        push @seedlots, $unique_seedlots{$_};
 
     }
 
@@ -859,6 +925,98 @@ sub verify_all_seedlots_compatibility {
 }
 
 
+=head2 Class method: verify_accession_content_source_compatibility()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_accession_content_source_compatibility($schema, [[$accession_name, $source_name]]);
+ Desc:         Class method that verifies if accession of a seedlot source is the same as accession content.
+ Ret:          success or error
+ Args:         $schema, $accession_name, $source_name
+ Side Effects: accesses the database
+
+=cut
+
+sub verify_accession_content_source_compatibility {
+    my $class = shift;
+    my $schema = shift;
+    my $pairs = shift;
+    my $error = '';
+    my %return;
+
+    if (!$pairs){
+        $error .= "No pair array passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my @pairs = @$pairs;
+    if (scalar(@pairs)<1){
+        $error .= "Your pairs list is empty!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "subplot", "stock_type")->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plant", "stock_type")->cvterm_id();
+
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "subplot_of", "stock_relationship")->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plant_of", "stock_relationship")->cvterm_id();
+
+    foreach my $each_pair (@pairs){
+        my $accession_id;
+        my $source_id;
+        my $source_type_id;
+        my $accession_source_relationship_type;
+        my $source_accession_id;
+        my $accession_name = $each_pair->[0];
+        my $source_name = $each_pair->[1];
+
+        my $accession_rs = $schema->resultset("Stock::Stock")->find({'uniquename' => $accession_name,'type_id' => $accession_cvterm_id});
+        if ($accession_rs) {
+            $accession_id = $accession_rs->stock_id();
+        }
+
+        my $source_rs = $schema->resultset("Stock::Stock")->find({'uniquename' => $source_name});
+        if ($source_rs) {
+            $source_id = $source_rs->stock_id();
+            $source_type_id = $source_rs->type_id();
+
+            if ($source_type_id eq $plot_cvterm_id) {
+                $accession_source_relationship_type = $plot_of_cvterm_id;
+            } elsif ($source_type_id eq $subplot_cvterm_id) {
+                $accession_source_relationship_type = $subplot_of_cvterm_id;
+            } elsif ($source_type_id eq $plant_cvterm_id) {
+                $accession_source_relationship_type = $plant_of_cvterm_id;
+            } else {
+                $error .= "The source name: $source_name is not a plot, subplot or plant stock type.";
+            }
+        }
+
+        if ($accession_id && $source_id && $accession_source_relationship_type) {
+            my $accession_source_relationship_rs = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $source_id, type_id => $accession_source_relationship_type});
+            $source_accession_id = $accession_source_relationship_rs->object_id();
+
+            if ($accession_id ne $source_accession_id){
+                $error .= "The source name: $source_name is not linked to the same accession as the access content: $accession_name"."<br>";
+            }
+        }
+    }
+
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
+}
+
+
 =head2 Class method: get_content_id()
 
 =cut
@@ -1163,12 +1321,15 @@ sub current_count {
     my $transactions = $self->transactions();
 
     my $count = 0;
+    my $na_amount_counter = 0;
     foreach my $t (@$transactions) {
         if ($t->amount() ne 'NA'){
             $count += $t->amount() * $t->factor();
+        } else {
+            $na_amount_counter += 1;
         }
     }
-    if ($count == 0 && scalar(@$transactions)>0){
+    if ($count == 0 && scalar(@$transactions) == $na_amount_counter){
         $count = 'NA';
     }
     return $count;
@@ -1213,6 +1374,22 @@ sub _retrieve_quality {
     $self->quality($self->_retrieve_stockprop('seedlot_quality'));
 }
 
+=head2 _retrieve_material_type
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub _retrieve_material_type {
+    my $self = shift;
+    my $material_type = $self->_retrieve_stockprop('material_type');
+    $self->material_type($material_type);
+}
 
 
 =head2 Method current_weight()
@@ -1231,12 +1408,15 @@ sub current_weight {
     my $transactions = $self->transactions();
 
     my $weight = 0;
+    my $na_weight_counter = 0;
     foreach my $t (@$transactions) {
-        if ($t->weight_gram() ne 'NA'){
+        if ($t->weight_gram() ne 'NA' && length($t->weight_gram)){
             $weight += $t->weight_gram() * $t->factor();
+        } else {
+            $na_weight_counter += 1;
         }
     }
-    if ($weight == 0 && scalar(@$transactions)>0){
+    if ($weight == 0 && scalar(@$transactions) == $na_weight_counter){
         $weight = 'NA';
     }
     return $weight;
@@ -1308,9 +1488,12 @@ sub store {
             if ($self->box_name){
                 $self->_store_stockprop('location_code', $self->box_name);
             }
-	    if ($self->quality()) {
-		$self->_store_stockprop('seedlot_quality', $self->quality());
-	    }
+            if ($self->quality()) {
+                $self->_store_stockprop('seedlot_quality', $self->quality());
+            }
+            if ($self->material_type()) {
+                $self->_store_stockprop('material_type', $self->material_type());
+            }
 
         } else { #Updating seedlot
 
@@ -1363,9 +1546,13 @@ sub store {
             if($self->box_name){
                 $self->_update_stockprop('location_code', $self->box_name);
             }
-	    if($self->quality) {
-		$self->_update_stockprop('seedlot_quality', $self->quality());
-	    }
+            if($self->quality) {
+                $self->_update_stockprop('seedlot_quality', $self->quality());
+            }
+            if($self->material_type) {
+                $self->_update_stockprop('material_type', $self->material_type());
+            }
+
         }
     };
 

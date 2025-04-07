@@ -139,6 +139,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     `<table id="${tableId}" class="table table-striped"><thead><tr>` +
       "<th>Name</th>" +
       "<th>Data structure</th>" +
+      "<th>Compatibility</th>" + 
       "<th>Ownership</th>" +
       "<th>Data type</th>" +
       "<th>Run correlation</th>" +
@@ -153,6 +154,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     var popId = corrPop.id;
     var popName = corrPop.name;
     var dataStr = corrPop.data_str;
+    var tool_compatibility = corrPop.tool_compatibility;
   
     var corrPopId = this.getCorrPopId(popId, dataStr);
    
@@ -190,12 +192,26 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       `<button type="button" id=${runCorrBtnId}` +
       ` class="btn btn-success" data-selected-pop='${corrArgs}'>Run Correlation</button>`;
   
+    var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
+      if (tool_compatibility == null || tool_compatibility == "(not calculated)"){
+        compatibility_message = "(not calculated)";
+      } else {
+          if (tool_compatibility["Correlation"]['compatible'] == 0) {
+          compatibility_message = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
+          } else {
+              if ('warn' in tool_compatibility["Correlation"]) {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + tool_compatibility["Correlation"]['warn'] + '"></span></b>';
+              } else {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-ok" style="color:green"></span></b>';
+              }
+          }
+      }
     }
 
     var rowData = [popName,
-      dataStr, corrPop.owner, dataTypeOpts, runCorrBtn, `${dataStr}_${popId}`];
+      dataStr, compatibility_message, corrPop.owner, dataTypeOpts, runCorrBtn, `${dataStr}_${popId}`];
     
     return rowData;
   },
@@ -522,13 +538,16 @@ jQuery(document).ready(function () {
   if (location.pathname.match(/correlation\/analysis/)) {
     corrPopsDataDiv = solGS.correlation.corrPopsDataDiv;
     var tableId = 'corr_pops_table';
-    var corrPopsTable = solGS.correlation.createTable(tableId)
+    var corrPopsTable = solGS.correlation.createTable(tableId);
     jQuery(corrPopsDataDiv).append(corrPopsTable).show();
 
-    var corrPops = solGS.correlation.getCorrPops()
+    var corrPops = solGS.correlation.getCorrPops();
     var corrPopsRows = solGS.correlation.getCorrPopsRows(corrPops);
 
-    solGS.correlation.displayCorrPopsTable(tableId, corrPopsRows)
+    solGS.correlation.displayCorrPopsTable(tableId, corrPopsRows);
+
+    jQuery("#create_new_list_dataset").show();
+
   }
 });
 

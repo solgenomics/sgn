@@ -48,7 +48,7 @@ my $collapsed = 0;
 my $collapsible = 0;
 
 if ($url !~ /pca\/analysis/) {
-  $title = 'Principal Component Analysis (PCA)';
+  $title = 'Principal component analysis (PCA)';
   $collapsible = 1;
   $collapsed = 1 if $url =~ /breeders\/trial/;
 }
@@ -56,7 +56,6 @@ if ($url !~ /pca\/analysis/) {
 </%perl>
 
 <& /solgs/tools/base.mas &>
-<& /util/import_javascript.mas, classes => ["solGS.pca"] &>
 
 % if ($url =~ /pca\/analysis/) {
 
@@ -98,3 +97,5 @@ if ($url !~ /pca\/analysis/) {
 
 </div>
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.pca", "solGS.analysisSave", "solGS.pcaSave"] &>

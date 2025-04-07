@@ -28,7 +28,7 @@
         <option value="json">JSON</option>
         <option value="csv">CSV</option>
         <option value="tsv">TSV</option>
-        <option value="xls">Excel (xls)</option>
+        <option value="xlsx">Excel (xlsx)</option>
     </select>
 
     <div id="brapi_phenotyping_handhelds_studies_div">

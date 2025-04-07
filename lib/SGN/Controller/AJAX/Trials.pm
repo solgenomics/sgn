@@ -126,15 +126,13 @@ sub trial_autocomplete_GET :Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $trial_design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), "design", "project_property")->cvterm_id();
     my @response_list;
-    my $q = "select distinct(name) from project join projectprop using(project_id) where project.name ilike ? and projectprop.type_id = ? ORDER BY name";
+    my $q = "select distinct(name) from project join projectprop using(project_id) where project.name ilike ? and projectprop.type_id = ? and projectprop.value not in ('genotyping_plate', 'genotype_data_project', 'pcr_genotype_data_project') ORDER BY name";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%', $trial_design_cvterm_id);
     while (my ($project_name) = $sth->fetchrow_array) {
         push @response_list, $project_name;
     }
-    #print STDERR Dumper \@response_list;
 
-    print STDERR "Returning...\n";
     $c->stash->{rest} = \@response_list;
 }
 
@@ -157,7 +155,8 @@ sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
         { 'name' => $trial_name, 'projectprops.type_id' => $trial_type_id },
         { join => 'projectprops' }
     );
-    my $trial_id = $rs->project_id() if $rs;
+    my $trial_id;
+    $trial_id = $rs->project_id() if $rs;
 
     # Trial not found
     if ( !$trial_id || $trial_id eq '' ) {
@@ -166,4 +165,66 @@ sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
     }
 
     $c->stash->{rest} = { trial_id => $trial_id };
+}
+
+
+=head2 function get_recent_trials()
+
+  Params: a string indicating the interval - one of 'day', 'week', 'month' or 'year'
+  Returns: a list of of recently created trials
+     The list contains lists with the following info: link for the trial, 
+     the trial type, the breeding program and the creation date.
+
+=cut  
+
+sub get_recent_trials : Path('/ajax/breeders/recent_trials') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $interval = shift; # 1 day, week, month, or year
+    
+    my $trial_table = CXGN::Project::get_recently_added_trials($c->dbic_schema('Bio::Chado::Schema'),  $c->dbic_schema("CXGN::Phenome::Schema"),  $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $interval);
+
+    $c->stash->{rest} =  { data => $trial_table }
+
+
+}
+
+=head2 function get_recently_modified_trials()
+
+  Params: a string indicating the interval - one of 'day', 'week', 'month' or 'year'
+  Returns: a list of of recently modified trials, defined here narrowly as new
+     phenotypes that have been uploaded.
+     The list contains lists with the following info: link for the trial, 
+     the trial type, the breeding program and the last modified date date
+     (the create_date of the phenotypes falling in the interval).
+
+=cut  
+
+sub get_recently_modified_trials : Path('/ajax/breeders/recently_modified_trials') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $interval = shift;
+
+    my $trial_table = CXGN::Project::get_recently_modified_trials($c->dbic_schema('Bio::Chado::Schema'), $c->dbic_schema("CXGN::Phenome::Schema"), $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $interval);
+
+    $c->stash->{rest} =  { data => $trial_table };
+}
+
+=head2 function get_recently_created_accessions()
+
+  Params: interval - one of 'day', 'week', 'month', or 'year'
+  Returns: a list of accessions that have been added in that interval.
+     
+=cut
+
+sub get_recently_created_accessions : Path('/ajax/breeders/recently_added_accessions') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $interval = shift;
+    
+    my $s = CXGN::Stock->new( { schema => $c->dbic_schema('Bio::Chado::Schema') } );
+
+    my $accession_table = CXGN::Project::get_recently_added_accessions($c->dbic_schema('Bio::Chado::Schema'), $interval);
+
+    $c->stash->{rest} =  { data => $accession_table };
 }

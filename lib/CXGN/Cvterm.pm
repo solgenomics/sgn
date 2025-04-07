@@ -138,7 +138,11 @@ has 'accession' => (
     is => 'rw',
 );
 
-
+has 'is_variable' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => sub { return 0; },
+    );
 
 #########################################
 
@@ -149,6 +153,19 @@ sub BUILD {
     my $cvterm;
     if ($self->cvterm_id){
         $cvterm = $self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id => $self->cvterm_id() });
+	
+	if ($cvterm) { 
+	    my $cvterm_rel_rs = $self->schema()->resultset("Cv::CvtermRelationship")->search( { subject_id => $self->cvterm_id  });
+	    # require at least one parent to have a variable_of type
+	    #
+	    while (my $row = $cvterm_rel_rs->next()) {
+		#print STDERR "ROW TYPE: ".$row->type()->name()."\n";
+		if (uc($row->type()->name) eq uc('variable_of')) { 
+		    $self->is_variable(1);
+		}
+	    }
+	    
+	}
     } elsif ($self->accession )   {
 	my ($db_name, $dbxref_accession) = split "\:", $self->accession;
 
@@ -184,12 +201,6 @@ sub BUILD {
     }
     return $self;
 }
-
-
-
-
-
-
 
 =head2 function get_image_ids
 

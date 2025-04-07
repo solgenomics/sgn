@@ -10,7 +10,13 @@ use SGN::Test::solGSData;
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
-my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
+my $solgs_data = SGN::Test::solGSData->new({
+    'fixture' => $f, 
+    'accessions_list_subset' => 60, 
+    'plots_list_subset' => 60
+    'user_id' => 40,
+});
+
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
 
 my $accessions_list =  $solgs_data->load_accessions_list();
@@ -179,9 +185,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(5);
@@ -196,9 +202,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(15);
@@ -266,22 +272,22 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(1);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(3);
 
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
     sleep(2);
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
     sleep(2);
-    $d->find_element_ok('done_selecting', 'id', 'done selecting')->click();
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
     sleep(2);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(3);
@@ -297,22 +303,22 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(1);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(3);
 
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
     sleep(2);
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
     sleep(2);
-    $d->find_element_ok('done_selecting', 'id', 'done selecting')->click();
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
     sleep(2);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(15);

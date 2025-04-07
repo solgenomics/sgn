@@ -30,14 +30,18 @@ jQuery( document ).ready( function() {
         }
     });
 
-    jQuery('#upload_spreadsheet_phenotype_file_format').change(function(){
-        var val = jQuery(this).val();
+    const handlePhenotypeFileFormatChange = function() {
+        var val = jQuery('#upload_spreadsheet_phenotype_file_format').val();
         if (val == 'simple') {
             jQuery('#upload_spreadsheet_phenotype_data_level_div').hide();
+            jQuery('#upload_phenotype_spreadsheet_info').show();
         } else {
             jQuery('#upload_spreadsheet_phenotype_data_level_div').show();
+            jQuery('#upload_phenotype_spreadsheet_info').hide();
         }
-    });
+    }
+    jQuery('#upload_spreadsheet_phenotype_file_format').change(handlePhenotypeFileFormatChange);
+    handlePhenotypeFileFormatChange();
 
     //For Datacollector Upload
     jQuery('#upload_datacollector_phenotype_submit_verify').click( function() {

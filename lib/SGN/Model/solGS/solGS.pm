@@ -387,6 +387,23 @@ sub get_trial_accessions {
 
 }
 
+sub get_trial_id_by_accession {
+    my ($self, $accession_id) = @_;
+    
+    my $q = "SELECT trial_id FROM accessionsXtrials WHERE accession_id = ?";
+
+    my $sth = $self->schema->storage->dbh->prepare($q);
+    $sth->execute($accession_id);
+
+    my @trials_ids;
+    while (my $trial_id = $sth->fetchrow_array()) {
+        push @trials_ids, $trial_id;
+    }
+
+    return \@trials_ids;
+
+}
+
 
 sub has_phenotype {
     my ( $self, $pr_id ) = @_;
@@ -833,8 +850,9 @@ sub structure_genotype_data {
 sub genotypes_list_genotype_data {
     my ( $self, $genotypes_ids, $protocol_id ) = @_;
 
+    my $protocol_detail;
     if ( !$protocol_id ) {
-        my $protocol_detail = $self->protocol_detail() if !$protocol_id;
+        $protocol_detail = $self->protocol_detail() if !$protocol_id;
         $protocol_id = $protocol_detail->{protocol_id};
     }
 

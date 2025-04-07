@@ -462,6 +462,71 @@ $(document).ready(function() {
 
 
 
+<!-- start of code for seedlot details download -->
+
+<div class="well well-sm">
+    <form id="download_seedlot_details" action="/list/download_details" method="POST">
+        <table class="table"  cellpadding="10">
+            <thead>
+                <tr><td colspan="2"><h4>Download Seedlot Details </h4><p>Select parameters:</p></tr>
+                <tr>
+                    <th>Seedlots</th>
+                    <th>Format</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div id="seedlot_list"></div>
+                    </td>
+                    <td>
+                        <select class="form-control" id="seedlot_file_format" name="file_format">
+                            <option value=".txt">Plain Text</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" type="button" id="seedlot">Download</button>
+                        <input type="hidden" id="seedlot_list_id" name="list_id" />
+                        <input type="hidden" id="seedlot_download_token" name="list_download_token" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+</div>
+
+
+<script>
+$(document).ready(function() {
+    var lo = new CXGN.List();
+    $('#seedlot_list').html(lo.listSelect('seedlot_list', [ 'seedlots' ], 'select', undefined, undefined));
+    $('#seedlot').click(function() {
+        var seedlot_list_id = $('#seedlot_list_list_select').val();
+        if (!seedlot_list_id) {
+            alert("You need to select a seedlot list!");
+            return;
+        }
+        else {
+            lo.validate(seedlot_list_id, 'seedlots', true).then((r) => {
+                if (r.missing.length > 0) {
+                   alert("The seedlot list did not pass validation. Please correct the list and try again");
+                }
+                else {
+                    jQuery("#seedlot_list_id").val(seedlot_list_id);
+                    jQuery('#download_seedlot_details').submit();
+                }
+            });
+        }
+    });
+});
+
+</script>
+
+<!-- end of code for seedlot download -->
+
+
+
 <!-- start of code for download seedlot matinenance events -->
 
 % if ( $seedlot_maintenance_enabled ) {
@@ -587,7 +652,7 @@ $(document).ready(function() {
       $('#genotype').click(function() {
 
       var accession_list_id = $('#genotype_accession_list_list_select').val();
-      var protocol_list_id = $('#protocol_list').val();
+      var protocol_list_id = $('#gtp_select').val();
 
       var accession_validation = 1;
       if (accession_list_id) {

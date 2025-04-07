@@ -34,6 +34,7 @@ use Encode;
 #use Encode::Detect;
 use JSON::XS qw | decode_json |;
 use utf8;
+use CXGN::Contact;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -85,10 +86,10 @@ sub verify_accession_list_POST : Args(0) {
     my @organism_list = $organism_list_json ? @{_parse_list_from_json($c, $organism_list_json)} : [];
 
     my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
-    if ($user_role ne 'curator' && !$do_fuzzy_search) {
-        $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
-        $c->detach();
-    }
+    #if ($user_role ne 'curator' && !$do_fuzzy_search) {
+    #    $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
+    #    $c->detach();
+    #}
 
     if ($do_fuzzy_search) {
         $self->do_fuzzy_search($c, \@accession_list, \@organism_list);
@@ -238,10 +239,10 @@ sub verify_accessions_file_POST : Args(0) {
     my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_accessions') ? 0 : 1;
     my $append_synonyms = !$c->req->param('append_synonyms') ? 0 : 1;
 
-    if ($user_role ne 'curator' && !$do_fuzzy_search) {
-        $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
-        $c->detach();
-    }
+    #if ($user_role ne 'curator' && !$do_fuzzy_search) {
+    #    $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
+    #    $c->detach();
+    #}
 
     # These roles are required by CXGN::UploadFile
     if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
@@ -378,8 +379,12 @@ sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') 
 
 sub add_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
+
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $email_address = $c->req->param("email_address_upload");
+    my $email_option_enabled = $c->req->param("email_option_enabled");
+    print STDERR "here is the email_address: $email_address\n";
 
     my $full_info = $c->req->param('full_info') ? _parse_list_from_json($c, $c->req->param('full_info')) : '';
     my $allowed_organisms = $c->req->param('allowed_organisms') ? _parse_list_from_json($c, $c->req->param('allowed_organisms')) : [];
@@ -463,10 +468,77 @@ sub add_accession_list_POST : Args(0) {
     };
 
     my $transaction_error;
+    my ($email_subject, $email_body);
     try {
         $schema->txn_do($coderef_bcs);
+
+        my ($a_num, $b_num, $base_url, $accession_stocks);
+        my @sort_added_fullinfo_stocks = sort {
+            ($a_num) = $a->[1] =~ /(\d+)/;
+            ($b_num) = $b->[1] =~ /(\d+)/;
+            if (defined $a_num && defined $b_num) {
+                $a_num <=> $b_num;
+            } elsif (defined $a_num) {
+                -1;
+            } elsif (defined $b_num) {
+                1;
+            } else {
+                $a->[1] cmp $b->[1];
+            }
+        } @added_fullinfo_stocks;
+
+        if ($email_option_enabled == 1 && $email_address) {
+            # print STDERR "send email: $email_address\n";
+            print STDERR "transaction succeeded! committing accessions\n\n";
+
+            $email_subject = "Accessions upload status";
+            $email_body = "Dear $user_name,\n\n";
+            $email_body.= "Congratulations, all your accessions have been successfully uploaded to the database.\n\n";
+            $email_body.= "Upload details:\n";
+            $email_body.= "Total accessions added: " . scalar(@added_stocks) . "\n\n";
+            $email_body.= "Accession ID\tAccession Name\tAccession URLs\n";
+
+            $base_url = "$main_production_site_url/stock/";
+            # $base_url = "http://localhost:8080/stock/";
+            # print STDERR "Added fullinfo stocks: " . Dumper \@added_fullinfo_stocks;
+
+            #uploading accessions upto or less than 1000 accessions
+            $accession_stocks = 0;
+            foreach my $stock (@sort_added_fullinfo_stocks) {
+                last if ($accession_stocks >= 1000);
+                $email_body .= "$stock->[0]\t$stock->[1]\t$base_url$stock->[0]/view\n";
+                $accession_stocks++;
+            }
+
+            #uploading more than 1000 accessions
+            if (scalar(@sort_added_fullinfo_stocks) > 1000) {
+                $email_body .= "... and more accessions are uploaded.\n";
+            }
+
+            $email_body.= "\nThank you.\nHave a nice day\n";
+
+            CXGN::Contact::send_email($email_subject, $email_body, $email_address);
+        }
+
+        $c->stash->{rest} = {
+            success => "1",
+            added => \@added_fullinfo_stocks
+            # print STDERR Dumper \@added_fullinfo_stocks;
+        };
     } catch {
         $transaction_error =  $_;
+        my $error_message = "An error occurred while uploading accessions: $_\n";
+        print STDERR $error_message;
+
+        if ($email_option_enabled == 1 && $email_address) {
+            $email_subject = 'Error in Accession Upload';
+            $email_body    = "Dear $user_name,\n\n$error_message\n";
+            $email_body   .= "Please correct these errors and try uploading again.\n\n";
+            $email_body   .= "Thank you\nHave a nice day\n";
+
+            CXGN::Contact::send_email($email_subject, $email_body, $email_address);
+        }
+        $c->stash->{rest} = {error => $error_message};
     };
     if ($transaction_error) {
         $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error" };
@@ -478,11 +550,6 @@ sub add_accession_list_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-    #print STDERR Dumper \@added_fullinfo_stocks;
-    $c->stash->{rest} = {
-        success => "1",
-        added => \@added_fullinfo_stocks
-    };
     return;
 }
 

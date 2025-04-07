@@ -25,24 +25,23 @@ $gs_traits_index => undef
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTraits",
-  "solGS.searchTrials", "jquery.dataTables", "solGS.Dataset", "solGS.combineTrials",
-  "solGS.ajaxAutocomplete"] &>
-
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.genotypingProtocol",  "solGS.searchTrials",  "solGS.ajaxAutocomplete",  "solGS.combineTrials", "solGS.searchTraits",
+ "jquery.dataTables", "solGS.Dataset",
+ ] &>
 
 <div id="solgs_search_page" class="container">
     <& /page/page_title.mas,
 	  title => "solGS: Genomic Prediction Modeling"
 	 &>
 
-      <& /solgs/genotyping_protocol/index.mas &>
+	<& /solgs/genotyping_protocol/index.mas &>
 
-	   <& /solgs/search/trial_search_form.mas &>
-
-	    <& /solgs/search/list_type_training_population.mas &>
-
-	    <& /solgs/search/trait_search_form.mas,
-		  gs_traits_index => $gs_traits_index
-		 &>
+<div id="solgs_search_interfaces">
+	<& /solgs/search/trial_search_form.mas &>
+	<& /solgs/search/list_type_training_population.mas &>
+	<& /solgs/search/trait_search_form.mas, gs_traits_index => $gs_traits_index &>
+</div>
 
 </div>
+
+<input type="hidden" id="genotyping_protocol_id" value="" />

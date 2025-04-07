@@ -81,4 +81,21 @@ class solGSList {
     return lists;
   }
 
+
+  addDataTypeAttr(lists) {
+
+    for (var i = 0; i < lists.length; i++) {
+        if (lists[i].type.match(/accessions/)) {
+          lists[i]["data_type"] = ["Genotype"];
+        } else if (lists[i].type.match(/plots/)) {
+          lists[i]["data_type"] = ["Phenotype"];
+        } else if (lists[i].type.match(/trials/)) {
+          lists[i]["data_type"] = ["Genotype", "Phenotype"];
+        }
+    
+    }
+    
+    return lists;
+  }
+
 }

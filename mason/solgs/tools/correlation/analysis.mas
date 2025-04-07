@@ -62,8 +62,6 @@ if ($url !~ /correlation\/analysis/) {
 
 <& /solgs/tools/base.mas &>
 
-<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>
-
 % if ($url =~ /correlation\/analysis/) {
 
 <& /page/page_title.mas,
@@ -71,7 +69,6 @@ if ($url !~ /correlation\/analysis/) {
   &>
   
 %}
-
 
 <&| /page/info_section.mas,
   collapsible => $collapsible,
@@ -89,9 +86,8 @@ if ($url !~ /correlation\/analysis/) {
     &>
 
 %} else {
-    <input id="run_correlation" class="btn btn-success" type="button" value="Run Correlation" />
+    <input id="run_correlation" class="btn btn-success" type="button" value="Run correlation" />
 %}
-
 
 <& plot.mas,
    corr_pop_id => $corr_pop_id,
@@ -103,3 +99,5 @@ if ($url !~ /correlation\/analysis/) {
 
 </div>
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>

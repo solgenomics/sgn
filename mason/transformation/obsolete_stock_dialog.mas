@@ -1,0 +1,45 @@
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'CXGN.Stock' ] &>
+
+
+<div class="modal fade" id="obsolete_stock_dialog" name="obsolete_stock_dialog" tabindex="-1" role="dialog" aria-labelledby="obsoleteStockDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="obsoleteStockDialog"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="obsolete_stock_div"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="obsolete_stock_submit" type="button" class="btn btn-primary"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="obsolete_stock_message_dialog" name="obsolete_stock_message_dialog" tabindex="-1" role="dialog" aria-labelledby="obsoleteStockMessageDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="obsoleteStockMessageDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Success!
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_obsolete_stock_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>

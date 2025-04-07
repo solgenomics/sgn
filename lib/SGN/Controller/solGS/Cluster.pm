@@ -14,6 +14,7 @@ use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
 
 use CXGN::List;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -127,10 +128,18 @@ sub prepare_response {
     my $file_id      = $c->stash->{file_id};
 
     my $json_data;
+    my $pc_scores_groups;
     if ( $cluster_type =~ /hierarchical/i ) {
         my $json_file = $c->stash->{"${cluster_type}_result_json_file"};
         $json_data = read_file( $json_file, { binmode => ':utf8' } );
+    } else {
+     my $pc_scores_file = $c->stash->{"${cluster_type}_pc_scores_file"};
+     if (-s $pc_scores_file) {
+        $pc_scores_groups = $c->controller('solGS::Utils')->read_file_data($pc_scores_file);
+     }
     }
+
+    print STDERR Dumper $pc_scores_groups;
 
     my $ret->{result} = 'failed';
 
@@ -146,8 +155,10 @@ sub prepare_response {
     $ret->{json_data}            = $json_data;
     $ret->{cluster_report}       = $c->stash->{download_cluster_report};
     $ret->{cluster_pop_id}       = $c->stash->{cluster_pop_id};
+    $ret->{file_id}              = $file_id;
     $ret->{combo_pops_id}        = $c->stash->{combo_pops_id};
     $ret->{list_id}              = $c->stash->{list_id};
+    $ret->{list_name}            = $c->stash->{list_name};
     $ret->{cluster_type}         = $c->stash->{cluster_type};
     $ret->{dataset_id}           = $c->stash->{dataset_id};
     $ret->{trials_names}         = $c->stash->{trials_names};
@@ -161,6 +172,7 @@ sub prepare_response {
     $ret->{kcluster_means}       = $c->stash->{download_kmeans_means};
     $ret->{kcluster_variances}   = $c->stash->{download_variances};
     $ret->{elbow_plot}           = $c->stash->{download_elbow_plot};
+    $ret->{pc_scores_groups}     = $pc_scores_groups;
 
     return $ret;
 
@@ -277,6 +289,23 @@ sub cluster_means_file {
 
 }
 
+sub cluster_pc_scores_file {
+    my ( $self, $c ) = @_;
+
+    my $file_id      = $c->stash->{file_id};
+    my $cluster_type = $c->stash->{cluster_type};
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+
+    my $cache_data = {
+        key       => "${cluster_type}_pc_scores_${file_id}",
+        file      => "${cluster_type}_pc_scores_${file_id}",
+        stash_key => "${cluster_type}_pc_scores_file"
+    };
+
+    $c->controller('solGS::Files')->cache_file( $c, $cache_data );
+
+}
+
 sub cluster_variances_file {
     my ( $self, $c ) = @_;
 
@@ -367,6 +396,7 @@ sub prep_cluster_download_files {
     my $elbow_file;
     my $variances_file;
     my $means_file;
+    my $pc_scores_file;
 
     if ( $cluster_type =~ /k-means/i ) {
         $clusters_file = $c->stash->{"${cluster_type}_result_file"};
@@ -379,6 +409,8 @@ sub prep_cluster_download_files {
         $variances_file = $c->stash->{"${cluster_type}_variances_file"};
         $self->cluster_means_file($c);
         $means_file = $c->stash->{"${cluster_type}_means_file"};
+        $self->cluster_pc_scores_file($c);
+        $pc_scores_file = $c->stash->{"${cluster_type}_pc_scores_file"};
 
         $elbow_file = $c->controller('solGS::Files')
           ->copy_to_tempfiles_subdir( $c, $elbow_file, 'cluster' );
@@ -386,6 +418,8 @@ sub prep_cluster_download_files {
           ->copy_to_tempfiles_subdir( $c, $variances_file, 'cluster' );
         $means_file = $c->controller('solGS::Files')
           ->copy_to_tempfiles_subdir( $c, $means_file, 'cluster' );
+        $pc_scores_file = $c->controller('solGS::Files')
+          ->copy_to_tempfiles_subdir( $c, $pc_scores_file, 'cluster' );
 
         $c->stash->{download_elbow_plot}   = $elbow_file;
         
@@ -414,6 +448,9 @@ sub prep_cluster_download_files {
     $c->stash->{download_newick}          = $newick_file;
     $c->stash->{download_json}            = $json_file;
     $c->stash->{download_cluster_report}  = $report_file;
+    $c->stash->{download_pc_scores}  = $pc_scores_file;
+
+
 
 }
 
@@ -450,6 +487,8 @@ sub cluster_output_files {
     my $variances_file = $c->stash->{"${cluster_type}_variances_file"};
     $self->cluster_means_file($c);
     my $means_file = $c->stash->{"${cluster_type}_means_file"};
+    $self->cluster_pc_scores_file($c);
+    my $pc_scores_file = $c->stash->{"${cluster_type}_pc_scores_file"};
 
     my $file_list = join( "\t",
         $result_file,          $newick_file,
@@ -457,6 +496,7 @@ sub cluster_output_files {
         $analysis_report_file, $analysis_error_file,
         $means_file,           $variances_file,
         $elbow_file,           $combined_cluster_data_file,
+        $pc_scores_file
     );
 
     my $tmp_dir = $c->stash->{cluster_temp_dir};
@@ -528,11 +568,8 @@ sub cluster_gebvs_input_files {
 sub cluster_sindex_input_files {
     my ( $self, $c ) = @_;
 
-    my $dir         = $c->stash->{selection_index_cache_dir};
-    my $sindex_name = $c->stash->{sindex_name};
-    my $file = catfile( $dir, "selection_index_only_${sindex_name}.txt" );
-
-    $c->stash->{cluster_sindex_input_files} = $file;
+    $c->controller('solGS::SelectionIndex')->selection_index_file($c);
+    $c->stash->{cluster_sindex_input_files} = $c->stash->{selection_index_only_file};
 
 }
 

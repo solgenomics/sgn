@@ -43,11 +43,13 @@ open (my $fh, "<", $opt_i ) || die ("\nERROR: the file $opt_i could not be found
 close($fh);
 
 eval {
+  if ( scalar(@nd_experiment_ids) > 0 ) {
     my $nd_experiment_ids_string = join ",", @nd_experiment_ids;
     my $q = "DELETE FROM nd_experiment WHERE nd_experiment_id IN ($nd_experiment_ids_string)";
     my $h = $dbh->prepare($q);
     $h->execute();
-    print STDERR "DELETED ".scalar(@nd_experiment_ids)." Nd Experiment Entries\n";
+  }
+  print STDERR "DELETED ".scalar(@nd_experiment_ids)." Nd Experiment Entries\n";
 };
 
 if ($@) {

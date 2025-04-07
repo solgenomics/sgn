@@ -22,6 +22,12 @@ use Spreadsheet::ParseXLSX;
 use JSON;
 use Data::Dumper;
 
+
+#
+# DEPRECATED: This plugin has been replaced by the PhenotypeSpreadsheetSimpleGeneric plugin
+#
+
+
 my @oun_columns = ("observationunit_name", "plot_name", "subplot_name", "plant_name", "observationUnitName", "plotName", "subplotName", "plantName");
 my %oun_columns_map = map { $_ => 1 } @oun_columns;
 

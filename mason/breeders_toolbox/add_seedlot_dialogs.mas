@@ -2,6 +2,8 @@
 $timestamp => localtime()
 $accession_uniquename => ''
 $cross_uniquename => ''
+$default_seedlot_material_type => undef
+
 </%args>
 
 <div class="modal fade" id="add_seedlot_dialog" name="add_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_dialog">
@@ -21,6 +23,21 @@ $cross_uniquename => ''
                         <input class="form-control" id="seedlot_name" placeholder="Required">
                     </div>
                 </div>
+%if ($default_seedlot_material_type) {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" >Material Type: </label>
+                    <div class="col-sm-9">
+                        <input class="form-control" name="add_seedlot_default_material_type" id="add_seedlot_default_material_type" disabled value="<% $default_seedlot_material_type %>">
+                    </div>
+                </div>
+% } else {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Material Type: </label>
+                    <div class="col-sm-9" >
+                        <div id="seedlot_material_type_div"></div>
+                    </div>
+                </div>
+% }
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Seedlot Description: </label>
                     <div class="col-sm-9" >
@@ -72,7 +89,9 @@ $cross_uniquename => ''
                                     </div>
                                 </div>
                             </div>
-                            <center><h4>OR</h4></center>
+                            <div style="text-align: center">
+                                <h4>OR</h4>
+                            </div>
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
@@ -94,7 +113,9 @@ $cross_uniquename => ''
                                     </div>
                                 </div>
                             </div>
-                            <center><h4>OR</h4></center>
+                            <div style="text-align: center">
+                                <h4>OR</h4>
+                            </div>
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
@@ -119,7 +140,7 @@ $cross_uniquename => ''
                 </div>
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Amount (number of seeds): </label>
+                    <label class="col-sm-3 control-label">Amount (number of materials): </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_amount" placeholder="Amount OR Weight(g) Required">
                     </div>
@@ -160,6 +181,7 @@ $cross_uniquename => ''
         </div>
       </div>
       <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button id="create_new_seedlot_button" type="button" class="btn btn-primary" >OK</button>
       </div>
     </div>
@@ -185,10 +207,19 @@ jQuery(document).ready(function(){
     jQuery('[name="add_seedlot_button"]').click( function() {
         jQuery('#add_seedlot_dialog').modal('show');
         get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id' });
+        get_select_box('material_types', 'seedlot_material_type_div', { 'name' : 'seedlot_material_type', 'id' : 'seedlot_material_type' });
+
     });
 
     jQuery('#create_new_seedlot_button').click( function() {
         var name = jQuery('#seedlot_name').val();
+        let material_type = "";
+        const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
+        if (default_seedlot_material_type) {
+            material_type = default_seedlot_material_type;
+        } else {
+            material_type = jQuery('#seedlot_material_type').val();
+        }
         var seedlot_description = jQuery('#seedlot_description').val();
         var location = jQuery('#seedlot_location').val();
         var box_name = jQuery('#seedlot_box_name').val();
@@ -197,17 +228,20 @@ jQuery(document).ready(function(){
         var population_name = jQuery('#seedlot_population_name').val();
         var organization = jQuery('#seedlot_organization').val();
         var source = jQuery("#seedlot_source").val();
-        var amount = jQuery('#seedlot_amount').val();
-        var weight = jQuery('#seedlot_weight').val();
+        var amount = jQuery('#seedlot_amount').val().trim();
+        var weight = jQuery('#seedlot_weight').val().trim();
         var timestamp = jQuery('#seedlot_timestamp').val();
         var transaction_description = jQuery('#seedlot_transaction_description').val();
         var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
         var seedlot_quality = jQuery('#seedlot_quality').val();
 
         if (name == '') { alert("Please provide a name"); return; }
+        else if (material_type == '') { alert("Please provide a material type"); return; }
         else if (location == '') { alert("Please provide a location"); return; }
         else if (box_name == '') { alert("Please provide a box name"); return; }
-        else if (amount == '' && weight == '') { alert("Please provide an seed count amount or a weight in grams!"); return; }
+        else if (amount.trim().length == 0 && weight.trim().length == 0) { alert("Please provide a seed count amount or a weight in grams!"); return; }
+        else if (isNaN(amount)) { alert("If inputting a seed count amount, it must be a numeric value."); return; }
+        else if (isNaN(weight)) { alert("If inputting a weight, it must be a numeric value."); return; }
         else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
         else if (accession_uniquename == '' && cross_uniquename == '') {
             alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
@@ -221,6 +255,7 @@ jQuery(document).ready(function(){
                 url: '/ajax/breeders/seedlot-create',
                 data : {
                     'seedlot_name' : name,
+                    'seedlot_material_type' : material_type,
                     'seedlot_description': seedlot_description,
                     'seedlot_location': location,
                     'seedlot_box_name':box_name,
@@ -234,8 +269,7 @@ jQuery(document).ready(function(){
                     'seedlot_timestamp':timestamp,
                     'seedlot_transaction_description':transaction_description,
                     'seedlot_breeding_program_id':breeding_program_id,
-                    'seedlot_quality' : seedlot_quality
-
+                    'seedlot_quality' : seedlot_quality,
                 },
                 beforeSend: function(response){
                     jQuery('#working_modal').modal('show');

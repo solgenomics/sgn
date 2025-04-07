@@ -42,17 +42,20 @@ sub analysis_detail :Path('/analyses') Args(1) {
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     print STDERR "Viewing analysis with id $analysis_id\n";
 
-    my $a = CXGN::Analysis->new({
+    my $a;
+    eval {
+    $a = CXGN::Analysis->new({
         bcs_schema => $bcs_schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         trial_id => $analysis_id,
     });
+    };
 
-    if (! $a) {
+    if ($@) {
         $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'The requested analysis ID does not exist in the database.';
+        $c->stash->{message} = 'The requested analysis ID does not exist in the database or has been deleted.';
         return;
     }
 

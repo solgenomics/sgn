@@ -180,6 +180,10 @@ function create_phenotype_spreadsheet() {
     if (! trait_list_id == "") {
         trait_list = JSON.stringify(list.getList(trait_list_id));
     }
+    else {
+        alert("You must select a Trait List first");
+        return;
+    }
 %  if ($trial_id){
         var trial_ids = [<% $trial_id %>];
 %  } else {

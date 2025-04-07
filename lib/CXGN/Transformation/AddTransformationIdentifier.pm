@@ -53,7 +53,7 @@ has 'vector_construct' => (
 );
 
 has 'notes' => (
-    isa => 'Str',
+    isa => 'Maybe[Str]',
     is => 'rw',
 );
 

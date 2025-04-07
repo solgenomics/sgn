@@ -1,7 +1,7 @@
 
 package SGN::Controller::Cvterm;
 
-use CXGN::Chado::Cvterm; #DEPRECATE this !! 
+#use CXGN::Chado::Cvterm; #DEPRECATE this !! 
 use CXGN::Cvterm;
 
 use Moose;
@@ -35,13 +35,14 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
     my $cvterm_id = $cvterm ? $cvterm->cvterm_id : undef ;
    
     my $bcs_cvterm = $cvterm->cvterm;
-       
+
+    my ($person_id, $user_role, $curator, $submitter, $sequencer);
     my $logged_user = $c->user;
-    my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $user_role = 1 if $logged_user;
-    my $curator   = $logged_user->check_roles('curator') if $logged_user;
-    my $submitter = $logged_user->check_roles('submitter') if $logged_user;
-    my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
+    $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    $user_role = 1 if $logged_user;
+    $curator   = $logged_user->check_roles('curator') if $logged_user;
+    $submitter = $logged_user->check_roles('submitter') if $logged_user;
+    $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
     my $props = $self->_cvtermprops($cvterm);
     my $editable_cvterm_props = "trait_format,trait_default_value,trait_minimum,trait_maximum,trait_details,trait_categories";
    
@@ -99,7 +100,7 @@ sub _cvtermprops {
     my $properties ;
     if ($cvterm) {
 	my $bcs_cvterm = $cvterm->cvterm;
-	if (!$bcs_cvterm) { return undef ; } 
+	if (!$bcs_cvterm) { return; } 
         my $cvtermprops = $bcs_cvterm->search_related("cvtermprops");
         while ( my $prop =  $cvtermprops->next ) {
             push @{ $properties->{$prop->type->name} } ,   $prop->value ;

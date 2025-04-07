@@ -1,0 +1,91 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Transformation' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<&| /page/info_section.mas, id=>'delete_transformation_ids_section', title => 'Delete Transformation IDs', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <center>You cannot delete any transformation ID with associated transformants, but you can mark the transformation ID as terminated.</center>
+    </div>
+
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table class="table table-hover table-bordered" id="transformation_ids_deletion_table">
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, id=>'delete_transformation_project_section', title => 'Delete Transformation Project', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <center>You cannot delete any transformation project with associated transformation IDs. Please delete those associated transformation IDs in the project first.</center>
+    </div>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-primary" id="delete_transformation_project" role="button">Delete transformation project</button><br/><br/>
+            </div>
+        </div>
+    </div>
+</&>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    const project_id = "<% $trial_id %>";
+
+    jQuery('#delete_transformation_project').click(function() {
+        const confirmation = confirm("Are you sure you want to delete this transformation project? The deletion cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/trial/'+project_id+'/delete/transformation_project',
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert('Deletion was successful');
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
+    });
+
+    const deletion_table = jQuery('#transformation_ids_deletion_table').DataTable({
+        'ajax': '/ajax/transformation/all_transformation_ids_in_project/'+project_id,
+        'autoWidth': false,
+        'columns': [
+            { title: "Transformation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/transformation/"+row.transformation_id+"'>"+row.transformation_name+"</a>"; } },
+            { title: "Status", "data": "status_type" },
+            { title: "Number of Transformants", "data": "number_of_transformants" },
+            { title: "Delete", "data": null, "render": function ( data, type, row ) {
+                if (row.number_of_transformants > 0){
+                    return 'Cannot Delete'
+                } else {
+                    return "<a onclick='deleteTransformationID("+row.transformation_id+")'>Delete</a>";
+
+                }
+            }},
+
+        ],
+
+    });
+
+});
+
+</script>

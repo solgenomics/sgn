@@ -23,7 +23,7 @@
 <meta name="author" content="Breedbase team" />
 
 
-<meta name="date" content="2024-07-22" />
+<meta name="date" content="2025-02-25" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -185,8 +185,9 @@
 <li class="chapter" data-level="10.2.10" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-tissue-sample-entries-to-your-trial"><i class="fa fa-check"></i><b>10.2.10</b> Adding Tissue Sample Entries To Your Trial</a></li>
 <li class="chapter" data-level="10.2.11" data-path="managing-field-trials.html"><a href="managing-field-trials.html#uploading-gps-coordinates-for-plots"><i class="fa fa-check"></i><b>10.2.11</b> Uploading GPS Coordinates For Plots</a></li>
 <li class="chapter" data-level="10.2.12" data-path="managing-field-trials.html"><a href="managing-field-trials.html#uploading-additional-files-to-trial"><i class="fa fa-check"></i><b>10.2.12</b> Uploading Additional Files To Trial</a></li>
-<li class="chapter" data-level="10.2.13" data-path="managing-field-trials.html"><a href="managing-field-trials.html#deleting-trial-data"><i class="fa fa-check"></i><b>10.2.13</b> Deleting Trial Data</a></li>
 </ul></li>
+<li class="chapter" data-level="10.3" data-path="managing-field-trials.html"><a href="managing-field-trials.html#updating-trial-data"><i class="fa fa-check"></i><b>10.3</b> Updating Trial Data</a></li>
+<li class="chapter" data-level="10.4" data-path="managing-field-trials.html"><a href="managing-field-trials.html#deleting-trial-data"><i class="fa fa-check"></i><b>10.4</b> Deleting Trial Data</a></li>
 </ul></li>
 <li class="chapter" data-level="11" data-path="managing-genotyping-plates.html"><a href="managing-genotyping-plates.html"><i class="fa fa-check"></i><b>11</b> Managing Genotyping Plates</a>
 <ul>
@@ -333,7 +334,8 @@
 <li class="chapter" data-level="25.12.8" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#faq"><i class="fa fa-check"></i><b>25.12.8</b> FAQ</a></li>
 </ul></li>
 <li class="chapter" data-level="25.13" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#general-mixed-model-tool"><i class="fa fa-check"></i><b>25.13</b> General Mixed Model Tool</a></li>
-<li class="chapter" data-level="25.14" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#genomic-prediction-of-cross-performance-gcpc"><i class="fa fa-check"></i><b>25.14</b> Genomic Prediction of Cross Performance (GCPC)</a></li>
+<li class="chapter" data-level="25.14" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#genomic-prediction-of-cross-performance-gpcp"><i class="fa fa-check"></i><b>25.14</b> Genomic Prediction of Cross Performance (GPCP)</a></li>
+<li class="chapter" data-level="25.15" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#tool-compatibility"><i class="fa fa-check"></i><b>25.15</b> Tool Compatibility</a></li>
 </ul></li>
 <li class="divider"></li>
 <li><a href="https://bookdown.org/" target="blank">Published with bookdown</a></li>
@@ -802,8 +804,30 @@ The GPS coordinates should be WGS84 format and specify a four-pointed polygon ar
 <p>To upload an additional file, click on the “Upload Additional Files” link. A dialog will appear where you simply select your desired file. For information, you can click “Upload information” to see the following message.</p>
 <p><img src="assets/images/trial_upload_additional_file_info.png" width="95%" style="display: block; margin: auto;" /></p>
 </div>
-<div id="deleting-trial-data" class="section level3 hasAnchor" number="10.2.13">
-<h3><span class="header-section-number">10.2.13</span> Deleting Trial Data<a href="managing-field-trials.html#deleting-trial-data" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+</div>
+<div id="updating-trial-data" class="section level2 hasAnchor" number="10.3">
+<h2><span class="header-section-number">10.3</span> Updating Trial Data<a href="managing-field-trials.html#updating-trial-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>To updated the trial-level metadata (such as the planting date, design type, description, etc) of one or more existing trials, click the “Update Existing Trial(s)” button from the Manage &gt; Field Trials page. This upload can also be used to rename trials or move trials to a different breeding program. In order to update a trial, you must be a curator or a submitter (that is associated with the breeding program of the trials).</p>
+<p><img src="assets/images/update_trial_metadata.png" width="95%" style="display: block; margin: auto;" /></p>
+<p>Here you can upload a file that contains the new metadata for the existing trials in the database. The first column is labeled ‘trial_name’ and includes the name of the existing trial. Additional columns can be included for the metadata you want to update. Any columns not included in the file or values left blank will leave the existing metadata unchanged. The columns that can be included are:</p>
+<ul>
+<li>new_trial_name: A new name for the trial, must not already exist in the database</li>
+<li>breeding_program: The name of breeding program that managed the trial, must exist in the database.</li>
+<li>location: The name or abbreviation of the location where the trial was held, must exist in the database.</li>
+<li>year: The year the trial was held.</li>
+<li>transplanting_date: The transplanting_date of the trial was conducted. Date in YYYY-MM-DD format or ‘remove’ to remove the date</li>
+<li>planting_date: Date of Planting in YYYY-MM-DD format or ‘remove’ to remove the date</li>
+<li>harvest_date: Date of Harvest in YYYY-MM-DD format or ‘remove’ to remove the date</li>
+<li>design_type: The shorthand for the design type, must exist in the database. Possible values include CRD: Completely Randomized Design, RCBD: Randomized Complete Block Design, RRC: Resolvable Row-Column, DRRC: Doubly-Resolvable Row-Column, ARC: Augmented Row-Column, Alpha: Alpha Lattice Design, Lattice: Lattice Design, Augmented: Augmented Design, MAD: Modified Augmented Design, greenhouse: undesigned Nursery/Greenhouse, splitplot: Split Plot, p-rep: Partially Replicated, Westcott: Westcott Design</li>
+<li>description: Additional text with any other relevant information about the trial.</li>
+<li>trial_type: The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial</li>
+<li>plot_width: plot width in meters</li>
+<li>plot_length: plot length in meters</li>
+<li>field_size: field size in hectares</li>
+</ul>
+</div>
+<div id="deleting-trial-data" class="section level2 hasAnchor" number="10.4">
+<h2><span class="header-section-number">10.4</span> Deleting Trial Data<a href="managing-field-trials.html#deleting-trial-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>To delete a trial data, click on the “Delete trial data” section. There are links to delete traits, layout and trial entry data.</p>
 <p><img src="assets/images/trial_detail_page_delete_trait1.png" width="95%" style="display: block; margin: auto;" /></p>
 <p>To delete assayed trait data, click on “Delete trait data” link. On the appeared dialog, confirm deletion by clicking on the “Select Traits For Deletion” button, then select one or more traits to delete from the trial.</p>
@@ -812,7 +836,6 @@ The GPS coordinates should be WGS84 format and specify a four-pointed polygon ar
 <p>To delete trial layout data, click on the “Delete layout data” link. Confirm deletion on the appeared dialog.</p>
 <p>To Delete trial entry, click on “Delete trial entry” link. Confirm deletion on the appeared dialog.</p>
 
-</div>
 </div>
 </div>
             </section>

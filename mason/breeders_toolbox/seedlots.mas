@@ -9,6 +9,7 @@ $locations
 $crossing_trials
 $maintenance_enabled => undef
 $user_role => undef
+$default_seedlot_material_type => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -27,10 +28,12 @@ $user_role => undef
             <div class="panel-body">
                 <b><p>What are seedlots?</p></b>
                 <ul>
-                <li>Seedlots represent physical seed in packets.</li>
-                <li>This seed can be from crosses or for named accessions.</li>
+                <li>Seedlots represent physical plant materials in packets/containers.</li>
+                <li>Plant material can be seed, root, clone, plant, tissue culture or gametophyte.</li>
+                <li>If you would like to set a default material type for seedlots, please contact us.</li>
+                <li>These materials can be from crosses or for named accessions.</li>
                 <li>Seedlots can have a specific location, box, weight(g), and count.</li>
-                <li>Seed can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
+                <li>Plant material can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
                 <li>Seedlots can belong to breeding programs and organizations.</li>
                 </ul>
 
@@ -100,6 +103,14 @@ $user_role => undef
               <label class="form-check-label" for="exact_cross">exact match</label>
             </div>
         </div>
+% if (!$default_seedlot_material_type) {
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Material Type: </label>
+            <div class="col-sm-9" >
+                <div id="search_seedlot_form_material_type_div"></div>
+            </div>
+        </div>
+% }
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Location: </label>
             <div class="col-sm-9" >
@@ -120,35 +131,52 @@ $user_role => undef
         </div>
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Minimum Weight (g): </label>
+
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_minimum_weight" type="number" />
             </div>
         </div>
 
-	<!-- div class="form-group form-group-sm">
-	  <label class="col-sm-3 control-label"></label>
-          <div class="col-sm-9" >
-	    <input id="search_seedlot_form_only_good_quality_checkbox" type="checkbox" /> Only show seedlots without quality issues
-          </div>
+        <!-- div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label"></label>
+            <div class="col-sm-9" >
+                <input id="search_seedlot_form_only_good_quality_checkbox" type="checkbox" /> Only show seedlots without quality issues
+            </div>
         </div  -->
 
-	<div class="form-group form-group-sm">
+        <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Quality: </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_quality" type="text" />
             </div>
         </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Trial Usage: </label>
+            <div class="col-sm-9">
+                <div class="col-sm-5" style="padding-left: 0; padding-right: 5px">
+                    <input class="form-control" id="search_seedlot_form_trial_name" type="text" placeholder="Trial Name" />
+                </div>
+                <div class="col-sm-7" style="padding-left: 5px; padding-right: 0">
+                    <select class="form-control" id="search_seedlot_form_trial_usage">
+                        <option value="">Select trial / seedlot usage...</option>
+                        <option value="source">Trial --> Seedlot: Find seedlots that are derived from this trial</option>
+                        <option value="sink">Seedlot --> Trial: Find seedlots that provided seed to this trial</option>
+                        <option value="source|sink">Either of the above</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
     </form>
-    <center>
-    <button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
-    </center>
+    <div style="text-align: center">
+        <button class="btn btn-primary" id="submit_seedlot_search">Search</button>
+    </div>
 </div>
 </&>
 
-<center>
-  Enter search terms and click the "Search" button to view results.
-</center>
+<div style="text-align: center">
+    Enter search terms and click the "Search" button to view results.
+</div>
 
 <br />
 <br />
@@ -184,19 +212,32 @@ $user_role => undef
 % }
 </&>
 
+<&| /page/info_section.mas, title=>"Delete seedlots using a list",  collapsible => 1, collapsed=>1 &>
+% if ($user_role eq "curator" ) {
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="delete_seedlots_link">Delete seedlots using a list</button>
+            </div>
+        </div>
+    </div>
+% } else {
+    You need to be logged in or you do not have sufficient privileges to delete seedlots.
+% }
+</&>
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
-<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
-<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas, default_seedlot_material_type=>$default_seedlot_material_type&>
+<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp, default_seedlot_material_type=>$default_seedlot_material_type &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 <& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/cross/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
-<& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas &>
+<& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas, default_seedlot_material_type=>$default_seedlot_material_type&>
 <& /breeders_toolbox/delete_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_seedlots.mas, user_role => $user_role &>
 <& /breeders_toolbox/discard_undo_seedlot_usage.mas &>
-<& /breeders_toolbox/upload_transactions_dialogs.mas &>
+<& /breeders_toolbox/upload_transactions_dialogs.mas&>
 <& /breeders_toolbox/add_transactions_using_list.mas &>
 
 
@@ -205,6 +246,12 @@ jQuery(document).ready(function(){
     jQuery("#search_seedlot_form_seedlot_name").autocomplete({
        source: '/ajax/stock/seedlot_name_autocomplete',
     });
+    jQuery("#search_seedlot_form_trial_name").autocomplete({
+        source: '/ajax/trials/trial_autocomplete'
+    });
+
+    get_select_box('material_types', 'search_seedlot_form_material_type_div', { 'name' : 'search_seedlot_form_material_type', 'id' : 'search_seedlot_form_material_type', 'empty': 1 });
+
 
     var seedlots_table;
 
@@ -222,6 +269,7 @@ jQuery(document).ready(function(){
                 { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
                 { title: "Breeding Program", "data": "breeding_program_name" },
                 { title: "Contents", "data": "contents_html" },
+                { title: "Material Type", "data": "material_type" },
                 { title: "Location", "data": "location" },
                 { title: "Count", "data": "count" },
                 { title: "Weight (g)", "data": "weight_gram" },
@@ -246,18 +294,21 @@ jQuery(document).ready(function(){
                     d.exact_cross = jQuery('#exact_cross').is(":checked") ? 1 : 0;
                     d.quality = jQuery('#search_seedlot_form_quality').val();
                     d.only_good_quality = jQuery('#search_seedlot_form_only_good_quality_checkbox').is(":checked") ? 1 : 0;
+                    d.trial_name = jQuery('#search_seedlot_form_trial_name').val();
+                    d.trial_usage = jQuery('#search_seedlot_form_trial_usage').val();
+                    d.material_type = jQuery('#search_seedlot_form_material_type').val();
                 }
             },
         });
 
         seedlots_table.draw();
-        seedlots_table.column(11).visible(false);
+        seedlots_table.column(12).visible(false);
 
     });
 
 
     jQuery('#available_seedlots_table').on( 'draw.dt', function () {
-        var seedlot_names = seedlots_table.column(11).data();
+        var seedlot_names = seedlots_table.column(12).data();
         var names = "";
 
         for (var i = 0; i < seedlot_names.length; i++) {

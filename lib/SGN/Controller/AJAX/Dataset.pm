@@ -51,8 +51,8 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
     $dataset->name($dataset_name);
     $dataset->description($dataset_description);
 
-    foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols trial_types trial_designs category_order |) {
-#	print STDERR "Storing data: $type. $data{$type}\n";
+    foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols genotyping_projects trial_types trial_designs category_order |) {
+	#print STDERR "Storing data: $type\n";
 
 	my $json = $c->req->param($type);
 	if ($json) {
@@ -61,9 +61,11 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 	}
     }
 
-    $dataset->store();
+    my $new_id = $dataset->store();
+    print STDERR "==========================\nNew dataset ID: $new_id \n=============================\n";
+    # $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
 
-    $c->stash->{rest} = { message => "Stored Dataset Successfully!" };
+    $c->stash->{rest} = { message => "Stored Dataset Successfully!", id => $new_id };
 }
 
 sub store_outliers_in_dataset :Path('/ajax/dataset/store_outliers') Args(1) {
@@ -267,6 +269,76 @@ sub set_datasets_public :Path('/ajax/dataset/set_public') Args(1) {
     }
 }
 
+sub set_datasets_private :Path('/ajax/dataset/set_private') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $user = $c->user();
+    if (!$user) {
+        $c->stash->{rest} = { error => "No logged in user error." };
+        return;
+    }
+
+    my $logged_in_user = $c->user()->get_object()->get_sp_person_id();
+
+    my $dataset = CXGN::Dataset->new(
+        {
+            schema => $c->dbic_schema("Bio::Chado::Schema", undef, $logged_in_user),
+            people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $logged_in_user),
+            sp_dataset_id=> $dataset_id,
+        });
+    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
+    if ($dataset->sp_person_id() != $logged_in_user) {
+        $c->stash->{rest} = { error => "Only the owner can change a dataset" };
+        return;
+    }
+    print STDERR "set private dataset_id $dataset_id\n";
+    my $error = $dataset->set_dataset_private();
+
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+    } else {
+        $c->stash->{rest} = { success => 1 };
+    }
+}
+
+sub update_description :Path('/ajax/dataset/update_description') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $dataset_description = $c->req->param("description");
+
+    my $user = $c->user();
+    if (!$user) {
+        $c->stash->{rest} = { error => "No logged in user error." };
+        return;
+    }
+
+    my $logged_in_user = $c->user()->get_object()->get_sp_person_id();
+
+    my $dataset = CXGN::Dataset->new(
+        {
+            schema => $c->dbic_schema("Bio::Chado::Schema", undef, $logged_in_user),
+            people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $logged_in_user),
+            sp_dataset_id=> $dataset_id,
+        });
+    $dataset->description($dataset_description);
+    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
+    if ($dataset->sp_person_id() != $logged_in_user) {
+        $c->stash->{rest} = { error => "Only the owner can change a dataset" };
+        return;
+    }
+    my $error = $dataset->update_description($dataset_description);
+
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+    } else {
+        $c->stash->{rest} = { success => 1 };
+    }
+}
+
 sub get_dataset :Path('/ajax/dataset/get') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -284,6 +356,38 @@ sub get_dataset :Path('/ajax/dataset/get') Args(1) {
     my $dataset_data = $dataset->get_dataset_data();
 
     $c->stash->{rest} = { dataset => $dataset_data };
+}
+
+sub get_child_analyses :Path('/ajax/dataset/get_child_analyses') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
+    my $dataset = CXGN::Dataset->new(
+	{
+	    schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
+	    people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
+	    sp_dataset_id=> $dataset_id,
+	});
+
+    my $analysis_list;
+    eval {
+        $analysis_list = $dataset->get_child_analyses();
+    };
+
+    if ($@){
+        $c->stash->{rest} = {error => "Error retrieving analyses using this dataset. $@"};
+    }
+
+    if ($analysis_list eq "") {
+        $analysis_list = "(none)";
+    }
+
+    print STDERR "Got the following list of accessions using this dataset: $analysis_list \n";
+
+    $c->stash->{rest} = { analysis_html_list => $analysis_list };
 }
 
 
@@ -317,6 +421,36 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
     $c->stash->{rest} = { dataset_id => $dataset_id,
 			  $dimension => $dimension_data,
     };
+}
+
+sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $include_phenotype_primary_key = $c->req->param('include_phenotype_primary_key');
+
+    my $dataset = CXGN::Dataset->new(
+	{
+	    schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
+	    sp_dataset_id=> $dataset_id,
+        include_phenotype_primary_key => $include_phenotype_primary_key,
+	});
+
+    my $tool_compatibility;
+    eval {
+        $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
+        $tool_compatibility = $dataset->tool_compatibility;
+    };
+    if ($@){
+        $c->stash->{rest} = {
+            error => "Error calculating tool compatibility:\n$@"
+        };
+    } else {
+         $c->stash->{rest} = {
+            tool_compatibility => JSON::Any->encode($tool_compatibility)
+        };
+    }
 }
 
 sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
@@ -354,4 +488,4 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
     }
 }
 
-1;
+1

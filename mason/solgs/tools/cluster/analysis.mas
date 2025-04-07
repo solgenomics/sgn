@@ -44,26 +44,26 @@ if (!$data_structure) {
 }
 
 my $url = $c->req->path;
-my $title;
+my $title = 'Clustering Analysis';
+my $section_title;
 my $collapsed = 0;
 my $collapsible = 0;
 my $cluster_url = '/cluster/analysis/';
 
 if ($url !~ /cluster\/analysis/) {
-  $title = 'Clustering';
   $collapsible = 1;
   $collapsed = 1 if $url =~ /breeders\/trial/;
+  $section_title = 'Clustering analysis';
 }
 
 </%perl>
 
 <& /solgs/tools/base.mas &>
  
-<& /util/import_javascript.mas, classes => ["solGS.cluster", "solGS.dendrogram"] &>
 
 % if ($url =~ /cluster\/analysis/) {
   <& /page/page_title.mas,
-   title => "Cluster Analysis"
+   title => $title
   &>
 %}
 
@@ -71,7 +71,7 @@ if ($url !~ /cluster\/analysis/) {
 <&| /page/info_section.mas,
   collapsible => $collapsible,
   collapsed   => $collapsed,
-  title       => $title
+  title       => $section_title,
   &>
 
   <div id='cluster_div'>
@@ -112,3 +112,5 @@ if ($url !~ /cluster\/analysis/) {
 
 </div>
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.cluster", "solGS.dendrogram"] &>

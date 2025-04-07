@@ -20,8 +20,9 @@ solGS.listTypeTrainingPopulation = {
     var list = new solGSList();
     var lists = list.getLists(["plots", "trials"]);
     lists = list.addDataStrAttr(lists);
-
+   
     var datasets = solGS.dataset.getDatasetPops(["trials"]);
+   
     var trainingPops = [lists, datasets];
 
     return trainingPops.flat();
@@ -95,19 +96,25 @@ solGS.listTypeTrainingPopulation = {
 
   getTrainingPopArgs: function(trainingPop) {
     var popId = trainingPop.id;
-    var popName = trainingPop.name;
     var dataStr = trainingPop.data_str;
 
-    var trainingArgs;
+    var trainingPopId = this.getTrainingPopId(popId, dataStr);
+    var trainingArgs = {
+      training_pop_id: trainingPopId,
+      training_pop_name: trainingPop.name,
+      population_type: `${dataStr}_training`,
+      data_structure: dataStr
+    };
 
+    var protocolId;
     if (dataStr.match(/dataset/)) {
-      trainingArgs = solGS.dataset.createDatasetTrainingReqArgs(popId, popName);
+      protocolId = solGS.dataset.getDatasetGenoProtocolId(popId);
     } else if (dataStr.match(/list/)) {
-      trainingArgs = this.createListTypeTrainingReqArgs(popId);
+      protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
     }
 
     trainingArgs['analysis_type'] = `${dataStr}_type_training`;
-    trainingArgs['data_structure'] = dataStr;
+    trainingArgs['genotyping_protocol_id'] = protocolId;
 
     return trainingArgs;
 
@@ -147,6 +154,9 @@ solGS.listTypeTrainingPopulation = {
       'pageLength': 5,
       'rowId': function (a) {
         return a[4]
+      },
+      "oLanguage": {
+        "sSearch": "Filter"
       }
     });
 
@@ -197,17 +207,15 @@ solGS.listTypeTrainingPopulation = {
     var listDetail = listObj.getListDetail();
     var listName = listDetail.name;
 
-    var trainingPopId = `list_${listId}`;
     var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
-    var popType = "list_training";
-
+    
     var args = {
       list_name: listName,
       list_id: listId,
       list_type: listDetail.type,
-      training_pop_id: trainingPopId,
+      training_pop_id: `list_${listId}`,
       training_pop_name: listName,
-      population_type: popType,
+      population_type: "list_training",
       genotyping_protocol_id: protocolId,
       data_structure: 'list'
     };
@@ -263,7 +271,11 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
 
-  trainingPopsDataDiv = solGS.listTypeTrainingPopulation.trainingListPopsDataDiv;
+  jQuery("#lists_datasets_message").show();
+  jQuery("#lists_datasets_progress .multi-spinner-container").show();
+ 
+  var trainingPopsDataDiv = solGS.listTypeTrainingPopulation.trainingListPopsDataDiv;
+  
   var tableId = solGS.listTypeTrainingPopulation.trainingListPopsTable;
   var trainingPopsTable = solGS.listTypeTrainingPopulation.createTable(tableId)
 
@@ -271,6 +283,10 @@ jQuery(document).ready(function () {
   var trainingPops = solGS.listTypeTrainingPopulation.getTrainingListPops()
   var trainingPopsRows = solGS.listTypeTrainingPopulation.getTrainingListPopsRows(trainingPops);
 
-  solGS.listTypeTrainingPopulation.displayTrainingListPopsTable(tableId, trainingPopsRows)
+  solGS.listTypeTrainingPopulation.displayTrainingListPopsTable(tableId, trainingPopsRows);
+
+  jQuery("#lists_datasets_message").hide();
+  jQuery("#lists_datasets_progress .multi-spinner-container").hide();
+  jQuery("#create_new_list_dataset").show();
 
 });

@@ -1,0 +1,217 @@
+<%args>
+$identifier_id
+$identifier_name
+$material_id
+$material_name
+$updated_status_type
+$program_name
+$stock_type_page
+</%args>
+
+<%perl>
+
+my $display_label;
+my $display_name;
+if ($stock_type_page eq 'tracking_id') {
+    $display_label = 'Tracking ID';
+    $display_name = $identifier_name;
+} elsif ($stock_type_page eq 'transformation_id') {
+    $display_label = 'Transformation ID';
+    $display_name = $material_name;
+}
+</%perl>
+
+
+<div class="modal fade" id="update_status_dialog" name="_dialog" tabindex="-1" role="dialog" aria-labelledby="updateStatusDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateStatusDialog">Mark this experiment as completed or terminated </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="update_status_form" name="update_status_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label"><% $display_label %>: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" name="tracking_identifier_name" id="tracking_identifier_name" disabled value="<% $display_name %>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Status Type: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="status_type">
+                                    <option value="">Select a status type</option>
+                                    <option value="completed">completed</option>
+                                    <option value="terminated">terminated</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Comments: </label>
+                            <div class="col-sm-8" >
+                                <textarea class="form-control" id="comments_for_updating" name="comments_for_updating" placeholder="Optional"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="update_status_submit" id="update_status_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="updated_saved_dialog_message" name="updated_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="updatedSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updatedSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The status of this experiment has been updated.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_updated_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reverse_status_dialog_message" name="reverse_status_dialog_message" tabindex="-1" role="dialog" aria-labelledby="reverseStatusDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reverseStatusDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        This experiment has been restored.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_reverse_status_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function(){
+
+    var identifier_id = "<% $identifier_id %>";
+    var material_id = "<% $material_id %>";
+    var program_name = "<% $program_name %>";
+
+    jQuery("[name='update_status_link']").click(function() {
+        jQuery('#update_status_dialog').modal('show');
+    });
+
+    jQuery('#update_status_submit').click(function() {
+
+        var status_type = jQuery('#status_type').val();
+        var comments = jQuery('#comments_for_updating').val();
+
+        if (identifier_id === '') {
+            alert("Error retrieving identifier info");
+            return;
+        }
+
+        if (status_type === '') {
+            alert("Please select a status type");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/tracking_activity/update_status',
+            type: 'POST',
+            dataType: "json",
+            data : {
+                'identifier_id': identifier_id,
+                'status_type': status_type,
+                'material_id': material_id,
+                'comments': comments,
+                'program_name': program_name,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#update_status_dialog').modal('hide');
+                    jQuery('#updated_saved_dialog_message').modal("show");
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating status');
+            }
+        });
+    });
+
+    jQuery("#dismiss_updated_saved_dialog").click( function() {
+        jQuery('#updated_saved_dialog_message').modal('hide');
+        location.reload();
+    });
+
+    jQuery("[name='reverse_status_link']").click(function() {
+        var updated_status_type = "<% $updated_status_type %>";
+        var confirmation = confirm("Are you sure you want to reverse status of this <% $display_label %>?");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/tracking_activity/reverse_status',
+                type: 'POST',
+                dataType: "json",
+                data : {
+                    'identifier_id' : identifier_id,
+                    'updated_status_type' : updated_status_type,
+                    'material_id' : material_id,
+                    'program_name' : program_name,
+                },
+                beforeSend: function(response){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        jQuery('#reverse_status_dialog_message').modal("show");
+                    }
+                    if (response.error_string) {
+                        alert(response.error_string);
+                    }
+                },
+                error: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred processing your request');
+                }
+            });
+        }
+    });
+
+    jQuery("#dismiss_reverse_status_dialog").click( function() {
+        jQuery('#reverse_status_dialog_message').modal('hide');
+        location.reload();
+    });
+
+
+});
+
+</script>

@@ -1,5 +1,5 @@
 
-function get_select_box(type, div_id, options) {
+function get_select_box(type, div_id, options = {}) {
 
     //alert(JSON.stringify(options));
     jQuery.ajax( {

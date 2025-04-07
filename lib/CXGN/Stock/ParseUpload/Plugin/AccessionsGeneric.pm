@@ -21,7 +21,7 @@ sub _validate_with_plugin {
     my %missing_accessions;
 
     # optional columns = these hard-coded columns plus any editable stock props
-    my @optional_columns = ('synonyms', 'populationName', 'organizationName', 'locationCode', 'ploidyLevel', 'genomeStructure', 'variety', 'donor', 'donor institute', 'donor PUI', 'countryOfOriginCode', 'state', 'instituteCode', 'instituteName', 'biologicalStatusOfAccessionCode', 'notes', 'accessionNumber', 'germplasmPUI', 'germplasmSeedSource', 'typeOfGermplasmStorageCode', 'acquisitionDate', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp');
+    my @optional_columns = ('description', 'synonyms', 'populationName', 'organizationName', 'locationCode', 'ploidyLevel', 'genomeStructure', 'variety', 'donor', 'donor institute', 'donor PUI', 'countryOfOriginCode', 'state', 'instituteCode', 'instituteName', 'biologicalStatusOfAccessionCode', 'notes', 'accessionNumber', 'germplasmPUI', 'germplasmSeedSource', 'typeOfGermplasmStorageCode', 'acquisitionDate', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp');
     push @optional_columns, @$editable_stockprops;
 
     my $parser = CXGN::File::Parse->new(
@@ -104,6 +104,18 @@ sub _validate_with_plugin {
         $errors{'missing_species'} = \@species_missing;
     }
 
+    # Check for existing non-accession stocks
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $accession_list = $parsed_values->{'accession_name'};
+    my $stocks_in_db_rs = $schema->resultset("Stock::Stock")->search({ uniquename => { -ilike => $accession_list }, type_id => { '<>' => $accession_type_id } });
+    my @stocks_existing;
+    while ( my $r=$stocks_in_db_rs->next ) {
+      push @stocks_existing, $r->uniquename;
+    }
+    if ( scalar(@stocks_existing) > 0 ) {
+      push @error_messages, "The following accession names are already used in the database (as different stock types): " . join(',', @stocks_existing);
+    }
+
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
@@ -149,7 +161,7 @@ sub _parse_with_plugin {
     my $row_num = $row->{_row};
     my $accession = $row->{'accession_name'};
     my $synonyms = $row->{'synonyms'} || [];
-
+    my $description = $row->{'description'} || '';
     my $stock_id;
     if(exists($accession_lookup{$accession})){
       $stock_id = $accession_lookup{$accession};
@@ -161,7 +173,8 @@ sub _parse_with_plugin {
       species => $row->{'species_name'},
       populationName => $row->{'populationName'},
       organizationName => $row->{'organizationName'},
-      synonyms => $synonyms
+      synonyms => $synonyms,
+      description => $description,
     );
 
     #For "updating" existing accessions by adding properties.

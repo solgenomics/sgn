@@ -431,16 +431,20 @@ sub _format_data_type {
 
     if ($value) {
         my %formats = (
-	    "categorical" => "Ordinal",
-            "numeric"  => "Numerical",
-            "qualitative"  => "Nominal",
-            "numerical"  => "Numerical",
-            "nominal"  => "Nominal",
+	        "categorical" => "Ordinal",
+            "numeric" => "Numerical",
+            "qualitative" => "Nominal",
+            "numerical" => "Numerical",
+            "nominal" => "Nominal",
             "code" => "Code",
             "date" => "Date" ,
             "duration" => "Duration",
             "ordinal" => "Ordinal",
-            "text"=> "Text",
+            "text" => "Text",
+	        "photo" => "Photo",
+	        "multicat" => "Multicat",
+            "boolean" => "Boolean",
+            "counter" => "Counter",
         );
 
         $dataType = $formats{lc $value} ? $formats{lc $value} : $dataType;

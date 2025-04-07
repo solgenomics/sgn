@@ -20,7 +20,7 @@ jQuery(document).ready( function() {
 
 //population search autocomplete
 jQuery(document).ready( function() {
-        jQuery("#population_search_entry").autocomplete({
+        jQuery("#trial_search_box").autocomplete({
                 source: "/solgs/ajax/population/search",
                 minLength: 3,
        });

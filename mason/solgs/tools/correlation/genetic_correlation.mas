@@ -45,9 +45,6 @@ $training_pop_name
       title       => "Genetic correlation analysis"
   &>
 
- 
-
-
     <div class="row">
       <div class="form-group col-sm-3" id="corr_pops_select_div" style="margin-right:35px"></div>
       <input class="btn btn-success" type="submit" value="Run correlation" id="run_genetic_correlation" />

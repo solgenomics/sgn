@@ -54,11 +54,14 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use Data::Dumper;
 use JSON::Any;
+use JSON::XS;
 use CXGN::BreederSearch;
 use CXGN::People::Schema;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
+use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
+use CXGN::Trial;
 
 =head2 people_schema()
 
@@ -215,6 +218,15 @@ has 'genotyping_protocols' =>      ( isa => 'Maybe[ArrayRef]',
 		       predicate => 'has_genotyping_protocols',
     );
 
+=head2 genotyping_projects()
+
+=cut
+
+has 'genotyping_projects' =>      ( isa => 'Maybe[ArrayRef]',
+                       is => 'rw',
+                       predicate => 'has_genotyping_projects',
+    );
+
 =head2 trial_types()
 
 =cut
@@ -321,6 +333,16 @@ has 'include_phenotype_primary_key' => (
     default => 0
 );
 
+=head2 tool_compatibility()
+
+=cut
+
+has 'tool_compatibility' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw',
+    # default => ""
+);
+
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
 sub BUILD {
@@ -348,10 +370,12 @@ sub BUILD {
         $self->years($dataset->{categories}->{years});
         $self->breeding_programs($dataset->{categories}->{breeding_programs});
         $self->genotyping_protocols($dataset->{categories}->{genotyping_protocols});
+	    $self->genotyping_projects($dataset->{categories}->{genotyping_projects});
         $self->locations($dataset->{categories}->{locations});
         $self->trial_designs($dataset->{categories}->{trial_designs});
         $self->trial_types($dataset->{categories}->{trial_types});
         $self->category_order($dataset->{category_order});
+        $self->tool_compatibility($dataset->{tool_compatibility});
         $self->is_live($dataset->{is_live});
         $self->is_public($dataset->{is_public}); 
         if ($args->{outliers}) { $self->outliers($args->{outliers})} else { $self->outliers($dataset->{outliers}); }
@@ -438,7 +462,7 @@ sub set_dataset_public {
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return;
         }
     }
 }
@@ -464,7 +488,7 @@ sub set_dataset_private {
         if ($@) {
             return "An error occurred, $@";
         } else {
-            return undef;
+            return;
         }
     }
 }
@@ -566,12 +590,14 @@ sub get_dataset_data {
     @{$dataref->{categories}->{years}} = @{$self->years()} if $self->years && scalar(@{$self->years})>0;
     $dataref->{categories}->{breeding_programs} = $self->breeding_programs() if $self->breeding_programs && scalar(@{$self->breeding_programs})>0;
     $dataref->{categories}->{genotyping_protocols} = $self->genotyping_protocols() if $self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0;
+    $dataref->{categories}->{genotyping_projects} = $self->genotyping_projects() if $self->genotyping_projects && scalar(@{$self->genotyping_projects})>0;
     $dataref->{categories}->{trial_designs} = $self->trial_designs() if $self->trial_designs && scalar(@{$self->trial_designs})>0;
     $dataref->{categories}->{trial_types} = $self->trial_types() if $self->trial_types && scalar(@{$self->trial_types})>0;
     $dataref->{categories}->{locations} = $self->locations() if $self->locations && scalar(@{$self->locations})>0;
     $dataref->{category_order} = $self->category_order();
     $dataref->{outliers} = $self->outliers() if $self->outliers;
     $dataref->{outlier_cutoffs} = $self->outlier_cutoffs() if $self->outliers;
+    $dataref->{tool_compatibility} = ($self->tool_compatibility) ? $self->tool_compatibility() : undef;
     return $dataref;
 }
 
@@ -587,9 +613,11 @@ sub _get_dataref {
     $dataref->{years} = join(",", map { "'".$_."'" } @{$self->years()}) if $self->years && scalar(@{$self->years})>0;
     $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->breeding_programs && scalar(@{$self->breeding_programs})>0;
     $dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0;
+    $dataref->{genotyping_projects} = join(",", @{$self->genotyping_projects()}) if $self->genotyping_projects && scalar(@{$self->genotyping_projects})>0;
     $dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->trial_designs && scalar(@{$self->trial_designs})>0;
     $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->trial_types && scalar(@{$self->trial_types})>0;
     $dataref->{locations} = join(",", @{$self->locations()}) if $self->locations && scalar(@{$self->locations})>0;
+    $dataref->{tool_compatibility} = $self->tool_compatibility() if $self->tool_compatibility;
     return $dataref;
 }
 
@@ -1175,6 +1203,333 @@ sub retrieve_trial_types {
     return \@trial_types;
 }
 
+=head2 retrieve_tool_compatibility
+
+Returns precalculated tool compatibility as a JSON string, if any. 
+
+=cut
+
+sub retrieve_tool_compatibility {
+    my $self = shift;
+
+    if ($self->tool_compatibility) {
+        return JSON::Any->encode($self->tool_compatibility);
+    } else {
+        return "(not calculated)";
+    }
+}
+
+=head2 calculate_tool_compatibility
+
+Creates a hashref of analysis tools that this dataset can be used with. For example, a dataset with genotype data but no trait phenotypes cannot be used with GWAS.
+Note that this function should only ever be called once for a dataset and have the data stored as part of the dataset definition JSON, since retrieving high dimensional phenotype and genotype
+data can be time consuming. 
+
+Takes one parameter, passed from Controller: the name of the default genotyping protocol to use as a fallback if none is found in the dataset. 
+
+=cut
+
+sub calculate_tool_compatibility {
+    my $self = shift;
+    my $default_genotyping_protocol_name = shift;
+
+    my $tool_compatibility = {
+        'GWAS' => {
+            'compatible' => 0
+        },
+        # 'solGS' => {
+        #     'compatible' => 0
+        # },
+        'Population Structure' => {
+            'compatible' => 0
+        },
+        'Clustering' => {
+            'compatible' => 0
+        },
+        'Kinship & Inbreeding' => {
+            'compatible' => 0
+        },
+        'Stability' => {
+            'compatible' => 0
+        },
+        'Heritability' => {
+            'compatible' => 0
+        },
+        'Mixed Models' => {
+            'compatible' => 0
+        },
+        'Boxplotter' => {
+            'compatible' => 0
+        },
+        'Correlation' => {
+            'compatible' => 0
+        },
+        'Data Summary' => {
+            'markers per genotyping protocol' => [],
+            'number of phenotyped accessions per trait' => [],
+            'number of observations per trait' => [],
+            'number of genotyped accessions per protocol' => [],
+            'trait observations per location' => {},
+            'number of accessions per trial' => []
+        }
+    };
+
+    my $trials = $self->retrieve_trials(); # faster and easier than pulling it out of the phenotypes_ref
+        # listref of listrefs, first index is trialID, second is trial name
+    my $all_traits = $self->retrieve_traits();
+    my $traits = [];
+    foreach my $trait (@{$all_traits}) { #filter for quantitative traits
+        my $trait_obj = CXGN::Trait->new({
+            bcs_schema => $self->schema,
+            cvterm_id => $trait->[0]
+        });
+        if ($trait_obj->categories eq ""){# ??? Not sure how to filter properly
+            push @{$traits}, $trait;
+        }
+    }
+
+    my $trial_designs = $self->retrieve_trial_designs();
+    my $genotyping_methods = $self->retrieve_genotyping_protocols();# listref of listrefs. First index is 
+        # method ID, second is method name
+    if (scalar(@{$genotyping_methods}) == 0) {
+        my $geno_method_query = "SELECT nd_protocol_id FROM nd_protocol
+        WHERE name ilike ?";
+        my $h = $self->schema->storage()->dbh()->prepare($geno_method_query);
+        $h->execute($default_genotyping_protocol_name);
+        my $default_genotyping_protocol_id = $h->fetchrow_array();
+        push @{$genotyping_methods}, [$default_genotyping_protocol_id, $default_genotyping_protocol_name];
+    }
+    my $locations = $self->retrieve_locations(); # faster and easier than pulling it out of the phenotypes_ref
+        # listref of listrefs, first index is locationID, second is location name
+    my ($phenotypes, undef) = $self->retrieve_phenotypes_ref(); # Returns data as a listref with two hashrefs. First hashref is a list of all phenotypes in this dataset, which is an observational unit w/ a list 
+        # of trait observations. Each OU is a stock (plot, accession, etc). Second hashref has all unique traits in the phenotype list. 
+        # Relevant hash keys: observations, trial_id, trial_location_id, germplasm_stock_id, trait_id, trait_name, value
+    my $accessions = $self->retrieve_accessions();
+    my $genotype_counts = {};
+
+    my @accession_ids = map {$_->[0]} @{$accessions};
+
+    my $accessions_in_common = {};
+    foreach my $trial (@{$trials}) {
+        my $trial_obj = CXGN::Trial->new({
+            bcs_schema => $self->schema,
+            trial_id => $trial->[0]
+        });
+        my $current_accessions = $trial_obj->get_accessions();
+        push @{$tool_compatibility->{"Data Summary"}->{'number of accessions per trial'}}, $trial->[1]." : ".scalar(@{$current_accessions});
+        foreach my $accession (@{$current_accessions}) {
+            $accessions_in_common->{$accession->{"stock_id"}}++; 
+        }
+    }
+    my $num_shared_accessions = scalar(grep {$accessions_in_common->{$_} > 1} keys(%{$accessions_in_common}));
+    push @{$tool_compatibility->{"Data Summary"}->{'number of accessions per trial'}}, "Shared across all trials : $num_shared_accessions";
+
+    foreach my $method (@{$genotyping_methods}) {
+        my $genotype_query = "SELECT COUNT(DISTINCT(stock_id, nd_protocol_id)) FROM stock 
+        JOIN nd_experiment_stock USING(stock_id) 
+        JOIN nd_experiment_genotype USING(nd_experiment_id) 
+        JOIN genotypeprop USING(genotype_id) 
+        JOIN nd_experiment_protocol ON(nd_experiment_genotype.nd_experiment_id=nd_experiment_protocol.nd_experiment_id)
+            WHERE stock_id IN (SELECT unnest(string_to_array(?, ',')::int[])) AND nd_protocol_id=?;";
+        my $h = $self->schema->storage()->dbh()->prepare($genotype_query);
+        $h->execute(join(", ",@accession_ids), $method->[0]);
+
+        $genotype_counts->{$method->[0]}->{"num_accessions"} = $h->fetchrow_array;
+
+        my $marker_query = "SELECT DISTINCT LENGTH(genotypeprop.value::text) FROM genotypeprop 
+        JOIN nd_experiment_genotype USING(genotype_id) 
+        JOIN nd_experiment_protocol ON(nd_experiment_genotype.nd_experiment_id=nd_experiment_protocol.nd_experiment_id)
+            WHERE nd_protocol_id=?;";
+        $h = $self->schema->storage()->dbh()->prepare($marker_query);
+        $h->execute($method->[0]);
+
+        $genotype_counts->{$method->[0]}->{"num_markers"} = $h->fetchrow_array;
+    }
+
+    my $obs_by_trait = {};
+    my $pheno_represented_accessions = {};
+
+    foreach my $observation (@{$phenotypes}){ # hash map of count of every trait observation at every location
+        my $location = $observation->{'trial_location_id'};
+        $pheno_represented_accessions->{$observation->{'germplasm_stock_id'}} = 1;
+        my @obs_traits = map {$_->{'trait_id'}} @{$observation->{'observations'}};
+        foreach my $trait (@obs_traits) {
+            if (!exists($obs_by_trait->{$trait}->{$location})){
+                $obs_by_trait->{$trait}->{$location} = 1;
+            } else {
+                $obs_by_trait->{$trait}->{$location}++;
+            }
+            if (!exists($obs_by_trait->{$trait}->{$observation->{'germplasm_stock_id'}})){
+                $obs_by_trait->{$trait}->{'accessions'}->{$observation->{'germplasm_stock_id'}} = 1;
+            } else {
+                $obs_by_trait->{$trait}->{'accessions'}->{$observation->{'germplasm_stock_id'}} += 1;
+            }
+        }
+    }
+    my $num_phenotyped_accessions = scalar(%{$pheno_represented_accessions});
+
+    foreach my $method (@{$genotyping_methods}){
+        my $num_markers = $genotype_counts->{$method->[0]}->{"num_markers"};
+        my $num_accessions = $genotype_counts->{$method->[0]}->{"num_accessions"};
+
+        push @{$tool_compatibility->{"Data Summary"}->{"markers per genotyping protocol"}}, $method->[1]." : ".$num_markers;
+        push @{$tool_compatibility->{"Data Summary"}->{"number of genotyped accessions per protocol"}}, $method->[1]." : ".$num_accessions;
+
+        if ($num_markers > 1) {
+            if ($num_accessions < 30) {
+                $tool_compatibility->{'Population Structure'}->{'warn'}->{"You may not have enough accessions (n=$num_accessions) genotyped for ".$method->[1].", ($num_markers markers) for strong results."} = "";
+                $tool_compatibility->{'Kinship & Inbreeding'}->{'warn'}->{"You may not have enough accessions (n=$num_accessions) genotyped for ".$method->[1].", ($num_markers markers) for strong results."} = "";
+                $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough accessions (n=$num_accessions) genotyped for ".$method->[1].", ($num_markers markers) for strong genotype clustering."} = "";
+            }
+            $tool_compatibility->{'Population Structure'}->{'compatible'} = 1;
+            $tool_compatibility->{'Population Structure'}->{'types'}->{'Genotype'} = 1;
+            $tool_compatibility->{'Kinship & Inbreeding'}->{'compatible'} = 1;
+            $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
+            $tool_compatibility->{'Clustering'}->{'types'}->{'Genotype'} = "";
+        }
+    }
+
+    if ($num_phenotyped_accessions > 1 && scalar(@{$traits}) > 1) { #dont need to go trait by trait for clustering, since all traits are combined to eigenvectors. just need plenty of trait measurements
+        if (scalar(@{$traits}) < 5) {
+            $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough measured traits (only ".scalar(@{$traits}).") for strong phenotype clustering."} = "";
+            $tool_compatibility->{'Population Structure'}->{'warn'}->{"You have only ".scalar(@{$traits})." measured traits, which will limit the number of principal components in a phenotype PCA."} = "";
+        }
+        if ($num_phenotyped_accessions < 30) {
+            $tool_compatibility->{'Clustering'}->{'warn'}->{"You may not have enough phenotyped accessions (n=$num_phenotyped_accessions) for strong phenotype clustering."} = "";
+            $tool_compatibility->{'Population Structure'}->{'warn'}->{"You may not have enough phenotyped accessions (n=$num_phenotyped_accessions) for a strong phenotype PCA."} = "";
+        }
+        $tool_compatibility->{'Clustering'}->{'compatible'} = 1;
+        $tool_compatibility->{'Clustering'}->{'types'}->{'Phenotype'} = "";
+        $tool_compatibility->{'Population Structure'}->{'compatible'} = 1;
+        $tool_compatibility->{'Population Structure'}->{'types'}->{'Phenotype'} = "";
+    }
+
+    if (exists $tool_compatibility->{'Clustering'}->{'types'}) {
+        $tool_compatibility->{'Clustering'}->{'types'} = [keys(%{$tool_compatibility->{'Clustering'}->{'types'}})];
+    }
+    if (exists $tool_compatibility->{'Population Structure'}->{'types'}) {
+        $tool_compatibility->{'Population Structure'}->{'types'} = [keys(%{$tool_compatibility->{'Population Structure'}->{'types'}})];
+    }
+
+    foreach my $trait (@{$traits}){ # For each trait, we need to check for number of observations (plus locations for stability)
+        my $total_obs = 0;
+        my @location_counts = ();
+        foreach my $location (@{$locations}){
+            $total_obs += $obs_by_trait->{$trait->[0]}->{$location->[0]};
+            push @location_counts, $obs_by_trait->{$trait->[0]}->{$location->[0]};
+            push @{$tool_compatibility->{"Data Summary"}->{"trait observations per location"}->{$location->[1]}}, $trait->[1]." : ".$obs_by_trait->{$trait->[0]}->{$location->[0]};
+        }
+        
+        my $num_accessions_phenotyped_for_this_trait = scalar(keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}));
+
+        push @{$tool_compatibility->{"Data Summary"}->{"number of phenotyped accessions per trait"}}, $trait->[1]." : ".$num_accessions_phenotyped_for_this_trait;
+        push @{$tool_compatibility->{"Data Summary"}->{"number of observations per trait"}}, $trait->[1]." : ".$total_obs;
+
+        if ($total_obs > 0) { # This trait was measured
+
+            if ($total_obs < 30) {
+                $tool_compatibility->{'Boxplotter'}->{'warn'}->{"There may not be enough observations (n=$total_obs) of ". $trait->[1]." to get meaningful data."} = "";
+                $tool_compatibility->{'Correlation'}->{'warn'}->{"There may not be enough observations (n=$total_obs) of ". $trait->[1]." to get meaningful data."} = "";
+            }
+            $tool_compatibility->{'Boxplotter'}->{'compatible'} = 1;
+            push @{$tool_compatibility->{'Boxplotter'}->{'traits'}}, $trait->[1];
+            $tool_compatibility->{'Correlation'}->{'compatible'} = 1;
+            push @{$tool_compatibility->{'Correlation'}->{'traits'}}, $trait->[1];
+
+            if ($num_accessions_phenotyped_for_this_trait > 1 && scalar(@{$trials}) > 1 && $num_shared_accessions > 2){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
+                if ($num_accessions_phenotyped_for_this_trait < 30) {
+                    $tool_compatibility->{'Heritability'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to get strong results."} = "";
+                }
+                if ($num_shared_accessions < 30) {
+                    $tool_compatibility->{'Heritability'}->{'warn'}->{"There may not be enough accessions shared across all trials ($num_shared_accessions) to get strong results."} = "";
+                }
+                $tool_compatibility->{'Heritability'}->{'compatible'} = 1;
+                push @{$tool_compatibility->{'Heritability'}->{'traits'}}, $trait->[1];
+            }
+            if (scalar(grep {$_ > 0} @location_counts) > 1 && $num_accessions_phenotyped_for_this_trait > 1) { # More than one location had measurements, and more than one accession was measured
+                if ($num_accessions_phenotyped_for_this_trait < 30) {
+                    $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to get strong results."} = "";
+                }
+                if (scalar(grep {$_ < 30} @location_counts) > 1) {#If any of the locations had too few pheno observations
+                    $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough phenotype observations at all trial locations to get strong results."} = "";
+                }
+                if ($total_obs < $num_accessions_phenotyped_for_this_trait) {# If total observations is lower than number of accessions, accessions were probably not replicated
+                    $tool_compatibility->{'Stability'}->{'warn'}->{"There may not be enough replicated measurements of ".$trait->[1]."."} = "";
+                }
+                $tool_compatibility->{'Stability'}->{'compatible'} = 1;
+                push @{$tool_compatibility->{'Stability'}->{'traits'}}, $trait->[1];
+            }
+            if(scalar(@{$trial_designs}) > 0 && $num_accessions_phenotyped_for_this_trait > 1) {
+                if ($num_accessions_phenotyped_for_this_trait < 30) {
+                    $tool_compatibility->{'Mixed Models'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to build a strong model."} = "";
+                }
+                $tool_compatibility->{'Mixed Models'}->{'compatible'} = 1;
+                push @{$tool_compatibility->{'Mixed Models'}->{'traits'}}, $trait->[1];
+            }
+        }
+
+        foreach my $method (@{$genotyping_methods}){ # There needs to be consistent genotyping protocol for genomic modeling
+            my $num_markers = $genotype_counts->{$method->[0]}->{"num_markers"};
+            my $num_genotyped_accessions = $genotype_counts->{$method->[0]}->{"num_accessions"};
+            my $num_accessions_phenotyped_for_this_trait = scalar( keys(%{$obs_by_trait->{$trait->[0]}->{'accessions'}}) );
+            if ($total_obs > 100 && $num_markers > 100 && $num_accessions_phenotyped_for_this_trait > 50 && $num_genotyped_accessions > 50 && scalar(@{$trials}) > 0) { # If lots of markers, lots of accessions, and lots of phenotype measurements, then you can do genomic modeling
+                if ($total_obs < 300) {
+                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough observations (n=$total_obs) of ".$trait->[1]." to identify associated loci."} = "";
+                }
+                if ($num_markers < 2500) {
+                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough SNPs ($num_markers) genotyped for method ".$method->[1]." to identify associated loci."} = "";
+                }
+                if ($num_accessions_phenotyped_for_this_trait < 300 || $num_genotyped_accessions < 300) {
+                    $tool_compatibility->{'GWAS'}->{'warn'}->{"There may not be enough accessions (n=$num_genotyped_accessions) both genotyped and assayed for ".$trait->[1]." to identify associated loci."} = "";
+                }
+                push @{$tool_compatibility->{'GWAS'}->{'traits'}}, $trait->[1];
+                $tool_compatibility->{'GWAS'}->{'compatible'} = 1;
+                # push @{$tool_compatibility->{'solGS'}->{'traits'}}, $trait->[1];
+            }
+        }
+    }
+
+    foreach my $tool (keys(%{$tool_compatibility})) {
+        if (exists($tool_compatibility->{$tool}->{"warn"})){
+            $tool_compatibility->{$tool}->{"warn"} = join("\n", keys(%{$tool_compatibility->{$tool}->{"warn"}}));
+        }
+    }
+
+    $self->tool_compatibility($tool_compatibility);
+
+    #return JSON::Any->encode($tool_compatibility);
+    return $tool_compatibility;
+}
+
+=head2 update_tool_compatibility
+
+Recalculates and stores tool compatibility individually without updating other dataset characteristics. Used in a button in the dataset details page. 
+
+=cut
+
+sub update_tool_compatibility {
+    my $self = shift;
+
+    $self->calculate_tool_compatibility();
+
+    my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+    if (! $row) {
+        return "The specified dataset does not exist";
+    } else {
+        eval {
+            $row->sp_person_id($self->sp_person_id());
+            $row->sp_dataset_id($self->sp_dataset_id());
+            $row->dataset(JSON::Any->encode($self->to_hashref()->{dataset}));
+            $row->update();
+        };
+        if ($@) {
+            return "An error occurred, $@";
+        } else {
+            return;
+        }
+    }
+}
+
 sub get_dataset_definition  {
     my $self = shift;
     my @criteria;
@@ -1206,6 +1561,9 @@ sub get_dataset_definition  {
     if ($self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0) {
         push @criteria, "genotyping_protocols";
     }
+    if ($self->genotyping_projects && scalar(@{$self->genotyping_projects})>0) {
+        push @criteria, "genotyping_projects";
+    }
     if ($self->trial_types && scalar(@{$self->trial_types})>0) {
         push @criteria, "trial_types";
     }
@@ -1236,21 +1594,68 @@ sub delete {
 
     if (! $row) {
 	return "The specified dataset does not exist";
-    }
-
-    else {
+    } else {
 	eval {
 	    $row->delete();
 	};
 	if ($@) {
 	    return "An error occurred, $@";
-	}
-
-	else {
-	    return undef;
+        } else {
+	    return;
 	}
 
     }
+}
+
+sub update_description {
+    my $self = shift;
+    my $description = shift;
+    my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+    if (! $row) {
+        return "The specified dataset does not exist";
+    } else {
+        eval {
+            $row->sp_person_id($self->sp_person_id());
+            $row->sp_dataset_id($self->sp_dataset_id());
+            $row->description($description);
+            $row->update();
+        };
+        if ($@) {
+            return "An error occurred, $@";
+        } else {
+            return;
+        }
+    }
+}
+
+=head2 get_child_analyses()
+
+# Retrieves the list of analyses that use this dataset. 
+
+=cut
+
+sub get_child_analyses {
+    my $self = shift;
+    my $dataset_id = $self->sp_dataset_id();
+
+    my $dbh = $self->schema->storage->dbh();
+
+    my $analysis_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
+
+    my $analysis_q = "select DISTINCT project.name, project.project_id FROM projectprop 
+    JOIN project USING (project_id) 
+    WHERE projectprop.type_id=$analysis_info_type_id 
+        AND analysisinfo.value::json->>'dataset_id'=?;";
+    my $h = $dbh->prepare($analysis_q);
+    $h->execute($dataset_id);
+
+    my @html = ();
+
+    while (my ($analysis_name, $analysis_id) = $h->fetchrow_array()){
+        push @html, "<a href=/analyses/".$analysis_id.">".$analysis_name."</a>";
+    }
+
+    return join(" | ", @html);
 }
 
 

@@ -69,6 +69,10 @@ function create_DataCollector() {
     if (! trait_list_id == "") {
         trait_list = JSON.stringify(list.getList(trait_list_id));
     }
+    else {
+        alert("You must select a Trait List first");
+        return;
+    }
     var trial_stock_type = "<% $trial_stock_type %>";
 
     jQuery.ajax({

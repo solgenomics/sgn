@@ -16,7 +16,7 @@ use CGI;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use File::Slurp qw | read_file |;
-use File::Temp 'tempfile';
+use File::Temp qw(tempfile tempdir);
 use File::Basename;
 use File::Copy;
 use URI::FromHash 'uri';
@@ -41,6 +41,12 @@ use CXGN::Genotype::GWAS;
 use CXGN::Accession;
 use CXGN::Stock::Seedlot::Maintenance;
 use CXGN::Dataset;
+use CXGN::Stock;
+use CXGN::Project;
+use IO::Compress::Gzip qw(gzip $GzipError);
+use Catalyst::Utils;
+use SGN::Image;
+use Archive::Tar;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -185,7 +191,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 sub _parse_list_from_json {
     my $list_json = shift;
 #    print STDERR "LIST JSON: ". Dumper $list_json;
-    my $json = new JSON;
+    my $json = JSON->new;
     if ($list_json) {
        # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
         my $decoded_list = decode_json($list_json);
@@ -627,7 +633,9 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         if ($format eq ".csv") {
 
             #build csv with column names
-            open(CSV, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
+            ## no critic (RequireBriefOpen)
+            open(my $csv_fh, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
+            {
                 my @header = @{$data[0]};
                 my $num_col = scalar(@header);
                 for (my $line =0; $line< @data; $line++) {
@@ -635,18 +643,19 @@ sub download_action : Path('/breeders/download_action') Args(0) {
                     my $step = 1;
                     for(my $i=0; $i<$num_col; $i++) {
                         if (defined($columns[$i])) {
-                            print CSV "\"$columns[$i]\"";
+                            print $csv_fh "\"$columns[$i]\"";
                         } else {
-                            print CSV "\"\"";
+                            print $csv_fh "\"\"";
                         }
                         if ($step < $num_col) {
-                            print CSV ",";
+                            print $csv_fh ",";
                         }
                         $step++;
                     }
-                    print CSV "\n";
+                    print $csv_fh "\n";
                 }
-            close CSV;
+            }
+            close $csv_fh;
 
         } else {
             my $ss = Excel::Writer::XLSX->new($tempfile);
@@ -762,7 +771,8 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         my $file_name = basename($file_path);
 
         # Write to csv file
-        open(CSV, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
+        ## no critic (RequireBriefOpen)
+        open(my $csv_fh, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
         my @header =  @{$rows->[0]};
         my $num_col = scalar(@header);
 
@@ -771,18 +781,18 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
             my $step = 1;
             for ( my $i = 0; $i < $num_col; $i++ ) {
                 if ($columns->[$i]) {
-                    print CSV "\"$columns->[$i]\"";
+                    print $csv_fh "\"$columns->[$i]\"";
                 } else {
-                    print CSV "\"\"";
+                    print $csv_fh "\"\"";
                 }
                 if ($step < $num_col) {
-                    print CSV ",";
+                    print $csv_fh ",";
                 }
                 $step++;
             }
-            print CSV "\n";
+            print $csv_fh "\n";
         }
-        close CSV;
+        close $csv_fh;
 
         # Return the csv file
         $c->res->content_type('text/csv');
@@ -821,7 +831,7 @@ sub build_accession_properties_info {
     # Setup Stock Props
     my @stock_props = ("organization", "stock_synonym", "PUI");
     foreach my $esp (@$editable_stock_props) {
-        if ( !grep(/^$esp$/, @stock_props) ) {
+        if (!scalar grep { $_ eq $esp } @stock_props) {
             push(@stock_props, $esp)
         }
     }
@@ -916,6 +926,8 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $dl_cookie = "download".$dl_token;
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
+
+    ## no critic (RequireBriefOpen)
     open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
     my $filename;
 
@@ -1147,15 +1159,22 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $return_only_first_genotypeprop_for_stock = $c->req->param('include_duplicate_genotypes') eq 'true' ? 0 : 1;
     my $marker_set_list_id = $c->req->param('marker_set_list_id');
 
+    my $o;
     my @marker_name_list;
     if ($marker_set_list_id) {
         my $list = CXGN::List->new({ dbh => $schema->storage->dbh, list_id => $marker_set_list_id });
         my $elements = $list->elements();
 
         foreach my $e (@$elements) {
-            my $o = decode_json $e;
-            if (exists($o->{marker_name})) {
-                push @marker_name_list, $o->{marker_name};
+            eval {
+                $o = decode_json($e);
+            };
+            if ($@) {    #simple list
+                push @marker_name_list, $e;
+            } else {    #json list
+                if (exists($o->{marker_name})) {
+                    push @marker_name_list, $o->{marker_name};
+                }
             }
         }
     }
@@ -1425,7 +1444,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
 
-
+    ## no critic (RequireBriefOpen)
     open my $TEMP, '> :encoding(UTF-8)', $tempfile or die "Cannot open output_test00.txt: $!";
 
 
@@ -1480,6 +1499,9 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
             print $TEMP "\n";
 
 	}
+
+    close $TEMP;
+
     }
 
 
@@ -1509,8 +1531,8 @@ sub trial_download_log {
     my $now = DateTime->now();
 
     if (! $c->user) {
-      return;
       print STDERR "Can't find user id, skipping download logging\n";
+      return;
     }
     if ($c->config->{trial_download_logfile}) {
       my $logfile = $c->config->{trial_download_logfile};
@@ -1770,6 +1792,65 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
 
 }
 
+sub download_images : Path('/breeders/download_images') : ActionClass('REST') { }
+
+sub download_images_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $trial_id = $c->req->param('trial_id');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $trial = CXGN::Trial->new({ 
+        bcs_schema => $schema, 
+        trial_id => $trial_id, 
+        }
+    );
+
+    my $plots = $trial->get_plots();
+    my @image_ids;
+
+    foreach my $plot (@$plots) {
+        my ($plot_id, $plot_name) = @$plot;
+
+        my $stock = CXGN::Stock->new({ schema => $schema, stock_id => $plot_id });
+        my @plot_image_ids = $stock->get_image_ids();
+
+        foreach my $id (@plot_image_ids) {
+            my ($image_id, $stock_type) = @$id;
+            push @image_ids, $image_id;
+        }
+    }
+
+    my $tempdir = tempdir(CLEANUP => 1);
+    my $temp_images_dir = "$tempdir/images";
+    mkdir $temp_images_dir or die "Failed to create temp images directory: $!";
+
+    foreach my $image_id (@image_ids) {
+        my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+        my $original_filename = $image->get_original_filename;
+        my $image_path = $image->get_filename('original');
+
+        my $file_extension = ($image_path =~ /\.([^.]+)$/) ? $1 : '';
+        if ($file_extension) {
+            $original_filename .= ".$file_extension";
+        }
+
+        copy($image_path, $temp_images_dir . '/' . $original_filename) or die "Failed to copy $image_path to $temp_images_dir: $!";
+
+    }
+
+    my $tar = Archive::Tar->new;
+    $tar->add_files(glob("$temp_images_dir/*"));
+    my $tar_filename = "trial_${trial_id}_images.tar.gz";
+    my $tar_file = "$tempdir/$tar_filename";
+
+    $tar->write($tar_file, COMPRESS_GZIP);
+
+    $c->response->header('Content-Type' => 'application/gzip');
+    $c->response->header('Content-Disposition' => "attachment; filename=$tar_filename");
+    $c->serve_static_file($tar_file);
+
+    return;
+}
 
 
 #=pod

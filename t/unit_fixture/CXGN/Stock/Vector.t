@@ -83,5 +83,6 @@ is_deeply($s->Terminators,$terminators);
 is_deeply($s->PlantAntibioticResistantMarker,$plant_antibiotic_resistant_marker);
 is_deeply($s->BacterialResistantMarker,$bacterial_resistant_marker);
 
+$f->clean_up_db();
 
 done_testing();

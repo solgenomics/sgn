@@ -9,6 +9,10 @@ use Data::Dumper;
 use CXGN::List::Validate;
 use CXGN::Stock::Seedlot;
 
+#
+# DEPRECATED: This plugin has been replaced by the TrialGeneric plugin
+#
+
 my @REQUIRED_COLUMNS = qw|plot_number block_number|;
 # accession_name, cross_unique_id, or family_name are required depending on the trial_stock_type
 my @OPTIONAL_COLUMNS = qw|plot_name is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;

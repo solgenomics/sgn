@@ -33,6 +33,34 @@ solGS.dataset = {
     return datasets;
   },
 
+  addDataTypeAttr(datasets, analysis) {
+
+    // for (var i = 0; i < datasets.length; i++) {
+    //   if (datasets[i].type.match(/accessions/)) {
+    //     datasets[i]["data_type"] = ["Genotype"];
+    //   } else if (datasets[i].type.match(/plots/)) {
+    //     datasets[i]["data_type"] = ["Phenotype"];
+    //   } else if (datasets[i].type.match(/trials/)) {
+    //     datasets[i]["data_type"] = ["Genotype", "Phenotype"];
+    //   }
+  
+    // }
+    var type_opts;
+    if (analysis == "Population Structure") {
+      type_opts = ["Genotype", "Phenotype"];
+    } else if (analysis == "Clustering") {
+      type_opts = ["Genotype", "Phenotype", "GEBV"];
+    }
+
+    for (var i = 0; i < datasets.length; i++) {
+      datasets[i]["data_type"] = type_opts;
+    }
+
+    return datasets;
+
+  },
+
+
   converDatasetArrayToJson(datasets, datasetTypes) {
 
     var dataset = new CXGN.Dataset();
@@ -50,6 +78,7 @@ solGS.dataset = {
               name: name,
               type: datasetTypes[j],
               data_str: "dataset",
+              tool_compatibility: d.tool_compatibility
             };
             datasetPops.push(dsObj);
             dsIds.push(id);
@@ -78,6 +107,7 @@ solGS.dataset = {
     privateDatasets = this.addDataOwnerAttr(privateDatasets, 'private')
     
     var allDatasets = [privateDatasets, publicDatasets];
+    console.log(allDatasets);
     return allDatasets.flat();
     
   },
@@ -152,64 +182,63 @@ solGS.dataset = {
     solGS.waitPage(page, args);
   },
 
-  createDatasetTrainingReqArgs: function (datasetId, datasetName) {
+
+  getDatasetGenoProtocolId: function (datasetId) {
     var dataset = new CXGN.Dataset();
     var d = dataset.getDataset(datasetId);
 
     var protocolId = d.categories["genotyping_protocols"]
-      ? d.categories["genotyping_protocols"][0]
-      : null;
+    ? d.categories["genotyping_protocols"][0]
+    : null;
 
     if (!protocolId) {
       protocolId = jQuery("#genotyping_protocol_id").val();
     }
 
-    var popId = "dataset_" + datasetId;
-    var popType = "dataset_training";
+    return protocolId;
+
+  },
+
+  createDatasetTrainingReqArgs: function (datasetId, datasetName) {
+   
+    var protocolId = this.getDatasetGenoProtocolId(datasetId);
 
     var args = {
       dataset_name: datasetName,
       dataset_id: datasetId,
-      analysis_type: "training_dataset",
+      analysis_type: "dataset_type_training",
       data_set_type: "single_population",
-      training_pop_id: popId,
+      training_pop_id: `dataset_${datasetId}`,
       training_pop_name: datasetName,
-      population_type: popType,
+      population_type: "dataset_training",
       genotyping_protocol_id: protocolId,
+      data_structure: 'dataset'
     };
 
     return args;
   },
 
   createDatasetTypeSelectionReqArgs: function (datasetId, datasetName) {
-    var trainingPopDetails = solGS.getPopulationDetails();
     var selectionPopId = "dataset_" + datasetId;
 
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-
-    var dataset = new CXGN.Dataset();
-    var d = dataset.getDataset(datasetId);
-
-    var protocolId;
-    if (d.categories["genotyping_protocols"]) {
-      protocolId = d.categories["genotyping_protocols"][0];
-    } else {
-      protocolId = jQuery("#genotyping_protocol_id").val();
-    }
-
+    var modelArgs = solGS.getModelArgs();
+    var protocolId = this.getDatasetGenoProtocolId(datasetId);
+   
     var args = {
       dataset_id: datasetId,
       dataset_name: datasetName,
-      training_pop_id: trainingPopDetails.training_pop_id,
+      training_pop_id: modelArgs.training_pop_id,
       selection_pop_id: selectionPopId,
       selection_pop_name: datasetName,
-      training_traits_ids: trainingTraitsIds,
+      training_traits_ids: modelArgs.training_traits_ids,
       population_type: "dataset_selection",
-      data_set_type: trainingPopDetails.data_set_type,
+      data_set_type: modelArgs.data_set_type,
       genotyping_protocol_id: protocolId,
+      data_structure: 'dataset'
     };
 
     return args;
+
   },
 
 
