@@ -7,7 +7,8 @@ CXGN::Job - a class to unify background job submission, storage, and reporting
 CXGN::Job is a central location where background jobs can be submitted through cxgn-corelibs/CXGN::Tools::Run. 
 By routing all jobs through this module, all submitted jobs regardless of type can be stored in sgn_people.sp_job 
 and updated accordingly. To use this module, simply replace all calls to CXGN::Tools:Run with a call to this module,
-supplying the Run arguments to the cxgn_tools_run_config hash. 
+supplying the Run arguments to the cxgn_tools_run_config hash. To run on a cluster, use is_cluster => 1 in arguments
+hash. Otherwise leave it blank, and process will be forked in background. 
 
 =head1 SYNOPSIS
 
@@ -17,6 +18,7 @@ my $job = CXGN::Job->new({
     sp_person_id => $c->user->get_object()->get_sp_person_id(),
     args => {
         cxgn_tools_run_config => {$config},
+        is_cluster => 1,
         cmd => $cmd,
         logfile => $c->config->{job_finish_log},
         name => 'Sample download',
@@ -194,6 +196,9 @@ and cxgn_tools_run_config. Stored in the DB as a JSONB. This is the place to
 include config for CXGN::Tools::Run. As an argument to a new object, this will be 
 ignored if an sp_job_id is also supplied. 
 
+The most important arguments to look at are cxgn_tools_run_config, is_cluster, cmd,
+name, results_page, and job_type. 
+
 Ex:
 
 my $job = CXGN::Jobs->new({
@@ -203,6 +208,7 @@ my $job = CXGN::Jobs->new({
     args => {
         cmd => 'perl /bin/script.pl -a arg1 -b arg2',
         cxgn_tools_run_config => {$config},
+        is_cluster => 0,
         logfile => $c->config->{job_finish_log},
         name => 'Sample download',
         job_type => 'download',
@@ -397,10 +403,13 @@ sub cancel {
     my $backend_id = $self->backend_id();
 
     eval {
-        system("scancel $backend_id");
+        if ($self->retrieve_argument("is_cluster")) {
+            system("scancel $backend_id");
+        } else {
+            system("kill $backend_id");
+        }
         $self->status('canceled');
-        my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime();
-        my $formatted_time = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+        my $formatted_time = DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S');
         $self->finish_timestamp($formatted_time);
         system('echo "'.$self->sp_job_id().'    '.$formatted_time.'" >> '.$logfile.' >/dev/null 2>&1');
         $self->store();
@@ -451,7 +460,7 @@ sub submit {
     my $logfile = $self->retrieve_argument('logfile');
     my $cmd = $self->args->{cmd};
     my $cxgn_tools_run_config;
-    my $user_id = $self->sp_person_id() ? $self->sp_person_id() : "unknown_user";
+    my $user_id = $self->sp_person_id();
     my $name = $self->retrieve_argument('name') =~ s/ /_/gr;
     if (!$name) {
         $name = "job";
@@ -459,7 +468,10 @@ sub submit {
     my $temp_base = "/home/production/volume/tmp/user_$user_id/$name";
     `mkdir -p $temp_base`;
     my $err_file = "$temp_base/job.err";
+    `touch $err_file`;
     my $out_file = "$temp_base/job.out";
+    `touch $out_file`;
+    my $is_cluster = $self->retrieve_argument("is_cluster") ? $self->retrieve_argument("is_cluster") : 0;
     if (!$self->retrieve_argument('cxgn_tools_run_config')) {
         $cxgn_tools_run_config = {
             'err_file' => $err_file,
@@ -468,8 +480,8 @@ sub submit {
             'temp_base' => $temp_base, 
             'queue' => 'batch',
             'max_cluster_jobs' => 1000000000,
-            'is_async' => 0,
-            'is_cluster' => 1,
+            #'is_async' => !$is_cluster,
+            'is_cluster' => $is_cluster,
             'do_cleanup' => 0,
             'sleep' => undef,
             'backend' => 'Slurm'
@@ -498,7 +510,16 @@ sub submit {
     eval {
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
         print STDERR "[SERVER] submitting job: \n$cmd\n";
-        $job->run_cluster($cmd.$finish_timestamp_cmd);
+        if ($is_cluster) {
+            $job->run_cluster($cmd.$finish_timestamp_cmd);
+            #$job->run_cluster($cmd);
+            $backend_id = $job->cluster_job_id();
+        } else {
+            $job->run_async($cmd.$finish_timestamp_cmd);
+            #$job->run_async($cmd);
+            $backend_id = $job->pid();
+        }
+        
 
         $backend_id = $job->cluster_job_id();
         $status = 'submitted';

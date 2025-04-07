@@ -438,13 +438,19 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
         include_phenotype_primary_key => $include_phenotype_primary_key
 	});
 
-    my $genotyping_protocol = $c->config->{default_genotyping_protocol} =~ s/ /_/r; 
+    my $genotyping_protocol = $c->config->{default_genotyping_protocol} =~ s/ /_/gr; 
     my $dbhost = $c->config->{dbhost};
     my $dbuser = $c->config->{dbuser};
     my $dbname = $c->config->{dbname};
     my $dbpass = $c->config->{dbpass};
     
-    my $cmd = "/home/production/cxgn/sgn/bin/check_tool_compatibility.pl -i $dataset_id -G $genotyping_protocol -H $dbhost -D $dbname -U $dbuser -P $dbpass";
+    my $cmd = "mx-run CXGN::Dataset::ToolCompatibility".
+                " --dataset_id $dataset_id".
+                " --genotyping_protocol $genotyping_protocol".
+                " --dbhost $dbhost".
+                " --dbname $dbname".
+                " --user $dbuser".
+                " --password $dbpass";
 
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
@@ -457,6 +463,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
                 name => $dataset->name()." tool compatibility check",
                 results_page => "/dataset/$dataset_id",
                 job_type => 'tool_compatibility',
+                is_cluster => 0,
                 cmd => $cmd,
                 logfile => $c->config->{job_finish_log}
             }
