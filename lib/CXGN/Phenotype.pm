@@ -356,18 +356,17 @@ sub store {
 
 	# check if a value needs to be removed.
 	#
-	if ($self->remove_empty_value() && !defined($self->value()) || $self->value() eq '') {
+	if ($self->remove_empty_value() && (!defined($self->value()) || $self->value() eq '')) {
 	    print STDERR "REMOVE VALUES SET. REMOVING THE VALUE ".$self->value()." BECAUSE IT IS NOT DEFINED.\n";
 	    $self->delete_phenotype();
 	    return { success => 1, remove_count => 1, reason => "DELETED ENTRY - DELETE VALUES SET ON EMPTY VALUE.\n" };
 	    
 	}
-
 	
 	# update only if overwrite is set
 	#
 	if ($self->overwrite()) {
-	    print STDERR "OVERWRITE SET (".$self->overwrite()."). OVERWRITING\n";
+	    print STDERR "OVERWRITE SET (".$self->overwrite()."). OVERWRITING OLD VALUE ".$self->old_value()." WITH NEW VALUE ".$self->value()."\n";
 	    
 	    if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
 		print STDERR "DELETE VALUES NOT SET FOR EMPTY VALUE. IGNORING EMPTY VALUES!\n";
@@ -401,7 +400,7 @@ sub store {
 	    my $q = "SELECT phenotype_id, nd_experiment_id, file_id
                      FROM phenotype
                      JOIN nd_experiment_phenotype using(phenotype_id)
-                     JOIN nd   _experiment_stock using(nd_experiment_id)
+                     JOIN nd_experiment_stock using(nd_experiment_id)
                      LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
                      JOIN stock using(stock_id)  
                      WHERE stock.stock_id=?	    
