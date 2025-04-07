@@ -959,14 +959,7 @@ sub store {
 
 			my ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
 			
-			if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }
-			
-			# convert to array or array format for single array values to accept old format inputs without refactoring
-			#if (ref($value_array->[0]) ne 'ARRAY') {
-			#	push @values, $value_array;
-			#   } else {
-			#	@values = @{$value_array};
-			#   }
+			if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }			
 			
 			my $phenotype_object = CXGN::Phenotype->new( { schema => $schema });
 
@@ -983,8 +976,11 @@ sub store {
 
 			my $observation = $value_array->[3];
 
+			print STDERR "OBSERVATION = $observation\n";
+
 			#if ($observation eq "") { $observation = undef; } # special case, not sure where it comes from
 			#$phenotype_object->phenotype_id($observation);
+			
 			my $image_id = $value_array->[4];
 			
                         if (defined($image_id) && ($image_id eq "")) { $image_id = undef; }
@@ -1020,7 +1016,7 @@ sub store {
 			    ", date: $unique_time" .
 			    ", operator: $operator" .
 			    ", count: $value_count" .
-			    ", observation: $observation";
+			    ", observation: $trait_value";
 			
 			#print STDERR "phenotype uniquename: $plot_trait_uniquename\n";
 			
@@ -1034,129 +1030,163 @@ sub store {
 			#
 			my $repeat_type = $self->check_trait_repeat_type()->{$trait_cvterm_id} || "single";
 
+			$phenotype_object->trait_repeat_type($repeat_type);
+			$phenotype_object->overwrite($overwrite_values);
+
+			$phenotype_object->remove_empty_value($self->remove_values());
+
+			my $old_value;
+			my $old_phenotype_id;
+			
+			if ($repeat_type eq "single") {
+			    $old_value = $self->unique_trait_stock->{$trait_cvterm_id, $stock_id};
+			    $old_phenotype_id = $self->unique_trait_stock_phenotype_id()->{$trait_cvterm_id, $stock_id};
+			}
+			else { 
+			    $old_value = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
+			    $old_phenotype_id = $self->unique_trait_stock_timestamp_phenotype_id->{$trait_cvterm_id, $stock_id, $timestamp};
+			}
+			
+			$phenotype_object->old_value($old_value);
+			$phenotype_object->phenotype_id($old_phenotype_id);
+			
 			#print STDERR "\nREPEAT TYPE for $trait_cvterm_id: $repeat_type\n\n";
 
 			# deal with the case where overwrite_values is selected, the trait is of type single, and
 			# the same value for the trait does not exist in the database yet.
 			#
-			if ($overwrite_values && $repeat_type eq "single") {   
-			    
-			    #print STDERR "STORING SINGLE TRAIT WITH OVERWRITE VALUES!\n";
-			    if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
-				$phenotype_object->phenotype_id($phenotype_id); # we need to phenotype_id to overwrite
-				# we already have a value that needs to be overwritten
-				# we already have the phenotype_id of the stored value in the object 
-				# we can update that entry using the phenotype object store function
-				#
-				#skip when observation is provided since overwriting doesn't create records it updates observations.
-				#if (!$observation) {
-				#push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-				#push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
-				#}
+			
+			# if (exists($self->unique_trait_stock->{$trait_cvterm->cvterm_id(), $stock_id})) {
+			# 	$phenotype_object->phenotype_id($phenotype_id); # we need to phenotype_id to overwrite
+			# 	# we already have a value that needs to be overwritten
+			# 	# we already have the phenotype_id of the stored value in the object 
+			# 	# we can update that entry using the phenotype object store function
+			# 	#
+			# 	#skip when observation is provided since overwriting doesn't create records it updates observations.
+			# 	#if (!$observation) {
+			# 	#push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+			# 	#push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+			# 	#}
 				
-				# if remove_values is set and the trait_value is undef or "", we update the value, otherwise we skip
-				# the saving of the value
-				if ($remove_values && ($trait_value eq "" || ! defined($trait_value))) {
-				    # we are removing this entry from the database
-				    #
-				    #print STDERR "Removing $trait_value because of remove_values = $remove_values\n";
-				    $phenotype_object->delete_phenotype();
-				    $remove_count++;
-				}
-				if ( $overwrite_values && defined($trait_value) && length($trait_value) ) {
-				    print STDERR "OVERWRITING VALUE..,\n";
+			# 	# if remove_values is set and the trait_value is undef or "", we update the value, otherwise we skip
+			# 	# the saving of the value
+			# 	if ($remove_values && ($trait_value eq "" || ! defined($trait_value))) {
+			# 	    # we are removing this entry from the database
+			# 	    #
+			# 	    #print STDERR "Removing $trait_value because of remove_values = $remove_values\n";
+			# 	    $phenotype_object->delete_phenotype();
+			# 	    $remove_count++;
+			# 	}
+			# 	if ( $overwrite_values && defined($trait_value) && length($trait_value) ) {
+			# 	    print STDERR "OVERWRITING VALUE..,\n";
 
-				    # do we have a previous measurement with the same value - do not store
-				    #
-				    my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};  # boolean, not trait value
-				    my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
+			# 	    # do we have a previous measurement with the same value - do not store
+			# 	    #
+			# 	    my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};  # boolean, not trait value
+			# 	    my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
 
-				    if ($prev || $prev_with_timestamp eq $trait_value) {
-					# this value is already in the database - skip this save
-					print STDERR "SKIPPING THIS SAVE AS VALUE $prev or $prev_with_timestamp ARE ALREADY STORED.\n";
-				    }
-				    else {
-					print STDERR "STORING THE VALUE $trait_value FOR TRAIT $trait_cvterm_id\n";
-					$overwrite_count++;
-					$plot_trait_uniquename .= ", overwritten: $upload_date";
-					$phenotype_object->uniquename($plot_trait_uniquename);
-					$phenotype_object->store();
-				    }
-				}
-			    }
-			    else {
-				# we don't have an existing measurement in the database, so just add it
-				# and keep track of it
-				#
-				print STDERR "DID NOT FIND PREVIOUS ENTRY, JUST STORING $trait_cvterm_id, VALUE $trait_value!\n";
-				$phenotype_object->store();
-				$new_count++;
-			    }
-			}		    
-			elsif ($repeat_type eq "single") {
-			    # if the repeat_type is single, but no overwrite values,
-			    # we add a new measurement if there is no measurement present yet with the same value
-			    #
-			    my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};  # just a boolean, not trait_value
-			    my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
-
-			    print STDERR "PREV: $prev. PREV_WITH_TIMESTAMP: $prev_with_timestamp (timestamp is $timestamp)\n";
+			# 	    if ($prev || $prev_with_timestamp eq $trait_value) {
+			# 		# this value is already in the database - skip this save
+			# 		print STDERR "SKIPPING THIS SAVE AS VALUE $prev or $prev_with_timestamp ARE ALREADY STORED.\n";
+			# 	    }
+			    # 	    else {
 			    
-			    if ($prev || $prev_with_timestamp eq $trait_value) {
-				# this value is already in the database - skip this save
-				print STDERR "SKIPPING THIS SAVE AS VALUE $prev or $prev_with_timestamp ARE ALREADY STORED (SECOND CASE).\n";
-				$skip_count++;
-			    }
-			    else {
-				print STDERR "STORING VALUE WITH OVERWRITE CONDITION\n";
-				$new_count++;
-				$phenotype_object->store();
-			    }
-			}
+			    print STDERR "STORING THE VALUE $trait_value FOR TRAIT $trait_cvterm_id\n";
+
+			$plot_trait_uniquename .= ", overwritten: $upload_date, old_value=$old_value";
+			$phenotype_object->uniquename($plot_trait_uniquename);
+			my $result = $phenotype_object->store();
+
+			print STDERR "RESULT FROM STORE: ".Dumper($result)."\n";
+			
+			if (exists($result->{skip_count}) && $result->{skip_count} > 0) { $skip_count++; }
+			if (exists($result->{remove_count}) && $result->{remove_count} > 0) { $remove_count++; }
+			if (exists($result->{new_count})   && $result->{new_count}   > 0) { $new_count++; }
+			if (exists($result->{overwrite_count}) && $result->{overwrite_count} > 0) { $overwrite_count++; }
+		# }			    else {
+		# 		# we don't have an existing measurement in the database, so just add it
+		# 		# and keep track of it
+		# 		#
+		# 		print STDERR "DID NOT FIND PREVIOUS ENTRY, JUST STORING $trait_cvterm_id, VALUE $trait_value!\n";
+		# 		$phenotype_object->store();
+		# 		$new_count++;
+		# 	    }
+		# 	}		    
+		# 	elsif ($repeat_type eq "single") {
+		# 	    # if the repeat_type is single, but no overwrite values,
+		# 	    # we add a new measurement if there is no measurement present yet with the same value
+		# 	    #
+		# 	    my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};  # just a boolean, not trait_value
+		# 	    my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
+
+		# 	    print STDERR "PREV: $prev. PREV_WITH_TIMESTAMP: $prev_with_timestamp (timestamp is $timestamp)\n";
 			    
-			elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
+		# 	    if ($prev || $prev_with_timestamp eq $trait_value) {
+		# 		# this value is already in the database - skip this save
+		# 		print STDERR "SKIPPING THIS SAVE AS VALUE $prev or $prev_with_timestamp ARE ALREADY STORED (SECOND CASE).\n";
+		# 		$skip_count++;
+		# 	    }
+		# 	    else {
+		# 		print STDERR "STORING VALUE WITH OVERWRITE CONDITION\n";
+		# 		$new_count++;
+		# 		$phenotype_object->store();
+		# 	    }
+		# 	}
+			    
+		# 	elsif ( $repeat_type eq "multiple" || $repeat_type eq "time_series") {
 
-			    print STDERR "TYPE IS MULTIPE OR TIME SERIES...\n";
-			    # otherwise, we deal with a time series and we add a new value
-			    # if there is no other exact same value with exactly the same timestamp
-			    #
-			    if ($phenotype_id) { 
-				if ($self->overwrite_values()) {
-				    print STDERR "OVERWRITE VALUES IS SET...\n";
-				    $phenotype_object->phenotype_id($phenotype_id);
-				    $phenotype_object->store();
-				    $overwrite_count++;
-				}
-				elsif ($self->remove_values()) {
+		# 	    print STDERR "TYPE IS MULTIPE OR TIME SERIES...\n";
+		# 	    # otherwise, we deal with a time series and we add a new value
+		# 	    # if there is no other exact same value with exactly the same timestamp
+		# 	    #
+		# 	    if ($phenotype_id) { 
+		# 		if ($self->overwrite_values()) {
+		# 		    print STDERR "OVERWRITE VALUES IS SET...\n";
+		# 		    my $old_value = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
+		# 		    if ($old_value eq $trait_value) {  # this is exactly the same entry, do not store
+		# 			print STDERR "OLD VALUE $old_value IS EQUAL TO NEW VALUE $trait_value AT SAME TIMESTAMP (".$phenotype_object->collect_date()."). NOT STORING!\n";
+		# 		    }
+		# 		    else { 
+		# 			print STDERR "OLD VALUE $old_value IS DIFFERENT FROM NEW VALUE $trait_value... OVERWRITING!!!!\n";
+		# 			print STDERR "CURRENT UNIQUENAME: ".$phenotype_object->uniquename()."\n";
+		# 			$trait_value =~ s/[{};]//g; # remove unsafe characters
+		# 			$plot_trait_uniquename .= ", overwritten: $upload_date, old_value=$old_value";
+		# 			$phenotype_object->uniquename($plot_trait_uniquename);
+		# 			$phenotype_object->phenotype_id($phenotype_id);
+		# 			$phenotype_object->store();
+		# 			$overwrite_count++;
+		# 		    }
+		# 		}
+		# 		elsif ($self->remove_values()) {
 
-				    print STDERR "REMOVE VALUES IS SET...\n";
-				    # if observations are emtpy, with this option,
-				    # remove the measurement from the database
-				    #
-				    $phenotype_object->phenotype_id($phenotype_id);
-				    if ($trait_value eq "" || ! defined($trait_value)) {
-					$phenotype_object->delete_phenotype();
-				    }
-				    $remove_count++;
-				}
-			    }
-			    else {
-				# add a completely new measurement if it doesn't exist yet
-				#
-				my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
-				print STDERR "COMPARING $prev_with_timestamp to $trait_value... \n";
+		# 		    print STDERR "REMOVE VALUES IS SET...\n";
+		# 		    # if observations are emtpy, with this option,
+		# 		    # remove the measurement from the database
+		# 		    #
+		# 		    $phenotype_object->phenotype_id($phenotype_id);
+		# 		    if ($trait_value eq "" || ! defined($trait_value)) {
+		# 			$phenotype_object->delete_phenotype();
+		# 		    }
+		# 		    $remove_count++;
+		# 		}
+		# 	    }
+		# 	    else {
+		# 		# add a completely new measurement if it doesn't exist yet
+		# 		#
+		# 		my $prev_with_timestamp = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $phenotype_object->collect_date()};
+		# 		print STDERR "COMPARING $prev_with_timestamp to $trait_value... \n";
 				
 				
-				if ($prev_with_timestamp ne $trait_value) {
-				    print STDERR "REALLY STORING...\n";
-				    $phenotype_object->store();
-				    $new_count++;
-				}
-				else {
-				    $skip_count++;
-				}
-			    }
-			}
+		# 		if ($prev_with_timestamp ne $trait_value) {
+		# 		    print STDERR "REALLY STORING...\n";
+		# 		    $phenotype_object->store();
+		# 		    $new_count++;
+		# 		}
+		# 		else {
+		# 		    $skip_count++;
+		# 		}
+		# 	    }
+		# 	}
 			
 			my $additional_info_stored;
 			if($additional_info){

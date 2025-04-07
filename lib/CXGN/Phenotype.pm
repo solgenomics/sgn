@@ -258,6 +258,46 @@ has 'trait_max_value' => (
     is => 'rw',
     );
 
+=head2 overwrite()
+
+Overwrite the old value if it is different but has the same value and timestamp
+
+If overwrite is not set, the new value is added to the database.
+
+=cut
+
+has 'overwrite' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => sub { return 0; },
+    );
+
+=head2 remove_empty_value
+
+Remove a value if the value in the file is undef or '' and another value is already
+stored in the database. Requires overwrite(1).
+
+=cut
+
+has 'remove_empty_value' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => sub { return 0; },
+    );
+
+=head2 old_value
+
+The old value in the database. Can be set automatically by calling find_matching_phenotype() or set
+from a large compound query using this accessor.
+
+=cut
+
+has 'old_value' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+
 
 
 sub BUILD {
@@ -313,51 +353,85 @@ sub store {
     }
 
     if ($self->phenotype_id) {   ### UPDATE
-	#print STDERR "UPDATING ".$self->phenotype_id()." with new value ".$self->value()."\n";
-	my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->
-	    find( { phenotype_id  => $self->phenotype_id() });
-	## should check that unit and variable (also checked here) are conserved in parse step,
-	## if not reject before store
-	## should also update operator in nd_experimentprops
 
-	$phenotype_row->update({
-	    value      => $self->value(),
-	    cvalue_id  => $self->cvterm_id(),
-	    observable_id => $self->cvterm_id(),
-	    uniquename => $self->uniquename(),
-	    collect_date => $self->collect_date(),
-	    operator => $self->operator(),
-			   });
-
-        #	$self->handle_timestamp($timestamp, $observation);
-        #	$self->handle_operator($operator, $observation);
-
-	my $q = "SELECT phenotype_id, nd_experiment_id, file_id
-                FROM phenotype
-                JOIN nd_experiment_phenotype using(phenotype_id)
-                JOIN nd_experiment_stock using(nd_experiment_id)
-                LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
-                JOIN stock using(stock_id)
-                WHERE stock.stock_id=?
-                AND phenotype.cvalue_id=?";
-
-	my $h = $self->schema->storage->dbh()->prepare($q);
-	$h->execute($self->stock_id, $self->cvterm_id);
-
-	while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-	    push @overwritten_values, [ $file_id, $phenotype_id, $nd_experiment_id ];
-	    $experiment_ids{$nd_experiment_id} = 1;
-	    if ($self->image_id) {
-		$nd_experiment_md_images{$nd_experiment_id} = $self->image_id;
-	    }
+	# check if a value needs to be removed.
+	#
+	if ($self->remove_empty_value() && !defined($self->value()) || $self->value() eq '') {
+	    print STDERR "REMOVE VALUES SET. REMOVING THE VALUE ".$self->value()." BECAUSE IT IS NOT DEFINED.\n";
+	    $self->delete_phenotype();
+	    return { success => 1, remove_count => 1, reason => "DELETED ENTRY - DELETE VALUES SET ON EMPTY VALUE.\n" };
+	    
 	}
-        return { success => 1, overwritten_values => \@overwritten_values, experiment_ids => \%experiment_ids, nd_experiment_md_images => \%nd_experiment_md_images };
-    }
-    else { # INSERT
 
+	
+	# update only if overwrite is set
+	#
+	if ($self->overwrite()) {
+	    print STDERR "OVERWRITE SET (".$self->overwrite()."). OVERWRITING\n";
+	    
+	    if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
+		print STDERR "DELETE VALUES NOT SET FOR EMPTY VALUE. IGNORING EMPTY VALUES!\n";
+		return { succes => 1, skip_count => 1, reason => "SKIPPING EMPTY VALUE WITHOUT DELETE_VALUES\n" }; 
+	    }
+
+	    if ($self->old_value() && ($self->old_value() eq $self->value())) {
+		print STDERR "OLD VALUE AND NEW VALUE ARE THE SAME (".$self->value()."). NOT UPDATING\n";
+		return { success => 1, skip_count => 1, reason => "NEW AND OLD VALUES ARE IDENTICAL.\n" };
+		
+	    }
+	    
+	   # else { 
+	    print STDERR "UPDATING ".$self->phenotype_id()." WITH NEW VALUE ".$self->value()."\n";
+	    my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->
+		find( { phenotype_id  => $self->phenotype_id() });
+	    ## should check that unit and variable (also checked here) are conserved in parse step,
+	    ## if not reject before store
+	    ## should also update operator in nd_experimentprops
+	    
+	    $phenotype_row->update(
+		{
+		    value      => $self->value(),
+		    cvalue_id  => $self->cvterm_id(),
+		    observable_id => $self->cvterm_id(),
+		    uniquename => $self->uniquename(),
+		    collect_date => $self->collect_date(),
+		    operator => $self->operator(),
+		});
+	    
+	    my $q = "SELECT phenotype_id, nd_experiment_id, file_id
+                     FROM phenotype
+                     JOIN nd_experiment_phenotype using(phenotype_id)
+                     JOIN nd   _experiment_stock using(nd_experiment_id)
+                     LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+                     JOIN stock using(stock_id)  
+                     WHERE stock.stock_id=?	    
+                     AND phenotype.cvalue_id=?"; 
+	    
+	    my $h = $self->schema->storage->dbh()->prepare($q);
+	    $h->execute($self->stock_id, $self->cvterm_id);
+	    
+	    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+		push @overwritten_values, [ $file_id, $phenotype_id, $nd_experiment_id ];
+		$experiment_ids{$nd_experiment_id} = 1;
+		if ($self->image_id) {
+		    $nd_experiment_md_images{$nd_experiment_id} = $self->image_id;
+		}
+	    }
+	    return { success => 1, overwrite_count => \@overwritten_values, experiment_ids => \%experiment_ids, nd_experiment_md_images => \%nd_experiment_md_images };   
+	} # if overwrite    
+	return { success => 1, skip_count => 1, reason => "Overwrite not set - skipping" };
+    }  # if phenotype-id
+    else { # INSERT
+	print STDERR "OLD VALUE = ".$self->old_value()."\n";
+	if ($self->old_value() eq $self->value()) {
+	    print STDERR "TRYING TO INSERT WITH SAME VALUE ALREADY PRESENT... SKIPPING!\n";
+	    return { success => 1, skip_count => 1, reason => "VALUE ALREADY PRESENT FOR TRAIT, OBS UNIT AND TIMESTAMP.\n" };
+	}
+	
+	print STDERR "INSERTING... ".$self->value()."\n";
 	if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
 	    print STDERR "NOT STORING EMTPY VALUE\n";
-	    return { success => 0, message => "Not storing empty values" };
+	    return { success => 1, skip_count => 1, message => "Not storing empty values" };
 	}
 	#print STDERR "INSERTING new value ...\n";
         my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->create({
@@ -389,8 +463,9 @@ sub store {
 	}
 
 	$self->phenotype_id($phenotype_row->phenotype_id());
+	print STDERR "INSERTED ROW WITH NEW PHENOTYPE_ID ".$self->phenotype_id()."\n";
     }
-    return { success => 1, phenotype_id => $self->phenotype_id() };
+    return { success => 1, new_count => 1, phenotype_id => $self->phenotype_id() };
 }
 
 =head3 store_external_references()
@@ -697,4 +772,14 @@ sub check_collect_date {
     return;
 }
 
+
+=head2 find_matching_phenotype()
+
+=cut 
+	
+sub find_matching_phenotype {
+    my $self = shift;
+    
+}
+    
 1;
