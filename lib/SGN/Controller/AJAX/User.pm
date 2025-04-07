@@ -242,7 +242,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	return;
     }
 
-    my $person = CXGN::People::Login->($c->dbc->dbh(), $c->user->get_sp_person_id());
+    my $person = CXGN::People::Login->new($c->dbc->dbh(), $c->user->get_sp_person_id());
 
 #    my ($current_password, $change_username, $change_password, $change_email) = $c->req->param({qw(current_password change_username change_password change_email)});
 

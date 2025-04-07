@@ -64,6 +64,84 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
 
+# CHECK UPDATES LOGGED IN AS WRONG USER
+
+# test update password functionality 
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?change_password=1&current_password=secretpw&new_password=blablabla&confirm_password=blablabla');
+$response = decode_json($mech->content());
+print STDERR Dumper($response);
+is($response->{error}, "Your current password does not match SGN records.", "password update check");
+
+# reset it to what it was
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?change_password=1&current_password=blablabla&new_password=secretpw&confirm_password=secretpw');
+
+# check email update
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?change_email=1&current_password=secretpw&private_email=test@testbase.org&confirm_email=test@testbase.org');
+$response = decode_json($mech->content());
+is($response->{error}, "Your current password does not match SGN records.", 'email update check');
+
+# email was not set in the fixture, no need to reset it to nothing?
+
+
+# change username
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?current_password=secretpw&change_username=1&new_username=janemoe');
+my $un_response = decode_json($mech->content());
+is($un_response->{error}, "Your current password does not match SGN records.", "username update check");
+
+# change username back
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?current_password=secretpw&change_username=1&new_username=janedoe');
+
+# LOG OUT WRONG USER
+#
+$mech->get_ok('http://localhost:3010/ajax/user/login?logout=1');
+$response = decode_json $mech->content();
+print STDERR "LOGOUT: ".Dumper($response);
+
+# CHECK UPDATES WITH CORRECT USER
+# login again as janedoe for update tests
+#
+$mech->get_ok('http://localhost:3010/ajax/user/login?username=janedoe&password=secretpw');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{message}, 'Login successful');
+
+# test update password functionality
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?change_password=1&current_password=secretpw&new_password=blablabla&confirm_password=blablabla');
+$response = decode_json($mech->content());
+print STDERR Dumper($response);
+is($response->{message}, "Update successful", "password update check");
+
+# reset it to what it was
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?change_password=1&current_password=blablabla&new_password=secretpw&confirm_password=secretpw');
+
+# check email update
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?change_email=1&current_password=secretpw&private_email=test@testbase.org&confirm_email=test@testbase.org');
+$response = decode_json($mech->content());
+is($response->{message}, 'Update successful', 'email update check');
+
+# email was not set in the fixture, no need to reset it to nothing?
+
+
+# change username
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?current_password=secretpw&change_username=1&new_username=janemoe');
+my $un_response = decode_json($mech->content());
+is($un_response->{message}, "Update successful", "username update check");
+
+# change username back
+#
+$mech->get_ok('http://localhost:3010/ajax/user/update?current_password=secretpw&change_username=1&new_username=janedoe');
+
+
+
 #Delete user
 my $dbh = $schema->storage->dbh;
 if( $dbh and  my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" ) ) {
