@@ -114,11 +114,13 @@ $t->while_logged_in_as("submitter", sub {
         "upload_phenotype_datacollector_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
 
-    ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation");
-    ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation");
-    ok($verify_status =~ /Metadata saved for archived file./, "Verify warnings after store validation");
-    ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation");
-    ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation");
+    print STDERR "VERFIY STATUS NOW: $verify_status\n";
+    
+    ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation - skipped values");
+    ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation - overwritten values");
+    ok($verify_status =~ /Metadata saved for archived file./, "Verify warnings after store validation - metadata saved");
+    ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation - removed values");
+    ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation - upload successful");
 
     }
 );
