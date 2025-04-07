@@ -235,4 +235,4 @@ ok(!$phenotype_id, "Find multiple phenotype entry 12");
 
 done_testing();
 
-#$f->clean_up_db();
+$f->clean_up_db();

@@ -83,6 +83,8 @@ my $filename = "t/data/trial/upload_phenotypin_spreadsheet.$extension";
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
 
+print STDERR "NOW UPLOADING FILE $filename\n";
+
 my $uploader = CXGN::UploadFile->new({
     tempfile => $filename,
     subdirectory => 'temp_fieldbook',
@@ -262,6 +264,9 @@ ok($post1_exp_md_files_diff == 15, "Check num rows in NdExperimentMdFIles table 
 #
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet_duplicate.$extension";
+
+print STDERR "NOW PARSING FILE $filename\n";
+
 $validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
@@ -328,6 +333,7 @@ my $filename = "t/data/trial/upload_phenotypin_spreadsheet_update.$extension";
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
 
+print STDERR "NOW UPLOADING FILE $filename\n";
 
 #Test archive upload file
 my $uploader = CXGN::UploadFile->new(
@@ -346,6 +352,8 @@ my $archived_filename_with_path = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 ok($archived_filename_with_path);
 ok($md5);
+
+print STDERR "NOW PARSING FILE $archived_filename_with_path\n";
 
 #Now parse phenotyping spreadsheet file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
@@ -451,6 +459,8 @@ my $parser = CXGN::Phenotypes::ParseUpload->new();
 my $filename = "t/data/trial/upload_phenotypin_spreadsheet.xlsx";
 my $validate_file = $parser->validate('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate fieldbook fails for spreadsheet file");
+
+print STDERR "NOW PARSING FILE $filename\n";
 
 #check that parse fails for datacollector file when using fieldbook parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
@@ -629,6 +639,8 @@ $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet.xlsx";
 $validate_file = $parser->validate('datacollector spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate datacollector fails for spreadsheet file");
+
+print STDERR "NOW DEALING WITH FILE $filename\n";
 
 # check that parse fails for fieldbook file when using datacollector parser
 #
