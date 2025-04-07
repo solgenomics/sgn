@@ -4,7 +4,7 @@ ToolCompatibility.pm - a MooseX::Runnable module for running tool compatibility 
 
 =head1 SYNOPSIS
 
-mx-run ToolCompatibility --dataset_id <id> --genotyping_protocol [default genotyping protocol] --dbhost [host] --dbname [dbname] --user [dbuser] --password [dbpassword]
+mx-run ToolCompatibility --dataset_id [id] --genotyping_protocol [default genotyping protocol] --dbhost [host] --dbname [dbname] --user [dbuser] --password [dbpassword]
 
 =head1 OPTIONS
 
@@ -45,7 +45,7 @@ Ryan Preble <rsp98@cornell.edu>
 package CXGN::Dataset::ToolCompatibility;
 
 use Moose;
-use CXGN::DB::InsertDBH;
+use DBI;
 use Bio::Chado::Schema;
 use CXGN::People::Schema;
 use CXGN::Dataset;
@@ -72,49 +72,41 @@ sub run {
     my $self = shift;
 
     my $dataset_id = $self->dataset_id;
-    print STDERR "Starting tool compatibility check for ID $dataset_id.\n";
     my $genotyping_protocol = $self->genotyping_protocol;
     my $dbhost = $self->dbhost;
     my $dbname = $self->dbname;
     my $user = $self->user;
     my $password = $self->password;
 
-    print STDERR "Connecting to DB.x\n";
+    my $dbh;
+    my $dsn;
+    my $people_schema;
+    my $bcs_schema;
 
     eval {
-        my $dbh = CXGN::DB::Connection->new(
-            { 
-                dbhost=>$dbhost,
-                dbname=>$dbname,
-                dbuser=>$user,
-                #dbpass=>$password,
-                dbargs => {
-                    AutoCommit => 0,
-                    RaiseError => 1
-                }
-            }
-        );
-    }
+        $dsn = 'dbi:Pg:database='.$dbname.";host=".$dbhost.";port=5432";
+        $dbh = DBI->connect($dsn, $user, $password, { on_connect_do => ['SET search_path TO sgn_people' ], AutoCommit => 0, RaiseError => 1});
+
+        $people_schema = CXGN::People::Schema->connect( $dsn, $user, $password,  { on_connect_do => ['SET search_path TO sgn_people' ]} );
+        $bcs_schema = Bio::Chado::Schema->connect( $dsn, $user, $password );
+    };
     if ($@) {
-        die "Error connecting to DB $@\n";
+        die "Error connecting to DB:\n $@\n";
     }
-    
 
-    my $people_schema = CXGN::People::Schema->connect(  sub { $dbh->get_actual_dbh() } );
-    my $bcs_schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
-
-    my $dataset = CXGN::Dataset->new({
-        people_schema => $people_schema,
-        schema => $bcs_schema,
-        sp_dataset_id => $dataset_id
-    }); 
+    my $dataset;
 
     eval {
+        $dataset = CXGN::Dataset->new({
+            people_schema => $people_schema,
+            schema => $bcs_schema,
+            sp_dataset_id => $dataset_id
+        }); 
         $dataset->update_tool_compatibility($genotyping_protocol);
     };
     if ($@) {
         $dbh->rollback();
-        die "Tool compatibility failed.$@\n";
+        die "Tool compatibility failed:\n$@\n";
     }
 
     $dbh->commit();

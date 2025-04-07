@@ -463,7 +463,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
                 name => $dataset->name()." tool compatibility check",
                 results_page => "/dataset/$dataset_id",
                 job_type => 'tool_compatibility',
-                is_cluster => 0,
+                is_cluster => 1,
                 cmd => $cmd,
                 logfile => $c->config->{job_finish_log}
             }
@@ -477,16 +477,10 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
             error => "Error calculating tool compatibility:\n$@"
         };
     } else {
-        sleep 3;
-        if ($dataset->tool_compatibility){
-            $c->stash->{rest} = {
-                tool_compatibility => JSON::Any->encode($dataset->tool_compatibility)
-            };
-        } else {
-            $c->stash->{rest} = {
-                error => "Tool compatibility did not finish in a timely manner. Please view job logs later.\n"
-            };
-        }
+         $c->stash->{rest} = {
+            message => "Tool compatibility submitted. Check job logs for progress.\n",
+            success => 1
+         };
     }
 }
 
