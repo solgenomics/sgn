@@ -25,6 +25,7 @@ use CXGN::Trial::Search;
 use Try::Tiny;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
+use CXGN::Stock::TissueSample::Search;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
