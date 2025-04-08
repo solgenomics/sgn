@@ -15,15 +15,25 @@ my $job = CXGN::Job->new({
     people_schema => $people_schema
     schema => $bcs_schema,
     sp_person_id => $c->user->get_object()->get_sp_person_id(),
-    args => {
-        cxgn_tools_run_config => {$config},
-        cmd => $cmd,
-        logfile => $c->config->{job_finish_log},
-        name => 'Sample download',
-        job_type => 'download',
-        submit_page => 'https://www.breedbase.org/submit_page_url'
-        results_page => 'https://www.breedbase.org/results_page_url',
-    }
+    cmd => $cmd,
+    cxgn_tools_run_config => {
+        'err_file' => $err_file,
+        'out_file' => $out_file,
+        'temp_base' => $temp_base, 
+        'submit_host' => 'localhost',
+        'queue' => 'batch',
+        'max_cluster_jobs' => 1000000000,
+        'is_cluster' => 1,
+        'do_cleanup' => 0,
+        'sleep' => undef,
+        'backend' => 'Slurm'
+    },
+    finish_logfile => $c->config->{job_finish_log},
+    name => 'Sample download',
+    job_type => 'download',
+    submit_page => 'https://www.breedbase.org/submit_page_url',
+    results_page => 'https://www.breedbase.org/results_page_url',
+    additional_args => {$more_stuff}
 });
 
 my $job_id = $job->submit();
@@ -38,7 +48,7 @@ my $job = CXGN::Jobs->new({
 
 my $create_time = $job->create_timestamp();
 
-my $current_status = $job->retrieve_status();
+my $current_status = $job->check_status();
 
 my $results_page = $job->results_page();
 
@@ -129,8 +139,6 @@ Current status of the job. May be stored in DB or may be gathered from Slurm (an
 
 =cut 
 
-# enum 'ValidStatus', [qw( submitted finished failed timeout canceled )];
-
 has 'status' => ( 
     isa => 'Maybe[Str]',
     isa => enum([qw( submitted finished failed timeout canceled )]), 
@@ -168,11 +176,9 @@ in the database row. Can be one of:
 
 =cut
 
-# enum 'ValidType', [qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )];
-
 has 'job_type' => ( 
     isa => 'Maybe[Str]', 
-    # isa => enum([qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )]),
+    isa => enum([qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )]),
     is => 'rw', 
     predicate => 'has_type'
 );
@@ -185,38 +191,58 @@ The cvterm_id stored in the database.
 
 has 'type_id' => ( isa => 'Maybe[Int]', is => 'rw');
 
-=head2 args()
+=head2 cxgn_tools_run_config()
 
-Hashref of arguments supplied to the job. Not necessarily needed for job creation, but 
-essential for job submission. Must have keys for cmd, cxgn_tools_run_config, and logfile. 
-All other keys can be customized for the job type. Sensible defaults will be used for logfile
-and cxgn_tools_run_config. Stored in the DB as a JSONB. This is the place to 
-include config for CXGN::Tools::Run. As an argument to a new object, this will be 
-ignored if an sp_job_id is also supplied. 
+The configuration options for CXGN::Tools::Run. Sensible defaults are used and accessed with $self->get_default_cxgn_tools_run_config().
 
-The most important arguments to look at are cxgn_tools_run_config, cmd,
-name, results_page, and job_type. 
+Config keys include:
 
-Ex:
-
-my $job = CXGN::Jobs->new({
-    people_schema => $ps,
-    schema => $s,
-    sp_person_id => $c->user->get_object->get_sp_person_id(),
-    args => {
-        cmd => 'perl /bin/script.pl -a arg1 -b arg2',
-        cxgn_tools_run_config => {$config},
-        logfile => $c->config->{job_finish_log},
-        name => 'Sample download',
-        job_type => 'download',
-        submit_page => '...',
-        results_page => '...'
-    }
-});
+- err_file      err_file, out_file, and temp_base can be left blank for default temp directories
+- out_file
+- temp_base
+- submit_host (probably localhost, but could be a different server)
+- queue (batch by default)
+- max_cluster_jobs 
+- is_cluster (true by default)
+- do_cleanup (0 by default)
+- sleep (undef by default)
+- backend (likely to be Slurm)
 
 =cut
 
-has 'args' => ( isa => 'Maybe[HashRef]', is => 'rw' );
+has 'cxgn_tools_run_config' => (isa => 'Maybe[HashRef]', is => 'rw', predicate => 'has_cxgn_tools_run_config');
+
+=head2 cmd()
+
+The command submitted to be run.
+
+=cut
+
+has 'cmd' => (isa => 'Str', is => 'rw');
+
+=head2 logfile()
+
+The logfile used to store and retrieve finish timestamps. Required for job creation. 
+
+=cut
+
+has 'finish_logfile' => (isa => 'Str', is => 'rw', predicate => 'has_finish_logfile');
+
+=head2 name()
+
+The name of the job.
+
+=cut
+
+has 'name' => (isa => 'Maybe[Str]', is => 'rw');
+
+=head2 additional_args()
+
+Hashref for additional arguments that may be tailored to a specific job. Not standardized in any way. 
+
+=cut
+
+has 'additional_args' => (isa => 'Maybe[HashRef]', is => 'rw');
 
 =head1 INSTANCE METHODS
 
@@ -228,30 +254,30 @@ sub BUILD {
 
     my $bcs_schema = $args->{schema};
     my $people_schema = $args->{people_schema};
-    my $user_id = $args->{sp_person_id};
 
     if (!$self->has_sp_job_id()) { # New job, no ID yet.
-        my $job_args = $args->{args};
-        $self->args($job_args);
-        $self->job_type($self->args->{job_type});
         my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({name => $self->job_type()});
         $self->type_id($cvterm_row->cvterm_id());
-        $self->sp_person_id($user_id);
         my $logfile;
-        if (!$self->retrieve_argument('logfile')) {
-            $logfile = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep job_finish_log | sed -r 's/\\w+\\s//'`;
-            $self->args->{logfile} = $logfile;
+        if (!$self->has_finish_logfile()) {
+            $logfile = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
+            $self->finish_logfile($logfile);
+        }
+        $self->create_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
+        if (!$self->has_cxgn_tools_run_config()) {
+            $self->cxgn_tools_run_config($self->get_default_cxgn_tools_run_config());
         }
         
     } else { #existing job, retrieve from DB
-        $self->sp_job_id($args->{sp_job_id});
         my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
-        if (!$row) { die "The job with id ".$self->sp_jb_id()." does not exist"; }
+        if (!$row) { die "The job with id ".$self->sp_job_id()." does not exist"; }
         my $job_args = $row->args() ? JSON::Any->decode($row->args()) : undef;
-        $self->args($job_args);
         $self->type_id($row->type_id());
-        my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({cvterm_id => $row->type_id()});
-        $self->job_type($cvterm_row->name());
+        my $cvterm_row;
+        if ($row->type_id()) {
+            $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({cvterm_id => $row->type_id()});
+            $self->job_type($cvterm_row->name());
+        }
         $self->create_timestamp($row->create_timestamp());
         $self->finish_timestamp($row->finish_timestamp());
         $self->sp_person_id($row->sp_person_id());
@@ -259,11 +285,12 @@ sub BUILD {
         $self->status($row->status());
         $self->submit_page($job_args->{submit_page});
         $self->results_page($job_args->{results_page});
-        my $logfile;
-        if (!$self->retrieve_argument('logfile')) {
-            $logfile = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep job_finish_log | sed -r 's/\\w+\\s//'`;
-            $self->args->{logfile} = $logfile;
-        }
+        $self->name($job_args->{name});
+        $self->additional_args($job_args->{additional_args});
+        $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
+        $self->cmd($job_args->{cmd});
+        my $logfile = $job_args->{finish_logfile} ? $job_args->{finish_logfile} : `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
+        $self->finish_logfile($logfile);
     }
 }
 
@@ -277,9 +304,14 @@ sub check_status {
     my $self = shift;
 
     my $backend_id = $self->backend_id();
-    my $logfile = $self->retrieve_argument('logfile');
+    my $logfile = $self->finish_logfile();
 
-    if (!$backend_id && !$self->has_sp_job_id()) {
+    if (!$backend_id || !$self->has_sp_job_id()) {
+        my $finish_timestamp = $self->read_finish_timestamp();
+        if ($finish_timestamp) {
+            $self->status("finished");
+            $self->store();
+        }
         return $self->status() ? $self->status() : "";
     } else {
         if ($self->status() eq "submitted") {
@@ -322,7 +354,7 @@ Returns the finish timestamp if already recorded. Otherwise, reads the logfile, 
 
 sub read_finish_timestamp {
     my $self = shift;
-    my $logfile = $self->retrieve_argument('logfile');
+    my $logfile = $self->finish_logfile();
 
     if ($self->finish_timestamp()) {
         return $self->finish_timestamp();
@@ -359,10 +391,10 @@ sub delete {
     my $self = shift;
 
     if (!$self->has_sp_job_id()) {
-        die "Deletion has no meaning for jobs that have not yet been submitted.\n";
+        die "Deletion has no meaning for jobs that have not yet been stored.\n";
     } 
 
-    my $logfile = $self->retrieve_argument('logfile');
+    my $logfile = $self->finish_logfile();
 
     my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
@@ -395,7 +427,7 @@ sub cancel {
     if (!$self->has_backend_id()) {
         die "Cannot cancel a job without a backend ID.\n";
     }
-    my $logfile = $self->retrieve_argument('logfile');
+    my $logfile = $self->finish_logfile();
 
     my $backend_id = $self->backend_id();
 
@@ -413,27 +445,6 @@ sub cancel {
     }
 }
 
-=head2 retrieve_argument(arg) 
-
-Returns the specified job argument stored in the args hashref. For example:
-
-$job->retrieve_argument('cmd');
-
-retrieves the command line code of the job. May return nothing for undefined arguments!
-
-=cut
-
-sub retrieve_argument {
-    my $self = shift;
-    my $arg_string = shift;
-
-    if (!$self->args() || !defined($self->args->{$arg_string})) {
-        return "";
-    } 
-
-    return $self->args->{$arg_string};
-}
-
 =head2 submit()
 
 Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a new db row. Returns sp_job_id
@@ -447,48 +458,18 @@ sub submit {
         die "This job has already been submitted!\n";
     }
 
-    if (!$self->retrieve_argument('cmd')) {
+    if (!$self->cmd()) {
         die "Background jobs must have a command to run.\n";
     }
 
-    my $logfile = $self->retrieve_argument('logfile');
-    my $cmd = $self->args->{cmd};
+    my $logfile = $self->finish_logfile();
+    my $cmd = $self->cmd();
     my $cxgn_tools_run_config;
-    my $user_id = $self->sp_person_id();
-    my $name = $self->retrieve_argument('name') =~ s/ /_/gr;
-    if (!$name) {
-        $name = "job";
-    }
-    my $temp_base = "/home/production/volume/tmp/user_$user_id/$name";
-    `mkdir -p $temp_base`;
-    my $err_file = "$temp_base/job.err";
-    `touch $err_file`;
-    my $out_file = "$temp_base/job.out";
-    `touch $out_file`;
-    if (!$self->retrieve_argument('cxgn_tools_run_config')) {
-        $cxgn_tools_run_config = {
-            'err_file' => $err_file,
-            'submit_host' => 'localhost',
-            'out_file' => $out_file,
-            'temp_base' => $temp_base, 
-            'queue' => 'batch',
-            'max_cluster_jobs' => 1000000000,
-            'is_cluster' => 1,
-            'do_cleanup' => 0,
-            'sleep' => undef,
-            'backend' => 'Slurm'
-        };
+    
+    if (!$self->has_cxgn_tools_run_config()) {
+        $cxgn_tools_run_config = $self->get_default_cxgn_tools_run_config();
     } else {
-        if (!$self->args->{cxgn_tools_run_config}->{'err_file'}) {
-            $self->args->{cxgn_tools_run_config}->{'err_file'} = $err_file;
-        }
-        if (!$self->args->{cxgn_tools_run_config}->{'out_file'}) {
-            $self->args->{cxgn_tools_run_config}->{'out_file'} = $out_file;
-        }
-        if (!$self->args->{cxgn_tools_run_config}->{'temp_base'}) {
-            $self->args->{cxgn_tools_run_config}->{'temp_base'} = $temp_base;
-        }
-        $cxgn_tools_run_config = $self->args->{cxgn_tools_run_config};
+        $cxgn_tools_run_config = $self->cxgn_tools_run_config();
     }
 
     my $sp_job_id = $self->store();
@@ -502,9 +483,13 @@ sub submit {
     eval {
 
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
-        print STDERR "[SERVER] submitting job: \n$cmd\n";
-        $job->run_cluster($cmd.$finish_timestamp_cmd);
-
+        print STDERR "Submitting job: \n$cmd\n";
+        if ($self->cxgn_tools_run_config->{is_cluster} == 1){
+            $job->run_cluster($cmd.$finish_timestamp_cmd);
+        } else {
+            $job->run_async($cmd.$finish_timestamp_cmd);
+        }
+        
         $backend_id = $job->cluster_job_id();
         $status = 'submitted';
     };
@@ -512,8 +497,7 @@ sub submit {
     if ($@) {
         $self->status('failed');
         $self->store();
-        print STDERR "[SERVER] error: $@\n";
-        die "An error occured trying to submit a background job.\n";
+        die "An error occured trying to submit a background job.\n$@\n";
     } 
 
     $self->backend_id($backend_id);
@@ -537,10 +521,19 @@ sub store {
             my $row = $self->people_schema()->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
             $row->backend_id($self->backend_id());
             $row->create_timestamp($self->create_timestamp() ? $self->create_timestamp() : DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
-            $row->args(JSON::Any->encode($self->args()));
+            $row->finish_timestamp($self->finish_timestamp());
+            $row->args(JSON::Any->encode({
+                cxgn_tools_run_config => $self->cxgn_tools_run_config(),
+                name => $self->name(),
+                finish_logfile => $self->finish_logfile(),
+                cmd => $self->cmd(),
+                results_page => $self->results_page(),
+                submit_page => $self->submit_page(),
+                additional_args => $self->additional_args(),
+                job_type => $self->job_type()
+            }));
             $row->sp_person_id($self->sp_person_id());
             $row->status($self->status());
-            $row->finish_timestamp($self->finish_timestamp());
             $row->type_id($self->type_id());
             $row->update();
         } else {
@@ -548,7 +541,16 @@ sub store {
             my $cvterm_id = $cvterm_row->cvterm_id();
             my $row = $self->people_schema()->resultset("SpJob")->create({
                 backend_id => $self->backend_id(),
-                args => JSON::Any->encode($self->args()),
+                args => JSON::Any->encode({
+                    cxgn_tools_run_config => $self->cxgn_tools_run_config(),
+                    name => $self->name(),
+                    finish_logfile => $self->finish_logfile(),
+                    cmd => $self->cmd(),
+                    results_page => $self->results_page(),
+                    submit_page => $self->submit_page(),
+                    additional_args => $self->additional_args(),
+                    job_type => $self->job_type()
+                }),
                 sp_person_id => $self->sp_person_id(),
                 status => $self->status(),
                 finish_timestamp => $self->finish_timestamp(),
@@ -575,7 +577,7 @@ Generates a command that gives the finish timestamp. Use to append to a cmd befo
 sub generate_finish_timestamp_cmd {
     my $self = shift;
 
-    my $logfile = $self->retrieve_argument('logfile');
+    my $logfile = $self->finish_logfile();
 
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
@@ -589,6 +591,40 @@ FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z");
 echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$logfile.' ;
 
 ';
+}
+
+=head2 get_default_cxgn_tools_run_config()
+
+Returns a hashref of the default config options for cxgn tools run. Used when no cxgn_tools_run_config found.
+
+=cut
+
+sub get_default_cxgn_tools_run_config {
+    my $self = shift;
+
+    my $cxgn_tools_run_config;
+    my $user_id = $self->sp_person_id();
+    my $name = $self->name() =~ s/ /_/gr;
+    if (!$name) {
+        $name = "job_".DateTime->now(time_zone => 'local')->strftime('%Y_%m_%d_%H_%M_%S');
+    }
+    my $temp_base = "/home/production/volume/tmp/user_$user_id/$name";
+    my $err_file = "$temp_base/job.err";
+    my $out_file = "$temp_base/job.out";
+    $cxgn_tools_run_config = {
+        #'err_file' => $err_file,
+        'submit_host' => 'localhost',
+        #'out_file' => $out_file,
+        'temp_base' => $temp_base, 
+        'queue' => 'batch',
+        'max_cluster_jobs' => 1000000000,
+        'is_cluster' => 1,
+        'do_cleanup' => 0,
+        'sleep' => undef,
+        'backend' => 'Slurm'
+    };
+
+    return $cxgn_tools_run_config;
 }
 
 =head1 CLASS METHODS

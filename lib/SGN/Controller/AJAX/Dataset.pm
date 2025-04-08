@@ -459,13 +459,11 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
             schema => $c->dbic_schema("Bio::Chado::Schema"),
             people_schema => $c->dbic_schema("CXGN::People::Schema"),
             sp_person_id => $user,
-            args => {
-                name => $dataset->name()." tool compatibility check",
-                results_page => "/dataset/$dataset_id",
-                job_type => 'tool_compatibility',
-                cmd => $cmd,
-                logfile => $c->config->{job_finish_log}
-            }
+            name => $dataset->name()." tool compatibility check",
+            results_page => "/dataset/$dataset_id",
+            job_type => 'tool_compatibility',
+            cmd => $cmd,
+            finish_logfile => $c->config->{job_finish_log}
         });
 
         $job->submit();

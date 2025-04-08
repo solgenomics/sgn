@@ -798,14 +798,12 @@ sub submit_job_cluster {
       schema => $c->dbic_schema("Bio::Chado::Schema"),
       people_schema => $c->dbic_schema("CXGN::People::Schema"),
       sp_person_id => $user,
-      args => {
-        job_type => $data_type,
-        name => $name,
-        results_page => $results_page,
-        cmd => $args->{cmd},
-        cxgn_tools_run_config => $args->{config},
-        logfile => $c->config->{job_finish_log}
-      }
+      job_type => $data_type,
+      name => $name,
+      results_page => $results_page,
+      cmd => $args->{cmd},
+      cxgn_tools_run_config => $args->{config},
+      finish_logfile => $c->config->{job_finish_log}
     });
     $job_record->status("submitted");
     $job_record->store();
@@ -836,6 +834,7 @@ sub submit_job_cluster {
     if ($@) {
       $job_record->status("failed");
       $job_record->store();
+      print STDERR "Error submitting a job or job record:\n $@\n";
         $c->stash->{Error} =
           'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
         $c->stash->{status} =

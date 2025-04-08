@@ -41,7 +41,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-Adds sp_job table to sgn_people for slurm job tracking
+Adds sp_job table to sgn_people for submitted job tracking
 
 has '+prereq' => (
     default => sub {
@@ -65,22 +65,7 @@ sub patch {
             ['download','A background job downloading data from the server'],
             ['upload', 'A background job uploading data to the server'],
             ['report', 'A background job for generating personalized reports'],
-            # 'pca_analysis',
-            # 'kinship_analysis',
             ['tool_compatibility','A background job for determining which analysis tools can be used on a dataset'],
-            # 'cluster_analysis',
-            # 'correlation_analysis',
-            # 'training_dataset',
-            # 'training_model',
-            # 'training_prediction',
-            # 'anova_analysis',
-            # 'heritability_analysis',
-            # 'stability_analysis',
-            # 'blastn',
-            # 'blastp',
-            # 'blastx',
-            # 'tblastn',
-            # 'tblastx',
             ['phenotypic_analysis','Any analysis done on phenotypes, such as calculating adjusted means. Includes phenotypic correlation, trait stability, heritability, etc'],
             ['genotypic_analysis','Any analysis using genotypic data, such as GWAS or genotype clustering'],
             ['genomic_prediction','Any analysis to predict breeding value or phenotype from genomic data, such as solGS'],
