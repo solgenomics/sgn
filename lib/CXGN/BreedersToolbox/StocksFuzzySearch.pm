@@ -53,34 +53,31 @@ sub get_matches {
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
 
-    my $combined_query = "
-        SELECT 
-            stock.uniquename, 
-            stockprop.value AS synonym, 
-            stockprop.type_id AS type_id, 
-                CASE 
-                    WHEN LOWER(stock.uniquename) = LOWER(?) THEN 0
-                    ELSE levenshtein(LOWER(stock.uniquename), LOWER(?))
-                END
-            AS distance
-        FROM 
-            stock 
-        LEFT JOIN 
-            stockprop USING(stock_id) 
-        WHERE 
-            stock.type_id = ? 
-            AND (
-                LOWER(stock.uniquename) = LOWER(?) 
-                OR levenshtein(LOWER(stock.uniquename), LOWER(?)) <= ?
-            )
-        ORDER BY distance ASC
+    my $exact_query = "
+        SELECT
+            stock.uniquename
+        FROM stock
+        WHERE stock.type_id = ?
+        AND LOWER(stock.uniquename) = ?
     ";
-    my $sth = $schema->storage->dbh()->prepare($combined_query);
-    #print STDERR "Stocklist: @stock_list\n";
+    my $exact_sth = $schema->storage->dbh()->prepare($exact_query);
+
+    my $fuzzy_query = "
+        SELECT 
+            stock.uniquename,
+            similarity(LOWER(stock.uniquename), ?) AS similarity_score
+        FROM stock
+        WHERE 
+            LENGTH(stock.uniquename) BETWEEN ? AND ?
+            AND LOWER(stock.uniquename) % ?
+            AND similarity(LOWER(stock.uniquename), ?) > 0.5
+        ORDER BY similarity_score DESC
+        LIMIT 5
+    ";
+    my $fuzzy_sth = $schema->storage->dbh()->prepare($fuzzy_query);
 
     foreach my $stock_name (@stock_list) {
         my $stockname_length = length($stock_name);
-        #print STDERR "Stockname length: $stockname_length\n";
         if ($stockname_length <= 5) {
             $max_distance = 1;
         } elsif ($stockname_length >= 10) {
@@ -91,39 +88,36 @@ sub get_matches {
             $max_distance = 5;
         }
 
-       # print STDERR "Stock name: $stock_name\n";
-       # print STDERR "Stock type id: $stock_type_id\n";
+        my $lc_stockname = lc($stock_name);
+        my $min_len = $stockname_length - $max_distance;
+        my $max_len = $stockname_length + $max_distance;
 
-        $sth->execute($stock_name, $stock_name, $stock_type_id, $stock_name, $stock_name, $max_distance);
-        my $matches = $sth->fetchall_arrayref({});
-        #print STDERR Dumper ($matches);
+        $exact_sth->execute($stock_type_id, $lc_stockname);
+        my $exact_matches = $exact_sth->fetchall_arrayref({});
+        #print STDERR Dumper($exact_matches);
 
-        if (@$matches) {
-            foreach my $match (@$matches) {
-                #print STDERR "Stockname: $stock_name\n";
-                if ($match->{distance} == 0 && $match->{uniquename} eq $stock_name) {
-                    #print STDERR "Adding to found_stocks\n";
-                    # Exact match
-                    push @found_stocks, { matched_string => $stock_name, unique_name => $match->{uniquename} };
-                    last;
-                } elsif ($match->{synonym} && $match->{type_id} == $synonym_type_id && $match->{distance} == 0) {
-                    # Synonym match
-                    push @found_stocks, { matched_string => "$stock_name (SYNONYM OF $match->{uniquename})", is_synonym => 1, unique_name => $match->{uniquename} };
-                    last;
-                } elsif ($match->{distance} > 0) {
-                    #print STDERR "Adding to fuzzy\n";
-                    # Fuzzy match
+        if (@$exact_matches) {
+            foreach my $match (@$exact_matches) {
+                push @found_stocks, { matched_string => $stock_name, unique_name => $match->{uniquename} };
+            }
+        } else {
+            $fuzzy_sth->execute($lc_stockname, $min_len, $max_len, $lc_stockname, $lc_stockname);
+            my $matches = $fuzzy_sth->fetchall_arrayref({});
+            #print STDERR Dumper($matches);
+
+            if (@$matches) {
+                foreach my $match (@$matches) {
                     push @fuzzy_stocks, {
                         name => $stock_name,
                         matches => [{
                             name => $match->{uniquename},
-                            distance => $match->{distance}
+                            distance => $match->{similarity_score}
                         }]
                     };
                 }
+            } else {
+                push @absent_stocks, $stock_name;
             }
-        } else {
-            push @absent_stocks, $stock_name;
         }
     }
 
@@ -139,7 +133,7 @@ sub get_matches {
 }
 
 
-=begin
+=head1 Old Implementation
     my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$stock_type_id";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
