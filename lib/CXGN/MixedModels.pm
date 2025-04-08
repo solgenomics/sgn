@@ -73,7 +73,7 @@ has 'variable_slope_factors' => (is => 'rw', isa => 'Ref', default => sub{[]});
 
 has 'random_factors' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
-=head2 variable_slop_intersects
+=head2 variable_slope_intersects
 
 =cut
 
