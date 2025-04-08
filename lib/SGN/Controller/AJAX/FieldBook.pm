@@ -58,6 +58,9 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   my $trial_id = $c->req->param('trial_id');
   my $data_level = $c->req->param('data_level') || 'plots';
   my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
+  my $include_plot_order = $c->req->param('include_plot_order') eq 'true';
+  my $plot_order = $c->req->param('plot_order') || 'by_row_serpentine';
+  my $plot_start = $c->req->param('plot_start') || 'bottom_left';
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
   my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
@@ -154,6 +157,9 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         use_synonyms => $use_synonyms,
         selected_trait_ids => \@selected_traits,
         trial_stock_type => $trial_stock_type,
+        include_plot_order => $include_plot_order,
+        plot_order => $plot_order,
+        plot_start => $plot_start,
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();

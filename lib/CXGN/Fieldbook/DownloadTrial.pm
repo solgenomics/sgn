@@ -152,6 +152,24 @@ has 'trial_stock_type'=> (
     default => 'accession'
 );
 
+has 'include_plot_order' => (
+    is => 'rw',
+    isa => 'Bool',
+    default => 0
+);
+
+has 'plot_order' => (
+    is => 'rw',
+    isa => 'Str',
+    default => 'by_row_serpentine'
+);
+
+has 'plot_start' => (
+    is => 'rw',
+    isa => 'Str',
+    default => 'bottom_left'
+);
+
 sub download {
     my $self = shift;
     my %errors;
