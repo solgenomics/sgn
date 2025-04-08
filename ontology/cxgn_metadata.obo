@@ -1,0 +1,15 @@
+data-version: 1
+date: 04:05:2025 03:00
+saved-by: Naama
+default-namespace: cxgn_metadata
+ontology: cxgn_metadata
+
+[Term]
+id: METADATA:0000001
+name: metadata
+
+[Term]
+id: METADATA:0000002
+name: image_id
+def: "Database image ID" []
+is_a: METADATA:0000001
