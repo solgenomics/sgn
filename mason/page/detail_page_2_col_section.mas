@@ -83,6 +83,7 @@ $trait_ontology_db_name => undef
 $pubs => undef
 $cvterm_add_uri => undef
 $referer => undef
+$is_obsolete => undef
 
 #Specific to genotyping protocol detail page
 $protocol_id => undef
@@ -127,6 +128,12 @@ $all_nirs_files => undef
 $all_deleted_nirs_files => undef
 $locations => undef
 $sampling_facilities => ()
+
+#Specific to manage transcriptomics page
+$transcriptomics_files => undef
+$deleted_transcriptomics_files => undef
+$all_transcriptomics_files => undef
+$all_deleted_transcriptomics_files => undef
 
 #Specific to analytics detail page
 $analytics_protocol_id => undef
@@ -288,7 +295,9 @@ $field_headers => ()
 % if ($info_section_id eq 'trial_soil_data_section'){
                                 <& /breeders_toolbox/trial/trial_soil_data.mas, trial_id => $trial_id &>
 % } #End trial_soil_data_section
-
+% if ($info_section_id eq 'trial_images_section'){
+                                <& /image/plot_images.mas, trial_id => $trial_id &>
+% } #End trial_images_section
 
 % if ($info_section_id eq 'stock_additional_info_section'){
                                 <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
@@ -372,7 +381,7 @@ $field_headers => ()
                                 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$referer &>
 % } #End stock_comments_section
 % if ($info_section_id eq 'stock_delete_section'){
-                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename &>
+                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete &>
 % } #End stock_delete_section
 % if ($info_section_id eq 'population_delete_section'){
                                 <& /stock/population_delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename &>
@@ -514,6 +523,10 @@ $field_headers => ()
 % if ($info_section_id eq 'manage_nirs_main'){
                                 <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities=>$sampling_facilities &>
 % } #End manage_nirs_main
+
+% if ($info_section_id eq 'manage_transcriptomics_main'){
+                                <& /tools/transcriptomics/manage_transcriptomics_main.mas, transcriptomics_files => $transcriptomics_files, deleted_transcriptomics_files => $deleted_transcriptomics_files, all_transcriptomics_files => $all_transcriptomics_files, all_deleted_transcriptomics_files => $all_deleted_transcriptomics_files, locations => $locations, sampling_facilities=>$sampling_facilities &>
+% } #End manage_transcriptomics_main
 
 % if ($info_section_id eq 'manage_sequence_metadata'){
     <& /tools/sequence_metadata/manage_sequence_metadata_main.mas &>
