@@ -1,0 +1,48 @@
+<%args>
+
+</%args>
+
+<div class="modal fade" id="download_obsolete_metadata_using_list_dialog" name="download_obsolete_metadata_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadObsoleteMetadataUsingListDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="reset" class="close" id="download_obsolete_metadata_using_list_dismiss_button_1" name="download_obsolete_metadata_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="downloadObsoleteMetadataUsingList">Download Obsolete Metadata Using a List</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" name="download_obsolete_metadata_form" id="download_obsolete_metadata_form">
+                        <div class="form-group">
+                            <label class="control-label col-sm-5">List of Obsoleted Accessions:</label>
+                            <div class="col-sm-7" >
+                                <div class="input-group">
+                                    <select class="form-control" id="obsoleted_accession_list_select"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="download_obsoleted_accession_list_submit">Download</button>
+                <button id="download_obsolete_metadata_using_list_dismiss_button_2" name="download_obsolete_metadata_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery("#download_obsolete_metadata_link").click( function() {
+        jQuery('#download_obsolete_metadata_using_list_dialog').modal('show');
+    });
+
+    var list = new CXGN.List();
+    document.getElementById("obsoleted_accession_list_select").innerHTML = list.listSelect("obsoleted_accession_list_select", [ 'accessions' ], 'Please select a list','', undefined);
+
+
+});
+
+</script>
