@@ -216,14 +216,16 @@ export function init() {
             }
         }
 
-        get_plot_order(
+        get_plot_order({
             type,
             order,
             start,
             include_borders,
             include_gaps,
+            include_subplots,
+            include_plants,
             additional_properties
-        ) {
+        } = {}) {
             let q = new URLSearchParams({
                 trial_ids: [
                     this.trial_id,
@@ -242,6 +244,8 @@ export function init() {
                 left_border:
                     !!include_borders && !!this.meta_data.left_border_selection,
                 gaps: !!include_gaps,
+                subplots: !!include_subplots,
+                plants: !!include_plants,
                 ...additional_properties,
             }).toString();
             window.open(`/ajax/breeders/trial_plot_order?${q}`, "_blank");
