@@ -338,7 +338,7 @@ sub search {
       LEFT JOIN stock_relationship AS icsr ON (observationunit.stock_id=icsr.subject_id) AND icsr.type_id = $intercrop_plot_rel_type_id
       LEFT JOIN stock AS ics ON (icsr.object_id=ics.stock_id)
       LEFT JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
-      LEFT JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $analysis_result_type_id, $cross_type_id, $family_name_type_id)
+      JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $analysis_result_type_id, $cross_type_id, $family_name_type_id)
       $design_layout_sql
       LEFT JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
       LEFT JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
@@ -659,8 +659,8 @@ sub search {
         if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };
         if ($folder_description) { $folder_description =~ s/\R//g };
 
-        my @intercrop_stock_ids = split(/\|/, $intercrop_stock_id);
-        my @intercrop_stock_names = split(',', $intercrop_stock_name);
+        my @intercrop_stock_ids = $intercrop_stock_id ? split(/\|/, $intercrop_stock_id) : ();
+        my @intercrop_stock_names = $intercrop_stock_name ? split(',', $intercrop_stock_name) : ();
         my @intercrop_stocks;
         for my $i (0 .. $#intercrop_stock_ids) {
             my $id = $intercrop_stock_ids[$i];
