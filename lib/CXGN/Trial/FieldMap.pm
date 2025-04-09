@@ -189,9 +189,9 @@ sub display_fieldmap {
     my @rep_no = ();
     my @array_msg = ();
     my @plot_number = ();
-    my $my_hash;
+#    my $my_hash;
     
-    foreach $my_hash (@layout_info) {
+    foreach my $my_hash (@layout_info) {
 	if ($my_hash->{'row_number'}) {
 	    if ($my_hash->{'row_number'} =~ m/\d+/) {
 		if (scalar(@{$my_hash->{"plant_names"}}) < 1) {
