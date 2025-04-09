@@ -108,7 +108,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     $c->stash->{composable_toy_root_cvterm} = $c->config->{composable_toy_root_cvterm};
     $c->stash->{composable_gen_root_cvterm} = $c->config->{composable_gen_root_cvterm};
     $c->stash->{composable_evt_root_cvterm} = $c->config->{composable_evt_root_cvterm};
-
+    $c->stash->{composable_meta_root_cvterm} = $c->config->{composable_meta_root_cvterm};
     $c->stash->{user} = $c->user();
     $c->stash->{template} = '/ontology/compose_trait.mas';
 
