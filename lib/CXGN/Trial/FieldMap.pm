@@ -189,8 +189,7 @@ sub display_fieldmap {
     my @rep_no = ();
     my @array_msg = ();
     my @plot_number = ();
-#    my $my_hash;
-    
+
     foreach my $my_hash (@layout_info) {
 	if ($my_hash->{'row_number'}) {
 	    if ($my_hash->{'row_number'} =~ m/\d+/) {
