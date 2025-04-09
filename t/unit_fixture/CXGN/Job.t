@@ -1,7 +1,7 @@
 use strict;
 
 use lib 't/lib';
-use Test::More;
+use Test::More 'tests' => 9;
 use Data::Dumper;
 use SGN::Test::Fixture;
 use_ok('CXGN::Job');
