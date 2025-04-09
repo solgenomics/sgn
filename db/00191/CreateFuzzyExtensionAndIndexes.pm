@@ -63,7 +63,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX gin_trgm_idx ON stock USING gin (LOWER(uniquename) gin_trgm_ops);
 CREATE INDEX stock_type_id_lower_uniquename_idx ON stock (type_id, LOWER(uniquename));
 
-SET pg_trgm.similarity_threshold = 0.5;
+SET pg_trgm.similarity_threshold = 0.57;
 
 EOSQL
 
