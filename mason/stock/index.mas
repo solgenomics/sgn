@@ -300,13 +300,14 @@ function jqueryStuff() {
                             $image_url = $image->get_image_url('small');
                         }
 
-                        if ($image_url ne '/data/images/image_files_test/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/small.jpg') {
+                        my $no_img_url = '/data/images/image_files/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/small';
+                        if (index($image_url, $no_img_url) != -1) {
                         </%perl>                      
-                        <img src="<% $image_url %>" class="img-responsive" style="max-width: 100%; height: auto;" />
+                        <p>No accession image to display</p>
                         <%perl>
                             } else { 
                         </%perl>
-                        <p>No accession image to display</p>
+                        <img src="<% $image_url %>" alt="No accession image to display" class="img-responsive" style="max-width: 100%; height: auto;" />
                         <%perl>
                             } 
                         </%perl>
