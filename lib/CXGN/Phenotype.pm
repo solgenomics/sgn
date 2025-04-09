@@ -774,11 +774,63 @@ sub check_collect_date {
 
 =head2 find_matching_phenotype()
 
+    Desc: finds matching phenotypes in the database
+    Params: cvterm_id, observationunit_id, value
+          (if no params are provided, will take object values)
+    Returns: an array of matching phenotype ids
+
 =cut 
 	
 sub find_matching_phenotype {
     my $self = shift;
+    my $cvterm_id = shift || $self->cvterm_id();
+    my $observationunit_id = shift || $self->observationunit_id();
+    my $value = shift || $self->value();
+
+    my $h = $self->schema()->storage()->dbh()->prepare(
+	"SELECT phenotype_id, collect_date FROM phenotype 
+    	JOIN nd_experiment_phenotype USING(phenotype_id)
+	JOIN nd_experiment_stock USING(nd_experiment_id) 
+	WHERE cvalue_id=?  AND stock_id=? AND value=?");
     
+    $h->execute($cvterm_id, $observationunit_id, $value);
+
+    my @phenotype_ids;
+    while (my ($phenotype_id) = $h->fetchrow_array()) {
+	push @phenotype_ids, $phenotype_id;
+    }
+    return @phenotype_ids;
 }
-    
+
+=head2 find_matching_phenotype_with_collect_date()
+
+    Desc: finds matching phenotypes in the database
+    Params: cvterm_id, observationunit_id, value, collect_data
+          (if no params are provided, will take object values)
+    Returns: an array of matching phenotype ids
+
+=cut
+
+sub find_matching_phenotype_with_collect_date {
+    my $self = shift;
+    my $cvterm_id = shift || $self->cvterm_id();
+    my $observationunit_id = shift || $self->observationunit_id();
+    my $value = shift || $self->value();
+    my $collect_date = shift || $self->collect_date();
+
+    my $h =  $self->schema()->storage()->dbh()->prepare(
+	"SELECT phenotype_id, collect_date FROM phenotype 
+    	JOIN nd_experiment_phenotype USING(phenotype_id)
+	JOIN nd_experiment_stock USING(nd_experiment_id) 
+	WHERE cvalue_id=? AND stock_id=? AND collect_date=? AND value=? ");
+
+    $h->execute($cvterm_id, $observationunit_id, $collect_date, $value);
+
+    my @phenotype_ids;
+    while (my ($phenotype_id) = $h->fetchrow_array()) {
+	push @phenotype_ids, $phenotype_id;
+    }
+    return @phenotype_ids;
+}
+
 1;

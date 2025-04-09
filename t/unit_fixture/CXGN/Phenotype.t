@@ -108,6 +108,20 @@ $p2->value(40);
 
 print STDERR "ERRORS: ".Dumper(\@errors);
 
+# check find_matching_phenotype functions
+#
+my @ps = $p2->find_matching_phenotype(70741, 39252, 40);
+
+is($ps[0], 740534, "find matching phenotype test");
+
+print STDERR "Phenotypes found: ".Dumper(\@ps);
+
+@ps = $p2->find_matching_phenotype_with_collect_date(70741, 39252, 40, "2025-03-18 22:00" );
+
+is($ps[0], 740534, "find matching phenotype with collect date test");
+
+print STDERR "Phenotypes found: ".Dumper(\@ps);
+
 done_testing();
 
 $f->clean_up_db();
