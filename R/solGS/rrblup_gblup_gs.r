@@ -779,21 +779,15 @@ if (length(selection_pop_data) == 0) {
     training_pop_genetic_values <- data.frame(
         round(training_model_result$pred, 2)
     )
-
-    print(head(training_pop_genetic_values))
     
     colnames(training_pop_genetic_values) <- trait_adjusted_means_header
     training_pop_genetic_values <- training_pop_genetic_values %>%
         arrange(across(trait_adjusted_means_header, desc))
     
-    print(head(training_pop_genetic_values))
-
     training_pop_genetic_values <- rownames_to_column(
         training_pop_genetic_values,
         var = "genotypes"
     )
-
-    print(head(training_pop_genetic_values))
 
     training_pop_gebvs <- training_model_result$g
     training_gebv_pev <- training_model_result$PEV
@@ -824,12 +818,22 @@ if (length(selection_pop_data) == 0) {
 
     if (!is.null(training_pop_genetic_values) &&
     !is.null(training_pop_gebvs)) {
-    combined_training_gebvs_genetic_values <- inner_join(training_pop_gebvs,
-        training_pop_genetic_values,
-        by = 'genotypes')
+        combined_training_gebvs_genetic_values <- inner_join(
+            training_pop_gebvs,
+            training_pop_genetic_values,
+            by = 'genotypes'
+        )
     }
 
-    training_pop_gebvs <- column_to_rownames(training_pop_gebvs, var = "genotypes")
+    combined_training_gebvs_genetic_values <- column_to_rownames(
+        combined_training_gebvs_genetic_values,
+        var = "genotypes"
+    )
+
+    training_pop_gebvs <- column_to_rownames(
+        training_pop_gebvs,
+        var = "genotypes"
+    )
 
     pheno_trait_for_mixed_solve <- data.matrix(pheno_trait_for_mixed_solve)
     geno_data_filtered_genotypes <- data.matrix(geno_data_filtered_genotypes)
@@ -1102,6 +1106,11 @@ if (length(selection_pop_data) != 0) {
         by = 'genotypes')
     }
 
+    combined_selection_gebvs_genetic_values <- column_to_rownames(
+        combined_selection_gebvs_genetic_values,
+        var = "genotypes"
+    )
+
     selection_pop_gebvs <- column_to_rownames(
         selection_pop_gebvs,
         var = "genotypes"
@@ -1116,11 +1125,6 @@ if (length(selection_pop_data) != 0) {
     )
 }
 
-
-
-print(head(combined_training_gebvs_genetic_values))
-
-print(head(combined_selection_gebvs_genetic_values))
 
 if (!is.null(selection_pop_gebvs) && length(selection_pop_gebvs_file) != 0)  {
     fwrite(
@@ -1392,7 +1396,7 @@ if (file.info(average_kinship_file)$size == 0) {
 
     average_kinship <- average_kinship %>%
         rownames_to_column("genotypes") %>%
-        rename(Mean_kinship = contains("traitRe")) %>%
+        rename(Mean_kinship = contains("apply.trait_kinship_matrix")) %>%
         arrange(Mean_kinship) %>%
         mutate_at("Mean_kinship", round, 3) %>%
         column_to_rownames("genotypes")
