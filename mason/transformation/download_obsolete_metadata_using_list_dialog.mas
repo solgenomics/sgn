@@ -13,10 +13,10 @@
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" name="download_obsolete_metadata_form" id="download_obsolete_metadata_form">
                         <div class="form-group">
-                            <label class="control-label col-sm-5">List of Obsoleted Accessions:</label>
+                            <label class="control-label col-sm-5">List of Obsoleted Stocks:</label>
                             <div class="col-sm-7" >
                                 <div class="input-group">
-                                    <select class="form-control" id="obsoleted_accession_list_select"></select>
+                                    <select class="form-control" id="obsoleted_stock_list_select"></select>
                                 </div>
                             </div>
                         </div>
@@ -24,7 +24,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="download_obsoleted_accession_list_submit">Download</button>
+                <button type="button" class="btn btn-primary" id="download_obsoleted_stock_list_submit">Download</button>
                 <button id="download_obsolete_metadata_using_list_dismiss_button_2" name="download_obsolete_metadata_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -39,8 +39,29 @@ jQuery(document).ready(function(){
         jQuery('#download_obsolete_metadata_using_list_dialog').modal('show');
     });
 
-    var list = new CXGN.List();
-    document.getElementById("obsoleted_accession_list_select").innerHTML = list.listSelect("obsoleted_accession_list_select", [ 'accessions' ], 'Please select a list','', undefined);
+    const list = new CXGN.List();
+    document.getElementById("obsoleted_stock_list_select").innerHTML = list.listSelect("obsoleted_stock_list_select", [ 'obsoleted_stocks' ], 'Please select a list','', undefined);
+
+    jQuery("#download_obsoleted_stock_list_submit").click(function() {
+        const obsoleted_stock_list_id = jQuery('#obsoleted_stock_list_select').val();
+
+        if (!obsoleted_stock_list_id) {
+            alert("Please select an obsoleted stock list!");
+            return;
+        } else {
+            jQuery('#working_modal').modal('show');
+            list.validate(obsoleted_stock_list_id, 'obsoleted_stocks', true).then(
+            function(r) {
+                if (r.valid != 1) {
+                    alert("The list did not pass validation. Please correct the list and try again");
+                    jQuery('#working_modal').modal('hide');
+                } else {
+                    jQuery('#download_obsolete_metadata').submit();
+                    jQuery('#working_modal').modal('hide');
+                }
+            });
+        }
+    });
 
 
 });
