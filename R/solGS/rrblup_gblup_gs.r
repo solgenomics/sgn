@@ -108,8 +108,20 @@ training_pop_genetic_values_file <- grep(
     value = TRUE
 )
 
+combined_training_gebvs_genetic_values_file <- grep(
+    "combined_training_gebvs_genetic_values",
+    output_files,
+    value = TRUE
+)
+
 selection_pop_genetic_values_file <- grep(
     "selection_genetic_values",
+    output_files,
+    value = TRUE
+)
+
+combined_selection_gebvs_genetic_values_file <- grep(
+    "combined_selection_gebvs_genetic_values",
     output_files,
     value = TRUE
 )
@@ -602,14 +614,17 @@ if (length(selection_pop_data) != 0) {
 }
 
 ordered_marker_effects <- c()
-training_gebv          <- c()
+training_pop_gebvs          <- c()
 all_validations          <- c()
 combined_gebvs_file      <- c()
 all_gebvs               <- c()
 model_pheno_data       <- c()
 kinship_matrix         <- c()
 training_pop_genetic_values <- c()
-
+selection_pop_genetic_values <- c()
+combined_training_gebvs_genetic_values <- c()
+combined_selection_gebvs_genetic_values <- c()
+trait_adjusted_means_header <- paste0(trait_abbr, "_adjusted_means")
 #additive relationship model
 #calculate the inner products for
 #genotypes (realized relationship matrix)
@@ -618,25 +633,36 @@ kinship_matrix_file <- grep(
     output_files,
     value = TRUE
 )
-kinship_matrix_json_file <- grep("relationship_matrix_json",
-                                 output_files,
-                                 value = TRUE)
 
-trait_kinship_matrix_file <- grep("relationship_matrix_adjusted_table",
-                                  output_files,
-                                  value = TRUE)
+kinship_matrix_json_file <- grep(
+    "relationship_matrix_json",
+    output_files,
+    value = TRUE
+)
 
-trait_kinship_matrix_json_file <- grep("relationship_matrix_adjusted_json",
-                                       output_files, 
-                                       value = TRUE)
+trait_kinship_matrix_file <- grep(
+    "relationship_matrix_adjusted_table",
+    output_files,
+    value = TRUE
+)
 
-inbreeding_file <- grep("inbreeding_coefficients",
-                        output_files,
-                        value = TRUE)
+trait_kinship_matrix_json_file <- grep(
+    "relationship_matrix_adjusted_json",
+    output_files,
+    value = TRUE
+)
 
-average_kinship_file <- grep("average_kinship",
-                             output_files, 
-                             value = TRUE)
+inbreeding_file <- grep(
+    "inbreeding_coefficients",
+    output_files,
+    value = TRUE
+)
+
+average_kinship_file <- grep(
+    "average_kinship",
+    output_files,
+    value = TRUE
+)
 
 inbreeding <- c()
 average_kinship <- c()
@@ -754,26 +780,39 @@ if (length(selection_pop_data) == 0) {
         round(training_model_result$pred, 2)
     )
 
-    colnames(training_pop_genetic_values) <- trait_abbr
+    print(head(training_pop_genetic_values))
+    
+    colnames(training_pop_genetic_values) <- trait_adjusted_means_header
     training_pop_genetic_values <- training_pop_genetic_values %>%
-        arrange(across(trait_abbr, desc))
+        arrange(across(trait_adjusted_means_header, desc))
+    
+    print(head(training_pop_genetic_values))
 
-    training_gebv    <- training_model_result$g
+    training_pop_genetic_values <- rownames_to_column(
+        training_pop_genetic_values,
+        var = "genotypes"
+    )
+
+    print(head(training_pop_genetic_values))
+
+    training_pop_gebvs <- training_model_result$g
     training_gebv_pev <- training_model_result$PEV
     training_gebv_stderr  <- sqrt(training_gebv_pev)
     training_gebv_stderr  <- data.frame(round(training_gebv_stderr, 2))
 
-    training_gebv <- data.frame(round(training_gebv, 2))
+    training_pop_gebvs <- data.frame(round(training_pop_gebvs, 2))
 
     colnames(training_gebv_stderr) <- c("SE")
-    colnames(training_gebv) <- trait_abbr
+    colnames(training_pop_gebvs) <- trait_abbr
 
     training_gebv_stderr <- rownames_to_column(training_gebv_stderr,
                                                var = "genotypes")
 
-    training_gebv   <- rownames_to_column(training_gebv, var = "genotypes")
+    training_pop_gebvs   <- rownames_to_column(training_pop_gebvs, var = "genotypes")
 
-    training_gebv_stderr <- full_join(training_gebv, training_gebv_stderr)
+    training_gebv_stderr <- full_join(training_pop_gebvs, training_gebv_stderr)
+
+
 
     training_gebv_stderr <-  training_gebv_stderr %>%
         arrange(across(trait_abbr, desc))
@@ -781,8 +820,16 @@ if (length(selection_pop_data) == 0) {
     training_gebv_stderr <- column_to_rownames(training_gebv_stderr,
                                                var = "genotypes")
 
-    training_gebv <- training_gebv %>% arrange(across(trait_abbr, desc))
-    training_gebv <- column_to_rownames(training_gebv, var = "genotypes")
+    training_pop_gebvs <- training_pop_gebvs %>% arrange(across(trait_abbr, desc))
+
+    if (!is.null(training_pop_genetic_values) &&
+    !is.null(training_pop_gebvs)) {
+    combined_training_gebvs_genetic_values <- inner_join(training_pop_gebvs,
+        training_pop_genetic_values,
+        by = 'genotypes')
+    }
+
+    training_pop_gebvs <- column_to_rownames(training_pop_gebvs, var = "genotypes")
 
     pheno_trait_for_mixed_solve <- data.matrix(pheno_trait_for_mixed_solve)
     geno_data_filtered_genotypes <- data.matrix(geno_data_filtered_genotypes)
@@ -837,7 +884,7 @@ if (length(selection_pop_data) == 0) {
             rownames(combined_gebvs) <- combined_gebvs[, 1]
             combined_gebvs[, 1]       <- NULL
 
-            all_gebvs <- merge(combined_gebvs, training_gebv,
+            all_gebvs <- merge(combined_gebvs, training_pop_gebvs,
                 by = 0,
                 all = TRUE
             )
@@ -996,18 +1043,22 @@ if (length(selection_pop_data) != 0) {
         round(selection_prediction_result$pred, 2)
     )
 
-    colnames(selection_pop_genetic_values) <- trait_abbr
+    colnames(selection_pop_genetic_values) <- trait_adjusted_means_header
     selection_pop_genetic_values <- rownames_to_column(
         selection_pop_genetic_values,
         var = "genotypes"
     )
+
+    selection_pop_genetic_values <-  selection_pop_genetic_values %>%
+        filter(genotypes %in%
+                   selection_pop_genotypes)
 
     selection_pop_genetic_values <- selection_pop_genetic_values %>%
         filter(genotypes %in%
                    selection_pop_genotypes)
 
     selection_pop_genetic_values <- selection_pop_genetic_values %>%
-        arrange(across(all_of(trait_abbr), desc))
+        arrange(across(all_of(trait_adjusted_means_header), desc))
 
     selection_pop_gebvs <- round(data.frame(selection_prediction_result$g), 2)
     colnames(selection_pop_gebvs) <- trait_abbr
@@ -1043,6 +1094,14 @@ if (length(selection_pop_data) != 0) {
     selection_pop_gebvs <- selection_pop_gebvs %>%
         arrange(across(all_of(trait_abbr), desc))
 
+    
+    if (!is.null(selection_pop_genetic_values) &&
+        !is.null(selection_pop_gebvs)) {
+        combined_selection_gebvs_genetic_values <- inner_join(selection_gebvs,
+        selection_pop_genetic_values, 
+        by = 'genotypes')
+    }
+
     selection_pop_gebvs <- column_to_rownames(
         selection_pop_gebvs,
         var = "genotypes"
@@ -1057,6 +1116,11 @@ if (length(selection_pop_data) != 0) {
     )
 }
 
+
+
+print(head(combined_training_gebvs_genetic_values))
+
+print(head(combined_selection_gebvs_genetic_values))
 
 if (!is.null(selection_pop_gebvs) && length(selection_pop_gebvs_file) != 0)  {
     fwrite(
@@ -1077,13 +1141,31 @@ if (!is.null(training_pop_genetic_values) &&
         sep   = "\t",
         quote = FALSE,
     )
+
+    fwrite(
+        combined_training_gebvs_genetic_values,
+        file  = combined_training_gebvs_genetic_values_file,
+        row.names = TRUE,
+        sep   = "\t",
+        quote = FALSE,
+    )
 }
 
+
+
 if (!is.null(selection_pop_genetic_values) &&
-        length(selection_pop_genetic_values_file) != 0)  {
+    length(selection_pop_genetic_values_file) != 0)  {
     fwrite(
         selection_pop_genetic_values,
         file  = selection_pop_genetic_values_file,
+        row.names = TRUE,
+        sep   = "\t",
+        quote = FALSE,
+    )
+
+    fwrite(
+        combined_selection_gebvs_genetic_values,
+        file  = combined_selection_gebvs_genetic_values_file,
         row.names = TRUE,
         sep   = "\t",
         quote = FALSE,
@@ -1111,9 +1193,9 @@ if (!is.null(ordered_marker_effects)) {
 }
 
 
-if (!is.null(training_gebv)) {
+if (!is.null(training_pop_gebvs)) {
     fwrite(
-        training_gebv,
+        training_pop_gebvs,
         file  = blup_file,
         row.names = TRUE,
         sep   = "\t",
@@ -1124,7 +1206,7 @@ if (!is.null(training_gebv)) {
 if (length(combined_gebvs_file) != 0 ) {
     if (file.info(combined_gebvs_file)$size == 0) {
         fwrite(
-            training_gebv,
+            training_pop_gebvs,
             file  = combined_gebvs_file,
             row.names = TRUE,
             sep   = "\t",
