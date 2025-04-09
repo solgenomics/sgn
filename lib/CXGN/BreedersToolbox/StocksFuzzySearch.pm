@@ -70,7 +70,7 @@ sub get_matches {
         WHERE 
             LENGTH(stock.uniquename) BETWEEN ? AND ?
             AND LOWER(stock.uniquename) % ?
-            AND similarity(LOWER(stock.uniquename), ?) > 0.5
+            AND similarity(LOWER(stock.uniquename), ?) >= 0.57
         ORDER BY similarity_score DESC
         LIMIT 5
     ";
@@ -96,25 +96,30 @@ sub get_matches {
         my $exact_matches = $exact_sth->fetchall_arrayref({});
         #print STDERR Dumper($exact_matches);
 
+        
         if (@$exact_matches) {
             foreach my $match (@$exact_matches) {
-                push @found_stocks, { matched_string => $stock_name, unique_name => $match->{uniquename} };
+                push @found_stocks, {
+                    matched_string => $stock_name,
+                    unique_name    => $match->{uniquename}
+                };
             }
         } else {
             $fuzzy_sth->execute($lc_stockname, $min_len, $max_len, $lc_stockname, $lc_stockname);
             my $matches = $fuzzy_sth->fetchall_arrayref({});
-            #print STDERR Dumper($matches);
 
             if (@$matches) {
+                my @fuzzy_matches;
                 foreach my $match (@$matches) {
-                    push @fuzzy_stocks, {
-                        name => $stock_name,
-                        matches => [{
-                            name => $match->{uniquename},
-                            distance => $match->{similarity_score}
-                        }]
+                    push @fuzzy_matches, {
+                        name     => $match->{uniquename},
+                        distance => $match->{similarity_score}
                     };
                 }
+                push @fuzzy_stocks, {
+                    name    => $stock_name,
+                    matches => \@fuzzy_matches
+                };
             } else {
                 push @absent_stocks, $stock_name;
             }
@@ -126,9 +131,10 @@ sub get_matches {
         $results{'error'} = $error;
     }
 
-    $results{'found'} = \@found_stocks;
-    $results{'fuzzy'} = \@fuzzy_stocks;
+    $results{'found'}  = \@found_stocks;
+    $results{'fuzzy'}  = \@fuzzy_stocks;
     $results{'absent'} = \@absent_stocks;
+
     return \%results;
 }
 
