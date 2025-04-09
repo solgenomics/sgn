@@ -100,6 +100,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     $c->stash->{method_select} = $html_hash{'method_ontology'};
     $c->stash->{unit_select} = $html_hash{'unit_ontology'};
     $c->stash->{trait_select} = $html_hash{'trait_ontology'};
+    $c->stash->{meta_select} = $html_hash{'meta_ontology'};
 
     $c->stash->{composable_cvs} = $c->config->{composable_cvs};
     $c->stash->{composable_cvs_allowed_combinations} = $c->config->{composable_cvs_allowed_combinations};
