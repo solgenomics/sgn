@@ -299,10 +299,18 @@ function jqueryStuff() {
                             my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
                             $image_url = $image->get_image_url('small');
                         }
-                        
-                        </%perl>
 
-                        <img src="<% $image_url %>" alt="No accession image to display" class="img-responsive" style="max-width: 100%; height: auto;" />
+                        if ($image_url ne '/data/images/image_files_test/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/small.jpg') {
+                        </%perl>                      
+                        <img src="<% $image_url %>" class="img-responsive" style="max-width: 100%; height: auto;" />
+                        <%perl>
+                            } else { 
+                        </%perl>
+                        <p>No accession image to display</p>
+                        <%perl>
+                            } 
+                        </%perl>
+                        
                     </div>
                     <br /><br />
                 </div>
