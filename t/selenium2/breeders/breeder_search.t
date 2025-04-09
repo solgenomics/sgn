@@ -2,7 +2,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests' => 113;
+use Test::More 'tests' => 126;
 
 use SGN::Test::WWW::WebDriver;
 use Selenium::Remote::WDKeys 'KEYS';
