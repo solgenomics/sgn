@@ -75,7 +75,7 @@ sub get_variables {
                   JOIN dbxref USING(dbxref_id)
                   JOIN db USING(db_id)
                   JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
-                  WHERE cv_id = ? AND cvterm_relationship.type_id = ? AND is_obsolete = ?
+                  WHERE cv_id = ? AND is_subject.type_id = ? AND is_obsolete = ?
                   GROUP BY 1,2,3
                   ORDER BY 3";
 
