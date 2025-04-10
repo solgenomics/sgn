@@ -223,7 +223,15 @@ has 'offset' => (
     is => 'rw',
 );
 
+# when true, include both non-obsolete and obsolete stocks
 has 'include_obsolete' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0
+);
+
+# when true, include only obsolete stocks
+has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
     default => 0
@@ -249,6 +257,21 @@ has 'external_ref_id_list' => (
 has 'external_ref_source_list' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
+);
+
+has 'acquisition_date' => (
+    isa => 'Str|Int|Undef',
+    is => 'rw'
+);
+
+has 'min_acquisition_date' => (
+    isa => 'Str|Int|Undef',
+    is => 'rw'
+);
+
+has 'max_acquisition_date' => (
+    isa => 'Str|Int|Undef',
+    is => 'rw'
 );
 
 sub search {
@@ -281,6 +304,9 @@ sub search {
     my @external_ref_source_array = $self->external_ref_source_list ? @{$self->external_ref_source_list} : ();
     my $limit = $self->limit;
     my $offset = $self->offset;
+    my $acquisition_date = $self->acquisition_date;
+    my $min_acquisition_date = $self->min_acquisition_date;
+    my $max_acquisition_date = $self->max_acquisition_date;
 
     my $advanced_search = 0; #this is for joining nd_experiment and its related tables
 
@@ -490,15 +516,64 @@ sub search {
     }
     if ( !$and_conditions) {  $and_conditions = [ { 'me.type_id' => { '!=' => undef } } ] };
 
+    my $acq_date_join = $acquisition_date || $min_acquisition_date || $max_acquisition_date ? 'stockprops' : '';
+    my $acq_date_conditions = $acquisition_date || $min_acquisition_date || $max_acquisition_date ? { "-and" => [] } : {};
+    if ( $acquisition_date ) {
+        my $f = {
+            "-or" => [
+                {
+                    "to_char(me.create_date, 'YYYY-MM-DD')" => $acquisition_date #Use ISO Date format
+                },
+                {
+                    'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
+                    'stockprops_2.value' => $acquisition_date
+                }
+            ]
+        };
+        push(@{$acq_date_conditions->{'-and'}}, $f)
+    }
+    if ( $min_acquisition_date ) {
+        my $f = {
+            "-or" => [
+                {
+                    "to_char(me.create_date, 'YYYY-MM-DD')" => { '>=', $min_acquisition_date } #Use ISO Date format
+                },
+                {
+                    'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
+                    'stockprops_2.value' => { '>=', $min_acquisition_date }
+                }
+            ]
+        };
+        push(@{$acq_date_conditions->{'-and'}}, $f)
+    }
+    if ( $max_acquisition_date ) {
+        my $f = {
+            "-or" => [
+                {
+                    "to_char(me.create_date, 'YYYY-MM-DD')" => { '<=', $max_acquisition_date } #Use ISO Date format
+                },
+                {
+                    'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
+                    'stockprops_2.value' => { '<=', $max_acquisition_date }
+                }
+            ]
+        };
+        push(@{$acq_date_conditions->{'-and'}}, $f)
+    }
+
     #$schema->storage->debug(1);
     my $search_query = {
         -and => [
             $or_conditions,
             $and_conditions,
+            $acq_date_conditions
         ],
     };
     if (!$self->include_obsolete) {
         $search_query->{'me.is_obsolete'} = 'f';
+    }
+    if ($self->is_obsolete) {
+        $search_query->{'me.is_obsolete'} = 't';
     }
     if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
@@ -528,14 +603,15 @@ sub search {
     print STDERR "**stock search q " . Dumper($search_query)  ."\n";
     print STDERR "***stock_join= " . Dumper($stock_join) ." \n\n";
     my $rs = $schema->resultset("Stock::Stock")->search(
-    $search_query,
-    {
-        join => ['type', 'organism', 'stockprops', $stock_join],
-        '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
-        '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
-        order_by  => 'me.name',
-        distinct=>1
-    });
+        $search_query,
+        {
+            join => ['type', 'organism', 'stockprops', $stock_join, $acq_date_join],
+            '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
+            '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
+            order_by  => 'me.name',
+            distinct=>1
+        }
+    );
 
     my $records_total = $rs->count();
     print STDERR "total records: ".$records_total;
@@ -622,10 +698,10 @@ ORDER BY organism_id ASC;";
         push @{$organism_props{$organism_id}->{$prop_type}}, $prop_value;
     }
 
-    # Get additional stock properties (pedigree, synonyms, donor info)
+    # Get additional stock properties (pedigree, synonyms, donor info, create date in ISO Date format)
     my $stock_query = "SELECT stock.stock_id, stock.uniquename, stock.organism_id,
                mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
-               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name
+               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name, to_char(stock.create_date, 'YYYY-MM-DD')
         FROM stock
         LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
         LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
@@ -653,6 +729,7 @@ ORDER BY organism_id ASC;";
         my @donor_institutes = keys %{$donor_inst_json};
         my @donor_puis = keys %{$donor_pui_json};
         my $population_name = $r[10] || undef;
+        my $create_date = $r[11];
 
         # add stock props to the result hash
         $result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
@@ -676,6 +753,7 @@ ORDER BY organism_id ASC;";
         $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
 
         $result_hash{$stock_id}{population_name} = $population_name;
+        $result_hash{$stock_id}{create_date} = $create_date;
     }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){

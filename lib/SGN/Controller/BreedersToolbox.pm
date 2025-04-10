@@ -167,7 +167,8 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
     $c->stash->{is_curator} = $c->user->check_roles("curator");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $person_roles = CXGN::People::Roles->new({ people_schema=>$people_schema });
     my $ascii_chars = 1;
     my $breeding_programs = $person_roles->get_breeding_program_roles($ascii_chars);
 
@@ -338,6 +339,32 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     $c->stash->{all_deleted_nirs_files} = $all_data->{deleted_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_nirs.mas';
+
+}
+
+sub manage_transcriptomics :Path("/breeders/transcriptomics") Args(0) {
+    my $self =shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    my @file_types = ( 'transcriptomics spreadsheet' );
+    my $all_data = $self->get_file_data($c, \@file_types, 1);
+    my $data = $self->get_file_data($c, \@file_types, 0);
+
+    my $sampling_facilities = $c->config->{sampling_facilities};
+    my @sampling_facilities = split ',',$sampling_facilities;
+
+    $c->stash->{sampling_facilities} = \@sampling_facilities;
+    $c->stash->{transcriptomics_files} = $data->{files};
+    $c->stash->{deleted_transcriptomics_files} = $data->{deleted_files};
+    $c->stash->{all_transcriptomics_files} = $all_data->{files};
+    $c->stash->{all_deleted_transcriptomics_files} = $all_data->{deleted_files};
+
+    $c->stash->{template} = '/breeders_toolbox/manage_transcriptomics.mas';
 
 }
 

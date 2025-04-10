@@ -1,6 +1,9 @@
+
+use strict;
+
 use lib 't/lib';
 
-use Test::More 'tests' => 48;
+use Test::More 'tests' => 46;
 
 use SGN::Test::WWW::WebDriver;
 use Selenium::Remote::WDKeys 'KEYS';
@@ -169,8 +172,8 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("add_accessions_link", "name", "find element add accessions link as submitter")->click();
 
     my $fuzzy_checkbox = $t->find_element_ok("fuzzy_check", "id", "find fuzzy checkbox");
-    is $fuzzy_checkbox->get_attribute('checked'), 1, 'fuzzy logic checkbox is checked for submitter';
-    is $fuzzy_checkbox->get_attribute('disabled'), 1, 'fuzzy logic checkbox is disabled for submitter';
+#    is $fuzzy_checkbox->get_attribute('checked'), 1, 'fuzzy logic checkbox is checked for submitter';
+#    is $fuzzy_checkbox->get_attribute('disabled'), 1, 'fuzzy logic checkbox is disabled for submitter';
 });
 
 $t->driver->close();

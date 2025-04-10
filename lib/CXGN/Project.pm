@@ -1084,6 +1084,40 @@ sub set_breeding_program {
 	return {};
 }
 
+=head2 accessors get_breeding_program_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_breeding_program_id {
+
+    my $self = shift;
+
+    my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search({
+        subject_project_id => $self->get_trial_id(),
+        type_id => $self->get_breeding_program_trial_relationship_cvterm_id(),
+    });
+    if ($rs->count() == 0) {
+        return;
+    }
+
+    my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search({
+        project_id => $rs->first()->object_project_id()
+    });
+    if ($bp_rs->count > 0) {
+        return $bp_rs->first()->project_id();
+    }
+
+    return;
+}
+
+
 
 =head2 accessors get_name(), set_name()
 
@@ -5434,6 +5468,16 @@ sub delete_empty_transformation_project {
     }
 }
 
+sub get_create_date {
+    my $self = shift;
+    my $q = "select create_date from project where project_id=?";
+    my $h = $self->bcs_schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+
+    my ($create_date) = $h->fetchrow_array();
+    return $create_date;
+}
+
 =head2 function transformation_id_count()
 
  Usage:
@@ -5462,8 +5506,192 @@ sub transformation_id_count {
     return $count;
 }
 
+=head2 class function get_recently_added_trials()
 
+ Usage:   my @trials = CXGN::Project::get_recently_added_trials()
+ Params:  $interval - one of day, week, month, year
+ Returns: a list of trials, consisting of listrefs listing
+          trial_name (with link), trial_type, breeding program 
+          (with link)
 
+=cut
+
+sub get_recently_added_trials {
+    my $bcs_schema = shift;
+    my $phenome_schema = shift;
+    my $people_schema = shift;
+    my $metadata_schema = shift;
+    my $interval = shift;
+    my $limit = shift || 10;
+    
+    if (! grep($interval, qw| day week month year | )) {
+	print STDERR "Interval $interval not recognized, aborting query\n";
+	return;
+    }
+
+    my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
+    
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute($limit);
+    
+    my @recent_trials = ();
+    while (my ($trial_id) = $h->fetchrow_array()) {
+	print STDERR "Formatting entry with trial id $trial_id...\n";
+	my $t = CXGN::Trial->new({ bcs_schema => $bcs_schema, phenome_schema => $phenome_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, trial_id => $trial_id });
+	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
+	my $trial_type = ref($t);
+	$trial_type =~ s/^CXGN\:\://g;
+	
+	my $breeding_program = $t->get_breeding_program();
+	my $breeding_program_id = $t->get_breeding_program_id();
+	my $create_date = $t->get_create_date();
+	my $breeding_program_link = "<a href=\"/breeders/program/".$breeding_program_id."\">$breeding_program</a>";
+       push @recent_trials, [ $trial_link, $trial_type, $breeding_program_link, $create_date ];
+    }
+    return \@recent_trials;
+}
+
+=head2 class function get_recently_modified_trials()
+
+  Usage:   my $accs = $p->get_recenlty_modified_trials($bcs_schema, $interval, $limit)
+  Params:  $bcs_schema - Bio::Chado::Schema schema
+           $interval - day, week, month, year
+           $limit - the maximum number of accessions to report (default 10)
+
+  Returns: list ref of [ $trial_link, $trial_type, $breeding_program, $create_date ]
+
+=cut
+
+sub get_recently_modified_trials {
+    my $bcs_schema = shift;
+    my $phenome_schema = shift;
+    my $people_schema = shift;
+    my $metadata_schema = shift;
+    my $interval = shift;
+    my $limit = shift || 10;
+
+    if (! grep($interval, qw| day week month year | )) {
+	print STDERR "Interval $interval not recognized, aborting query\n";
+	return;
+    }
+        
+    #print STDERR "INTERVAL is $interval\n";
+    my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc limit ? ";
+    
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute($limit);
+    
+    my @recent_trials;
+    while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
+	print STDERR "Formatting entry with trial id $trial_id...\n";
+	my $t = CXGN::Trial->new( { bcs_schema => $bcs_schema, phenome_schema => $phenome_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, trial_id => $trial_id });
+	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
+	my $trial_type = ref($t);
+	$trial_type =~ s/^CXGN\:\://g;
+	
+	my $breeding_program = $t->get_breeding_program();
+	my $breeding_program_id = $t->get_breeding_program_id();
+
+	my $breeding_program_link = "<a href=\"/breeders/program/".$breeding_program_id."\">$breeding_program</a>";
+       push @recent_trials, [ $trial_link, $trial_type, $breeding_program_link, $create_date ];
+    }
+    return \@recent_trials;
+}
+
+=head2 class function get_recently_added_accessions()
+
+  Usage:   my $accs = CXGN::Project::get_recenlty_added_accessions($bcs_schema, $interval, $limit)
+  Params:  $bcs_schema - Bio::Chado::Schema object
+           $interval - day, week, month, year
+           $limit - the maximum number of accessions to report (default 10)
+
+  Returns: list ref of [ $uniquename, $create_date ]
+
+=cut
+
+sub get_recently_added_accessions {
+    my $bcs_schema = shift;
+    my $interval = shift;
+    my $limit = shift || 10;
+
+    if (! grep($interval, qw| day week month year | )) {
+	print STDERR "Interval $interval not recognized, aborting query\n";
+	return;
+    }
+    
+    my $q = "select stock.stock_id from stock where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
+
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute($limit);
+
+    my @stock_table;
+    while (my ($stock_id) = $h->fetchrow_array()) {
+	my $s = CXGN::Stock->new( { schema => $bcs_schema, stock_id => $stock_id });
+	my $uniquename = $s->uniquename();
+	my $create_date = $s->create_date();
+
+	push @stock_table, [ $uniquename, $create_date ];
+    }
+
+    return \@stock_table;
+    
+}
+
+=head2 function update_metadata()
+
+ Usage:         $trial->update_metadata(\%details);
+ Desc:          Update the trial metadata details using the provided hashref of properties
+ Ret:           An error message if an error was encountered
+ Args:          details = a hashref of trial metadata properties
+ Side Effects:
+ Example:       my %details = ( location => 'New Location, ST', planting_date => '2024-01-01' );
+                $trial->update_metadata(\%details);
+
+=cut
+
+sub update_metadata {
+    my $self = shift;
+    my $details = shift;
+
+    eval {
+        if ($details->{name}) { $self->set_name($details->{name}); }
+        if ($details->{breeding_program}) { $self->set_breeding_program($details->{breeding_program}); }
+        if ($details->{location}) { $self->set_location($details->{location}); }
+        if ($details->{year}) { $self->set_year($details->{year}); }
+        if ($details->{type}) { $self->set_project_type($details->{type}); }
+        if ($details->{design_type}) { $self->set_design_type($details->{design_type}); }
+        if ($details->{planting_date}) {
+            if ($details->{planting_date} eq 'remove') { $self->remove_planting_date($self->get_planting_date()); }
+            else { $self->set_planting_date($details->{planting_date}); }
+        }
+        if ($details->{transplanting_date}) {
+            if ($details->{transplanting_date} eq 'remove') { $self->remove_transplanting_date($self->get_transplanting_date()); }
+            else { $self->set_transplanting_date($details->{transplanting_date}); }
+        }
+        if ($details->{harvest_date}) {
+            if ($details->{harvest_date} eq 'remove') { $self->remove_harvest_date($self->get_harvest_date()); }
+            else { $self->set_harvest_date($details->{harvest_date}); }
+        }
+        if ($details->{description}) { $self->set_description($details->{description}); }
+        if ($details->{field_size}) { $self->set_field_size($details->{field_size}); }
+        if ($details->{plot_width}) { $self->set_plot_width($details->{plot_width}); }
+        if ($details->{plot_length}) { $self->set_plot_length($details->{plot_length}); }
+        if ($details->{plan_to_genotype}) { $self->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
+        if ($details->{plan_to_cross}) { $self->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
+        if ($details->{plate_format}) { $self->set_genotyping_plate_format($details->{plate_format}); }
+        if ($details->{plate_sample_type}) { $self->set_genotyping_plate_sample_type($details->{plate_sample_type}); }
+        if ($details->{facility}) { $self->set_genotyping_facility($details->{facility}); }
+        if ($details->{facility_submitted}) { $self->set_genotyping_facility_submitted($details->{facility_submitted}); }
+        if ($details->{facility_status}) { $self->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
+        if ($details->{raw_data_link}) { $self->set_raw_data_link($details->{raw_data_link}); }
+    };
+    if ($@) {
+        return "An error occurred setting the new trial details of trial " . $self->get_name() . ": $@";
+    }
+}
 
 1;
 

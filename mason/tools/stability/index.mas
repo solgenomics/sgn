@@ -26,7 +26,7 @@
 <& /page/page_title.mas, title=>"Stability" &>
 
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/stability" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
   <div class="form-group form-inline">
     <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
@@ -51,6 +51,9 @@
         <br>
         </div>
       <div class = "form-group form-inline">
+       <input type="checkbox" id="dataset_trait_outliers" />
+       <label>Exclude dataset outliers &nbsp; </label>
+       <br>      
        <label for = select_method>Available Methods: </label>
        <select class="form-control input-sm" id="select_method">
         <option selected value="method_empty"></option>
@@ -135,9 +138,21 @@
 
 <script>
 
+var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+if (require_login === '1'){
+    auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+    if (!auth_token){ alert("Login required to display heritability"); }
+}
+
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('dataset_trait_outliers').checked = true;
+}
+
 jQuery(document).ready(function() {
   if (isLoggedIn()) {
-    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
+    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox", "analysis_type":"Stability", "show_compatibility":"yes"});
   }
   else {
     alert('You must be logged in to use Stability');
@@ -313,7 +328,7 @@ jQuery('#runAMMI').click( function () {
             var trait_id = $('#pheno_select').val();
             var method_id = $('#select_method').val();
             var imput_id = $('#select_imput').val();
-            var dataset_trait_outliers = 0;
+            var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
             $.ajax({
                 url: '/ajax/stability/generate_results',
                 data: {

@@ -9,20 +9,49 @@ my $trial = CXGN::Trial->new( { bcs_schema => $schema, ... , trial_id => $trial_
 
 If $trial_id is a phenotyping trial, the type of object returned will be CXGN::PhenotypingTrial.
 
+If $trial_id is a genotyping trial, the type of object returned will be CXGN::GenotypingTrial.
+
+If $trial_id is a crossing trial, the type of object returned will be CXGN::CrossingTrial.
+
+If $trial_id is an analysis, the type of object returned will be CXGN::Analysis.
+
+=over 6
+
+=item Note:
+
+if there is a chance that a CXGN::Analysis object will be created, you also need to
+supply a people_schema, phenome_schema, and metadata_schema object to the constructor
+
+=back
+
+
+Inheritance structure of Trial objects:
+
+      CXGN::Project
+      |
+      |--CXGN::PhenotypingTrial
+      |  |
+      |  |--CXGN::GenotypingTrial
+      |  |
+      |  ---CXGN::CrossingTrial
+      |
+      ---CXGN::Analysis
+
+
 =head1 AUTHOR
 
-Lukas Mueller <lam87@cornell.edu>
+Lukas Mueller <lam87@cornell.edu> and many others
 
 =head1 METHODS
 
 =cut
+
 
 package CXGN::Trial;
 
 use Moose;
 use Data::Dumper;
 use Try::Tiny;
-use Data::Dumper;
 use CXGN::Trial::Folder;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::TrialLayoutDownload;
@@ -33,44 +62,6 @@ use CXGN::Calendar;
 use JSON;
 use File::Basename qw | basename dirname|;
 use CXGN::BrAPI::v2::ExternalReferences;
-
-=head1 NAME
-
-
-=head1 DESCRIPTION
-
-If $trial_id is a genotyping trial, the type of object returned will be CXGN::GenotypingTrial.
-
-If $trial_id is a crossing trial, the type of object returned will be CXGN::CrossingTrial.
-
-If $trial_id is an analysis, the type of object returned will be CXGN::Analysis.
-
-(you get the idea).
-
-Inheritance structure of Trial objects:
-
-CXGN::Trial - Factory object (for backwards compatibility)
-
-CXGN::Project
-|
----CXGN::PhenotypingTrial
-|  |
-|  ---CXGN::GenotypingTrial
-|  |
-|  ---CXGN::CrossingTrial
-|
----CXGN::Analysis
-
-=head1 AUTHOR
-
-Lukas Mueller <lam87@cornell.edu>
-
-Based on work by the entire group :-)
-
-=cut
-
-package CXGN::Trial;
-
 use CXGN::PhenotypingTrial;
 use CXGN::GenotypingTrial;
 use CXGN::CrossingTrial;
@@ -80,11 +71,12 @@ use CXGN::ManagementFactor;
 use CXGN::GenotypeDataProject;
 use CXGN::AerialImagingEventBandProject;
 use CXGN::AerialImagingEventProject;
-use Data::Dumper;
+
 
 sub new {
     my $class = shift;
     my $args = shift;
+
     my $schema = $args->{bcs_schema};
     my $trial_id = $args->{trial_id};
 
@@ -98,14 +90,14 @@ sub new {
     while (my $trial_row = $trial_rs->next()) {
         my $name = $trial_row->type()->name();
         my $val = $trial_row->value();
-        # print STDERR Dumper [$name, $val];
+
         if ($val eq "genotyping_plate") {
             return CXGN::GenotypingTrial->new($args);
         }
         elsif ($name eq "crossing_trial") {
             return CXGN::CrossingTrial->new($args);
         }
-        elsif ($name eq "analysis") {
+        elsif ($name eq "analysis_experiment") {
             return CXGN::Analysis->new($args);
         }
         elsif ($val eq "treatment") {

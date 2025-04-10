@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::TrialMetadata;
 use Moose;
 use Data::Dumper;
 use Bio::Chado::Schema;
+use CXGN::People::Schema;
 use CXGN::Trial;
 use CXGN::Trial::TrialLookup;
 use CXGN::Trial::Search;
@@ -61,12 +62,15 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{schema} =  $bcs_schema;
     $c->stash->{trial} = CXGN::Trial->new({
         bcs_schema => $bcs_schema,
         metadata_schema => $metadata_schema,
         phenome_schema => $phenome_schema,
+        people_schema => $people_schema,
         trial_id => $trial_id
     });
 
@@ -282,45 +286,12 @@ sub trial_details_POST  {
     print STDERR "logged in user TrialMetadata.pm BEFORE EVAL: ".Dumper($logged_in_user_arr)."\n";
 
 
-    eval {
-        if ($details->{name}) { $trial->set_name($details->{name}); }
-        if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
-        if ($details->{location}) { $trial->set_location($details->{location}); }
-        if ($details->{year}) { $trial->set_year($details->{year}); }
-        if ($details->{type}) { $trial->set_project_type($details->{type}); }
-        if ($details->{planting_date}) {
-        if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
-        else { $trial->set_planting_date($details->{planting_date}); }
-    }
-        if ($details->{transplanting_date}) {
-            if ($details->{transplanting_date} eq 'remove') { $trial->remove_transplanting_date($trial->get_transplanting_date()); }
-            else { $trial->set_transplanting_date($details->{transplanting_date}); }
-        }
-        if ($details->{harvest_date}) {
-            if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
-            else { $trial->set_harvest_date($details->{harvest_date}); }
-        }
-
-        if ($details->{description}) { $trial->set_description($details->{description}); }
-        if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
-        if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
-        if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
-        if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
-        if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
-    };
-
-    if ($details->{plate_format}) { $trial->set_genotyping_plate_format($details->{plate_format}); }
-    if ($details->{plate_sample_type}) { $trial->set_genotyping_plate_sample_type($details->{plate_sample_type}); }
-    if ($details->{facility}) { $trial->set_genotyping_facility($details->{facility}); }
-    if ($details->{facility_submitted}) { $trial->set_genotyping_facility_submitted($details->{facility_submitted}); }
-    if ($details->{facility_status}) { $trial->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
-    if ($details->{raw_data_link}) { $trial->set_raw_data_link($details->{raw_data_link}); }
-
-    if ($@) {
-	    $c->stash->{rest} = { error => "An error occurred setting the new trial details: $@" };
+    my $error = $trial->update_metadata($details);
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
     }
     else {
-	    $c->stash->{rest} = { success => 1 };
+        $c->stash->{rest} = { success => 1 };
     }
 }
 
@@ -352,6 +323,10 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $display = $c->req->param('display');
     my $trait = $c->req->param('trait');
+
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
+    my $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
+    
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
         search_type => "Native",
@@ -362,6 +337,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
 	end_date => $end_date,
 	include_dateless_items => $include_dateless_items,
     );
+
     my @data = $phenotypes_search->get_phenotype_matrix();
     $c->stash->{rest} = {
       status => "success",
@@ -434,23 +410,33 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
         $order_by_additional = ' ,accession.uniquename DESC';
     }
+
     if ($display eq 'analysis_instance') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
-        # my $plots = $c->stash->{trial}->get_plots();
-        # $total_complete_number = scalar (@$plots);
     }
-    my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    
     my $trial_stock_type_id;
+    
     if ($trial_stock_type eq 'family_name') {
         $trial_stock_type_id = $family_name_type_id;
     } elsif ($trial_stock_type eq 'cross') {
         $trial_stock_type_id = $cross_type_id;
-    } else {
-        $trial_stock_type_id = $accesion_type_id;
-    }
+    } 
+    else {
+        $trial_stock_type_id = $accession_type_id;
+        if ($display eq 'analysis_instance') {
+            my $analysis_stock_type = $self->get_analysis_instance_stock_type($c, $trial_id);
+            if ($analysis_stock_type eq 'analysis_result') {
+                my $analysis_result_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_result', 'stock_type')->cvterm_id();
+                $trial_stock_type_id = $analysis_result_type_id;
+            } 
+        }    
+    }    
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -477,12 +463,11 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
         $order_by_additional;");
-
+    
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     my @phenotype_data;
-
     my @numeric_trait_ids;
 
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
@@ -2344,6 +2329,8 @@ sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
         include_measured => "false"
     });
     my $output = $trial_layout_download->get_layout_output();
+
+    print STDERR "\nDone getting layout output CXGN::Trial::TrialLayoutDownload..\n";
 
     $c->stash->{rest} = $output;
 }
@@ -4845,7 +4832,7 @@ sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/do
     my $tempfile = $c->req->param('file');
 
     $c->res->content_type('application/vnd.ms-excel');
-    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xls"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xlsx"]);
     my $output = read_file($tempfile);
     $c->res->body($output);
 }
@@ -4945,6 +4932,47 @@ sub upload_entry_number_template_POST : Args(0) {
         warning => $parse_warnings->{'warning_messages'}
     };
     return;
+}
+
+sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    my $trial_id = $c->req->param("trial_id");
+
+    if (! $trial_id) {
+	$c->stash->{rest} = { error_string => 'A trial id must be provided to delete the entry numbers.' };
+	return;
+    }
+    
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
+        return;
+    }
+
+    if (!$c->user()->check_roles("curator")) {
+	$c->stash->{rest} = {error_string => "Your account must have the curator role to delete entry numbers" };
+	return;
+    }
+    
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $project_entry_number_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_entry_number_map', 'project_property')->cvterm_id();
+
+    
+    my $row = $schema->resultset("Project::Projectprop")->find( { type_id => $project_entry_number_map_cvterm_id, project_id => $trial_id });
+
+    eval { 
+	$row->delete();
+    };
+
+    if ($@) {
+	$c->stash->{rest} = { error_string => "The following error occurred when trying to delete an entry map: $@\n" };
+	return;
+    }
+    else {
+	$c->stash->{rest} = { success => 1 };
+    }
 }
 
 
@@ -5470,5 +5498,36 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     $c->stash->{rest} = { success => 1 };
 }
 
+sub get_analysis_instance_stock_type {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $project = $schema->resultset('Project::Project')->find({
+        project_id => $trial_id, 
+    });
+
+    my $trial_layout_json_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
+
+    my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_type_id });
+
+    my $design;
+
+    if ($trial_layout_json) {
+        $design = decode_json $trial_layout_json->value;
+    }
+
+    if (keys %{$design}) {
+        my $sample_design_key = (keys %{$design})[0];
+        my $sample_trial_entry = $design->{$sample_design_key};
+
+        if ($sample_trial_entry->{'accession_name'}) {
+            return 'accession';
+        } elsif($sample_trial_entry->{'analysis_result_stock_name'}) {
+            return 'analysis_result';
+        }
+    }
+
+}
 
 1;

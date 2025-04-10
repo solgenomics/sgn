@@ -1,7 +1,8 @@
 <%args>
+
 $transformation_id
 $transformation_name => ''
-$user_id => undef
+$user_role => undef
 $identifier_prefix => ''
 $next_new_transformant => undef
 $last_number => undef
@@ -16,9 +17,17 @@ $name_format => undef
 $program_id
 $program_name
 $source_info
+$stock_type_page
+$identifier_id
+$identifier_name
+$material_id
+$material_name
+$status_display => undef
+$has_associated_transformants => undef
+
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables", "CXGN.Stock", "CXGN.Transformation"] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
@@ -37,7 +46,7 @@ $source_info
                         <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
                         <tr><td><b>Name Format for Transformants</b></td><td><%$name_format%></td></tr>
 %if ($updated_status_type) {
-                        <tr><td><b>Status</b></td><td><%$updated_status_type%></td></tr>
+                        <tr><td><b>Status</b></td><td><%$status_display%></td></tr>
                         <tr><td><b>Updated Status Info</b></td><td><%$updated_status_string%></td></tr>
 %}
 %if ($identifier_link) {
@@ -56,16 +65,53 @@ $source_info
 
 <& /transformation/transformants_section.mas, transformation_id => $transformation_id &>
 <& /transformation/obsoleted_transformants_section.mas, transformation_id => $transformation_id &>
+
+<&| /page/info_section.mas, title=>"Update Status",  collapsible => 1, collapsed=>1 &>
+% if ($user_role eq "curator" ) {
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link_transformation_page" name = "update_status_usage_link">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>
+% if ($updated_status_type) {
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="reverse_status_link_transformation_page" name="reverse_status_link">Reverse Status</button>
+% } else {
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="update_status_link_transformation_page" name="update_status_link">Update Status</button>
+% }
+            </div>
+        </div>
+    </div>
+% } else {
+    You need to be logged in or you do not have sufficient privileges to update status of this tracking identifier.
+% }
+</&>
+
+<&|  /page/info_section.mas, title => "Delete Transformation ID", collapsible => 1, collapsed => 1, subtitle => '<font color="red">Deletion cannot be undone</font>'  &>
+% if ($has_associated_transformants) {
+    <font color="red">This transformation ID has associated transformants. Cannot delete!</font>
+% } else {
+    <button id="delete_transformation_button" class="btn btn-primary">Delete</button>
+% }
+</&>
+
+
 <& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number, name_format => $name_format, program_id => $program_id, program_name => $program_name, source_info => $source_info &>
 <& /transformation/add_transformants_using_list_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, program_name => $program_name &>
+<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id, material_id => $material_id, material_name => $material_name, updated_status_type => $updated_status_type, program_name => $program_name, stock_type_page => $stock_type_page &>
+<& /tracking_activities/update_status_usage_info_dialog.mas &>
 
 <script>
 
 jQuery(document).ready(function(){
 
+    const transformation_stock_id = "<%$transformation_id%>";
     jQuery('#custom_barcode_link').click(function() {
         location.href = '/tools/label_designer';
     })
+
+    jQuery('#delete_transformation_button').click(function() {
+        deleteTransformationID(transformation_stock_id);
+    })
+
 
 });
 

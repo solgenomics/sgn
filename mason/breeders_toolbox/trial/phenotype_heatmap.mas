@@ -755,38 +755,55 @@ jQuery(document).ready( function() {
     }
 
     function heatmap(selected) {
-        if (FieldMap.heatmap_queried) {
+        jQuery('#working_modal').modal("show");
+        get_heatmap_observations(selected).then((observations) => {
+            jQuery('#working_modal').modal("hide");
+            FieldMap.filter_heatmap(observations);
             FieldMap.load();
-        } else {
-            var observations;
+        }).catch((err) => {
+            jQuery('#working_modal').modal("hide");
+            alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+        });
+    }
+
+    async function get_heatmap_observations(observationVariableDbId, pageSize=5000, page=0, observations=[]) {
+        return new Promise((resolve, reject) => {
+            if ( FieldMap.heatmap_cached_data.hasOwnProperty(observationVariableDbId) ) {
+                return resolve(FieldMap.heatmap_cached_data[observationVariableDbId]);
+            }
+
             jQuery.ajax({
-                headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+                headers: (auth_token) ? {'Authorization': `Bearer ` + auth_token } : {},
                 method: 'GET',
                 url: '/brapi/v2/observations',
                 data: {
+                    observationVariableDbId,
                     studyDbId: trial_ids,
-                    pageSize: 10000
+                    pageSize,
+                    page
                 },
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                },
-                success: function(response) {
-                    FieldMap.heatmap_queried = true;
-                    observations = response.result.data;
+                success: async function(response) {
+                    if ( response && response.result && response.metadata && response.metadata.pagination ) {
+                        const data = response.result.data || [];
+                        const pages = response.metadata.pagination.totalPages || 0;
+                        observations.push(...data);
+
+                        if ( page < (pages-1) ) {
+                            observations = await get_heatmap_observations(observationVariableDbId, pageSize, page+1, observations);
+                        }
+
+                        FieldMap.heatmap_cached_data[observationVariableDbId] = observations;
+                        resolve(observations);
+                    }
+                    else {
+                        reject(`Error loading heatmap obsevations (page: ${page})`);
+                    }
                 },
                 error: function(response) {
-                    alert("Error loading Heatmap");
+                    reject(`Error loading heatmap observations (page: ${page})`);
                 }
-            }).then(
-                function() {
-                    return FieldMap.filter_heatmap(observations);
-                }
-            ).then(
-                function() {
-                    return FieldMap.load();
-                }
-            )
-        }
+            });
+        });
     }
 
     function geo_field_map_view(){
@@ -1127,26 +1144,26 @@ jQuery(document).ready( function() {
     jQuery('#pheno_heatmap_onswitch').click( function() {
         jQuery("#trait_heatmap").css("display", "none");
         field_map_view();
-        jQuery.ajax ( {
-            headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-            url: '/brapi/v1/studies/'+ <% $trial_id %> +'/observationvariables?pageSize=1000000',
-            //url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
+        jQuery.ajax({
+            headers: (auth_token) ? {'Authorization': `Bearer ` + auth_token } : {},
+            method: 'GET',
+            url: '/brapi/v2/variables',
+            data: {
+                studyDbId: trial_ids,
+                pageSize: 10000
+            },
             beforeSend: function() {
               jQuery("#working_modal").modal("show");
             },
             success: function(response){
-                var data = response.result.data;
-                var varName = [];
-                var varID = [];
-                jQuery.each(data, function(key_obj, value_obj) {
-                    jQuery.each(value_obj, function(key, value) {
-                        if (key == 'name'){
-                            varName.push(value);
+                var data = response?.result?.data || [];
+                var variables = {};
+                data.forEach((v) => {
+                    if ( v.hasOwnProperty('observationVariableName') && v.hasOwnProperty('observationVariableDbId') ) {
+                        if ( v.observationVariableName !== '' && v.observationVariableDbId !== '' ) {
+                            variables[v.observationVariableName] = v.observationVariableDbId;
                         }
-                        if (key == 'observationVariableDbId'){
-                            varID.push(value);
-                        }
-                    });
+                    }
                 });
 
                 if (varName != '' && varID != '' ) {
@@ -1232,7 +1249,7 @@ jQuery(document).ready( function() {
             jQuery("#view_ctrl_button").show();
             jQuery("#include_linked_trials").css("display", "block");
             FieldMap.heatmap_selected = true;
-            FieldMap.heatmap_selection = selected;
+            FieldMap.heatmap_selection = jQuery("#trait_list_dropdown option:selected").text();
             heatmap(selected);
         }
     }
@@ -1285,7 +1302,6 @@ function _finish() {
             jQuery("#include_linked_trials_list_container").css("display", include_linked_trials ? 'block' : 'none');
             jQuery("#trait_list_dropdown").val("fieldmap");
             on_change_view();
-            FieldMap.heatmap_queried = false;
             field_map_view();
         }
     });

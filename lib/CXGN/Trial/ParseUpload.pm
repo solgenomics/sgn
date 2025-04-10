@@ -15,9 +15,9 @@ has 'chado_schema' => (
 );
 
 has 'trial_id' => (
-  is => 'ro',
-  isa => 'Str',
-  required => 0
+    is => 'ro',
+    isa => 'Str',
+    required => 0
 );
 
 has 'filename' => (

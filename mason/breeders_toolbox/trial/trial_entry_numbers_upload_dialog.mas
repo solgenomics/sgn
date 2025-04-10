@@ -93,6 +93,7 @@ jQuery(document).ready(function() {
           }
           if ( response.success === 1) {
             addSuccess("Trial entry numbers stored!");
+	    loadEntryNumbers();
           }
         }
       },

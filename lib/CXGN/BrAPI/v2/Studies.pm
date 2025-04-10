@@ -53,7 +53,7 @@ sub seasons {
         push @data, {
             seasonDbId=>qq|$projectprop_id|,
             season=>$season,
-            year=>$year
+            year=>int($year)
         };
     }
     my %result = (data=>\@data);
@@ -80,12 +80,14 @@ sub study_types {
 sub search {
     my $self = shift;
     my $search_params = shift;
-	my $c = shift;
+    my $c = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema;
     my $supported_crop = $c->config->{"supportedCrop"};
+    my $data_out;
+    my $total_count;
 
     my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
  	my @program_names = $search_params->{programNames} ? @{$search_params->{programNames}} : ();
@@ -125,7 +127,7 @@ sub search {
 		push @$status, { 'error' => 'The studyPUI search parameters are not implemented.' };
 	}
 
-    my ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,\@study_dbids,\@location_names,\@location_ids,\@study_type_list,\@study_names,\@program_names,\@program_dbids,\@folder_dbids,\@folder_names,\@obs_variable_ids,\@germplasm_dbids,\@germplasm_names,\@year_list,\@externalReferenceIds,\@externalReferenceSource,$sortBy,$sortOrder);
+    ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,\@study_dbids,\@location_names,\@location_ids,\@study_type_list,\@study_names,\@program_names,\@program_dbids,\@folder_dbids,\@folder_names,\@obs_variable_ids,\@germplasm_dbids,\@germplasm_names,\@year_list,\@externalReferenceIds,\@externalReferenceSource,$sortBy,$sortOrder);
 
     my %result = (data=>$data_out);
     my @data_files;
@@ -370,6 +372,7 @@ sub update {
 	my $params = shift;
 	my $user_id =shift;
 	my $c = shift;
+	my $data_out;
 
 	if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to update studies!'));
@@ -523,7 +526,7 @@ sub update {
 
 	my $supported_crop = $c->config->{"supportedCrop"};
 
-	my ($data_out,$total_count) = _search($self,$self->bcs_schema(),$page_size,$page,$supported_crop,[$trial_id]);
+	($data_out,$total_count) = _search($self,$self->bcs_schema(),$page_size,$page,$supported_crop,[$trial_id]);
 
 	my $result = @$data_out[0];
 	my @data_files;

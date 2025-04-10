@@ -225,20 +225,35 @@
   });
 
   $('#filtered_results').on( 'draw.dt', function () {
+    var table = $("#filtered_results").DataTable();
+    var accessionColumnIndex = -1;
 
-        var names = [];
-        var data = $("#filtered_results").DataTable().context[0].aoData;
-        var displayed_rows = $("#filtered_results").DataTable().context[0].aiDisplay;
-        var names = [];
-        for (var i =0; i< displayed_rows.length; i++){
-            var displayed_index = displayed_rows[i];
-            names.push(data[displayed_index]._aFilterData[2]+'\n');
+    // Determine the correct column index for "Accession"
+    table.columns().every(function (index) {
+        var header = this.header();
+        if ($(header).text().trim() === "Accession") {
+            accessionColumnIndex = index;
         }
-        $('#graphical_filter_result_names').html(names);
-        addToListMenu('graphical_filter_results_to_list_menu', 'graphical_filter_result_names', {
-            listType: 'accessions'
-        });
     });
+
+    if (accessionColumnIndex === -1) {
+        console.error("Accession column not found.");
+        return;
+    }
+
+    var names = [];
+    var displayed_rows = table.rows({ filter: 'applied' }).indexes();
+    displayed_rows.each(function (index) {
+        var accessionName = table.cell(index, accessionColumnIndex).data();
+        names.push(accessionName + '\n');
+    });
+
+    $('#graphical_filter_result_names').html(names.join(''));
+    addToListMenu('graphical_filter_results_to_list_menu', 'graphical_filter_result_names', {
+        listType: 'accessions'
+    });
+
+  });
   
 }());
 

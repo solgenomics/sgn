@@ -118,5 +118,6 @@ my $missing_pedigree_result = CXGN::Cross->get_accessions_missing_pedigree($sche
 my $number_of_accessions = scalar @$missing_pedigree_result;
 is($number_of_accessions, '456');
 
+$test->clean_up_db();
 
 done_testing();

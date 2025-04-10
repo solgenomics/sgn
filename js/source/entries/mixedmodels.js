@@ -11,8 +11,8 @@ export function init(main_div) {
 
     var dataset_id;
 
-    alert("WELCOME TO MIXED MODELS!");
-    get_select_box("datasets", "mixed_model_dataset_select", { "checkbox_name": "mixed_model_dataset_select_checkbox" });
+    // alert("WELCOME TO MIXED MODELS!");
+    get_select_box("datasets", "mixed_model_dataset_select", { "checkbox_name": "mixed_model_dataset_select_checkbox", "analysis_type":"Mixed Models", "show_compatibility":"yes" });
 
     jQuery('#mixed_model_analysis_prepare_button').removeClass('active').addClass('inactive');
 
@@ -104,10 +104,12 @@ export function init(main_div) {
     $('#mixed_model_analysis_prepare_button').click(function () {
 
         dataset_id = get_dataset_id();
+        var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+
         if (dataset_id != false) {
             $.ajax({
                 url: '/ajax/mixedmodels/prepare',
-                data: { 'dataset_id': get_dataset_id() },
+                data: { 'dataset_id': get_dataset_id(),'dataset_trait_outliers': dataset_trait_outliers, },
                 success: function (r) {
                     if (r.error) {
                         alert(r.error);

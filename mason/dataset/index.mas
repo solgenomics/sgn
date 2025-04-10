@@ -99,6 +99,19 @@ $dataset_contents => ''
                         </span>
 %                   }
                     <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
+                    <tr><td>Tool Compatibility <span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Predicted tool compatibility based on dataset definition. 
+The table details the traits and types of analyses that can
+be performed. If database elements are updated, such as 
+phenotypes added to field trials or accessions, you may wish 
+to recalculate tool compatibility for more accurate results.
+Warning symbols indicate compatibility, but with low sample
+sizes. Hover for details."></span>
+                    <br>
+                    <td>
+                        <div id="predicted-tool-compatibility" style="width:85%;overflow-x:auto;overflow-y:auto">
+                        </div>  
+                        <div><br><button type="button" class="btn btn-sm btn-success" id="tool-compatibility-calc-button" >Check Tool Compatibility</button></div>
+                    <tr><td>Analyses using this dataset<td id="dataset_analysis_usage"></td></td>
             </table>
         </div>
     </div>
@@ -221,6 +234,104 @@ $dataset_contents => ''
         var DataSet = window.jsMod['dataset_scatterplot'].init(<% $dataset_id %>);
         DataSet.render();
 
+        function populate_tool_compatibility(json) {
+
+            var data_summary = {};
+
+            for (key in json) {
+               if (key == "Data Summary"){
+                   var newkey = '<b>' + key + '</b>';
+                   data_summary[newkey] = json[key];
+                   delete json[key];
+                } else {
+                    if (json[key]['compatible'] == 0) {
+                        var newkey = '<b>' + key + ' <span class="glyphicon glyphicon-remove" style="color:red"></span></b>';
+                        delete json[key]['compatible'];
+                        json[newkey] = json[key];
+                        delete json[key];
+                    } else {
+                        if ('warn' in json[key]) {
+                            var newkey = '<b>' + key + ' <span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + json[key]['warn'] + '"></span></b>';
+                            delete json[key]['warn'];
+                            delete json[key]['compatible'];
+                            json[newkey] = json[key];
+                            delete json[key];
+                        } else {
+                            var newkey = '<b>' + key + ' <span class="glyphicon glyphicon-ok" style="color:green"></span></b>';
+                            delete json[key]['compatible'];
+                            json[newkey] = json[key];
+                            delete json[key];
+                        }
+                    }
+                }
+                
+            }
+            
+            function recursive_table_gen(obj) {
+                if (Object.prototype.toString.call(obj) == "[object Array]") {
+                    let table = '<table border="1"><tr><td><p>' + obj.join("</p><p>") + '</p></table>';
+                    return table;
+                }
+                var keys = [];
+                for (key in obj) {
+                    keys.push( key + recursive_table_gen(obj[key]))
+                }
+                if (keys.length == 0) {
+                    return "";
+                }
+                let table = '<table border="1"><tr><td>' + keys.join("<td>") + '</table>';
+                return table;
+            }
+
+            return recursive_table_gen(json) + "<br>" + recursive_table_gen(data_summary);
+        }
+
+        jQuery('#tool-compatibility-calc-button').click(function() {
+            jQuery('#working_modal').modal("show");
+            $.ajax({
+                url: '/ajax/dataset/calc_tool_compatibility/' + <% $dataset_id %>,
+                success: function(response) {
+                    if (response.error) {
+                        jQuery('#working_modal').modal("hide");
+                        alert("An error occured calculating tool compatibility: \n" + response.error);
+                        jQuery('#predicted-tool-compatibility').text("Error calculating tool compatibility.");
+                    } else {
+                        jQuery('#predicted-tool-compatibility').css('height', '400px');
+                        jQuery('#predicted-tool-compatibility').html(populate_tool_compatibility(JSON.parse(response.tool_compatibility)));
+                        jQuery('#working_modal').modal("hide");
+                    }
+                }, 
+                error: function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    alert("An error occurred calculating tool compatibility");
+                    jQuery('#predicted-tool-compatibility').text("Error calculating tool compatibility.");
+                }
+            });
+        });
+
+        $.ajax({
+            url: '/ajax/dataset/retrieve/' + <% $dataset_id %> + '/tool_compatibility',
+            success: function(response) {
+                if (response.error) {
+                    alert("An error occurred. \n" + response.error);
+                    jQuery('#predicted-tool-compatibility').text("Error retrieving tool compatibility.");
+                } else {
+                    if (response.tool_compatibility == "(not calculated)") {
+                         jQuery('#predicted-tool-compatibility').text(response.tool_compatibility);
+                    } else {
+                        //console.log(JSON.parse(response.tool_compatibility));
+                        jQuery('#predicted-tool-compatibility').css('height', '400px');
+                        jQuery('#predicted-tool-compatibility').html(populate_tool_compatibility(JSON.parse(response.tool_compatibility)));
+                    }
+                }
+            },
+            error: function(response) {
+                alert("An error occurred retrieving tool compatibility");
+                jQuery('#predicted-tool-compatibility').css('height', '100px');
+                jQuery('#predicted-tool-compatibility').text("Error retrieving tool compatibility.");
+            }
+        });
+
         jQuery('#info_table').click(function() {
             $.ajax({
                 url: '/ajax/dataset/by_user/<% $dataset_id %>',
@@ -249,6 +360,21 @@ $dataset_contents => ''
 
             window.open(url,'_blank');
         })
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/ajax/dataset/get_child_analyses/<% $dataset_id %>',
+            success: function(response) {
+                if (response.error){
+                    alert(response.error);
+                } else {
+                    jQuery('#dataset_analysis_usage').html(response.analysis_html_list);
+                }
+            },
+            error: function(response) {
+                alert("Error retrieving analyses using this dataset.");
+            }
+        });
     });
 
     </script>

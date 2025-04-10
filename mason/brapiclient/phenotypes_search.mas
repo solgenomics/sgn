@@ -48,7 +48,7 @@
     <select name="brapi_phenotype_studies_table_format" id="brapi_phenotype_studies_table_format" class="form-control" />
         <option value="csv">CSV</option>
         <option value="tsv">TSV</option>
-        <option value="xls">Excel (xls)</option>
+        <option value="xlsx">Excel (xlsx)</option>
         <option value="json">JSON</option>
     </select>
 

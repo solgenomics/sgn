@@ -12,13 +12,12 @@ use SGN::Test::solGSData;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
-my $solgs_data = SGN::Test::solGSData->new(
-    {
-        'fixture'                => $f,
-        'accessions_list_subset' => 60,
-        'plots_list_subset'      => 60
-    }
-);
+my $solgs_data = SGN::Test::solGSData->new({
+    'fixture'                => $f,
+    'accessions_list_subset' => 60,
+    'plots_list_subset'      => 60,
+    'user_id' => 40,
+});
 
 my $cache_dir    = $solgs_data->site_cluster_shared_dir();
 my $protocol_dir = $solgs_data->default_protocol_dir();
@@ -81,8 +80,81 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get_ok('/pca/analysis', 'pca home page');
     sleep(5);
-    $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+
+
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    sleep(5);
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'trials dataset job name')->send_keys('trials dataset pheno pca job');
     sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca page')->click();
+    sleep(3);
+
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    sleep(2);
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca trials dataset (phenotype)')->click();
+    sleep(5);
+    $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials dataset pheno  pca plot')->click();
+    sleep(5);
+
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(3);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store pc scores')->click();
+    sleep(80);
+    $d->find_element_ok('View stored PC', 'partial_link_text',  'view store pca')->click();
+    sleep(20);
+
+    $d->driver->go_back();
+    sleep(15);
+
+    `rm -r $cache_dir`;
+
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(5);
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'trials dataset job name')->send_keys('trials dataset geno pca job');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca page')->click();
+    sleep(3);
+
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(2);
+    $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca trials dataset (genotype)')->click();
+    sleep(5);
+    $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials dataset geno  pca plot')->click();
+    sleep(5);
+
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(2);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store pc scores')->click();
+    sleep(80);
+    $d->find_element_ok('View stored PC', 'partial_link_text',  'view store pca')->click();
+    sleep(20);
+
+    $d->driver->go_back();
+    sleep(15);
+
+    `rm -r $cache_dir`;
+
+
+    $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
@@ -103,7 +175,18 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check accessions list geno  pca plot')->click();
     sleep(5);
 
-    `rm -r $cache_dir`;
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(2);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store pc scores')->click();
+    sleep(80);
+    $d->find_element_ok('View stored PC', 'partial_link_text',  'view store gebvs')->click();
+    sleep(20);
+
+    $d->driver->go_back();
+    sleep(15);
+
+    `rm -r $pca_dir`;
     $d->driver->refresh();
     sleep(5);
 
@@ -140,7 +223,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials list geno pca plot')->click();
     sleep(5);
 
-   `rm -r $cache_dir`;
+   `rm -r $pca_dir`;
     $d->driver->refresh();
     sleep(5);
 
@@ -153,7 +236,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials list pheno pca plot')->click();
     sleep(5);
 
-    `rm -r $cache_dir`;
+    `rm -r $pca_dir`;
 
     $d->driver->refresh();
     sleep(5);
@@ -221,13 +304,48 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
-    $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'clones list job name')->send_keys('trial page -- pheno pca job');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca pg')->click();
+    sleep(3);
+
+    my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $analysis_tools);
+    sleep(5);
+    $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis')->click();
+    sleep(5);
+    $d->find_element_ok('ANOVA', 'partial_link_text', 'collapse anova')->click();
+    sleep(3);
+    $d->find_element_ok('PCA', 'partial_link_text', 'expand PCA')->click();
+    sleep(3);
+    $d->find_element_ok('//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    sleep(10);
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
+    sleep(3);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trial page pheno pca plot')->click();
     sleep(5);
 
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(2);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store phenotype pc scores')->click();
+	sleep(80);
+	$d->find_element_ok('View stored PC', 'partial_link_text',  'view store gebvs')->click();
+	sleep(20);
+
+	$d->driver->go_back();
+	sleep(15);
+
     $d->driver->refresh();
     sleep(5);
+
+    `rm -r $pca_dir`;
 
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $analysis_tools);
@@ -298,6 +416,53 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'Training model page -- geno pca job')->send_keys('Training model page -- geno pca job');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca pg')->click();
+    sleep(3);
+
+    $d->driver->refresh();
+    sleep(5);
+
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
+    sleep(3);
+
+
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(2);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store genotype pc scores')->click();
+	sleep(80);
+	$d->find_element_ok('View stored PC', 'partial_link_text',  'view stored pcs')->click();
+	sleep(20);
+
+	$d->driver->go_back();
+	sleep(15);
+
+    $d->driver->refresh();
+    sleep(5);
+
+    `rm -r $pca_dir`;
+
+    
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
+    sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(200);
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check geno pca plot in model page')->click();
@@ -349,6 +514,44 @@ $d->while_logged_in_as("submitter", sub {
 
     # $d->get_ok('/solgs/selection/141/model/139/trait/70666/gp/1', 'selection prediction page');
     # sleep(5);
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'selection pop page -- geno pca job')->send_keys('selection pop page -- geno pca job');
+    sleep(5);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	sleep(5);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back to selection pop page')->click();
+    sleep(3);
+
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
+    sleep(10);
+
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(2);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store geno pc scores')->click();
+	sleep(80);
+	$d->find_element_ok('View stored PC', 'partial_link_text',  'view stored pcs')->click();
+	sleep(20);
+
+	$d->driver->go_back();
+	sleep(15);
+
+    `rm -r $pca_dir`;
 
     my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
@@ -464,6 +667,51 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
+    `rm -r $pca_dir`;
+
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    sleep(10);
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'combined trials training model -- geno pca job')->send_keys('combined trials training model pop page -- geno pca job');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca pg')->click();
+    sleep(3);
+
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id,"pca_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    sleep(10);
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
+    sleep(5);
+    $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check pheno pca plot in model page')->click();
+    sleep(5);
+
+
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(2);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store pheno pc scores')->click();
+	sleep(80);
+	$d->find_element_ok('View stored PC', 'partial_link_text',  'view stored pcs')->click();
+	sleep(20);
+
+	$d->driver->go_back();
+	sleep(15);
+
+
+    `rm -r $pca_dir`;
+
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(2);
@@ -505,11 +753,51 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check geno pca plot in selection pop page')->click();
     sleep(5);
 
+    ` rm -r $pca_dir`;
+
+    $d->driver->refresh();
+    sleep(5);
+    
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select phenotype')->click();
+    sleep(10);
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
+    sleep(3);
+    $d->find_element_ok('queue_job', 'id', 'queue pca job')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'combined trials selection page-- geno pca job')->send_keys('combined trials selection pop page -- geno pca job');
+    sleep(2);
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
+	sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(200);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back to pca pg')->click();
+    sleep(3);
+
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(10);
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
+    sleep(5);
+    $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check geno pca plot in model page')->click();
+    sleep(5);
+
+    my $download_links = $d->find_element('Scree plot', 'partial_link_text', 'scroll to download lins');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-220);", $download_links);
+    sleep(2);
+    $d->find_element_ok('//*[starts-with(@id, "save_pcs")]', 'xpath',  'store geno pc scores')->click();
+	sleep(80);
+	$d->find_element_ok('View stored PC', 'partial_link_text',  'view stored pcs')->click();
+	sleep(20);
 
     foreach my $list_id ( $trials_list_id, $accessions_list_id, $plots_list_id ) {
             $list_id =~ s/\w+_//g;
             $solgs_data->delete_list($list_id);
-        }
+    }
 
     foreach my $dataset_id ( $trials_dt_id, $accessions_dt_id, $plots_dt_id ) {
             $dataset_id =~ s/\w+_//g;

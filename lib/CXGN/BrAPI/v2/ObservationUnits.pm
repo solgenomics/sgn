@@ -228,7 +228,7 @@ sub _search {
         ## Format position coordinates
         my $level_name = $obs_unit->{obsunit_type_name};
 
-	print STDERR "LEVEL NAME: ".Dumper(\%numbers);
+	    # print STDERR "LEVEL NAME: ".Dumper(\%numbers);
 
         my $level_order = _order($level_name) + 0;
 

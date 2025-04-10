@@ -89,6 +89,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
 
     if (! $c->user()) {
         $c->stash->{rest} = {error=>'You must be logged in first!'};
@@ -103,7 +104,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id,exclude_dataset_outliers => $exclude_outliers, exclude_phenotype_outlier => $exclude_outliers, file_name => $temppath, quotes => 0);
     $ds->retrieve_phenotypes();
 
     # Note: file is cleaned by run_model function in CXGN::MixedModel
