@@ -1,6 +1,6 @@
 
 <%args>
-
+%services
 </%args>
 
 <& /util/import_javascript.mas,
@@ -128,12 +128,17 @@ tr.shown td.details-control {
                     <label class="col-sm-6 control-label">Image Analysis Service: </label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="image_analysis_service_select" name="image_analysis_service_select">
-                            <option value="">Select An Analysis Service</option>
-                            <option value="necrosis">Necrosis(Makerere AIR Lab)</option>
+                            <option value="">Select An Analysis Service:</option>
+
+% foreach my $s (keys %services) {
+ 		            <option value="<% $s %>"><% $services{$s}->{description} %></option>
+% }
+
+                            <!-- option value="necrosis">Necrosis(Makerere AIR Lab)</option>
                             <option value="largest_contour_percent">Necrosis Largest Contour Mask Percent</option>
                             <option value="count_contours">Count Contours</option>
                             <option value="count_sift">SIFT Feature Count</option>
-                            <option value="whitefly_count">Whitefly Count (Makerere AIR Lab)</option>
+                            <option value="whitefly_count">Whitefly Count (Makerere AIR Lab)</option  -->
                         </select>
                     </div>
                 </div>
