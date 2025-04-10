@@ -245,7 +245,7 @@ jQuery(document).on('change','#object_select, #attribute_select, #method_select,
     //clearAllOptions(document.getElementById('method_select'));
     //clearAllOptions(document.getElementById('unit_select'));
   }
-  else if ((jQuery(this).attr('name') == 'object_select') || (jQuery(this).attr('name') == 'attribute_select') || (jQuery(this).attr('name') == 'method_select') || (jQuery(this).attr('name') == 'unit_select')) {
+  else if ((jQuery(this).attr('name') == 'object_select') || (jQuery(this).attr('name') == 'attribute_select') || (jQuery(this).attr('name') == 'method_select') || (jQuery(this).attr('name') == 'unit_select' || (jQuery(this).attr('name') == 'meta_select')) {
     //console.log("component select changed");
     //clearAllOptions(document.getElementById('trait_select'));
   }
