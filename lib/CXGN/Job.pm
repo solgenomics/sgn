@@ -306,9 +306,13 @@ sub check_status {
     my $backend_id = $self->backend_id();
     my $logfile = $self->finish_logfile();
 
+    if ($self->status() eq "canceled") {
+        return $self->status();
+    }
+
     if (!$backend_id || !$self->has_sp_job_id()) {
         my $finish_timestamp = $self->read_finish_timestamp();
-        if ($finish_timestamp) {
+        if ($finish_timestamp && $self->status() ne "canceled") {
             $self->status("finished");
             $self->store();
         }
