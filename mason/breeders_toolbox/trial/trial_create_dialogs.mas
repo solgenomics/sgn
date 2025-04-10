@@ -290,7 +290,7 @@ rect.bordered {
                                     <label class="col-sm-3 control-label">Design Type: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="select_design_method" name="select_design_method">
-% foreach my $type(@$design_types){
+% foreach my $type (@$design_types) {
 %    my $method;
 %    if ($type eq 'Completely Randomized'){
 %        $method = 'CRD';
@@ -300,6 +300,8 @@ rect.bordered {
 %        $method = 'RRC';
 %    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
 %        $method = 'DRRC';
+%    } elsif ($type eq 'Un-Replicated Diagonal Design'){
+%        $method = 'URDD';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
@@ -441,7 +443,7 @@ rect.bordered {
                                     <div class="col-sm-5"  >
                                         <div class="input-group">
                                             <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
-                                            <input class="form-control" id="no_of_row_in_design" name="no_of_row_in_design" placeholder="26"/>
+                                            <input class="form-control" id="fieldMap_row_number" name="no_of_row_in_design" placeholder="26"/>
                                         </div>
                                     </div>
                                 </div>
@@ -450,7 +452,7 @@ rect.bordered {
                                     <div class="col-sm-5"  >
                                         <div class="input-group">
                                             <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
-                                            <input class="form-control" id="no_of_col_in_design" name="no_of_col_in_design" placeholder="26"/>
+                                            <input class="form-control" id="fieldMap_col_number" name="no_of_col_in_design" placeholder="26"/>
                                         </div>
                                     </div>
                                 </div>
@@ -518,7 +520,7 @@ rect.bordered {
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="block_number_section" style="display: none">
-                                        <label class="col-sm-7 control-label">Number of blocks (required): </label>
+                                        <label class="col-sm-7 control-label">Number of blocks: </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="block_number" name="block_number" />
                                         </div>
@@ -526,13 +528,13 @@ rect.bordered {
                                     <div class="form-group form-group-sm" id="row_number_section" style="display: none">
                                         <label class="col-sm-7 control-label">Number of field rows (Required): </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="row_number" name="row_number" />
+                                            <input class="form-control" id="fieldMap_row_number" name="row_number" />
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="col_number_section" style="display: none">
                                         <label class="col-sm-7 control-label">Number of Columns (Required): </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="col_number" name="col_number" />
+                                            <input class="form-control" id="fieldMap_col_number" name="col_number" />
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="col_number_per_block_section" style="display: none">
