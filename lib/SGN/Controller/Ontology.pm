@@ -42,7 +42,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
       $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
       return;
     }
-
+    my $variable_conf = $c->config->{composable_variables};
     my @composable_cvs = split ",", $c->config->{composable_cvs};
     my $dbh = $c->dbc->dbh();
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -76,23 +76,28 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
         }
         else {
             my $cv_id = $root_nodes[0][0];
-           my @components = $onto->get_terms($cv_id);
+            my @components;
+            if ($name eq 'trait' && $variable_conf == 1) {
+                @components = $onto->get_variables($cv_id);
+            } else {
+                @components = $onto->get_terms($cv_id);
+            }
 
-           my $id = $name."_select";
-           my $name = $name."_select";
-           my $default = 0;
-           if ($default) { unshift @components, [ '', $default ]; }
+            my $id = $name."_select";
+            my $name = $name."_select";
+            my $default = 0;
+            if ($default) { unshift @components, [ '', $default ]; }
 
-           my $html = simple_selectbox_html(
-              name => $name,
-              multiple => 1,
-              id => $id,
-              choices => \@components,
-              size => '10'
-           );
+            my $html = simple_selectbox_html(
+                name => $name,
+                multiple => 1,
+                id => $id,
+                choices => \@components,
+                size => '10'
+            );
            #put html in hash
            $html_hash{$cv_type} = $html;
-       }
+        }
     }
 
     $c->stash->{object_select} = $html_hash{'object_ontology'};

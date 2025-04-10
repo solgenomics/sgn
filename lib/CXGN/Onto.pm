@@ -50,6 +50,49 @@ sub get_terms {
       return @results;
 }
 
+=head2 get_variables
+
+parameters: namespace
+
+returns: terms with variable_od relationship in a namespace
+
+Side Effects: none
+
+=cut
+
+sub get_variables {
+      my $self = shift;
+      my $cv_id = shift;
+
+      my $schema = $self->schema();
+
+      my $variable_relationship = $schema->resultset("Cv::Cvterm")->search({ name => 'VARIABLE_OF' })->first();
+      my $variable_id;
+      if ($variable_relationship) {  $variable_id = $variable_relationship->cvterm_id(); }
+
+      my $query = "SELECT distinct(cvterm_id), dbxref.accession, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
+                  FROM cvterm
+                  JOIN dbxref USING(dbxref_id)
+                  JOIN db USING(db_id)
+                  JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+                  WHERE cv_id = ? AND cvterm_relationship.type_id = ? AND is_obsolete = ?
+                  GROUP BY 1,2,3
+                  ORDER BY 3";
+
+
+      my $h = $self->schema->storage->dbh->prepare($query);
+      $h->execute($cv_id, $variable_id,'0');
+
+      my @results;
+      while (my ($id, $accession, $name) = $h->fetchrow_array()) {
+          if ($accession +0 != 0) {
+              push @results, [$id, $name];
+          }
+      }
+
+      return @results;
+}
+
 sub get_root_nodes {
       my $self = shift;
       my $cv_type = shift;
@@ -494,7 +537,7 @@ sub store_observation_variable_trait_method_scale {
 #   - definition = definition of the child cvterm
 #   - children = children of the child cvterm
 #   - accession = dbxref accession of the child cvterm
-# 
+#
 sub get_children {
     my $self = shift;
     my $cvterm_id = shift;
@@ -520,7 +563,7 @@ sub get_children {
             }
         }
     }
-    
+
     my @sorted =  sort { $a->{accession} <=> $b->{accession} } @children;
     return \@sorted;
 }
