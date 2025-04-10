@@ -597,7 +597,7 @@ sub output_files {
     $c->controller('solGS::Files')->marker_effects_file($c);
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     $c->controller('solGS::Files')->rrblup_training_genetic_values_file($c);
-    $c->controller('solGS::Files')->rrblup_selection_genetic_values_file($c);
+    $c->controller('solGS::Files')->rrblup_combined_training_gebvs_genetic_values_file($c);
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller("solGS::Files")->model_phenodata_file($c);
     $c->controller("solGS::Files")->model_genodata_file($c);
@@ -617,14 +617,19 @@ sub output_files {
 
     if ($selection_pop_id) {
         $c->controller('solGS::Files')
-          ->rrblup_selection_gebvs_file( $c, $training_pop_id,
-            $selection_pop_id, $trait_id );
+          ->rrblup_selection_gebvs_file($c, $training_pop_id,
+            $selection_pop_id, $trait_id);
+
+        $c->controller('solGS::Files')->rrblup_selection_genetic_values_file($c);
+        $c->controller('solGS::Files')->rrblup_combined_selection_gebvs_genetic_values_file($c);
+        
         $c->controller('solGS::Files')->filtered_selection_genotype_file($c);
     }
 
-    my $file_list = join( "\t",
+    my $file_list = join("\t",
         $c->stash->{rrblup_training_gebvs_file},
         $c->stash->{rrblup_training_genetic_values_file},
+        $c->stash->{rrblup_combined_training_gebvs_genetic_values_file},
         $c->stash->{marker_effects_file},
         $c->stash->{validation_file},
         $c->stash->{model_phenodata_file},
@@ -642,6 +647,7 @@ sub output_files {
         $c->stash->{filtered_selection_genotype_file},
         $c->stash->{rrblup_selection_gebvs_file},
         $c->stash->{rrblup_selection_genetic_values_file},
+        $c->stash->{rrblup_combined_selection_gebvs_genetic_values_file},
         $c->stash->{"${analysis_type}_report_file"},
         $c->stash->{genotype_filtering_log_file},
     );

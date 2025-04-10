@@ -621,6 +621,23 @@ sub rrblup_training_genetic_values_file {
 
 }
 
+sub rrblup_combined_training_gebvs_genetic_values_file {
+    my ($self, $c, $training_pop_id, $trait_id, $protocol_id) = @_;
+
+    my $type = 'training';
+    my $file_id = $self->gebvs_file_id($c, $type);
+
+    my $cache_data = {
+        key  => 'rrblup_combined_training_gebvs_genetic_values_' . $file_id,
+        file => 'rrblup_combined_training_gebvs_genetic_values_' . $file_id,
+        stash_key => 'rrblup_combined_training_gebvs_genetic_values_file',
+		cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
 sub rrblup_selection_genetic_values_file {
     my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
 
@@ -640,6 +657,28 @@ sub rrblup_selection_genetic_values_file {
     $self->cache_file($c, $cache_data);
 
 }
+
+
+sub rrblup_combined_selection_gebvs_genetic_values_file {
+    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
+
+    my $type = 'selection';
+    $c->stash->{selection_pop_id} = $selection_pop_id if $selection_pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
+
+    my $file_id = $self->gebvs_file_id($c, $type);
+
+    my $cache_data = {
+        key  => 'rrblup_combined_selection_gebvs_genetic_values_' . $file_id,
+        file => 'rrblup_combined_selection_gebvs_genetic_values_' . $file_id,
+        stash_key => 'rrblup_combined_selection_gebvs_genetic_values_file',
+		cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
 
 sub gebvs_file_id {
     my ($self, $c, $type) = @_;
