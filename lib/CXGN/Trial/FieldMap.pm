@@ -93,13 +93,13 @@ sub display_fieldmap {
         my $plot_name = $v->{plot_name};
         my $accession_name = $v->{accession_name};
         my $plant_names = $v->{plant_names};
-	    my $plot_number_fromDesign = $v->{plot_number};
+        my $plot_number_fromDesign = $v->{plot_number};
 
     	my $image_id = CXGN::Stock->new({
     	    schema => $schema,
     	    stock_id => $plot_id,
-		});
-	    my @plot_image_ids = map $_->[0], $image_id->get_image_ids();
+        });
+	my @plot_image_ids = map $_->[0], $image_id->get_image_ids();
 
         push @plot_numbers_not_used, $plot_number;
         push @plot_numbers_from_design, $plot_number_fromDesign;
@@ -137,16 +137,16 @@ sub display_fieldmap {
     	}
 
     	push @layout_info, {
-                plot_id => $plot_id,
-                plot_number => $plot_number,
-                row_number => $row_number,
-                col_number => $col_number,
-                block_number=> $block_number,
-                rep_number =>  $rep_number,
-                plot_name => $plot_name,
-                accession_name => $accession_name,
-                plant_names => $plant_names,
-    			plot_image_ids => \@plot_image_ids,
+            plot_id => $plot_id,
+            plot_number => $plot_number,
+            row_number => $row_number,
+            col_number => $col_number,
+            block_number=> $block_number,
+            rep_number =>  $rep_number,
+            plot_name => $plot_name,
+            accession_name => $accession_name,
+            plant_names => $plant_names,
+            plot_image_ids => \@plot_image_ids,
         };
 
     }
@@ -194,18 +194,18 @@ sub display_fieldmap {
     foreach my $my_hash (@layout_info) {
     	if ($my_hash->{'row_number'}) {
     	    if ($my_hash->{'row_number'} =~ m/\d+/) {
-        		if (scalar(@{$my_hash->{"plant_names"}}) < 1) {
-        		    $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nPlot_name: ".$my_hash->{'plot_name'};
-        		}
-        		else {
-        		    $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$my_hash->{"plant_names"}})."\nPlot_name: ".$my_hash->{'plot_name'};
-        		}
-        		$plot_id[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_id'};
-        		$plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
-        		$acc_name[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'accession_name'};
-        		$blk_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'block_number'};
-        		$rep_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'rep_number'};
-        		$plot_name[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_name'};
+                if (scalar(@{$my_hash->{"plant_names"}}) < 1) {
+                    $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nPlot_name: ".$my_hash->{'plot_name'};
+                }
+                else {
+                    $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$my_hash->{"plant_names"}})."\nPlot_name: ".$my_hash->{'plot_name'};
+                }
+                $plot_id[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_id'};
+                $plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
+                $acc_name[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'accession_name'};
+                $blk_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'block_number'};
+                $rep_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'rep_number'};
+                $plot_name[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_name'};
     	    }
     	}
     }
@@ -273,7 +273,7 @@ sub display_fieldmap {
     	false_coord => $false_coord,
     	result => $result,
         design_type => $design_type,
-	);
+    );
     #print STDERR Dumper(\%return);
     return \%return;
 }
@@ -300,7 +300,7 @@ sub update_fieldmap_precheck {
     my $trial = CXGN::Trial->new({
         bcs_schema => $self->bcs_schema,
         trial_id => $trial_id
-	});
+    });
     my $triat_name = $trial->get_traits_assayed();
     #print STDERR Dumper($triat_name);
 
@@ -388,10 +388,10 @@ sub replace_plot_accession_fieldMap {
     my $dbh = $self->bcs_schema->storage->dbh;
 
     my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search(
-	{
-	    subject_id => $plot_id,
-	    type_id => $plot_of_type_id
-	});
+    {
+        subject_id => $plot_id,
+        type_id => $plot_of_type_id
+    });
 
     if ($stockprop_rs->count == 1) {
         $stockprop_rs->update({
@@ -427,12 +427,12 @@ sub replace_plot_name_fieldMap {
         {
             stock_id => $plot_id,
             type_id => $plot_type_id,
-	    });
+        });
 
     	$stock_rs->update(
-    	    {
-                uniquename => $new_plot_name,
-    	    });
+        {
+            uniquename => $new_plot_name,
+        });
     }
     $self->_regenerate_trial_layout_cache();
     return $error;
@@ -462,7 +462,7 @@ sub replace_trial_stock_fieldMap {
 
     my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN (?,?,?) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
     if ($trial_stock_type eq 'family_name') {
-		$h_update->execute($new_stock_id,$family_name_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+        $h_update->execute($new_stock_id,$family_name_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
     }
     elsif ($trial_stock_type eq 'cross') {
         $h_update->execute($new_stock_id,$cross_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
