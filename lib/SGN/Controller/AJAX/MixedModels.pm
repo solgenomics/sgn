@@ -65,6 +65,10 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 	print STDERR "Generating sommer model...\n";
 	($model, $error) = $mm->generate_model_sommer();
     }
+    elsif($engine eq "spl2D"){
+    print STDERR "Generating sommer model with spl2D...\n";
+    ($model, $error) = $mm->generate_model_spl2D();
+    }
     elsif ($engine eq "lme4") {
 	print STDERR "Generating lme4 model...\n";
 	($model, $error) =  $mm->generate_model();
@@ -164,14 +168,28 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	$dependent_variables = [ $dependent_variables ];
     }
     my $model  = $params->{model};
+
+    
+
+
     my $random_factors = $params->{'random_factors[]'}; #
     if (!ref($random_factors)) {
 	$random_factors = [ $random_factors ];
     }
-    my $fixed_factors = $params->{'fixed_factors[]'}; #   "
-    if (!ref($fixed_factors)) {
-	$fixed_factors = [ $fixed_factors ];
+    my $fixed_factors = $params->{'fixed_factors[]'};
+    # If fixed_factors is not defined or is an empty string, set it to "1"
+    if (!defined $fixed_factors || $fixed_factors eq '') {
+        $fixed_factors = ["1"];  # Ensure it is an array reference
     }
+    elsif (!ref($fixed_factors)) {
+        $fixed_factors = [ $fixed_factors ];  # Wrap in an array if it's a scalar
+    }
+    
+    # print Dumper($params);
+    # print Dumper($model);
+    # print Dumper($fixed_factors);
+    # print Dumper($random_factors);
+
     
     print STDERR "sub run: FIXED FACTORS: ".Dumper($fixed_factors)." RANDOM FACTORS: ".Dumper($random_factors)."\n";
     my $engine = $params->{engine};
