@@ -25,10 +25,10 @@ treatments <- stocks[!stocks %in% controls]
 
 ## Setting the same number of treatments per block
 if(is.null(nBlocks)) {
+  nInd <- nIndBlock <- nLines
+}else{
   nInd <- nLines/nBlocks
   nIndBlock <- rep(nInd, nBlocks)
-}else{
-  nInd <- nIndBlock <- nLines
 }
 nControls <- length(controls)
 
