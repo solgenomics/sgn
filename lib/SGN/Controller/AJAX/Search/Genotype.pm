@@ -18,7 +18,7 @@ use JSON;
 use CXGN::People::Login;
 use CXGN::Genotype::Search;
 use JSON;
-
+use CXGN::Stock::TissueSample::Search;
 use utf8;
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
@@ -57,6 +57,7 @@ sub genotyping_data_search_GET : Args(0) {
         tissue_sample_list=>$clean_inputs->{tissue_sample_id_list},
         genotype_data_project_list=>$clean_inputs->{genotyping_data_project_id_list},
         protocol_id_list=>$clean_inputs->{protocol_id_list},
+        genotyping_plate_list=>$clean_inputs->{genotyping_plate_list},
         #marker_name_list=>['S80_265728', 'S80_265723']
         #marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
         #marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],

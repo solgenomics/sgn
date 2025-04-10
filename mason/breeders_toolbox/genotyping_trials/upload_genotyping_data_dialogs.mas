@@ -25,9 +25,9 @@ $facilities
                                 <p>If you are uploading many files that used the same genotyping protocol, you can do so, and the database will ensure that the marker information is consistent across the genotyping data (e.g. the same reference, alternate, position, etc.).</p>
 
                                 <br/><br/>
-                                <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </div>
                             </&>
 
                             <&| /util/workflow.mas:step, title=> "Data Type" &>
@@ -46,9 +46,9 @@ $facilities
                                     </div>
                                 </div>
                                 <br/><br/>
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_type_check_button">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_type_check_button">Go to Next Step</button>
+                                </div>
                             </&>
 
                             <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
@@ -68,9 +68,9 @@ $facilities
                                     </thead>
                                 </table>
 
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_project_missing_button">My project is not here. Create a new one.</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_project_missing_button">My project is not here. Create a new one.</button>
+                                </div>
                                 <br/>
 
                                 <!-- If genotyping project is selected above, the project_id is passed to controller, negating need to create new project -->
@@ -116,9 +116,9 @@ $facilities
                                 </div>
 
                                 <br/>
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_project_check_button">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_project_check_button">Go to Next Step</button>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Genotyping Protocol" &>
                                 <& /page/page_title.mas, title=>"Provide info about the genotyping protocol used. The genotyping protocol represents a specific instance of how genotypes were called for a set of markers in a genotyping platform. Many genotyping projects can use the same genotyping protocol." &>
@@ -139,9 +139,9 @@ $facilities
                                     </thead>
                                 </table>
 
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_protocol_missing_button">My protocol is not here. Create a new one.</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_protocol_missing_button">My protocol is not here. Create a new one.</button>
+                                </div>
                                 <br/>
 
                                 <!-- If protocol is selected above, the protocol_id is passed to controller, negating need to create new protocol -->
@@ -218,9 +218,9 @@ $facilities
                                 </div>
 
                                 <br/>
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_protocol_check_button">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_protocol_check_button">Go to Next Step</button>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Genotype Info" &>
                                 <& /page/page_title.mas, title=>"Provide genotype information" &>
@@ -399,10 +399,10 @@ $facilities
                                 </div>
 
                                 <br/><br/>
-                                <center>
+                                <div style="text-align: center">
                                     <button type="button" class="btn btn-default" name="file_check_button" id="file_check_button">Check File Type</button>
                                     <button type="button" style="display:none" class="btn btn-primary" disabled onclick="Workflow.complete(this); return false;" id="genotyping_data_upload_next">Go to Next Step</button>
-                                </center>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
                                 <& /page/page_title.mas, title=>"Finalize and submit your genotyping data" &>
@@ -430,9 +430,9 @@ $facilities
                                     </div>
                                 </div>
 
-                                <center>
-                                <button type="button" class="btn btn-primary" name="upload_genotype_submit" id="upload_genotype_submit">Submit</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button type="button" class="btn btn-primary" name="upload_genotype_submit" id="upload_genotype_submit">Submit</button>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Complete" &>
                                 <& /page/page_title.mas, title=>"Complete! Your genotyping data was saved in the database." &>

@@ -27,9 +27,9 @@ $facilities
                                 </ul>
 
                                 <br/><br/>
-                                <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </div>
                             </&>
 
                             <&| /util/workflow.mas:step, title=> "Genotype Protocol" &>
@@ -44,9 +44,9 @@ $facilities
                                 </div>
 
                                 <br/><br/>
-                                <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </div>
                             </&>
 
                             <&| /util/workflow.mas:step, title=> "Genotype Info" &>
@@ -79,9 +79,9 @@ $facilities
                                 </div>
 
                                 <br/><br/>
-                                <center>
-                                <button class="btn btn-primary" id="genotype_qc_upload_submit_button">Submit</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="genotype_qc_upload_submit_button">Submit</button>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Results" &>
                                 <& /page/page_title.mas, title=>"A similarity matrix between the samples in your file and the saved genotypes for the protocol you selected" &>
@@ -174,7 +174,7 @@ jQuery(document).ready(function(){
             //console.log(response);
             jQuery('#working_modal').modal('hide');
             if (response.success) {
-            
+
                 var html = '<table class="table table-hover"><thead><tr><th>Samples In File</th>';
                 for(var i=0; i<response.protocol_stock_names.length; i++) {
                     html = html + '<th>'+response.protocol_stock_names[i]+'</th>';
@@ -190,7 +190,7 @@ jQuery(document).ready(function(){
                 }
                 html = html + '</tbody></table>';
                 jQuery('#genotype_qc_result_div').html(html);
-            
+
                 Workflow.complete('#genotype_qc_upload_submit_button');
                 Workflow.focus("#upload_genotypes_qc_workflow", 3);
             }

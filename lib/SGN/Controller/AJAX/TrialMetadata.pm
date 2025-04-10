@@ -5450,9 +5450,10 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     my $genotyping_project_id = $c->stash->{trial_id};
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in to delete genotyping plates" };
-        $c->detach();
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
     }
+
     if (!$c->user()->check_roles("curator")) {
         $c->stash->{rest} = { error => "You do not have the correct role to delete genotyping plates. Please contact us." };
         $c->detach();
@@ -5465,8 +5466,14 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     my ($data, $total_count) = $plate_info->get_plate_info();
     my @genotyping_plate_ids;
     foreach  my $plate(@$data){
-        my $plate_id = $plate->{plate_id};
-        push @genotyping_plate_ids, $plate_id;
+        my $number_of_samples_with_data = $plate->{number_of_samples_with_data};
+        if ($number_of_samples_with_data > 0) {
+            $c->stash->{rest} = { error => 'Cannot delete! One or more plates have genotyping data' };
+            return;
+        } else {
+            my $plate_id = $plate->{plate_id};
+            push @genotyping_plate_ids, $plate_id;
+        }
     }
 
     my $number_of_plates = @genotyping_plate_ids;

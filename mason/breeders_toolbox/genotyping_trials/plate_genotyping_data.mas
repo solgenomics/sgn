@@ -1,0 +1,118 @@
+<%args>
+$trial_id
+</%args>
+<!--
+<input type="checkbox" id="plate_genotyping_data_forbid_cache"> Refresh results
+-->
+<hr>
+
+<div style="overflow:scroll">
+    <table id="plate_genotyping_data" width="100%" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Protocol</th>
+                <th>Sample Name</th>
+                <th>Sample Type</th>
+                <th>Accession Name</th>
+                <th>Synonyms</th>
+                <th>Description</th>
+                <th>Number of Marker Scores</th>
+                <th>IGD Number</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<div class="modal fade" id="plate_sample_unit_level_select_dialog" name="plate_sample_unit_level_select_dialog" tabindex="-1" role="dialog" aria-labelledby="plateSampleUnitLevelSelectDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="reset" class="close" id="plate_sample_unit_level_dismiss_button_1" name="plate_sample_unit_level_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="plateSampleUnitLevelSelectDialog">Sample Unit level</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Sample Unit Level: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="genotyping_plate_sample_unit_level">
+                                    <option value="accession">accession</option>
+                                    <option value="genotyping_plate_sample_name">sample name</option>
+                                    <option value="sample_name_and_accession">sample name and accession name</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="plate_sample_unit_level_dismiss_button_2" name="plate_sample_unit_level_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="plate_genotype_download">Download</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function () {
+    const plate_genotyping_data_table = jQuery('#plate_genotyping_data').DataTable({
+        'destroy' : true,
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'lengthMenu': [ 10, 50, 100, 2000 ],
+        'ajax': '/ajax/genotyping_data/search?genotyping_plate_list=<% $trial_id %>&forbid_cache=1',
+    });
+
+    var refresh_results;
+    jQuery("#plate_genotyping_data_forbid_cache").change(function(){
+        if (jQuery(this).is(":checked")) {
+            refresh_results = '1';
+            var plate_genotyping_data_table = jQuery('#plate_genotyping_data').DataTable({
+                'destroy' : true,
+                'searching' : false,
+                'ordering'  : false,
+                'processing': true,
+                'serverSide': true,
+                'lengthMenu': [ 10, 50, 100, 2000 ],
+                'ajax': '/ajax/genotyping_data/search?genotyping_plate_list=<% $trial_id %>&forbid_cache=1',
+            });
+        }
+    });
+
+    let download_format = '';
+    let sample_unit_level = '';
+
+    jQuery('#plate_genotyping_data_download_all_vcf').click(function(){
+        download_format = 'VCF';
+        jQuery('#plate_sample_unit_level_select_dialog').modal('show');
+    });
+
+    jQuery('#plate_genotyping_data_download_all_dosagematrix').click(function(){
+        download_format = 'DosageMatrix';
+        jQuery('#plate_sample_unit_level_select_dialog').modal('show');
+    });
+
+    jQuery('#plate_kasp_genotype_data_download_csv').click(function(){
+        download_format = 'KASPdata';
+        jQuery('#plate_sample_unit_level_select_dialog').modal('show');
+    });
+
+    jQuery('#plate_genotype_download').click(function(){
+        sample_unit_level = jQuery('#genotyping_plate_sample_unit_level').val();
+        if (download_format == 'KASPdata') {
+            window.open("/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=<% $trial_id %>&sample_unit_level="+sample_unit_level+"");
+        } else {
+            window.open("/breeders/download_gbs_action/?genotyping_plate_id=<% $trial_id %>&download_format="+download_format+"&forbid_cache=1&sample_unit_level="+sample_unit_level+"");
+        }
+        jQuery('#plate_sample_unit_level_select_dialog').modal('hide');
+    });
+
+});
+
+</script>

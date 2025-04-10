@@ -47,6 +47,11 @@ has 'genotype_data_project_list' => (
     is => 'ro',
 );
 
+has 'genotyping_plate_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
 has 'genotypeprop_hash_select' => (
     isa => 'ArrayRef[Str]',
     is => 'ro',
@@ -64,21 +69,31 @@ has 'filename' => (
     required => 1,
 );
 
+has 'sample_unit_level' => (
+    isa => 'Str',
+    is => 'rw',
+    default => 'accession',
+);
+
 sub download {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $people_schema = $self->people_schema;
     my $protocol_id_list = $self->protocol_id_list;
     my $genotyping_project_list = $self->genotype_data_project_list;
+    my $genotyping_plate_list = $self->genotyping_plate_list;
     my $genotypeprop_hash_select = ['NT', 'XV', 'YV'];
     my $return_only_first_genotypeprop_for_stock = $self->return_only_first_genotypeprop_for_stock;
-        
+    my $sample_unit_level = $self->sample_unit_level;
+
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
         protocol_id_list=>$protocol_id_list,
         genotype_data_project_list=>$genotyping_project_list,
-        genotypeprop_hash_select=>$genotypeprop_hash_select
+        genotyping_plate_list=>$genotyping_plate_list,
+        genotypeprop_hash_select=>$genotypeprop_hash_select,
+        sample_unit_level=>$sample_unit_level,
     });
 
     my ($total_count, $data) = $genotypes_search->get_genotype_info();
@@ -87,7 +102,7 @@ sub download {
     my %data_hash;
     foreach my $sample_data (@all_data) {
         my %genotype_hash = ();
-        my $sample_name = $sample_data->{stock_name};
+        my $sample_name = $sample_data->{germplasmName};
         my $genotype_hash_ref = $sample_data->{selected_genotype_hash};
         %genotype_hash = %{$genotype_hash_ref};
         foreach my $marker_name (keys %genotype_hash) {
@@ -116,11 +131,20 @@ sub download {
         }
     }
 
-    my @headers = ('MARKER NAME', 'SAMPLE NAME', 'SNP CALL (X,Y)', 'X VALUE', 'Y VALUE');
+    my $unit_header;
+    if ($sample_unit_level eq 'genotyping_plate_sample_name') {
+        $unit_header = 'SAMPLE NAME';
+    } elsif ($sample_unit_level eq 'sample_name_and_accession') {
+        $unit_header = 'SAMPLE NAME|ACCESSION NAME';
+    } else {
+        $unit_header = 'ACCESSION NAME';
+    }
+
+    my @headers = ('MARKER NAME', $unit_header, 'SNP CALL (X,Y)', 'X VALUE', 'Y VALUE');
     my @lines;
     push @lines, [@headers];
     push @lines, @info_lines;
-    print STDERR "LINES =".Dumper(@lines)."\n";
+#    print STDERR "LINES =".Dumper(@lines)."\n";
 
     no warnings 'uninitialized';
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();

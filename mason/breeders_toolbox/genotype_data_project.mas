@@ -76,7 +76,7 @@ $assay_type => undef
 % if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Data Agreement License</h4>", info_section_subtitle => 'View and edit the public data agreement on this experiment.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "trial_data_agreement_section", buttons_html => $data_agreement_link &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Delete Genotyping Project and/or Associated Data</h4>", info_section_subtitle => 'Delete genotyping project, genotyping plates and/or genotyping protocols in this project.', icon_class => "glyphicon glyphicon-trash", info_section_id => "genotyping_project_deletion_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Delete</h4>", info_section_subtitle => 'Delete genotyping project, genotyping plates and/or genotyping data associated with this project.', icon_class => "glyphicon glyphicon-trash", info_section_id => "genotyping_project_deletion_section" &>
 
 <& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/genotyping_data_project/add_existing_genotyping_plate_dialog.mas, breeding_program_id => $breeding_program_id, breeding_program_name => $breeding_program_name, trial_id => $trial_id, trial_name => $trial_name &>
