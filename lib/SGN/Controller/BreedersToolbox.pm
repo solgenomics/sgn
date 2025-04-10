@@ -332,6 +332,10 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     my $sampling_facilities = $c->config->{sampling_facilities};
     my @sampling_facilities = split ',',$sampling_facilities;
 
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+    my @sample_tissue_types = split ',',$sample_tissue_types_string;
+
+    $c->stash->{sample_tissue_types} = \@sample_tissue_types;
     $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{nirs_files} = $data->{files};
     $c->stash->{deleted_nirs_files} = $data->{deleted_files};
@@ -358,6 +362,11 @@ sub manage_transcriptomics :Path("/breeders/transcriptomics") Args(0) {
     my $sampling_facilities = $c->config->{sampling_facilities};
     my @sampling_facilities = split ',',$sampling_facilities;
 
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+    my @sample_tissue_types = split ',',$sample_tissue_types_string;
+    print STDERR Dumper(@sample_tissue_types);
+
+    $c->stash->{sample_tissue_types} = \@sample_tissue_types;
     $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{transcriptomics_files} = $data->{files};
     $c->stash->{deleted_transcriptomics_files} = $data->{deleted_files};

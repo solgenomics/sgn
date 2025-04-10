@@ -94,6 +94,10 @@ sub index :Path :Args(0) {
     my @design_types = split ',',$design_type_string;
     $c->stash->{design_types} = \@design_types;
 
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+    my @sample_tissue_types = split ',',$sample_tissue_types_string;
+    $c->stash->{sample_tissue_types} = \@sample_tissue_types;
+
     $c->stash->{schema}   = $c->dbic_schema('SGN::Schema');
     $c->stash->{static_content_path} = $c->config->{static_content_path};
 
