@@ -47,6 +47,8 @@ use IO::Compress::Gzip qw(gzip $GzipError);
 use Catalyst::Utils;
 use SGN::Image;
 use Archive::Tar;
+use CXGN::Stock::ObsoletedStocks;
+use CXGN::People::Person;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -1799,9 +1801,9 @@ sub download_images_POST : Args(0) {
     my $trial_id = $c->req->param('trial_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $trial = CXGN::Trial->new({ 
-        bcs_schema => $schema, 
-        trial_id => $trial_id, 
+    my $trial = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
         }
     );
 
@@ -1850,6 +1852,84 @@ sub download_images_POST : Args(0) {
     $c->serve_static_file($tar_file);
 
     return;
+}
+
+
+sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metadata_action') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+    my @obsoleted_stock_ids;
+    my $accession_list_id;
+    my $source_description;
+    my @accession_ids;
+
+    my $obsoleted_stock_list_id = $c->req->param("obsoleted_stock_list_list_select");
+    my $obsoleted_stocks = SGN::Controller::AJAX::List->retrieve_list($c, $obsoleted_stock_list_id);
+    my @obsoleted_stock_names = map { $_->[1] } @$obsoleted_stocks;
+
+    my $transform = CXGN::List::Transform->new();
+    my $stock_transform = $transform->can_transform("stocks", "stock_ids");
+    my $stock_id_hash = $transform->transform($schema, $stock_transform, \@obsoleted_stock_names);
+    @obsoleted_stock_ids = @{$stock_id_hash->{transform}};
+
+    my $ped_format = $c->req->param("ped_format") || "parents_only";
+    my $ped_include = $c->req->param("ped_include") || "ancestors";
+    my $file_format = $c->req->param("file_format") || ".txt";
+    my $dl_token = $c->req->param("obsolete_metadata_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "obsoleted_stocks_download_XXXXX", UNLINK=> 0);
+
+    ## no critic (RequireBriefOpen)
+    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+    my $filename;
+
+    my $obsoleted_stocks_obj = CXGN::Stock::ObsoletedStocks->new(bcs_schema => $schema, obsoleted_stock_ids => \@obsoleted_stock_ids);
+    my $obsolete_metadata = $obsoleted_stocks_obj->get_obsolete_metadata();
+
+    my @download_rows = ();
+    foreach my $obsolete_info (@$obsolete_metadata) {
+        my ($stock_id, $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
+        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
+        my $full_name = $person->get_first_name()." ".$person->get_last_name();
+        push @download_rows, [$stock_name, $obsolete_note, $obsolete_date,$full_name];
+    }
+    print STDERR "DOWNLOAD ROWS =".Dumper(\@download_rows)."\n";
+
+
+    # TEXT FORMAT
+    print $FILE "Name\tObsolete_Note\tDate\tObsoleted by\n";
+    foreach my $row (@download_rows) {
+        print $FILE @$row;
+    }
+    close $FILE;
+
+    $filename = "obsoleted_stocks.txt";
+
+    $c->res->content_type("application/text");
+    $c->res->cookies->{$dl_cookie} = {
+      value => $dl_token,
+      expires => '+1m',
+    };
+    $c->res->header("Filename", $filename);
+    $c->res->header("Content-Disposition", qq[attachment; filename="$filename"]);
+
+
+    #my $output = read_file($tempfile, binmode => ':utf8' );
+
+    ### read_file does not read UTF-8 correctly, even with binmode :raw
+    my $output = "";
+    open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
+    while (<$F>) {
+        $output .= $_;
+    }
+    close($F);
+
+    $c->res->body($output);
+
 }
 
 
