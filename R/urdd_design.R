@@ -24,8 +24,14 @@ nChecks <- length(controls)
 treatments <- stocks[!stocks %in% controls]
 
 ## Setting the same number of treatments per block
-nInd <- nLines/nBlocks
-nIndBlock <- rep(nInd, nBlocks)
+if(is.null(nBlocks)) {
+  nInd <- nLines/nBlocks
+  nIndBlock <- rep(nInd, nBlocks)
+}else{
+  nInd <- nIndBlock <- nLines
+}
+nControls <- length(controls)
+
 
 if(nBlocks>1){typeDesign = 'DBUDC'}else{typeDesign='SUDC'}
 if(layout=="serpentine"){lType<-"serpentine"}else{lType<-"cartesian"}
@@ -46,6 +52,8 @@ nRow <- as.integer(nRow)
 nCol <- as.integer(nCol)
 nLines <- as.integer(nLines)
 nChecks <- as.integer(nChecks)
+
+basefile <- tools::file_path_sans_ext(paramfile)
 
 ## FieldHub Design
 output <- capture.output({
@@ -80,7 +88,6 @@ field_book$CHECKS[field_book$CHECKS>0] <- 1
 head(field_book,10)
 
 # save result files
-basefile <- tools::file_path_sans_ext(paramfile)
 outfile = paste(basefile, ".design", sep="");
 sink(outfile)
 write.table(field_book, quote=F, sep='\t', row.names=FALSE)
