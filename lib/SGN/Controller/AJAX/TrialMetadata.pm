@@ -5101,16 +5101,19 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     my $bottom_border = $c->req->param('bottom_border') || 'false';
     my $left_border = $c->req->param('left_border') || 'false';
     my $gaps = $c->req->param('gaps') || 'false';
+    my $subplots = $c->req->param('subplots') || 'false';
+    my $plants = $c->req->param('plants') || 'false';
     my $hm_pltid = $c->req->param('hm_pltid') || 'plot_id';
     my $hm_range = $c->req->param('hm_range') || 'row_number';
     my $hm_row = $c->req->param('hm_row') || 'col_number';
+    my $include_subplots_plants = $subplots eq 'true' || $plants eq 'true';
 
     # Check parameters
     if ( scalar(@trial_ids) eq 0 ) {
         $c->stash->{rest} = { error => "No trial_ids provided!" };
         return;
     }
-    if ( $type ne 'planting' && $type ne 'harvest' && $type ne 'harvestmaster' ) {
+    if ( $type ne 'planting' && $type ne 'collection' && $type ne 'harvest' && $type ne 'harvestmaster' ) {
         $c->stash->{rest} = { error => "Unrecognized type!" };
         return;
     }
@@ -5157,43 +5160,171 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         }
     };
 
-    # Generate CSV file
+    # Fetch subplots and/or plant entries, if requested
+    my %subplots_by_plot;
+    my %plants_by_plot;
+    if ( $include_subplots_plants ) {
+        foreach my $trial_id (@trial_ids) {
+            my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+
+            # Get subplots for the trial
+            if ( $subplots eq 'true' ) {
+                my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+                    schema => $schema,
+                    trial_id => $trial_id,
+                    data_level => 'subplots',
+                    selected_columns => {"subplot_name"=>1,"subplot_id"=>1,"plot_name"=>1,"plot_id"=>1},
+                });
+                my $output = $trial_layout_download->get_layout_output()->{output};
+
+                if ( defined $output ) {
+                    foreach (@$output) {
+                        my $subplot_name = $_->[0];
+                        my $subplot_id = $_->[1];
+                        my $plot_name = $_->[2];
+                        if ( $plot_name ne 'plot_name' ) {
+                            $subplots_by_plot{$plot_name} = [] if !exists $subplots_by_plot{$plot_name};
+                            push @{$subplots_by_plot{$plot_name}}, { name => $subplot_name, id => $subplot_id };
+                        }
+                    }
+                }
+            }
+
+            # Get plants for the trial
+            if ( $plants eq 'true' ) {
+                my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+                    schema => $schema,
+                    trial_id => $trial_id,
+                    data_level => 'plants',
+                    selected_columns => {"plant_name"=>1,"plant_id"=>1,"plot_name"=>1,"plot_id"=>1},
+                });
+                my $output = $trial_layout_download->get_layout_output()->{output};
+
+                if ( defined $output ) {
+                    foreach (@$output) {
+                        my $plant_name = $_->[0];
+                        my $plant_id = $_->[1];
+                        my $plot_name = $_->[2];
+                        if ( $plot_name ne 'plot_name' ) {
+                            $plants_by_plot{$plot_name} = [] if !exists $plants_by_plot{$plot_name};
+                            push @{$plants_by_plot{$plot_name}}, { name => $plant_name, id => $plant_id };
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    # Generate CSV File
     my $filename;
     my @data;
-    if ( $type eq 'planting' || $type eq 'harvest' ) {
+    if ( $type eq 'planting' || $type eq 'collection' || $type eq 'harvest' ) {
         $filename = $type . "_order_" . join("-", @trial_ids) . ".csv";
-        my $col = $type . "_order";
+        my $order_column = $type . "_order";
 
         # Add CSV headers
-        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "entry_number", "seedlot_name", "row_number", "col_number", "rep_number", "block_number", "is_a_control");
+        my @headers = ($order_column);
+        push(@headers, "observationunit_name") if $include_subplots_plants;
+        push(@headers,
+            "type",
+            "location_name",
+            "trial_name",
+            "plot_number",
+            "plot_name",
+            "accession_name",
+            "entry_number",
+            "seedlot_name",
+            "row_number",
+            "col_number",
+            "rep_number",
+            "block_number",
+            "is_a_control"
+        );
         push(@data, \@headers);
 
         # Add plot rows
         my $plots = $results->{plots};
-        foreach (@$plots) {
-            if ( $_->{type} eq 'plot' ) {
-                my @d = (
-                    $_->{order},
-                    $_->{type},
-                    "\"$_->{location_name}\"",
-                    $_->{trial_name},
-                    $_->{plot_number},
-                    $_->{plot_name},
-                    $_->{accession_name},
-                    $_->{entry_number},
-                    $_->{seedlot_name},
-                    $_->{row_number},
-                    $_->{col_number},
-                    $_->{rep_number},
-                    $_->{block_number},
-                    $_->{is_a_control}
+        my $order_offset = 0;
+        foreach my $plot (@$plots) {
+
+            # Add plots
+            if ( $plot->{type} eq 'plot' ) {
+                my @d = ($plot->{order}+$order_offset);
+                push(@d, $plot->{plot_name}) if $include_subplots_plants;
+                push(@d,
+                    $plot->{type},
+                    "\"$plot->{location_name}\"",
+                    $plot->{trial_name},
+                    $plot->{plot_number},
+                    $plot->{plot_name},
+                    $plot->{accession_name},
+                    $plot->{entry_number},
+                    $plot->{seedlot_name},
+                    $plot->{row_number},
+                    $plot->{col_number},
+                    $plot->{rep_number},
+                    $plot->{block_number},
+                    $plot->{is_a_control}
                 );
                 push(@data, \@d);
+
+                # Add additional subplots for the current plot, if found
+                if ( $include_subplots_plants && exists $subplots_by_plot{$plot->{plot_name}} ) {
+                    foreach my $sp (@{$subplots_by_plot{$plot->{plot_name}}}) {
+                        $order_offset++;
+                        my @d = ($plot->{order}+$order_offset);
+                        push(@d, $sp->{name});
+                        push(@d,
+                            "subplot",
+                            "\"$plot->{location_name}\"",
+                            $plot->{trial_name},
+                            $plot->{plot_number},
+                            $plot->{plot_name},
+                            $plot->{accession_name},
+                            $plot->{entry_number},
+                            $plot->{seedlot_name},
+                            $plot->{row_number},
+                            $plot->{col_number},
+                            $plot->{rep_number},
+                            $plot->{block_number},
+                            $plot->{is_a_control}
+                        );
+                        push(@data, \@d);
+                    }
+                }
+
+                # Add additional plant entries for the current plot, if found
+                if ( $include_subplots_plants && exists $plants_by_plot{$plot->{plot_name}} ) {
+                    foreach my $p (@{$plants_by_plot{$plot->{plot_name}}}) {
+                        $order_offset++;
+                        my @d = ($plot->{order}+$order_offset);
+                        push(@d, $p->{name});
+                        push(@d,
+                            "plant",
+                            "\"$plot->{location_name}\"",
+                            $plot->{trial_name},
+                            $plot->{plot_number},
+                            $plot->{plot_name},
+                            $plot->{accession_name},
+                            $plot->{entry_number},
+                            $plot->{seedlot_name},
+                            $plot->{row_number},
+                            $plot->{col_number},
+                            $plot->{rep_number},
+                            $plot->{block_number},
+                            $plot->{is_a_control}
+                        );
+                        push(@data, \@d);
+                    }
+                }
             }
+
+            # Add borders, gaps, etc if in the layout
             else {
-                my @d = (
-                    $_->{order},
-                    $_->{type},
+                my @d = ($plot->{order}+$order_offset);
+                push(@d, "") if $include_subplots_plants;
+                push(@d,
+                    $plot->{type},
                     "", # location
                     "", # trial
                     "", # plot number
@@ -5201,52 +5332,109 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     "", # accession
                     "", # entry number
                     "", # seedlot
-                    $_->{row_number},
-                    $_->{col_number},
+                    $plot->{row_number},
+                    $plot->{col_number},
                     "", # rep
                     "", # block
                     "", # control
                 );
                 push(@data, \@d);
             }
+
         }
     }
 
+    # Generate HarvestMaster File
     elsif ( $type eq 'harvestmaster' ) {
         $filename = "harvestmaster_" . join("-", @trial_ids) . ".csv";
 
         # Add CSV headers
-        my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "entry_number", "seedlot_name", "rep_number", "block_number", "is_a_control");
+        my @headers = ("PLTID", "Range", "Row");
+        push(@headers, "observationunit_name") if $include_subplots_plants;
+        push(@headers, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "entry_number", "seedlot_name", "rep_number", "block_number", "is_a_control");
         push(@data, \@headers);
 
         # Add plot rows
         my $plots = $results->{plots};
-        foreach (@$plots) {
-            if ( $_->{type} eq 'plot' ) {
-                my @d = (
-                    $_->{$hm_pltid},
-                    $_->{$hm_range},
-                    $_->{$hm_row},
-                    $_->{type},
-                    "\"$_->{location_name}\"",
-                    $_->{trial_name},
-                    $_->{plot_number},
-                    $_->{plot_name},
-                    $_->{accession_name},
-                    $_->{entry_number},
-                    $_->{seedlot_name},
-                    $_->{rep_number},
-                    $_->{block_number},
-                    $_->{is_a_control}
+        foreach my $plot (@$plots) {
+
+            # Add plots
+            if ( $plot->{type} eq 'plot' ) {
+                my @d = ($plot->{$hm_pltid}, $plot->{$hm_range}, $plot->{$hm_row});
+                push(@d, $plot->{plot_name}) if $include_subplots_plants;
+                push(@d,
+                    $plot->{type},
+                    "\"$plot->{location_name}\"",
+                    $plot->{trial_name},
+                    $plot->{plot_number},
+                    $plot->{plot_name},
+                    $plot->{accession_name},
+                    $plot->{entry_number},
+                    $plot->{seedlot_name},
+                    $plot->{rep_number},
+                    $plot->{block_number},
+                    $plot->{is_a_control}
                 );
                 push(@data, \@d);
+
+                # Add additional subplots for the current plot, if found
+                if ( $include_subplots_plants && exists $subplots_by_plot{$plot->{plot_name}} ) {
+                    foreach my $sp (@{$subplots_by_plot{$plot->{plot_name}}}) {
+                        my $id = $plot->{$hm_pltid};
+                        $id = $sp->{id} if $hm_pltid eq 'plot_id';
+                        $id = $sp->{name} if $hm_pltid eq 'plot_name';
+                        my @d = ($id, $plot->{$hm_range}, $plot->{$hm_row});
+                        push(@d, $sp->{name});
+                        push(@d,
+                            "subplot",
+                            "\"$plot->{location_name}\"",
+                            $plot->{trial_name},
+                            $plot->{plot_number},
+                            $plot->{plot_name},
+                            $plot->{accession_name},
+                            $plot->{entry_number},
+                            $plot->{seedlot_name},
+                            $plot->{rep_number},
+                            $plot->{block_number},
+                            $plot->{is_a_control}
+                        );
+                        push(@data, \@d);
+                    }
+                }
+
+                # Add additional plant entries for the current plot, if found
+                if ( $include_subplots_plants && exists $plants_by_plot{$plot->{plot_name}} ) {
+                    foreach my $p (@{$plants_by_plot{$plot->{plot_name}}}) {
+                        my $id = $plot->{$hm_pltid};
+                        $id = $p->{id} if $hm_pltid eq 'plot_id';
+                        $id = $p->{name} if $hm_pltid eq 'plot_name';
+                        my @d = ($id, $plot->{$hm_range}, $plot->{$hm_row});
+                        push(@d, $p->{name});
+                        push(@d,
+                            "plant",
+                            "\"$plot->{location_name}\"",
+                            $plot->{trial_name},
+                            $plot->{plot_number},
+                            $plot->{plot_name},
+                            $plot->{accession_name},
+                            $plot->{entry_number},
+                            $plot->{seedlot_name},
+                            $plot->{rep_number},
+                            $plot->{block_number},
+                            $plot->{is_a_control}
+                        );
+                        push(@data, \@d);
+                    }
+                }
+
             }
+
+            # Add gaps, borders, etc if in the layout
             else {
-                my @d = (
-                    $_->{type},
-                    $_->{$hm_range},
-                    $_->{$hm_row},
-                    $_->{type},
+                my @d = ($plot->{type}, $plot->{$hm_range}, $plot->{$hm_row});
+                push(@d, "") if $include_subplots_plants; # observationunit_name
+                push(@d,
+                    $plot->{type},
                     "", # location
                     "", # trial
                     "", # plot number
@@ -5261,15 +5449,14 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                 push(@data, \@d);
             }
         }
-
     }
 
+    # Join all lines into CSV format
     my @all_lines = ();
     foreach my $each_line (@data) {
         my $each_line_string = join(",", @$each_line);
         push @all_lines, $each_line_string;
     }
-
     my $all_lines_string = join("\n", @all_lines);
 
     # Return the generated file
