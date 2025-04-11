@@ -161,14 +161,14 @@ has 'include_plot_order' => (
 
 has 'plot_order' => (
     is => 'rw',
-    isa => 'Str',
-    default => ''
+    isa => 'Str|Undef',
+    default => undef
 );
 
 has 'plot_start' => (
     is => 'rw',
-    isa => 'Str',
-    default => ''
+    isa => 'Str|Undef',
+    default => undef
 );
 
 sub download {
@@ -180,7 +180,7 @@ sub download {
     my $trial_id = $self->trial_id();
     my $tempfile = $self->tempfile();
 
-    my $include_plot_order = $self->include_plot_order() && $self->plot_order() ne '' && $self->plot_start() ne '';
+    my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
     # my $wb = Spreadsheet::WriteExcel->new($tempfile);
 
