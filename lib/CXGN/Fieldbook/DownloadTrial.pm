@@ -234,20 +234,18 @@ sub download {
 
     # Generate the output Excel file
     my $row_num = 0;
+    my $plot_name_col = 0;
     foreach my $l (@output_array){
         my $col_num = 0;
         foreach my $c (@$l){
+            $plot_name_col = $col_num if $row_num == 0 && $c eq 'plot_name';
             $ws->write($row_num, $col_num, $c);
             $col_num++;
         }
         if ( $include_plot_order ) {
-            if ( $row_num == 0 ) {
-                $ws->write($row_num, $col_num, 'plot_order');
-            }
-            else {
-                my $po = exists $plot_order{$l->[0]} ? $plot_order{$l->[0]} : '';
-                $ws->write($row_num, $col_num, $po);
-            }
+            my $pn = $l->[$plot_name_col];
+            my $po = exists $plot_order{$pn} ? $plot_order{$pn} : '';
+            $ws->write($row_num, $col_num, $row_num == 0 ? 'plot_order' : $po);
         }
         $row_num++;
     }
