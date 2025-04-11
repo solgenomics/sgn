@@ -195,7 +195,7 @@ sub store_composed_term {
             my $component = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $component_id });
             my $component_props_rs = $component->cvtermprops();
             while ( my $component_prop = $component_props_rs->next() ) {
-                my $new_term_prop = $schema->resultset->find_or_create({
+                my $new_term_prop = $schema->resultset('Cv::Cvtermprop')->find_or_create({
                     cvterm_id => $new_term->cvterm_id(),
                     type_id   => $component_prop->type_id(),
                     value     => $component_prop->value(),
