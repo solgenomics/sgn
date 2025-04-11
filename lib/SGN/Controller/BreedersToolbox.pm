@@ -972,6 +972,11 @@ sub manage_transformations : Path("/breeders/transformations") Args(0) {
     my @breeding_programs = @$breeding_programs;
     my @roles = $c->user->roles();
 
+    my $is_curator;
+    if (grep { /curator/ } @roles) {
+        $is_curator = 1;
+    }
+
     foreach my $role (@roles) {
         for (my $i=0; $i < scalar @breeding_programs; $i++) {
             if ($role eq $breeding_programs[$i][1]){
@@ -989,6 +994,8 @@ sub manage_transformations : Path("/breeders/transformations") Args(0) {
     $c->stash->{programs} = \@breeding_programs;
 
     $c->stash->{roles} = $c->user()->roles();
+
+    $c->stash->{is_curator} = $is_curator;
 
     $c->stash->{template} = '/transformation/manage_transformation.mas';
 
