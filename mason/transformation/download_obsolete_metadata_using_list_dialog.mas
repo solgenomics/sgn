@@ -21,6 +21,7 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <input type="hidden" id="download_obsolete_metadata_token" name="download_obsolete_metadata_token"/>
                 <button type="button" class="btn btn-primary" id="download_obsoleted_stock_list_submit">Download</button>
                 <button id="download_obsolete_metadata_using_list_dismiss_button_2" name="download_obsolete_metadata_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
@@ -49,6 +50,8 @@ jQuery(document).ready(function(){
                 if (r.missing.length > 0) {
                    alert("The obsoleted stock list did not pass validation. Please correct the list and try again");
                 } else {
+                    var token = new Date().getTime(); //use the current timestamp as the token name and value
+                    jQuery('#download_obsolete_metadata_token').val(token);
                     jQuery('#download_obsolete_metadata').submit();
                 }
             });

@@ -34,7 +34,7 @@ sub get_obsolete_metadata {
         FROM stock
         JOIN phenome.stock_owner ON (stock.stock_id = phenome.stock_owner.stock_id)
         JOIN metadata.md_metadata ON (phenome.stock_owner.metadata_id = metadata.md_metadata.metadata_id)
-        where stock.stock_id IN ($stock_list_query) AND stock.is_obsolete = 't' ";
+        where stock.stock_id IN ($stock_list_query) AND stock.is_obsolete = 't' ORDER BY stock.uniquename";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -44,7 +44,7 @@ sub get_obsolete_metadata {
     while (my ($stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
         push @obsoleted_stocks, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id]
     }
-
+    
     return \@obsoleted_stocks;
 
 }

@@ -1861,31 +1861,19 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $dbh = $schema->storage->dbh;
-    my @obsoleted_stock_ids;
-    my $accession_list_id;
-    my $source_description;
-    my @accession_ids;
-
+    my $file_format = $c->req->param("file_format") || ".xlsx";
     my $obsoleted_stock_list_id = $c->req->param("obsoleted_stock_list_list_select");
+
     my $obsoleted_stocks = SGN::Controller::AJAX::List->retrieve_list($c, $obsoleted_stock_list_id);
     my @obsoleted_stock_names = map { $_->[1] } @$obsoleted_stocks;
 
     my $transform = CXGN::List::Transform->new();
     my $stock_transform = $transform->can_transform("stocks", "stock_ids");
     my $stock_id_hash = $transform->transform($schema, $stock_transform, \@obsoleted_stock_names);
-    @obsoleted_stock_ids = @{$stock_id_hash->{transform}};
+    my @obsoleted_stock_ids = @{$stock_id_hash->{transform}};
 
-    my $ped_format = $c->req->param("ped_format") || "parents_only";
-    my $ped_include = $c->req->param("ped_include") || "ancestors";
-    my $file_format = $c->req->param("file_format") || ".txt";
-    my $dl_token = $c->req->param("obsolete_metadata_download_token") || "no_token";
+    my $dl_token = $c->req->param("download_obsolete_metadata_token'") || "no_token";
     my $dl_cookie = "download".$dl_token;
-
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "obsoleted_stocks_download_XXXXX", UNLINK=> 0);
-
-    ## no critic (RequireBriefOpen)
-    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
-    my $filename;
 
     my $obsoleted_stocks_obj = CXGN::Stock::ObsoletedStocks->new(bcs_schema => $schema, obsoleted_stock_ids => \@obsoleted_stock_ids);
     my $obsolete_metadata = $obsoleted_stocks_obj->get_obsolete_metadata();
@@ -1895,38 +1883,37 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
         my ($stock_id, $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
-        push @download_rows, [$stock_name, $obsolete_note, $obsolete_date,$full_name];
+        if ($obsolete_date =~ /Obsolete/) {
+            push @download_rows, [$stock_name, $obsolete_note, $obsolete_date,$full_name];
+        }
     }
-    print STDERR "DOWNLOAD ROWS =".Dumper(\@download_rows)."\n";
 
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "obsoleted_stocks_download_XXXXX", UNLINK=> 0);
 
-    # TEXT FORMAT
-    print $FILE "Name\tObsolete_Note\tDate\tObsoleted by\n";
+    my $file_path = $tempfile . ".xlsx";
+    my $file_name = basename($file_path);
+
+    my $workbook = Excel::Writer::XLSX->new($file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+    my @header = ("Name", "Obsolete Note", "Obsolete Date", "Obsoleted by");
+    $worksheet->write_row(0, 0, \@header);
+
+    my $row_count = 1;
     foreach my $row (@download_rows) {
-        print $FILE @$row;
+        $worksheet->write_row($row_count, 0, $row);
+        $row_count++;
     }
-    close $FILE;
+    $workbook->close();
 
-    $filename = "obsoleted_stocks.txt";
-
-    $c->res->content_type("application/text");
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     $c->res->cookies->{$dl_cookie} = {
-      value => $dl_token,
-      expires => '+1m',
+        value => $dl_token,
+        expires => '+1m',
     };
-    $c->res->header("Filename", $filename);
-    $c->res->header("Content-Disposition", qq[attachment; filename="$filename"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
-
-    #my $output = read_file($tempfile, binmode => ':utf8' );
-
-    ### read_file does not read UTF-8 correctly, even with binmode :raw
-    my $output = "";
-    open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
-    while (<$F>) {
-        $output .= $_;
-    }
-    close($F);
+    my $output = read_file($file_path);
 
     $c->res->body($output);
 
