@@ -117,6 +117,7 @@ $trial_stock_type => undef
                             <div style="display: flex; gap: 15px; align-items: center;">
                                 <label>Plot&nbsp;Order:</label>
                                 <select class="form-control" name="create_fieldbook_plot_order_<% $download_type %>" id="create_fieldbook_plot_order_<% $download_type %>">
+                                    <option value="">--Select plot order--</option>
                                     <option value="by_col_serpentine">By Column: Serpentine</option>
                                     <option value="by_col_zigzag">By Column: Zigzag</option>
                                     <option value="by_row_serpentine">By Row: Serpentine</option>
@@ -126,6 +127,7 @@ $trial_stock_type => undef
                             <div style="display: flex; gap: 15px; align-items: center;">
                                 <label>Starting&nbsp;Plot:</label>
                                 <select class="form-control" id="create_fieldbook_plot_start_<% $download_type %>" name="create_fieldbook_plot_start_<% $download_type %>">
+                                    <option value="">--Select start plot--</option>
                                     <option value="bottom_left">Bottom Left</option>
                                     <option value="top_left">Top Left</option>
                                     <option value="top_right">Top Right</option>
