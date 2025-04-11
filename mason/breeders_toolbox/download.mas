@@ -1,6 +1,6 @@
 <%args>
 $seedlot_maintenance_enabled => 0
-$is_curator => 1
+$is_curator => 0
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>

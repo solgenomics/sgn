@@ -60,6 +60,15 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 	    return;
     }
 
+    my $is_curator;
+    if ($c->user()) {
+        my @roles = $c->user->roles();
+        if (grep { /curator/ } @roles) {
+            $is_curator = 1;
+        }
+    }
+
+    $c->stash->{is_curator} = $is_curator;
     $c->stash->{seedlot_maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
