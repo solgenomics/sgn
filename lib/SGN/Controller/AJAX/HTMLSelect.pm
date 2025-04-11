@@ -85,14 +85,14 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
 
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) } )->get_breeding_programs();
 
-    my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
     if ($empty) { unshift @$breeding_programs, [ "", "Please select a program" ]; }
+    my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
 
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
       choices => $breeding_programs,
-#      selected => $default
+      selected => $default
     );
     $c->stash->{rest} = { select => $html };
 }
