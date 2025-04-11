@@ -1,5 +1,6 @@
 <%args>
 $seedlot_maintenance_enabled => 0
+$is_curator => 1
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>
@@ -166,16 +167,16 @@ $(document).ready(function() {
 
     get_select_box('datasets', 'phenotype_download_dataset_list');
 
-    $('#metadata').click(function() { 
+    $('#metadata').click(function() {
       var trial_list_id = $('#trial_metadata_list_list_select').val();
       var trial_validation = 1;
-      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true).then( 
+      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true).then(
          function(r) {
             if (r.missing.length != 0) {
                alert("The following lists did not pass validation: "+r.missing.join(", ")+". Please correct the list(s) and try again");
             }
             else {
-               
+
 
 //      var ladda = Ladda.create(this);
 //      ladda.start();
@@ -223,25 +224,25 @@ $(document).ready(function() {
             alert('Some lists ('+names_str+') are not valid, please check.');
             jQuery('#working_modal').modal('hide');
          }
-         else { 
+         else {
             download_phenotypes(this);
             jQuery('#working_modal').modal('hide');
-         
+
          }},
-    
+
          function(e) { alert(e);     jQuery('#working_modal').modal('hide');
 }
          );
 
       });
 
-        
-      
+
+
 
 //alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
 //	 return;
-//      
-  
+//
+
 
 });
 
@@ -254,7 +255,7 @@ function download_phenotypes() {
      // manage_dl_with_cookie(token, ladda);
       jQuery('#phenotype_download_token').val(token);
       jQuery('#download_form').submit();
- 
+
 
 }
 
@@ -317,11 +318,11 @@ $(document).ready(function() {
               jQuery('#working_modal').modal('show');
               lo.validate(accession_list_id, 'accessions', true).then(
               function(r) {
-                 if (r.valid != 1) { 
+                 if (r.valid != 1) {
                     alert("The accession list did not pass validation. Please correct the list and try again");
                     jQuery('#working_modal').modal('hide');
                  }
-                 else { 
+                 else {
                     //var ladda = Ladda.create(this);
                     //ladda.start();
                     //var token = new Date().getTime(); //use the current timestamp as the token name and value
@@ -423,11 +424,11 @@ $(document).ready(function() {
 
         if (accession_list_id) {
            accession_validation = lo.validate(accession_list_id, 'accessions', true).then(
-             function(r) { 
+             function(r) {
                  if(r.valid != 1) {
                    alert("The accession list did not pass validation. Please correct the list and try again");
                  }
-                 else { 
+                 else {
                     //var ladda = Ladda.create(this);
                     //ladda.start();
                     //var token = new Date().getTime(); //use the current timestamp as the token name and value
@@ -604,6 +605,75 @@ $(document).ready(function() {
 <!-- end of code for seedlot maintenance event download -->
 
 
+<!-- start of code for obsolete metadata download -->
+
+% if ($is_curator) {
+
+<div class="well well-sm">
+    <form id="download_obsolete_metadata_action" action="/breeders/download_obsolete_metadata_action" method="POST">
+        <table class="table" cellpadding="10">
+            <thead>
+                <tr><td colspan="2"><h4>Download Obsolete Metadata</h4><p>Select parameters:</p></tr>
+                <tr>
+                    <th>Obsoleted Stocks</th>
+                    <th>Format</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div id="obsoleted_stock_list"></div>
+                    </td>
+                    <td>
+                        <select class="form-control" id="obsoleted_metadata_format" name="file_format">
+                            <option value=".xlsx">XLSX</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" type="button" id="obsolete_metadata_download">Download</button>
+                        <input type="hidden" id="obsolete_metadata_download_token" name="obsolete_metadata_download_token"/>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+
+    var lo = new CXGN.List();
+    jQuery('#obsoleted_stock_list').html(lo.listSelect('obsoleted_stock_list', [ 'obsoleted_stocks' ], 'Please select', undefined, undefined));
+
+    jQuery('#obsolete_metadata_download').click(function() {
+        var obsoleted_stock_list_id = jQuery('#obsoleted_stock_list_list_select').val();
+        alert(obsoleted_stock_list_id);
+        if (!obsoleted_stock_list_id) {
+            alert("Please select an obsoleted stock list!");
+            return;
+        } else {
+            lo.validate(obsoleted_stock_list_id, 'obsoleted_stocks', true).then((r) => {
+                if (r.missing.length > 0) {
+                   alert("The obsoleted stock list did not pass validation. Please correct the list and try again");
+                } else {
+                    var token = new Date().getTime(); //use the current timestamp as the token name and value
+                    jQuery('#obsolete_metadata_download_token').val(token);
+                    jQuery('#download_obsolete_metadata_action').submit();
+                }
+            });
+        }
+    });
+
+});
+
+</script>
+
+% }
+
+<!-- end of code for obsolete metadata download -->
+
+
 <div class="well well-sm">
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
 <table class="table"  cellpadding="10">
@@ -657,15 +727,15 @@ $(document).ready(function() {
       var accession_validation = 1;
       if (accession_list_id) {
   accession_validation = lo.validate(accession_list_id, 'accessions', true).then(
-     function(r) { 
+     function(r) {
          if (!( accession_list_id || protocol_list_id) ) {
              alert("You need to select a list of accessions and a protocol !");
          }
-         else if(r.valid != 1)  { 
+         else if(r.valid != 1)  {
              alert("The accession list could not be validated. Please correct the list(s) and try again");
          }
   else  {
-  
+
 
       //var ladda = Ladda.create(this);
       //ladda.start();
@@ -751,11 +821,11 @@ $(document).ready(function() {
 		});
 
       var lists = new Array();
-  
+
       var accession_list_id = $('#genotype_qc_accession_list_list_select').val();
       var trial_list_id = $('#genotype_trial_list_list_select').val();
 
-      
+
       if (! (accession_list_id || trial_list_id) ) {
         alert("You need to select an accession or a trial, or both!");
         return;
@@ -774,7 +844,7 @@ $(document).ready(function() {
   types.push('trials');
   }
 
-  
+
       validateLists(lists, types).then(function(r) {
          console.log('validation results: '+JSON.stringify(r));
          var names_str = '';
@@ -785,16 +855,16 @@ $(document).ready(function() {
             alert('Some lists ('+names_str+') are not valid, please check.');
             jQuery('#working_modal').modal('hide');
          }
-         else { 
+         else {
            //      var ladda = Ladda.create(this);
 //         ladda.start();
 //         var token = new Date().getTime(); //use the current timestamp as the token name and value
 //          manage_dl_with_cookie(token, ladda);
 //          jQuery('#qc_download_token').val(token);
             jQuery('#gbs_qc').submit();
-   
+
             jQuery('#working_modal').modal('hide');
-         
+
         }
 
       });
