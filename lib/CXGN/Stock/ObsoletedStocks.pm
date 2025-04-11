@@ -30,8 +30,9 @@ sub get_obsolete_metadata {
 
     my $stock_list_query = join ("," , @$obsoleted_stock_ids);
 
-    my $q = "SELECT stock.stock_id, stock.uniquename, metadata.md_metadata.obsolete_note, metadata.md_metadata.modification_note, phenome.stock_owner.sp_person_id
+    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name, metadata.md_metadata.obsolete_note, metadata.md_metadata.modification_note, phenome.stock_owner.sp_person_id
         FROM stock
+        JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
         JOIN phenome.stock_owner ON (stock.stock_id = phenome.stock_owner.stock_id)
         JOIN metadata.md_metadata ON (phenome.stock_owner.metadata_id = metadata.md_metadata.metadata_id)
         where stock.stock_id IN ($stock_list_query) AND stock.is_obsolete = 't' ORDER BY stock.uniquename";
@@ -41,10 +42,10 @@ sub get_obsolete_metadata {
     $h->execute();
 
     my @obsoleted_stocks = ();
-    while (my ($stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
-        push @obsoleted_stocks, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id]
+    while (my ($stock_id,  $stock_name, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
+        push @obsoleted_stocks, [$stock_id, $stock_name, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id]
     }
-    
+
     return \@obsoleted_stocks;
 
 }

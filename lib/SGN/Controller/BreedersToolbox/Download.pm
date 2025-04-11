@@ -1889,11 +1889,11 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
 
     my @download_rows = ();
     foreach my $obsolete_info (@$obsolete_metadata) {
-        my ($stock_id, $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
+        my ($stock_id, $stock_name, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
         if ($obsolete_date =~ /Obsolete/) {
-            push @download_rows, [$stock_name, $obsolete_note, $obsolete_date,$full_name];
+            push @download_rows, [$stock_name, $stock_type, $obsolete_note, $obsolete_date,$full_name];
         }
     }
 
@@ -1905,7 +1905,7 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
     my $workbook = Excel::Writer::XLSX->new($file_path);
     my $worksheet = $workbook->add_worksheet();
 
-    my @header = ("Name", "Obsolete Note", "Obsolete Date", "Obsoleted by");
+    my @header = ("Stock Name", "Stock Type", "Obsolete Note", "Obsolete Date", "Obsoleted by");
     $worksheet->write_row(0, 0, \@header);
 
     my $row_count = 1;

@@ -648,7 +648,6 @@ jQuery(document).ready(function() {
 
     jQuery('#obsolete_metadata_download').click(function() {
         var obsoleted_stock_list_id = jQuery('#obsoleted_stock_list_list_select').val();
-        alert(obsoleted_stock_list_id);
         if (!obsoleted_stock_list_id) {
             alert("Please select an obsoleted stock list!");
             return;
