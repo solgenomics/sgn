@@ -152,10 +152,10 @@ sub store_composed_term {
         $h->execute();
         my $accession = $h->fetchrow_array();
 
-      my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create(
-      {   db_id     => $db->get_column('db_id'),
-		      accession => sprintf("%07d",$accession)
-		  });
+      my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create( {
+          db_id     => $db->get_column('db_id'),
+          accession => sprintf("%07d",$accession)
+      });
 
       my $parent_term= $schema->resultset("Cv::Cvterm")->find(
         { cv_id  =>$cv->cv_id(),
@@ -173,8 +173,8 @@ sub store_composed_term {
             name   => $name,
             dbxref_id  => $new_term_dbxref-> dbxref_id()
         });
-    }
 
+    }
 
     #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
@@ -190,6 +190,18 @@ sub store_composed_term {
                 object_id  => $new_term->cvterm_id(),
                 type_id    => $contains_relationship->cvterm_id()
             });
+
+            #copy cvtermprops from the component to the new post-composed term
+            my $component = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $component_id });
+            my $component_props_rs = $component->cvtermprops();
+            while ( my $component_prop = $component_props_rs->next() ) {
+                my $new_term_prop = $schema->resultset->find_or_create({
+                    cvterm_id => $new_term->cvterm_id(),
+                    type_id   => $component_prop->type_id(),
+                    value     => $component_prop->value(),
+                    rank      => $component_prop->rank()
+                });
+            }
         }
 
         push @new_terms, [$new_term->cvterm_id, $new_term->name().'|COMP:'.sprintf("%07d",$accession)];
