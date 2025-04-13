@@ -13,7 +13,6 @@ if(length(args)==0){
     }
 }
 
-library(FielDHub)
 
 source(paramfile)
 
@@ -57,7 +56,7 @@ basefile <- tools::file_path_sans_ext(paramfile)
 
 ## FieldHub Design
 output <- capture.output({
-  multi_diag <- diagonal_arrangement(
+  multi_diag <- FielDHub::diagonal_arrangement(
     nrows = nRow,
     ncols = nCol,
     lines = nLines,
