@@ -528,13 +528,13 @@ rect.bordered {
                                     <div class="form-group form-group-sm" id="row_number_section" style="display: none">
                                         <label class="col-sm-7 control-label">Number of field rows (Required): </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="fieldMap_row_number" name="row_number" />
+                                            <input class="form-control" id="row_number" name="row_number" />
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="col_number_section" style="display: none">
                                         <label class="col-sm-7 control-label">Number of Columns (Required): </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="fieldMap_col_number" name="col_number" />
+                                            <input class="form-control" id="col_number" name="col_number" />
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="col_number_per_block_section" style="display: none">
