@@ -30,9 +30,9 @@ sub create_design {
   my @converted_plot_numbers;
   my @control_list_crbd;
   my %control_names_lookup;
-  my $fieldmap_row_number;
-  my @fieldmap_row_numbers;
-  my $fieldmap_col_number;
+  my $row_in_design_number;
+  my @row_in_design_numbers;
+  my $col_in_design_number;
   my $plot_layout_format;
   my @col_number_fieldmaps;
 
@@ -54,12 +54,12 @@ sub create_design {
   #   die "Number of blocks not specified\n";
   # }
   
-  if ($self->has_fieldmap_row_number()) {
-    $fieldmap_row_number = $self->get_fieldmap_row_number();
+  if ($self->has_row_in_design_number()) {
+    $row_in_design_number = $self->get_row_in_design_number();
   }
 
-  if ($self->has_fieldmap_col_number()) {
-    $fieldmap_col_number = $self->get_fieldmap_col_number();
+  if ($self->has_col_in_design_number()) {
+    $col_in_design_number = $self->get_col_in_design_number();
   }
 
   my $treatments = [];
@@ -70,7 +70,7 @@ sub create_design {
       $num_trt = scalar(@$treatments);
   }
 
-  print STDERR "Stock number is ".scalar(@stock_list)." and block number is $number_of_blocks \nand cols $fieldmap_col_number \nand row number is $fieldmap_row_number\nTreatments are $num_trt";
+  print STDERR "Stock number is ".scalar(@stock_list)." and block number is $number_of_blocks \nand cols $col_in_design_number \nand row number is $row_in_design_number\nTreatments are $num_trt";
 
   if ($self->has_plot_layout_format()) {
     $plot_layout_format = $self->get_plot_layout_format();
@@ -100,8 +100,8 @@ sub create_design {
   print $F "stocks <- c($stock_list)\n";
   print $F "controls <- c($control_list)\n";
   print $F "nBlocks <- ".$number_of_blocks."\n";
-  print $F "nRow <- ".$fieldmap_row_number."\n";
-  print $F "nCol <- ".$fieldmap_col_number."\n";
+  print $F "nRow <- ".$row_in_design_number."\n";
+  print $F "nCol <- ".$col_in_design_number."\n";
   print $F "serie <- ".$serie."\n";
   print $F "nLines <- ".$num_stocks."\n";
   print $F "layout <- \"$plot_layout_format\"\n";
@@ -154,7 +154,7 @@ sub create_design {
           my @fields = split /\t/, $line;
 
           push @block_numbers,         $fields[ $col_idx{'EXPT'} ];
-          push @fieldmap_row_numbers,  $fields[ $col_idx{'ROW'} ];
+          push @row_in_design_numbers,  $fields[ $col_idx{'ROW'} ];
           push @col_number_fieldmaps,  $fields[ $col_idx{'COLUMN'} ];
           push @plot_numbers,          $fields[ $col_idx{'PLOT'} ];
           push @stock_names,           $fields[ $col_idx{'TREATMENT'} ];
@@ -184,8 +184,8 @@ sub create_design {
     $plot_info{'plot_num_per_block'} = $plot_numbers[$i];
     $plot_info{'is_a_control'} = $is_a_control[$i];
     #$plot_info_per_block{}
-      if ($fieldmap_row_numbers[$i]){
-      $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
+      if ($row_in_design_numbers[$i]){
+      $plot_info{'row_number'} = $row_in_design_numbers[$i];
       $plot_info{'col_number'} = $col_number_fieldmaps[$i];
     }
     $urdd_design{$plot_numbers[$i]} = \%plot_info;

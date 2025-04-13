@@ -1454,11 +1454,11 @@ jQuery(document).ready(function ($) {
                 $("#show_list_of_unrep_family_name").hide();
                 $("#show_list_of_rep_family_name").hide();
             }
-            $("#FieldMap").show();
+            $("#FieldMap").hide();
             $("#prephelp").hide();
             $("#trial_multi-design_more_info").show();
-            $("#show_no_of_row_in_design").hide();
-            $("#show_no_of_col_in_design").hide();
+            $("#show_no_of_row_in_design").show();
+            $("#show_no_of_col_in_design").show();
             $("#show_no_of_rep_times").hide();
             $("#show_no_of_block_sequence").show();
             $("#show_no_of_sub_block_sequence").hide();

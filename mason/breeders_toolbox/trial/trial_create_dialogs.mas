@@ -443,7 +443,7 @@ rect.bordered {
                                     <div class="col-sm-5"  >
                                         <div class="input-group">
                                             <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
-                                            <input class="form-control" id="fieldMap_row_number" name="no_of_row_in_design" placeholder="26"/>
+                                            <input class="form-control" id="no_of_row_in_design" name="no_of_row_in_design" placeholder="26"/>
                                         </div>
                                     </div>
                                 </div>
@@ -452,7 +452,7 @@ rect.bordered {
                                     <div class="col-sm-5"  >
                                         <div class="input-group">
                                             <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
-                                            <input class="form-control" id="fieldMap_col_number" name="no_of_col_in_design" placeholder="26"/>
+                                            <input class="form-control" id="no_of_col_in_design" name="no_of_col_in_design" placeholder="26"/>
                                         </div>
                                     </div>
                                 </div>
