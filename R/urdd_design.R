@@ -4,7 +4,7 @@ args <- commandArgs(TRUE)
 
 if (length(args) == 0) {
   message("No arguments supplied.")
-  param_file <- ""
+  paramfile <- ""
 } else {
   for (i in seq_along(args)) {
     message(paste("Processing arg", args[[i]]))
@@ -12,81 +12,81 @@ if (length(args) == 0) {
   }
 }
 
-source(param_file)
+source(paramfile)
 
-n_stocks <- length(stocks)
-n_checks <- length(controls)
+nStocks <- length(stocks)
+nChecks <- length(controls)
 
 ## Separating treatments from checks
 treatments <- stocks[!stocks %in% controls]
 
 ## Setting the same number of treatments per block
-if (is.null(n_blocks)) {
-  n_ind <- n_lines
-  n_ind_block <- n_lines
-} else {
-  n_ind <- n_lines / n_blocks
-  n_ind_block <- rep(n_ind, n_blocks)
+if(is.null(nBlocks)) {
+  nInd <- nIndBlock <- nLines
+}else{
+  nInd <- nLines / nBlocks
+  nIndBlock <- rep(nInd, nBlocks)
 }
+
 
 n_controls <- length(controls)
 
-type_design <- if (n_blocks > 1) "DBUDC" else "SUDC"
-layout_type <- if (layout == "serpentine") "serpentine" else "cartesian"
+typeDesign <- if (nBlocks > 1) "DBUDC" else "SUDC"
+lType <- if (layout == "serpentine") "serpentine" else "cartesian"
 
 treatment_list <- data.frame(
-  entry = seq_len(n_stocks),
+  entry = seq_len(nStocks),
   name = c(controls, treatments)
 )
 
-start_plot <- switch(
+startPlot <- switch(
   as.character(serie),
   "1" = 1,
   "2" = 101,
   "3" = 1001,
-  1  # default to 1 if none matched
+  2  # default to 2 if none matched
 )
 
 ## Grant the right format
-n_row <- as.integer(n_row)
-n_col <- as.integer(n_col)
-n_lines <- as.integer(n_lines)
-n_checks <- as.integer(n_checks)
+nRow <- as.integer(nRow)
+nCol <- as.integer(nCol)
+nLines <- as.integer(nLines)
+nChecks <- as.integer(nChecks)
 
-base_file <- tools::file_path_sans_ext(param_file)
+basefile <- tools::file_path_sans_ext(paramfile)
 
-## FieldHub design
+## FieldHub Design
 output <- capture.output({
   multi_diag <- FielDHub::diagonal_arrangement(
-    nrows = n_row,
-    ncols = n_col,
-    lines = n_lines,
-    planter = layout_type,
-    plotNumber = start_plot,
-    kindExpt = type_design,
-    blocks = n_ind_block,
-    checks = n_checks,
+    nrows = nRow,
+    ncols = nCol,
+    lines = nLines,
+    planter = lType,
+    plotNumber = startPlot,
+    kindExpt = typeDesign, 
+    blocks = nIndBlock,
+    checks = nChecks,
     l = 1,
     data = treatment_list
   )
 })
 
 if (any(grepl("Field dimensions do not fit", output))) {
-  error_file <- paste0(base_file, ".design.error")
-  writeLines(output, con = error_file)
+  errorFile <- paste(basefile, "design.error", sep = "")
+  writeLines(output, con = errorFile)
   quit(status = 1)
 }
 
 field_book <- multi_diag$fieldBook
 
-## Fixing names to match with Breedbase
-field_book$EXPT <- gsub("Block", "", field_book$EXPT)
+## Fixing names to match with breedbase
+field_book$EXPT <- gsub("Block","",field_book$EXPT)
 field_book$CHECKS[field_book$CHECKS > 0] <- 1
 
-print(head(field_book, 10))
+head(field_book,10)
 
-## Save result files
-out_file <- paste0(base_file, ".design")
-sink(out_file)
-write.table(field_book, quote = FALSE, sep = "\t", row.names = FALSE)
-sink()
+# save result files
+outfile = paste(basefile, ".design", sep="");
+sink(outfile)
+write.table(field_book, quote=F, sep="\t", row.names=FALSE)
+sink();
