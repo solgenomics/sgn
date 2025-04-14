@@ -231,8 +231,11 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
     my $id = $c->req->param("id") || "treatment_select";
     my $name = $c->req->param("name") || "treatment_select";
     my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 
-    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema,people_schema=>$people_schema, metadata_schema=>$metadata_schema, phenome_schema=>$phenome_schema,trial_id => $trial_id });
     my $data = $trial->get_treatments();
 
     if ($empty) {
@@ -398,13 +401,17 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 
     my @trials;
     if ($include_lists) { push @trials, [ "", "----INDIVIDUAL TRIALS----" ]; }
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
           my $trial_id = $_->[0];
           my $trial_name = $_->[1];
           if ($include_location_year) {
-              my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id });
+              my $trial = CXGN::Trial->new({bcs_schema => $schema,people_schema=>$people_schema,metadata_schema=>$metadata_schema,phenome_schema=>$phenome_schema,trial_id => $trial_id });
               my $location_array = $trial->get_location();
               my $year = $trial->get_year();
               $trial_name .= " (".$location_array->[1]." $year)";
@@ -1267,8 +1274,12 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
         my %unique_traits_ids;
         my %unique_traits_ids_count;
         my %unique_traits_ids_drone_project;
+        my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+        my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+        my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
         foreach (@trial_ids){
-            my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+            my $trial = CXGN::Trial->new({bcs_schema=>$schema, people_schema=>$people_schema, metadata_schema=>$metadata_schema,phenome_schema=>$phenome_schema,trial_id=>$_});
             my $traits_assayed = $trial->get_traits_assayed($data_level, $trait_format, $contains_composable_cv_type);
             foreach (@$traits_assayed) {
                 $unique_traits_ids{$_->[0]} = $_;
@@ -1408,8 +1419,12 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
     my @trial_ids = split ',', $trial_ids;
 
     my @trait_components;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
     foreach (@trial_ids){
-        my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+        my $trial = CXGN::Trial->new({bcs_schema=>$schema, people_schema=>$people_schema, metadata_schema=>$metadata_schema, phenome_schema=>$phenome_schema,trial_id=>$_});
         push @trait_components, @{$trial->get_trait_components_assayed($data_level, $composable_cvterm_format)};
     }
     #print STDERR Dumper \@trait_components;

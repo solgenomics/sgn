@@ -352,10 +352,14 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     }
     my @trial_list_int;
     my $trial_name = "";
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
     foreach (@trial_list) {
         if ($_ =~ m/^\d+$/) {
             push @trial_list_int, $_;
-	    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $_ });
+	    my $trial = CXGN::Trial->new( { bcs_schema => $schema, people_schema=>$people_schema, metadata_schema=>$metadata_schema,phenome_schema=>$phenome_schema,trial_id => $_ });
 	    $trial_name = $trial->get_name();
 	    $trial_name =~ s/ /\_/g;
         } else {
