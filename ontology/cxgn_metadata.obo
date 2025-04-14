@@ -1,4 +1,4 @@
-format-version: 1.0
+format-version: 1.2
 data-version: 1
 date: 04:05:2025 03:00
 saved-by: Naama
@@ -11,6 +11,8 @@ name: metadata
 
 [Term]
 id: METADATA:0000002
-name: image_id
-def: "Database image ID" []
-is_a: METADATA:0000001
+name: image
+def: "store an image or a photo associated with a measured variable" []
+comment: \{trait type:image}
+is_a: METADATA:0000001 ! metadata
+
