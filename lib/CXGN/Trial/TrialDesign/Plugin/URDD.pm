@@ -99,11 +99,11 @@ sub create_design {
   open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
   print $F "stocks <- c($stock_list)\n";
   print $F "controls <- c($control_list)\n";
-  print $F "nBlocks <- ".$number_of_blocks."\n";
-  print $F "nRow <- ".$row_in_design_number."\n";
-  print $F "nCol <- ".$col_in_design_number."\n";
+  print $F "n_blocks <- ".$number_of_blocks."\n";
+  print $F "n_row <- ".$row_in_design_number."\n";
+  print $F "n_col <- ".$col_in_design_number."\n";
   print $F "serie <- ".$serie."\n";
-  print $F "nLines <- ".$num_stocks."\n";
+  print $F "n_lines <- ".$num_stocks."\n";
   print $F "layout <- \"$plot_layout_format\"\n";
   close($F);
 
