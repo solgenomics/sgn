@@ -5,6 +5,7 @@ import { WizardDownloads } from "../modules/wizard-downloads.js";
 
 const initialtypes = [
     "accessions",
+    "organisms",
     "breeding_programs",
     "genotyping_protocols",
     "genotyping_projects",
@@ -20,6 +21,7 @@ const initialtypes = [
 
 const types = {
     "accessions": "Accessions",
+    "organisms": "Organisms",
     "breeding_programs": "Breeding Programs",
     "genotyping_protocols": "Genotyping Protocols",
     "genotyping_projects": "Genotyping Projects",
