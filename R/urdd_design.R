@@ -1,18 +1,16 @@
-## This is a script for Un-replicated Diagonal Designs
+## Script for Un-replicated Diagonal Designs
 
-args=commandArgs(TRUE)
+args <- commandArgs(TRUE)
 
-if(length(args)==0){
-    print("No arguments supplied.")
-    ##supply default values
-    paramfile=''
+if (length(args) == 0) {
+  message("No arguments supplied.")
+  paramfile <- ''
 } else {
-    for(i in 1:length(args)){
-        print(paste("Processing arg ", args[[i]]));
-        eval(parse(text=args[[i]]))
-    }
+  for (i in seq_along(args)) {
+    message(paste("Processing arg", args[[i]]))
+    eval(parse(text = args[[i]]))
+  }
 }
-
 
 source(paramfile)
 
@@ -23,28 +21,31 @@ nChecks <- length(controls)
 treatments <- stocks[!stocks %in% controls]
 
 ## Setting the same number of treatments per block
-if(is.null(nBlocks)) {
-  nInd <- nIndBlock <- nLines
-}else{
-  nInd <- nLines/nBlocks
+if (is.null(nBlocks)) {
+  nInd <- nLines
+  nIndBlock <- nLines
+} else {
+  nInd <- nLines / nBlocks
   nIndBlock <- rep(nInd, nBlocks)
 }
+
 nControls <- length(controls)
 
+typeDesign <- if (nBlocks > 1) "DBUDC" else "SUDC"
+lType <- if (layout == "serpentine") "serpentine" else "cartesian"
 
-if(nBlocks>1){typeDesign = 'DBUDC'}else{typeDesign='SUDC'}
-if(layout=="serpentine"){lType<-"serpentine"}else{lType<-"cartesian"}
+treatment_list <- data.frame(
+  ENTRY = seq_len(nStocks),
+  NAME = c(controls, treatments)
+)
 
-
-treatment_list <- data.frame(list(ENTRY = 1:nStocks, NAME = c(controls, treatments)))
-
-if(serie == 1){
-  startPlot <- 1
-}else if(serie == 2){
-  startPlot <- 101
-}else if(serie == 3){
-  startPlot <- 1001
-}
+startPlot <- switch(
+  as.character(serie),
+  "1" = 1,
+  "2" = 101,
+  "3" = 1001,
+  1  # default to 1 if none matched
+)
 
 ## Grant the right format
 nRow <- as.integer(nRow)
@@ -62,7 +63,7 @@ output <- capture.output({
     lines = nLines,
     planter = lType,
     plotNumber = startPlot,
-    kindExpt = typeDesign, 
+    kindExpt = typeDesign,
     blocks = nIndBlock,
     checks = nChecks,
     l = 1,
@@ -71,23 +72,21 @@ output <- capture.output({
 })
 
 if (any(grepl("Field dimensions do not fit", output))) {
-  errorFile <- paste(basefile, "design.error", sep = "")
+  errorFile <- paste0(basefile, ".design.error")
   writeLines(output, con = errorFile)
   quit(status = 1)
 }
 
-
-
 field_book <- multi_diag$fieldBook
 
-## Fixing names to match with breedbase
-field_book$EXPT <- gsub("Block","",field_book$EXPT)
-field_book$CHECKS[field_book$CHECKS>0] <- 1
+## Fixing names to match with Breedbase
+field_book$EXPT <- gsub("Block", "", field_book$EXPT)
+field_book$CHECKS[field_book$CHECKS > 0] <- 1
 
-head(field_book,10)
+print(head(field_book, 10))
 
-# save result files
-outfile = paste(basefile, ".design", sep="");
+## Save result files
+outfile <- paste0(basefile, ".design")
 sink(outfile)
-write.table(field_book, quote=F, sep='\t', row.names=FALSE)
-sink();
+write.table(field_book, quote = FALSE, sep = '\t', row.names = FALSE)
+sink()
