@@ -143,6 +143,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{material_name} = $transformation_name;
     $c->stash->{status_display} = $status_display;
     $c->stash->{has_associated_transformants} = $has_associated_transformants;
+    $c->stash->{project_id} = $project_id;
 
     $c->stash->{template} = '/transformation/transformation.mas';
 

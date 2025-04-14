@@ -1,6 +1,7 @@
 <%args>
 $transformation_id
 $transformation_name
+$project_id
 </%args>
 
 
@@ -15,8 +16,8 @@ $transformation_name
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" name="add_transformation_control_form" id="add_transformation_control_form">
                         <div class="form-group">
-                            <label class="control-label col-sm-6">Select a transformation experiment:</label>
-                            <div class="col-sm-6" >
+                            <label class="control-label col-sm-5">Select a control experiment:</label>
+                            <div class="col-sm-7" >
                                 <div class="input-group">
                                     <select class="form-control" id="transformation_experiment_select"></select>
                                 </div>
@@ -80,6 +81,10 @@ $transformation_name
 <script>
 
 jQuery(document).ready(function(){
+
+
+    get_select_box('transformation_ids', 'transformation_experiment_select', { 'name' : 'transformation_control_id', 'id' : 'transformation_control_id', 'multiple':'0', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
+
 
     jQuery('#add_transformation_control_link').click(function(){
         jQuery('#add_transformation_control_dialog').modal('show');
