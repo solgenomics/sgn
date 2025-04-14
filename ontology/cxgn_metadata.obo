@@ -13,6 +13,6 @@ name: metadata
 id: METADATA:0000002
 name: image
 def: "store an image or a photo associated with a measured variable" []
-comment: \{trait_format:image}
+comment: \{trait_format:photo}
 is_a: METADATA:0000001 ! metadata
 
