@@ -68,9 +68,13 @@ sub delete_genotype_data {
         my $where_clause;
         my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
 
+        if (!$genotyping_project_id && !$genotyping_plate_id && !$genotyping_protocol_id) {
+            print STDERR "No project id, plate id or protocol id info.\n";
+            die "No project id, plate id or protocol id info.\n";
+        }
+
         if ($genotyping_plate_id) {
-            my @plate_list = ();
-            @plate_list = ($genotyping_plate_id);
+            my @plate_list = ($genotyping_plate_id);
             my $plate_samples = CXGN::Stock::TissueSample::Search->new({
                 bcs_schema => $schema,
                 plate_db_id_list => \@plate_list,
