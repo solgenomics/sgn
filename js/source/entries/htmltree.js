@@ -6,23 +6,29 @@ var version = '0.01';
 
 export function init(tree_type) {
     var last_refresh_date = localStorage.getItem(tree_type+'_last_refresh');
-    alert("Last refresh timestamp = "+last_refresh_date);
+    alert("Last refresh timestamp  :-) = "+last_refresh_date);
 
     if (last_refresh_date === null) { alert("refresh date is not set"); }
 
+    alert('TREE TYPE: '+tree_type);
+    
     jQuery.ajax( {
     	url: '/ajax/breeders/recently_modified_projects',
 	data: { since_date: last_refresh_date, type: tree_type },
-    }).then( function(r) { alert("NEW TRIALS: "+JSON.stringify(r)); if (r.data.length > 0) { get_html_tree(tree_type).then( function(r) { alert("setting new tree"); format_html_tree(r.html, tree_type)  } )} } )  ;
+    }).then( function(r) { alert("NEW TRIALS: "+JSON.stringify(r)); if (r.data.length > 0) { get_html_tree(tree_type).then( function(r) { alert("setting new tree"); format_html_tree(r.html, tree_type); } ) } else { alert("here!"); } });
+
+    alert("WHAT???");
     
 
-    alert('get tree from local storage...');
+    alert('get tree from local storage 2...');
     var html = localStorage.getItem(tree_type);
     if (html !== null) {
-	alert("HTML NOW: "+html);
-	format_html_tree(html);
+	alert("HTML NOW 2: "+html);
+	format_html_tree(html, tree_type);
     }
 
+    alert('Done with local storage...');
+    
     if (html === null) {
 	alert('HTML NOT DEFINED! FETCHING...');
 	get_html_tree(tree_type).then( function(r) { 
@@ -30,6 +36,8 @@ export function init(tree_type) {
 	    format_html_tree(html, tree_type);
 	});
     }
+
+    alert('Done with init');
 }
 
 export function init_events(tree_type) { 
@@ -42,11 +50,11 @@ export function init_events(tree_type) {
 
       jQuery('#'+tree_type+'_list').on("changed.jstree", function (e, data) {
     //console.log(data);
-       if ($('#'+tree_type+'_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == tree_type) {
+       if (jQuery('#'+tree_type+'_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == tree_type) {
          jQuery('#'+tree_type+'_download_phenotypes_button').removeAttr('disabled');
          jQuery("#folder_edit_options").hide();
        }
-       else if ($('#'+tree_type+'_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
+       else if (jQuery('#'+tree_type+'_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
            jQuery('#'+tree_type+'_download_phenotypes_button').attr('disabled', 'disabled');
          jQuery("#folder_edit_options").show();
        }
@@ -57,8 +65,8 @@ export function init_events(tree_type) {
     });
 
 
-    $("#'+tree_type+'_list").delegate("li", "dblclick", function(event){
-      var node = $("#"+tree_type+"_list").jstree("get_node", this);
+    jQuery('#'+tree_type+'_list').delegate("li", "dblclick", function(event){
+      var node = jQuery('#'+tree_type+'_list').jstree("get_node", this);
       //console.log(node);
       if (node.id.substr(0,1) !== 'j') {
         if (node.type == 'folder') {
@@ -80,9 +88,9 @@ export function init_events(tree_type) {
       }
     });
 
-    jQuery("#"+tree_type+"_search").keyup(function() {
-        var v = jQuery("#"+tree_type+"_tree_search").val();
-        jQuery("#"+tree_type+"_list").jstree(true).search(v);
+    jQuery('#'+tree_type+'_search').keyup(function() {
+        var v = jQuery('#'+tree_type+'_tree_search').val();
+        jQuery('#'+tree_type+'_list').jstree(true).search(v);
     });
 
 }
@@ -112,7 +120,8 @@ export function get_html_tree(tree_type) {
 export function format_html_tree(treehtml, tree_type) {
 
     var html = '<ul>'+treehtml+'</ul>';
-    
+
+    alert('TREE TYPE = '+tree_type);
     jQuery('#'+tree_type+'_list').html(html);
     
     //console.log(html);

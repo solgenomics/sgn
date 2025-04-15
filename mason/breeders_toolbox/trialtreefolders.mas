@@ -115,9 +115,13 @@ jQuery(document).ready(function($) {
 	
     // });
 
-    var htmltree = window.jsMod['htmltree'].init("htmltree");
+    var htmltree = window.jsMod['htmltree'];
 
-    htmltree.init_tree('trialtree');
+
+    htmltree.init("trialtree");
+        htmltree.init_events('trialtree');	
+
+//    htmltree.init_tree('trialtree');
 
 //       jQuery('#trial_list').on("changed.jstree", function (e, data) {
 //     //console.log(data);
