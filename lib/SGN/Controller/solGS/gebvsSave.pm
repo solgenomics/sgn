@@ -52,6 +52,7 @@ sub structure_gebvs_result_details {
     my ($self, $c, $params) = @_;
 
     my $gebvs = $self->structure_gebvs_values($c, $params);
+    # print Dumper $gebvs;
     my @accessions = keys %$gebvs;
 
     my $trait_names		= $c->controller('solGS::AnalysisSave')->analysis_traits($c);
@@ -139,12 +140,79 @@ sub gebvs_values {
 
 }
 
+
+sub get_genetic_values {
+    my ($self, $c, $params) = @_;
+
+    my $training_pop_id = $params->{training_pop_id};
+    my $selection_pop_id = $params->{selection_pop_id};
+    my $trait_id = $params->{trait_id};
+    my $protocol_id = $params->{genotyping_protocol_id};
+
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+
+    my $analysis_page = $params->{analysis_page}; 
+    $analysis_page = $c->controller('solGS::Path')->page_type($c, $analysis_page);
+
+    my $genetic_values_file;
+    if ($analysis_page =~ /training_model/) {
+        $genetic_values_file = $c->controller('solGS::Files')->rrblup_training_genetic_values_file($c, $training_pop_id, $trait_id);
+    }
+    elsif ($analysis_page =~ /selection_prediction/) {
+        $genetic_values_file = $c->controller('solGS::Files')->rrblup_selection_genetic_values_file($c, $training_pop_id, $selection_pop_id, $trait_id);
+    }
+
+    my $genetic_values = $c->controller('solGS::Utils')->read_file_data($genetic_values_file);
+
+    # print Dumper $genetic_values;
+
+    return $genetic_values;
+
+}
+
+
+sub get_combined_gebvs_genetic_values {
+    my ($self, $c, $params) = @_;
+
+    my $analysis_page = $params->{analysis_page}; 
+    $analysis_page = $c->controller('solGS::Path')->page_type($c, $analysis_page);
+
+    my $combined_values_file = $self->get_combined_gebvs_genetic_values_file($c, $params);
+    my $combined_values = $c->controller('solGS::Utils')->read_file_data($combined_values_file);
+
+    # print Dumper $combined_values;
+
+    return $combined_values;
+
+}
+
+sub get_combined_gebvs_genetic_values_file {
+    my ($self, $c, $params) = @_;
+
+    my $analysis_page = $params->{analysis_page}; 
+    $analysis_page = $c->controller('solGS::Path')->page_type($c, $analysis_page);
+
+    my $combined_values_file;
+    if ($analysis_page =~ /training_model/) {
+        $combined_values_file = $c->controller('solGS::Files')->rrblup_combined_training_gebvs_genetic_values_file($c);
+    }
+    elsif ($analysis_page =~ /selection_prediction/) {
+        $combined_values_file = $c->controller('solGS::Files')->rrblup_combined_selection_gebvs_genetic_values_file($c);
+    }
+
+    return $combined_values_file;
+
+}
+
+
 sub structure_gebvs_values {
     my ($self, $c, $params) = @_;
 
-    my $trait_name = $c->controller('solGS::AnalysisSave')->extended_trait_name($c, $params->{trait_id});
+    # my $trait_name = $c->controller('solGS::AnalysisSave')->extended_trait_name($c, $params->{trait_id});
+    my $col_names = $self->format_output_col_names($c, $params);
 
-    my $gebvs = $self->gebvs_values($c, $params);
+    # my $gebvs = $self->gebvs_values($c, $params);
+    my $gebvs = $self->get_combined_gebvs_genetic_values($c, $params);
     my $gebvs_ref = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($gebvs);
 
     my %gebvs_hash;
@@ -157,12 +225,42 @@ sub structure_gebvs_values {
     my @accessions = keys %$gebvs_ref;
 
     foreach my $accession (@accessions) {
-        $gebvs_hash{$accession} = {
-            $trait_name => [$gebvs_ref->{$accession}->[0], $timestamp, $user_name, "", ""]
-        };
+
+        for (my $i=0;  $i < scalar(@$col_names);  $i++) {
+				my $col_name = $col_names->[$i];
+		
+				$gebvs_hash{$accession}{$col_name} = 
+					[$gebvs_ref->{$accession}->[$i], $timestamp, $user_name, "", ""];
+			}
     }
 
     return \%gebvs_hash;
+
+}
+
+
+sub format_output_col_names {
+    my ($self, $c, $params) = @_;
+    
+    my $combined_values_file = $self->get_combined_gebvs_genetic_values_file($c, $params);
+	my @col_names= $c->controller('solGS::Utils')->get_data_col_headers($combined_values_file);
+
+	my @extended_names;
+
+	foreach my $col_name (@col_names) {
+        my $trait_name;
+        if ($col_name !~ /_adjusted_means/) {
+            $trait_name = $col_name;
+            my $extended_trait_name = $c->controller('solGS::AnalysisSave')->extended_trait_name($c, $params->{trait_id});
+            push @extended_names, $extended_trait_name;
+
+        } else {
+            push @extended_names, $col_name;
+        }
+
+	}
+
+	return \@extended_names;
 
 }
 
