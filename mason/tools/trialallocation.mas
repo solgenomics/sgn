@@ -38,27 +38,48 @@ Chris Simoes – updated by ChatGPT (o3)
     .trial-box   { width:var(--cell); height:var(--cell); border:1px solid #333; font-size:0.65rem; font-weight:600; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:move; }
     .remove-btn  { position:absolute; top:-8px; right:-8px; width:1rem; height:1rem; border-radius:9999px; background:#e3342f; color:#fff; font-size:0.6rem; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:25; }
   </style>
-</head>
-<body class="bg-white text-gray-800 font-sans p-8 space-y-12">
-  <section>
+  <body class="bg-white text-gray-800 font-sans p-8 space-y-12">
+
+  <&| /page/info_section.mas, id=>"trial_summary_section", title=>"1 - Trial allocation summary", collapsible=>1, collapsed=>0 &>
     <h2 class="text-2xl font-bold mb-4">Field Layout Workflow</h2>
     <p class="mb-4">Toggle unused plots with a single click (when the switch is on). Palette boxes disable once their trial is placed and re‑enable when deleted.</p>
+  </&>
 
-    <label class="inline-flex items-center mb-4">
-      <input type="checkbox" id="edit-toggle" class="mr-2" />
-      <span class="font-semibold">Edit unused plots</span>
-    </label>
-
-    <div class="grid grid-cols-2 gap-4 mb-6">
-      <label>Farm <select class="w-full border rounded px-2 py-1"><option>Select Farm</option></select></label>
-      <label>Year <input type="number" class="w-full border rounded px-2 py-1" /></label>
-      <label>Season <input type="text" class="w-full border rounded px-2 py-1" /></label>
-      <label>Total Rows <input type="number" id="farm-rows" class="w-full border rounded px-2 py-1" onchange="drawGrid()" /></label>
-      <label>Total Columns <input type="number" id="farm-cols" class="w-full border rounded px-2 py-1" onchange="drawGrid()" /></label>
+  <&| /page/info_section.mas, id=>"farm_settings_section", title=>"2 - Farm settings", collapsible=>1, collapsed=>0 &>
+    <div class="space-y-4">
+      <div class="grid grid-cols-3 gap-4">
+        <label>Farm <select class="w-full border rounded px-2 py-1"><option>Select Farm</option></select></label>
+        <label>Year <input type="number" class="w-full border rounded px-2 py-1" /></label>
+        <label>Season <input type="text" class="w-full border rounded px-2 py-1" /></label>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <label>Total Rows <input type="number" id="farm-rows" class="w-full border rounded px-2 py-1" onchange="drawGrid()" /></label>
+        <label>Total Columns <input type="number" id="farm-cols" class="w-full border rounded px-2 py-1" onchange="drawGrid()" /></label>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <label>Plot Width <input type="number" id="plot-width" class="w-full border rounded px-2 py-1" /></label>
+        <label>Plot Length <input type="number" id="plot-length" class="w-full border rounded px-2 py-1" /></label>
+      </div>
     </div>
+  </&>
 
-    <div class="mb-6"><label>Number of Trials <input type="number" id="num-trials" class="w-full border rounded px-2 py-1" onchange="makeTrials()" /></label></div>
+
+  <&| /page/info_section.mas, id=>"trial_settings_section", title=>"3 - Trial Settings", collapsible=>1, collapsed=>0 &>
+    <div class="mb-6">
+      <label>Number of Trials 
+        <input type="number" id="num-trials" class="w-full border rounded px-2 py-1" onchange="makeTrials()" />
+      </label>
+    </div>
     <div id="trial-details" class="mb-6"></div>
+  </&>
+
+
+
+  <&| /page/info_section.mas, id=>"layout_section", title=>"4 - Layout", collapsible=>1, collapsed=>0 &>
+    <label class="inline-flex items-center mb-4 space-x-2">
+      <input type="checkbox" id="edit-toggle" />
+      <span class="font-semibold ml-1">Edit unused plots</span>
+    </label>
 
     <div class="mb-6">
       <label class="block mb-2">Unused Rows (comma‑separated)
@@ -70,20 +91,149 @@ Chris Simoes – updated by ChatGPT (o3)
     </div>
 
     <div class="flex gap-8">
-      <div class="border p-4 rounded w-2/3 bg-green-50 relative">
-        <h3 class="font-semibold mb-2">Farm Field Grid</h3>
-        <div id="farm-scroll" ondragover="event.preventDefault();" ondrop="handleDrop(event)">
-          <div id="farm-grid"></div>
-        </div>
-      </div>
       <div class="w-1/3">
         <h3 class="font-semibold mb-2">Trials</h3>
         <div id="trial-boxes" class="space-y-4"></div>
       </div>
-    </div>
-  </section>
 
+      <div class="border p-4 rounded w-2/3 bg-green-50 relative">
+        <h3 class="font-semibold mb-2 flex justify-between">
+          Farm Field Grid
+          <button id="export-full-jpg-btn" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm">
+            Export FULL Grid
+          </button>
+          <button id="export-jpg-btn" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm">
+            Export View as JPG
+          </button>
+        </h3>
+        <div id="farm-scroll" ondragover="event.preventDefault();" ondrop="handleDrop(event)">
+          <div id="field-zoom-container" style="position: relative;">
+            <div id="farm-grid"></div>
+          </div>
+        </div>
+
+
+        <div class="mt-4">
+          <label for="zoom-slider" class="block font-semibold mb-1">Zoom Field Grid</label>
+          <input type="range" id="zoom-slider" min="0.5" max="2" step="0.1" value="1" class="w-1/2" />
+        </div>
+      </div>
+    </div>
+  </&>
+
+  <&| /page/info_section.mas, id=>"field_management_section", title=>"5 - Field management factor", collapsible=>1, collapsed=>0 &>
+  <div class="grid grid-cols-2 gap-4">
+    <label>Previous Crop
+      <input id="prev-crop" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Maize" />
+    </label>
+    <label>Soil Type
+      <input id="soil-type" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Clay Loam" />
+    </label>
+    <label>Fertilizer Used
+      <input id="fertilizer" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Urea 100kg/ha" />
+    </label>
+    <label>Irrigation
+      <select id="irrigation" class="w-full border rounded px-2 py-1">
+        <option value="">Select</option>
+        <option>Rainfed</option>
+        <option>Drip</option>
+        <option>Sprinkler</option>
+        <option>Furrow</option>
+      </select>
+    </label>
+  </div>
+</&>
+
+
+
+
+</head>
+
+
+</html>
+
+<style>
+
+#field-zoom-container {
+  transform-origin: top left;
+  transition: transform 0.2s ease-in-out;
+}
+
+
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
+
+// Grid Zoom
+document.getElementById('zoom-slider').addEventListener('input', function (e) {
+  const scale = parseFloat(e.target.value);
+  const container = document.getElementById('field-zoom-container');
+  if (container) container.style.transform = `scale(${scale})`;
+});
+
+
+
+// Export View as JPG
+document.getElementById('export-jpg-btn').addEventListener('click', function () {
+  const target = document.getElementById('farm-scroll');
+  html2canvas(target, {
+    backgroundColor: '#ffffff',
+    scale: 2
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'farm_field_grid.jpg';
+    link.href = canvas.toDataURL('image/jpeg');
+    link.click();
+  });
+});
+
+// Export Full grid
+document.getElementById('export-full-jpg-btn').addEventListener('click', function () {
+  const scrollContainer = document.getElementById('farm-scroll');
+  const zoomContainer = document.getElementById('field-zoom-container');
+
+  // Save original styles
+  const originalOverflow = scrollContainer.style.overflow;
+  const originalHeight = scrollContainer.style.maxHeight;
+  const originalWidth = zoomContainer.style.width;
+  const originalHeightZoom = zoomContainer.style.height;
+
+  // Measure actual size
+  const fullWidth = zoomContainer.scrollWidth;
+  const fullHeight = zoomContainer.scrollHeight;
+
+  // Force layout to full size
+  scrollContainer.style.overflow = 'visible';
+  scrollContainer.style.maxHeight = 'none';
+  zoomContainer.style.width = `${fullWidth}px`;
+  zoomContainer.style.height = `${fullHeight}px`;
+
+  // Capture
+  html2canvas(zoomContainer, {
+    backgroundColor: '#ffffff',
+    scale: 2
+  }).then(canvas => {
+    // Restore original styles
+    scrollContainer.style.overflow = originalOverflow;
+    scrollContainer.style.maxHeight = originalHeight;
+    zoomContainer.style.width = originalWidth;
+    zoomContainer.style.height = originalHeightZoom;
+
+    // Export
+    const link = document.createElement('a');
+    link.download = 'farm_field_grid_full.jpg';
+    link.href = canvas.toDataURL('image/jpeg');
+    link.click();
+  });
+});
+
+
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
 /******** constants ********/
 const CELL = 40, GAP = 2, STEP = CELL + GAP;
 const colours = ['bg-red-400','bg-blue-400','bg-yellow-300','bg-green-400'];
@@ -136,17 +286,71 @@ function makeTrials(){
     addPaletteBox(i);
   }
 }
-function addTrialForm(i){
-  const d=document.createElement('div');
-  d.className='border rounded p-4 mb-4 bg-gray-100';
-  d.innerHTML=`<h4 class='font-semibold mb-2'>Trial ${i}</h4>
-    <label class='block mb-2'>Name <input id='tname${i}' class='w-full border rounded px-2 py-1'/></label>
+function addTrialForm(i) {
+  const d = document.createElement('div');
+  d.className = 'border rounded p-4 mb-4 bg-gray-100';
+
+  d.innerHTML = `
+    <h4 class='font-semibold mb-2'>Trial ${i}</h4>
+
+    <label class='block mb-2'>Name
+      <input id='tname${i}' class='w-full border rounded px-2 py-1' />
+    </label>
+
+    <label class='block mb-4'>Description
+      <textarea id='tdesc${i}' class='w-full border rounded px-2 py-1' rows='2'></textarea>
+    </label>
+
+    <div class='grid grid-cols-2 gap-4 mb-4'>
+      <label>Trial Type
+        <select id='ttype${i}' class='w-full border rounded px-2 py-1'>
+          <option>Select type</option>
+          <option>Yield Trial</option>
+          <option>Phenotyping</option>
+          <option>Nursery</option>
+        </select>
+      </label>
+      <label>Trial Design
+        <select id='tdesign${i}' class='w-full border rounded px-2 py-1'>
+          <option>Select design</option>
+          <option>RCBD</option>
+          <option>Alpha Lattice</option>
+          <option>Augmented</option>
+        </select>
+      </label>
+    </div>
+
+    <div class='grid grid-cols-2 gap-4 mb-4'>
+      <label>Treatments List
+        <input id='ttreatments${i}' placeholder='e.g. A, B, C' class='w-full border rounded px-2 py-1' />
+      </label>
+      <label>Controls List
+        <input id='tcontrols${i}' placeholder='e.g. Check1, Check2' class='w-full border rounded px-2 py-1' />
+      </label>
+    </div>
+
+    <div class='grid grid-cols-2 gap-4 mb-4'>
+      <label>Reps
+        <input id='treps${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
+      </label>
+      <label>Blocks
+        <input id='tblocks${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
+      </label>
+    </div>
+
     <div class='grid grid-cols-2 gap-4'>
-      <label>Rows <input id='trows${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1'/></label>
-      <label>Cols <input id='tcols${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1'/></label>
+      <label>Rows
+        <input id='trows${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
+      </label>
+      <label>Cols
+        <input id='tcols${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
+      </label>
     </div>`;
+
   qs('#trial-details').appendChild(d);
 }
+
+
 function addPaletteBox(i){
   const box=document.createElement('div');
   box.id=`palette${i}`;
@@ -189,12 +393,130 @@ function handleDrop(e){
   placeTrial({tn,name,rowsWanted,colsWanted,total,rowStart:row,colStart:col,colour,rootId:src==='grid'?root:null});
 }
 /******** placement ********/
+
+function willOverlapTrialRegion(rowStart, colStart, rowsWanted, colsWanted) {
+  const total = rowsWanted * colsWanted;
+  let r = rowStart, c = colStart, count = 0;
+
+  while (count < total) {
+    if (!cellIsUnused(r, c)) {
+      const cellLeft = (c + 1) * STEP;
+      const cellTop = (r + 1) * STEP;
+      const cellBox = {
+        left: cellLeft,
+        top: cellTop,
+        right: cellLeft + CELL,
+        bottom: cellTop + CELL
+      };
+
+      const overlap = [...document.querySelectorAll('.trial-group')].some(group => {
+        const gLeft = parseFloat(group.style.left);
+        const gTop = parseFloat(group.style.top);
+        const gRight = gLeft + parseFloat(group.style.width);
+        const gBottom = gTop + parseFloat(group.style.height);
+
+        return !(
+          cellBox.right <= gLeft ||
+          cellBox.left >= gRight ||
+          cellBox.bottom <= gTop ||
+          cellBox.top >= gBottom
+        );
+      });
+
+      if (overlap) return true;
+    }
+
+    count++;
+    c++;
+    if (c - colStart >= colsWanted) {
+      c = colStart;
+      r++;
+    }
+  }
+
+  return false;
+}
+
+function trialCellExists(r, c) {
+  return [...document.querySelectorAll('.trial-group')].some(group => {
+    const gr = +group.dataset.row;
+    const gc = +group.dataset.col;
+    const cols = group.style.gridTemplateColumns.split(' ').length || 1;
+    const rows = Math.round(group.offsetHeight / (CELL + GAP)); // height is a multiple of CELL+GAP
+    return (r >= gr && r < gr + rows) && (c >= gc && c < gc + cols);
+  });
+}
+
+function doesOverlap(rowStart, colStart, rows, cols) {
+  const trialLeft = (colStart + 1) * STEP;
+  const trialTop = (rowStart + 1) * STEP;
+  const trialWidth = cols * STEP - GAP;
+  const trialHeight = rows * STEP - GAP;
+
+  const trialBox = {
+    left: trialLeft,
+    top: trialTop,
+    right: trialLeft + trialWidth,
+    bottom: trialTop + trialHeight
+  };
+
+  return [...document.querySelectorAll('.trial-group')].some(group => {
+    const existingLeft = parseFloat(group.style.left);
+    const existingTop = parseFloat(group.style.top);
+    const existingWidth = parseFloat(group.style.width);
+    const existingHeight = parseFloat(group.style.height);
+
+    const existingBox = {
+      left: existingLeft,
+      top: existingTop,
+      right: existingLeft + existingWidth,
+      bottom: existingTop + existingHeight
+    };
+
+    // check if rectangles intersect
+    return !(
+      trialBox.right <= existingBox.left ||
+      trialBox.left >= existingBox.right ||
+      trialBox.bottom <= existingBox.top ||
+      trialBox.top >= existingBox.bottom
+    );
+  });
+}
+
 function placeTrial({tn,name,rowsWanted,colsWanted,total,rowStart,colStart,colour,rootId}){
+
+  // Prevent dropping if target area overlaps with existing trial
+  if (willOverlapTrialRegion(rowStart, colStart, rowsWanted, colsWanted)) {
+    alert("Please find another region to place your trial. This is occupied!");
+    return;
+  }
+
+
   disablePal(tn);
   const root=rootId||uid();
   const coords=[];
   let r=rowStart,c=colStart;
-  while(coords.length<total){ if(!cellIsUnused(r,c)) coords.push([r,c]); c++; if(c-colStart>=colsWanted){c=colStart;r++;} }
+  let overlapFound = false;
+  while(coords.length < total){
+    if (!cellIsUnused(r, c)) {
+      if (trialCellExists(r, c)) {
+        overlapFound = true;
+        break;
+      }
+      coords.push([r, c]);
+    }
+    c++;
+    if (c - colStart >= colsWanted) {
+      c = colStart;
+      r++;
+    }
+  }
+
+  if (overlapFound) {
+    alert("Please find another region to place your trial. This is occupied!");
+    return;
+  }
+
   const rowsMap={}; coords.forEach(([rr,cc])=>{(rowsMap[rr]=rowsMap[rr]||[]).push(cc);});
   Object.entries(rowsMap).forEach(([rr,cols])=>{cols.sort((a,b)=>a-b);let s=cols[0];for(let i=1;i<=cols.length;i++){if(i===cols.length||cols[i]!==cols[i-1]+1){createSeg(+rr,s,cols[i-1]);s=cols[i];}}});
   function createSeg(rr,start,end){
@@ -212,13 +534,15 @@ function placeTrial({tn,name,rowsWanted,colsWanted,total,rowStart,colStart,colou
     if(!qs(`[data-root="${root}"] .remove-btn`)){
       const rm=document.createElement('div');rm.className='remove-btn';rm.textContent='×';rm.onclick=()=>{qsa(`[data-root="${root}"]`).forEach(el=>el.remove());enablePal(tn);};g.appendChild(rm);
     }
-    qs('#farm-scroll').appendChild(g);
+    qs('#field-zoom-container').appendChild(g);
   }
 }
 /******** reposition ********/
 function repositionTrials(){qsa('.trial-group').forEach(g=>{g.style.left=`${(+g.dataset.col+1)*STEP}px`;g.style.top=`${(+g.dataset.row+1)*STEP}px`;});}
 /******** boot ********/
 window.onload=()=>{makeTrials();drawGrid();};
+
+
 </script>
 </body>
 </html>
