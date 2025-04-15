@@ -1,0 +1,224 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/trial.mas – Trial allocation page (hot‑fix v11, Apr‑14‑2025)
+
+=head1 AUTHOR
+
+Chris Simoes – updated by ChatGPT (o3)
+
+=cut
+
+</%doc>
+
+<%args>
+
+</%args>
+
+<& /page/page_title.mas, title=>"Trial Allocation" &>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Field Layout Workflow</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    :root { --cell: 40px; --gap: 2px; }
+    #farm-scroll { overflow:auto; max-height:70vh; position:relative; }
+    #farm-grid   { display:grid; gap:var(--gap); position:relative; }
+    .grid-cell   { width:var(--cell); height:var(--cell); display:flex; align-items:center; justify-content:center; font-size:0.7rem; box-sizing:border-box; user-select:none; }
+    .header-cell { background:#f3f3f3; font-weight:700; color:#555; position:sticky; z-index:30; }
+    .col-header  { top:0; }
+    .row-header  { left:0; }
+    .corner      { top:0; left:0; z-index:31; }
+    .trial-group { position:absolute; display:grid; gap:var(--gap); cursor:move; z-index:20; }
+    .trial-box   { width:var(--cell); height:var(--cell); border:1px solid #333; font-size:0.65rem; font-weight:600; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:move; }
+    .remove-btn  { position:absolute; top:-8px; right:-8px; width:1rem; height:1rem; border-radius:9999px; background:#e3342f; color:#fff; font-size:0.6rem; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:25; }
+  </style>
+</head>
+<body class="bg-white text-gray-800 font-sans p-8 space-y-12">
+  <section>
+    <h2 class="text-2xl font-bold mb-4">Field Layout Workflow</h2>
+    <p class="mb-4">Toggle unused plots with a single click (when the switch is on). Palette boxes disable once their trial is placed and re‑enable when deleted.</p>
+
+    <label class="inline-flex items-center mb-4">
+      <input type="checkbox" id="edit-toggle" class="mr-2" />
+      <span class="font-semibold">Edit unused plots</span>
+    </label>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <label>Farm <select class="w-full border rounded px-2 py-1"><option>Select Farm</option></select></label>
+      <label>Year <input type="number" class="w-full border rounded px-2 py-1" /></label>
+      <label>Season <input type="text" class="w-full border rounded px-2 py-1" /></label>
+      <label>Total Rows <input type="number" id="farm-rows" class="w-full border rounded px-2 py-1" onchange="drawGrid()" /></label>
+      <label>Total Columns <input type="number" id="farm-cols" class="w-full border rounded px-2 py-1" onchange="drawGrid()" /></label>
+    </div>
+
+    <div class="mb-6"><label>Number of Trials <input type="number" id="num-trials" class="w-full border rounded px-2 py-1" onchange="makeTrials()" /></label></div>
+    <div id="trial-details" class="mb-6"></div>
+
+    <div class="mb-6">
+      <label class="block mb-2">Unused Rows (comma‑separated)
+        <input id="unused-rows" class="w-full border rounded px-2 py-1" placeholder="1,5,20" onchange="drawGrid()" />
+      </label>
+      <label class="block">Unused Columns (comma‑separated)
+        <input id="unused-cols" class="w-full border rounded px-2 py-1" placeholder="3,10" onchange="drawGrid()" />
+      </label>
+    </div>
+
+    <div class="flex gap-8">
+      <div class="border p-4 rounded w-2/3 bg-green-50 relative">
+        <h3 class="font-semibold mb-2">Farm Field Grid</h3>
+        <div id="farm-scroll" ondragover="event.preventDefault();" ondrop="handleDrop(event)">
+          <div id="farm-grid"></div>
+        </div>
+      </div>
+      <div class="w-1/3">
+        <h3 class="font-semibold mb-2">Trials</h3>
+        <div id="trial-boxes" class="space-y-4"></div>
+      </div>
+    </div>
+  </section>
+
+<script>
+/******** constants ********/
+const CELL = 40, GAP = 2, STEP = CELL + GAP;
+const colours = ['bg-red-400','bg-blue-400','bg-yellow-300','bg-green-400'];
+const colourFor = n => colours[(n-1)%colours.length];
+/******** state ********/
+let manualBlock = new Set();
+let manualAllow = new Set();
+/******** helpers ********/
+const qs = s => document.querySelector(s);
+const qsa= s => Array.from(document.querySelectorAll(s));
+const uid= (()=>{let i=0;return()=>`u${++i}`})();
+const key=(r,c)=>`${r},${c}`;
+const intList=id=>{const t=qs('#'+id)?.value.trim();return t? t.split(',').map(v=>+v.trim()-1).filter(n=>!isNaN(n)):[]};
+function cellIsUnused(r,c){
+  const row=intList('unused-rows').includes(r);
+  const col=intList('unused-cols').includes(c);
+  const k=key(r,c);
+  if(manualAllow.has(k)) return false;
+  if(manualBlock.has(k)) return true;
+  return row||col;
+}
+function disablePal(t){const p=qs(`#palette${t}`);if(p){p.style.opacity='0.3';p.draggable=false;p.classList.add('cursor-not-allowed');}}
+function enablePal(t){const p=qs(`#palette${t}`);if(p){p.style.opacity='1';p.draggable=true;p.classList.remove('cursor-not-allowed');}}
+/******** grid ********/
+function drawGrid(){
+  const rows=+qs('#farm-rows')?.value||0;
+  const cols=+qs('#farm-cols')?.value||0;
+  const grid=qs('#farm-grid');
+  grid.innerHTML='';
+  grid.style.gridTemplateColumns=`repeat(${cols+1},${CELL}px)`;
+  grid.style.gridTemplateRows=`repeat(${rows+1},${CELL}px)`;
+  const makeHeader=(cls,val='')=>{const d=document.createElement('div');d.className='grid-cell header-cell '+cls;if(val)d.textContent=val;return d;};
+  grid.appendChild(makeHeader('corner'));
+  for(let c=0;c<cols;c++) grid.appendChild(makeHeader('col-header',c+1));
+  for(let r=0;r<rows;r++){
+    grid.appendChild(makeHeader('row-header',r+1));
+    for(let c=0;c<cols;c++){
+      const cell=document.createElement('div');cell.className='grid-cell border';cell.dataset.row=r;cell.dataset.col=c;cell.style.background=cellIsUnused(r,c)?'#d1d5db':'#ffffff';cell.onclick=toggleCell;grid.appendChild(cell);
+    }
+  }
+  repositionTrials();
+}
+function toggleCell(e){if(!qs('#edit-toggle').checked)return;const r=+e.target.dataset.row,c=+e.target.dataset.col;const k=key(r,c);if(cellIsUnused(r,c)){manualBlock.delete(k);manualAllow.add(k);}else{manualAllow.delete(k);manualBlock.add(k);}drawGrid();}
+/******** palette & forms ********/
+function makeTrials(){
+  qs('#trial-details').innerHTML='';qs('#trial-boxes').innerHTML='';
+  const n=+qs('#num-trials')?.value||0;
+  for(let i=1;i<=n;i++){
+    addTrialForm(i);
+    addPaletteBox(i);
+  }
+}
+function addTrialForm(i){
+  const d=document.createElement('div');
+  d.className='border rounded p-4 mb-4 bg-gray-100';
+  d.innerHTML=`<h4 class='font-semibold mb-2'>Trial ${i}</h4>
+    <label class='block mb-2'>Name <input id='tname${i}' class='w-full border rounded px-2 py-1'/></label>
+    <div class='grid grid-cols-2 gap-4'>
+      <label>Rows <input id='trows${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1'/></label>
+      <label>Cols <input id='tcols${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1'/></label>
+    </div>`;
+  qs('#trial-details').appendChild(d);
+}
+function addPaletteBox(i){
+  const box=document.createElement('div');
+  box.id=`palette${i}`;
+  box.className=`trial-box ${colourFor(i)} bg-opacity-60`;
+  box.textContent=`Trial ${i}`;
+  box.dataset.trial=i;
+  box.draggable=true;
+  box.ondragstart=startDrag;
+  qs('#trial-boxes').appendChild(box);
+  if(document.querySelector(`.trial-group[data-trial="${i}"]`)) disablePal(i);
+}
+/******** drag ********/
+function startDrag(e){
+  const el=e.target.closest('.trial-group')||e.target;
+  const fromPal=el.id.startsWith('palette');
+  const rect=el.getBoundingClientRect();
+  e.dataTransfer.setData('src',fromPal?'pal':'grid');
+  e.dataTransfer.setData('tn',el.dataset.trial);
+  if(!fromPal) e.dataTransfer.setData('root',el.dataset.root);
+  e.dataTransfer.setData('offX',e.clientX-rect.left);
+  e.dataTransfer.setData('offY',e.clientY-rect.top);
+}
+function handleDrop(e){
+  e.preventDefault();
+  const tn=e.dataTransfer.getData('tn');
+  const src=e.dataTransfer.getData('src');
+  const root=e.dataTransfer.getData('root');
+  const offX=+e.dataTransfer.getData('offX');
+  const offY=+e.dataTransfer.getData('offY');
+  const rect=qs('#farm-grid').getBoundingClientRect();
+  let col=Math.floor((e.clientX-rect.left-offX)/STEP)-1;
+  let row=Math.floor((e.clientY-rect.top-offY)/STEP)-1;
+  if(col<0||row<0) return;
+  const name=qs('#tname'+tn)?.value||`Trial ${tn}`;
+  const rowsWanted=+qs('#trows'+tn)?.value||1;
+  const colsWanted=+qs('#tcols'+tn)?.value||1;
+  const total=rowsWanted*colsWanted;
+  const colour=colourFor(tn);
+  if(src==='grid') qsa(`[data-root="${root}"]`).forEach(el=>el.remove());
+  placeTrial({tn,name,rowsWanted,colsWanted,total,rowStart:row,colStart:col,colour,rootId:src==='grid'?root:null});
+}
+/******** placement ********/
+function placeTrial({tn,name,rowsWanted,colsWanted,total,rowStart,colStart,colour,rootId}){
+  disablePal(tn);
+  const root=rootId||uid();
+  const coords=[];
+  let r=rowStart,c=colStart;
+  while(coords.length<total){ if(!cellIsUnused(r,c)) coords.push([r,c]); c++; if(c-colStart>=colsWanted){c=colStart;r++;} }
+  const rowsMap={}; coords.forEach(([rr,cc])=>{(rowsMap[rr]=rowsMap[rr]||[]).push(cc);});
+  Object.entries(rowsMap).forEach(([rr,cols])=>{cols.sort((a,b)=>a-b);let s=cols[0];for(let i=1;i<=cols.length;i++){if(i===cols.length||cols[i]!==cols[i-1]+1){createSeg(+rr,s,cols[i-1]);s=cols[i];}}});
+  function createSeg(rr,start,end){
+    const seg=end-start+1;
+    const g=document.createElement('div');
+    g.className='trial-group';
+    g.dataset.trial=tn;g.dataset.root=root;g.dataset.row=rr;g.dataset.col=start;
+    g.style.left=`${(start+1)*STEP}px`;
+    g.style.top =`${(rr+1)*STEP}px`;
+    g.style.width=`${seg*STEP-GAP}px`;
+    g.style.height=`${CELL}px`;
+    g.style.gridTemplateColumns=`repeat(${seg},${CELL}px)`;
+    g.draggable=true; g.ondragstart=startDrag;
+    for(let i=0;i<seg;i++){const b=document.createElement('div');b.className=`trial-box ${colour} bg-opacity-60`;b.textContent=name;b.draggable=true;b.ondragstart=startDrag;g.appendChild(b);}    
+    if(!qs(`[data-root="${root}"] .remove-btn`)){
+      const rm=document.createElement('div');rm.className='remove-btn';rm.textContent='×';rm.onclick=()=>{qsa(`[data-root="${root}"]`).forEach(el=>el.remove());enablePal(tn);};g.appendChild(rm);
+    }
+    qs('#farm-scroll').appendChild(g);
+  }
+}
+/******** reposition ********/
+function repositionTrials(){qsa('.trial-group').forEach(g=>{g.style.left=`${(+g.dataset.col+1)*STEP}px`;g.style.top=`${(+g.dataset.row+1)*STEP}px`;});}
+/******** boot ********/
+window.onload=()=>{makeTrials();drawGrid();};
+</script>
+</body>
+</html>
