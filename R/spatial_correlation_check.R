@@ -15,42 +15,42 @@
 # 1. Load software needed
 ################################################################################
 # Check installation of required packages
-if (!require("dplyr")) {
-    install.packages("dplyr")
-}
-if (!require("spdep")) {
-    install.packages("sf")
-    install.packages("spdep", dependencies = TRUE)
-}
-if (!require("gstat")) {
-    install.packages("gstat", dependencies = TRUE)
-}
-# if (!require("raster")) {
-#     install.packages("raster")
+# if (!require("dplyr")) {
+#     install.packages("dplyr")
 # }
-if (!require("ggplot2")) {
-    install.packages("ggplot2")
-}
-if (!require("reshape2")) {
-    install.packages("reshape2")
-}
-if (!require("moments")) {
-    install.packages("moments")
-}
-if (!require("stats")) {
-    install.packages("stats")
-}
+# if (!require("spdep")) {
+#     install.packages("sf")
+#     install.packages("spdep", dependencies = TRUE)
+# }
+# if (!require("gstat")) {
+#     install.packages("gstat", dependencies = TRUE)
+# }
+# # if (!require("raster")) {
+# #     install.packages("raster")
+# # }
+# if (!require("ggplot2")) {
+#     install.packages("ggplot2")
+# }
+# if (!require("reshape2")) {
+#     install.packages("reshape2")
+# }
+# if (!require("moments")) {
+#     install.packages("moments")
+# }
+# if (!require("stats")) {
+#     install.packages("stats")
+# }
 ###################################################################
 # Load libraries
 ###################################################################
-library(dplyr)
-library(spdep)
-library(gstat)
+library('dplyr')
+library('spdep')
+library('gstat')
 # library(raster)
-library(ggplot2)
-library(reshape2)
-library(moments)
-library(stats)
+library('ggplot2')
+library('reshape2')
+library('moments')
+library('stats')
 ###################################################################
 # 2. Declare user-supplied variables.
 ###################################################################
