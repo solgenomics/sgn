@@ -18,16 +18,18 @@ $sp_person_id
 
 <& /util/import_javascript.mas, entries => ["job"], classes => ["jquery.dataTables"] &>
 
-<div id = job_log_div style="display:none;">
-    <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Dismiss failed and timed out jobs</button>
-    <br>
-    <button id="clear_old_jobs_button" class='btn btn-sm btn-primary'>Dismiss all jobs older than</button> 
-    <select id="keep_recent_jobs_select">
-        <option value='one_week'>One week</option>
-        <option value='one_month'>One month</option>
-        <option value='six_months'>Six months</option>
-        <option value='one_year'>One year</option>
-    </select>
+<div id ="job_log_div" style="display:none;">
+    <div style='display:flex;justify-content:center;'>
+        <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Dismiss failed and timed out jobs</button>
+        <span style="display: inline-block; width: 100px;"></span>
+        <button id="clear_old_jobs_button" class='btn btn-sm btn-primary'>Dismiss all jobs older than</button> 
+        <select id="keep_recent_jobs_select">
+            <option value='one_week'>One week</option>
+            <option value='one_month'>One month</option>
+            <option value='six_months'>Six months</option>
+            <option value='one_year'>One year</option>
+        </select>
+    </div>
     <table id="user_job_log_table" class="table" style="text-align:left;">
     </table>
 </div>
