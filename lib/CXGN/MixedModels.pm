@@ -27,6 +27,7 @@ use Data::Dumper;
 use File::Basename;
 use File::Copy;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use CXGN::Phenotypes::File;
 
 =head2 dependent_variables()
@@ -352,6 +353,7 @@ sub run_model {
     my $backend = shift || 'Slurm';
     my $cluster_host = shift || "localhost";
     my $cluster_shared_tempdir = shift;
+	my $job_record_config = shift;
 
     my $random_factors = '"'.join('","', @{$self->random_factors()}).'"';
     my $fixed_factors = '"'.join('","',@{$self->fixed_factors()}).'"';
@@ -361,6 +363,7 @@ sub run_model {
     my $error;
     my $executable;
 
+	my $job_record;
     eval { 
 	
 	if ($self->engine() eq "lme4") {
@@ -405,13 +408,30 @@ sub run_model {
 	
 	print STDERR "running R command $clean_tempfile...\n";
 	
-	my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host } );
+	my $cxgn_tools_run_config = { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host };
+	my $ctr = CXGN::Tools::Run->new( $cxgn_tools_run_config );
+	$job_record = CXGN::Job->new({
+		schema => $job_record_config->{schema},
+		people_schema => $job_record_config->{people_schema},
+		sp_person_id => $job_record_config->{user},
+		cmd => $cmd,
+		cxgn_tools_run_config => $cxgn_tools_run_config,
+		name => $job_record_config->{name},
+		job_type => 'phenotypic_analysis'
+	});
 	
-	
-	$ctr->run_cluster($cmd);
+	$job_record->update_status("submitted");
+	$ctr->run_cluster($cmd.$job_record->generate_finish_timestamp_cmd());
 	
 	while ($ctr->alive()) {
 	    sleep(1);
+	}
+
+	my $finished = $job_record->read_finish_timestamp();
+	if (!$finished) {
+		$job_record->update_status("failed");
+	} else {
+		$job_record->update_status("finished");
 	}
 	
 	# replace the R-compatible traits with original trait names
@@ -439,6 +459,7 @@ sub run_model {
 
     if ($@) {
 	$error = $@;
+	$job_record->update_status("failed");
     }
 
     return $error;    

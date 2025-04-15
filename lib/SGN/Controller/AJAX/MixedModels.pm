@@ -184,7 +184,14 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
     $mm->engine($engine);
-    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models" );
+    my $job_record_config = {
+        user => $c->user->get_object()->get_sp_person_id(), 
+        schema => $c->dbic_schema("Bio::Chado::Schema"), 
+        people_schema => $c->dbic_schema("CXGN::People::Schema"), 
+        finish_logfile => $c->config->{job_finish_log},
+        name => "mixed model computation"
+    };
+    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models", $job_record_config);
     
     my $temppath = $c->config->{basepath}."/".$tempfile;
 

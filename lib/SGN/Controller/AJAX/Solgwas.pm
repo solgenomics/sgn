@@ -19,6 +19,7 @@ use CXGN::Dataset::File;
 #use CXGN::Phenotypes::PhenotypeMatrix;
 #use CXGN::BreederSearch;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use Cwd qw(cwd);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -471,8 +472,8 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 
 #    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
 #    system($cmd);
-    my $cmd = CXGN::Tools::Run->new(
-        {
+
+    my $cxgn_tools_run_config = {
             backend => $c->config->{backend},
             submit_host => $c->config->{cluster_host},
             temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
@@ -480,8 +481,41 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             do_cleanup => 0,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
-        }
+        };
+    my $cmd = CXGN::Tools::Run->new(
+        $cxgn_tools_run_config
     );
+    my $cmd_str = join(" ",(
+        "Rscript ",
+        $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
+        $pheno_filepath,
+        $geno_filepath2,
+        $trait_id,
+        $figure3file,
+        $figure4file,
+        $pc_check,
+        $kinship_check,
+        $gwasResultsPhenoCsv
+    ));
+
+    my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
+    my $job_record = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user,
+        job_type => 'genotypic_analysis',
+        name => $ds->name().' solGWAS',
+        cxgn_tools_run_config => $cxgn_tools_run_config,
+        cmd => $cmd_str,
+        finish_logfile => $c->config->{job_finish_log},
+        results_page => '/tools/solgwas'
+    });
+
+    $job_record->update_status("submitted");
+
+    my $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
+
     $cmd->run_cluster(
             "Rscript ",
             $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
@@ -493,10 +527,18 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $pc_check,
             $kinship_check,
             $gwasResultsPhenoCsv,
+            $finish_timestamp_cmd
     );
 
     $cmd->is_cluster(1);
     $cmd->wait;
+
+    my $finished = $job_record->read_finish_timestamp();
+	if (!$finished) {
+		$job_record->update_status("failed");
+	} else {
+		$job_record->update_status("finished");
+	}
 
     my $figure_path = "./documents/tempfiles/solgwas_files/";
     copy($figure3file,$figure_path);

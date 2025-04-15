@@ -441,7 +441,7 @@ sub cancel {
         $self->status('canceled');
         my $formatted_time = DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S');
         $self->finish_timestamp($formatted_time);
-        system('echo "'.$self->sp_job_id().'    '.$formatted_time.'" >> '.$logfile.' >/dev/null 2>&1');
+        system('echo "'.$self->sp_job_id().'    '.$formatted_time.'" >> '.$logfile);
         $self->store();
     };
     if ($@){
@@ -595,6 +595,20 @@ FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z");
 echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$logfile.' ;
 
 ';
+}
+
+=head2 update_status($status)
+
+Update the status of the job and store with the new value. 
+
+=cut
+
+sub update_status {
+    my $self = shift;
+    my $new_status = shift;
+
+    $self->status($new_status);
+    $self->store();
 }
 
 =head2 get_default_cxgn_tools_run_config()

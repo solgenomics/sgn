@@ -805,8 +805,7 @@ sub submit_job_cluster {
       cxgn_tools_run_config => $args->{config},
       finish_logfile => $c->config->{job_finish_log}
     });
-    $job_record->status("submitted");
-    $job_record->store();
+    $job_record->update_status("submitted");
     my $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
 
     eval {
@@ -832,8 +831,7 @@ sub submit_job_cluster {
     };
 
     if ($@) {
-      $job_record->status("failed");
-      $job_record->store();
+      $job_record->update_status("failed");
       print STDERR "Error submitting a job or job record:\n $@\n";
         $c->stash->{Error} =
           'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
