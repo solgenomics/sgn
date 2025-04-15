@@ -2,11 +2,11 @@
 
 =head1 NAME
 
-/breeders_toolbox/trial.mas – Trial allocation page (hot‑fix v11, Apr‑14‑2025)
+/breeders_toolbox/trial.mas – Trial allocation page (hot‑fix v13, Apr‑15‑2025)
 
 =head1 AUTHOR
 
-Chris Simoes – updated by ChatGPT (o3)
+Chris Simoes – ccs263@cornell.edu
 
 =cut
 
@@ -38,8 +38,8 @@ Chris Simoes – updated by ChatGPT (o3)
     .trial-box   { width:var(--cell); height:var(--cell); border:1px solid #333; font-size:0.65rem; font-weight:600; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:move; }
     .remove-btn  { position:absolute; top:-8px; right:-8px; width:1rem; height:1rem; border-radius:9999px; background:#e3342f; color:#fff; font-size:0.6rem; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:25; }
   </style>
-  </head>
-  <body class="bg-white text-gray-800 font-sans p-8 space-y-12">
+</head>
+<body class="bg-white text-gray-800 font-sans p-8 space-y-12">
 
   <&| /page/info_section.mas, id=>"trial_summary_section", title=>"1 - Trial allocation summary", collapsible=>1, collapsed=>0 &>
     <h2 class="text-2xl font-bold mb-4">Field Layout Workflow</h2>
@@ -64,7 +64,6 @@ Chris Simoes – updated by ChatGPT (o3)
     </div>
   </&>
 
-
   <&| /page/info_section.mas, id=>"trial_settings_section", title=>"3 - Trial Settings", collapsible=>1, collapsed=>0 &>
     <div class="mb-6">
       <label>Number of Trials 
@@ -73,8 +72,6 @@ Chris Simoes – updated by ChatGPT (o3)
     </div>
     <div id="trial-details" class="mb-6"></div>
   </&>
-
-
 
   <&| /page/info_section.mas, id=>"layout_section", title=>"4 - Layout", collapsible=>1, collapsed=>0 &>
     <label class="inline-flex items-center mb-4 space-x-2">
@@ -89,35 +86,50 @@ Chris Simoes – updated by ChatGPT (o3)
 
     <div class="mb-6">
       <label class="block mb-2">Unused Rows (comma‑separated)
-        <input id="unused-rows" class="w-full border rounded px-2 py-1" placeholder="1,5,20" onchange="drawGrid()" />
+        <input id="unused-rows" class="w-full border rounded px-2 py-1" />
       </label>
       <label class="block">Unused Columns (comma‑separated)
-        <input id="unused-cols" class="w-full border rounded px-2 py-1" placeholder="3,10" onchange="drawGrid()" />
+        <input id="unused-cols" class="w-full border rounded px-2 py-1" />
       </label>
     </div>
 
+    <div id="removal-loader" class="grid-loader hidden">
+      <svg class="animate-spin h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span>Removing trial from layout...</span>
+    </div>
+
+
+    <div id="grid-loader" class="grid-loader hidden" style="pointer-events:none;">
+      <svg class="animate-spin h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span>Building grid...</span>
+    </div>
+
     <div class="flex gap-8">
-      <div class="w-1/3">
+      <div class="w-1/4">
         <h3 class="font-semibold mb-2">Trials</h3>
         <div id="trial-boxes" class="space-y-4"></div>
       </div>
 
-      <div class="border p-4 rounded w-2/3 bg-green-50 relative">
+      <div class="border p-4 rounded w-3/4 bg-green-50 relative">
         <h3 class="font-semibold mb-2 flex justify-between">
           Farm Field Grid
-          <button id="export-full-jpg-btn" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm">
-            Export FULL Grid
-          </button>
-          <button id="export-jpg-btn" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm">
-            Export View as JPG
-          </button>
+          <div>
+            <button id="export-full-jpg-btn" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm mr-2">Export FULL Grid</button>
+            <button id="export-jpg-btn" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm">Export View as JPG</button>
+          </div>
         </h3>
-        <div id="farm-scroll" ondragover="event.preventDefault();" ondrop="handleDrop(event)">
-          <div id="field-zoom-container" style="position: relative;">
+
+        <div id="farm-scroll">
+          <div id="field-zoom-container" class="relative">
             <div id="farm-grid"></div>
           </div>
         </div>
-
 
         <div class="mt-4">
           <label for="zoom-slider" class="block font-semibold mb-1">Zoom Field Grid</label>
@@ -128,80 +140,63 @@ Chris Simoes – updated by ChatGPT (o3)
   </&>
 
   <&| /page/info_section.mas, id=>"field_management_section", title=>"5 - Field management factor", collapsible=>1, collapsed=>0 &>
-  <div class="grid grid-cols-2 gap-4">
-    <label>Previous Crop
-      <input id="prev-crop" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Maize" />
-    </label>
-    <label>Soil Type
-      <input id="soil-type" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Clay Loam" />
-    </label>
-    <label>Fertilizer Used
-      <input id="fertilizer" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Urea 100kg/ha" />
-    </label>
-    <label>Irrigation
-      <select id="irrigation" class="w-full border rounded px-2 py-1">
-        <option value="">Select</option>
-        <option>Rainfed</option>
-        <option>Drip</option>
-        <option>Sprinkler</option>
-        <option>Furrow</option>
-      </select>
-    </label>
-  </div>
-</&>
-
+    <div class="grid grid-cols-2 gap-4">
+      <label>Previous Crop
+        <input id="prev-crop" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Maize" />
+      </label>
+      <label>Soil Type
+        <input id="soil-type" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Clay Loam" />
+      </label>
+      <label>Fertilizer Used
+        <input id="fertilizer" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Urea 100kg/ha" />
+      </label>
+      <label>Irrigation
+        <select id="irrigation" class="w-full border rounded px-2 py-1">
+          <option value="">Select</option>
+          <option>Rainfed</option>
+          <option>Drip</option>
+          <option>Sprinkler</option>
+          <option>Furrow</option>
+        </select>
+      </label>
+    </div>
+  </&>
 
 </body>
 </html>
 
+<!-- Styles for hover, borders, loader -->
 <style>
-
-#field-zoom-container {
-  transform-origin: top left;
-  transition: transform 0.2s ease-in-out;
-}
-
-#farm-grid.edit-mode .grid-cell {
-  cursor: crosshair;
-}
-
-#selection-box {
-  position: absolute;
-  border: 2px dashed #3b82f6; /* Tailwind blue-500 */
-  background-color: rgba(59, 130, 246, 0.1); /* light blue transparent */
-  pointer-events: none;
-  z-index: 9999;
-  display: none;
-}
-
-.grid-cell.hover-preview {
-  outline: 2px dashed #3b82f6;
-  background-color: rgba(59, 130, 246, 0.1); /* light blue */
-}
-
-.border-plot {
-  background-color: #d1fae5 !important; /* light green */
-  font-weight: bold;
-  color: #065f46; /* darker green text */
-}
-
+#field-zoom-container{transform-origin:top left;transition:transform 0.2s ease-in-out;}
+#farm-grid.edit-mode .grid-cell{cursor:crosshair;}
+.grid-cell.hover-preview{outline:2px dashed #3b82f6;background-color:rgba(59,130,246,0.1);}
+.border-plot{background-color:#d1fae5 !important;font-weight:bold;color:#065f46;}
+#grid-loader{display:flex;align-items:center;gap:0.5rem;background:white;padding:0.5rem 1rem;border:1px solid #ccc;border-radius:0.375rem;font-size: 2.00rem;color:#065f46;box-shadow:0 0 4px rgba(0,0,0,0.1);margin-bottom:1rem;pointer-events:none;}
+#grid-loader.hidden{display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.animate-spin{animation:spin 1s linear infinite;}
 </style>
-
-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
+// (JavaScript identical to v12; retained for brevity)
+</script>
 
-// Grid Zoom
+<script>
+
+/******** global state ********/
+let gridReady = false;
+let lastUnusedRows = '';
+let lastUnusedCols = '';
+
+/******** Grid Zoom ********/
 document.getElementById('zoom-slider').addEventListener('input', function (e) {
   const scale = parseFloat(e.target.value);
   const container = document.getElementById('field-zoom-container');
   if (container) container.style.transform = `scale(${scale})`;
 });
 
-
-
-// Export View as JPG
+/******** Export View as JPG ********/
 document.getElementById('export-jpg-btn').addEventListener('click', function () {
   const target = document.getElementById('farm-scroll');
   html2canvas(target, {
@@ -215,7 +210,7 @@ document.getElementById('export-jpg-btn').addEventListener('click', function () 
   });
 });
 
-// Export Full grid
+/******** Export Full grid ********/
 document.getElementById('export-full-jpg-btn').addEventListener('click', function () {
   const scrollContainer = document.getElementById('farm-scroll');
   const zoomContainer = document.getElementById('field-zoom-container');
@@ -255,101 +250,123 @@ document.getElementById('export-full-jpg-btn').addEventListener('click', functio
   });
 });
 
-function toggleSection(id) {
-  const el = document.getElementById(id);
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-
-/******** constants ********/
+/******** util ********/
+const qs  = s => document.querySelector(s);
+const qsa = s => Array.from(document.querySelectorAll(s));
 const CELL = 40, GAP = 2, STEP = CELL + GAP;
 const colours = ['bg-red-400','bg-blue-400','bg-yellow-300','bg-green-400'];
 const colourFor = n => colours[(n-1)%colours.length];
+const uid = (() => { let i = 0; return () => `u${++i}`; })();
+const key = (r,c) => `${r},${c}`;
+
 /******** state ********/
-let manualBlock = new Set();
-let manualAllow = new Set();
+let manualBlock   = new Set();
+let manualAllow   = new Set();
 let manualBorders = new Set();
-/******** helpers ********/
-const qs = s => document.querySelector(s);
-const qsa= s => Array.from(document.querySelectorAll(s));
-const uid= (()=>{let i=0;return()=>`u${++i}`})();
-const key=(r,c)=>`${r},${c}`;
-const intList=id=>{const t=qs('#'+id)?.value.trim();return t? t.split(',').map(v=>+v.trim()-1).filter(n=>!isNaN(n)):[]};
+
+const intList = id => {
+  const t = qs('#'+id)?.value.trim();
+  return t ? t.split(',').map(v=>+v.trim()-1).filter(n=>!isNaN(n)) : [];
+};
+
 function cellIsUnused(r,c){
-  const row=intList('unused-rows').includes(r);
-  const col=intList('unused-cols').includes(c);
-  const k=key(r,c);
-  if(manualAllow.has(k)) return false;
-  if(manualBlock.has(k)) return true;
-  return row||col;
+  const row = intList('unused-rows').includes(r);
+  const col = intList('unused-cols').includes(c);
+  const k   = key(r,c);
+  if (manualAllow.has(k)) return false;
+  if (manualBlock.has(k)) return true;
+  return row || col;
 }
-function disablePal(t){const p=qs(`#palette${t}`);if(p){p.style.opacity='0.3';p.draggable=false;p.classList.add('cursor-not-allowed');}}
-function enablePal(t){const p=qs(`#palette${t}`);if(p){p.style.opacity='1';p.draggable=true;p.classList.remove('cursor-not-allowed');}}
+
+function disablePal(t){ const p = qs(`#palette${t}`); if(p){ p.style.opacity='0.3'; p.draggable=false; p.classList.add('cursor-not-allowed'); } }
+function enablePal(t){ const p = qs(`#palette${t}`); if(p){ p.style.opacity='1';  p.draggable=true;  p.classList.remove('cursor-not-allowed'); } }
+
 /******** grid ********/
 function drawGrid() {
-  const rows = +qs('#farm-rows')?.value || 0;
-  const cols = +qs('#farm-cols')?.value || 0;
-  const grid = qs('#farm-grid');
+  const rows   = +qs('#farm-rows')?.value || 0;
+  const cols   = +qs('#farm-cols')?.value || 0;
+  const grid   = qs('#farm-grid');
+  const loader = qs('#grid-loader');
 
-  // Fix: toggle edit-mode class separately
+  gridReady = false;
+  loader?.classList.remove('hidden');
+
   grid.classList.toggle('edit-mode', qs('#edit-toggle').checked);
-
   grid.innerHTML = '';
   grid.style.gridTemplateColumns = `repeat(${cols + 1}, ${CELL}px)`;
-  grid.style.gridTemplateRows = `repeat(${rows + 1}, ${CELL}px)`;
+  grid.style.gridTemplateRows    = `repeat(${rows + 1}, ${CELL}px)`;
 
   const makeHeader = (cls, val = '') => {
     const d = document.createElement('div');
-    d.className = 'grid-cell header-cell ' + cls;
+    d.className = `grid-cell header-cell ${cls}`;
     if (val) d.textContent = val;
     return d;
   };
 
-  grid.appendChild(makeHeader('corner'));
-  for (let c = 0; c < cols; c++) grid.appendChild(makeHeader('col-header', c + 1));
-  for (let r = 0; r < rows; r++) {
-    grid.appendChild(makeHeader('row-header', r + 1));
-    for (let c = 0; c < cols; c++) {
-      const cell = document.createElement('div');
-      cell.className = 'grid-cell border';
-      cell.dataset.row = r;
-      cell.dataset.col = c;
-      cell.style.background = cellIsUnused(r, c) ? '#d1d5db' : '#ffffff';
-      if (manualBorders.has(key(r, c))) {
-        cell.classList.add('border-plot');
-        cell.textContent = 'B';
-      } else {
-        cell.textContent = '';
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(makeHeader('corner'));
+  for (let c = 0; c < cols; c++) fragment.appendChild(makeHeader('col-header', c + 1));
+  grid.appendChild(fragment);
+
+  let currentRow = 0;
+  const chunkSize = 10;
+
+  function drawChunk() {
+    const frag = document.createDocumentFragment();
+    for (let r = currentRow; r < Math.min(currentRow + chunkSize, rows); r++) {
+      frag.appendChild(makeHeader('row-header', r + 1));
+      for (let c = 0; c < cols; c++) {
+        frag.appendChild(createCell(r, c));
       }
-
-      cell.onclick = toggleCell;
-
-      cell.addEventListener('mouseenter', function () {
-        if (qs('#edit-toggle').checked || qs('#border-toggle').checked) {
-          cell.classList.add('hover-preview');
-        }
-      });
-
-      cell.addEventListener('mouseleave', function() {
-        cell.classList.remove('hover-preview');
-      });
-
-      grid.appendChild(cell);
+    }
+    grid.appendChild(frag);
+    currentRow += chunkSize;
+    if (currentRow < rows) {
+      requestAnimationFrame(drawChunk);
+    } else {
+      loader?.classList.add('hidden');
+      repositionTrials();
+      gridReady = true;
     }
   }
 
-  repositionTrials();
+  drawChunk();
 }
 
-  
+function createCell(r, c) {
+  const cell = document.createElement('div');
+  cell.className = 'grid-cell border';
+  cell.dataset.row = r;
+  cell.dataset.col = c;
+
+  const k = key(r, c);
+  const isUnused = cellIsUnused(r, c);
+  const isBorder = manualBorders.has(k);
+
+  cell.style.background = isUnused ? '#d1d5db' : '#ffffff';
+  cell.textContent = isBorder ? 'B' : '';
+  if (isBorder) cell.classList.add('border-plot');
+
+  cell.onclick = toggleCell;
+  cell.addEventListener('mouseenter', () => {
+    if (qs('#edit-toggle').checked || qs('#border-toggle').checked) cell.classList.add('hover-preview');
+  });
+  cell.addEventListener('mouseleave', () => cell.classList.remove('hover-preview'));
+
+  return cell;
+}
+
+
+
 function toggleCell(e) {
-  const r = +e.target.dataset.row;
-  const c = +e.target.dataset.col;
+  const cell = e.target;
+  const r = +cell.dataset.row;
+  const c = +cell.dataset.col;
   const k = key(r, c);
 
   const editMode = qs('#edit-toggle').checked;
   const borderMode = qs('#border-toggle').checked;
 
-  // No mode active → ignore
   if (!editMode && !borderMode) return;
 
   if (editMode) {
@@ -360,34 +377,38 @@ function toggleCell(e) {
       manualAllow.delete(k);
       manualBlock.add(k);
     }
+    // Just update this cell background
+    const unused = cellIsUnused(r, c);
+    cell.style.background = unused ? '#d1d5db' : '#ffffff';
   }
 
   if (borderMode) {
     if (manualBorders.has(k)) {
       manualBorders.delete(k);
+      cell.classList.remove('border-plot');
+      cell.textContent = '';
     } else {
       manualBorders.add(k);
+      cell.classList.add('border-plot');
+      cell.textContent = 'B';
     }
   }
-
-  drawGrid();
 }
 
-function addTrialForm(i) {
+
+
+/******** trial forms ********/
+function addTrialForm(i){
   const d = document.createElement('div');
   d.className = 'border rounded p-4 mb-4 bg-gray-100';
-
   d.innerHTML = `
     <h4 class='font-semibold mb-2'>Trial ${i}</h4>
-
     <label class='block mb-2'>Name
       <input id='tname${i}' class='w-full border rounded px-2 py-1' />
     </label>
-
     <label class='block mb-4'>Description
       <textarea id='tdesc${i}' class='w-full border rounded px-2 py-1' rows='2'></textarea>
     </label>
-
     <div class='grid grid-cols-2 gap-4 mb-4'>
       <label>Trial Type
         <select id='ttype${i}' class='w-full border rounded px-2 py-1'>
@@ -406,7 +427,6 @@ function addTrialForm(i) {
         </select>
       </label>
     </div>
-
     <div class='grid grid-cols-2 gap-4 mb-4'>
       <label>Treatments List
         <input id='ttreatments${i}' placeholder='e.g. A, B, C' class='w-full border rounded px-2 py-1' />
@@ -415,7 +435,6 @@ function addTrialForm(i) {
         <input id='tcontrols${i}' placeholder='e.g. Check1, Check2' class='w-full border rounded px-2 py-1' />
       </label>
     </div>
-
     <div class='grid grid-cols-2 gap-4 mb-4'>
       <label>Reps
         <input id='treps${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
@@ -424,7 +443,6 @@ function addTrialForm(i) {
         <input id='tblocks${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
       </label>
     </div>
-
     <div class='grid grid-cols-2 gap-4'>
       <label>Rows
         <input id='trows${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
@@ -433,239 +451,213 @@ function addTrialForm(i) {
         <input id='tcols${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
       </label>
     </div>`;
-
   qs('#trial-details').appendChild(d);
 }
 
-
 function addPaletteBox(i){
-  const box=document.createElement('div');
-  box.id=`palette${i}`;
-  box.className=`trial-box ${colourFor(i)} bg-opacity-60`;
-  box.textContent=`Trial ${i}`;
-  box.dataset.trial=i;
-  box.draggable=true;
-  box.ondragstart=startDrag;
+  const box = document.createElement('div');
+  box.id = `palette${i}`;
+  box.className = `trial-box ${colourFor(i)} bg-opacity-60`;
+  box.textContent = `Trial ${i}`;
+  box.dataset.trial = i;
+  box.draggable = true;
+  box.ondragstart = startDrag;
   qs('#trial-boxes').appendChild(box);
   if(document.querySelector(`.trial-group[data-trial="${i}"]`)) disablePal(i);
 }
-/******** drag ********/
+
+/******** drag & drop ********/
 function startDrag(e){
-  const el=e.target.closest('.trial-group')||e.target;
-  const fromPal=el.id.startsWith('palette');
-  const rect=el.getBoundingClientRect();
-  e.dataTransfer.setData('src',fromPal?'pal':'grid');
-  e.dataTransfer.setData('tn',el.dataset.trial);
-  if(!fromPal) e.dataTransfer.setData('root',el.dataset.root);
-  e.dataTransfer.setData('offX',e.clientX-rect.left);
-  e.dataTransfer.setData('offY',e.clientY-rect.top);
+  const el = e.target.closest('.trial-group') || e.target;
+  const fromPal = el.id.startsWith('palette');
+  const rect = el.getBoundingClientRect();
+  e.dataTransfer.setData('src', fromPal ? 'pal' : 'grid');
+  e.dataTransfer.setData('tn', el.dataset.trial);
+  if(!fromPal) e.dataTransfer.setData('root', el.dataset.root);
+  e.dataTransfer.setData('offX', e.clientX - rect.left);
+  e.dataTransfer.setData('offY', e.clientY - rect.top);
 }
-function handleDrop(e){
+
+function handleDrop(e) {
   e.preventDefault();
-  const tn=e.dataTransfer.getData('tn');
-  const src=e.dataTransfer.getData('src');
-  const root=e.dataTransfer.getData('root');
-  const offX=+e.dataTransfer.getData('offX');
-  const offY=+e.dataTransfer.getData('offY');
-  const rect=qs('#farm-grid').getBoundingClientRect();
-  let col=Math.floor((e.clientX-rect.left-offX)/STEP)-1;
-  let row=Math.floor((e.clientY-rect.top-offY)/STEP)-1;
-  if(col<0||row<0) return;
-  const name=qs('#tname'+tn)?.value||`Trial ${tn}`;
-  const rowsWanted=+qs('#trows'+tn)?.value||1;
-  const colsWanted=+qs('#tcols'+tn)?.value||1;
-  const total=rowsWanted*colsWanted;
-  const colour=colourFor(tn);
-  if(src==='grid') qsa(`[data-root="${root}"]`).forEach(el=>el.remove());
-  placeTrial({tn,name,rowsWanted,colsWanted,total,rowStart:row,colStart:col,colour,rootId:src==='grid'?root:null});
+  if (!gridReady) {
+    alert('Grid is still loading. Please wait.');
+    return;
+  }
+
+  const tn   = e.dataTransfer.getData('tn');
+  const src  = e.dataTransfer.getData('src');
+  const root = e.dataTransfer.getData('root');
+  const offX = +e.dataTransfer.getData('offX');
+  const offY = +e.dataTransfer.getData('offY');
+
+  const rect = qs('#farm-grid').getBoundingClientRect();
+
+  let col, row;
+
+  if (src === 'grid') {
+    // Adjust using offset when dragging from the grid
+    col = Math.floor((e.clientX - rect.left - offX) / STEP) - 1;
+    row = Math.floor((e.clientY - rect.top  - offY) / STEP) - 1;
+  } else {
+    // No offset if dragging from palette
+    col = Math.floor((e.clientX - rect.left) / STEP) - 1;
+    row = Math.floor((e.clientY - rect.top)  / STEP) - 1;
+  }
+
+  if (col < 0 || row < 0) return;
+
+  const name        = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
+  const rowsWanted  = +qs(`#trows${tn}`)?.value || 1;
+  const colsWanted  = +qs(`#tcols${tn}`)?.value || 1;
+  const total       = rowsWanted * colsWanted;
+  const colour      = colourFor(tn);
+
+  if (src === 'grid') {
+    const parent = qs('#field-zoom-container');
+    const groups = parent.querySelectorAll(`.trial-group[data-root="${root}"]`);
+    groups.forEach(g => parent.removeChild(g));
+  }
+
+  placeTrial({ tn, name, rowsWanted, colsWanted, total, rowStart: row, colStart: col, colour, rootId: src === 'grid' ? root : null });
 }
-/******** placement ********/
-function checkBordersInRegion(rowStart, colStart, rowsWanted, colsWanted) {
-  for (let r = rowStart; r < rowStart + rowsWanted; r++) {
-    for (let c = colStart; c < colStart + colsWanted; c++) {
-      if (manualBorders.has(key(r, c))) return true;
+
+
+const farmGridEl = qs('#farm-grid');
+farmGridEl.addEventListener('dragover', e=>e.preventDefault());
+farmGridEl.addEventListener('drop', handleDrop);
+
+/******** placement helpers (unchanged logic, syntax corrected) ********/
+function checkBordersInRegion(rowStart,colStart,rowsWanted,colsWanted){
+  for(let r=rowStart;r<rowStart+rowsWanted;r++){
+    for(let c=colStart;c<colStart+colsWanted;c++){
+      if(manualBorders.has(key(r,c))) return true;
     }
   }
   return false;
 }
 
-
-function willOverlapTrialRegion(rowStart, colStart, rowsWanted, colsWanted) {
-  const total = rowsWanted * colsWanted;
-  let r = rowStart, c = colStart, count = 0;
-
-  while (count < total) {
-    if (!cellIsUnused(r, c)) {
-      const cellLeft = (c + 1) * STEP;
-      const cellTop = (r + 1) * STEP;
-      const cellBox = {
-        left: cellLeft,
-        top: cellTop,
-        right: cellLeft + CELL,
-        bottom: cellTop + CELL
-      };
-
-      const overlap = [...document.querySelectorAll('.trial-group')].some(group => {
-        const gLeft = parseFloat(group.style.left);
-        const gTop = parseFloat(group.style.top);
-        const gRight = gLeft + parseFloat(group.style.width);
-        const gBottom = gTop + parseFloat(group.style.height);
-
-        return !(
-          cellBox.right <= gLeft ||
-          cellBox.left >= gRight ||
-          cellBox.bottom <= gTop ||
-          cellBox.top >= gBottom
-        );
-      });
-
-      if (overlap) return true;
-    }
-
-    count++;
-    c++;
-    if (c - colStart >= colsWanted) {
-      c = colStart;
-      r++;
-    }
-  }
-
-  return false;
-}
-
-function trialCellExists(r, c) {
-  return [...document.querySelectorAll('.trial-group')].some(group => {
+function trialCellExists(r,c){
+  return [...document.querySelectorAll('.trial-group')].some(group=>{
     const gr = +group.dataset.row;
     const gc = +group.dataset.col;
     const cols = group.style.gridTemplateColumns.split(' ').length || 1;
-    const rows = Math.round(group.offsetHeight / (CELL + GAP)); // height is a multiple of CELL+GAP
-    return (r >= gr && r < gr + rows) && (c >= gc && c < gc + cols);
+    const rows = Math.round(group.offsetHeight / (CELL+GAP));
+    return (r>=gr && r<gr+rows) && (c>=gc && c<gc+cols);
   });
 }
 
-function doesOverlap(rowStart, colStart, rows, cols) {
-  const trialLeft = (colStart + 1) * STEP;
-  const trialTop = (rowStart + 1) * STEP;
-  const trialWidth = cols * STEP - GAP;
-  const trialHeight = rows * STEP - GAP;
-
-  const trialBox = {
-    left: trialLeft,
-    top: trialTop,
-    right: trialLeft + trialWidth,
-    bottom: trialTop + trialHeight
-  };
-
-  return [...document.querySelectorAll('.trial-group')].some(group => {
-    const existingLeft = parseFloat(group.style.left);
-    const existingTop = parseFloat(group.style.top);
-    const existingWidth = parseFloat(group.style.width);
-    const existingHeight = parseFloat(group.style.height);
-
-    const existingBox = {
-      left: existingLeft,
-      top: existingTop,
-      right: existingLeft + existingWidth,
-      bottom: existingTop + existingHeight
-    };
-
-    // check if rectangles intersect
-    return !(
-      trialBox.right <= existingBox.left ||
-      trialBox.left >= existingBox.right ||
-      trialBox.bottom <= existingBox.top ||
-      trialBox.top >= existingBox.bottom
-    );
-  });
+function willOverlapTrialRegion(rowStart,colStart,rowsWanted,colsWanted){
+  const total = rowsWanted*colsWanted;
+  let r=rowStart,c=colStart,count=0;
+  while(count<total){
+    if(!cellIsUnused(r,c)){
+      const cellLeft = (c+1)*STEP;
+      const cellTop  = (r+1)*STEP;
+      const cellBox  = { left:cellLeft, top:cellTop, right:cellLeft+CELL, bottom:cellTop+CELL };
+      const overlap = [...document.querySelectorAll('.trial-group')].some(group=>{
+        const gLeft = parseFloat(group.style.left);
+        const gTop  = parseFloat(group.style.top);
+        const gRight= gLeft + parseFloat(group.style.width);
+        const gBottom = gTop + parseFloat(group.style.height);
+        return !(cellBox.right<=gLeft || cellBox.left>=gRight || cellBox.bottom<=gTop || cellBox.top>=gBottom);
+      });
+      if(overlap) return true;
+    }
+    count++; c++;
+    if(c-colStart>=colsWanted){ c=colStart; r++; }
+  }
+  return false;
 }
 
 function placeTrial({tn,name,rowsWanted,colsWanted,total,rowStart,colStart,colour,rootId}){
-
-  // Prevent dropping if target area overlaps with existing trial
-  if (willOverlapTrialRegion(rowStart, colStart, rowsWanted, colsWanted)) {
-    alert("Please find another region to place your trial. This is occupied!");
+  if(willOverlapTrialRegion(rowStart,colStart,rowsWanted,colsWanted)){
+    alert('Please find another region to place your trial. This is occupied!');
     return;
   }
-
-
-
-
   disablePal(tn);
-  const root=rootId||uid();
-  const coords=[];
-  let r=rowStart,c=colStart;
-  let overlapFound = false;
-  while(coords.length < total){
-    
-    const k = key(r, c);
+  const root = rootId || uid();
+  const coords = [];
+  let r=rowStart,c=colStart,overlapFound=false;
+  while(coords.length<total){
+    const k = key(r,c);
     const isBorder = manualBorders.has(k);
-
-    // Skip borders (do NOT push into coords, but also do NOT trigger alert)
-    if (isBorder) {
-      // just skip this cell (will cause the trial to split)
-    } else if (!cellIsUnused(r, c)) {
-      if (trialCellExists(r, c)) {
-        overlapFound = true;
-        break;
-      }
-      coords.push([r, c]);
+    if(isBorder){ /* skip border cell */ }
+    else if(!cellIsUnused(r,c)){
+      if(trialCellExists(r,c)){ overlapFound=true; break; }
+      coords.push([r,c]);
     }
-
-
     c++;
-    if (c - colStart >= colsWanted) {
-      c = colStart;
-      r++;
+    if(c-colStart>=colsWanted){ c=colStart; r++; }
+  }
+  if(overlapFound){ alert('Please find another region to place your trial. This is occupied!'); return; }
+  const rowsMap = {};
+  coords.forEach(([rr,cc])=>{ (rowsMap[rr]=rowsMap[rr]||[]).push(cc); });
+  Object.entries(rowsMap).forEach(([rr,cols])=>{
+    cols.sort((a,b)=>a-b);
+    let s=cols[0];
+    for(let i=1;i<=cols.length;i++){
+      if(i===cols.length || cols[i]!==cols[i-1]+1){ createSeg(+rr,s,cols[i-1]); s=cols[i]; }
     }
-  }
-
-  if (overlapFound) {
-    alert("Please find another region to place your trial. This is occupied!");
-    return;
-  }
-
-  const rowsMap={}; coords.forEach(([rr,cc])=>{(rowsMap[rr]=rowsMap[rr]||[]).push(cc);});
-  Object.entries(rowsMap).forEach(([rr,cols])=>{cols.sort((a,b)=>a-b);let s=cols[0];for(let i=1;i<=cols.length;i++){if(i===cols.length||cols[i]!==cols[i-1]+1){createSeg(+rr,s,cols[i-1]);s=cols[i];}}});
+  });
   function createSeg(rr,start,end){
     const seg=end-start+1;
     const g=document.createElement('div');
     g.className='trial-group';
-    g.dataset.trial=tn;g.dataset.root=root;g.dataset.row=rr;g.dataset.col=start;
-    g.style.left=`${(start+1)*STEP}px`;
-    g.style.top =`${(rr+1)*STEP}px`;
-    g.style.width=`${seg*STEP-GAP}px`;
-    g.style.height=`${CELL}px`;
-    g.style.gridTemplateColumns=`repeat(${seg},${CELL}px)`;
+    g.dataset.trial=tn; g.dataset.root=root; g.dataset.row=rr; g.dataset.col=start;
+    g.style.left  = `${(start+1)*STEP}px`;
+    g.style.top   = `${(rr+1)*STEP}px`;
+    g.style.width = `${seg*STEP-GAP}px`;
+    g.style.height= `${CELL}px`;
+    g.style.gridTemplateColumns = `repeat(${seg}, ${CELL}px)`;
     g.draggable=true; g.ondragstart=startDrag;
-    for(let i=0;i<seg;i++){const b=document.createElement('div');b.className=`trial-box ${colour} bg-opacity-60`;b.textContent=name;b.draggable=true;b.ondragstart=startDrag;g.appendChild(b);}    
+    for(let i=0;i<seg;i++){
+      const b=document.createElement('div');
+      b.className = `trial-box ${colour} bg-opacity-60`;
+      b.textContent = name;
+      b.draggable = true;
+      b.ondragstart = startDrag;
+      g.appendChild(b);
+    }
     if(!qs(`[data-root="${root}"] .remove-btn`)){
-      const rm=document.createElement('div');rm.className='remove-btn';rm.textContent='×';rm.onclick=()=>{qsa(`[data-root="${root}"]`).forEach(el=>el.remove());enablePal(tn);};g.appendChild(rm);
+      const rm=document.createElement('div');
+      rm.className='remove-btn';
+      rm.textContent='×';
+      rm.onclick = () => {
+        const removalLoader = qs('#removal-loader');
+        removalLoader?.classList.remove('hidden');
+
+        // Slight delay so user sees the loader
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            qsa(`[data-root="${root}"]`).forEach(el => el.remove());
+            enablePal(tn);
+            removalLoader?.classList.add('hidden');
+          }, 100); // remove almost immediately, but after loader shows
+        });
+      };
+      g.appendChild(rm);
     }
     qs('#field-zoom-container').appendChild(g);
   }
 }
 
-/******** setting un utilized plots ***********/
-let isDragging = false;
-let dragStart = null;
-
-qs('#farm-grid').addEventListener('mousedown', function(e) {
-  const cell = e.target.closest('.grid-cell');
-  if (!cell || !cell.dataset.row) return;
-
-  const editMode = qs('#edit-toggle').checked;
-  const borderMode = qs('#border-toggle').checked;
-  if (!editMode && !borderMode) return;
-
-  isDragging = true;
-  dragStart = { row: +cell.dataset.row, col: +cell.dataset.col };
-
-  // Prevent text selection
+/******** selection drag for unused & borders (logic unchanged) ********/
+let isDragging=false;
+let dragStart=null;
+qs('#farm-grid').addEventListener('mousedown',e=>{
+  const cell=e.target.closest('.grid-cell');
+  if(!cell||!cell.dataset.row) return;
+  const editMode=qs('#edit-toggle').checked;
+  const borderMode=qs('#border-toggle').checked;
+  if(!editMode && !borderMode) return;
+  isDragging=true;
+  dragStart={row:+cell.dataset.row,col:+cell.dataset.col};
   e.preventDefault();
 });
 
 
-document.addEventListener('mouseup', function (e) {
+document.addEventListener('mouseup', e => {
   if (!isDragging || !dragStart) return;
 
   const cell = document.elementFromPoint(e.clientX, e.clientY)?.closest('.grid-cell');
@@ -675,21 +667,14 @@ document.addEventListener('mouseup', function (e) {
     return;
   }
 
-  const row1 = dragStart.row;
-  const col1 = dragStart.col;
-  const row2 = +cell.dataset.row;
-  const col2 = +cell.dataset.col;
-
-  const rMin = Math.min(row1, row2);
-  const rMax = Math.max(row1, row2);
-  const cMin = Math.min(col1, col2);
-  const cMax = Math.max(col1, col2);
-
+  const row1 = dragStart.row, col1 = dragStart.col;
+  const row2 = +cell.dataset.row, col2 = +cell.dataset.col;
+  const rMin = Math.min(row1, row2), rMax = Math.max(row1, row2);
+  const cMin = Math.min(col1, col2), cMax = Math.max(col1, col2);
   const editMode = qs('#edit-toggle').checked;
   const borderMode = qs('#border-toggle').checked;
-
-  // Only check overlap if editing unutilized cells
   let overlap = false;
+
   if (editMode && !borderMode) {
     for (let r = rMin; r <= rMax; r++) {
       for (let c = cMin; c <= cMax; c++) {
@@ -698,8 +683,8 @@ document.addEventListener('mouseup', function (e) {
           const gc = +group.dataset.col;
           const gw = parseFloat(group.style.width) / STEP;
           const gh = parseFloat(group.style.height) / STEP;
-          return r === gr && c >= gc && c < gc + gw ||
-                 c === gc && r >= gr && r < gr + gh ||
+          return (r === gr && c >= gc && c < gc + gw) ||
+                 (c === gc && r >= gr && r < gr + gh) ||
                  (r >= gr && r < gr + gh && c >= gc && c < gc + gw);
         });
         if (occupied) {
@@ -712,11 +697,14 @@ document.addEventListener('mouseup', function (e) {
   }
 
   if (overlap) {
-    alert("It is not possible to turn entire row or column unutilized because there is a trial already placed.");
+    alert('It is not possible to turn entire row or column unutilized because there is a trial already placed.');
   } else {
     for (let r = rMin; r <= rMax; r++) {
       for (let c = cMin; c <= cMax; c++) {
         const k = key(r, c);
+        const cell = qs(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
+        if (!cell) continue;
+
         if (editMode) {
           if (cellIsUnused(r, c)) {
             manualBlock.delete(k);
@@ -725,17 +713,23 @@ document.addEventListener('mouseup', function (e) {
             manualAllow.delete(k);
             manualBlock.add(k);
           }
+          const unused = cellIsUnused(r, c);
+          cell.style.background = unused ? '#d1d5db' : '#ffffff';
         }
+
         if (borderMode) {
           if (manualBorders.has(k)) {
             manualBorders.delete(k);
+            cell.classList.remove('border-plot');
+            cell.textContent = '';
           } else {
             manualBorders.add(k);
+            cell.classList.add('border-plot');
+            cell.textContent = 'B';
           }
         }
       }
     }
-    drawGrid();
   }
 
   isDragging = false;
@@ -743,54 +737,69 @@ document.addEventListener('mouseup', function (e) {
 });
 
 
-/******** reposition ********/
-function repositionTrials(){qsa('.trial-group').forEach(g=>{g.style.left=`${(+g.dataset.col+1)*STEP}px`;g.style.top=`${(+g.dataset.row+1)*STEP}px`;});}
-/******** boot ********/
 
-function makeTrials() {
-  qs('#trial-details').innerHTML = '';
-  qs('#trial-boxes').innerHTML = '';
-  const n = +qs('#num-trials')?.value || 0;
-  for (let i = 1; i <= n; i++) {
-    addTrialForm(i);
-    addPaletteBox(i);
+/******** reposition helper ********/
+function repositionTrials(){ qsa('.trial-group').forEach(g=>{
+  g.style.left = `${(+g.dataset.col+1)*STEP}px`;
+  g.style.top  = `${(+g.dataset.row+1)*STEP}px`;
+}); }
+
+/******** boot ********/
+function makeTrials(){
+  qs('#trial-details').innerHTML='';
+  qs('#trial-boxes').innerHTML='';
+  const n=+qs('#num-trials')?.value||0;
+  for(let i=1;i<=n;i++){ addTrialForm(i); addPaletteBox(i); }
+}
+
+function updateUnusedRowHighlights(rowList) {
+  const cols = +qs('#farm-cols')?.value || 0;
+  for (let r = 0; r < +qs('#farm-rows')?.value || 0; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = qs(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
+      if (!cell) continue;
+      const k = key(r, c);
+      const isUnused = rowList.includes(r) || intList('unused-cols').includes(c);
+      cell.style.background = isUnused && !manualAllow.has(k) ? '#d1d5db' : '#ffffff';
+    }
+  }
+}
+
+function updateUnusedColHighlights(colList) {
+  const rows = +qs('#farm-rows')?.value || 0;
+  for (let c = 0; c < +qs('#farm-cols')?.value || 0; c++) {
+    for (let r = 0; r < rows; r++) {
+      const cell = qs(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
+      if (!cell) continue;
+      const k = key(r, c);
+      const isUnused = colList.includes(c) || intList('unused-rows').includes(r);
+      cell.style.background = isUnused && !manualAllow.has(k) ? '#d1d5db' : '#ffffff';
+    }
   }
 }
 
 
-window.onload = () => {
+window.onload = ()=>{
   makeTrials();
   drawGrid();
-
-  qs('#farm-rows').addEventListener('change', drawGrid);
-  qs('#farm-cols').addEventListener('change', drawGrid);
-
-  qs('#edit-toggle').addEventListener('change', () => {
-    if (qs('#edit-toggle').checked) {
-      qs('#border-toggle').checked = false;
-    }
-  });
-
-  qs('#border-toggle').addEventListener('change', () => {
-    if (qs('#border-toggle').checked) {
-      qs('#edit-toggle').checked = false;
-    }
-  });
-
-  // Safe to reference inputs here
+  qs('#farm-rows').addEventListener('change',drawGrid);
+  qs('#farm-cols').addEventListener('change',drawGrid);
+  qs('#edit-toggle').addEventListener('change',()=>{ if(qs('#edit-toggle').checked) qs('#border-toggle').checked=false; });
+  qs('#border-toggle').addEventListener('change',()=>{ if(qs('#border-toggle').checked) qs('#edit-toggle').checked=false; });
   lastUnusedRows = qs('#unused-rows').value;
   lastUnusedCols = qs('#unused-cols').value;
 
   qs('#unused-rows').addEventListener('change', function (e) {
     const val = e.target.value.trim();
     const rowList = val ? val.split(',').map(v => +v.trim() - 1).filter(n => !isNaN(n)) : [];
+    const cols = +qs('#farm-cols')?.value || 0;
 
     const conflict = rowList.some(row => {
       return [...document.querySelectorAll('.trial-group')].some(group => {
         const gr = +group.dataset.row;
         const gh = parseFloat(group.style.height) / STEP;
-        if (row >= gr && row < gr + gh) return true;
-      }) || Array.from({length: +qs('#farm-cols')?.value || 0}).some((_, c) => manualBorders.has(key(row, c)));
+        return row >= gr && row < gr + gh;
+      }) || Array.from({ length: cols }).some((_, c) => manualBorders.has(key(row, c)));
     });
 
     if (conflict) {
@@ -800,7 +809,7 @@ window.onload = () => {
     }
 
     lastUnusedRows = val;
-    drawGrid();
+    updateUnusedRowHighlights(rowList);  // <-- efficient, no redraw
   });
 
 
@@ -808,13 +817,14 @@ window.onload = () => {
   qs('#unused-cols').addEventListener('change', function (e) {
     const val = e.target.value.trim();
     const colList = val ? val.split(',').map(v => +v.trim() - 1).filter(n => !isNaN(n)) : [];
+    const rows = +qs('#farm-rows')?.value || 0;
 
     const conflict = colList.some(col => {
       return [...document.querySelectorAll('.trial-group')].some(group => {
         const gc = +group.dataset.col;
         const gw = parseFloat(group.style.width) / STEP;
-        if (col >= gc && col < gc + gw) return true;
-      }) || Array.from({length: +qs('#farm-rows')?.value || 0}).some((_, r) => manualBorders.has(key(r, col)));
+        return col >= gc && col < gc + gw;
+      }) || Array.from({ length: rows }).some((_, r) => manualBorders.has(key(r, col)));
     });
 
     if (conflict) {
@@ -824,16 +834,12 @@ window.onload = () => {
     }
 
     lastUnusedCols = val;
-    drawGrid();
+    updateUnusedColHighlights(colList);
   });
 
 
-  qs('#num-trials')?.addEventListener('change', makeTrials);
 
-
+  qs('#num-trials')?.addEventListener('change',makeTrials);
 };
 
 </script>
-
-
-
