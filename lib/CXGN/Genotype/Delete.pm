@@ -73,6 +73,8 @@ sub delete_genotype_data {
             die "No project id, plate id or protocol id info.\n";
         }
 
+        my @samples_array;
+        my $placeholder;
         if ($genotyping_plate_id) {
             my @plate_list = ($genotyping_plate_id);
             my $plate_samples = CXGN::Stock::TissueSample::Search->new({
@@ -82,8 +84,11 @@ sub delete_genotype_data {
 
             my $data = $plate_samples->get_sample_data();
             my $sample_list = $data->{sample_list};
-            my $stock_ids = join ("," , @$sample_list);
-            $where_clause = "nd_experiment_stock.stock_id in ($stock_ids)";
+            @samples_array = @$sample_list;
+            $placeholder = join ",",("?") x @samples_array;
+#            my $stock_ids = join ("," , @$sample_list);
+#            $where_clause = "nd_experiment_stock.stock_id in ($stock_ids)";
+            $where_clause = "nd_experiment_stock.stock_id in ($placeholder)";
 
         } elsif ($genotyping_project_id) {
             $where_clause = "nd_experiment_project.project_id = $genotyping_project_id";
@@ -101,7 +106,7 @@ sub delete_genotype_data {
         ";
 
         my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($experiment_cvterm_id);
+        $h->execute($experiment_cvterm_id, @samples_array);
 
         my @genotype_ids_to_delete;
         my @nd_experiment_ids_to_delete;
