@@ -86,14 +86,12 @@ sub delete_genotype_data {
             my $sample_list = $data->{sample_list};
             @samples_array = @$sample_list;
             $placeholder = join ",",("?") x @samples_array;
-#            my $stock_ids = join ("," , @$sample_list);
-#            $where_clause = "nd_experiment_stock.stock_id in ($stock_ids)";
             $where_clause = "nd_experiment_stock.stock_id in ($placeholder)";
 
         } elsif ($genotyping_project_id) {
-            $where_clause = "nd_experiment_project.project_id = $genotyping_project_id";
+            $where_clause = "nd_experiment_project.project_id = ?";
         } elsif ($genotyping_protocol_id) {
-            $where_clause = "nd_experiment_protocol.nd_protocol_id = $genotyping_protocol_id";
+            $where_clause = "nd_experiment_protocol.nd_protocol_id = ?";
         }
 
         my $q = "SELECT nd_experiment_genotype.nd_experiment_id, nd_experiment_genotype.genotype_id, nd_experiment_protocol.nd_protocol_id
@@ -106,7 +104,13 @@ sub delete_genotype_data {
         ";
 
         my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($experiment_cvterm_id, @samples_array);
+        if ($genotyping_plate_id) {
+            $h->execute($experiment_cvterm_id, @samples_array);
+        } elsif ($genotyping_project_id) {
+            $h->execute($experiment_cvterm_id, $genotyping_project_id);
+        } elsif ($genotyping_protocol_id) {
+            $h->execute($experiment_cvterm_id, $genotyping_protocol_id);
+        }
 
         my @genotype_ids_to_delete;
         my @nd_experiment_ids_to_delete;
