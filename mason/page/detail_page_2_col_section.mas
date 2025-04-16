@@ -100,6 +100,9 @@ $genotype_data_type => undef
 $marker_info_headers => undef
 $assay_type => undef
 
+#Specific to genotyping plate detail page
+$number_of_samples_with_data => undef
+
 #Specific to drone run detail page
 $drone_run_date => undef
 $id_extension => undef
@@ -457,7 +460,12 @@ $field_headers => ()
 % if ($info_section_id eq 'pcr_genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/pcr_genotype_data.mas, protocol_id => $protocol_id, marker_names => $marker_names &>
 % } #End pcr_genotyping_protocol_genotype_data
-
+% if ($info_section_id eq 'plate_genotyping_data'){
+                                <& /breeders_toolbox/genotyping_trials/plate_genotyping_data.mas, trial_id => $trial_id &>
+% } #End plate_genotyping_data
+% if ($info_section_id eq 'delete_genotyping_plate_section'){
+                                <& /breeders_toolbox/genotyping_trials/delete_genotyping_plate.mas, trial_id => $trial_id, number_of_samples_with_data => $number_of_samples_with_data &>
+% } #End delete_genotyping_plate_section
 
 
 % if ($info_section_id eq 'crossingtrial_details'){
