@@ -5635,35 +5635,51 @@ sub get_recently_modified_projects {
     my $metadata_schema = shift;
     my $last_refresh_date = shift;
     my $type = shift;
-
-    if (! $last_refresh_date) {
-	print STDERR "No last refresh date provided, skipping.\n";
-	return [];
-    }
-
+    my $hard_refresh = shift;
     
-    if (! grep($type, qw | phenotyping genotyping_plate genotyping_project crosses | )) {
+    print STDERR "RECENTLY MODIFIED PROJECT... using type $type and hard refresh set to $hard_refresh\n";
+    
+    #if (! $last_refresh_date) {
+#	print STDERR "No last refresh date provided, skipping.\n";
+#	return [];
+#    }
+
+    if ($type eq "trialtree") { $type = "phenotyping_trial"; }
+
+    print STDERR "TYPE NOW: $type\n";
+    
+    if (! grep($type, qw | phenotyping_trial genotyping_plate genotyping_project crosses | )) {
 	print STDERR "Trial type $type not recognized, aborting query\n";
 	return;	
     }
 
     my %clause = (
 	all => " ",
-	phenotyping_trial => " cvterm.cv_id in (select cv_id from cv where name='project_type') and (cvterm.name not in ('analysis_metadata_json', 'genotyping_trial', 'genotyping_project', 'crossing_trial')) and ",
-	genotyping_plate => "  cvterm.cv_id in (select cv_id where name='project_property')  and projectprop.value in ('genotyping_plate', 'folder_for_genotyping_trials', 'breeding_program') and ",
-	gentoyping_project => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value in ('genotyping_project', 'folder_for_genotyping_projects', 'breeding_program') and ",
-	crossing_trial => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value in ('crossing_trial', 'folder_for_crossing_trials', 'breeding_program') and ",
-	analysis_experiment => " cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value = 'analysis_experiment' and ",
+	phenotyping_trial => " cvterm.cv_id in (select cv_id from cv where name='project_type') and (cvterm.name not in ('analysis_metadata_json', 'genotyping_trial', 'genotyping_project', 'crossing_trial'))  ",
+	genotyping_plate => "  cvterm.cv_id in (select cv_id where name='project_property')  and projectprop.value in ('genotyping_plate', 'folder_for_genotyping_trials', 'breeding_program') ",
+	gentoyping_project => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value in ('genotyping_project', 'folder_for_genotyping_projects', 'breeding_program')  ",
+	crossing_trial => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value in ('crossing_trial', 'folder_for_crossing_trials', 'breeding_program') ",
+	analysis_experiment => " cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value = 'analysis_experiment' ",
     );
-    
-    my $q = "select distinct(project.project_id), project.create_date from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm.cvterm_id) where $clause{$type} create_date > ?  group by project.project_id order by create_date desc limit ?";
+
+    my $create_clause = "";
+
+    if ($last_refresh_date || !$hard_refresh) {
+	$create_clause = " and create_date > ? ";
+    }
+	
+    my $q = "select distinct(project.project_id), project.create_date from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm.cvterm_id) where $clause{$type} $create_clause  group by project.project_id order by create_date";
 
     print STDERR "QUERY = $q\n";
     
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
-    $h->execute($last_refresh_date, 10);
-
+    if ($last_refresh_date) { 
+	$h->execute($last_refresh_date);
+    }
+    else {
+	$h->execute();
+    }
 
     my @recent_trials;
     while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
