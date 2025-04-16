@@ -51,9 +51,9 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     # adjust resource nomenclature
     #
     my $resource = "trials";
-    if ($tree_type eq "trial") { $resource = "trials"; }
+    if ($tree_type eq "trialtree") { $resource = "trials"; }
     if ($tree_type eq "genotyping_trial") { $resource = "genotyping"; }
-    if ($tree_type eq "cross") { $resource = "crosses"; }
+    if ($tree_type eq "crosstrial") { $resource = "crosses"; }
     
     print STDERR "Figuring out user privileges for $tree_type tree...\n";
     my $privs =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $resource);
@@ -81,9 +81,9 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     }
     my $filename = $dir."/entire_jstree_html_$tree_type.txt";
 
-    _write_cached_folder_tree($schema, $tree_type, \@breeding_programs, $filename);
+    my $html = _write_cached_folder_tree($schema, $tree_type, \@breeding_programs, $filename);
 
-    $c->stash->{rest} = { status => 1 };
+    $c->stash->{rest} = { html => $html,  status => 1 };
 }
 
 sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folders_cached') Args(0) {
@@ -242,8 +242,6 @@ sub get_recent_trials : Path('/ajax/breeders/recent_trials') Args(1) {
     my $trial_table = CXGN::Project::get_recently_added_trials($c->dbic_schema('Bio::Chado::Schema'),  $c->dbic_schema("CXGN::Phenome::Schema"),  $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $interval, $type);
 
     $c->stash->{rest} =  { data => $trial_table }
-
-
 }
 
 =head2 function get_recently_modified_trials()
@@ -292,7 +290,8 @@ sub get_recently_created_accessions : Path('/ajax/breeders/recently_added_access
   Summary: function used in the trial tree pages to determine if there
            were any changes in the database that should trigger a refresh
   Returns: a list of project_ids that where added
-  Notes:   may not detect deletions or renaming
+  Notes:   may not detect deletions or renaming. Used by htmltree.js to 
+           display trial, crossing, etc trees on respective manage pages.
 
 =cut
 
@@ -301,8 +300,10 @@ sub get_recently_modified_projects : Path('/ajax/breeders/recently_modified_proj
     my $c = shift;
     my $since_date = $c->req->param('since_date');
     my $type = $c->req->param('type');
-    
-    my $trial_table = CXGN::Project::get_recently_modified_projects($c->dbic_schema('Bio::Chado::Schema'), $c->dbic_schema("CXGN::Phenome::Schema"), $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $since_date, $type);
+    my $hard_refresh = $c->req->param('hard_refresh');
+
+    print STDERR "AJAX: get_recently_modified_projects... ($type)\n";
+    my $trial_table = CXGN::Project::get_recently_modified_projects($c->dbic_schema('Bio::Chado::Schema'), $c->dbic_schema("CXGN::Phenome::Schema"), $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $since_date, $type, $hard_refresh);
 
     $c->stash->{rest} =  { data => $trial_table };
 }
