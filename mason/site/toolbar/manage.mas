@@ -18,6 +18,7 @@
 
     <li role="separator" class="divider"></li>
     <li><a href="/breeders/trials/">Field Trials</a></li>
+    <li><a href="/tools/trialallocation">Trial Allocation</a></li>
     <li><a href="/fieldbook">Field Book App</a></li>
     <li><a href="/breeders/phenotyping/">Phenotyping</a></li>
     <li><a href="/barcode">Barcodes</a></li>
