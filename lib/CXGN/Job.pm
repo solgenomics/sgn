@@ -260,7 +260,7 @@ sub BUILD {
         $self->type_id($cvterm_row->cvterm_id());
         my $logfile;
         if (!$self->has_finish_logfile()) {
-            $logfile = `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
+            $logfile = `cat /home/production/volume/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
             $self->finish_logfile($logfile);
         }
         $self->create_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
@@ -289,7 +289,7 @@ sub BUILD {
         $self->additional_args($job_args->{additional_args});
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
-        my $logfile = $job_args->{finish_logfile} ? $job_args->{finish_logfile} : `cat /home/production/volume/cxgn/sgn/sgn_local.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
+        my $logfile = $job_args->{finish_logfile} ? $job_args->{finish_logfile} : `cat /home/production/volume/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
         $self->finish_logfile($logfile);
     }
 }
@@ -408,15 +408,14 @@ sub delete {
 
     eval {
         $row->delete();
-        my $job_id = $self->sp_job_id();
-        my @rows = read_file( $logfile, { binmode => ':utf8' } );
-        @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
-        write_file($logfile,{binmode => ':utf8'},@rows);
     };
     if ($@) {
         die "An error occurred deleting job from database: $@\n";
     }
-
+    my $job_id = $self->sp_job_id();
+    my @rows = read_file( $logfile, { binmode => ':utf8' } );
+    @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
+    write_file($logfile,{binmode => ':utf8'},@rows);
 }
 
 =head2 cancel()

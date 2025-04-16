@@ -791,7 +791,7 @@ sub submit_job_cluster {
     } elsif ($data_type =~ m/genotype/i) {
       $data_type = "genotypic_analysis";
     } else {
-      $data_type = "";
+      $data_type = "genotypic_analysis"; #just a guess.
     }
 
     my $job_record = CXGN::Job->new({

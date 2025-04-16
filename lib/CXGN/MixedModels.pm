@@ -417,7 +417,8 @@ sub run_model {
 		cmd => $cmd,
 		cxgn_tools_run_config => $cxgn_tools_run_config,
 		name => $job_record_config->{name},
-		job_type => 'phenotypic_analysis'
+		job_type => 'phenotypic_analysis',
+		finish_logfile => $job_record_config->{finish_logfile}
 	});
 	
 	$job_record->update_status("submitted");
@@ -459,7 +460,6 @@ sub run_model {
 
     if ($@) {
 	$error = $@;
-	$job_record->update_status("failed");
     }
 
     return $error;    
