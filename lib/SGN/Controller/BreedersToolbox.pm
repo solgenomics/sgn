@@ -61,6 +61,8 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my $hard_refresh = $c->req->param("hard_refresh");
+    
     if (!$c->stash->{user_id}) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	$c->detach();
@@ -126,7 +128,8 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
     $c->stash->{can_write_trials} = $can_write_trials;
-
+    $c->stash->{hard_refresh} = $hard_refresh;
+    
     my $locations = $projects->get_all_locations_by_breeding_program();
 
     #print STDERR "Locations are ".Dumper($locations)."\n";
