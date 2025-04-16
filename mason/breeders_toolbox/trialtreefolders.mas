@@ -8,6 +8,7 @@ $editable_stock_props_definitions => {}
 $timestamp
 $management_factor_types => ()
 $design_types => ()
+$hard_refresh => undef
 </%args>
 
     <& /util/import_javascript.mas,  classes => [ 'jstree.dist.jstree', 'bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ], entries => [ 'htmltree' ] &>
@@ -115,11 +116,13 @@ jQuery(document).ready(function($) {
 	
     // });
 
+
+    
     var htmltree = window.jsMod['htmltree'];
-
-
-    htmltree.init("trialtree");
-        htmltree.init_events('trialtree');	
+    var hard_refresh = <% $hard_refresh || '""' %>;
+    alert('HARD REFRESH = '+hard_refresh);
+    htmltree.init("trialtree", <% $hard_refresh %>);
+    //htmltree.init_events('trialtree');	
 
 //    htmltree.init_tree('trialtree');
 
