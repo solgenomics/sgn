@@ -62,6 +62,11 @@ has 'tracking_identifier' => (
     builder => '_get_tracking_identifier',
 );
 
+has 'transformation_control_stock_id' => (
+    isa => "Int",
+    is => 'rw',
+);
+
 
 sub get_active_transformations_in_project {
     my $self = shift;
@@ -440,6 +445,38 @@ sub delete {
 	    return 0;
     }
 }
+
+
+sub set_transformation_control {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $transformation_control_stock_id = $self->transformation_control_stock_id();
+
+    eval {
+        my $transformation_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation','stock_type')->cvterm_id();
+        my $control_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of','stock_relationship')->cvterm_id();
+        my $transformation_rs = $schema->resultset("Stock::Stock")->find({stock_id => $transformation_stock_id, type_id => $transformation_cvterm_id });
+
+        if ($transformation_control_stock_id) {
+             $transformation_rs->find_or_create_related('stock_relationship_subjects', {
+                type_id    => $control_of_cvterm_id,
+                object_id  => $transformation_rs->stock_id(),
+                subject_id => $transformation_control_stock_id,
+            });
+        }
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while setting transformation control for stock id ".$transformation_stock_id."$@\n";
+	    return $@;
+    } else {
+	    return 0;
+    }
+
+}
+
 
 
 ###

@@ -2453,10 +2453,7 @@ sub get_transformation_ids_select : Path('/ajax/html/select/transformation_ids')
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
-    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
-    my $size = $c->req->param("size");
     my $empty = $c->req->param("empty") || "";
-    my @stocks;
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
     my $active_transformations = $transformation_obj->get_active_transformations_in_project();
@@ -2480,10 +2477,8 @@ sub get_transformation_ids_select : Path('/ajax/html/select/transformation_ids')
     if ($empty) { unshift @transformations, [ "", "Please select" ]; }
 
     my $html = simple_selectbox_html(
-        multiple => $multiple,
         name => $name,
         id => $id,
-        size => $size,
         choices => \@transformations,
     );
     $c->stash->{rest} = { select => $html };

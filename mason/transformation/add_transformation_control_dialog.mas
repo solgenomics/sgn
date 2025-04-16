@@ -5,41 +5,39 @@ $project_id
 </%args>
 
 
-<div class="modal fade" id="add_transformation_control_dialog" name="add_transformation_control_dialog" tabindex="-1" role="dialog" aria-labelledby="addTransformationControlDialog">
+<div class="modal fade" id="set_transformation_control_dialog" name="set_transformation_control_dialog" tabindex="-1" role="dialog" aria-labelledby="setTransformationControlDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ">
             <div class="modal-header">
-                <button type="reset" class="close" id="add_transformation_control_dismiss_button_1" name="add_transformation_control_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="addTransformationControlDialog">Add Transformation Control</h4></center>
+                <button type="reset" class="close" id="set_transformation_control_dismiss_button_1" name="set_transformation_control_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="setTransformationControlDialog">Set Transformation Control</h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <form class="form-horizontal" role="form" name="add_transformation_control_form" id="add_transformation_control_form">
+                    <form class="form-horizontal" role="form" name="set_transformation_control_form" id="set_transformation_control_form">
                         <div class="form-group">
-                            <label class="control-label col-sm-5">Select a control experiment:</label>
+                            <label class="col-sm-5 control-label">Select a control: </label>
                             <div class="col-sm-7" >
-                                <div class="input-group">
-                                    <select class="form-control" id="transformation_experiment_select"></select>
-                                </div>
+                                <div id="transformation_control_select_div"></div>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="add_transformation_control_submit">Submit</button>
-                <button id="add_trnsformation_control_dismiss_button_2" name="add_transformation_control_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="set_transformation_control_submit">Submit</button>
+                <button id="set_trnsformation_control_dismiss_button_2" name="set_transformation_control_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="add_transformation_control_saved_dialog_message" name="add_transformation_control_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addTransformationControlSavedDialog">
+<div class="modal fade" id="set_transformation_control_saved_dialog_message" name="set_transformation_control_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="setTransformationControlSavedDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTransformationControlSavedDialog">Success</h4>
+                <h4 class="modal-title" id="setTransformationControlSavedDialog">Success</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -50,18 +48,18 @@ $project_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_add_transformation_control_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="dismiss_set_transformation_control_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="add_transformation_control_error_dialog" name="add_transformation_control_error_dialog" tabindex="-1" role="dialog" aria-labelledby="addTransformationControlErrorDialog">
+<div class="modal fade" id="set_transformation_control_error_dialog" name="set_transformation_control_error_dialog" tabindex="-1" role="dialog" aria-labelledby="setTransformationControlErrorDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTransformationControlErrorDialog">Add Transformation Control Error</h4>
+                <h4 class="modal-title" id="setTransformationControlErrorDialog">Set Transformation Control Error</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -82,13 +80,49 @@ $project_id
 
 jQuery(document).ready(function(){
 
+    const transformation_id = '<%$transformation_id%>';
+    get_select_box('transformation_ids', 'transformation_control_select_div', { 'name' : 'transformation_control_id', 'id' : 'transformation_control_id', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
 
-    get_select_box('transformation_ids', 'transformation_experiment_select', { 'name' : 'transformation_control_id', 'id' : 'transformation_control_id', 'multiple':'0', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
-
-
-    jQuery('#add_transformation_control_link').click(function(){
-        jQuery('#add_transformation_control_dialog').modal('show');
+    jQuery('#set_transformation_control_link').click(function(){
+        jQuery('#set_transformation_control_dialog').modal('show');
     });
+
+    jQuery('#set_transformation_control_submit').click(function(){
+        const control_stock_id = jQuery('#transformation_control_id').val();
+        if (!control_stock_id) {
+            alert ("Please select a control");
+            return;
+        }
+
+        jQuery.ajax({
+            url : '/ajax/transformation/set_transformation_control',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'transformation_stock_id': transformation_id,
+                'control_stock_id': control_stock_id,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#set_transformation_control_dialog').modal('hide');
+                    jQuery('#set_transformation_control_saved_dialog_message').modal("show");
+
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred setting transformation control');
+            }
+        });
+    });
+
 
 
 });
