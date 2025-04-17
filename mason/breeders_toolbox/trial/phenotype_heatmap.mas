@@ -3,6 +3,8 @@ $trial_id
 $stockref => undef
 $data_level => 'plot'
 $has_col_and_row_numbers => undef
+$has_subplot_entries => undef
+$has_plant_entries => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
@@ -213,6 +215,7 @@ $has_col_and_row_numbers => undef
                 <select class="form-control" name="plot_download_type" id="plot_download_type">
                     <option value="">--Select Type--</option>
                     <option value="planting">Planting Order</option>
+                    <option value="collection">Collection Order</option>
                     <option value="harvest">Harvest Order</option>
                     <option value="harvestmaster">HarvestMaster</option>
                 </select>
@@ -245,6 +248,18 @@ $has_col_and_row_numbers => undef
                     <label for="plot_download_gaps">Include Gaps</label>
                     <input type="checkbox" id="plot_download_gaps" name="plot_download_gaps" value="no">
                 </div>
+% if ( $has_subplot_entries ) {
+                <div>
+                    <label for="plot_download_subplots">Include Subplots</label>
+                    <input type="checkbox" id="plot_download_subplots" name="plot_download_subplots" value="no">
+                </div>
+% }
+% if ( $has_plant_entries ) {
+                <div>
+                    <label for="plot_download_plants">Include Plants</label>
+                    <input type="checkbox" id="plot_download_plants" name="plot_download_plants" value="no">
+                </div>
+% }
             </div>
         </div>
         <div id="plot_download_harvestmaster_options" style="display: none; padding: 15px">
@@ -951,6 +966,8 @@ jQuery(document).ready( function() {
         let start = jQuery("#plot_download_start").val();
         let include_borders = jQuery("#plot_download_borders").is(":checked");
         let include_gaps = jQuery("#plot_download_gaps").is(":checked");
+        let include_subplots = jQuery("#plot_download_subplots").is(":checked");
+        let include_plants = jQuery("#plot_download_plants").is(":checked");
         if ( !type || type === '' ) {
             alert("Please select a type");
             return;
@@ -968,7 +985,7 @@ jQuery(document).ready( function() {
             hm_range: jQuery("#hm_range").val(),
             hm_row: jQuery("#hm_row").val()
         }
-        FieldMap.get_plot_order(type, order, start, include_borders, include_gaps, additional_properties);
+        FieldMap.get_plot_order({type, order, start, include_borders, include_gaps, include_subplots, include_plants, additional_properties});
     });
 
     jQuery("#invert_row_checkmark").change(function() {
