@@ -143,7 +143,7 @@ sub check_stored_analysis {
         
         if ($analysis) {
             $analysis_id = $analysis->project_id;
-         } 
+        } 
     }
     
     return $analysis_id;
