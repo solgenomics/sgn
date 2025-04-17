@@ -564,7 +564,7 @@ jQuery(document).ready(function ($) {
             }
             else if (response.success) {
                 fullParsedData = response.full_data;
-                doFuzzySearch = jQuery('#fuzzy_check_upload_accessions').attr('checked');;
+                doFuzzySearch = jQuery('#fuzzy_check_upload_accessions').prop('checked');;
                 review_verification_results(doFuzzySearch, response, response.list_id);
             }
             else {
