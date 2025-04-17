@@ -35,6 +35,8 @@ $design_name
 %        $method = 'RRC';
 %    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
 %        $method = 'DRRC';
+%    } elsif ($type eq 'Un-Replicated Diagonal Design'){
+%        $method = 'URDD';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){

@@ -352,10 +352,14 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     }
     my @trial_list_int;
     my $trial_name = "";
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
     foreach (@trial_list) {
         if ($_ =~ m/^\d+$/) {
             push @trial_list_int, $_;
-	    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $_ });
+	    my $trial = CXGN::Trial->new( { bcs_schema => $schema, people_schema=>$people_schema, metadata_schema=>$metadata_schema,phenome_schema=>$phenome_schema,trial_id => $_ });
 	    $trial_name = $trial->get_name();
 	    $trial_name =~ s/ /\_/g;
         } else {
@@ -1101,6 +1105,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
+
     my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
     my $associated_protocol;
 
@@ -1189,6 +1196,11 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         push @genotyping_project_list, $genotyping_project_id;
     }
 
+    my @genotyping_plate_list;
+    if (defined $genotyping_plate_id) {
+        push @genotyping_plate_list, $genotyping_plate_id;
+    }
+
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
@@ -1208,6 +1220,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock,
             #markerprofile_id_list=>$markerprofile_id_list,
             genotype_data_project_list=>\@genotyping_project_list,
+            genotyping_plate_list=>\@genotyping_plate_list,
+            sample_unit_level=>$sample_unit_level,
             #limit=>$limit,
             #offset=>$offset
         }
@@ -1746,6 +1760,8 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $protocol_id = $c->req->param("protocol_id");
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
 
     my @protocol_list;
     if (defined $protocol_id) {
@@ -1757,6 +1773,10 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
         push @genotyping_project_list, $genotyping_project_id;
     }
 
+    my @genotyping_plate_list;
+    if (defined $genotyping_plate_id) {
+        push @genotyping_plate_list, $genotyping_plate_id;
+    }
 
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = $protocol_id . "_" . "KASP_data" . "XXXX";
@@ -1774,7 +1794,9 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
             people_schema=>$people_schema,
             protocol_id_list=>\@protocol_list,
             genotype_data_project_list=>\@genotyping_project_list,
+            genotyping_plate_list=>\@genotyping_plate_list,
             filename => $tempfile,
+            sample_unit_level=>$sample_unit_level,
         }
     );
 
@@ -1799,9 +1821,9 @@ sub download_images_POST : Args(0) {
     my $trial_id = $c->req->param('trial_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $trial = CXGN::Trial->new({ 
-        bcs_schema => $schema, 
-        trial_id => $trial_id, 
+    my $trial = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
         }
     );
 
