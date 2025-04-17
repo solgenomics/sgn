@@ -2,17 +2,17 @@
 
 =head1 NAME
 
-AddControlOfCvterm
+AddControlRelatedCvterms
 
 =head1 SYNOPSIS
 
-mx-run AddControlOfCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run AddControlRelatedCvterms [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds 'control_of' stock_relationship cvterm
+This patch adds 'control_of' stock_relationship cvterm and is_a_transformation_control stock_property cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -29,7 +29,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddControlOfCvterm;
+package AddControlRelatedCvterms;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -38,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'control_of' stock_relationship cvterm
+This patch adds the 'control_of' stock_relationship cvterm and is_a_transformation_control stock_property cvterm
 
 has '+prereq' => (
 	default => sub {
@@ -59,10 +59,23 @@ sub patch {
 
     print STDERR "INSERTING CV TERMS...\n";
 
-    $schema->resultset("Cv::Cvterm")->create_with({
-        name => 'control_of',
-        cv => 'stock_relationship'
-    });
+	my $terms = {
+        'stock_relationship' => [
+            'control_of',
+        ],
+        'stock_property' => [
+            'is_a_transformation_control',
+        ]
+    };
+
+    foreach my $t (keys %$terms){
+        foreach (@{$terms->{$t}}){
+            $schema->resultset("Cv::Cvterm")->create_with({
+                name => $_,
+                cv => $t
+            });
+        }
+    }
 
     print "You're done!\n";
 }
