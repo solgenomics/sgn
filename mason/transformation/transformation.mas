@@ -43,6 +43,7 @@ $control_link => undef
             <div class="row">
                 <div class="col-sm-6">
                     <table class="table table-bordered table-hover">
+                        <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
                         <tr><td><b>Plant Material</b></td><td><%$plant_material%></td></tr>
                         <tr><td><b>Vector Construct</b></td><td><%$vector_construct%></td></tr>
                         <tr><td><b>Notes</b></td><td><%$transformation_notes%></td></tr>
@@ -51,7 +52,6 @@ $control_link => undef
 %} elsif ($control_link) {
                         <tr><td><b>Control</b></td><td><%$control_link%></td></tr>
 %}
-                        <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
                         <tr><td><b>Name Format for Transformants</b></td><td><%$name_format%></td></tr>
 %if ($updated_status_type) {
                         <tr><td><b>Status</b></td><td><%$status_display%></td></tr>
