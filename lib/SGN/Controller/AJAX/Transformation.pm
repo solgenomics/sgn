@@ -423,11 +423,14 @@ sub get_active_transformations_in_project :Path('/ajax/transformation/active_tra
 
     my @transformations;
     foreach my $r (@$result){
-        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $status_type) =@$r;
+        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control) =@$r;
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
         my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
-        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
+        if($is_a_control) {
+            $is_a_control = 'is a control';
+        }
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $is_a_control, $number_of_transformants];
     }
 
     $c->stash->{rest} = { data => \@transformations };
@@ -448,7 +451,7 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
 
     my @transformations;
     foreach my $r (@$result){
-        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $status_type) =@$r;
+        my ($transformation_id, $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $status_type) =@$r;
         if ($status_type eq 'terminated_metadata') {
             $status_type = '<span style="color:red">'.'TERMINATED'.'</span>';
         } elsif ($status_type eq 'completed_metadata') {
@@ -457,8 +460,11 @@ sub get_inactive_transformation_ids_in_project :Path('/ajax/transformation/inact
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
         my $transformants = $transformation_obj->transformants();
         my $number_of_transformants = scalar(@$transformants);
+        if ($is_a_control) {
+            $is_a_control = 'is a control';
+        }
 
-        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $number_of_transformants];
+        push @transformations, [qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $status_type, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$vector_id/view">$vector_name</a>}, $notes, $is_a_control, $number_of_transformants];
     }
 
     $c->stash->{rest} = { data => \@transformations };

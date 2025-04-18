@@ -62,7 +62,19 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $vector_construct = qq{<a href="/stock/$vector_id/view">$vector_name</a>};
     my $transformation_notes = $info->[0]->[4];
 
-    my $updated_status_type = $info->[0]->[5];
+    my $is_a_control = $info->[0]->[5];
+    if ($is_a_control) {
+        $is_a_control = 'is a control';
+    }
+
+    my $control_id = $info->[0]->[6];
+    my $control_name = $info->[0]->[7];
+    my $control_link;
+    if ($control_id) {
+        $control_link = qq{<a href="/transformation/$control_id">$control_name</a>}
+    }
+
+    my $updated_status_type = $info->[0]->[8];
     my $completed_metadata;
     my $terminated_metadata;
     my $status_display;
@@ -144,6 +156,8 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{status_display} = $status_display;
     $c->stash->{has_associated_transformants} = $has_associated_transformants;
     $c->stash->{project_id} = $project_id;
+    $c->stash->{is_a_control} = $is_a_control;
+    $c->stash->{control_link} = $control_link;
 
     $c->stash->{template} = '/transformation/transformation.mas';
 

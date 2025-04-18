@@ -25,6 +25,8 @@ $material_name
 $status_display => undef
 $has_associated_transformants => undef
 $project_id
+$is_a_control => undef
+$control_link => undef
 
 </%args>
 
@@ -44,6 +46,11 @@ $project_id
                         <tr><td><b>Plant Material</b></td><td><%$plant_material%></td></tr>
                         <tr><td><b>Vector Construct</b></td><td><%$vector_construct%></td></tr>
                         <tr><td><b>Notes</b></td><td><%$transformation_notes%></td></tr>
+%if ($is_a_control) {
+                        <tr><td><b>Control</b></td><td><%$is_a_control%></td></tr>
+%} elsif ($control_link) {
+                        <tr><td><b>Control</b></td><td><%$control_link%></td></tr>
+%}
                         <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
                         <tr><td><b>Name Format for Transformants</b></td><td><%$name_format%></td></tr>
 %if ($updated_status_type) {

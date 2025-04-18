@@ -81,7 +81,7 @@ $project_id
 jQuery(document).ready(function(){
 
     const transformation_id = '<%$transformation_id%>';
-    get_select_box('transformation_ids', 'transformation_control_select_div', { 'name' : 'transformation_control_id', 'id' : 'transformation_control_id', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
+    get_select_box('control_transformation_ids', 'transformation_control_select_div', { 'name' : 'transformation_control_id', 'id' : 'transformation_control_id', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
 
     jQuery('#set_transformation_control_link').click(function(){
         jQuery('#set_transformation_control_dialog').modal('show');

@@ -2455,7 +2455,7 @@ sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0)
 }
 
 
-sub get_transformation_ids_select : Path('/ajax/html/select/transformation_ids') Args(0) {
+sub get_control_transformation_ids_select : Path('/ajax/html/select/control_transformation_ids') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dbh = $c->dbc->dbh();
@@ -2477,13 +2477,16 @@ sub get_transformation_ids_select : Path('/ajax/html/select/transformation_ids')
     foreach my $active_id (@$active_transformations){
         my $transformation_id = $active_id->[0];
         my $transformation_name = $active_id->[1];
+        my $is_a_control = $active_id->[7];
 
-        if ($exclude_self == 1) {
-            if ($self_transformation_id != $transformation_id ) {
+        if ($is_a_control) {
+            if ($exclude_self == 1) {
+                if ($self_transformation_id != $transformation_id ) {
+                    push @transformations, [$transformation_id, $transformation_name];
+                }
+            } else {
                 push @transformations, [$transformation_id, $transformation_name];
             }
-        } else {
-            push @transformations, [$transformation_id, $transformation_name];
         }
     }
 
