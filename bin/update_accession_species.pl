@@ -6,19 +6,17 @@ update_stock_props.pl - updates stock props
 
 =head1 DESCRIPTION
 
-update_stock_props -H [database host] -D [database name] update_stock_prop_file.xlsx
+update_accession_species.pl -H [database host] -D [database name] -i update_file.xlsx
 
 Options:
 
  -H the database host
  -D the database name
+ -i update_file.xlsx
 
-update_stock_prop_file.xlsx: a file with three columns: 
+update_stock_prop_file.xlsx: a file with two columns: 
  accession_name
- <stock_attribute>_old
- <stock_attribute>_new
-
-The script will remove the _new and _old extension, compare if they are the same, and then start replacing the values in the old column with the values in the new column for each accession_name.
+ species_name
 
 =head1 AUTHOR
 
@@ -37,11 +35,11 @@ use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 
 
-our ($opt_H, $opt_D);
-getopts("H:D:");
+our ($opt_H, $opt_D, $opt_i);
+getopts("H:D:i:");
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
-my $file = shift;
+my $file = $opt_i;
 my @traits;
 my @formulas;
 my @array_ref;
@@ -51,9 +49,9 @@ my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>"$dbhost",
 				   dbargs => {AutoCommit => 1,
 					      RaiseError => 1,
 				   }
-
 				 } );
 
+$dbh->do('set search_path to public');
 
 my $schema= Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() });
 
@@ -101,7 +99,7 @@ if ($worksheet->get_cell(0,0)) {
 }
 if ($worksheet->get_cell(0,1)) { 
     $species_header = $worksheet->get_cell(0,1)->value();
-    if ($species_header ne 'species') { die "species header not found" };
+    if ($species_header ne 'species_name') { die "species header not found" };
 }
 #if ($worksheet->get_cell(0,2)) {
 #    $cvterm_new = $worksheet->get_cell(0,2)->value();
@@ -135,14 +133,18 @@ for (my $n=1; $n<$row_max; $n++) {
     my $accession_row = $schema->resultset("Stock::Stock")->find( { uniquename => $accession_name } );
     if (!$accession_row) { die "Accession $accession_name does not exist. Please fix and try again."; }
     
-    my $organism_row = $schema->resultset("General::Organism")->find( { species => $species });
+    my $organism_row = $schema->resultset("Organism::Organism")->find( { species => $species });
 
     if (! $organism_row) {
-	die "The organsim $species does not exit in the database"; 
+	die "The organism $species does not exit in the database"; 
     }
 
-    $accession_row->organsim_id($organism_row->organism_id());
+    my $current_organism_id = $accession_row->organism_id();
+
+    print STDERR "Accession: ".$accession_row->uniquename().". Current organism_id: $current_organism_id. New organism: ".$organism_row->organism_id()." ($species)\n"; 
     
+    $accession_row->organism_id($organism_row->organism_id());
+    $accession_row->update();
 }
 
 
