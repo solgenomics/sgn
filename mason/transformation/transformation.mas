@@ -26,6 +26,7 @@ $status_display => undef
 $has_associated_transformants => undef
 $project_id
 $is_a_control => undef
+$control_id => undef
 $control_link => undef
 
 </%args>
@@ -73,6 +74,9 @@ $control_link => undef
 
 <& /transformation/transformants_section.mas, transformation_id => $transformation_id &>
 <& /transformation/obsoleted_transformants_section.mas, transformation_id => $transformation_id &>
+%if ($control_id) {
+    <& /transformation/control_transformants_section.mas, control_id => $control_id &>
+%}
 
 <&| /page/info_section.mas, title=>"Update Status",  collapsible => 1, collapsed=>1 &>
 % if ($user_role eq "curator" ) {
