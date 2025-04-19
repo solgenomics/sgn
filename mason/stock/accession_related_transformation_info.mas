@@ -1,0 +1,35 @@
+<%args>
+$stock_id
+$stock_uniquename => undef
+</%args>
+
+<&| /page/info_section.mas, id=>'transformation_experiment', title => 'Transformation Experiment', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table id = "transformation_experiment_info" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th>Transformation ID</th>
+                            <th>Vector Construct</th>
+                            <th>Plant Material</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    const stock_id = "<%$stock_id%>";
+
+
+});
+
+
+</script>
