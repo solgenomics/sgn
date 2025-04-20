@@ -1,3 +1,7 @@
+
+import '../legacy/jquery.js';
+import '../legacy/d3/d3v4Min.js';
+
 document.addEventListener('DOMContentLoaded', () => {
 
   /******** global state ********/
@@ -144,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drawChunk();
   }
 
+
   function createCell(r, c) {
     const cell = document.createElement('div');
     cell.className = 'grid-cell border';
@@ -206,17 +211,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /******** trial forms ********/
-  function addTrialForm(i){
+  function addTrialForm(i, selectedListId = null) {
     const d = document.createElement('div');
     d.className = 'border rounded p-4 mb-4 bg-gray-100';
     d.innerHTML = `
       <h4 class='font-semibold mb-2'>Trial ${i}</h4>
+
       <label class='block mb-2'>Name
         <input id='tname${i}' class='w-full border rounded px-2 py-1' />
       </label>
+
       <label class='block mb-4'>Description
         <textarea id='tdesc${i}' class='w-full border rounded px-2 py-1' rows='2'></textarea>
       </label>
+
       <div class='grid grid-cols-2 gap-4 mb-4'>
         <label>Trial Type
           <select id='ttype${i}' class='w-full border rounded px-2 py-1'>
@@ -235,15 +243,21 @@ document.addEventListener('DOMContentLoaded', () => {
           </select>
         </label>
       </div>
+
       <div class='grid grid-cols-2 gap-4 mb-4'>
         <label>Treatments List
-          <input id='ttreatments${i}' placeholder='e.g. A, B, C' class='w-full border rounded px-2 py-1' />
+          <select id='ttreatments${i}' class='w-full border rounded px-2 py-1'>
+            <option value="">Loading...</option>
+          </select>
         </label>
         <label>Controls List
-          <input id='tcontrols${i}' placeholder='e.g. Check1, Check2' class='w-full border rounded px-2 py-1' />
+          <select id='tcontrols${i}' class='w-full border rounded px-2 py-1'>
+            <option value="">-- Select a list --</option>
+          </select>
         </label>
       </div>
-      <div class='grid grid-cols-2 gap-4 mb-4'>
+
+      <div id='repsblocks-container${i}' class='grid grid-cols-2 gap-4 mb-4'>
         <label>Reps
           <input id='treps${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
         </label>
@@ -251,16 +265,75 @@ document.addEventListener('DOMContentLoaded', () => {
           <input id='tblocks${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
         </label>
       </div>
-      <div class='grid grid-cols-2 gap-4'>
+
+      <div id='rowcol-container${i}' class='grid grid-cols-2 gap-4'>
         <label>Rows
           <input id='trows${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
         </label>
         <label>Cols
           <input id='tcols${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
         </label>
-      </div>`;
+      </div>
+
+      <div class='mt-4 text-right'>
+        <button onclick='generateDesign(${i})' class='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
+          Generate Design
+        </button>
+      </div>
+    `;
+
     qs('#trial-details').appendChild(d);
+
+    // Design toggle logic
+    const designSelect = d.querySelector(`#tdesign${i}`);
+    const rowcol = d.querySelector(`#rowcol-container${i}`);
+    const repsblocks = d.querySelector(`#repsblocks-container${i}`);
+
+    designSelect.addEventListener('change', () => {
+      const isRCBD = designSelect.value === 'RCBD';
+
+      // Replace Reps/Blocks
+      repsblocks.innerHTML = isRCBD
+        ? `
+          <label>Reps / Blocks
+            <input id='trepsblocks${i}' type='number' min='1' value='1' class='w-full border rounded px-2 py-1' />
+          </label>
+          <div></div>
+        `
+        : `
+          <label>Reps
+            <input id='treps${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
+          </label>
+          <label>Blocks
+            <input id='tblocks${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
+          </label>
+        `;
+
+      // Replace Row/Col
+      rowcol.innerHTML = isRCBD
+        ? `
+          <label>Number of Rows per Block
+            <input id='tblockrows${i}' type='number' min='1' value='1' class='w-full border rounded px-2 py-1' />
+          </label>
+          <div></div>
+        `
+        : `
+          <label>Rows
+            <input id='trows${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
+          </label>
+          <label>Cols
+            <input id='tcols${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
+          </label>
+        `;
+    });
+
+    // Load dropdown lists
+    loadTreatmentsList(i, null, function (selectedTreatmentListId) {
+      loadControlsList(i, selectedTreatmentListId);
+    });
   }
+
+
 
   function addPaletteBox(i){
     const box = document.createElement('div');
@@ -273,6 +346,114 @@ document.addEventListener('DOMContentLoaded', () => {
     qs('#trial-boxes').appendChild(box);
     if(document.querySelector(`.trial-group[data-trial="${i}"]`)) disablePal(i);
   }
+
+  /******** getting lists **********/
+  function loadTreatmentsList(i, selectedListId = null, onSelectedCallback = null) {
+    const $select = $(`#ttreatments${i}`);
+    if ($select.length === 0) return;
+
+    $select.html(`<option value="">Loading...</option>`);
+
+    $.ajax({
+      url: '/ajax/trialallocation/accession_lists',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        if (!data.success) {
+          $select.html(`<option value="">Failed to load</option>`);
+          alert("Could not load Treatments List");
+          return;
+        }
+
+        $select.empty().append(`<option value="">-- Select a list --</option>`);
+
+        data.lists.forEach(function(list) {
+          const selected = (selectedListId && list.list_id == selectedListId) ? 'selected' : '';
+          const label = `${list.name} (${list.is_public ? 'Public' : 'Private'})`;
+          $select.append(`<option value="${list.list_id}" ${selected}>${label}</option>`);
+        });
+
+        //Attach change listener to trigger control refresh
+        $select.off('change').on('change', function () {
+          const selectedTreatmentsList = $(this).val();
+          if (onSelectedCallback) {
+            onSelectedCallback(selectedTreatmentsList);
+          }
+        });
+
+        // Optional: trigger callback if pre-selected
+        if (selectedListId && onSelectedCallback) {
+          onSelectedCallback(selectedListId);
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error("Error loading Treatments List:", status, error);
+        $select.html(`<option value="">Failed to load</option>`);
+        alert("Error loading Treatments List.");
+      }
+    });
+  }
+
+  function loadControlsList(i, excludeListId = null) {
+    const $select = $(`#tcontrols${i}`);
+    if ($select.length === 0) return;
+
+    $select.html(`<option value="">Loading...</option>`);
+
+    $.ajax({
+      url: '/ajax/trialallocation/accession_lists',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        if (!data.success) {
+          $select.html(`<option value="">Failed to load</option>`);
+          alert("Could not load Controls List");
+          return;
+        }
+
+        $select.empty().append(`<option value="">-- Select a list --</option>`);
+
+        data.lists.forEach(function(list) {
+          if (excludeListId && list.list_id == excludeListId) return; //skip treatment list
+          const label = `${list.name} (${list.is_public ? 'Public' : 'Private'})`;
+          $select.append(`<option value="${list.list_id}">${label}</option>`);
+        });
+      },
+      error: function(xhr, status, error) {
+        console.error("Error loading Controls List:", status, error);
+        $select.html(`<option value="">Failed to load</option>`);
+        alert("Error loading Controls List.");
+      }
+    });
+  }
+  
+  /******** Gereate trial Design *************/
+  window.generateDesign = function(i, rowStart = 0, colStart = 0) {
+    const design = $(`#tdesign${i}`).val();
+    const isRCBD = design === 'RCBD';
+
+    const trial = {
+      name: $(`#tname${i}`).val(),
+      description: $(`#tdesc${i}`).val(),
+      type: $(`#ttype${i}`).val(),
+      design: design,
+      treatment_list_id: $(`#ttreatments${i}`).val(),
+      control_list_id: $(`#tcontrols${i}`).val(),
+      reps: isRCBD ? 0 : parseInt($(`#treps${i}`).val()) || 0,
+      blocks: isRCBD ? parseInt($(`#trepsblocks${i}`).val()) || 0 : parseInt($(`#tblocks${i}`).val()) || 0,
+      rows: isRCBD ? parseInt($(`#tblockrows${i}`).val()) || 0 : parseInt($(`#trows${i}`).val()) || 0,
+      cols: parseInt($(`#tcols${i}`).val()) || 0
+    };
+
+    return $.ajax({
+      url: '/ajax/trialallocation/generate_design',
+      method: 'POST',
+      data: {
+        trial: JSON.stringify(trial)
+      }
+    });
+  };
+
 
   /******** drag & drop ********/
   function startDrag(e){
@@ -301,34 +482,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rect = qs('#farm-grid').getBoundingClientRect();
 
-    let col, row;
-
-    if (src === 'grid') {
-      // Adjust using offset when dragging from the grid
-      col = Math.floor((e.clientX - rect.left - offX) / STEP) - 1;
-      row = Math.floor((e.clientY - rect.top  - offY) / STEP) - 1;
-    } else {
-      // No offset if dragging from palette
-      col = Math.floor((e.clientX - rect.left) / STEP) - 1;
-      row = Math.floor((e.clientY - rect.top)  / STEP) - 1;
-    }
+    let col = Math.floor((e.clientX - rect.left - (src === 'grid' ? offX : 0)) / STEP) - 1;
+    let row = Math.floor((e.clientY - rect.top  - (src === 'grid' ? offY : 0)) / STEP) - 1;
 
     if (col < 0 || row < 0) return;
 
-    const name        = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
-    const rowsWanted  = +qs(`#trows${tn}`)?.value || 1;
-    const colsWanted  = +qs(`#tcols${tn}`)?.value || 1;
-    const total       = rowsWanted * colsWanted;
-    const colour      = colourFor(tn);
+    const name = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
+    const colour = colourFor(tn);
+    const design = qs(`#tdesign${tn}`)?.value;
 
     if (src === 'grid') {
-      const parent = qs('#field-zoom-container');
-      const groups = parent.querySelectorAll(`.trial-group[data-root="${root}"]`);
-      groups.forEach(g => parent.removeChild(g));
+      qsa(`.trial-group[data-root="${root}"]`).forEach(el => el.remove());
     }
 
-    placeTrial({ tn, name, rowsWanted, colsWanted, total, rowStart: row, colStart: col, colour, rootId: src === 'grid' ? root : null });
+    if (design === 'RCBD') {
+      generateDesign(tn, row, col).done(function(response) {
+        if (response.success) {
+          const rowsWanted = response.n_row;
+          const colsWanted = response.n_col;
+          const total = rowsWanted * colsWanted;
+
+          placeTrial({
+            tn,
+            name,
+            rowsWanted,
+            colsWanted,
+            total,
+            rowStart: row,
+            colStart: col,
+            colour,
+            rootId: null
+          });
+        } else {
+          alert("Design failed: " + response.error);
+        }
+      }).fail(function(xhr, status, error) {
+        console.error("AJAX error:", error);
+        alert("Error generating design.");
+      });
+    } else {
+      const rowsWanted = +qs(`#trows${tn}`)?.value || 1;
+      const colsWanted = +qs(`#tcols${tn}`)?.value || 1;
+      const total = rowsWanted * colsWanted;
+
+      placeTrial({
+        tn,
+        name,
+        rowsWanted,
+        colsWanted,
+        total,
+        rowStart: row,
+        colStart: col,
+        colour,
+        rootId: src === 'grid' ? root : null
+      });
+    }
   }
+
 
 
   const farmGridEl = qs('#farm-grid');
@@ -377,107 +587,112 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return false;
   }
+  
+  /******** Placing Trial ********/
+  function placeTrial({tn, name, rowsWanted, colsWanted, total, rowStart, colStart, colour, rootId, design, rowsPerBlock, blocks}) {
+      disablePal(tn);
+      const root = rootId || uid();
+      const coords = [];
+      let r = rowStart, c = colStart;
 
-  function placeTrial({tn, name, rowsWanted, colsWanted, total, rowStart, colStart, colour, rootId}) {
-    disablePal(tn);
-    const root = rootId || uid();
-    const coords = [];
-    let r = rowStart, c = colStart;
-    let usableInRow = 0;
+      // Adjust for RCBD
+      if (design === 'RCBD' && rowsPerBlock && blocks) {
+        rowsWanted = rowsPerBlock * blocks;
+        colsWanted = Math.ceil((numTreatments + numControls) * reps / rowsWanted);
+      }
 
-    while (coords.length < total) {
-      const k = key(r, c);
-      const isBorder = manualBorders.has(k);
+      // Attempt to place total plots, skipping over borders and unutilized
+      while (coords.length < total) {
+        if (!cellIsUnused(r, c) && !manualBorders.has(key(r, c))) {
+          if (trialCellExists(r, c)) {
+            alert("Please find another region to place your trial. This is occupied!");
+            return;
+          }
+          coords.push([r, c]);
+        }
 
-      if (!cellIsUnused(r, c) && !isBorder) {
-        if (trialCellExists(r, c)) {
-          alert('Please find another region to place your trial. This is occupied!');
+        c++;
+        if (coords.length % colsWanted === 0) {
+          // Move to next row after 'colsWanted' usable plots
+          c = colStart;
+          r++;
+        }
+
+        // Safety stop to prevent infinite loop
+        if (r > 1000) {
+          alert("Could not place trial: not enough space.");
           return;
         }
-        coords.push([r, c]);
-        usableInRow++;
       }
 
-      c++;
-      if (usableInRow >= colsWanted) {
-        // We filled the desired number of usable plots in this row
-        r++;
-        c = colStart;
-        usableInRow = 0;
-      }
+      // Build segments from coords
+      const rowsMap = {};
+      coords.forEach(([rr, cc]) => {
+        (rowsMap[rr] = rowsMap[rr] || []).push(cc);
+      });
 
-      // Safety break
-      if (r > 1000) {
-        alert("Could not place trial: not enough usable space.");
-        return;
-      }
-    }
-
-    // Group by row
-    const rowsMap = {};
-    coords.forEach(([rr, cc]) => {
-      (rowsMap[rr] = rowsMap[rr] || []).push(cc);
-    });
-
-    // Create segmented trial boxes
-    Object.entries(rowsMap).forEach(([rr, cols]) => {
-      cols.sort((a, b) => a - b);
-      let s = cols[0];
-      for (let i = 1; i <= cols.length; i++) {
-        if (i === cols.length || cols[i] !== cols[i - 1] + 1) {
-          createSeg(+rr, s, cols[i - 1]);
-          s = cols[i];
+      Object.entries(rowsMap).forEach(([rr, cols]) => {
+        cols.sort((a, b) => a - b);
+        let s = cols[0];
+        for (let i = 1; i <= cols.length; i++) {
+          if (i === cols.length || cols[i] !== cols[i - 1] + 1) {
+            createSeg(+rr, s, cols[i - 1]);
+            s = cols[i];
+          }
         }
-      }
-    });
+      });
 
-    function createSeg(rr, start, end) {
-      const seg = end - start + 1;
-      const g = document.createElement('div');
-      g.className = 'trial-group';
-      g.dataset.trial = tn;
-      g.dataset.root = root;
-      g.dataset.row = rr;
-      g.dataset.col = start;
-      g.style.left = `${(start + 1) * STEP}px`;
-      g.style.top = `${(rr + 1) * STEP}px`;
-      g.style.width = `${seg * STEP - GAP}px`;
-      g.style.height = `${CELL}px`;
-      g.style.gridTemplateColumns = `repeat(${seg}, ${CELL}px)`;
-      g.draggable = true;
-      g.ondragstart = startDrag;
+      function createSeg(rr, start, end) {
+        const seg = end - start + 1;
+        const g = document.createElement('div');
+        g.className = 'trial-group';
+        g.dataset.trial = tn;
+        g.dataset.root = root;
+        g.dataset.row = rr;
+        g.dataset.col = start;
+        g.style.left = `${(start + 1) * STEP}px`;
+        g.style.top = `${(rr + 1) * STEP}px`;
+        g.style.width = `${seg * STEP - GAP}px`;
+        g.style.height = `${CELL}px`;
+        g.style.gridTemplateColumns = `repeat(${seg}, ${CELL}px)`;
+        g.draggable = true;
+        g.ondragstart = startDrag;
 
-      for (let i = 0; i < seg; i++) {
-        const b = document.createElement('div');
-        b.className = `trial-box ${colour} bg-opacity-60`;
-        b.textContent = name;
-        b.draggable = true;
-        b.ondragstart = startDrag;
-        g.appendChild(b);
-      }
+        for (let i = 0; i < seg; i++) {
+          const b = document.createElement('div');
+          b.className = `trial-box ${colour} bg-opacity-60`;
+          b.textContent = name;
+          b.draggable = true;
+          b.ondragstart = startDrag;
+          g.appendChild(b);
+        }
 
-      if (!qs(`[data-root="${root}"] .remove-btn`)) {
-        const rm = document.createElement('div');
-        rm.className = 'remove-btn';
-        rm.textContent = '×';
-        rm.onclick = () => {
-          const removalLoader = qs('#removal-loader');
-          removalLoader?.classList.remove('hidden');
-
-          requestAnimationFrame(() => {
-            setTimeout(() => {
+        if (!qs(`[data-root="${root}"] .remove-btn`)) {
+          const rm = document.createElement('div');
+          rm.className = 'remove-btn';
+          rm.textContent = '×';
+          rm.onclick = () => {
+            const loading = qs('#grid-loader');
+            if (loading) {
+              loading.querySelector('span').textContent = "Removing trial...";
+              loading.classList.remove('hidden');
+              setTimeout(() => {
+                qsa(`[data-root="${root}"]`).forEach(el => el.remove());
+                enablePal(tn);
+                loading.classList.add('hidden');
+              }, 50);
+            } else {
               qsa(`[data-root="${root}"]`).forEach(el => el.remove());
               enablePal(tn);
-              removalLoader?.classList.add('hidden');
-            }, 100);
-          });
-        };
-        g.appendChild(rm);
-      }
+            }
+          };
+          g.appendChild(rm);
+        }
 
-      qs('#field-zoom-container').appendChild(g);
-    }
+        qs('#field-zoom-container').appendChild(g);
+      }
   }
+
 
   /******** selection drag for unused & borders (logic unchanged) ********/
   let isDragging=false;

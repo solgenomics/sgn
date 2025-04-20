@@ -52,8 +52,8 @@ sub validate_design {
     my $error = '';
 
     if (defined $design_type){
-        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'stripplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
-            $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, ARC, MAD, p-rep, greenhouse, Westcott, splitplot or stripplot";
+        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'URDD'&& $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'stripplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
+            $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, URDD, ARC, MAD, p-rep, greenhouse, Westcott, splitplot or stripplot";
             return $error;
         }
     }
@@ -153,21 +153,25 @@ sub validate_design {
     print STDERR "Source Stock types = ".join(", ",@source_stock_types)."\n";
     print STDERR "Accession names = ".join(", ", @accession_names)."\n";
 
-    my %found_data;
-    foreach my $a (@accession_names) {
-        my $rs = $chado_schema->resultset('Stock::Stock')->search({
-            'is_obsolete' => { '!=' => 't' },
-            'type_id' => { -in => \@source_stock_types },
-            'uniquename' => { ilike => $a } });
+    # Run one query to get all stocks matching the accession names
+    my $rs = $chado_schema->resultset('Stock::Stock')->search({
+        'is_obsolete' => { '!=' => 't' },
+        'type_id'     => { -in => \@source_stock_types },
+        'uniquename'  => { -in => \@accession_names },
+    });
 
-        while (my $s = $rs->next()) {
-            print STDERR "FOUND ".$s->uniquename()."\n";
-            $found_data{$s->uniquename} = 1;
-        }
+    # Record found names
+    my %found_data;
+    while (my $s = $rs->next) {
+        my $uname = $s->uniquename;
+        print STDERR "FOUND $uname\n";
+        $found_data{$uname} = 1;
     }
-    foreach (@accession_names){
-        if (!$found_data{$_}){
-            $error .= "The following name is not in the database: $_ .";
+
+    # Report any missing names
+    foreach my $name (@accession_names) {
+        if (!$found_data{$name}) {
+            $error .= "The following name is not in the database: $name.\n";
         }
     }
 
