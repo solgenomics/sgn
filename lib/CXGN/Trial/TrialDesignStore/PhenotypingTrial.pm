@@ -168,30 +168,37 @@ sub validate_design {
     print STDERR "Source Stock types = ".join(", ",@source_stock_types)."\n";
     print STDERR "Accession names = ".join(", ", @accession_names)."\n";
 
-    my %found_data;
-    foreach my $a (@accession_names) {
-        my $rs;
-        if ($allow_obsoleted_accessions) {
-            $rs = $chado_schema->resultset('Stock::Stock')->search({
-                'type_id' => { -in => \@source_stock_types },
-                'uniquename' => { ilike => $a }
-            });            
-        } else {
-            $rs = $chado_schema->resultset('Stock::Stock')->search({
-                'is_obsolete' => { '!=' => 't' },
-                'type_id' => { -in => \@source_stock_types },
-                'uniquename' => { ilike => $a }
-            });
-        }
+    # Run one query to get all stocks matching the accession names
+    my %stock_search = (
+        'type_id'    => { -in => \@source_stock_types },
+        'uniquename' => { -in => \@accession_names },
+    );
 
-        while (my $s = $rs->next()) {
-            print STDERR "FOUND ".$s->uniquename()."\n";
-            $found_data{$s->uniquename} = 1;
+    if (!$allow_obsoleted_accessions) {
+        $stock_search{'is_obsolete'} = { '!=' => 't' };
+    }
+
+    my $rs = $chado_schema->resultset('Stock::Stock')->search(\%stock_search);
+
+    # Record found names
+    my %found_data;
+    while (my $s = $rs->next) {
+        my $uname = $s->uniquename;
+        print STDERR "FOUND $uname\n";
+        $found_data{$uname} = 1;
+    }
+
+    # Report any missing names
+    foreach my $name (@accession_names) {
+        if (!$found_data{$name}) {
+            $error .= "The following name is not in the database: $name.\n";
         }
     }
-    foreach (@accession_names){
-        if (!$found_data{$_}){
-            $error .= "The following name is not in the database: $_ .";
+
+    # Report any missing names
+    foreach my $name (@accession_names) {
+        if (!$found_data{$name}) {
+            $error .= "The following name is not in the database: $name.\n";
         }
     }
 
