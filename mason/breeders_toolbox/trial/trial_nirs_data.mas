@@ -1,0 +1,23 @@
+
+<%args>
+$trial_id
+$stockref => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
+
+
+<div class="well well-sm">
+    
+</div>
+            
+
+<script>
+
+var trial_id = '<% $trial_id %>';
+
+jQuery(document).ready( function() {
+    jQuery('#trial_nirs_section_onswitch').click(function() {
+        get_select_box('high_dimensional_phenotypes_protocols','nirs_analysis_plot_spectra_protocol_select', {'checkbox_name':'nirs_analysis_plot_spectra_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
+    })
+})
