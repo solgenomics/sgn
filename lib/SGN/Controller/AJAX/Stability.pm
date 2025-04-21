@@ -194,7 +194,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
         people_schema => $people_schema,
         sp_person_id => $user,
         name => $ds->name()." stability analysis",
-        job_type => 'phenotypic_analysis',
+        job_type => 'stability_analysis',
         cmd => $cmd_str,
         cxgn_tools_run_config => $cxgn_tools_run_config,
         finish_logfile => $c->config->{job_finish_log}

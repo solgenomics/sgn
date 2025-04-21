@@ -13,6 +13,7 @@ use List::Util qw | any |;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
@@ -138,24 +139,42 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     #while(<$PF>) {
 	#chomp;
 	#my @f = split /\t/;
+    my $cxgn_tools_run_config = {
+        backend => $c->config->{backend},
+        submit_host=>$c->config->{cluster_host},
+        temp_base => $c->config->{cluster_shared_tempdir} . "/spatial_model_files",
+        queue => $c->config->{'web_cluster_queue'},
+        do_cleanup => 0,
+        # don't block and wait if the cluster looks full
+        max_cluster_jobs => 1_000_000_000,
+    };
+    my $cmd_str = join(" ", (
+        "Rscript ",
+        $c->config->{basepath} . "/R/spatial_modeling.R",
+        $pheno_filepath.".clean",
+        "'".$si_traits."'"
+    ));
+    my $job_record = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $sp_person_id,
+        job_type => 'spatial_analysis',
+        cmd => $cmd_str,
+        name => "Trial $trial_id spatial analysis",
+        results_page => "/breeders/trial/$trial_id",
+        cxgn_tools_run_config => $cxgn_tools_run_config,
+        finish_logfile => $c->config->{job_finish_log}
+    });
 
+    my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
 
-        my $cmd = CXGN::Tools::Run->new({
-            backend => $c->config->{backend},
-            submit_host=>$c->config->{cluster_host},
-            temp_base => $c->config->{cluster_shared_tempdir} . "/spatial_model_files",
-            queue => $c->config->{'web_cluster_queue'},
-            do_cleanup => 0,
-            # don't block and wait if the cluster looks full
-            max_cluster_jobs => 1_000_000_000,
-        });
-
-    $cmd->run_cluster(
-	"Rscript ",
-	$c->config->{basepath} . "/R/spatial_modeling.R",
-	$pheno_filepath.".clean",
-	"'".$si_traits."'",
-
+    $job_record->update_status("submitted");
+        $cmd->run_cluster(
+        "Rscript ",
+        $c->config->{basepath} . "/R/spatial_modeling.R",
+        $pheno_filepath.".clean",
+        "'".$si_traits."'",
+        $job_record->generate_finish_timestamp_cmd()
 	);
 
     while ($cmd->alive) {

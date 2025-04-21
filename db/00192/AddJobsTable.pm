@@ -62,23 +62,30 @@ sub patch {
 
     my $terms = {
         'job_type' => [
-            ['download','A background job downloading data from the server'],
-            ['upload', 'A background job uploading data to the server'],
-            ['report', 'A background job for generating personalized reports'],
-            ['tool_compatibility','A background job for determining which analysis tools can be used on a dataset'],
-            ['phenotypic_analysis','Any analysis done on phenotypes, such as calculating adjusted means. Includes phenotypic correlation, trait stability, heritability, etc'],
-            ['genotypic_analysis','Any analysis using genotypic data, such as GWAS or genotype clustering'],
-            ['genomic_prediction','Any analysis to predict breeding value or phenotype from genomic data, such as solGS'],
-            ['sequence_analysis','Any BLAST analysis or other analysis using sequence alignments']
+            'download',
+            'upload',
+            'report',
+            'search',
+            'cluster_analysis',
+            'kinship_analysis',
+            'heritability_analysis',
+            'solGWAS_analysis',
+            'spatial_analysis',
+            'pca_analysis',
+            'stability_analysis',
+            'mixed_model_analysis',
+            'nirs_analysis',
+            'tool_compatibility',
+            'genomic_prediction',
+            'sequence_analysis',
         ]
     };
 
     foreach my $cv (keys %$terms){
         foreach my $term (@{$terms->{$cv}}){
             $schema->resultset("Cv::Cvterm")->create_with({
-                name => $term->[0],
+                name => $term,
                 cv => $cv,
-                definition => $term->[1]
             });
         }
     }

@@ -52,6 +52,7 @@ use File::Slurp qw | write_file |;
 use POSIX;
 use File::Copy;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use File::Temp 'tempfile';
 
 has 'bcs_schema' => (
@@ -265,6 +266,7 @@ sub download_arm {
     my $cluster_host_config = shift;
     my $web_cluster_queue_config = shift;
     my $basepath_config = shift;
+    my $job_record_config = shift;
     my $download_format = $self->download_format();
     my $arm_tempfile = $self->arm_temp_file();
 
@@ -580,21 +582,34 @@ sub download_arm {
             my $tmp_output_dir = $shared_cluster_dir_config."/tmp_download_arm_heatmap";
             mkdir $tmp_output_dir if ! -d $tmp_output_dir;
 
-            # Do the GRM on the cluster
-            my $plot_cmd = CXGN::Tools::Run->new(
-                {
-                    backend => $backend_config,
-                    submit_host => $cluster_host_config,
-                    temp_base => $tmp_output_dir,
-                    queue => $web_cluster_queue_config,
-                    do_cleanup => 0,
-                    out_file => $arm_tempfile_out,
-                    # don't block and wait if the cluster looks full
-                    max_cluster_jobs => 1_000_000_000,
-                }
-            );
+            my $cxgn_tools_run_config =  {
+                backend => $backend_config,
+                submit_host => $cluster_host_config,
+                temp_base => $tmp_output_dir,
+                queue => $web_cluster_queue_config,
+                do_cleanup => 0,
+                out_file => $arm_tempfile_out,
+                # don't block and wait if the cluster looks full
+                max_cluster_jobs => 1_000_000_000,
+            };
 
-            $plot_cmd->run_cluster($heatmap_cmd);
+            my $download_record = CXGN::Job->new({
+                schema => $self->bcs_schema,
+                people_schema => $self->people_schema,
+                sp_person_id => $job_record_config->{calling_user_id},
+                job_type => 'download',
+                name => 'ARM Download',
+                cmd => $heatmap_cmd,
+                finish_logfile => $job_record_config->{job_finish_log},
+                cxgn_tools_run_config => $cxgn_tools_run_config
+            });
+            # Do the GRM on the cluster (currently not called anywhere)
+            my $plot_cmd = CXGN::Tools::Run->new(
+               $cxgn_tools_run_config
+            );
+            $download_record->update_status("submitted");
+            $plot_cmd->run_cluster($heatmap_cmd.$download_record->generate_finish_timestamp_cmd());
+            
             $plot_cmd->is_cluster(1);
             $plot_cmd->wait;
 

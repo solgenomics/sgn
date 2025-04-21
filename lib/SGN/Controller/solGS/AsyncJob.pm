@@ -782,17 +782,15 @@ sub submit_job_cluster {
 
     my $name = $c->stash->{analysis_profile}->{analysis_name};
     my $results_page = $c->stash->{analysis_profile}->{analysis_page};
-    $results_page =~ s/http[s]*:\/\///;
-    $results_page =~ s/localhost[:0-9]*//;
+    my @url = split("/", $results_page);
+    pop(@url);
+    pop(@url);
+    pop(@url);
+    $results_page = join("/", @url);
     my $job_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
-    my $data_type = $job_arguments->{data_type};
-    if ($data_type =~ m/phenotype/i) {
-      $data_type = "phenotypic_analysis";
-    } elsif ($data_type =~ m/genotype/i) {
-      $data_type = "genotypic_analysis";
-    } else {
-      $data_type = "genotypic_analysis"; #just a guess.
-    }
+    my $data_type = $job_arguments->{analysis_type} =~ s/ /_/gr;
+    print STDERR "[JOB DATA]\n";
+    print STDERR Dumper $c->stash->{analysis_profile};
 
     my $job_record = CXGN::Job->new({
       schema => $c->dbic_schema("Bio::Chado::Schema"),

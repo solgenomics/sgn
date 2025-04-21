@@ -179,7 +179,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         schema => $schema,
         people_schema => $people_schema, 
         sp_person_id => $sp_person_id,
-        job_type => 'phenotypic_analysis',
+        job_type => 'heritability_analysis',
         name => $ds->name().' heritability analysis',
         cmd => $cmd_str,
         cxgn_tools_run_config => $cxgn_tools_run_config,

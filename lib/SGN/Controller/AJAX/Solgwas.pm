@@ -504,7 +504,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         schema => $schema,
         people_schema => $people_schema,
         sp_person_id => $user,
-        job_type => 'genotypic_analysis',
+        job_type => 'solGWAS_analysis',
         name => $ds->name().' solGWAS',
         cxgn_tools_run_config => $cxgn_tools_run_config,
         cmd => $cmd_str,

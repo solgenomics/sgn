@@ -2,6 +2,7 @@ package SGN::Controller::AJAX::Job;
 
 use Moose;
 use CXGN::Job;
+use CXGN::People::Person;
 
 BEGIN {extends 'Catalyst::Controller::REST'};
 
@@ -31,22 +32,42 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
     my $jobs = CXGN::Job->get_user_submitted_jobs(
         $bcs_schema,
         $people_schema,
-        $sp_person_id
+        $sp_person_id,
+        $role
     );
 
-    my $data = {
-        data => [],
-        columns => [
-            {title => 'Name', data => 'name'},
-            {title => 'Type', data => 'type'},
-            {title => 'Start Time', data => 'create_timestamp'},
-            {title => 'End Time', data => 'finish_timestamp'},
-            {title => 'Status', data => 'status'},
-            {title => 'Results', data => 'results_page'},
-            {title => 'Actions', data => 'actions'},
-        ],
-        order => [[2, 'asc']]
-    };
+    my $data;
+
+    if ($role eq "curator") {
+        $data = {
+            data => [],
+            columns => [
+                {title => 'Submitted By', data => 'user'},
+                {title => 'Name', data => 'name'},
+                {title => 'Type', data => 'type'},
+                {title => 'Start Time', data => 'create_timestamp'},
+                {title => 'End Time', data => 'finish_timestamp'},
+                {title => 'Status', data => 'status'},
+                {title => 'Results', data => 'results_page'},
+                {title => 'Actions', data => 'actions'},
+            ],
+            order => [[3, 'asc']]
+        };
+    } else {
+        $data = {
+            data => [],
+            columns => [
+                {title => 'Name', data => 'name'},
+                {title => 'Type', data => 'type'},
+                {title => 'Start Time', data => 'create_timestamp'},
+                {title => 'End Time', data => 'finish_timestamp'},
+                {title => 'Status', data => 'status'},
+                {title => 'Results', data => 'results_page'},
+                {title => 'Actions', data => 'actions'},
+            ],
+            order => [[2, 'asc']]
+        };
+    }
 
     foreach my $job_id (@{$jobs}) {
         my $job = CXGN::Job->new({
@@ -75,16 +96,36 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
         }
         my $create_timestamp = $job->create_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
         my $finish_timestamp = $job->finish_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
-        my $row = {
-            id => $job_id,
-            name => $job->name(),
-            type => $job->job_type(),
-            status => $status,
-            create_timestamp => $create_timestamp,
-            finish_timestamp => $finish_timestamp,
-            results_page => $results_page,
-            actions => $actions_html
-        };
+        my $row;
+        if ($role eq "curator") {
+            my $dbh = $bcs_schema->storage->dbh();
+            my $owner = CXGN::People::Person->new(
+                $dbh,
+                $job->sp_person_id()
+            );
+            $row = {
+                id => $job_id,
+                user => $owner->get_first_name()." ".$owner->get_last_name(),
+                name => $job->name(),
+                type => $job->job_type(),
+                status => $status,
+                create_timestamp => $create_timestamp,
+                finish_timestamp => $finish_timestamp,
+                results_page => $results_page,
+                actions => $actions_html
+            };
+        } else {
+            $row = {
+                id => $job_id,
+                name => $job->name(),
+                type => $job->job_type(),
+                status => $status,
+                create_timestamp => $create_timestamp,
+                finish_timestamp => $finish_timestamp,
+                results_page => $results_page,
+                actions => $actions_html
+            };
+        }
 
         push @{$data->{data}}, $row;
     }

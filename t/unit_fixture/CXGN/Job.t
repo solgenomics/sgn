@@ -1,7 +1,7 @@
 use strict;
 
 use lib 't/lib';
-use Test::More 'tests' => 5;
+use Test::More qw( no_plan );
 use Data::Dumper;
 use SGN::Test::Fixture;
 use_ok('CXGN::Job');
@@ -30,22 +30,26 @@ eval {
 };
 ok($@, 'Check for refusal to generate finish timestamp');
 
+my $SYSTEM_MODE = $ENV{SYSTEM};
 # The following tests wont work on github, but you can run them locally
-# my $job_id = $job->submit();
+SKIP: {
+    skip "Skip if run under git", 4 unless $SYSTEM_MODE ne "GITACTION";
+    my $job_id = $job->submit();
 
-# ok($job_id, 'Check for successful job submission');
-# ok($job->check_status() eq "submitted", 'Check for proper job status');
+    ok($job_id, 'Check for successful job submission');
+    ok($job->check_status() eq "submitted", 'Check for proper job status');
 
-# $job->cancel();
+    $job->cancel();
 
-# sleep (6);
+    sleep (6);
 
-# ok($job->check_status() eq "canceled", 'Check for proper job status');
+    ok($job->check_status() eq "canceled", 'Check for proper job status');
 
-# eval {
-#     $job->delete();
-# };
-# ok($@ =~ m/No such file or directory/, 'Making sure DB deletion worked, catching expected error for finish_logfile');
+    eval {
+        $job->delete();
+    };
+    ok($@ =~ m/No such file or directory/, 'Making sure DB deletion worked, catching expected error for finish_logfile');
+};
 
 system('rm ~/testlog.txt');
 

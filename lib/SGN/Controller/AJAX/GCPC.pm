@@ -406,7 +406,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         schema => $schema,
         people_schema => $people_schema, 
         sp_person_id => $sp_person_id,
-        job_type => 'genotypic_analysis',
+        job_type => 'genomic_prediction',
         name => $ds->name().' GCPC',
         cmd => $cmd_str,
         cxgn_tools_run_config => $cxgn_tools_run_config,

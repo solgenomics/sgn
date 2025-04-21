@@ -178,7 +178,7 @@ in the database row. Can be one of:
 
 has 'job_type' => ( 
     isa => 'Maybe[Str]', 
-    isa => enum([qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )]),
+    # isa => enum([qw( download upload report tool_compatibility phenotypic_analysis genotypic_analysis sequence_analysis genomic_prediction )]),
     is => 'rw', 
     predicate => 'has_type'
 );
@@ -257,7 +257,9 @@ sub BUILD {
 
     if (!$self->has_sp_job_id()) { # New job, no ID yet.
         my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({name => $self->job_type()});
-        $self->type_id($cvterm_row->cvterm_id());
+        if ($cvterm_row) {
+            $self->type_id($cvterm_row->cvterm_id());
+        }
         my $logfile;
         if (!$self->has_finish_logfile()) {
             $logfile = `cat /home/production/volume/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
@@ -491,6 +493,7 @@ sub submit {
             $job->run_cluster($cmd.$finish_timestamp_cmd);
         } else {
             $job->run_async($cmd.$finish_timestamp_cmd);
+            $job->wait();
         }
         
         $backend_id = $job->cluster_job_id();
@@ -498,14 +501,12 @@ sub submit {
     };
 
     if ($@) {
-        $self->status('failed');
-        $self->store();
+        $self->update_status('failed');
         die "An error occured trying to submit a background job.\n$@\n";
     } 
 
     $self->backend_id($backend_id);
-    $self->status($status);
-    $self->store();
+    $self->update_status($status);
 
     return $sp_job_id;
 }
@@ -541,7 +542,10 @@ sub store {
             $row->update();
         } else {
             my $cvterm_row = $self->schema->resultset('Cv::Cvterm')->find({ name => $self->job_type() });
-            my $cvterm_id = $cvterm_row->cvterm_id();
+            my $cvterm_id;
+            if ($cvterm_row) {
+                $cvterm_id = $cvterm_row->cvterm_id();
+            } 
             my $row = $self->people_schema()->resultset("SpJob")->create({
                 backend_id => $self->backend_id(),
                 args => JSON::Any->encode({
@@ -622,6 +626,7 @@ sub get_default_cxgn_tools_run_config {
     my $cxgn_tools_run_config;
     my $user_id = $self->sp_person_id();
     my $name = $self->name() =~ s/ /_/gr;
+    $name =~ s/[\\*?[\]{}|;><&$"'`]//g;
     if (!$name) {
         $name = "job_".DateTime->now(time_zone => 'local')->strftime('%Y_%m_%d_%H_%M_%S');
     }
@@ -657,14 +662,21 @@ sub get_user_submitted_jobs {
     my $bcs_schema = shift;
     my $people_schema = shift;
     my $sp_person_id = shift;
+    my $user_role = shift;
 
     if (!$sp_person_id) {
         die "Need a user id\n";
     }
 
     my @user_jobs = ();
+    
+    my $rs;
+    if ($user_role eq 'curator') {
+        $rs = $people_schema->resultset("SpJob")->search();
+    } else {
+        $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+    }
 
-    my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
     while (my $row = $rs->next()){
         push @user_jobs, $row->sp_job_id();
     }
