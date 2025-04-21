@@ -238,8 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <select id='tdesign${i}' class='w-full border rounded px-2 py-1'>
             <option>Select design</option>
             <option>RCBD</option>
-            <option>Alpha Lattice</option>
-            <option>Augmented</option>
+            <option>Augmented Row-Column</option>
+            <option>Row-Column Design</option>
+            <option>Un-Replicated Diaginal</option>
           </select>
         </label>
       </div>
@@ -568,12 +569,24 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   }
-
-
-
   const farmGridEl = qs('#farm-grid');
   farmGridEl.addEventListener('dragover', e=>e.preventDefault());
   farmGridEl.addEventListener('drop', handleDrop);
+
+  /************* grab coodinates from grd ****************/
+  function getTrialCoordinates(trialName) {
+    const coords = [];
+
+    document.querySelectorAll(`.trial-cell[data-trial="${trialName}"]`).forEach(cell => {
+      const row = parseInt(cell.dataset.row);
+      const col = parseInt(cell.dataset.col);
+      coords.push({ row, col });
+    });
+
+    return coords;
+  }
+
+
 
   /******** placement helpers (unchanged logic, syntax corrected) ********/
   function checkBordersInRegion(rowStart,colStart,rowsWanted,colsWanted){
@@ -625,10 +638,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const coords = [];
       let r = rowStart, c = colStart;
 
-      // Adjust for RCBD
-      if (design === 'RCBD' && rowsPerBlock && blocks) {
-        rowsWanted = rowsPerBlock * blocks;
-        colsWanted = Math.ceil((numTreatments + numControls) * reps / rowsWanted);
+      if (design === 'RCBD') {
+        generateDesign(tn, row, col).done(function(response) {
+          if (response.success) {
+            const rowsWanted = response.n_row;
+            const colsWanted = response.n_col;
+            const total = rowsWanted * colsWanted;
+
+            placeTrial({
+              tn,
+              name,
+              rowsWanted,
+              colsWanted,
+              total,
+              rowStart: row,
+              colStart: col,
+              colour,
+              rootId: null
+            });
+
+            // 🔥 Grab coordinates right after
+            const coords = getTrialCoordinates(name);
+            console.log(`Coordinates for ${name}:`, coords);
+          } else {
+            alert("Design failed: " + response.error);
+          }
+        }).fail(function(xhr, status, error) {
+          console.error("AJAX error:", error);
+          alert("Error generating design.");
+        });
       }
 
       // Attempt to place total plots, skipping over borders and unutilized
