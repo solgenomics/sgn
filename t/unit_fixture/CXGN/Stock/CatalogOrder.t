@@ -37,7 +37,7 @@ my $sgn_session_id = $response->{access_token};
 my $johndoe_id = CXGN::People::Person->get_person_by_username($dbh, 'johndoe');
 my $role_rs = $people_schema->resultset("SpRole")->find({ name => 'vendor' });
 my $vendor_id = $role_rs->sp_role_id();
-my $person_roles = CXGN::People::Roles->new({ bcs_schema => $schema });
+my $person_roles = CXGN::People::Roles->new({ people_schema => $people_schema });
 my $add_role = $person_roles->add_sp_person_role($johndoe_id, $vendor_id);
 
 #test adding catalog item

@@ -36,9 +36,9 @@ export function init() {
             this.plot_object = Object;
             this.meta_data = {};
             this.brapi_plots = Object;
-            this.heatmap_queried = false;
             this.heatmap_selected = false;
             this.heatmap_selection = String;
+            this.heatmap_cached_data = {};
             this.heatmap_object = Object;
             this.display_borders = true;
             this.linked_trials = {};
@@ -216,14 +216,16 @@ export function init() {
             }
         }
 
-        get_plot_order(
+        get_plot_order({
             type,
             order,
             start,
             include_borders,
             include_gaps,
+            include_subplots,
+            include_plants,
             additional_properties
-        ) {
+        } = {}) {
             let q = new URLSearchParams({
                 trial_ids: [
                     this.trial_id,
@@ -242,6 +244,8 @@ export function init() {
                 left_border:
                     !!include_borders && !!this.meta_data.left_border_selection,
                 gaps: !!include_gaps,
+                subplots: !!include_subplots,
+                plants: !!include_plants,
                 ...additional_properties,
             }).toString();
             window.open(`/ajax/breeders/trial_plot_order?${q}`, "_blank");
@@ -742,7 +746,7 @@ export function init() {
             var local_this = this;
 
             if (this.heatmap_selected) {
-                let plots_with_selected_trait = heatmap_object[trait_name];
+                let plots_with_selected_trait = heatmap_object[trait_name] || {};
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
                     trait_vals.push(obs_unit.val);
                 }
@@ -851,6 +855,7 @@ export function init() {
                                 v = heatmap_object[trait_name][plot.observationUnitDbId].val;
                                 v = isNaN(v) ? v : Math.round((parseFloat(v) + Number.EPSILON) * 100) / 100;
                             }
+                            html += `<br /><strong>Trait Name:</strong> ${local_this.heatmap_selection}`;
                             html += `<br /><strong>Trait Value:</strong> ${v}`;
                         }
                     }

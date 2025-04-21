@@ -85,7 +85,7 @@
 
 \title{User Manual of Breedbase}
 \author{Breedbase team}
-\date{2024-12-13}
+\date{2025-02-25}
 
 \begin{document}
 \maketitle
@@ -2926,7 +2926,7 @@ Selection Index tool also allows you to save top ranked accessions directly to `
 
 The prediction of breeding values for a trait is a one step or two steps process, depending on what stage in your breeding cycle you are. The first step is to build a prediction model for a trait using a training population of clones with phenotype and genotype data. If you have yet to select parents for crossing for your first cycle of selection you can use the breeding values of the training population. If you are at later stages of your selection program, you need to do the second step which is applying the prediction model on your selection population. All clones in your training and selection populations must exist in the database.
 
-To use the genomic selection tool, on \href{http://cassavabase.org/}{\emph{cassavabase.org}}, select `Genomic Selection' from the `analyze' pull-down menu.
+To use the genomic selection tool, on \href{http://cassavabase.org/}{\emph{cassavabase.org}}, select ``Genomic Selection'' from the ``analyze'' pull-down menu.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image247} \end{center}
 
@@ -2935,15 +2935,15 @@ There are three ways to build a model for a trait.
 \hypertarget{method-1}{%
 \subsection{Building a Model - Method 1:}\label{method-1}}
 
-One way to build a model is, using a trait name, to search for trials in which the trait was phenotyped and use a trial or a combination of trials to build a model for the trait. For example, if you search for 'mosaic disease severity, you will get a list of trials you can use as training populations.
+One way to build a model is, using a trait name, to search for trials in which the trait was phenotyped and use a trial or a combination of trials to build a model for the trait. For example, if you search for ``mosaic disease severity, you will get a list of trials you can use as training populations.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image160} \end{center}
 
-You will get a list of trials (as shown below) in which the trait of your interested was phenotyped. From the list, you can use a single trial as a training population or combine several trails to form a training population for the prediction model of the trait. Let's say, you want to create a training population using individuals from trials `cassava ibadan 2001/02' and `cassava ibadan 02/03' and build a model for `cassava mosaic disease severity' using all clones from the training population.
+You will get a list of trials (as shown below) in which the trait of your interested was phenotyped. From the list, you can use a single trial as a training population or combine several trails to form a training population for the prediction model of the trait. Let''s say, you want to create a training population using individuals from trials ``cassava ibadan 2001/02'' and ``cassava ibadan 02/03'' and build a model for ``cassava mosaic disease severity'' using all clones from the training population.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image249} \end{center}
 
-Select the trials to combine (the same coloured), click `done selecting', click the `combine trials and build model' button, and you will get a model and its output for the trait. On the model detail page, you can view the description of input data used in the model, output from the model and search interface for selection populations the model you can apply to predict their breeding values. The description of the input data for the model includes the number of phenotyped clones, and the number of markers, scatter and frequency distribution plots for the phenotype data, relationship between the phenotype data and GEBVs, population structure. The model output includes model parameters, heritability of the trait , prediction accuracy, GEBVs of the individuals from the training population and marker effects.
+Select the trials to combine (the same coloured), click `done selecting', click the ``combine trials and build model'' button, and you will get a model and its output for the trait. On the model detail page, you can view the description of input data used in the model, output from the model and search interface for selection populations the model you can apply to predict their breeding values. The description of the input data for the model includes the number of phenotyped clones, and the number of markers, scatter and frequency distribution plots for the phenotype data, relationship between the phenotype data and GEBVs, population structure. The model output includes model parameters, heritability of the trait , prediction accuracy, GEBVs of the individuals from the training population and marker effects.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image330} \end{center}
 
@@ -2971,7 +2971,7 @@ Marker effects are also available for download. To do so, expanad the `Marker Ef
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image74} \end{center}
 
-The breeding values of the individuals used in the training population are displayed graphically. Mousing over each data point displays the clone and its breeding value. To examine better, you can zoom in into the plot by selecting an area on the plot. You can download them also by following the `Download all GEBVs' link.
+The breeding values of the individuals used in the training population are displayed graphically. Mousing over each data point displays the clone and its breeding value. To examine better, you can zoom in into the plot by selecting an area on the plot. You can download them also by following the ``Download all GEBVs'' link.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image147} \end{center}
 
@@ -2979,11 +2979,11 @@ The breeding values of the individuals used in the training population are displ
 \subsubsection*{Estimating breeding values in a selection population}\label{estimating-breeding-values-in-a-selection-population}}
 
 
-If you already have a selection population (in the database), from the same model page, you can apply the model to the selection population and estimate breeding values for all the clones in the population. You can search for a selection population of clones in the database using the search interface or you can make a custom list of clones using the \protect\hyperlink{working-with-lists}{\emph{list interface}}. If you click the `search for all relevant selection populations', you will see all relevant selection populations for that model. However, this option takes long time decause of the large set of populations in the database and the filtering. Therefore, the fastest way is to search for each of your selection populations by name. If you are logged in to the website you will also see a list of your custom set of genotyped clones.
+If you already have a selection population (in the database), from the same model page, you can apply the model to the selection population and estimate breeding values for all the clones in the population. You can search for a selection population of clones in the database using the search interface or you can make a custom list of clones using the \protect\hyperlink{working-with-lists}{\emph{list interface}}. If you click the ``search for all relevant selection populations'', you will see all relevant selection populations for that model. However, this option takes long time decause of the large set of populations in the database and the filtering. Therefore, the fastest way is to search for each of your selection populations by name. If you are logged in to the website you will also see a list of your custom set of genotyped clones.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image338} \end{center}
 
-To apply the model to a selection population, simply click your population name or `Predict Now' and you will get the predicted breeding values. When you see a name of (or acronym{]}) of the trait, follow the link and you will see an interactive plot of the breeding values and a link to download the breeding values of your selection population.
+To apply the model to a selection population, simply click your population name or ``Predict Now'' and you will get the predicted breeding values. When you see a name of (or acronym{]}) of the trait, follow the link and you will see an interactive plot of the breeding values and a link to download the breeding values of your selection population.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image334} \end{center}
 
@@ -3012,11 +3012,11 @@ Below the ``Training population summary'' there is a tab for ``Traits''. Clickin
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image69} \end{center}
 
-Clicking on `Build Model' will take you to a new page with the models outputs for the traits. Under the ``Genomic Selection Model Output'' tab you can view the model output and the model accuracy. Clicking on any of the traits will take you to a page with information about the model output on that individual trait within the trial. There you can view all of the trait information that was seen in more detail in \protect\hyperlink{method-1}{\emph{Method 1}}.
+Clicking on ``Build Model'' will take you to a new page with the models outputs for the traits. Under the ``Genomic Selection Model Output'' tab you can view the model output and the model accuracy. Clicking on any of the traits will take you to a page with information about the model output on that individual trait within the trial. There you can view all of the trait information that was seen in more detail in \protect\hyperlink{method-1}{\emph{Method 1}}.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image336} \end{center}
 
-You can apply the models to simultaneously predict GEBVs for respective traits in a selection population by clicking on ``Predict Now'' or the name of the selection population. You can also apply the models to any set of genotyped clones that you can create using the `lists' feature. For more information on lists, click \protect\hyperlink{working-with-lists}{\emph{here}}. Follow the link to the trait name to view and download the predicted GEBVs for the trait in a selection population.
+You can apply the models to simultaneously predict GEBVs for respective traits in a selection population by clicking on ``Predict Now'' or the name of the selection population. You can also apply the models to any set of genotyped clones that you can create using the ``lists'' feature. For more information on lists, click \protect\hyperlink{working-with-lists}{\emph{here}}. Follow the link to the trait name to view and download the predicted GEBVs for the trait in a selection population.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image171} \end{center}
 
@@ -3090,15 +3090,15 @@ You can run PCA from multiple places on the website. To do PCA on
 \begin{enumerate}
 \def\labelenumi{(\arabic{enumi})}
 \item
-  individuals from a trial, go to the trial detail page and find the PCA tool under the `Analysis tools' section.
+  individuals from a trial, go to the trial detail page and find the PCA tool under the ``Analysis tools'' section.
 \item
   individuals from a training population you used in a GS modeling, do your modeling and find the PCA tool in the model output page.
 \item
   individuals in a training population and selection population you applied the training model, do your modeling, apply the model on the selection population and find the PCA tool on the selection population prediction output page.
 \item
-  individuals in a list of accessions you created, for example using the search wizard, go to the `Analyze' menu and select the `Population Structure', select your list of individuals and run PCA.
+  individuals in a list of accessions you created, for example using the search wizard, go to the ``Analyze'' menu and select the ``Population Structure'', select your list of individuals and run PCA.
 \item
-  individuals from multiple trials, create a list of the trials using the search wizard, go to the `Analyze' menu and select the `Population Structure', select your list of trials and run PCA.
+  individuals from multiple trials, create a list of the trials using the search wizard, go to the ``Analyze'' menu and select the ``Population Structure'', select your list of trials and run PCA.
 \end{enumerate}
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/pca_iita_naccri_trials} \end{center}
@@ -3108,7 +3108,7 @@ With all the options, you will get a interactive plot of the two PCs (shown belo
 \hypertarget{anova}{%
 \section{ANOVA}\label{anova}}
 
-Currently, ANOVA is implemented for a single trial (single year and single location). You can do ANOVA for RCBD, CRD, Alpha and Augmented trial designs. ANOVA is done using linear mixed effects model, where the genotypes is fixed effect and the replications and blocks are random effects. Fixed effect significance level is computed using `lmer' from `lmeTest' R package.
+Currently, ANOVA is implemented for a single trial (single year and single location). You can do ANOVA for RCBD, CRD, Alpha and Augmented trial designs. ANOVA is done using linear mixed effects model, where the genotypes is fixed effect and the replications and blocks are random effects. Fixed effect significance level is computed using ``lmer'' from ``lmeTest'' R package.
 
 You can do ANOVA from two places: trial detail and training population detail. In both cases, if the phenotype data was from the supported trial designs,
 
@@ -3116,7 +3116,7 @@ You can do ANOVA from two places: trial detail and training population detail. I
 
 -- Select the trait of you want to perform ANOVA
 
--- Click the `Run ANOVA' and wait for the result
+-- Click the ``Run ANOVA'' and wait for the result
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/anova-dm} \end{center}
 
@@ -3137,13 +3137,13 @@ There are three pathways to using this tool.
 \begin{enumerate}
 \def\labelenumi{(\Alph{enumi})}
 \item
-  -- go to the `Analyze' menu and select the clustering option
+  -- go to the ``Analyze'' menu and select the clustering option
 \item
   -- make sure you are logged in
 \item
   -- Select the relevant genotyping protocol, if you are clustering using genotype data
 \item
-  -- select your list or dataset, click `Go'
+  -- select your list or dataset, click ``Go''
 \item
   -- select clustering type
 \item
@@ -3151,7 +3151,7 @@ There are three pathways to using this tool.
 \item
   -- If you are running K-Means clustering, provide the number of partitions (K). If left blank it will partition the data set into optimal numbers for the dataset.
 \item
-  -- click the `Run Cluster' and wait for the analysis to finish or queue the request and wait for an email with the analysis result.
+  -- click the ``Run Cluster'' and wait for the analysis to finish or queue the request and wait for an email with the analysis result.
 \item
   -- You can download the outputs following the download links.
 \end{enumerate}
@@ -3167,7 +3167,7 @@ There are three pathways to using this tool.
 \begin{enumerate}
 \def\labelenumi{(\Alph{enumi})}
 \item
-  -- Go to the `Analysis Tools' section
+  -- Go to the ``Analysis Tools'' section
 \item
   -- Follow steps D to G in (1)
 \end{enumerate}
@@ -3198,7 +3198,7 @@ Hierarchical clustering:
 \hypertarget{genetic-gain}{%
 \section{Genetic Gain}\label{genetic-gain}}
 
-You can check for genetic gain by comparing the the GEBVs of a training and a selection population. You can do this in the solGS pipepline once you build a model and apply the model to predict the GEBVs of a selection population. Once at that stage, you will see a section `Check Genetic Gain'. Select a selection population to compare with the training population and click the `Check Genetic Gain' button. The genetic gain will be visualized in boxplots. You can download the boxplot(s) as well as the GEBVs data used for the plot(s).
+You can check for genetic gain by comparing the the GEBVs of a training and a selection population. You can do this in the solGS pipepline once you build a model and apply the model to predict the GEBVs of a selection population. Once at that stage, you will see a section ``Check Genetic Gain''. Select a selection population to compare with the training population and click the ``Check Genetic Gain'' button. The genetic gain will be visualized in boxplots. You can download the boxplot(s) as well as the GEBVs data used for the plot(s).
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/genetic-gain} \end{center}
 
@@ -3214,15 +3214,15 @@ There are three pathways to using this tool.
 \begin{enumerate}
 \def\labelenumi{(\Alph{enumi})}
 \item
-  -- go to the `Analyze' menu and select the kinship and inbreeding
+  -- go to the ``Analyze'' menu and select the kinship and inbreeding
 \item
   -- make sure you are logged in
 \item
   -- Select the genotypic protocol for the marker data
 \item
-  -- select your list or dataset of clones, click `Go'
+  -- select your list or dataset of clones, click ``Go''
 \item
-  -- click the `Run Kinship' and wait for the analysis to finish, depending on the data size this may take minutes. You can choose to submit the analysis and wait for an email notice to view the results or wait for it to complete.
+  -- click the ``Run Kinship'' and wait for the analysis to finish, depending on the data size this may take minutes. You can choose to submit the analysis and wait for an email notice to view the results or wait for it to complete.
 \item
   -- You can download the output following the download links.
 \end{enumerate}
@@ -3232,7 +3232,7 @@ There are three pathways to using this tool.
 \begin{enumerate}
 \def\labelenumi{(\Alph{enumi})}
 \item
-  -- Go to the `Analysis Tools' section
+  -- Go to the ``Analysis Tools'' section
 \item
   -- Follow steps C to G in (1)
 \end{enumerate}
@@ -3243,7 +3243,7 @@ There are three pathways to using this tool.
 \def\labelenumi{(\Alph{enumi})}
 \tightlist
 \item
-  -- Once you you are in a model output put page, scroll down to the `Kinship and Inbreeding' section and run kinship.
+  -- Once you you are in a model output put page, scroll down to the ``Kinship and Inbreeding'' section and run kinship.
 \end{enumerate}
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/kinship-inbreeding} \end{center}
@@ -3267,9 +3267,9 @@ The procedure is:
 
 -- select the selection index data,
 
--- select `K-means',
+-- select ``K-means'',
 
--- select `Genotype',
+-- select ``Genotype'',
 
 -- in the K-numbers textbox, fill in the number of groups you want to create,
 
@@ -3289,9 +3289,9 @@ The genomic relationship matrix (GRM) is useful for understanding underlying str
 \hypertarget{search-wizard-genome-wide-association-study-gwas}{%
 \section{Search Wizard Genome Wide Association Study (GWAS)}\label{search-wizard-genome-wide-association-study-gwas}}
 
-Performing a genome wide association study (GWAS) can determine genotypic markers which are significantly correlated to phenotypic traits. Breedbase can compute GWAS using rrBLUP. First, select accessions and trait(s) in the search wizard, and optionally select a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol in your system is used (as defined in sgn\_local.conf). Several traits can be selected in the search wizard; if the traits are not to be treated as repeated measurements then select `no' in the select box and this will tell Breedbase to return GWAS results independently for the selected traits. If the selected traits are indeed all repeated measurements then select `yes' in the select box and Breedbase will return as single GWAS analysis across all the phenotypic records. Specify the minor allele frequency, missing marker data, and missing individuals data filters to apply. GWAS results can be returned in a tabular format (.tsv) where the -log10(p-values) for the selected traits are returned; alternatively, the GWAS results can be returned as Manhattan and QQ plots for the selected traits. The GWAS can be computed from parents of the selected accessions granted the parents were genotyped, by clicking the checkbox ``compute from parents''; this is useful for programs where parental lines are genotyped and then hybrids are created and evaluated in the field.
+Performing a genome wide association study (GWAS) can determine genotypic markers which are significantly correlated to phenotypic traits. Breedbase can compute GWAS using rrBLUP. First, select accessions and trait(s) in the search wizard, and optionally select a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol in your system is used (as defined in sgn\_local.conf). Several traits can be selected in the search wizard; if the traits are not to be treated as repeated measurements then select ``no'' in the select box and this will tell Breedbase to return GWAS results independently for the selected traits. If the selected traits are indeed all repeated measurements then select ``yes'' in the select box and Breedbase will return as single GWAS analysis across all the phenotypic records. Specify the minor allele frequency, missing marker data, and missing individuals data filters to apply. GWAS results can be returned in a tabular format (.tsv) where the -log10(p-values) for the selected traits are returned; alternatively, the GWAS results can be returned as Manhattan and QQ plots for the selected traits. The GWAS can be computed from parents of the selected accessions granted the parents were genotyped, by clicking the checkbox ``compute from parents''; this is useful for programs where parental lines are genotyped and then hybrids are created and evaluated in the field.
 
-The GWAS will filter the data by the input MAF and missing data filters provided. After filtering the data is imputed using an `EM' method in rrBLUP. The Kinship matrix (GRM) is computed from the imputed genotypic data and used in the GWAS model. The GWAS uses fixed effects for different field trials and replicates in the phenotypic data.
+The GWAS will filter the data by the input MAF and missing data filters provided. After filtering the data is imputed using an ``EM'' method in rrBLUP. The Kinship matrix (GRM) is computed from the imputed genotypic data and used in the GWAS model. The GWAS uses fixed effects for different field trials and replicates in the phenotypic data.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/search_wizard_genotype_analyses_gwas} \end{center}
 
@@ -3339,7 +3339,7 @@ Several algorithms are available for calibration model development in Breedbase 
 \hypertarget{output-common-model-summary-statistics}{%
 \subsection{Output: common model summary statistics}\label{output-common-model-summary-statistics}}
 
-After training, model performance statistics are both displayed on a results webpage and made available for download in .csv format. These statistics are calculated by the \emph{TrainSpectralModel()} function in \href{https://CRAN.R-project.org/package=waves}{\emph{waves}} using the \emph{caret} and \emph{spectacles} packages. Reported statistics include: * Tuned parameters depending on the model algoritm * \textbf{Best.n.comp}, the best number of components to be included in a PLSR model * \textbf{Best.ntree}, the best number of trees in an RF model * \textbf{Best.mtry}, the best number of variables to include at every decision point in an RF model * \textbf{RMSECV}, the root mean squared error of cross-validation * \textbf{R2cv}, the coefficient of multiple determination of cross-validation for PLSR models * \textbf{RMSEP}, the root mean squared error of prediction * \textbf{R2p}, the squared Pearson's correlation between predicted and observed test set values * \textbf{RPD}, the ratio of standard deviation of observed test set values to RMSEP * \textbf{RPIQ}, the ratio of performance to interquartile distance * \textbf{CCC}, the concordance correlation coefficient * \textbf{Bias}, the average difference between the predicted and observed values * \textbf{SEP}, the standard error of prediction * \textbf{R2sp}, the squared Spearman's rank correlation between predicted and observed test set values
+After training, model performance statistics are both displayed on a results webpage and made available for download in .csv format. These statistics are calculated by the \emph{TrainSpectralModel()} function in \href{https://CRAN.R-project.org/package=waves}{\emph{waves}} using the \emph{caret} and \emph{spectacles} packages. Reported statistics include: * Tuned parameters depending on the model algoritm * \textbf{Best.n.comp}, the best number of components to be included in a PLSR model * \textbf{Best.ntree}, the best number of trees in an RF model * \textbf{Best.mtry}, the best number of variables to include at every decision point in an RF model * \textbf{RMSECV}, the root mean squared error of cross-validation * \textbf{R2cv}, the coefficient of multiple determination of cross-validation for PLSR models * \textbf{RMSEP}, the root mean squared error of prediction * \textbf{R2p}, the squared Pearson's correlation between predicted and observed test set values * \textbf{RPD}, the ratio of standard deviation of observed test set values to RMSEP * \textbf{RPIQ}, the ratio of performance to interquartile distance * \textbf{CCC}, the concordance correlation coefficient * \textbf{Bias}, the average difference between the predicted and observed values * \textbf{SEP}, the standard error of prediction * \textbf{R2sp}, the squared Spearman''s rank correlation between predicted and observed test set values
 
 \hypertarget{export-model-for-later-use}{%
 \subsection{Export model for later use}\label{export-model-for-later-use}}
@@ -3385,21 +3385,40 @@ The result view contains two tabs, one with the raw data, either BLUPS or BLUEs,
 
 The results can be stored in the database as an analysis, by clicking the button provided on the top of the data.
 
-\hypertarget{genomic-prediction-of-cross-performance-gcpc}{%
-\section{Genomic Prediction of Cross Performance (GCPC)}\label{genomic-prediction-of-cross-performance-gcpc}}
+\hypertarget{genomic-prediction-of-cross-performance-gpcp}{%
+\section{Genomic Prediction of Cross Performance (GPCP)}\label{genomic-prediction-of-cross-performance-gpcp}}
 
-The GCPC tool is available at /tools/gcpc and a link is provided from the Analyze menu. The GCPC tool implements genomic prediction with additive and directional dominance in the linear mixed model to predict for cross performance.
+The GPCP tool is available at /tools/gcpc and a link is provided from the Analyze menu. The GCPC tool implements genomic prediction with additive and directional dominance in the linear mixed model to predict for cross performance.
 
 Before using the tool, first create a dataset using the Wizard containing the data that you would like to analyze. (The dataset should have genotyping\_protocols). Second, create Selection Indices for your traits using Selection Index in Analyze Menu.
 
-To use the tool, Select the GCPC tool from the Analyze menu.
+To use the tool, Select the GPCP tool from the Analyze menu.
 
 Then, select the dataset with genotyping\_protocols that you wish to analyze, click on ``Proceed to Factor Selection'' to load available factors that can be included in the model.
 
-Select the factors you wish to include in the model either as Fixed or Random. Click ``None'' for factors that you don't want to include in the model. Note that the ``germplasmName'' is factored as Random by default.
+Select the factors you wish to include in the model either as Fixed or Random. Click ``None'' for factors that you don''t want to include in the model. Note that the ``germplasmName'' is factored as Random by default.
 
 The next step is to select the selection index for your traits on the dropdown menu.
 
-Once you are through, click ``Run GCPC'' to run the model. The output will be presented in form of a table with ``ID'', ``Parent1'', ``Parent2'' and their cross prediction merit organized in descending order. The results will also have sex information based on whether the dataset has plant sexes available in the database.
+Once you are through, click ``Run GPCP'' to run the model. The output will be presented in form of a table with ``ID'', ``Parent1'', ``Parent2'' and their cross prediction merit organized in descending order. The results will also have sex information based on whether the dataset has plant sexes available in the database.
+
+\hypertarget{tool-compatibility}{%
+\section{Tool Compatibility}\label{tool-compatibility}}
+
+The dataset definition enables one to predict whether the dataset can be used in various analysis tools.
+
+Upon creating a dataset, the site will automatically predict its compatibility with the available analysis tools and report these values on the dataset details page.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/tool_compatibility_details} \end{center}
+
+In the table, each tool will report to the user which traits are available to be analyzed based on phenotype data, and if different types of analyses are available, these will also be reported to the user. Some tools may give a warning sign to indicate that this dataset is compatible, but with potentially low sample sizes. Hover over the warning symbol to get a readout of the reason for the warning.
+
+Below the table, there is a button that enables the user to re-calculate tool compatibility. This can be useful if a dataset is created before phenotypes are uploaded to a trial, since phenotype data is used in determining dataset compatibility. Even if the page appears to hang, do not worry; the compatibility check will continue in the background, and you can check later.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/tool_compatibility_data_summary} \end{center}
+
+Below the tool compatibilities, there is also a summary of the data encompassed by the dataset and the criteria used for determining tool compatibility. Those criteria are used in the following way: - Correlation: A dataset can be used in a correlation analysis if there are many phenotype measurements for different traits made on the same accession. - Population Structure (PCA): A genotype PCA can be run if there are many accessions all genotyped with the same protocol. A phenotype PCA can be run if many accessions all have measurements on many traits. - Clustering: Like a PCA, clustering can be done in both phenotype and genotype modes. They have the same requirements as PCA. - Kinship \& Inbreeding: A dataset with many accessions genotyped with the same protocol can be used for kinship analyses. - Stability: A dataset containing many accessions with the same trait measured across multiple locations can be used in stability analyses. - Heritability: This requires one or more trials with the same trait measured on the same accession across those trial(s). - Mixed Models: This requires sufficient accession numbers, trait measurements, and trial designs. - GWAS: A dataset is compatible with GWAS if there are many accessions genotyped for the same genotyping protocol, and the genotyping protocol has enough markers to run a GWAS. In addition, each accession needs to be phenotyped for a trait. - Boxplotter: There must be sufficient trait measurements to make a boxplot of the trait.
+
+In addition to being on the dataset details page, tool compatibilities may be listed on the dataset selection screens for analysis tools. The compatibilities are non-blocking; you may always try using a dataset in an analysis even if there are warnings or if it is deemed non-compatible. As before, you can hover over the warning symbols to see why a dataset may not have statistical power. For analyses with multiple modes, such as clustering and PCA, you can also hover over the compatibliity checkmark to see what types (phenotype or genotype) the dataset is compatible with.
 
 \end{document}

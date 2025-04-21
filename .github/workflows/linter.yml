@@ -35,6 +35,7 @@ jobs:
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HTMLHINT_CONFIG_FILE: .github/linters/.htmlhintrc
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_ANSIBLE: false
           VALIDATE_CHECKOV: false

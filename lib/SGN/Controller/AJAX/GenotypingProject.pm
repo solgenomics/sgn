@@ -21,7 +21,7 @@ sub add_genotyping_project : Path('/ajax/breeders/add_genotyping_project') : Act
 
 sub add_genotyping_project_POST :Args(0){
     my ($self, $c) = @_;
-    
+
     my $dbh = $c->dbc->dbh;
     my $project_name = $c->req->param('project_name');
     my $project_breeding_program = $c->req->param('project_breeding_program');
@@ -32,8 +32,7 @@ sub add_genotyping_project_POST :Args(0){
     my $data_type = $c->req->param('data_type');
 
     if (!$c->user()){
-        print STDERR "User not logged in... not adding a genotyping project.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to add a genotyping project."};
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 

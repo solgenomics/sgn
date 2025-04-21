@@ -12,6 +12,13 @@
   $editable_stock_props => undef
 </%args>
 
+<%perl>
+  my $user_role = '';
+  if ($c->user) {
+    $user_role = $c->user->get_object()->get_user_type();
+  }
+</%perl>
+
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
 
 <div class="container-fluid">
@@ -93,53 +100,66 @@ my $breeding_programs_select = simple_selectbox_html(
     <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
 
     <div class="row">
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Organism: </label>
-          <div class="col-sm-9" >
-            <% $organism_select %>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-4 control-label">Organization: </label>
-          <div class="col-sm-8" >
-            <input type="text" class="form-control" id="organization" placeholder="Type to Autocomplete"/>
-          </div>
+      <div class="form-group form-group-sm">
+        <label class="col-sm-4 control-label">Organism:</label>
+        <div class="col-sm-8" >
+          <% $organism_select %>
         </div>
       </div>
     </div>
 
-    <hr>
+    <br />
+
     <div class="row">
-      <div class="col-sm-11">
-        <div class="form-group form-group-sm">
-      	  <label class="col-sm-3 control-label">Search By Another Property: </label>
-          <div class="col-sm-9" >
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-btn">
-                  <select class="form-control" id="editable_stockprop_search_term" name="editable_stockprop_search_term">
-%  foreach my $stockprop (@$editable_stock_props){
-                    <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
+      <div class="form-group form-group-sm">
+        <label class="col-sm-4 control-label">Organization:</label>
+        <div class="col-sm-8" >
+          <input type="text" class="form-control" id="organization" placeholder="Type to Autocomplete"/>
+        </div>
+      </div>
+    </div>
+
+    <br /><hr /><br />
+
+    <div class="row">
+      <div class="form-group form-group-sm">
+        <label class="col-sm-4 control-label">Search By Another Property:</label>
+        <div class="col-sm-8" >
+          <div class="form-group">
+            <div class="input-group">
+              <span class="input-group-btn">
+                <select class="form-control" id="editable_stockprop_search_term" name="editable_stockprop_search_term">
+%  foreach my $stockprop (sort {uc($a) cmp uc($b)} @$editable_stock_props){
+                  <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
 %  }
-                  </select>
-                </span>
-                  <span class="input-group-btn">
-                    <button class="btn btn-primary btn-sm" id="editable_stockprop_search_add">Add</button>
-                </span>
-              </div>
+                </select>
+              </span>
+              <span class="input-group-btn">
+                <button class="btn btn-primary btn-sm" id="editable_stockprop_search_add">Add</button>
+              </span>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <div id="editable_stockprop_search_div"></div>
 
-    <div id="editable_stockprop_search_div">
+% if ( $user_role eq 'curator' ) {
+    <br /><hr /><br />
+    <div class="row">
+      <div class="form-group form-group-sm">
+        <label class="col-sm-4 control-label">Is Obsolete?:</label>
+        <div class="col-sm-8" >
+          <div class="form-group">
+            <select class="form-control" id="obsolete_stock_search_term" name="obsolete_stock_search_term">
+              <option value="false" selected>Not Obsolete</option>
+              <option value="true">Is Obsolete</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
+% }
 
     </&>
     <&| /page/info_section.mas, title => 'Usage', collapsible=>1, collapsed=>1 &>
@@ -410,7 +430,7 @@ jQuery(document).ready(function () {
         jQuery('#editable_stockprop_search_div').html('');
         for (var property in editable_stockprops_search) {
             if (editable_stockprops_search.hasOwnProperty(property)) {
-                jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-3 control-label">'+property+': </label><div class="col-sm-9" ><div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%"><select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="'+property+'"><option title="contains" value="contains" selected="selected">contains</option><option title="starts with" value="starts_with">starts with</option><option title="ends with" value="ends_with">ends with</option><option title="exactly" value="exactly">exactly</option><option title="one of" value="one of">one of (separate multiple possibilities with commas)</option></select></span><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+property+'_input_id" data-property="'+property+'" placeholder="Type to Autocomplete"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+property+'" class="btn"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
+                jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-4 control-label">'+property+': </label><div class="col-sm-8"><div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%"><select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="'+property+'"><option title="contains" value="contains" selected="selected">contains</option><option title="starts with" value="starts_with">starts with</option><option title="ends with" value="ends_with">ends with</option><option title="exactly" value="exactly">exactly</option><option title="one of" value="one of">one of (separate multiple possibilities with commas)</option></select></span><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+property+'_input_id" data-property="'+property+'" placeholder="Type to Autocomplete"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+property+'" class="btn"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
 
                 jQuery('#editable_stockprop_search_div').find("#"+property+"_input_id").autocomplete({
                    source: '/ajax/stock/stockproperty_autocomplete?property='+property,
@@ -442,17 +462,26 @@ jQuery(document).ready(function () {
     parseArgs(editable_stockprops_search);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
-      var name_links = stock_table.column(0).data();
-      var names = [];
+        const name_links = stock_table.column(0).data();
+        let names = [];
+        for (let i = 0; i < name_links.length; i++) { //extract text from anchor tags
+            names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
 
-      for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
-        names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
-      }
+        let is_obsolete = '';
+        is_obsolete = jQuery("#obsolete_stock_search_term option:selected").val();
 
-      jQuery('#search_result_names').html(names);
-      addToListMenu('results_to_list_menu', 'search_result_names', {
-        listType: jQuery('#stock_type_select option:selected').text()+'s' || 'null'
-      });
+        let  list_type = '';
+        if (is_obsolete == 'true') {
+            list_type = 'obsoleted_stocks';
+        } else {
+            list_type = jQuery('#stock_type_select option:selected').text()+'s' || 'null';
+        }
+
+        jQuery('#search_result_names').html(names);
+        addToListMenu('results_to_list_menu', 'search_result_names', {
+            listType: list_type
+        });
     });
 
    jQuery('#submit_stock_search').click( function() {
@@ -577,6 +606,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
               d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
               d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
               d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
+              d.is_obsolete = jQuery("#obsolete_stock_search_term option:selected").val()
             }
         }
     });

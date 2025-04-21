@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::TrialMetadata;
 use Moose;
 use Data::Dumper;
 use Bio::Chado::Schema;
+use CXGN::People::Schema;
 use CXGN::Trial;
 use CXGN::Trial::TrialLookup;
 use CXGN::Trial::Search;
@@ -61,12 +62,15 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{schema} =  $bcs_schema;
     $c->stash->{trial} = CXGN::Trial->new({
         bcs_schema => $bcs_schema,
         metadata_schema => $metadata_schema,
         phenome_schema => $phenome_schema,
+        people_schema => $people_schema,
         trial_id => $trial_id
     });
 
@@ -319,6 +323,10 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $display = $c->req->param('display');
     my $trait = $c->req->param('trait');
+
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
+    my $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
+    
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
         search_type => "Native",
@@ -329,6 +337,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
 	end_date => $end_date,
 	include_dateless_items => $include_dateless_items,
     );
+
     my @data = $phenotypes_search->get_phenotype_matrix();
     $c->stash->{rest} = {
       status => "success",
@@ -401,23 +410,33 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
         $order_by_additional = ' ,accession.uniquename DESC';
     }
+
     if ($display eq 'analysis_instance') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
-        # my $plots = $c->stash->{trial}->get_plots();
-        # $total_complete_number = scalar (@$plots);
     }
-    my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    
     my $trial_stock_type_id;
+    
     if ($trial_stock_type eq 'family_name') {
         $trial_stock_type_id = $family_name_type_id;
     } elsif ($trial_stock_type eq 'cross') {
         $trial_stock_type_id = $cross_type_id;
-    } else {
-        $trial_stock_type_id = $accesion_type_id;
-    }
+    } 
+    else {
+        $trial_stock_type_id = $accession_type_id;
+        if ($display eq 'analysis_instance') {
+            my $analysis_stock_type = $self->get_analysis_instance_stock_type($c, $trial_id);
+            if ($analysis_stock_type eq 'analysis_result') {
+                my $analysis_result_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_result', 'stock_type')->cvterm_id();
+                $trial_stock_type_id = $analysis_result_type_id;
+            } 
+        }    
+    }    
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -444,12 +463,11 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
         $order_by_additional;");
-
+    
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     my @phenotype_data;
-
     my @numeric_trait_ids;
 
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
@@ -2311,6 +2329,8 @@ sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
         include_measured => "false"
     });
     my $output = $trial_layout_download->get_layout_output();
+
+    print STDERR "\nDone getting layout output CXGN::Trial::TrialLayoutDownload..\n";
 
     $c->stash->{rest} = $output;
 }
@@ -4812,7 +4832,7 @@ sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/do
     my $tempfile = $c->req->param('file');
 
     $c->res->content_type('application/vnd.ms-excel');
-    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xls"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xlsx"]);
     my $output = read_file($tempfile);
     $c->res->body($output);
 }
@@ -4912,6 +4932,47 @@ sub upload_entry_number_template_POST : Args(0) {
         warning => $parse_warnings->{'warning_messages'}
     };
     return;
+}
+
+sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    my $trial_id = $c->req->param("trial_id");
+
+    if (! $trial_id) {
+	$c->stash->{rest} = { error_string => 'A trial id must be provided to delete the entry numbers.' };
+	return;
+    }
+    
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
+        return;
+    }
+
+    if (!$c->user()->check_roles("curator")) {
+	$c->stash->{rest} = {error_string => "Your account must have the curator role to delete entry numbers" };
+	return;
+    }
+    
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $project_entry_number_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_entry_number_map', 'project_property')->cvterm_id();
+
+    
+    my $row = $schema->resultset("Project::Projectprop")->find( { type_id => $project_entry_number_map_cvterm_id, project_id => $trial_id });
+
+    eval { 
+	$row->delete();
+    };
+
+    if ($@) {
+	$c->stash->{rest} = { error_string => "The following error occurred when trying to delete an entry map: $@\n" };
+	return;
+    }
+    else {
+	$c->stash->{rest} = { success => 1 };
+    }
 }
 
 
@@ -5040,16 +5101,19 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
     my $bottom_border = $c->req->param('bottom_border') || 'false';
     my $left_border = $c->req->param('left_border') || 'false';
     my $gaps = $c->req->param('gaps') || 'false';
+    my $subplots = $c->req->param('subplots') || 'false';
+    my $plants = $c->req->param('plants') || 'false';
     my $hm_pltid = $c->req->param('hm_pltid') || 'plot_id';
     my $hm_range = $c->req->param('hm_range') || 'row_number';
     my $hm_row = $c->req->param('hm_row') || 'col_number';
+    my $include_subplots_plants = $subplots eq 'true' || $plants eq 'true';
 
     # Check parameters
     if ( scalar(@trial_ids) eq 0 ) {
         $c->stash->{rest} = { error => "No trial_ids provided!" };
         return;
     }
-    if ( $type ne 'planting' && $type ne 'harvest' && $type ne 'harvestmaster' ) {
+    if ( $type ne 'planting' && $type ne 'collection' && $type ne 'harvest' && $type ne 'harvestmaster' ) {
         $c->stash->{rest} = { error => "Unrecognized type!" };
         return;
     }
@@ -5096,43 +5160,171 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
         }
     };
 
-    # Generate CSV file
+    # Fetch subplots and/or plant entries, if requested
+    my %subplots_by_plot;
+    my %plants_by_plot;
+    if ( $include_subplots_plants ) {
+        foreach my $trial_id (@trial_ids) {
+            my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+
+            # Get subplots for the trial
+            if ( $subplots eq 'true' ) {
+                my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+                    schema => $schema,
+                    trial_id => $trial_id,
+                    data_level => 'subplots',
+                    selected_columns => {"subplot_name"=>1,"subplot_id"=>1,"plot_name"=>1,"plot_id"=>1},
+                });
+                my $output = $trial_layout_download->get_layout_output()->{output};
+
+                if ( defined $output ) {
+                    foreach (@$output) {
+                        my $subplot_name = $_->[0];
+                        my $subplot_id = $_->[1];
+                        my $plot_name = $_->[2];
+                        if ( $plot_name ne 'plot_name' ) {
+                            $subplots_by_plot{$plot_name} = [] if !exists $subplots_by_plot{$plot_name};
+                            push @{$subplots_by_plot{$plot_name}}, { name => $subplot_name, id => $subplot_id };
+                        }
+                    }
+                }
+            }
+
+            # Get plants for the trial
+            if ( $plants eq 'true' ) {
+                my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+                    schema => $schema,
+                    trial_id => $trial_id,
+                    data_level => 'plants',
+                    selected_columns => {"plant_name"=>1,"plant_id"=>1,"plot_name"=>1,"plot_id"=>1},
+                });
+                my $output = $trial_layout_download->get_layout_output()->{output};
+
+                if ( defined $output ) {
+                    foreach (@$output) {
+                        my $plant_name = $_->[0];
+                        my $plant_id = $_->[1];
+                        my $plot_name = $_->[2];
+                        if ( $plot_name ne 'plot_name' ) {
+                            $plants_by_plot{$plot_name} = [] if !exists $plants_by_plot{$plot_name};
+                            push @{$plants_by_plot{$plot_name}}, { name => $plant_name, id => $plant_id };
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    # Generate CSV File
     my $filename;
     my @data;
-    if ( $type eq 'planting' || $type eq 'harvest' ) {
+    if ( $type eq 'planting' || $type eq 'collection' || $type eq 'harvest' ) {
         $filename = $type . "_order_" . join("-", @trial_ids) . ".csv";
-        my $col = $type . "_order";
+        my $order_column = $type . "_order";
 
         # Add CSV headers
-        my @headers = ($col, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "entry_number", "seedlot_name", "row_number", "col_number", "rep_number", "block_number", "is_a_control");
+        my @headers = ($order_column);
+        push(@headers, "observationunit_name") if $include_subplots_plants;
+        push(@headers,
+            "type",
+            "location_name",
+            "trial_name",
+            "plot_number",
+            "plot_name",
+            "accession_name",
+            "entry_number",
+            "seedlot_name",
+            "row_number",
+            "col_number",
+            "rep_number",
+            "block_number",
+            "is_a_control"
+        );
         push(@data, \@headers);
 
         # Add plot rows
         my $plots = $results->{plots};
-        foreach (@$plots) {
-            if ( $_->{type} eq 'plot' ) {
-                my @d = (
-                    $_->{order},
-                    $_->{type},
-                    "\"$_->{location_name}\"",
-                    $_->{trial_name},
-                    $_->{plot_number},
-                    $_->{plot_name},
-                    $_->{accession_name},
-                    $_->{entry_number},
-                    $_->{seedlot_name},
-                    $_->{row_number},
-                    $_->{col_number},
-                    $_->{rep_number},
-                    $_->{block_number},
-                    $_->{is_a_control}
+        my $order_offset = 0;
+        foreach my $plot (@$plots) {
+
+            # Add plots
+            if ( $plot->{type} eq 'plot' ) {
+                my @d = ($plot->{order}+$order_offset);
+                push(@d, $plot->{plot_name}) if $include_subplots_plants;
+                push(@d,
+                    $plot->{type},
+                    "\"$plot->{location_name}\"",
+                    $plot->{trial_name},
+                    $plot->{plot_number},
+                    $plot->{plot_name},
+                    $plot->{accession_name},
+                    $plot->{entry_number},
+                    $plot->{seedlot_name},
+                    $plot->{row_number},
+                    $plot->{col_number},
+                    $plot->{rep_number},
+                    $plot->{block_number},
+                    $plot->{is_a_control}
                 );
                 push(@data, \@d);
+
+                # Add additional subplots for the current plot, if found
+                if ( $include_subplots_plants && exists $subplots_by_plot{$plot->{plot_name}} ) {
+                    foreach my $sp (@{$subplots_by_plot{$plot->{plot_name}}}) {
+                        $order_offset++;
+                        my @d = ($plot->{order}+$order_offset);
+                        push(@d, $sp->{name});
+                        push(@d,
+                            "subplot",
+                            "\"$plot->{location_name}\"",
+                            $plot->{trial_name},
+                            $plot->{plot_number},
+                            $plot->{plot_name},
+                            $plot->{accession_name},
+                            $plot->{entry_number},
+                            $plot->{seedlot_name},
+                            $plot->{row_number},
+                            $plot->{col_number},
+                            $plot->{rep_number},
+                            $plot->{block_number},
+                            $plot->{is_a_control}
+                        );
+                        push(@data, \@d);
+                    }
+                }
+
+                # Add additional plant entries for the current plot, if found
+                if ( $include_subplots_plants && exists $plants_by_plot{$plot->{plot_name}} ) {
+                    foreach my $p (@{$plants_by_plot{$plot->{plot_name}}}) {
+                        $order_offset++;
+                        my @d = ($plot->{order}+$order_offset);
+                        push(@d, $p->{name});
+                        push(@d,
+                            "plant",
+                            "\"$plot->{location_name}\"",
+                            $plot->{trial_name},
+                            $plot->{plot_number},
+                            $plot->{plot_name},
+                            $plot->{accession_name},
+                            $plot->{entry_number},
+                            $plot->{seedlot_name},
+                            $plot->{row_number},
+                            $plot->{col_number},
+                            $plot->{rep_number},
+                            $plot->{block_number},
+                            $plot->{is_a_control}
+                        );
+                        push(@data, \@d);
+                    }
+                }
             }
+
+            # Add borders, gaps, etc if in the layout
             else {
-                my @d = (
-                    $_->{order},
-                    $_->{type},
+                my @d = ($plot->{order}+$order_offset);
+                push(@d, "") if $include_subplots_plants;
+                push(@d,
+                    $plot->{type},
                     "", # location
                     "", # trial
                     "", # plot number
@@ -5140,52 +5332,109 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                     "", # accession
                     "", # entry number
                     "", # seedlot
-                    $_->{row_number},
-                    $_->{col_number},
+                    $plot->{row_number},
+                    $plot->{col_number},
                     "", # rep
                     "", # block
                     "", # control
                 );
                 push(@data, \@d);
             }
+
         }
     }
 
+    # Generate HarvestMaster File
     elsif ( $type eq 'harvestmaster' ) {
         $filename = "harvestmaster_" . join("-", @trial_ids) . ".csv";
 
         # Add CSV headers
-        my @headers = ("PLTID", "Range", "Row", "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "entry_number", "seedlot_name", "rep_number", "block_number", "is_a_control");
+        my @headers = ("PLTID", "Range", "Row");
+        push(@headers, "observationunit_name") if $include_subplots_plants;
+        push(@headers, "type", "location_name", "trial_name", "plot_number", "plot_name", "accession_name", "entry_number", "seedlot_name", "rep_number", "block_number", "is_a_control");
         push(@data, \@headers);
 
         # Add plot rows
         my $plots = $results->{plots};
-        foreach (@$plots) {
-            if ( $_->{type} eq 'plot' ) {
-                my @d = (
-                    $_->{$hm_pltid},
-                    $_->{$hm_range},
-                    $_->{$hm_row},
-                    $_->{type},
-                    "\"$_->{location_name}\"",
-                    $_->{trial_name},
-                    $_->{plot_number},
-                    $_->{plot_name},
-                    $_->{accession_name},
-                    $_->{entry_number},
-                    $_->{seedlot_name},
-                    $_->{rep_number},
-                    $_->{block_number},
-                    $_->{is_a_control}
+        foreach my $plot (@$plots) {
+
+            # Add plots
+            if ( $plot->{type} eq 'plot' ) {
+                my @d = ($plot->{$hm_pltid}, $plot->{$hm_range}, $plot->{$hm_row});
+                push(@d, $plot->{plot_name}) if $include_subplots_plants;
+                push(@d,
+                    $plot->{type},
+                    "\"$plot->{location_name}\"",
+                    $plot->{trial_name},
+                    $plot->{plot_number},
+                    $plot->{plot_name},
+                    $plot->{accession_name},
+                    $plot->{entry_number},
+                    $plot->{seedlot_name},
+                    $plot->{rep_number},
+                    $plot->{block_number},
+                    $plot->{is_a_control}
                 );
                 push(@data, \@d);
+
+                # Add additional subplots for the current plot, if found
+                if ( $include_subplots_plants && exists $subplots_by_plot{$plot->{plot_name}} ) {
+                    foreach my $sp (@{$subplots_by_plot{$plot->{plot_name}}}) {
+                        my $id = $plot->{$hm_pltid};
+                        $id = $sp->{id} if $hm_pltid eq 'plot_id';
+                        $id = $sp->{name} if $hm_pltid eq 'plot_name';
+                        my @d = ($id, $plot->{$hm_range}, $plot->{$hm_row});
+                        push(@d, $sp->{name});
+                        push(@d,
+                            "subplot",
+                            "\"$plot->{location_name}\"",
+                            $plot->{trial_name},
+                            $plot->{plot_number},
+                            $plot->{plot_name},
+                            $plot->{accession_name},
+                            $plot->{entry_number},
+                            $plot->{seedlot_name},
+                            $plot->{rep_number},
+                            $plot->{block_number},
+                            $plot->{is_a_control}
+                        );
+                        push(@data, \@d);
+                    }
+                }
+
+                # Add additional plant entries for the current plot, if found
+                if ( $include_subplots_plants && exists $plants_by_plot{$plot->{plot_name}} ) {
+                    foreach my $p (@{$plants_by_plot{$plot->{plot_name}}}) {
+                        my $id = $plot->{$hm_pltid};
+                        $id = $p->{id} if $hm_pltid eq 'plot_id';
+                        $id = $p->{name} if $hm_pltid eq 'plot_name';
+                        my @d = ($id, $plot->{$hm_range}, $plot->{$hm_row});
+                        push(@d, $p->{name});
+                        push(@d,
+                            "plant",
+                            "\"$plot->{location_name}\"",
+                            $plot->{trial_name},
+                            $plot->{plot_number},
+                            $plot->{plot_name},
+                            $plot->{accession_name},
+                            $plot->{entry_number},
+                            $plot->{seedlot_name},
+                            $plot->{rep_number},
+                            $plot->{block_number},
+                            $plot->{is_a_control}
+                        );
+                        push(@data, \@d);
+                    }
+                }
+
             }
+
+            # Add gaps, borders, etc if in the layout
             else {
-                my @d = (
-                    $_->{type},
-                    $_->{$hm_range},
-                    $_->{$hm_row},
-                    $_->{type},
+                my @d = ($plot->{type}, $plot->{$hm_range}, $plot->{$hm_row});
+                push(@d, "") if $include_subplots_plants; # observationunit_name
+                push(@d,
+                    $plot->{type},
                     "", # location
                     "", # trial
                     "", # plot number
@@ -5200,15 +5449,14 @@ sub get_trial_plot_order : Path('/ajax/breeders/trial_plot_order') : Args(0) {
                 push(@data, \@d);
             }
         }
-
     }
 
+    # Join all lines into CSV format
     my @all_lines = ();
     foreach my $each_line (@data) {
         my $each_line_string = join(",", @$each_line);
         push @all_lines, $each_line_string;
     }
-
     my $all_lines_string = join("\n", @all_lines);
 
     # Return the generated file
@@ -5389,9 +5637,10 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     my $genotyping_project_id = $c->stash->{trial_id};
 
     if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in to delete genotyping plates" };
-        $c->detach();
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
     }
+
     if (!$c->user()->check_roles("curator")) {
         $c->stash->{rest} = { error => "You do not have the correct role to delete genotyping plates. Please contact us." };
         $c->detach();
@@ -5404,8 +5653,14 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     my ($data, $total_count) = $plate_info->get_plate_info();
     my @genotyping_plate_ids;
     foreach  my $plate(@$data){
-        my $plate_id = $plate->{plate_id};
-        push @genotyping_plate_ids, $plate_id;
+        my $number_of_samples_with_data = $plate->{number_of_samples_with_data};
+        if ($number_of_samples_with_data > 0) {
+            $c->stash->{rest} = { error => 'Cannot delete! One or more plates have genotyping data' };
+            return;
+        } else {
+            my $plate_id = $plate->{plate_id};
+            push @genotyping_plate_ids, $plate_id;
+        }
     }
 
     my $number_of_plates = @genotyping_plate_ids;
@@ -5437,5 +5692,36 @@ sub delete_all_genotyping_plates_in_project : Chained('trial') PathPart('delete_
     $c->stash->{rest} = { success => 1 };
 }
 
+sub get_analysis_instance_stock_type {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $project = $schema->resultset('Project::Project')->find({
+        project_id => $trial_id, 
+    });
+
+    my $trial_layout_json_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
+
+    my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_type_id });
+
+    my $design;
+
+    if ($trial_layout_json) {
+        $design = decode_json $trial_layout_json->value;
+    }
+
+    if (keys %{$design}) {
+        my $sample_design_key = (keys %{$design})[0];
+        my $sample_trial_entry = $design->{$sample_design_key};
+
+        if ($sample_trial_entry->{'accession_name'}) {
+            return 'accession';
+        } elsif($sample_trial_entry->{'analysis_result_stock_name'}) {
+            return 'analysis_result';
+        }
+    }
+
+}
 
 1;

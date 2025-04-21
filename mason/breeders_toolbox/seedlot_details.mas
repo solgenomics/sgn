@@ -18,6 +18,8 @@ $maintenance_enabled => undef
 $discard_info => undef
 $status => undef
 $user_role => undef
+$material_type => undef
+$default_seedlot_material_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -45,6 +47,7 @@ $user_role => undef
 % }
 <tr><td><b>Breeding Program</b></td><td><div id="seedlot_breeding_program_div">[LOADING...]</div></td></tr>
 <tr><td><b>Seedlot Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
+<tr><td><b>Material Type</b></td><td><% $material_type %></td></tr>
 <tr><td><b>Seedlot Description</b></td><td><% $description %></td></tr>
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><div id="seedlot_location_code_div">[LOADING...]</div></td></tr>
@@ -59,9 +62,9 @@ $user_role => undef
 
 </&>
 
-<center>
-<h3>Transactions</h3>
-</center>
+<div style="text-align: center">
+    <h3>Transactions</h3>
+</div>
 
 <&| /page/info_section.mas, title=>"Transactions Table",  collapsible => 1, collapsed=>0, subtitle=>$new_transaction_link &>
 
@@ -226,7 +229,7 @@ $user_role => undef
                                             </div>
 
                                             <div class="form-group">
-                                                <label class="col-sm-3 control-label">Starting Amount (number of seeds): </label>
+                                                <label class="col-sm-3 control-label">Starting Amount (number of materials): </label>
                                                 <div class="col-sm-9" >
                                                     <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Amount OR Weight Required" disabled value="0">
                                                 </div>
@@ -272,7 +275,7 @@ $user_role => undef
                 </div>
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Transaction Amount (number of seeds): </label>
+                    <label class="col-sm-3 control-label">Transaction Amount (number of materials): </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_transaction_amount" placeholder="Amount OR Weight Required">
                     </div>
@@ -344,6 +347,19 @@ $user_role => undef
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Material Type: </label>
+% if ($default_seedlot_material_type) {
+                    <div class="col-sm-9">
+                        <input class="form-control" id="edit_seedlot_details_default_material_type" disabled value="<% $default_seedlot_material_type %>">
+                    </div>
+% } else {
+                    <div class="col-sm-9" >
+                        <div id="edit_seedlot_details_material_type_div"></div>
+                    </div>
+% }
+                </div>
+
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Seedlot Description: </label>
                     <div class="col-sm-9" >
                         <input class="form-control" type="text" id="edit_seedlot_details_description" placeholder="Optional"/>
@@ -394,18 +410,18 @@ $user_role => undef
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Accession name: </label>
                                         <div class="col-sm-9" >
-                                            <input class="form-control" id="edit_seedlot_details_accession" placeholder="One Content Required">
+                                            <input class="form-control" id="edit_seedlot_details_accession" value="<% $content_accession_name %>">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <center><h4>OR</h4></center>
+                            <div style="text-align: center"><h4>OR</h4></div>
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Cross Unique ID: </label>
                                         <div class="col-sm-9" >
-                                            <input class="form-control" id="edit_seedlot_details_cross" placeholder="One Content Required">
+                                            <input class="form-control" id="edit_seedlot_details_cross" value="<% $content_cross_name %>">
                                         </div>
                                     </div>
                                 </div>
@@ -511,16 +527,6 @@ $user_role => undef
                 jQuery('#edit_seedlot_details_location').val(response.location_code);
                 jQuery('#edit_seedlot_details_box_name').val(response.box_name);
                 jQuery('#edit_seedlot_details_quality').val(response.quality);
-                var accession_name = '';
-                if (response.accession){
-                    accession_name = response.accession[1];
-                }
-                var cross_name = '';
-                if (response.cross){
-                    cross_name = response.cross[1];
-                }
-                jQuery('#edit_seedlot_details_accession').val(accession_name);
-                jQuery('#edit_seedlot_details_cross').val(cross_name);
             }
             if (response.error) {
                 alert(response.error);
@@ -737,6 +743,8 @@ $user_role => undef
 
     jQuery('#edit_seedlot_details_link').click(function(){
         jQuery('#edit_seedlot_details_dialog').modal('show');
+        const stored_material_type = "<%$material_type%>";
+        get_select_box('material_types', 'edit_seedlot_details_material_type_div', { 'name' : 'edit_seedlot_details_material_type', 'id' : 'edit_seedlot_details_material_type', 'default' : stored_material_type, 'empty': 1 });
     });
 
     jQuery('#edit_seedlot_details_button').click(function(){
@@ -750,6 +758,14 @@ $user_role => undef
         var quality = jQuery('#edit_seedlot_details_quality').val();
         var accession = jQuery('#edit_seedlot_details_accession').val();
         var cross = jQuery('#edit_seedlot_details_cross').val();
+        const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
+        let material_type;
+        if (default_seedlot_material_type) {
+            material_type = default_seedlot_material_type;
+        } else {
+            material_type = jQuery('#edit_seedlot_details_material_type').val();
+        }
+
         if (uniquename == ''){
             alert('Seedlot name must not be blank');
         } else if (breeding_program == ''){
@@ -761,6 +777,8 @@ $user_role => undef
         }
         else if (accession != '' && cross != '') {
             alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
+        } else if (material_type == ''){
+            alert('Please select a material type');
         }
         else {
             jQuery.ajax({
@@ -775,7 +793,8 @@ $user_role => undef
                     'box_name':box_name,
                     'quality' : quality,
                     'accession':accession,
-                    'cross':cross
+                    'cross':cross,
+                    'material_type':material_type
                 },
                 beforeSend: function(){
                     jQuery('#working_modal').modal('show');
@@ -813,7 +832,7 @@ function editSeedlotTransaction(transaction_id){
         success: function(response) {
             jQuery('#working_modal').modal('hide');
             if (response.success == 1) {
-                html = '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Transaction ID: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_id" value="'+response.transaction_id+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Operator: </label><div class="col-sm-9" ><input type="text" id="edit_seedlot_transaction_operator" class="form-control" value="'+response.operator+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Type: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_type" value="'+response.transaction_type+'" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Amount (Number of seeds): </label><div class="col-sm-9" ><input type="number" class="form-control" id="edit_seedlot_transaction_amount" value="'+response.amount+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Weight (g): </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_weight" value="'+response.weight_gram+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_timestamp" value="'+response.timestamp+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Description: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_description" value="'+response.description+'" /></div></div></form>';
+                html = '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Transaction ID: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_id" value="'+response.transaction_id+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Operator: </label><div class="col-sm-9" ><input type="text" id="edit_seedlot_transaction_operator" class="form-control" value="'+response.operator+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Type: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_type" value="'+response.transaction_type+'" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Amount (Number of materials): </label><div class="col-sm-9" ><input type="number" class="form-control" id="edit_seedlot_transaction_amount" value="'+response.amount+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Weight (g): </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_weight" value="'+response.weight_gram+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_timestamp" value="'+response.timestamp+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Transaction Description: </label><div class="col-sm-9" ><input type="text" class="form-control" id="edit_seedlot_transaction_description" value="'+response.description+'" /></div></div></form>';
                 jQuery('#edit_seedlot_transaction_div').html(html);
                 jQuery('#edit_seedlot_transaction_dialog').modal('show');
             }

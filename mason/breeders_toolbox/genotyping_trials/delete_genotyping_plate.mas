@@ -1,0 +1,176 @@
+<%args>
+$trial_id
+$number_of_samples_with_data => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<&| /page/info_section.mas, id=>'delete_genotyping_data_section', title => 'Delete Genotyping Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div style="text-align: center">Delete all genotyping data derived from this genotyping plate.</div>
+    </div>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-primary" id="delete_plate_genotyping_data" role="button">Delete genotyping data</button><br/><br/>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, id=>'delete_genotyping_plate_layout_section', title => 'Delete Genotyping Plate Layout', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div style="text-align: center">Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
+    </div>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+%if ($number_of_samples_with_data > 0) {
+                <div class="boxbgcolor5" >Cannot delete genotyping plate layout. This layout has associated genotyping data.</div>
+%} else {
+                <button class="btn btn-primary" id="delete_layout_data_by_trial_id" role="button">Delete genotyping plate layout</button><br/><br/>
+%}
+            </div>
+        </div>
+    </div>
+</&>
+
+<div class="modal fade" id="genotyping_data_delete_message_dialog" name="genotyping_data_delete_message_dialog" tabindex="-1" role="dialog" aria-labelledby="genotypingDataDeleteMessageDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingDataDeleteMessageDialog"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div style="text-align: center">The genotyping data was deleted successfully.</div>
+                    <div id="genotyping_data_delete_complete"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="genotyping_data_delete_dismiss_button_1" name="genotyping_data_delete_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="empty_protocol_message_dialog" name="empty_protocol_message_dialog" tabindex="-1" role="dialog" aria-labelledby="emptyProtocolMessageDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <div style="text-align: center">
+                    <h4 class="modal-title" id="createGenotypingProjectdialog">The genotyping data was deleted successfully.</h4>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div style="text-align: center">
+                        <div id="empty_protocol_message"></div>
+                        <p>Do you want to delete this protocol?</p>
+                        <button id="delete_empty_protocol_submit" name="delete_empty_protocol_submit" type="button" class="btn btn-primary" data-dismiss="modal">Yes</button>
+                        <button id="empty_dismiss_button_1" name="empty_protocol_dismiss_button" type="button" class="btn btn-primary" data-dismiss="modal">No</button>
+                        <br/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    let empty_protocol_id;
+    let empty_protocol_name;
+
+    jQuery('#delete_plate_genotyping_data').click(function() {
+        const trial_id = get_trial_id();
+        const confirmation = confirm("Are you sure you want to delete all genotyping data derived from this genotyping plate? This action cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/plate_genotyping_data_delete',
+                dataType: "json",
+                type: 'GET',
+                data:{
+                    'genotyping_plate_id': trial_id,
+                },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#working_msg').html("Deleting genotyping data...<br />");
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.empty_protocol_id) {
+                        empty_protocol_id = response.empty_protocol_id;
+                        empty_protocol_name = response.empty_protocol_name;
+
+                        const empty_protocol_message_string = "The protocol: " +empty_protocol_name+ " has no associated genotyping data.";
+                        jQuery('#empty_protocol_message').html(empty_protocol_message_string);
+                        jQuery("#empty_protocol_message_dialog").modal("show");
+                    }
+                    if (response.success == 1) {
+                        jQuery("#genotyping_data_delete_message_dialog").modal("show");
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
+    });
+
+    jQuery(document).on('click', '[name="genotyping_data_delete_dismiss_button"]', function(){
+        jQuery('#genotyping_data_delete_message_dialog').modal('hide');
+        location.reload();
+    });
+
+    jQuery(document).on('click', '[name="empty_protocol_dismiss_button"]', function(){
+        jQuery('#empty_protocol_message_dialog').modal('hide');
+        location.reload();
+    });
+
+    jQuery('#delete_empty_protocol_submit').click(function() {
+        const confirmation = confirm("Are you sure you want to delete this genotyping protocol? This action cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/empty_protocol_delete',
+                dataType: "json",
+                type: 'GET',
+                data:{
+                    'empty_protocol_id': empty_protocol_id,
+                },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#working_msg').html("Deleting genotyping protocol...<br />");
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert("The genotyping protocol was deleted successfully.");
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
+    });
+
+
+});
+
+</script>

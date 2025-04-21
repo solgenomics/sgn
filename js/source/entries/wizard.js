@@ -5,6 +5,7 @@ import { WizardDownloads } from "../modules/wizard-downloads.js";
 
 const initialtypes = [
     "accessions",
+    "organisms",
     "breeding_programs",
     "genotyping_protocols",
     "genotyping_projects",
@@ -20,12 +21,14 @@ const initialtypes = [
 
 const types = {
     "accessions": "Accessions",
+    "organisms": "Organisms",
     "breeding_programs": "Breeding Programs",
     "genotyping_protocols": "Genotyping Protocols",
     "genotyping_projects": "Genotyping Projects",
     "locations": "Locations",
     "plots": "Plots",
     "plants": "Plants",
+    "tissue_sample": "Tissue Samples",
     "seedlots": "Seedlots",
     "trait_components": "Trait Components",
     "traits": "Traits",
@@ -40,6 +43,7 @@ function makeURL(target, id) {
         case "accessions":
         case "plants":
         case "plots":
+        case "tissue_sample":
             return document.location.origin + `/stock/${id}/view`;
             break;
         case "seedlots":
@@ -115,10 +119,17 @@ export function WizardSetup(main_id) {
                 credentials: 'include',
                 body: formData
             }).then(resp => resp.json())
-                .then(json => {
-                    return json.list.map(d => ({ id: d[0], name: d[1], url: makeURL(target, d[0]) }))
-                })
-        })
+              .then(json => {
+                  if (!json.list) {
+                      return []; // Return an empty array to avoid breaking the code
+                  }
+                  if (!Array.isArray(json.list)) {
+                      console.error("json.list is not an array:", json.list);
+                      return [];
+                  }
+                  return json.list.map(d => ({ id: d[0], name: d[1], url: makeURL(target, d[0]) }));
+              });
+          })
         // Function which returns the list contents for a given listID
         // // Returns type and list of of unique names or objects with a "name" key
         // {"type":"typeID","items":["name","name",...]|[{"name":"example"},...]}

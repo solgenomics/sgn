@@ -299,10 +299,21 @@ function jqueryStuff() {
                             my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
                             $image_url = $image->get_image_url('small');
                         }
-                        
-                        </%perl>
 
-                        <img src="<% $image_url %>" alt="No accession image to display" class="img-responsive" style="max-width: 100%; height: auto;" />
+                        my $no_img_url = '/data/images/image_files/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/small';
+                        my $no_img_url_test = '/data/images/image_files_test/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/small';
+
+                        if (index($image_url, $no_img_url) != -1 || index($image_url, $no_img_url_test) != -1) {
+                        </%perl>                      
+                        <p>No accession image to display</p>
+                        <%perl>
+                            } else { 
+                        </%perl>
+                        <img src="<% $image_url %>" class="img-responsive" style="max-width: 100%; height: auto;" />
+                        <%perl>
+                            } 
+                        </%perl>
+                        
                     </div>
                     <br /><br />
                 </div>
@@ -419,10 +430,10 @@ function jqueryStuff() {
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Audit Table</h4>", info_section_subtitle => 'Track audit information for this stock.', icon_class => "glyphicon glyphicon-time", info_section_id => "audit_table_section", stock_uniquename => $uniquename, referer => $this_page &>
 
-% if ($type_name eq 'population') {
+% if ($edit_privs && $type_name eq 'population') {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => "<h4 style='display:inline'>Delete This Stock</h4>", info_section_subtitle => 'Delete this population.', icon_class => "glyphicon glyphicon-trash", info_section_id => "population_delete_section" &>
-% } elsif (($type_name ne 'population') && (!$is_obsolete)) {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => "<h4 style='display:inline'>Obsolete This Stock</h4>", info_section_subtitle => 'Make a stock obsolete so that it does not show in searches.', icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
+% } elsif ($edit_privs && $type_name ne 'population') {
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, is_obsolete=> $is_obsolete, info_section_title => "<h4 style='display:inline'>" . ($is_obsolete ? "Un-Obsolete This Stock" : "Obsolete This Stock") . "</h4>", info_section_subtitle => ($is_obsolete ? "Make a stock not obsolete so that it does show in searches" : "Make a stock obsolete so that it does not show in searches"), icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
 % }
 
 </&>

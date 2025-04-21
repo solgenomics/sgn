@@ -6,7 +6,7 @@ $trial_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
 
 
-<&| /page/info_section.mas, id=>'delete_genotyping_plate_section', title => 'Delete Genotyping Plate(s)', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'delete_genotyping_plate_section', title => 'Delete Genotyping Plate(s)', subtitle => '<font color="red">Deletion cannot be undone. Cannot delete any plate associated with genotyping data</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -49,7 +49,14 @@ jQuery(document).ready(function(){
         'ajax': '/ajax/genotyping_project/plate_names?genotyping_project_id=<% $trial_id %>',
         'columns': [
             { title: "Plate Names", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders_toolbox/trial/"+row.plate_id+"'>"+row.plate_name+"</a>"; } },
-            { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deletePlate("+row.plate_id+")'>Delete</a>"; } },
+            { title: "Delete", "data": null, "render": function ( data, type, row ) {
+                if (row.number_of_samples_with_data > 0){
+                    return 'Cannot Delete'
+                } else {
+                    return "<a onclick='deletePlate("+row.plate_id+")'>Delete</a>";
+                }
+            }},
+
         ]
     });
 
