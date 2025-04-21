@@ -27,18 +27,96 @@ Chris Simoes – ccs263@cornell.edu
   <title>Field Layout Workflow</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    :root { --cell: 40px; --gap: 2px; }
-    #farm-scroll { overflow:auto; max-height:70vh; position:relative; }
-    #farm-grid   { display:grid; gap:var(--gap); position:relative; }
-    .grid-cell   { width:var(--cell); height:var(--cell); display:flex; align-items:center; justify-content:center; font-size:0.7rem; box-sizing:border-box; user-select:none; }
-    .header-cell { background:#f3f3f3; font-weight:700; color:#555; position:sticky; z-index:30; }
-    .col-header  { top:0; }
-    .row-header  { left:0; }
-    .corner      { top:0; left:0; z-index:31; }
-    .trial-group { position:absolute; display:grid; gap:var(--gap); cursor:move; z-index:20; }
-    .trial-box   { width:var(--cell); height:var(--cell); border:1px solid #333; font-size:0.65rem; font-weight:600; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:move; }
-    .remove-btn  { position:absolute; top:-8px; right:-8px; width:1rem; height:1rem; border-radius:9999px; background:#e3342f; color:#fff; font-size:0.6rem; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:25; }
-  </style>
+  :root {
+    --cell: 40px;
+    --gap: 2px;
+  }
+
+  #farm-scroll {
+    overflow: auto;
+    max-height: 70vh;
+    position: relative;
+  }
+
+  #farm-grid {
+    display: grid;
+    gap: var(--gap);
+    position: relative;
+  }
+
+  .grid-cell {
+    width: var(--cell);
+    height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    box-sizing: border-box;
+    user-select: none;
+  }
+
+  .header-cell {
+    background: #f3f3f3;
+    font-weight: 700;
+    color: #555;
+    position: sticky;
+    z-index: 30;
+  }
+
+  .col-header {
+    top: 0;
+  }
+
+  .row-header {
+    left: 0;
+  }
+
+  .corner {
+    top: 0;
+    left: 0;
+    z-index: 31;
+  }
+
+  .trial-group {
+    position: absolute;
+    display: grid;
+    gap: var(--gap);
+    cursor: move;
+    z-index: 20;
+    border: 1px dashed red; /* diagnostic only */
+  }
+
+  .trial-box {
+    width: var(--cell);
+    height: var(--cell);
+    border: 1px solid #333;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    cursor: move;
+  }
+
+  .remove-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background: #e3342f;
+    color: #fff;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 25;
+  }
+</style>
+
 </head>
 <body class="bg-white text-gray-800 font-sans p-8 space-y-12">
 

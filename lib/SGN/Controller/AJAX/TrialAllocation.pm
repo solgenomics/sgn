@@ -82,6 +82,9 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     my $description = $trial->{description};
     my $treatments = $trial->{treatment_list_id};
     my $controls   = $trial->{control_list_id};
+    my $rows_per_block = $trial->{rows};       # corresponds to tblockrows
+    my $blocks         = $trial->{blocks};     # corresponds to trepsblocks
+    my $trial_design;
     
     ## Retrieving elements
     my $treatment_list = CXGN::List->new({ dbh => $dbh, list_id => $treatments });
@@ -94,34 +97,10 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     my $control_string   = join(', ', map { qq("$_") } @$control_names);
 
 
-    ## Adjusting variables for RCBD
-    my ($n_row, $n_col);
-    if ($design eq 'RCBD') {
-        my $rows_per_block = $trial->{rows};       # corresponds to tblockrows
-        my $blocks         = $trial->{blocks};     # corresponds to trepsblocks
-
-        my $n_row = $rows_per_block * $blocks;
-        my $total_entries = scalar(@$treatment_names) + scalar(@$control_names);
-        my $n_col = ($total_entries * $blocks) / $n_row;
-
-        if ($n_col != int($n_col)) {
-
-            $c->stash->{rest} = {
-                success => 0,
-                error   => "The number of columns for the RCBD layout is not an integer. Please adjust the number of entries, reps (blocks), or rows per block to fit evenly."
-            };
-            return;
-        };
-        
-        print STDERR "New total of rows: $rows_per_block \n";
-        print STDERR "New total of cols: $n_col \n";
-
-        $trial->{n_row} = $n_row;
-        $trial->{n_col} = $n_col;
-
-    }
+    my $n_trt = scalar(@$treatment_names);
+    my $n_ctl = scalar(@$control_names);
     
-    ## Send paramenter to a temp file
+    # Send paramenter to a temp file
     $c->tempfiles_subdir("trial_allocation");
 
     # Create base temp file (no extension yet)
@@ -130,20 +109,31 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     # Full base path (no extension)
     my $temppath = $c->config->{basepath} . "/" . $tempfile;
     print STDERR "***** temppath = $temppath\n";
+    
+    
+    
+    ## Call for rrc
+
+    ## Call for DRRC
+
+    ## Call for URDD
+    
 
     # Define specific file names with extensions
     my $paramfile = $temppath . ".params";  # for R input
     my $outfile   = $temppath . ".out";     # for R output
+    my $message_file = $temppath . ".message";
+    my $design_file = "$temppath" . ".design";
 
     # Write trial.params (for R)
     open(my $F, ">", $paramfile) or die "Can't open $paramfile for writing.";
 
     print $F "treatments <- c($treatment_string)\n";
     print $F "controls <- c($control_string)\n";
-    print $F "n_rep <- " . ($trial->{reps} // '') . "\n";
-    print $F "n_row <- " . ($trial->{rows} // '') . "\n";
-    print $F "n_col <- " . ($trial->{cols} // '') . "\n";
-    print $F "n_blocks <- " . ($trial->{blocks} // '') . "\n";
+    print $F "n_rep <- nRep <- " . ($trial->{reps} // '') . "\n";
+    print $F "n_row <- nRow <- " . ($trial->{rows} // '') . "\n";
+    print $F "n_col <- nCol <- " . ($trial->{cols} // '') . "\n";
+    print $F "n_blocks <- nBlocks <- " . ($trial->{blocks} // '') . "\n";
     print $F "serie <- " . ($trial->{serie} // 1) . "\n";  # optional
     close($F);
 
@@ -153,6 +143,33 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
         print STDERR "Running: $cmd\n";
         system($cmd);
     }
+    
+    ## Handelling with error messages
+    
+    if (-e $message_file) {
+        open(my $fh, '<', $message_file) or die "Could not open $message_file: $!";
+        my $error_text = do { local $/; <$fh> };
+        close($fh);
+        die "Trial allocation error: $error_text";
+    }
+
+
+
+    ## Adjusting variables for RCBD
+    my $json_desing;
+    if ($design eq 'RCBD') {
+        my ($n_row, $n_col, $error, $trial_design) = create_rcbd($rows_per_block, $blocks, $n_trt, $n_ctl, $design_file);
+        warn "n_row: $n_row";
+        warn "n_col: $n_col";
+        warn "error: " . ($error // 'none');
+        warn "trial_design defined? " . (defined $trial_design ? "YES" : "NO");
+        warn "trial_design is arrayref? " . (ref($trial_design) eq 'ARRAY' ? "YES" : "NO");
+        warn "trial_design length: " . (ref($trial_design) eq 'ARRAY' ? scalar(@$trial_design) : 'N/A');
+
+        $trial->{n_row} = $n_row;
+        $trial->{n_col} = $n_col;
+        $json_desing = encode_json($trial_design);
+    }
 
     # Return filenames
     $c->stash->{rest} = {
@@ -160,7 +177,8 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
         message     => "Files created and R script triggered.",
         n_row   => $trial->{n_row},
         n_col   => $trial->{n_col},
-        design  => $trial->{design},
+        design  => $json_desing,
+        rows_per_block => $rows_per_block,
         param_file  => $paramfile,
         r_output    => $outfile
     };
@@ -168,6 +186,48 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
 }
 
 
+sub create_rcbd {
+  my ($rows_per_block, $blocks, $n_trt, $n_ctl, $design_file) = @_;
+
+  my $n_row = $rows_per_block * $blocks;
+  my $total_entries = $n_trt + $n_ctl;
+  my $n_col = ($total_entries * $blocks) / $n_row;
+
+  if ($n_col != int($n_col)) {
+    return ($n_row, $n_col, "Invalid dimensions", []);
+  }
+
+  open my $fh, "<", $design_file or return ($n_row, $n_col, "Cannot open $design_file", []);
+
+  my $header_line = <$fh>;
+  chomp $header_line;
+  my @columns = split /\t/, $header_line;
+
+  my %col_index;
+  for my $i (0 .. $#columns) {
+    $col_index{$columns[$i]} = $i;
+  }
+
+  my @design;
+  while (my $line = <$fh>) {
+      chomp $line;
+      next unless $line =~ /\S/;  # skip blank lines
+      my @fields = split /\t/, $line;
+
+      push @design, {
+        plot_number    => $fields[ $col_index{plots} ],
+        block          => $fields[ $col_index{block} ],
+        accession_name => $fields[ $col_index{all_entries} ],
+        rep            => $fields[ $col_index{rep} ],
+        is_control     => $fields[ $col_index{is_control} ]
+      };
+    }
+
+
+  close $fh;
+
+  return ($n_row, $n_col, undef, \@design);
+}
 
 
 1;

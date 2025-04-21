@@ -276,10 +276,11 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
 
       <div class='mt-4 text-right'>
-        <button onclick='generateDesign(${i})' class='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
+        <button onclick='generateDesign(${i}, 0, 0, this)' class='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
           Generate Design
         </button>
       </div>
+
     `;
 
     qs('#trial-details').appendChild(d);
@@ -428,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   /******** Gereate trial Design *************/
-  window.generateDesign = function(i, rowStart = 0, colStart = 0) {
+  window.generateDesign = function(i, rowStart = 0, colStart = 0, btn) {
     const design = $(`#tdesign${i}`).val();
     const isRCBD = design === 'RCBD';
 
@@ -445,14 +446,43 @@ document.addEventListener('DOMContentLoaded', () => {
       cols: parseInt($(`#tcols${i}`).val()) || 0
     };
 
+    // Reset state before AJAX
+    if (btn) {
+      btn.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+      btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+      btn.textContent = 'Generating...';
+    }
+
     return $.ajax({
       url: '/ajax/trialallocation/generate_design',
       method: 'POST',
       data: {
         trial: JSON.stringify(trial)
       }
+    }).done(function(response) {
+      if (btn) {
+        btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        btn.classList.add('bg-green-600', 'hover:bg-green-700');
+        btn.textContent = 'Design Ready';
+      }
+    }).fail(function(err) {
+      if (btn) {
+        btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        btn.classList.add('bg-red-600', 'hover:bg-red-700');
+        btn.textContent = 'Error';
+      }
+      console.error('Design generation failed:', err);
+    }).always(function() {
+      if (btn) {
+        setTimeout(() => {
+          btn.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+          btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+          btn.textContent = 'Generate Design';
+        }, 5000); // Reset after 5 seconds
+      }
     });
   };
+
 
 
   /******** drag & drop ********/
