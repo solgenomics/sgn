@@ -250,6 +250,33 @@ sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
     };
 }
 
+sub get_design :Path('/ajax/trialallocation/get_design') :Args(0) {
+    my $self = shift;
+    my $c    = shift;
+
+    my $trial_path = $c->req->param('trial_path');
+
+    unless ($trial_path && -e $trial_path) {
+        $c->res->status(400);
+        $c->res->body("Design file not found or path not provided.");
+        return;
+    }
+
+    eval {
+        open(my $fh, '<', $trial_path) or die "Cannot open $trial_path: $!";
+        local $/;
+        my $content = <$fh>;
+        close($fh);
+
+        $c->res->content_type('text/plain');
+        $c->res->body($content);
+    };
+    if ($@) {
+        $c->res->status(500);
+        $c->res->body("Error reading design file: $@");
+    }
+}
+
 
 
 sub create_rcbd {
