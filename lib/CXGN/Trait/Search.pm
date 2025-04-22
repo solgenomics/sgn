@@ -140,7 +140,6 @@ sub search {
         }
     }
 
-    $ENV{DBIC_TRACE} = 1;
     if ($self->trait_name_list && scalar(@{$self->trait_name_list}) > 0){
         my $trait_name_is_exact = $self->trait_name_is_exact;
         if ($trait_name_is_exact){
@@ -161,7 +160,7 @@ sub search {
 	    $and_conditions{'-and' } = \@name_conditions;
         }
     }
-    print STDERR "AND CONDS: ".Dumper(\%and_conditions);
+
     my $sort_by = $self->sort_by;
     my $order_by = $self->order_by || 'me.name';
 
@@ -174,9 +173,6 @@ sub search {
         $where_join{'type.name'} = 'VARIABLE_OF';
     }
 
-    # $schema->storage->debug(1);
-
-    print STDERR "BEFORE QUERY: ".Dumper(\%and_conditions);
     my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
         \%and_conditions, 
         {
