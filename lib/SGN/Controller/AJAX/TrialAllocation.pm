@@ -12,6 +12,7 @@ use DateTime;
 use Bio::Chado::Schema;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
+use Text::CSV;
 use JSON;
 
 
@@ -159,13 +160,6 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     my $json_desing;
     if ($design eq 'RCBD') {
         my ($n_row, $n_col, $error, $trial_design) = create_rcbd($rows_per_block, $blocks, $n_trt, $n_ctl, $design_file);
-        warn "n_row: $n_row";
-        warn "n_col: $n_col";
-        warn "error: " . ($error // 'none');
-        warn "trial_design defined? " . (defined $trial_design ? "YES" : "NO");
-        warn "trial_design is arrayref? " . (ref($trial_design) eq 'ARRAY' ? "YES" : "NO");
-        warn "trial_design length: " . (ref($trial_design) eq 'ARRAY' ? scalar(@$trial_design) : 'N/A');
-
         $trial->{n_row} = $n_row;
         $trial->{n_col} = $n_col;
         $json_desing = encode_json($trial_design);
@@ -180,10 +174,82 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
         design  => $json_desing,
         rows_per_block => $rows_per_block,
         param_file  => $paramfile,
+        design_file => $design_file,
         r_output    => $outfile
     };
 
 }
+
+
+
+sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
+    my ($self, $c) = @_;
+
+    my $json_string = $c->req->param('trial');
+    my $data = eval { decode_json($json_string) };
+
+    if (!$data) {
+    $c->stash->{rest} = {
+        success => 0,
+        error   => "Invalid JSON in 'trial' param: $@"
+    };
+        return;
+    }
+
+    my $trial_name  = $data->{trial_name};
+    my $trial_id    = $data->{trial_id};
+    my $coords      = $data->{coordinates};
+    my $design_file = $data->{design_file};
+    # Log or process
+    $c->log->debug("Got trial $trial_name with coords:");
+    $c->log->debug(" → $_->[0], $_->[1]") for @$coords;
+
+
+    ## Adding coordinates to the trial
+    # Open original file
+    open my $in, '<', $design_file or die "Can't open $design_file: $!";
+
+    my $csv_in = Text::CSV->new({ sep_char => "\t", binary => 1, auto_diag => 1 });
+
+    # Read header
+    my $header = $csv_in->getline($in);
+    push @$header, 'row_number', 'col_number';
+
+    # Read data rows and filter out empty ones
+    my @rows;
+    while (my $row = $csv_in->getline($in)) {
+      # Skip completely empty rows
+      next if scalar(grep { defined && /\S/ } @$row) == 0;
+      push @rows, $row;
+    }
+    close $in;
+
+    # Validate row count
+    if (@rows != @$coords) {
+      die "Mismatch: design file has ".scalar(@rows)." valid rows but got ".scalar(@$coords)." coordinates";
+    }
+
+    # Add coordinates
+    for my $i (0 .. $#rows) {
+      my ($r, $c) = @{ $coords->[$i] };
+      push @{ $rows[$i] }, $r, $c;
+    }
+
+    # Write to same file
+    open my $out, '>', $design_file or die "Can't write to $design_file: $!";
+
+    my $csv_out = Text::CSV->new({ sep_char => "\t", binary => 1, eol => "\n" });
+    $csv_out->print($out, $header);
+    $csv_out->print($out, $_) for @rows;
+
+    close $out;
+
+    $c->stash->{rest} = {
+        success => 1,
+        message => "Trial saved!"
+    };
+}
+
 
 
 sub create_rcbd {

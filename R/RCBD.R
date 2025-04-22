@@ -54,6 +54,7 @@ if (!is.null(error_message)) {
 	## setting controls
 	book$is_control <- 0
 	book[book$all_entries %in% controls, "is_control"] <- 1
+	book <- book[book$block != 0, ]
 	head(book, 10)
 
 	outfile <- paste0(basefile, ".design")

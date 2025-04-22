@@ -464,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btn) {
         btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
         btn.classList.add('bg-green-600', 'hover:bg-green-700');
-        btn.textContent = 'Design Ready';
+        btn.textContent = 'Design Ready/Re-Run?';
       }
     }).fail(function(err) {
       if (btn) {
@@ -473,14 +473,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = 'Error';
       }
       console.error('Design generation failed:', err);
-    }).always(function() {
-      if (btn) {
-        setTimeout(() => {
-          btn.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
-          btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-          btn.textContent = 'Generate Design';
-        }, 5000); // Reset after 5 seconds
-      }
     });
   };
 
@@ -500,6 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleDrop(e) {
     e.preventDefault();
+
     if (!gridReady) {
       alert('Grid is still loading. Please wait.');
       return;
@@ -518,62 +511,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (col < 0 || row < 0) return;
 
-    const name = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
+    const name   = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
     const colour = colourFor(tn);
-    const design = qs(`#tdesign${tn}`)?.value;
 
+    // Remove any previously placed trial with same root
     if (src === 'grid') {
       qsa(`.trial-group[data-root="${root}"]`).forEach(el => el.remove());
     }
 
-    if (design === 'RCBD') {
-      generateDesign(tn, row, col).done(function(response) {
-        if (response.success) {
-          const rowsWanted = response.n_row;
-          const colsWanted = response.n_col;
-          const total = rowsWanted * colsWanted;
+    generateDesign(tn, row, col).done(function(response) {
+      if (response.success) {
+        const rowsWanted = response.n_row;
+        const colsWanted = response.n_col;
+        const total = rowsWanted * colsWanted;
 
-          placeTrial({
-            tn,
-            name,
-            rowsWanted,
-            colsWanted,
-            total,
-            rowStart: row,
-            colStart: col,
-            colour,
-            rootId: null
-          });
-        } else {
-          alert("Design failed: " + response.error);
-        }
-      }).fail(function(xhr, status, error) {
-        console.error("AJAX error:", error);
-        alert("Error generating design.");
-      });
-    } else {
-      const rowsWanted = +qs(`#trows${tn}`)?.value || 1;
-      const colsWanted = +qs(`#tcols${tn}`)?.value || 1;
-      const total = rowsWanted * colsWanted;
+        // Place trial using design output
+        const coords = placeTrial({
+          tn,
+          name,
+          rowsWanted,
+          colsWanted,
+          total,
+          rowStart: row,
+          colStart: col,
+          colour,
+          rootId: null
+        });
+        $.ajax({
+          url: '/ajax/trialallocation/save_coordinates',
+          method: 'POST',
+          data: {
+            trial: JSON.stringify({
+              trial_name: name,
+              trial_id: tn,
+              coordinates: final_coordinates,
+              design_file: response.design_file,
+              param_file: response.param_file,
+              r_output: response.r_output
+            })
+          },
+          success: function(saveResponse) {
+            if (saveResponse.success) {
+              console.log(`Coordinates for "${name}" saved successfully.`);
+            } else {
+              console.warn(`Save failed: ${saveResponse.error}`);
+            }
+          },
+          error: function(xhr, status, error) {
+            console.error('Error saving coordinates:', error);
+          }
+        });
+      } else {
+        alert("Design failed: " + response.error);
+      }
+    }).fail(function(xhr, status, error) {
+      console.error("AJAX error:", error);
+      alert("Error generating design.");
+    });
 
-      placeTrial({
-        tn,
-        name,
-        rowsWanted,
-        colsWanted,
-        total,
-        rowStart: row,
-        colStart: col,
-        colour,
-        rootId: src === 'grid' ? root : null
-      });
-    }
+
   }
+
   const farmGridEl = qs('#farm-grid');
   farmGridEl.addEventListener('dragover', e=>e.preventDefault());
   farmGridEl.addEventListener('drop', handleDrop);
 
   /************* grab coodinates from grd ****************/
+
   function getTrialCoordinates(trialName) {
     const coords = [];
 
@@ -632,134 +636,109 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   /******** Placing Trial ********/
-  function placeTrial({tn, name, rowsWanted, colsWanted, total, rowStart, colStart, colour, rootId, design, rowsPerBlock, blocks}) {
-      disablePal(tn);
-      const root = rootId || uid();
-      const coords = [];
-      let r = rowStart, c = colStart;
+  let final_coordinates = [];
+  function placeTrial({ tn, name, rowsWanted, colsWanted, total, rowStart, colStart, colour, rootId, design, rowsPerBlock, blocks }) {
+    disablePal(tn);
+    const root = rootId || uid();
+    const coords = [];
+    let r = rowStart, c = colStart;
 
-      if (design === 'RCBD') {
-        generateDesign(tn, row, col).done(function(response) {
-          if (response.success) {
-            const rowsWanted = response.n_row;
-            const colsWanted = response.n_col;
-            const total = rowsWanted * colsWanted;
-
-            placeTrial({
-              tn,
-              name,
-              rowsWanted,
-              colsWanted,
-              total,
-              rowStart: row,
-              colStart: col,
-              colour,
-              rootId: null
-            });
-
-            // 🔥 Grab coordinates right after
-            const coords = getTrialCoordinates(name);
-            console.log(`Coordinates for ${name}:`, coords);
-          } else {
-            alert("Design failed: " + response.error);
-          }
-        }).fail(function(xhr, status, error) {
-          console.error("AJAX error:", error);
-          alert("Error generating design.");
-        });
-      }
-
-      // Attempt to place total plots, skipping over borders and unutilized
-      while (coords.length < total) {
-        if (!cellIsUnused(r, c) && !manualBorders.has(key(r, c))) {
-          if (trialCellExists(r, c)) {
-            alert("Please find another region to place your trial. This is occupied!");
-            return;
-          }
-          coords.push([r, c]);
-        }
-
-        c++;
-        if (coords.length % colsWanted === 0) {
-          // Move to next row after 'colsWanted' usable plots
-          c = colStart;
-          r++;
-        }
-
-        // Safety stop to prevent infinite loop
-        if (r > 1000) {
-          alert("Could not place trial: not enough space.");
+    // Attempt to place total plots, skipping over borders and unutilized
+    while (coords.length < total) {
+      if (!cellIsUnused(r, c) && !manualBorders.has(key(r, c))) {
+        if (trialCellExists(r, c)) {
+          alert("Please find another region to place your trial. This is occupied!");
           return;
         }
+        coords.push([r, c]);
       }
 
-      // Build segments from coords
-      const rowsMap = {};
-      coords.forEach(([rr, cc]) => {
-        (rowsMap[rr] = rowsMap[rr] || []).push(cc);
-      });
+      c++;
+      if (coords.length % colsWanted === 0) {
+        // Move to next row after 'colsWanted' usable plots
+        c = colStart;
+        r++;
+      }
 
-      Object.entries(rowsMap).forEach(([rr, cols]) => {
-        cols.sort((a, b) => a - b);
-        let s = cols[0];
-        for (let i = 1; i <= cols.length; i++) {
-          if (i === cols.length || cols[i] !== cols[i - 1] + 1) {
-            createSeg(+rr, s, cols[i - 1]);
-            s = cols[i];
-          }
+      // Safety stop to prevent infinite loop
+      if (r > 1000) {
+        alert("Could not place trial: not enough space.");
+        return;
+      }
+    }
+
+    // Build segments from coords
+    const rowsMap = {};
+    coords.forEach(([rr, cc]) => {
+      (rowsMap[rr] = rowsMap[rr] || []).push(cc);
+    });
+
+    Object.entries(rowsMap).forEach(([rr, cols]) => {
+      cols.sort((a, b) => a - b);
+      let s = cols[0];
+      for (let i = 1; i <= cols.length; i++) {
+        if (i === cols.length || cols[i] !== cols[i - 1] + 1) {
+          createSeg(+rr, s, cols[i - 1]);
+          s = cols[i];
         }
-      });
+      }
+    });
 
-      function createSeg(rr, start, end) {
-        const seg = end - start + 1;
-        const g = document.createElement('div');
-        g.className = 'trial-group';
-        g.dataset.trial = tn;
-        g.dataset.root = root;
-        g.dataset.row = rr;
-        g.dataset.col = start;
-        g.style.left = `${(start + 1) * STEP}px`;
-        g.style.top = `${(rr + 1) * STEP}px`;
-        g.style.width = `${seg * STEP - GAP}px`;
-        g.style.height = `${CELL}px`;
-        g.style.gridTemplateColumns = `repeat(${seg}, ${CELL}px)`;
-        g.draggable = true;
-        g.ondragstart = startDrag;
+    function createSeg(rr, start, end) {
+      const seg = end - start + 1;
+      const g = document.createElement('div');
+      g.className = 'trial-group';
+      g.dataset.trial = tn;
+      g.dataset.root = root;
+      g.dataset.row = rr;
+      g.dataset.col = start;
+      g.style.left = `${(start + 1) * STEP}px`;
+      g.style.top = `${(rr + 1) * STEP}px`;
+      g.style.width = `${seg * STEP - GAP}px`;
+      g.style.height = `${CELL}px`;
+      g.style.gridTemplateColumns = `repeat(${seg}, ${CELL}px)`;
+      g.draggable = true;
+      g.ondragstart = startDrag;
 
-        for (let i = 0; i < seg; i++) {
-          const b = document.createElement('div');
-          b.className = `trial-box ${colour} bg-opacity-60`;
-          b.textContent = name;
-          b.draggable = true;
-          b.ondragstart = startDrag;
-          g.appendChild(b);
-        }
+      for (let i = 0; i < seg; i++) {
+        const b = document.createElement('div');
+        b.className = `trial-box ${colour} bg-opacity-60`;
+        b.textContent = name;
+        b.draggable = true;
+        b.ondragstart = startDrag;
+        g.appendChild(b);
+      }
 
-        if (!qs(`[data-root="${root}"] .remove-btn`)) {
-          const rm = document.createElement('div');
-          rm.className = 'remove-btn';
-          rm.textContent = '×';
-          rm.onclick = () => {
-            const loading = qs('#grid-loader');
-            if (loading) {
-              loading.querySelector('span').textContent = "Removing trial...";
-              loading.classList.remove('hidden');
-              setTimeout(() => {
-                qsa(`[data-root="${root}"]`).forEach(el => el.remove());
-                enablePal(tn);
-                loading.classList.add('hidden');
-              }, 50);
-            } else {
+      if (!qs(`[data-root="${root}"] .remove-btn`)) {
+        const rm = document.createElement('div');
+        rm.className = 'remove-btn';
+        rm.textContent = '×';
+        rm.onclick = () => {
+          const loading = qs('#grid-loader');
+          if (loading) {
+            loading.querySelector('span').textContent = "Removing trial...";
+            loading.classList.remove('hidden');
+            setTimeout(() => {
               qsa(`[data-root="${root}"]`).forEach(el => el.remove());
               enablePal(tn);
-            }
-          };
-          g.appendChild(rm);
-        }
-
-        qs('#field-zoom-container').appendChild(g);
+              loading.classList.add('hidden');
+            }, 50);
+          } else {
+            qsa(`[data-root="${root}"]`).forEach(el => el.remove());
+            enablePal(tn);
+          }
+        };
+        g.appendChild(rm);
       }
+
+      qs('#field-zoom-container').appendChild(g);
+    }
+
+    // Return coordinates in 1-based format
+    final_coordinates = coords.map(([r, c]) => [r + 1, c + 1]);
+    return final_coordinates;
   }
+
 
 
   /******** selection drag for unused & borders (logic unchanged) ********/
