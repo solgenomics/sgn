@@ -1166,34 +1166,22 @@ jQuery(document).ready( function() {
                     }
                 });
 
-                if (varName != '' && varID != '' ) {
-                    var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
-                    traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
-                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
-                    traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
-                    traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
-                    for (i=0; i<varID.length; i++) {
-                        traits_assayed_html = traits_assayed_html + "<option value='"+ varID[i] + "' >" + varName[i] + "</option>";
-                    }
-                    traits_assayed_html = traits_assayed_html +"</optgroup>";
-                    traits_assayed_html = traits_assayed_html +"</select>";
+                var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
+                traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
+                traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
+                Object.keys(variables).sort().forEach((name) => {
+                    traits_assayed_html = traits_assayed_html + `<option value='${variables[name]}'>${name}</option>`;
+                });
+                traits_assayed_html = traits_assayed_html +"</optgroup>";
+                traits_assayed_html = traits_assayed_html +"</select>";
 
-                    // traits_assayed_html = traits_assayed_html + "<br/><button class='btn btn-primary btn-sm' id='trial_phenotype_heatmap_download'>Download Heatmap</button>";
+                // traits_assayed_html = traits_assayed_html + "<br/><button class='btn btn-primary btn-sm' id='trial_phenotype_heatmap_download'>Download Heatmap</button>";
 
-                    jQuery("#trait_heatmap").css("display", "none");
-                    jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                }
-                else {
-                    var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
-                    traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
-                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
-                    traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
-                    traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
-                    traits_assayed_html = traits_assayed_html +"</optgroup>";
-                    traits_assayed_html = traits_assayed_html +"</select>";
-                    jQuery("#trait_heatmap").css("display", "none");
-                    jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                }
+                jQuery("#trait_heatmap").css("display", "none");
+                jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
+                
             },
             error: function(response){
                 alert('Error retrieving traits assayed in this trial');

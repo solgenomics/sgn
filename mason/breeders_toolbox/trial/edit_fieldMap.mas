@@ -17,7 +17,7 @@ $trial_stock_type => undef
 <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/dataTables.buttons.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.html5.min.js"></script>
 
-
+<& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div class="modal  fade" id="edit_field_map_dialog" name="edit_field_map_dialog" tabindex="-1" role="dialog" aria-labelledby="EditFieldMapDialog">
     <div class="modal-dialog " role="document">
@@ -371,6 +371,7 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
     }
   } catch (error) {
     console.error('Error:', error);
+    jQuery('#calculate_spatial_correction_status_message').text("Error calculating spatial correction.");
   }
 });
 
@@ -378,6 +379,7 @@ jQuery("#correct_spatial").click(function() {
   //var dataTableData = jQuery("#spatial_correction_needed_results_table").DataTable().data();
   //alert(JSON.stringify(dataTableData));
   //console.log(dataTableData);
+  jQuery('#working_modal').modal('show');
   jQuery.ajax({
     url: '/ajax/spatial_model/correct_spatial/' + trial_id,
     data: {
@@ -388,6 +390,7 @@ jQuery("#correct_spatial").click(function() {
     },
     success: function(response) {
       console.log(response);
+      jQuery('#working_modal').modal('hide');
       if (response.error) {
         alert(response.error);
         alert("Error calculating spatial correction");
@@ -406,7 +409,23 @@ jQuery("#correct_spatial").click(function() {
         });
       }
       //var input_file = response.input_file;
-      var fitted_data = JSON.stringify(response.result);
+      var fitted_data = response.result;
+      // transform fitted_data into stock->trait->value hashmap!
+      // As of right now, it is in the form of a listref of listrefs [ordinality, trait, stock, adjusted value, std.error of value]
+      var nested_fitted_data = {};
+      var traits = {};
+      for(const pheno of fitted_data) {
+        var trait = pheno[1];
+        traits[trait] = 1;
+        var stock = pheno[2];
+        var value = pheno[3];
+        nested_fitted_data[stock] = {
+          [trait]: value
+        };
+      }
+      traits = Object.keys(traits);
+      console.log(nested_fitted_data);
+      console.log(traits);
       var accessionNamesArray = response.accession_names;
       //alert(JSON.stringify(accessionNamesArray));
       var model_properties = JSON.stringify({ "properties": { "traits": ["ID", "Trait", "Name", "Fitted Values"] } });
@@ -419,15 +438,15 @@ jQuery("#correct_spatial").click(function() {
         jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(accessionNamesArray));
         jQuery('#generic_save_analysis_trial_id').val(trial_id);
         jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(traits));
-        jQuery('#generic_save_analysis_statistical_ontology_term').val('Fitted Values from Spatial Correction using Sommer|R');
+        jQuery('#generic_save_analysis_statistical_ontology_term').val('Adjusted Means from Spatial Correction using Sommer R|SGNSTAT:0000054');
         jQuery('#generic_save_analysis_model_language').val('R');
         jQuery('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
         jQuery('#generic_save_analysis_model_application_version').val('0.01');
         jQuery('#generic_save_analysis_model_type').val('spatial_model_sommer');
-        jQuery('#generic_save_analysis_result_values').val(fitted_data);
+        jQuery('#generic_save_analysis_result_values').val(JSON.stringify(nested_fitted_data));
         jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_plot_names');
         jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase mixed model analysis tool" }');
-        jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
+        //jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
         jQuery('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
       });
     }

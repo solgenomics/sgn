@@ -421,6 +421,7 @@ sub store {
         my @trait_ids = values %trait_id_map;
 
 
+        print STDERR "[SPATIAL] $analysis_statistical_ontology_term\n";
         my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
         my $categories = {
             object => [],

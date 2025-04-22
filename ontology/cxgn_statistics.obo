@@ -280,3 +280,9 @@ id: SGNSTAT:0000053
 name: Principal component 10 (PC10) scores
 definition: values for the tenth principal component derived from a linear combination of variables with quantitative values
 relationship: variable_of SGNSTAT:0000043
+
+[Term]
+id: SGNSTAT:0000054
+name: Adjusted Means from Spatial Correction using Sommer R
+definition: Values of a trait measurement that have been adjusted due to spatial correction 
+is_a: SGNSTAT:0000000
