@@ -518,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (src === 'grid') {
       qsa(`.trial-group[data-root="${root}"]`).forEach(el => el.remove());
     }
-
+    
     generateDesign(tn, row, col).done(function(response) {
       if (response.success) {
         const rowsWanted = response.n_row;
@@ -553,6 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
           success: function(saveResponse) {
             if (saveResponse.success) {
               console.log(`Coordinates for "${name}" saved successfully.`);
+              recolorTrialPlots(tn, response.design_file, colour);
             } else {
               console.warn(`Save failed: ${saveResponse.error}`);
             }
@@ -568,9 +569,53 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error("AJAX error:", error);
       alert("Error generating design.");
     });
-
+    
 
   }
+  
+  function getDesignFile(designPath) {
+    $.ajax({
+      url: '/ajax/trialallocation/get_design',
+      method: 'GET',
+      dataType: 'text',
+      data: { trial_path: designPath }, // send file path as GET param
+      success: function(designText) {
+        const lines = designText.trim().split('\n');
+        const header = lines.shift().split('\t');
+
+        const blockIndex = header.indexOf('block');
+        const rowIndex = header.indexOf('row_number');
+        const colIndex = header.indexOf('col_number');
+        const controlIndex = header.indexOf('is_control');
+
+        if (blockIndex === -1 || rowIndex === -1 || colIndex === -1 || controlIndex === -1) {
+          console.error('One or more required columns (block, row_number, col_number) not found.');
+          return;
+        }
+
+        lines.forEach(line => {
+          const cols = line.split('\t');
+          const block = cols[blockIndex];
+          const row = cols[rowIndex];
+          const col = cols[colIndex];
+          const control = cols[controlIndex];
+          console.log(`Block: ${block}, Row: ${row}, Col: ${col}, Control: ${control}`);
+        });
+      },
+      error: function(xhr, status, error) {
+        console.error("Failed to load design file:", error);
+      }
+    });
+  }
+
+  function lighterColor(base) {
+    // drop one Tailwind “step” (e.g. 400→200, 500→300, 900→700)
+    return base.replace(/-(\d+)$/, (_, num) => {
+      let n = Math.max(+num - 200, 50);
+      return '-' + n;
+    });
+  }
+
 
   const farmGridEl = qs('#farm-grid');
   farmGridEl.addEventListener('dragover', e=>e.preventDefault());
@@ -706,8 +751,14 @@ document.addEventListener('DOMContentLoaded', () => {
         b.textContent = name;
         b.draggable = true;
         b.ondragstart = startDrag;
+
+        /* NEW → let recolorTrialPlots find this cell */
+        b.dataset.row = rr;            // 0‑based grid row
+        b.dataset.col = start + i;     // 0‑based grid col
+
         g.appendChild(b);
       }
+
 
       if (!qs(`[data-root="${root}"] .remove-btn`)) {
         const rm = document.createElement('div');
@@ -737,6 +788,68 @@ document.addEventListener('DOMContentLoaded', () => {
     // Return coordinates in 1-based format
     final_coordinates = coords.map(([r, c]) => [r + 1, c + 1]);
     return final_coordinates;
+  }
+
+
+  function recolorTrialPlots(trialId, designPath, baseColour) {
+
+    $.ajax({
+      url: '/ajax/trialallocation/get_design',
+      method: 'GET',
+      dataType: 'text',
+      data: { trial_path: designPath },
+
+      success: txt => {
+        const lines  = txt.trim().split('\n');
+        const header = lines.shift().split('\t');
+
+        const idx = k => header.indexOf(k);
+        const bI = idx('block'), rI = idx('row_number'),
+              cI = idx('col_number'), ctlI = idx('is_control');
+
+        if ([bI, rI, cI, ctlI].includes(-1)) {
+          console.error('Design file missing columns');  return;
+        }
+
+        /* Map: block # → colour (base or lighter) */
+        const blockColour = new Map();
+
+        lines.forEach(l => {
+          const f   = l.split('\t');
+          const blk = +f[bI];              // 1‑based block number
+          const row = +f[rI] - 1;          // to 0‑based
+          const col = +f[cI] - 1;
+          const ctl = +f[ctlI] === 1;
+
+          const box = document.querySelector(
+            `.trial-box[data-row="${row}"][data-col="${col}"]`
+          );
+          if (!box) return;
+
+          /* strip existing bg‑ & text‑ classes */
+          box.className = box.className
+            .replace(/\bbg-[^\s]+\b/g, '')
+            .replace(/\btext-[^\s]+\b/g, '')
+            .trim();
+
+          if (ctl) {
+            box.classList.add('bg-blue-900', 'text-white', 'bg-opacity-100');
+            return;
+          }
+
+          /* decide colour for this block only once */
+          if (!blockColour.has(blk)) {
+            const colour = (blk % 2 === 0)
+              ? lighterColor(baseColour)   // even block → lighter shade
+              : baseColour;                // odd block  → base shade
+            blockColour.set(blk, colour);
+          }
+          box.classList.add(blockColour.get(blk), 'bg-opacity-60');
+        });
+      },
+
+      error: (_, __, err) => console.error('Recolor failed:', err)
+    });
   }
 
 
