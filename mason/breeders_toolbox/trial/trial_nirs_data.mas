@@ -7,9 +7,13 @@ $stockref => undef
 <& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
 
 
-<div class="well well-sm">
-    
+<div class="well well-sm" id="nirs_analysis_plot_spectra_protocol_select">
+    <p>TEST3</p>
 </div>
+
+<center>
+    <button class="btn btn-success" id="submit_protocol_selection">Select</button>
+</center>
             
 
 <script>
@@ -20,4 +24,39 @@ jQuery(document).ready( function() {
     jQuery('#trial_nirs_section_onswitch').click(function() {
         get_select_box('high_dimensional_phenotypes_protocols','nirs_analysis_plot_spectra_protocol_select', {'checkbox_name':'nirs_analysis_plot_spectra_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
     })
-})
+
+    jQuery('#submit_protocol_selection').click(function() {
+        const selected = [];
+        jQuery('input[name="nirs_analysis_plot_spectra_protocol_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if (selected.length !== 1) {
+            alert('Please select only one protocol.');
+        } else {
+            selectedProtocolId = selected[0];
+            console.log('Selected protocol ID:', selectedProtocolId);
+
+            jQuery.ajax({
+                url: '/ajax/breeders/trial/'+<% $trial_id %>+'/nirs_samples',
+                dataType: 'json',
+                data: {
+                    'nd_protocol_id': selectedProtocolId
+                },
+                beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+                },
+                success: function(response) {
+                    console.log("NIRS data matrix:", response);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching NIRS samples:", error);
+                    alert("There was an error retrieving NIRS sample data.");
+                }
+            });
+        }
+    });
+});
+
+    
+</script>
