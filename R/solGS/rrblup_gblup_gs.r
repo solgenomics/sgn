@@ -624,7 +624,7 @@ training_pop_genetic_values <- c()
 selection_pop_genetic_values <- c()
 combined_training_gebvs_genetic_values <- c()
 combined_selection_gebvs_genetic_values <- c()
-trait_adjusted_means_header <- paste0(trait_abbr, "_adjusted_means")
+trait_genetic_values_header <- paste0(trait_abbr, "_genetic_values")
 #additive relationship model
 #calculate the inner products for
 #genotypes (realized relationship matrix)
@@ -780,9 +780,9 @@ if (length(selection_pop_data) == 0) {
         round(training_model_result$pred, 2)
     )
     
-    colnames(training_pop_genetic_values) <- trait_adjusted_means_header
+    colnames(training_pop_genetic_values) <- trait_genetic_values_header
     training_pop_genetic_values <- training_pop_genetic_values %>%
-        arrange(across(trait_adjusted_means_header, desc))
+        arrange(across(trait_genetic_values_header, desc))
     
     training_pop_genetic_values <- rownames_to_column(
         training_pop_genetic_values,
@@ -827,6 +827,11 @@ if (length(selection_pop_data) == 0) {
 
     combined_training_gebvs_genetic_values <- column_to_rownames(
         combined_training_gebvs_genetic_values,
+        var = "genotypes"
+    )
+
+    training_pop_genetic_values <- column_to_rownames(
+        training_pop_genetic_values,
         var = "genotypes"
     )
 
@@ -1047,7 +1052,7 @@ if (length(selection_pop_data) != 0) {
         round(selection_prediction_result$pred, 2)
     )
 
-    colnames(selection_pop_genetic_values) <- trait_adjusted_means_header
+    colnames(selection_pop_genetic_values) <- trait_genetic_values_header
     selection_pop_genetic_values <- rownames_to_column(
         selection_pop_genetic_values,
         var = "genotypes"
@@ -1062,7 +1067,7 @@ if (length(selection_pop_data) != 0) {
                    selection_pop_genotypes)
 
     selection_pop_genetic_values <- selection_pop_genetic_values %>%
-        arrange(across(all_of(trait_adjusted_means_header), desc))
+        arrange(across(all_of(trait_genetic_values_header), desc))
 
     selection_pop_gebvs <- round(data.frame(selection_prediction_result$g), 2)
     colnames(selection_pop_gebvs) <- trait_abbr
@@ -1111,6 +1116,11 @@ if (length(selection_pop_data) != 0) {
         var = "genotypes"
     )
 
+    selection_pop_genetic_values <- column_to_rownames(
+        selection_pop_genetic_values,
+        var = "genotypes"
+    )
+    
     selection_pop_gebvs <- column_to_rownames(
         selection_pop_gebvs,
         var = "genotypes"
