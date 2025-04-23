@@ -96,40 +96,44 @@ sub image_analysis_submit_POST : Args(0) {
     }
     print STDERR Dumper \@image_urls;
 
-    my %service_details = (
-        'necrosis' => {
-            server_endpoint => "http://unet.mcrops.org/api/",
-            image_type_name => "image_analysis_necrosis_solomon_nsumba",
-        },
-        'whitefly_count' => {
-            server_endpoint => "http://18.216.149.204/home/api2/",
-            image_type_name => "image_analysis_white_fly_count_solomon_nsumba",
-        },
-        'count_contours' => {
-            image_type_name => "image_analysis_contours",
-            trait_name => "count_contours",
-            script => 'GetContours.py',
-            input_image => 'image_path',
-            outfile_image => 'outfile_path',
-            results_outfile => 'results_outfile_path',
-        },
-        'largest_contour_percent' => {
-            image_type_name => 'image_analysis_largest_contour',
-            trait_name => 'percent_largest_contour',
-            script => 'GetLargestContour.py',
-            input_image => 'image_path',
-            outfile_image => 'outfile_path',
-            results_outfile => 'results_outfile_path',
-        },
-        'count_sift' => {
-            image_type_name => "image_analysis_sift",
-            trait_name => "count_sift",
-            script => 'ImageProcess/CalculatePhenotypeSift.py',
-            input_image => 'image_paths',
-            outfile_image => 'outfile_paths',
-            results_outfile => 'results_outfile_path',
-        }
-    );
+    my $service_details_json = $c->config->{image_analysis_services} || '{}';
+
+    my %service_details = %{decode_json($service_details_json)};
+    
+    # my %service_details = (
+    #     'necrosis' => {
+    #         server_endpoint => "http://unet.mcrops.org/api/",
+    #         image_type_name => "image_analysis_necrosis_solomon_nsumba",
+    #     },
+    #     'whitefly_count' => {
+    #         server_endpoint => "http://18.216.149.204/home/api2/",
+    #         image_type_name => "image_analysis_white_fly_count_solomon_nsumba",
+    #     },
+    #     'count_contours' => {
+    #         image_type_name => "image_analysis_contours",
+    #         trait_name => "count_contours",
+    #         script => 'GetContours.py',
+    #         input_image => 'image_path',
+    #         outfile_image => 'outfile_path',
+    #         results_outfile => 'results_outfile_path',
+    #     },
+    #     'largest_contour_percent' => {
+    #         image_type_name => 'image_analysis_largest_contour',
+    #         trait_name => 'percent_largest_contour',
+    #         script => 'GetLargestContour.py',
+    #         input_image => 'image_path',
+    #         outfile_image => 'outfile_path',
+    #         results_outfile => 'results_outfile_path',
+    #     },
+    #     'count_sift' => {
+    #         image_type_name => "image_analysis_sift",
+    #         trait_name => "count_sift",
+    #         script => 'ImageProcess/CalculatePhenotypeSift.py',
+    #         input_image => 'image_paths',
+    #         outfile_image => 'outfile_paths',
+    #         results_outfile => 'results_outfile_path',
+    #     }
+    # );
 
     my $image_type_name = $service_details{$service}->{'image_type_name'};
 

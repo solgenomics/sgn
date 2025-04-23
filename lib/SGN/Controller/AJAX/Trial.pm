@@ -180,6 +180,8 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
 
+    
+
     my $row_in_design_number = $c->req->param('row_in_design_number');
     my $col_in_design_number = $c->req->param('col_in_design_number');
     my $no_of_rep_times = $c->req->param('no_of_rep_times');
@@ -187,6 +189,13 @@ sub generate_experimental_design_POST : Args(0) {
     my $unreplicated_stock_list = $c->req->param('unreplicated_stock_list');
     my $replicated_stock_list = $c->req->param('replicated_stock_list');
     my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
+
+    if ($design_type eq 'URDD'){
+        if (!$row_in_design_number || !$col_in_design_number){
+            $c->stash->{rest} = { error => "You need to provide number of rows and cols for a unreplicated diagonal design."};
+            return;
+        }
+    }
 
     my @replicated_stocks;
     if ($c->req->param('replicated_stock_list')) {
@@ -204,7 +213,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $use_same_layout = $c->req->param('use_same_layout');
     my $number_of_checks = scalar(@control_names_crbd);
 
-    if ($design_type eq "RCBD" || $design_type eq "RRC" || $design_type eq "DRRC" ||$design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
+    if ($design_type eq "RCBD" || $design_type eq "RRC" || $design_type eq "DRRC" || $design_type eq "URDD" ||$design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
         if (@control_names_crbd) {
             @stock_names = (@stock_names, @control_names_crbd);
         }
