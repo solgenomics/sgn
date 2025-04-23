@@ -25,40 +25,36 @@ print(n_blocks)
 print(serie)
 
 ## Preparing design
-library(agricolae)
+library(FielDHub)
 library(dplyr)
 
 all_entries <- c(treatments, controls)
 new_seed <- sample(1:1e6, 1)
 
-
-error_message <- NULL
-outdesign <- tryCatch({
-	design.rcbd(all_entries, n_rep, serie = serie, seed = new_seed, kinds = "Wichmann-Hill")
-}, error = function(e) {
-	error_message <<- e$message
-	return(NULL)
-})
+init_plot = 1
+if( serie == 2 ){ init_plot = 101}
+if( serie == 3 ){ init_plot = 1001}
 
 
-if (!is.null(error_message)) {
-    out_message <- paste0(basefile, ".message")
-    sink(out_message)
-    write.table(out_message, quote = FALSE, sep = '\t', row.names = FALSE)
-    sink()
-  
-} else {
-	book <- outdesign$book
-    book$rep <- book$block
+## Design
+outdesign <- RCBD(t = length(all_entries), reps = n_blocks, plotNumber = init_plot, seed = new_seed)
 
-	## setting controls
-	book$is_control <- 0
-	book[book$all_entries %in% controls, "is_control"] <- 1
-	book <- book[book$block != 0, ]
-	head(book, 10)
+## Extracting field book
+book <- outdesign$fieldBook
 
-	outfile <- paste0(basefile, ".design")
-	sink(outfile)
-	write.table(book, quote = FALSE, sep = '\t', row.names = FALSE)
-	sink()
-}
+## Adding treatment names
+book$TREATMENT <- all_entries[match(book$TREATMENT, paste0("T", seq_along(all_entries)))]
+book$block <- book$REP
+
+## setting controls
+book$is_control <- 0
+book[book$TREATMENT %in% controls, "is_control"] <- 1
+book <- book %>% select(PLOT, block, TREATMENT, REP, is_control)
+
+colnames(book) <- c("plots", "block", "all_entries", "rep", "is_control")
+head(book, 10)
+
+outfile <- paste0(basefile, ".design")
+sink(outfile)
+write.table(book, quote = FALSE, sep = '\t', row.names = FALSE)
+sink()
