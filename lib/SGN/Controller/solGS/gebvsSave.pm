@@ -35,7 +35,7 @@ sub gebvs_result_details :Path('/solgs/gebvs/result/details') Args() {
         my $analysis_details;
 
         eval {	
-            $analysis_details = $self->structure_gebvs_result_details($c, $params);
+            $analysis_details = $self->structure_prediction_result_details($c, $params);
         };
 
         if ($@) {
@@ -48,10 +48,10 @@ sub gebvs_result_details :Path('/solgs/gebvs/result/details') Args() {
 
 }
 
-sub structure_gebvs_result_details {
+sub structure_prediction_result_details {
     my ($self, $c, $params) = @_;
 
-    my $gebvs = $self->structure_gebvs_values($c, $params);
+    my $gebvs = $self->structure_output_values($c, $params);
     # print Dumper $gebvs;
     my @accessions = keys %$gebvs;
 
@@ -62,9 +62,15 @@ sub structure_gebvs_result_details {
     my $breeding_prog_id = $c->controller('solGS::AnalysisSave')->analysis_breeding_prog($c);
     my $analysis_year = $c->controller('solGS::AnalysisSave')->analysis_year($c);
 
+    my $analysis_result_save_type = $c->stash->{analysis_result_save_type};
+    print "analysis_result_save_type: $analysis_result_save_type\n";
+
+    my $analysis_name = $log->{analysis_name};
+    $analysis_name .= " -- $analysis_result_save_type" if $analysis_result_save_type;
+    print "analysis_name: $analysis_name\n";
     my $details = {
         'analysis_to_save_boolean' => 'yes',
-        'analysis_name' => $log->{analysis_name},
+        'analysis_name' => $analysis_name,
         'analysis_description' => $log->{training_pop_desc},
         'analysis_year' => $analysis_year,
         'analysis_breeding_program_id' => $breeding_prog_id,
@@ -205,37 +211,50 @@ sub get_combined_gebvs_genetic_values_file {
 }
 
 
-sub structure_gebvs_values {
+sub structure_output_values {
     my ($self, $c, $params) = @_;
 
-    # my $trait_name = $c->controller('solGS::AnalysisSave')->extended_trait_name($c, $params->{trait_id});
+    my $trait_name = $c->controller('solGS::AnalysisSave')->extended_trait_name($c, $params->{trait_id});
     my $col_names = $self->format_output_col_names($c, $params);
 
     # my $gebvs = $self->gebvs_values($c, $params);
-    my $gebvs = $self->get_combined_gebvs_genetic_values($c, $params);
-    my $gebvs_ref = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($gebvs);
-
-    my %gebvs_hash;
-    my $now = DateTime->now();
-    my $timestamp = $now->ymd()."T".$now->hms();
-
-    my $user = $c->controller('solGS::AnalysisQueue')->get_user_detail($c);
-    my $user_name = $user->{user_name};
-
-    my @accessions = keys %$gebvs_ref;
-
-    foreach my $accession (@accessions) {
-
-        for (my $i=0;  $i < scalar(@$col_names);  $i++) {
-				my $col_name = $col_names->[$i];
-		
-				$gebvs_hash{$accession}{$col_name} = 
-					[$gebvs_ref->{$accession}->[$i], $timestamp, $user_name, "", ""];
-			}
+    my $output_values;
+    my $analysis_result_save_type = $c->stash->{analysis_result_save_type};
+    if ($analysis_result_save_type =~ /gebvs/) {
+        $output_values = $self->gebvs_values($c, $params);
+    } elsif ($analysis_result_save_type =~ /genetic_values/) {
+        $output_values = $self->get_genetic_values($c, $params);
     }
 
-    return \%gebvs_hash;
+    # my $gebvs = $self->get_combined_gebvs_genetic_values($c, $params);
 
+    if ($output_values) {
+        my $output_values_ref = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($output_values);
+
+        my %output_values_hash;
+        my $now = DateTime->now();
+        my $timestamp = $now->ymd()."T".$now->hms();
+
+        my $user = $c->controller('solGS::AnalysisQueue')->get_user_detail($c);
+        my $user_name = $user->{user_name};
+
+        my @accessions = keys %$output_values_ref;
+
+        foreach my $accession (@accessions) {
+
+            for (my $i=0;  $i < scalar(@$col_names);  $i++) {
+                    my $col_name = $col_names->[$i];
+            
+                    $output_values_hash{$accession}{$col_name} = 
+                        [$output_values_ref->{$accession}->[$i], $timestamp, $user_name, "", ""];
+                }
+        }
+
+        return \%output_values_hash;
+    } else {
+        $c->stash->{rest}{error} = 'No prediction values found';
+        return;
+    }
 }
 
 
