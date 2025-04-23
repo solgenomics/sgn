@@ -453,7 +453,7 @@ sub run_model {
     my $backend = shift || 'Slurm';
     my $cluster_host = shift || "localhost";
     my $cluster_shared_tempdir = shift;
-	my $job_record_config = shift;
+	my $job_config = shift;
 
     my $random_factors = '"'.join('","', @{$self->random_factors()}).'"';
     my $fixed_factors = '"'.join('","',@{$self->fixed_factors()}).'"';
@@ -521,14 +521,14 @@ sub run_model {
 	my $cxgn_tools_run_config = { backend => $backend, temp_base => dirname($self->tempfile()), submit_host => $cluster_host };
 	# my $ctr = CXGN::Tools::Run->new( $cxgn_tools_run_config );
 	my $job = CXGN::Job->new({
-		schema => $job_record_config->{schema},
-		people_schema => $job_record_config->{people_schema},
-		sp_person_id => $job_record_config->{user},
+		schema => $job_config->{schema},
+		people_schema => $job_config->{people_schema},
+		sp_person_id => $job_config->{user},
 		cmd => $cmd,
 		cxgn_tools_run_config => $cxgn_tools_run_config,
-		name => $job_record_config->{name},
+		name => $job_config->{name},
 		job_type => 'mixed_model_analysis',
-		finish_logfile => $job_record_config->{finish_logfile}
+		finish_logfile => $job_config->{finish_logfile}
 	});
 
 	$job->submit();
