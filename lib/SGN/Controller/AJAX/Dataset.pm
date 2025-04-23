@@ -160,7 +160,7 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
         $stat_file_path
     ));
 
-    my $job_record = CXGN::Job->new({
+    my $job = CXGN::Job->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user,
@@ -171,22 +171,28 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
         cxgn_tools_run_config => $cxgn_tools_run_config,
         finish_logfile => $c->config->{job_finish_log}
     });
+
+    $job->submit();
+
+    while($job->alive()) {
+        sleep(1);
+    }
     # run cluster with R
-    my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
+    # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
 
-    $job_record->update_status("submitted");
-    $cmd->run_cluster(
-        "Rscript ",
-        $c->config->{basepath} . "/R/dataset/rosner_test.R",
-        $trait_file_path,
-        $stat_file_path,
-        $job_record->generate_finish_timestamp_cmd()
-    );
-    $cmd->alive;
-    $cmd->is_cluster(1);
-    $cmd->wait;
+    # $job_record->update_status("submitted");
+    # $cmd->run_cluster(
+    #     "Rscript ",
+    #     $c->config->{basepath} . "/R/dataset/rosner_test.R",
+    #     $trait_file_path,
+    #     $stat_file_path,
+    #     $job_record->generate_finish_timestamp_cmd()
+    # );
+    # $cmd->alive;
+    # $cmd->is_cluster(1);
+    # $cmd->wait;
 
-    $job_record->update_status("finished");
+    # $job_record->update_status("finished");
 
     # print STDERR Dumper $stat_file_path;
     my $aoa = csv (in => $stat_file_path);   # as array of hash

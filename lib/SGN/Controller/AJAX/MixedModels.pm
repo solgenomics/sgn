@@ -189,7 +189,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
         schema => $c->dbic_schema("Bio::Chado::Schema"), 
         people_schema => $c->dbic_schema("CXGN::People::Schema"), 
         finish_logfile => $c->config->{job_finish_log},
-        name => "mixed model computation"
+        name => "$dependent_variables mixed model computation"
     };
     my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models", $job_record_config);
     

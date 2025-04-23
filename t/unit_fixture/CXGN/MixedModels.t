@@ -30,7 +30,6 @@ $ds->years( [ "2014", "2015" ]);
 
 $ds->store();
 
-
 my $dsf = CXGN::Dataset::File->new( { people_schema => $f->people_schema(), schema => $f->bcs_schema(), sp_dataset_id => $ds->sp_dataset_id(), quotes => 0 });
 
 $dsf->file_name($tempfile);
@@ -74,6 +73,7 @@ foreach my $engine ("lme4", "sommer") {
     }
     
     $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile) );
+    sleep(5);
 
     print STDERR "Using tempfile base ".$mm->tempfile()."\n";
 
@@ -119,7 +119,7 @@ is($model_string, "germplasmName + (1|replicate)", "model string test for BLUEs"
 
 $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile));
 
-sleep(2);
+sleep(5);
 
  SKIP: { 
      skip "Skip if run under git", 2 unless $SYSTEM_MODE ne "GITACTION"; 

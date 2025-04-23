@@ -367,7 +367,7 @@ sub read_finish_timestamp {
     }
 
     if (!$logfile) {
-        return "";
+        die "No logfile to read.\n";
     }
 
     my @rows = read_file( $logfile, { binmode => ':utf8' } );
@@ -489,12 +489,7 @@ sub submit {
 
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
         print STDERR "Submitting job: \n$cmd\n";
-        if ($self->cxgn_tools_run_config->{is_cluster} == 1){
-            $job->run_cluster($cmd.$finish_timestamp_cmd);
-        } else {
-            $job->run_async($cmd.$finish_timestamp_cmd);
-            $job->wait();
-        }
+        $job->run_cluster($cmd.$finish_timestamp_cmd);
         
         $backend_id = $job->cluster_job_id();
         $status = 'submitted';
@@ -647,6 +642,47 @@ sub get_default_cxgn_tools_run_config {
     };
 
     return $cxgn_tools_run_config;
+}
+
+=head2 wait()
+
+Blocking wait. Returns control when the job is finished. 
+
+=cut 
+
+sub wait {
+    my $self = shift;
+
+    while($self->alive()) {
+        sleep (1);
+    }
+
+    return;
+}
+
+=head2 alive()
+
+Returns true as long as squeue says job is still alive.
+
+=cut
+
+sub alive {
+    my $self = shift;
+
+    if (!$self->has_backend_id()) {
+        die "Job has not been submitted!";
+    }
+
+    my $backend_id = $self->backend_id();
+
+    my $squeue = `squeue --job=$backend_id`;
+    my @job_results = split("\n", $squeue);
+
+    if (scalar(@job_results) < 2) { #Squeue gives only header line if no job to show
+       return 0;
+    } else {
+        return 1;
+    }
 }
 
 =head1 CLASS METHODS

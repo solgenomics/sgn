@@ -363,7 +363,7 @@ sub run_model {
     my $error;
     my $executable;
 
-	my $job_record;
+	my $job;
     eval { 
 	
 	if ($self->engine() eq "lme4") {
@@ -408,31 +408,37 @@ sub run_model {
 	
 	print STDERR "running R command $clean_tempfile...\n";
 	
-	my $cxgn_tools_run_config = { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host };
-	my $ctr = CXGN::Tools::Run->new( $cxgn_tools_run_config );
-	$job_record = CXGN::Job->new({
+	my $cxgn_tools_run_config = { backend => $backend, temp_base => dirname($self->tempfile()), submit_host => $cluster_host };
+	# my $ctr = CXGN::Tools::Run->new( $cxgn_tools_run_config );
+	$job = CXGN::Job->new({
 		schema => $job_record_config->{schema},
 		people_schema => $job_record_config->{people_schema},
 		sp_person_id => $job_record_config->{user},
 		cmd => $cmd,
 		cxgn_tools_run_config => $cxgn_tools_run_config,
 		name => $job_record_config->{name},
-		job_type => 'phenotypic_analysis',
+		job_type => 'mixed_model_analysis',
 		finish_logfile => $job_record_config->{finish_logfile}
 	});
+
+	$job->submit();
+
+	# $job_record->update_status("submitted");
+	# $ctr->run_cluster($cmd.$job_record->generate_finish_timestamp_cmd());
 	
-	$job_record->update_status("submitted");
-	$ctr->run_cluster($cmd.$job_record->generate_finish_timestamp_cmd());
-	
-	while ($ctr->alive()) {
-	    sleep(1);
+	# while ($ctr->alive()) {
+	#     sleep(1);
+	# }
+
+	while ($job->alive()) {
+		sleep (1);
 	}
 
-	my $finished = $job_record->read_finish_timestamp();
+	my $finished = $job->read_finish_timestamp();
 	if (!$finished) {
-		$job_record->update_status("failed");
+		$job->update_status("failed");
 	} else {
-		$job_record->update_status("finished");
+		$job->update_status("finished");
 	}
 	
 	# replace the R-compatible traits with original trait names

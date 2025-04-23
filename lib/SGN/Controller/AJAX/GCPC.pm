@@ -402,7 +402,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         # don't block and wait if the cluster looks full
         max_cluster_jobs => 1_000_000_000,
     };
-    my $job_record = CXGN::Job->new({
+    my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema, 
         sp_person_id => $sp_person_id,
@@ -413,30 +413,36 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         finish_logfile => $c->config->{job_finish_log},
         results_page => '/tools/gcpc'
     });
-    my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
-    $job_record->update_status("submitted");
-    $cmd->run_cluster(
-	"Rscript ",
-	$c->config->{basepath} . "/R/GCPC.R",
-	$pheno_filepath.".clean",
-	$geno_filepath,
-	"'".$si_traits."'",
-	"'".$si_weights."'",
-	"'".$plant_sex_variable_name_R."'",
-  "'".$fixed_factors."'",
-  "'".$random_factors."'",
-  $job_record->generate_finish_timestamp_cmd()
-  );
+#     my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
+#     $job_record->update_status("submitted");
+#     $cmd->run_cluster(
+# 	"Rscript ",
+# 	$c->config->{basepath} . "/R/GCPC.R",
+# 	$pheno_filepath.".clean",
+# 	$geno_filepath,
+# 	"'".$si_traits."'",
+# 	"'".$si_weights."'",
+# 	"'".$plant_sex_variable_name_R."'",
+#   "'".$fixed_factors."'",
+#   "'".$random_factors."'",
+#   $job_record->generate_finish_timestamp_cmd()
+#   );
 
-    while ($cmd->alive) {
-	sleep(1);
+    # while ($cmd->alive) {
+	# sleep(1);
+    # }
+
+    $job->submit();
+
+    while($job->alive()){
+        sleep(1);
     }
 
-    my $finished = $job_record->read_finish_timestamp();
+    my $finished = $job->read_finish_timestamp();
 	if (!$finished) {
-		$job_record->update_status("failed");
+		$job->update_status("failed");
 	} else {
-		$job_record->update_status("finished");
+		$job->update_status("finished");
 	}
 
 #    my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";

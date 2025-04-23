@@ -593,7 +593,7 @@ sub download_arm {
                 max_cluster_jobs => 1_000_000_000,
             };
 
-            my $download_record = CXGN::Job->new({
+            my $download = CXGN::Job->new({
                 schema => $self->bcs_schema,
                 people_schema => $self->people_schema,
                 sp_person_id => $job_record_config->{calling_user_id},
@@ -603,15 +603,28 @@ sub download_arm {
                 finish_logfile => $job_record_config->{job_finish_log},
                 cxgn_tools_run_config => $cxgn_tools_run_config
             });
+
+            $download->submit();
             # Do the GRM on the cluster (currently not called anywhere)
-            my $plot_cmd = CXGN::Tools::Run->new(
-               $cxgn_tools_run_config
-            );
-            $download_record->update_status("submitted");
-            $plot_cmd->run_cluster($heatmap_cmd.$download_record->generate_finish_timestamp_cmd());
+            # my $plot_cmd = CXGN::Tools::Run->new(
+            #    $cxgn_tools_run_config
+            # );
+            # $download_record->update_status("submitted");
+            # $plot_cmd->run_cluster($heatmap_cmd.$download_record->generate_finish_timestamp_cmd());
             
-            $plot_cmd->is_cluster(1);
-            $plot_cmd->wait;
+            # $plot_cmd->is_cluster(1);
+            # $plot_cmd->wait;
+
+            while($download->alive()){
+                sleep(1);
+            }
+
+            my $finished = $download->read_finish_timestamp();
+            if (!$finished) {
+                $download->update_status("failed");
+            } else {
+                $download->update_status("finished");
+            }
 
             if ($return_type eq 'filehandle') {
                 open my $out_copy, '<', $arm_tempfile_out or die "Can't open output file: $!";

@@ -189,7 +189,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     ));
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
-    my $job_record = CXGN::Job->new({
+    my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema,
         sp_person_id => $user,
@@ -200,32 +200,38 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
         finish_logfile => $c->config->{job_finish_log}
     });
 
-    my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
-    $job_record->update_status("submitted");
+    $job->submit();
 
-    $cmd->run_cluster(
-            "Rscript ",
-            $c->config->{basepath} . "/R/stability/ammi_script.R",
-            $pheno_filepath,
-            $trait_id,
-            $imput_id,
-            $method,
-            $jsonFile,
-            $graphFile,
-            $messageFile,
-            $jsonSummary,
-            $job_record->generate_finish_timestamp_cmd()
-    );
+    # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
+    # $job_record->update_status("submitted");
 
-    while ($cmd->alive) { 
-	sleep(1);
+    # $cmd->run_cluster(
+    #         "Rscript ",
+    #         $c->config->{basepath} . "/R/stability/ammi_script.R",
+    #         $pheno_filepath,
+    #         $trait_id,
+    #         $imput_id,
+    #         $method,
+    #         $jsonFile,
+    #         $graphFile,
+    #         $messageFile,
+    #         $jsonSummary,
+    #         $job_record->generate_finish_timestamp_cmd()
+    # );
+
+    # while ($cmd->alive) { 
+	# sleep(1);
+    # }
+
+    while ($job->alive()) {
+        sleep(1);
     }
 
-    my $finished = $job_record->read_finish_timestamp();
+    my $finished = $job->read_finish_timestamp();
 	if (!$finished) {
-		$job_record->update_status("failed");
+		$job->update_status("failed");
 	} else {
-		$job_record->update_status("finished");
+		$job->update_status("finished");
 	}
 
     my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";

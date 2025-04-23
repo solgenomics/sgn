@@ -175,7 +175,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         $h2CsvFile,
         $errorFile
     ));
-    my $job_record = CXGN::Job->new({
+    my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema, 
         sp_person_id => $sp_person_id,
@@ -186,31 +186,37 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         finish_logfile => $c->config->{job_finish_log},
         results_page =>  '/tools/heritability'
     });
-    my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
+    # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
 
-        print STDERR Dumper $pheno_filepath;
+    #     print STDERR Dumper $pheno_filepath;
 
-    # my $job;
-    $job_record->update_status("submitted");
-    $cmd->run_cluster(
-            "Rscript ",
-            $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
-            $pheno_filepath,
-            $trait_id,
-            $h2File,
-            $h2CsvFile,
-            $errorFile,
-            $job_record->generate_finish_timestamp_cmd()
-    );
-    $cmd->alive;
-    $cmd->is_cluster(1);
-    $cmd->wait;
+    # # my $job;
+    # $job_record->update_status("submitted");
+    # $cmd->run_cluster(
+    #         "Rscript ",
+    #         $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
+    #         $pheno_filepath,
+    #         $trait_id,
+    #         $h2File,
+    #         $h2CsvFile,
+    #         $errorFile,
+    #         $job_record->generate_finish_timestamp_cmd()
+    # );
+    # $cmd->alive;
+    # $cmd->is_cluster(1);
+    # $cmd->wait;
 
-    my $finished = $job_record->read_finish_timestamp();
+    $job->submit();
+
+    while ($job->alive()) {
+        sleep(1);
+    }
+
+    my $finished = $job->read_finish_timestamp();
 	if (!$finished) {
-		$job_record->update_status("failed");
+		$job->update_status("failed");
 	} else {
-		$job_record->update_status("finished");
+		$job->update_status("finished");
 	}
    
     my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";

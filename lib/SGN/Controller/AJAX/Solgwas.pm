@@ -500,7 +500,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
-    my $job_record = CXGN::Job->new({
+    my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema,
         sp_person_id => $user,
@@ -512,32 +512,38 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         results_page => '/tools/solgwas'
     });
 
-    $job_record->update_status("submitted");
+    $job->submit();
 
-    my $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
+    while($job->alive()){
+        sleep(1);
+    }
 
-    $cmd->run_cluster(
-            "Rscript ",
-            $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
-            $pheno_filepath,
-            $geno_filepath2,
-            $trait_id,
-            $figure3file,
-            $figure4file,
-            $pc_check,
-            $kinship_check,
-            $gwasResultsPhenoCsv,
-            $finish_timestamp_cmd
-    );
+    # $job_record->update_status("submitted");
 
-    $cmd->is_cluster(1);
-    $cmd->wait;
+    # my $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
 
-    my $finished = $job_record->read_finish_timestamp();
+    # $cmd->run_cluster(
+    #         "Rscript ",
+    #         $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
+    #         $pheno_filepath,
+    #         $geno_filepath2,
+    #         $trait_id,
+    #         $figure3file,
+    #         $figure4file,
+    #         $pc_check,
+    #         $kinship_check,
+    #         $gwasResultsPhenoCsv,
+    #         $finish_timestamp_cmd
+    # );
+
+    # $cmd->is_cluster(1);
+    # $cmd->wait;
+
+    my $finished = $job->read_finish_timestamp();
 	if (!$finished) {
-		$job_record->update_status("failed");
+		$job->update_status("failed");
 	} else {
-		$job_record->update_status("finished");
+		$job->update_status("finished");
 	}
 
     my $figure_path = "./documents/tempfiles/solgwas_files/";

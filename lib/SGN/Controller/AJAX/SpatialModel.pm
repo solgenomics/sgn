@@ -154,7 +154,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
         $pheno_filepath.".clean",
         "'".$si_traits."'"
     ));
-    my $job_record = CXGN::Job->new({
+    my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema,
         sp_person_id => $sp_person_id,
@@ -166,19 +166,24 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
         finish_logfile => $c->config->{job_finish_log}
     });
 
-    my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
+    # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
 
-    $job_record->update_status("submitted");
-        $cmd->run_cluster(
-        "Rscript ",
-        $c->config->{basepath} . "/R/spatial_modeling.R",
-        $pheno_filepath.".clean",
-        "'".$si_traits."'",
-        $job_record->generate_finish_timestamp_cmd()
-	);
+    # $job_record->update_status("submitted");
+    #     $cmd->run_cluster(
+    #     "Rscript ",
+    #     $c->config->{basepath} . "/R/spatial_modeling.R",
+    #     $pheno_filepath.".clean",
+    #     "'".$si_traits."'",
+    #     $job_record->generate_finish_timestamp_cmd()
+	# );
 
-    while ($cmd->alive) {
-	sleep(1);
+    # while ($cmd->alive) {
+	# sleep(1);
+    # }
+
+    $job->submit();
+    while($job->alive()){
+        sleep(1);
     }
 
 #    my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
