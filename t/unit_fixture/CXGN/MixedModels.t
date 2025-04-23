@@ -18,6 +18,14 @@ my $dir = Cwd::cwd();
 # create tempfile 
 my ($fh, $tempfile) = tempfile( "mixedmodelsXXXXXX", DIR => $dir."/static/documents/tempfiles/", UNLINK => 0 );
 
+my $job_config = {
+    schema => $f->bcs_schema(),
+    people_schema => $f->people_schema(),
+    name => 'unit_fixture mixed model test',
+    user => 41,
+    job_finish_log => "/home/production/volume/logs/job_finish.log"
+};
+
 print STDERR "Using tempfile $tempfile\n";
 close($fh);
 
@@ -29,6 +37,7 @@ my $ds = CXGN::Dataset->new( { people_schema => $f->people_schema(), schema => $
 $ds->years( [ "2014", "2015" ]);
 
 $ds->store();
+
 
 my $dsf = CXGN::Dataset::File->new( { people_schema => $f->people_schema(), schema => $f->bcs_schema(), sp_dataset_id => $ds->sp_dataset_id(), quotes => 0 });
 
@@ -72,8 +81,7 @@ foreach my $engine ("lme4", "sommer") {
 	print STDERR "MODEL STRING: $model_string\n";
     }
     
-    $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile) );
-    sleep(5);
+    $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile), $job_config );
 
     print STDERR "Using tempfile base ".$mm->tempfile()."\n";
 
@@ -117,9 +125,9 @@ print STDERR "MODEL STRING = $model_string\n";
 
 is($model_string, "germplasmName + (1|replicate)", "model string test for BLUEs");
 
-$mm->run_model("Slurm", "localhost", dirname($pheno_tempfile));
+$mm->run_model("Slurm", "localhost", dirname($pheno_tempfile), $job_config);
 
-sleep(5);
+sleep(2);
 
  SKIP: { 
      skip "Skip if run under git", 2 unless $SYSTEM_MODE ne "GITACTION"; 

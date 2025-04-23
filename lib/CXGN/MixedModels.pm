@@ -463,7 +463,6 @@ sub run_model {
     my $error;
     my $executable;
 
-	my $job;
     eval { 
 	
 	if ($self->engine() eq "lme4") {
@@ -503,7 +502,7 @@ sub run_model {
 	elsif ($self->engine() eq "sommer" || $self->engine() eq "spl2D"){
 	    print $F "fixed_model <- \"$model->[0]\"\n";
 	    print $F "random_model <- \"$model->[1]\"\n";
-	    print Dumper($fixed_factors);
+	    # print Dumper($fixed_factors);
 	}
 	close($F);
 
@@ -515,13 +514,13 @@ sub run_model {
 	# run r script to create model
 	#
 	my $cmd = "R CMD BATCH  '--args datafile=\"".$clean_tempfile."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
-	print STDERR "running R command $cmd...\n";
+	# print STDERR "running R command $cmd...\n";
 	
-	print STDERR "running R command $clean_tempfile...\n";
+	# print STDERR "running R command $clean_tempfile...\n";
 	
 	my $cxgn_tools_run_config = { backend => $backend, temp_base => dirname($self->tempfile()), submit_host => $cluster_host };
 	# my $ctr = CXGN::Tools::Run->new( $cxgn_tools_run_config );
-	$job = CXGN::Job->new({
+	my $job = CXGN::Job->new({
 		schema => $job_record_config->{schema},
 		people_schema => $job_record_config->{people_schema},
 		sp_person_id => $job_record_config->{user},
