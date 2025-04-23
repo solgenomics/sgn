@@ -208,6 +208,7 @@ sub search {
     my $field_trial_is_planned_to_cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_trial_is_planned_to_cross', 'project_property')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $analysis_instance_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
     my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -275,7 +276,7 @@ sub search {
                     $self->plot_list(\@plots_list);
                 }
             }
-            
+
             if ($self->data_level eq 'plot'){
                 if (!$self->plot_list){
                     $self->plot_list([]);
@@ -435,7 +436,6 @@ sub search {
                     external_references.value ".$design_layout_select;
 
     my @where_clause;
-
     my $accession_list = $self->accession_list;
     print STDERR "Native search Accession list is ".Dumper($accession_list)."\n";
 
@@ -560,7 +560,8 @@ sub search {
         push @where_clause, "observationunit.type_id = $stock_type_id"; #ONLY plot or plant or subplot or tissue_sample
     } else {
         push @where_clause, "(observationunit.type_id = $plot_type_id 
-        OR observationunit.type_id = $plant_type_id 
+        OR observationunit.type_id = $plant_type_id
+        OR observationunit.type_id = $analysis_instance_id 
         OR observationunit.type_id = $subplot_type_id 
         OR observationunit.type_id = $tissue_sample_type_id)"; #plots AND plants AND subplots AND tissue_samples
     }

@@ -462,17 +462,26 @@ jQuery(document).ready(function () {
     parseArgs(editable_stockprops_search);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
-      var name_links = stock_table.column(0).data();
-      var names = [];
+        const name_links = stock_table.column(0).data();
+        let names = [];
+        for (let i = 0; i < name_links.length; i++) { //extract text from anchor tags
+            names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
 
-      for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
-        names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
-      }
+        let is_obsolete = '';
+        is_obsolete = jQuery("#obsolete_stock_search_term option:selected").val();
 
-      jQuery('#search_result_names').html(names);
-      addToListMenu('results_to_list_menu', 'search_result_names', {
-        listType: jQuery('#stock_type_select option:selected').text()+'s' || 'null'
-      });
+        let  list_type = '';
+        if (is_obsolete == 'true') {
+            list_type = 'obsoleted_stocks';
+        } else {
+            list_type = jQuery('#stock_type_select option:selected').text()+'s' || 'null';
+        }
+
+        jQuery('#search_result_names').html(names);
+        addToListMenu('results_to_list_menu', 'search_result_names', {
+            listType: list_type
+        });
     });
 
    jQuery('#submit_stock_search').click( function() {
@@ -597,7 +606,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
               d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
               d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
               d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
-              d.is_obsolete = jQuery("#obsolete_stock_search_term option:selected").val() 
+              d.is_obsolete = jQuery("#obsolete_stock_search_term option:selected").val()
             }
         }
     });
