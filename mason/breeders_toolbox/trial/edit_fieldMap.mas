@@ -444,7 +444,7 @@ jQuery("#correct_spatial").click(function() {
         jQuery('#generic_save_analysis_model_application_version').val('0.01');
         jQuery('#generic_save_analysis_model_type').val('spatial_model_sommer');
         jQuery('#generic_save_analysis_result_values').val(JSON.stringify(nested_fitted_data));
-        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_plot_names');
+        jQuery('#generic_save_analysis_result_values_type').val('analysis_instance');
         jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase mixed model analysis tool" }');
         //jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
         jQuery('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
