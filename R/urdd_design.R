@@ -15,13 +15,21 @@ if (length(args) == 0) {
 ## Source Files
 source(paramfile)
 basefile <- tools::file_path_sans_ext(paramfile)
+if (!exists("engine", inherits = FALSE)) engine <- "breedbase"
+
 
 ## Entry stocks
-n_stocks <- length(stocks)
+if(engine != "trial_allocation"){
+   n_stocks <- length(stocks)
+   treatments <- stocks[!stocks %in% controls]
+} else {
+   n_stocks <- length(c(treatments, controls))
+   n_lines <- length(treatments)
+}
+
 n_checks <- length(controls)
 
-## Separating treatments from checks
-treatments <- stocks[!stocks %in% controls]
+
 
 ## Setting the same number of treatments per block
 if (is.null(n_blocks)) {
@@ -35,7 +43,14 @@ if (is.null(n_blocks)) {
 n_controls <- length(controls)
 
 type_design <- if (n_blocks > 1) "DBUDC" else "SUDC"
-layout_type <- if (layout == "serpentine") "serpentine" else "cartesian"
+
+
+if( engine == "trial_allocation"){
+  layout_type <- "cartesian"
+} else {
+  layout_type <- if (layout == "serpentine") "serpentine" else "cartesian"
+}
+
 
 treatment_list <- data.frame(
   entry = seq_len(n_stocks),
@@ -68,6 +83,7 @@ output <- capture.output({
     kindExpt = type_design,
     blocks = n_ind_block,
     checks = n_checks,
+    splitBy = "row",
     l = 1,
     data = treatment_list
   )
@@ -84,6 +100,14 @@ field_book <- multi_diag$fieldBook
 ## Fixing names to match with Breedbase
 field_book$EXPT <- gsub("Block", "", field_book$EXPT)
 field_book$CHECKS[field_book$CHECKS > 0] <- 1
+
+if(engine == 'trial_allocation'){
+  library(dplyr)
+  field_book <- field_book %>% select(PLOT, EXPT, TREATMENT, LOCATION, CHECKS, ROW)
+  colnames(field_book) <- c("plots", "block", "all_entries", "rep", "is_control")
+  field_book <- field_book[order(field_book$plots),]
+}
+
 
 print(head(field_book, 10))
 

@@ -240,7 +240,17 @@ document.addEventListener('DOMContentLoaded', () => {
             <option>RCBD</option>
             <option>Augmented Row-Column</option>
             <option>Row-Column Design</option>
-            <option>Un-Replicated Diaginal</option>
+            <option>Doubly-Resolvable Row-Column</option>
+            <option>Un-Replicated Diagonal</option>
+          </select>
+        </label>
+      </div>
+
+      <div class='mb-4'>
+        <label>Layout Type
+          <select id='tlayout${i}' class='w-full border rounded px-2 py-1'>
+            <option value="serpentine">Serpentine</option>
+            <option value="cartesian">Cartesian</option>
           </select>
         </label>
       </div>
@@ -281,7 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
           Generate Design
         </button>
       </div>
-
     `;
 
     qs('#trial-details').appendChild(d);
@@ -294,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
     designSelect.addEventListener('change', () => {
       const isRCBD = designSelect.value === 'RCBD';
 
-      // Replace Reps/Blocks
       repsblocks.innerHTML = isRCBD
         ? `
           <label>Reps / Blocks
@@ -311,7 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </label>
         `;
 
-      // Replace Row/Col
       rowcol.innerHTML = isRCBD
         ? `
           <label>Number of Rows per Block
@@ -433,6 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.generateDesign = function(i, rowStart = 0, colStart = 0, btn) {
     const design = $(`#tdesign${i}`).val();
     const isRCBD = design === 'RCBD';
+    const layoutType = $(`#tlayout${i}`).val();
 
     const trial = {
       name: $(`#tname${i}`).val(),
@@ -441,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
       design: design,
       treatment_list_id: $(`#ttreatments${i}`).val(),
       control_list_id: $(`#tcontrols${i}`).val(),
+      layout_type: layoutType, 
       reps: isRCBD ? 0 : parseInt($(`#treps${i}`).val()) || 0,
       blocks: isRCBD ? parseInt($(`#trepsblocks${i}`).val()) || 0 : parseInt($(`#tblocks${i}`).val()) || 0,
       rows: isRCBD ? parseInt($(`#tblockrows${i}`).val()) || 0 : parseInt($(`#trows${i}`).val()) || 0,
@@ -514,100 +523,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const name   = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
     const colour = colourFor(tn);
 
-    // Remove any previously placed trial with same root
+    /* remove previously placed instance of this trial (if dragging from grid) */
     if (src === 'grid') {
       qsa(`.trial-group[data-root="${root}"]`).forEach(el => el.remove());
     }
-    
-    generateDesign(tn, row, col).done(function(response) {
-      if (response.success) {
-        const rowsWanted = response.n_row;
-        const colsWanted = response.n_col;
-        const total = rowsWanted * colsWanted;
 
-        // Place trial using design output
-        const coords = placeTrial({
-          tn,
-          name,
-          rowsWanted,
-          colsWanted,
-          total,
-          rowStart: row,
-          colStart: col,
-          colour,
-          rootId: null
-        });
-        $.ajax({
-          url: '/ajax/trialallocation/save_coordinates',
-          method: 'POST',
-          data: {
-            trial: JSON.stringify({
-              trial_name: name,
-              trial_id: tn,
-              coordinates: final_coordinates,
-              design_file: response.design_file,
-              param_file: response.param_file,
-              r_output: response.r_output
-            })
-          },
-          success: function(saveResponse) {
-            if (saveResponse.success) {
-              console.log(`Coordinates for "${name}" saved successfully.`);
-              recolorTrialPlots(tn, response.design_file, colour);
-            } else {
-              console.warn(`Save failed: ${saveResponse.error}`);
-            }
-          },
-          error: function(xhr, status, error) {
-            console.error('Error saving coordinates:', error);
-          }
-        });
-      } else {
-        alert("Design failed: " + response.error);
-      }
-    }).fail(function(xhr, status, error) {
-      console.error("AJAX error:", error);
-      alert("Error generating design.");
-    });
-    
+    /* ───── request design from server ───── */
+    generateDesign(tn, row, col)
+      .done(function (response) {
 
-  }
-  
-  function getDesignFile(designPath) {
-    $.ajax({
-      url: '/ajax/trialallocation/get_design',
-      method: 'GET',
-      dataType: 'text',
-      data: { trial_path: designPath }, // send file path as GET param
-      success: function(designText) {
-        const lines = designText.trim().split('\n');
-        const header = lines.shift().split('\t');
-
-        const blockIndex = header.indexOf('block');
-        const rowIndex = header.indexOf('row_number');
-        const colIndex = header.indexOf('col_number');
-        const controlIndex = header.indexOf('is_control');
-
-        if (blockIndex === -1 || rowIndex === -1 || colIndex === -1 || controlIndex === -1) {
-          console.error('One or more required columns (block, row_number, col_number) not found.');
+        if (!response.success) {
+          alert('Design failed: ' + response.error);
           return;
         }
 
-        lines.forEach(line => {
-          const cols = line.split('\t');
-          const block = cols[blockIndex];
-          const row = cols[rowIndex];
-          const col = cols[colIndex];
-          const control = cols[controlIndex];
-          console.log(`Block: ${block}, Row: ${row}, Col: ${col}, Control: ${control}`);
-        });
-      },
-      error: function(xhr, status, error) {
-        console.error("Failed to load design file:", error);
-      }
-    });
+        const rowsWanted = response.n_row;
+        const colsWanted = response.n_col;
+
+        /* inner helper does the actual placement + save-back */
+        const applyPlacement = (rowsWanted, colsWanted) => {
+          const total = rowsWanted * colsWanted;   // rectangular footprint
+
+          const coords = placeTrial({
+            tn,
+            name,
+            rowsWanted,
+            colsWanted,
+            total,
+            rowStart: row,
+            colStart: col,
+            colour,
+            rootId: null,
+            design: response.design
+          });
+
+          console.log('Generated coords:', coords);
+          console.log('Design file:', response.design_file);
+
+          /* save coords back to backend */
+          $.ajax({
+            url: '/ajax/trialallocation/save_coordinates',
+            method: 'POST',
+            data: {
+              trial: JSON.stringify({
+                trial_name: name,
+                trial_id: tn,
+                coordinates: coords,
+                design_file: response.design_file,
+                param_file: response.param_file,
+                r_output: response.r_output
+              })
+            },
+            success: function (saveResponse) {
+              if (saveResponse.success) {
+                console.log(`Coordinates for "${name}" saved successfully.`);
+                recolorTrialPlots(tn, response.design_file, colour);
+              } else {
+                console.warn('Save failed: ' + saveResponse.error);
+              }
+            },
+            error: function (xhr, status, error) {
+              console.error('Error saving coordinates:', error);
+            }
+          });
+        };
+
+        /* ←─── ACTUALLY RUN IT ───→ */
+        applyPlacement(rowsWanted, colsWanted);
+      })
+      .fail(function (xhr, status, error) {
+        console.error('AJAX error:', error);
+        alert('Error generating design.');
+      });
   }
 
+  
   function lighterColor(base) {
     // drop one Tailwind “step” (e.g. 400→200, 500→300, 900→700)
     return base.replace(/-(\d+)$/, (_, num) => {
@@ -680,43 +670,54 @@ document.addEventListener('DOMContentLoaded', () => {
     return false;
   }
   
-  /******** Placing Trial ********/
-  let final_coordinates = [];
-  function placeTrial({ tn, name, rowsWanted, colsWanted, total, rowStart, colStart, colour, rootId, design, rowsPerBlock, blocks }) {
-    disablePal(tn);
-    const root = rootId || uid();
-    const coords = [];
-    let r = rowStart, c = colStart;
 
-    // Attempt to place total plots, skipping over borders and unutilized
+  /******** Placing Trial ********/
+  function placeTrial({
+    tn, name,
+    rowsWanted, colsWanted, total,
+    rowStart, colStart,
+    colour, rootId,
+    design,                 // (not changed here)
+    rowsPerBlock, blocks    // (not used here yet)
+  }) {
+    disablePal(tn);
+
+    const root   = rootId || uid();
+    const coords = [];
+
+    let r = rowStart,
+        c = colStart;
+
+    /* walk row-by-row until we have the required number of plots */
     while (coords.length < total) {
+
+      /* FIX: accept only *usable* cells  ─────────────────────── */
       if (!cellIsUnused(r, c) && !manualBorders.has(key(r, c))) {
         if (trialCellExists(r, c)) {
-          alert("Please find another region to place your trial. This is occupied!");
-          return;
+          alert('Please find another region to place your trial. This is occupied!');
+          return;                          // abort placement
         }
         coords.push([r, c]);
       }
 
+      /* advance to next column / row */
       c++;
-      if (coords.length % colsWanted === 0) {
-        // Move to next row after 'colsWanted' usable plots
+      if (coords.length % colsWanted === 0) {   // finished a logical row
         c = colStart;
         r++;
       }
 
-      // Safety stop to prevent infinite loop
+      /* safety valve – prevents infinite loop if nothing fits */
       if (r > 1000) {
-        alert("Could not place trial: not enough space.");
+        alert('Could not place trial: not enough space.');
         return;
       }
     }
 
-    // Build segments from coords
+    /* group consecutive cells into “segments” so each visual row
+       becomes a single `.trial-group` div for efficient DOM use  */
     const rowsMap = {};
-    coords.forEach(([rr, cc]) => {
-      (rowsMap[rr] = rowsMap[rr] || []).push(cc);
-    });
+    coords.forEach(([rr, cc]) => ((rowsMap[rr] = rowsMap[rr] || []).push(cc)));
 
     Object.entries(rowsMap).forEach(([rr, cols]) => {
       cols.sort((a, b) => a - b);
@@ -729,45 +730,47 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    /* helper – draw one contiguous horizontal segment */
     function createSeg(rr, start, end) {
       const seg = end - start + 1;
-      const g = document.createElement('div');
-      g.className = 'trial-group';
-      g.dataset.trial = tn;
-      g.dataset.root = root;
-      g.dataset.row = rr;
-      g.dataset.col = start;
-      g.style.left = `${(start + 1) * STEP}px`;
-      g.style.top = `${(rr + 1) * STEP}px`;
-      g.style.width = `${seg * STEP - GAP}px`;
-      g.style.height = `${CELL}px`;
-      g.style.gridTemplateColumns = `repeat(${seg}, ${CELL}px)`;
-      g.draggable = true;
-      g.ondragstart = startDrag;
+      const g   = document.createElement('div');
 
+      g.className     = 'trial-group';
+      g.dataset.trial = tn;
+      g.dataset.root  = root;
+      g.dataset.row   = rr;
+      g.dataset.col   = start;
+
+      g.style.left  = `${(start + 1) * STEP}px`;
+      g.style.top   = `${(rr    + 1) * STEP}px`;
+      g.style.width = `${seg * STEP - GAP}px`;
+      g.style.height= `${CELL}px`;
+      g.style.gridTemplateColumns = `repeat(${seg}, ${CELL}px)`;
+
+      g.draggable    = true;
+      g.ondragstart  = startDrag;
+
+      /* individual plot boxes */
       for (let i = 0; i < seg; i++) {
         const b = document.createElement('div');
-        b.className = `trial-box ${colour} bg-opacity-60`;
-        b.textContent = name;
-        b.draggable = true;
-        b.ondragstart = startDrag;
-
-        /* NEW → let recolorTrialPlots find this cell */
-        b.dataset.row = rr;            // 0‑based grid row
-        b.dataset.col = start + i;     // 0‑based grid col
-
+        b.className    = `trial-box ${colour} bg-opacity-60`;
+        b.textContent  = name;
+        b.draggable    = true;
+        b.ondragstart  = startDrag;
+        b.dataset.row  = rr;          // for recoloring later
+        b.dataset.col  = start + i;
         g.appendChild(b);
       }
 
-
+      /* one “×” close button per root group */
       if (!qs(`[data-root="${root}"] .remove-btn`)) {
-        const rm = document.createElement('div');
+        const rm   = document.createElement('div');
         rm.className = 'remove-btn';
         rm.textContent = '×';
         rm.onclick = () => {
           const loading = qs('#grid-loader');
           if (loading) {
-            loading.querySelector('span').textContent = "Removing trial...";
+            loading.querySelector('span').textContent = 'Removing trial...';
             loading.classList.remove('hidden');
             setTimeout(() => {
               qsa(`[data-root="${root}"]`).forEach(el => el.remove());
@@ -784,10 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       qs('#field-zoom-container').appendChild(g);
     }
-
-    // Return coordinates in 1-based format
-    final_coordinates = coords.map(([r, c]) => [r + 1, c + 1]);
-    return final_coordinates;
+    return coords.map(([row, col]) => [row + 1, col + 1]);
   }
 
 
