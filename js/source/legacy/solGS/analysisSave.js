@@ -65,7 +65,8 @@ solGS.analysisSave = {
   saveGebvsArgs: function () {
     
     var analysisArgs = solGS.getSelectionPopArgs();
-    analysisArgs['analysis_result_type'] = this.analysisResultType();
+    analysisArgs['analysis_result_save_type'] = jQuery('#analysis_result_save_type').val();
+    analysisArgs['analysis_result_type'] = this.analysisResultType;
     analysisArgs['analysis_page'] = location.pathname;
   
     return analysisArgs;
