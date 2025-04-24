@@ -1,33 +1,34 @@
 jQuery(document).ready(function () {
-    var analysisArgs = solGS.analysisSave.saveGebvsArgs();
-      solGS.analysisSave.checkStoredAnalysis(analysisArgs).done(function (res) {
-      if (res.analysis_id) {
-        jQuery("#save_gebvs").hide();
-        var link = '<a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a>';
-        jQuery("#gebvs_output").append(link);
-        }
+  var analysisArgs = solGS.analysisSave.saveGebvsArgs();
+  jQuery('#analysis_result_save_type').val('gebvs');
+  analysisArgs['analysis_result_save_type'] = 'gebvs';
+  solGS.analysisSave.checkStoredAnalysis(analysisArgs).done(function (res) {
+    if (res.analysis_id) {
+      jQuery("#save_gebvs").hide();
+      var link = ' | <a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a>';
+      jQuery("#gebvs_output").append(link);
+    }
+  });
+  
+  jQuery("#save_gebvs").click(function () {
+      
+    console.log(`analysisArgs: ${JSON.stringify(analysisArgs)}`)
+    jQuery("#gebvs_output .multi-spinner-container").show();
+    jQuery("#gebvs_save_message")
+      .html("Please wait...saving the GEBVs may take a few minutes.")
+      .show();
+    jQuery("#save_gebvs").hide();
+
+    solGS.analysisSave.checkUserStatus().done(function (res) {
+      if (!res.loggedin) {
+        solGS.submitJob.loginAlert();
+      } else {
+      }
     });
   
-    jQuery("#save_gebvs").click(function () {
-        jQuery('#analysis_result_save_type').val('gebvs');
-        analysisArgs['analysis_result_save_type'] = 'gebvs';
-        console.log(`analysisArgs: ${JSON.stringify(analysisArgs)}`)
-      jQuery("#gebvs_output .multi-spinner-container").show();
-      jQuery("#gebvs_save_message")
-        .html("Please wait...saving the GEBVs may take a few minutes.")
-        .show();
-      jQuery("#save_gebvs").hide();
-  
-      solGS.analysisSave.checkUserStatus().done(function (res) {
-        if (!res.loggedin) {
-          solGS.submitJob.loginAlert();
-        } else {
-        }
-      });
-  
-      solGS.analysisSave.checkUserStatus().fail(function () {
-        solGS.alertMessage("Error occured checking for user status");
-      });
+    solGS.analysisSave.checkUserStatus().fail(function () {
+      solGS.alertMessage("Error occured checking for user status");
+    });
   
       solGS.analysisSave.getGebvsResultDetails(analysisArgs).done(function (res) {
   
@@ -51,7 +52,7 @@ jQuery(document).ready(function () {
             } else {
               jQuery("#gebvs_save_message").hide();
   
-              var link = '<a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a>';
+              var link = ' | <a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a> |';
               jQuery("#gebvs_output").append(link);
             }
           });
@@ -69,17 +70,18 @@ jQuery(document).ready(function () {
 
   jQuery(document).ready(function () {
     var analysisArgs = solGS.analysisSave.saveGebvsArgs();
+    analysisArgs['analysis_result_save_type'] = 'genetic_values';
+    jQuery('#analysis_result_save_type').val('genetic_values');
       solGS.analysisSave.checkStoredAnalysis(analysisArgs).done(function (res) {
       if (res.analysis_id) {
-        jQuery("#save_adjsuted_means").hide();
-        var link = '<a href="/analyses/' + res.analysis_id + '">View stored genetic values</a>';
+        jQuery("#save_genetic_values").hide();
+        var link = ' | <a href="/analyses/' + res.analysis_id + '">View stored genetic values</a> |';
         jQuery("#gebvs_output").append(link);
         }
     });
   
     jQuery("#save_genetic_values").click(function () {
-        analysisArgs['analysis_result_save_type'] = 'genetic_values';
-        jQuery('#analysis_result_save_type').val('genetic_values');
+      
 
       jQuery("#gebvs_output .multi-spinner-container").show();
       jQuery("#gebvs_save_message")
