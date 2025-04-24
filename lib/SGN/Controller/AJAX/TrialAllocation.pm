@@ -84,7 +84,10 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     my $treatments = $trial->{treatment_list_id};
     my $controls   = $trial->{control_list_id};
     my $rows_per_block = $trial->{rows};       # corresponds to tblockrows
+    my $cols_per_block = $trial->{cols};       # corresponds to tblockrows
     my $blocks         = $trial->{blocks};     # corresponds to trepsblocks
+    my $layout_type = $trial->{layout_type} || 'serpentine';
+    my $engine = 'trial_allocation';
     my $trial_design;
     
     ## Retrieving elements
@@ -136,15 +139,37 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     print $F "n_col <- nCol <- " . ($trial->{cols} // '') . "\n";
     print $F "n_blocks <- nBlocks <- " . ($trial->{blocks} // '') . "\n";
     print $F "serie <- " . ($trial->{serie} // 1) . "\n";  # optional
+    print $F "plot_type <- layout <- \"$layout_type\"\n";  # optional
+    print $F "engine <- \"$engine\"\n";  # optional
     close($F);
 
     # Run R if needed
-    if ($trial->{design} eq "RCBD") {
+    if ($design eq "RCBD") {
         my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/RCBD.R $outfile";
         print STDERR "Running: $cmd\n";
         system($cmd);
     }
     
+    if ($design eq "Doubly-Resolvable Row-Column") {
+        my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/DRRC.r $outfile";
+        print STDERR "Running: $cmd\n";
+        system($cmd);
+    }
+    
+    print STDERR "***** The design is = $design\n";
+
+    if ($design eq "Un-Replicated Diagonal") {
+        my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/urdd_design.R $outfile";
+        print STDERR "Running: $cmd\n";
+        system($cmd);
+    }
+
+    if ($design eq "Row-Column Design") {
+        my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/rrc_design.R $outfile";
+        print STDERR "Running: $cmd\n";
+        system($cmd);
+    }
+
     ## Handelling with error messages
     
     if (-e $message_file) {
@@ -155,15 +180,25 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     }
 
 
-
+    print STDERR "***** Rows = $rows_per_block\n";
+    print STDERR "***** Cols = $cols_per_block\n";
     ## Adjusting variables for RCBD
     my $json_desing;
-    if ($design eq 'RCBD') {
+    if( $design eq "RCBD"){
         my ($n_row, $n_col, $error, $trial_design) = create_rcbd($rows_per_block, $blocks, $n_trt, $n_ctl, $design_file);
         $trial->{n_row} = $n_row;
         $trial->{n_col} = $n_col;
         $json_desing = encode_json($trial_design);
+    } else {
+        my $trial_design = arrange_design($design_file, $design);
+        $json_desing = encode_json($trial_design);
+        $trial->{n_row} = $rows_per_block;
+        $trial->{n_col} = $cols_per_block;
     }
+    
+    
+
+    print STDERR Dumper \$json_desing;
 
     # Return filenames
     $c->stash->{rest} = {
@@ -188,6 +223,8 @@ sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
     my $json_string = $c->req->param('trial');
     my $data = eval { decode_json($json_string) };
 
+    print STDERR Dumper \$data;
+
     if (!$data) {
     $c->stash->{rest} = {
         success => 0,
@@ -202,7 +239,7 @@ sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
     my $design_file = $data->{design_file};
     # Log or process
     $c->log->debug("Got trial $trial_name with coords:");
-    $c->log->debug(" → $_->[0], $_->[1]") for @$coords;
+    # $c->log->debug(" → $_->[0], $_->[1]") for @$coords;
 
 
     ## Adding coordinates to the trial
@@ -321,6 +358,93 @@ sub create_rcbd {
 
   return ($n_row, $n_col, undef, \@design);
 }
+
+sub arrange_design {
+  my ($design_file, $design_type) = @_;
+
+  open my $fh, "<", $design_file or return ("Cannot open $design_file", []);
+  my @lines = <$fh>;
+  chomp @lines;
+  close $fh;
+
+  my @design;
+
+  if ($design_type eq 'Row-Column Design') {
+      # Transpose matrix
+      my @matrix = map { [split /\t/] } @lines;
+      my $n_rows = scalar @matrix;
+      my $n_cols = scalar @{$matrix[0]};
+      my @transposed;
+
+      for my $col (0 .. $n_cols - 1) {
+        my @new_row;
+        for my $row (0 .. $n_rows - 1) {
+          $new_row[$row] = $matrix[$row][$col];
+        }
+        push @transposed, \@new_row;
+      }
+
+      # Prepare output with ONLY the required columns
+      my @output_lines;
+      push @output_lines, join("\t", qw(block plots all_entries rep is_control));
+
+      for my $i (0 .. $#transposed) {  # skip header row
+        my $row = $transposed[$i];
+        next unless @$row >= 7;  # must have at least up to V6
+
+        my $block          = $row->[1];  # V1
+        my $plot_number    = $row->[4];  # V4
+        my $accession_name = $row->[5];  # V5
+        my $rep            = $row->[1];  # same as block
+        my $is_control     = $row->[6];  # V6
+
+        push @output_lines, join("\t", $block, $plot_number, $accession_name, $rep, $is_control);
+
+        push @design, {
+          block          => $block,
+          plot_number    => $plot_number,
+          accession_name => $accession_name,
+          rep            => $rep,
+          is_control     => $is_control,
+        };
+      }
+
+      # Overwrite original file with the selected columns
+      open my $outfh, ">", $design_file or return ("Cannot write to $design_file", []);
+      print $outfh "$_\n" for @output_lines;
+      close $outfh;
+    }
+
+
+  else {
+    # Standard design based on column headers
+    my @columns = split /\t/, shift @lines;
+
+    my %col_index;
+    for my $i (0 .. $#columns) {
+      $col_index{$columns[$i]} = $i;
+    }
+
+    for my $line (@lines) {
+      next unless $line =~ /\S/;
+      my @fields = split /\t/, $line;
+
+      push @design, {
+        plot_number    => $fields[ $col_index{plots} ],
+        block          => $fields[ $col_index{block} ],
+        accession_name => $fields[ $col_index{all_entries} ],
+        rep            => $fields[ $col_index{rep} ],
+        is_control     => $fields[ $col_index{is_control} ],
+      };
+    }
+  }
+
+  return (\@design);
+}
+
+
+
+
 
 
 1;
