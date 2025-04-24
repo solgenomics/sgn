@@ -77,15 +77,15 @@ jQuery(document).ready(function () {
         }
     });
   
-    jQuery("#save_adjusted_means").click(function () {
-        analysisArgs['analysis_result_save_type'] = 'adjsuted_means';
-        jQuery('#analysis_result_save_type').val('adjsuted_means');
+    jQuery("#save_genetic_values").click(function () {
+        analysisArgs['analysis_result_save_type'] = 'genetic_values';
+        jQuery('#analysis_result_save_type').val('genetic_values');
 
       jQuery("#gebvs_output .multi-spinner-container").show();
       jQuery("#gebvs_save_message")
         .html("Please wait...saving the genetic values (adjusted means) may take a few minutes.")
         .show();
-      jQuery("#save_adjsted_means").hide();
+      jQuery("#save_genetic_values").hide();
   
       solGS.analysisSave.checkUserStatus().done(function (res) {
         if (!res.loggedin) {
@@ -107,7 +107,7 @@ jQuery(document).ready(function () {
             .show()
             .fadeOut(50000);
   
-          jQuery("#save_adjusted_means").show();
+          jQuery("#save_genetic_values").show();
         } else {
           var save = solGS.analysisSave.storeAnalysisResults(res.analysis_details);
   
@@ -116,7 +116,7 @@ jQuery(document).ready(function () {
             if (res.error) {
               jQuery("#gebvs_save_message").html(res.error).show().fadeOut(50000);
   
-              jQuery("#save_adjusted_means").show();
+              jQuery("#save_genetic_values").show();
             } else {
               jQuery("#gebvs_save_message").hide();
   
@@ -127,7 +127,7 @@ jQuery(document).ready(function () {
   
           save.fail(function (res) {
             jQuery("#gebvs_output .multi-spinner-container").hide();
-            jQuery("#save_adjusted_means").show();
+            jQuery("#save_genetic_values").show();
             jQuery("#gebvs_save_message").html(res.error).show().fadeOut(50000);
           });
         }
