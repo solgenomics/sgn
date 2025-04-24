@@ -11,6 +11,7 @@ use File::Spec qw | catfile|;
 use File::Basename qw | basename |;
 use File::Copy;
 use List::Util qw | any |;
+use JSON::Any;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Tools::Run;
@@ -23,6 +24,7 @@ use Cwd qw(cwd);
 use namespace::autoclean;
 use Storable qw(retrieve);
 use Storable qw(store);
+use POSIX qw(strftime);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -317,6 +319,8 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 #     my $download_link_AIC = "<a href=\"$download_url_AIC\">Download Results</a>";
     ######################################################
 
+    # convert row data into nested structure that can be saved as analysis
+
 
     $c->stash->{rest} = {
 	data => \@data,
@@ -324,6 +328,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 	download_link => $download_link,
     pheno_filepath => $pheno_filepath,
     phenotype_file => $pheno_filepath.".clean",
+
     # data_fitted => \@data_fitted,
     # headers_fitted => \@spl_fitted,
 
@@ -422,10 +427,25 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     @result = @result_original;
     #get the accession names
     my @accessions;
-    print STDERR "FORMATTED DATA: ".Dumper(\@result);
+    # print STDERR "FORMATTED DATA: ".Dumper(\@result);
+    my $traits = {};
+    my $nested_data = {};
     foreach my $r (@result) {
-        push @accessions, $r->[2];
+        my $trait = $r->[1];
+        $traits->{$trait} = 1;
+        my $accession = $r->[2];
+        push @accessions, $accession;
+        my $value = $r->[3];
+        $nested_data->{$accession}->{$trait} = [
+            $value, 
+            strftime("%Y-%m-%dT%H:%M:%S", localtime), 
+            $c->user->get_object()->get_first_name().' '.$c->user->get_object()->get_last_name(), 
+            '', 
+            ''
+        ];
     }
+
+    # print STDERR Dumper $nested_data;
     
     
     my $basename = basename($phenotype_file.".clean.blues");
@@ -440,6 +460,9 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     headers => \@spl,
 	download_link => $download_link,
     accession_names => \@accessions,
+    phenotype_file => $phenotype_file,
+    traits => [keys(%{$traits})],
+    nested_data => JSON::Any->encode($nested_data)
     };
 
 };

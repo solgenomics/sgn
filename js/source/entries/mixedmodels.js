@@ -75,6 +75,7 @@ export function init(main_div) {
         $('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
         $('#generic_save_analysis_model_application_version').val(version);
         $('#generic_save_analysis_model_type').val('mixed_model_lmer');
+        $('#generic_save_analysis_result_values').val(adjusted_blues_data);
         $('#generic_save_analysis_result_summary_values').val(result_summary);
         $('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
         $('#generic_save_analysis_model_training_data_file').val(input_file);
@@ -95,6 +96,7 @@ export function init(main_div) {
         $('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
         $('#generic_save_analysis_model_application_version').val(version);
         $('#generic_save_analysis_model_type').val('mixed_model_lmer');
+        $('#generic_save_analysis_result_values').val(blues_data);
         $('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
         $('#generic_save_analysis_result_summary_values').val(result_summary);
         $('#generic_save_analysis_model_training_data_file').val(input_file);
@@ -369,9 +371,14 @@ export function init(main_div) {
 
 		    accession_names = JSON.stringify(r.accession_names);
 
+            
 		    adjusted_blups_data = JSON.stringify(r.adjusted_blups_data);
 
 		    adjusted_blues_data = JSON.stringify(r.adjusted_blues_data);
+
+            console.log('Adjusted means:'+adjusted_blups_data);
+            console.log('Adjusted means:'+adjusted_blues_data);
+
 		    blups_data = JSON.stringify(r.blups_data);
 		    blues_data = JSON.stringify(r.blues_data);
 		    traits = JSON.stringify(r.traits);
@@ -546,7 +553,7 @@ function get_model_string() {
 		alert(error);
 	    }
 	    else {
-		alert("MODEL STRING: "+r.model);
+		//alert("MODEL STRING: "+r.model);
 		console.log("ENGINE AGAIN: "+r.engine+" "+JSON.stringify(r));
 		if (r.engine == 'sommer') {
 		    jQuery('#model_string').text(r.model[0]+" , random = " + r.model[1]);

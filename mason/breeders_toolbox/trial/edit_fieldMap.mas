@@ -408,27 +408,27 @@ jQuery("#correct_spatial").click(function() {
           ],
         });
       }
-      //var input_file = response.input_file;
+      var input_file = response.phenotype_file;
       var fitted_data = response.result;
+      var nested_data = response.nested_data;
+      var traits = response.traits;
       // transform fitted_data into stock->trait->value hashmap!
       // As of right now, it is in the form of a listref of listrefs [ordinality, trait, stock, adjusted value, std.error of value]
-      var nested_fitted_data = {};
-      var traits = {};
-      for(const pheno of fitted_data) {
-        var trait = pheno[1];
-        traits[trait] = 1;
-        var stock = pheno[2];
-        var value = pheno[3];
-        nested_fitted_data[stock] = {
-          [trait]: value
-        };
-      }
-      traits = Object.keys(traits);
-      console.log(nested_fitted_data);
-      console.log(traits);
+      // var nested_fitted_data = {};
+      // var traits = {};
+      // for(const pheno of fitted_data) {
+      //   var trait = pheno[1];
+      //   traits[trait] = 1;
+      //   var stock = pheno[2];
+      //   var value = pheno[3];
+      //   nested_fitted_data[stock][trait] = value;
+      // }
+      // traits = Object.keys(traits);
+      // console.log(nested_fitted_data);
+      // console.log(traits);
       var accessionNamesArray = response.accession_names;
       //alert(JSON.stringify(accessionNamesArray));
-      var model_properties = JSON.stringify({ "properties": { "traits": ["ID", "Trait", "Name", "Fitted Values"] } });
+      var model_properties = JSON.stringify({ "properties": { "traits": traits } });
 
       jQuery(document).on('click', '#confirm_store_spatial_correction', async function(e) {
         jQuery('#generic_save_analysis_dialog').modal("show");
@@ -443,12 +443,16 @@ jQuery("#correct_spatial").click(function() {
         jQuery('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
         jQuery('#generic_save_analysis_model_application_version').val('0.01');
         jQuery('#generic_save_analysis_model_type').val('spatial_model_sommer');
-        jQuery('#generic_save_analysis_result_values').val(JSON.stringify(nested_fitted_data));
-        jQuery('#generic_save_analysis_result_values_type').val('analysis_instance');
-        jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase mixed model analysis tool" }');
-        //jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
+        jQuery('#generic_save_analysis_result_values').val(nested_data);
+        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
+        jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase spatial correction tool" }');
+        jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
         jQuery('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
       });
+    }, 
+    error: function(error) {
+      jQuery('#working_modal').modal('hide');
+      alert("Error calculating spatial corrections: "+error);
     }
   });
 });
