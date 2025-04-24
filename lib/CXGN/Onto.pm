@@ -50,6 +50,49 @@ sub get_terms {
       return @results;
 }
 
+=head2 get_variables
+
+parameters: namespace
+
+returns: terms with variable_od relationship in a namespace
+
+Side Effects: none
+
+=cut
+
+sub get_variables {
+      my $self = shift;
+      my $cv_id = shift;
+
+      my $schema = $self->schema();
+
+      my $variable_relationship = $schema->resultset("Cv::Cvterm")->search({ name => 'VARIABLE_OF' })->first();
+      my $variable_id;
+      if ($variable_relationship) {  $variable_id = $variable_relationship->cvterm_id(); }
+
+      my $query = "SELECT distinct(cvterm_id), dbxref.accession, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
+                  FROM cvterm
+                  JOIN dbxref USING(dbxref_id)
+                  JOIN db USING(db_id)
+                  JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+                  WHERE cv_id = ? AND is_subject.type_id = ? AND is_obsolete = ?
+                  GROUP BY 1,2,3
+                  ORDER BY 3";
+
+
+      my $h = $self->schema->storage->dbh->prepare($query);
+      $h->execute($cv_id, $variable_id,'0');
+
+      my @results;
+      while (my ($id, $accession, $name) = $h->fetchrow_array()) {
+          if ($accession +0 != 0) {
+              push @results, [$id, $name];
+          }
+      }
+
+      return @results;
+}
+
 sub get_root_nodes {
       my $self = shift;
       my $cv_type = shift;
@@ -109,10 +152,10 @@ sub store_composed_term {
         $h->execute();
         my $accession = $h->fetchrow_array();
 
-      my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create(
-      {   db_id     => $db->get_column('db_id'),
-		      accession => sprintf("%07d",$accession)
-		  });
+      my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create( {
+          db_id     => $db->get_column('db_id'),
+          accession => sprintf("%07d",$accession)
+      });
 
       my $parent_term= $schema->resultset("Cv::Cvterm")->find(
         { cv_id  =>$cv->cv_id(),
@@ -130,8 +173,8 @@ sub store_composed_term {
             name   => $name,
             dbxref_id  => $new_term_dbxref-> dbxref_id()
         });
-    }
 
+    }
 
     #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
@@ -147,6 +190,18 @@ sub store_composed_term {
                 object_id  => $new_term->cvterm_id(),
                 type_id    => $contains_relationship->cvterm_id()
             });
+
+            #copy cvtermprops from the component to the new post-composed term
+            my $component = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $component_id });
+            my $component_props_rs = $component->cvtermprops();
+            while ( my $component_prop = $component_props_rs->next() ) {
+                my $new_term_prop = $schema->resultset('Cv::Cvtermprop')->find_or_create({
+                    cvterm_id => $new_term->cvterm_id(),
+                    type_id   => $component_prop->type_id(),
+                    value     => $component_prop->value(),
+                    rank      => $component_prop->rank()
+                });
+            }
         }
 
         push @new_terms, [$new_term->cvterm_id, $new_term->name().'|COMP:'.sprintf("%07d",$accession)];
@@ -494,7 +549,7 @@ sub store_observation_variable_trait_method_scale {
 #   - definition = definition of the child cvterm
 #   - children = children of the child cvterm
 #   - accession = dbxref accession of the child cvterm
-# 
+#
 sub get_children {
     my $self = shift;
     my $cvterm_id = shift;
@@ -520,7 +575,7 @@ sub get_children {
             }
         }
     }
-    
+
     my @sorted =  sort { $a->{accession} <=> $b->{accession} } @children;
     return \@sorted;
 }
