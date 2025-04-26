@@ -52,19 +52,20 @@ sub structure_prediction_result_details {
     my ($self, $c, $params) = @_;
 
     my $output_values = $self->structure_output_values($c, $params);
-
     my @accessions = keys %$output_values;
 
     my $trait_names		= $c->controller('solGS::AnalysisSave')->analysis_traits($c);
     my $model_details   = $self->model_details($c);
     my $app_details		= $c->controller('solGS::AnalysisSave')->app_details();
-    my $log			    = $c->controller('solGS::AnalysisSave')->get_analysis_job_info($c);
     my $breeding_prog_id = $c->controller('solGS::AnalysisSave')->analysis_breeding_prog($c);
     my $analysis_year = $c->controller('solGS::AnalysisSave')->analysis_year($c);
 
-    my $analysis_name = $log->{analysis_name};
-    my $analysis_result_save_type = $c->stash->{analysis_result_save_type};
-    $analysis_name .= " -- $analysis_result_save_type" if $analysis_result_save_type;
+    my $analysis_name = $c->controller('solGS::AnalysisSave')->get_analysis_result_specific_analysis_name($c);
+    # $log->{analysis_name};
+    # my $analysis_result_save_type = $c->stash->{analysis_result_save_type};
+    # $analysis_name .= " -- $analysis_result_save_type" if $analysis_result_save_type;
+
+    my $log = $c->controller('solGS::AnalysisSave')->get_analysis_job_info($c);
 
     my $details = {
         'analysis_to_save_boolean' => 'yes',

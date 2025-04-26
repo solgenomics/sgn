@@ -128,15 +128,25 @@ sub analysis_year {
 
     return $year;
 
+} 
+
+sub get_analysis_result_specific_analysis_name {
+    my ($self, $c) = @_;
+
+    my $log = $self->get_analysis_job_info($c);
+    my $analysis_name = $log->{analysis_name};
+    my $analysis_result_save_type = $c->stash->{analysis_result_save_type};
+    $analysis_name .= " -- $analysis_result_save_type" if $analysis_result_save_type;
+
+    return $analysis_name;
 }
 
 sub check_stored_analysis {
     my ($self, $c) = @_;
 
-    my $log = $self->get_analysis_job_info($c);
-    my $analysis_name = $log->{analysis_name};
-
+    my $analysis_name = $self->get_analysis_result_specific_analysis_name($c);
     my $analysis_id;
+
     if ($analysis_name) {
         my $schema = $self->schema($c);
         my $analysis = $schema->resultset("Project::Project")->find({ name => $analysis_name });
@@ -162,14 +172,7 @@ sub check_logged_analysis_name {
 sub extended_trait_name {
     my ($self, $c, $trait_id) = @_;
 
-    my $schema = $self->schema($c);
-    # foreach my $tr_id (@$trait_ids) {
-        #$c->controller('solGS::Trait')->get_trait_details($c, $tr_id);
-        my $extended_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_id, 'extended');
-        # push @trait_names, $extended_name;
-    # }
-
-    return $extended_name;
+    return SGN::Model::Cvterm::get_trait_from_cvterm_id($self->schema($c), $trait_id, 'extended');
 
 }
 
