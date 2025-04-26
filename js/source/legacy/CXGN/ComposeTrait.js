@@ -49,6 +49,7 @@ function get_component_ids () {
   if (jQuery("#toy_select").val()) { component_ids.push(jQuery("#toy_select").val()); }
   if (jQuery("#gen_select").val()) { component_ids.push(jQuery("#gen_select").val()); }
   if (jQuery("#evt_select").val()) { component_ids.push(jQuery("#evt_select").val()); }
+  if (jQuery("#meta_select").val()) { component_ids.push(jQuery("#meta_select").val()); }
   return component_ids;
 }
 
@@ -66,6 +67,7 @@ function retrieve_matching_traits (component_ids) {
   ids["toy_ids"] = jQuery("#toy_select").val();
   ids["gen_ids"] = jQuery("#gen_select").val();
   ids["evt_ids"] = jQuery("#evt_select").val();
+  ids["meta_ids"] = jQuery("#meta_select").val();
 
 jQuery.ajax( {
   url: '/ajax/onto/get_traits_from_component_categories',
@@ -79,6 +81,7 @@ jQuery.ajax( {
           'toy_ids': ids["toy_ids"],
           'gen_ids': ids["gen_ids"],
           'evt_ids': ids["evt_ids"],
+          'meta_ids': ids["meta_ids"],
         },
   success: function(response) {
     traits = response.existing_traits || [];

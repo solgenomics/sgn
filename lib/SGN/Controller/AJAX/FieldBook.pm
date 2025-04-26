@@ -52,33 +52,36 @@ __PACKAGE__->config(
 sub create_fieldbook_from_trial : Path('/ajax/fieldbook/create') : ActionClass('REST') { }
 
 sub create_fieldbook_from_trial_POST : Args(0) {
-  my ($self, $c) = @_;
-  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
-  my $trial_id = $c->req->param('trial_id');
-  my $data_level = $c->req->param('data_level') || 'plots';
-  my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
-  my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
-  my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
+    my ($self, $c) = @_;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $trial_id = $c->req->param('trial_id');
+    my $data_level = $c->req->param('data_level') || 'plots';
+    my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
+    my $include_plot_order = $c->req->param('include_plot_order') eq 'true';
+    my $plot_order = $c->req->param('plot_order');
+    my $plot_start = $c->req->param('plot_start');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
-  chomp($trial_id);
-  if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
-    return;
-  }
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
-    return;
-  }
-  if (!$trial_id) {
-    $c->stash->{rest} = {error =>  "No trial ID supplied." };
-    return;
-  }
-  my $trial = $schema->resultset('Project::Project')->find({project_id => $trial_id});
-  if (!$trial) {
-    $c->stash->{rest} = {error =>  "Trial does not exist with id $trial_id." };
-    return;
-  }
+    chomp($trial_id);
+    if (!$c->user()) {
+        $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+        return;
+    }
+    if (!$trial_id) {
+        $c->stash->{rest} = {error =>  "No trial ID supplied." };
+        return;
+    }
+    my $trial = $schema->resultset('Project::Project')->find({project_id => $trial_id});
+    if (!$trial) {
+        $c->stash->{rest} = {error =>  "Trial does not exist with id $trial_id." };
+        return;
+    }
     if ($data_level eq 'plants') {
         my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
         if (!$trial->has_plant_entries()){
@@ -134,8 +137,8 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         @selected_traits = @{$lt->transform($schema, "traits_2_trait_ids", \@trait_list)->{transform}};
     }
 
-  my $dir = $c->tempfiles_subdir('/other');
-  my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
+    my $dir = $c->tempfiles_subdir('/other');
+    my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
 
     my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
         bcs_schema => $schema,
@@ -154,6 +157,9 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         use_synonyms => $use_synonyms,
         selected_trait_ids => \@selected_traits,
         trial_stock_type => $trial_stock_type,
+        include_plot_order => $include_plot_order,
+        plot_order => $plot_order,
+        plot_start => $plot_start,
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();
@@ -305,7 +311,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
 sub _parse_list_from_json {
   my $list_json = shift;
-  my $json = new JSON;
+  my $json = JSON->new();
   if ($list_json) {
       #my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
      my $decoded_list = decode_json($list_json);

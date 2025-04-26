@@ -3,8 +3,13 @@
 $user_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min'] &>
+<& /util/import_javascript.mas, classes => ['CXGN.List', 'jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min'] &>
 <br>
+
+<div style="display: flex; justify-content: flex-end; align-items: baseline; gap: 15px;">
+    <p><strong>Filter Locations by List:</strong></p>
+    <div id="locations_list"></div>
+</div>
 <div class="table-responsive" style="margin-top: 10px;">
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
         <thead>
@@ -32,106 +37,127 @@ $user_id => undef
 <script defer="defer">
 
 jQuery(document).ready(function() {
+    var table;
+    var locations;
 
-    jQuery.ajax( {
-    	url: '/ajax/location/all',
+    var lo = new CXGN.List();
+    jQuery('#locations_list').html(lo.listSelect('locations_list', [ 'locations' ], 'select', undefined, undefined));
+    jQuery('#locations_list').on('change', 'select', updateLocationsTable)
+
+    jQuery.ajax({
+        url: '/ajax/location/all',
         beforeSend: function() {
-            // put working animation handling here
-    	},
-    	success: function(response) {
-            var export_message = 'Location data from ' + window.location.href;
-            locationJSON = response.data;
-            // console.log("Data is "+JSON.stringify(locationJSON, null, 2));
-
-            // Remove [Computataion] location from response
-            locationJSON = locationJSON.filter(function(loc) {
+            createLocationsTable();
+        },
+        success: function(response) {
+            locations = response?.data || [];
+            locations = locations.filter(function(loc) {
                 return loc.properties.Name !== '[Computation]';
             });
-
-            var table = jQuery('#location_table').DataTable( {
-                data: locationJSON,
-                dom: 'Bfrtip',
-                rowId: 'properties.Id',
-                "columns": [
-                    { "data": "properties.Id" },
-                    { "data": "properties.Name" },
-                    { "data": "properties.Abbreviation" },
-                    { "data": "properties.Code",
-                        "render":function(data, type, full, meta){
-                           return full.properties.Code + ' ' + full.properties.Country;
-                        }
-                    },
-                    { "data": "properties.Program" },
-                    { "data": "properties.Type" },
-                    { "data": "properties.Latitude" },
-                    { "data": "properties.Longitude" },
-                    { "data": "properties.Altitude" },
-                    { "data": "properties.Trials" },
-                    { "data": "properties.NOAAStationID",
-                        "render":function(data, type, full, meta) {
-                            return full.properties.NOAAStationID ? "<a href='https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/" + full.properties.NOAAStationID + "/detail' target=_blank>"+ full.properties.NOAAStationID + "</a>" : "";
-                        }
-                    }
-                ],
-                buttons: [ 'colvis',
-                    {
-                        extend: 'copy',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'excelHtml5',
-                        title: document.title +'_locations',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'csvHtml5',
-                        title: document.title +'_locations',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        title: document.title +'_locations',
-                        exportOptions: {
-                            columns: ':visible'
-                        },
-                        message: export_message
-                    },
-                    {
-                        extend: 'print',
-                        exportOptions: {
-                            columns: ':visible'
-                        },
-                        message: export_message
-                    }
-                ],
-                drawCallback: function( settings ) {
-                   var api = this.api();
-                   var name_data = api.column(1, { search:'applied' } ).data();
-                   var names = [];
-                   for (var i = 0; i < name_data.length; i++) { //extract names from data object
-                       names.push(name_data[i]+'\n');
-                   }
-                   //console.log("Names are: "+JSON.stringify(names));
-                   $('#location_names').html(names);
-                   addToListMenu('locations_to_list_menu', 'location_names', {
-                     listType: 'locations'
-                   });
-                }
-            });
-
-            var map = initialize_map('location_map', locationJSON, table);
-
-    	},
-    	error: function(response) {
-    	    alert("An error occurred");
-    	}
+            updateLocationsTable();
+            initialize_map('location_map', locations, table);
+        },
+        error: function(response) {
+            alert("An error occurred");
+        }
     });
 
- });
+    function createLocationsTable() {
+        var export_message = 'Location data from ' + window.location.href;
+        table = jQuery('#location_table').DataTable({
+            data: [],
+            dom: 'Bfrtip',
+            rowId: 'properties.Id',
+            "columns": [
+                { "data": "properties.Id" },
+                { "data": "properties.Name" },
+                { "data": "properties.Abbreviation" },
+                { "data": "properties.Code",
+                    "render":function(data, type, full, meta){
+                        return full.properties.Code + ' ' + full.properties.Country;
+                    }
+                },
+                { "data": "properties.Program" },
+                { "data": "properties.Type" },
+                { "data": "properties.Latitude" },
+                { "data": "properties.Longitude" },
+                { "data": "properties.Altitude" },
+                { "data": "properties.Trials" },
+                { "data": "properties.NOAAStationID",
+                    "render":function(data, type, full, meta) {
+                        return full.properties.NOAAStationID ? "<a href='https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/" + full.properties.NOAAStationID + "/detail' target=_blank>"+ full.properties.NOAAStationID + "</a>" : "";
+                    }
+                }
+            ],
+            buttons: [ 'colvis',
+                {
+                    extend: 'copy',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'excelHtml5',
+                    title: document.title +'_locations',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'csvHtml5',
+                    title: document.title +'_locations',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    title: document.title +'_locations',
+                    exportOptions: {
+                        columns: ':visible'
+                    },
+                    message: export_message
+                },
+                {
+                    extend: 'print',
+                    exportOptions: {
+                        columns: ':visible'
+                    },
+                    message: export_message
+                }
+            ],
+            drawCallback: function( settings ) {
+                var api = this.api();
+                var name_data = api.column(1, { search:'applied' } ).data();
+                var names = [];
+                for (var i = 0; i < name_data.length; i++) { //extract names from data object
+                    names.push(name_data[i]+'\n');
+                }
+                $('#location_names').html(names);
+                addToListMenu('locations_to_list_menu', 'location_names', {
+                    listType: 'locations'
+                });
+            }
+        });
+    }
+
+    function updateLocationsTable() {
+
+        // Filter locations by list items, if a list is selected
+        var filtered_locations = locations;
+        var list_id = jQuery("#locations_list_list_select option:selected").val();
+        if ( list_id ) {
+            var data = lo.getListData(list_id);
+            var names = data.elements.map((x) => x[1]);
+            filtered_locations = filtered_locations.filter((loc) => names.includes(loc.properties.Name));
+        }
+
+        // Update table with filtered locations
+        table.clear();
+        table.rows.add(filtered_locations);
+        table.draw();
+
+    }
+
+});
 </script>
