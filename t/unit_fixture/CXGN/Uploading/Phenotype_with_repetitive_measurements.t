@@ -233,6 +233,66 @@ print STDERR "FOUND ANOTHER ENTRY AT PHENOTYPE_ID= $phenotype_id\n";
 ok(!$phenotype_id, "Find multiple phenotype entry 12");
 
 
+# CHECK FILE WITHOUT DATES
+#
+
+$filename = "t/data/trial/upload_phenotypin_spreadsheet_update.xlsx";
+
+$validate_file = $parser->validate('phenotype spreadsheet simple generic', $filename, 1, 'plots', $f->bcs_schema);
+
+print STDERR "VALIDATE FILE 99 = ".Dumper($validate_file);
+
+ok($validate_file == 1, "Check if parse validate works for phenotype file");
+
+if (ref($validate_file) && exists($validate_file->{error})) {
+    die "parse did not validate\n";
+}
+
+$parsed_file = $parser->parse('phenotype spreadsheet simple generic', $filename, 1, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse phenotype spreadsheet works");
+
+
+
+print STDERR "PARSED FILE: ".Dumper($parsed_file);
+
+%phenotype_metadata;
+$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-16_01:10:56";
+%parsed_data = %{$parsed_file->{'data'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
+
+
+$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>1,
+    metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
+    );
+
+($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok($verified_error);
+
+print STDERR "VERIFIED WARNING: ".Dumper($verified_warning)."\n";
+print STDERR "VERIFIED ERROR: ".Dumper($verified_error)."\n";
+
+
+
 done_testing();
 
 $f->clean_up_db();
