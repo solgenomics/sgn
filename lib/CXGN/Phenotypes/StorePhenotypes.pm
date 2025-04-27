@@ -511,7 +511,7 @@ sub verify {
     #
     
     my ($errors, $warnings);
-    my ($all_errors, $all_warnings);
+#    my ($all_errors, $all_warnings);
 
     # print STDERR "values hash = ".Dumper($self->values_hash());
 
@@ -520,23 +520,24 @@ sub verify {
     foreach my $plot_name (keys %{$self->values_hash()}) {
         foreach my $trait_name (keys %{$self->values_hash()->{$plot_name}}) {
             my $measurements_array = $self->values_hash()->{$plot_name}->{$trait_name};
-
-	        if ( (ref($measurements_array) eq "ARRAY") && ref($measurements_array->[0]) eq 'ARRAY') {   ### we have a list of measurements, not just a trait_value timestamp pair
-            # print STDERR "Trait name = $trait_name\n";
+	    
+	    if ( (ref($measurements_array) eq "ARRAY") && ref($measurements_array->[0]) eq 'ARRAY') {   ### we have a list of measurements, not just a trait_value timestamp pair
+		# print STDERR "Trait name = $trait_name\n";
                 foreach my $value_array (@$measurements_array) {
                     # print STDERR "Value array = ".Dumper($value_array)."\n";
-		            ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
-		            $all_errors .= $errors;
-		            $all_warnings .= $warnings;
-		        }
-	        }else {
-		        ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $measurements_array);
-		        $all_errors .= $errors;
-		        $all_warnings .= $warnings;
-	        }
+		    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
+		    $error_message .= $errors;
+		    $warning_message .= $warnings;
+		}
 	    }
+	    else {
+		($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $measurements_array);
+		$error_message .= $errors;
+		$warning_message .= $warnings;
+	    }
+	}
     }
-    return ($all_warnings, $all_errors);
+    return ($warning_message, $error_message);
 }
 
 
@@ -566,6 +567,8 @@ sub verify {
      Omitted the timestamp for such a trait is considered an error and should break the upload.
    * If the trait is defined as a single trait, the presence of an older measurement is checked.
      Depending on the settings, the old trait is either retained or overwritten with the new trait value.
+   * if the trait_repeat_type is set to multiple or time_series, an error will be returned if no
+     timestamp is present
 
 
 =cut
@@ -719,9 +722,9 @@ sub check_measurement {
 	}
 	
 	if ($repeat_type eq "multiple" or $repeat_type eq "time_series") {
-	    #print STDERR "Trait repeat type: $repeat_type\n";
+	    print STDERR "Trait repeat type: $repeat_type\n";
 	    if (!$timestamp) {
-		# print STDERR "trait name : $trait_name is multiple without timestamp \n";
+		print STDERR "trait name : $trait_name is multiple without timestamp \n";
 		$error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
 	    }
 	    if (exists($self->unique_trait_stock_timestamp()->{$trait_cvterm_id, $stock_id, $timestamp})) {
