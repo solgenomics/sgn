@@ -22,6 +22,28 @@ $stock_uniquename => undef
     </div>
 </&>
 
+<&| /page/info_section.mas, title => 'Transformants (Accessions) Derived from the same Transformation ID', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="related_transformants_table">
+                    </table>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <&| /page/info_section.mas, title => 'Add accession names to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding accession names to a new or exisiting list</i>'&>
+                            <br>
+                            <div id="related_transformants_to_new_list" style="display:none"></div>
+                            <div id="related_transformants_add_to_list"></div>
+                        </&>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
 <script>
 
 jQuery(document).ready(function(){
@@ -36,9 +58,34 @@ jQuery(document).ready(function(){
         'ordering': false,
         'paging': false,
         'info': false,
-
     });
 
+    const related_transformants_table = jQuery('#related_transformants_table').DataTable({
+        'ajax': '/ajax/transformation/related_transformants/'+stock_id,
+        'autoWidth': false,
+        'columns': [
+            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.related_transformant_id+"/view'>"+row.related_transformant_name+"</a>"; } },
+        ],
+
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#related_transformants_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                let html = "";
+                for(let i=0; i<json.data.length; i++){
+                    html += json.data[i].related_transformant_name+"\n";
+                }
+
+                jQuery("#related_transformants_to_new_list").html(html);
+                addToListMenu("related_transformants_add_to_list", "related_transformants_to_new_list", {
+                    selectText: true,
+                    listType: 'accessions',
+                });
+            }
+        }
+
+    });
 
 
 });

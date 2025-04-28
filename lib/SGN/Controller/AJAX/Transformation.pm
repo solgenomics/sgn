@@ -1087,6 +1087,37 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
 }
 
 
+sub get_related_transformants :Path('/ajax/transformation/related_transformants') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformant_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
+    my $experiment_info = $transformant_obj->get_transformant_experiment_info();
+    my $transformation_id = $experiment_info->[0]->[4];
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
+    my $result = $transformation_obj->transformants();
+
+    my @related_transformants;
+    foreach my $r (@$result){
+        my ($stock_id, $stock_name) =@$r;
+        if ($stock_id != $transformant_stock_id) {
+            push @related_transformants, {
+                related_transformant_id => $stock_id,
+                related_transformant_name => $stock_name,
+            };
+        }
+    }
+
+    $c->stash->{rest} = { data => \@related_transformants };
+
+}
+
+
+
 
 
 ###
