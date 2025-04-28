@@ -49,6 +49,13 @@ sub image_search_POST : Args(0) {
         
     }
 
+    my @related_accession_list;
+    if (exists($params->{image_accession_uniquename}) && $params->{image_stock_uniquename}) {
+        if (ref($params->{image_accession_uniquename}) eq 'ARRAY') {
+            push @related_accession_list, $params->{image_accession_uniquename};
+        }
+    }
+
     my @project_name_list;
     if (exists($params->{image_project_name}) && $params->{image_project_name}) {
         push @project_name_list, $params->{image_project_name};
