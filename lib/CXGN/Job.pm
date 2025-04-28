@@ -69,6 +69,7 @@ use DateTime;
 use DateTime::Format::ISO8601;
 use Data::Dumper;
 use File::Slurp qw( write_file read_file );
+use File::Path qw( make_path );
 use JSON::Any;
 use CXGN::Tools::Run;
 use CXGN::People::Schema;
@@ -307,6 +308,8 @@ sub check_status {
     my $logfile = $self->finish_logfile();
 
     unless (-e $logfile) {
+        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
+        make_path($directory);
         system("touch $logfile");
     }
 
@@ -373,6 +376,8 @@ sub read_finish_timestamp {
     }
 
     unless (-e $logfile) {
+        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
+        make_path($directory);
         system("touch $logfile");
     }
 
@@ -415,6 +420,8 @@ sub delete {
     my $logfile = $self->finish_logfile();
 
     unless (-e $logfile) {
+        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
+        make_path($directory);
         system("touch $logfile");
     }
 
@@ -457,6 +464,8 @@ sub cancel {
     my $logfile = $self->finish_logfile();
 
     unless (-e $logfile) {
+        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
+        make_path($directory);
         system("touch $logfile");
     }
 
@@ -496,6 +505,8 @@ sub submit {
     my $logfile = $self->finish_logfile();
 
     unless (-e $logfile) {
+        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
+        make_path($directory);
         system("touch $logfile");
     }
 
@@ -613,6 +624,8 @@ sub generate_finish_timestamp_cmd {
     my $logfile = $self->finish_logfile();
 
     unless (-e $logfile) {
+        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
+        make_path($directory);
         system("touch $logfile");
     }
 

@@ -127,8 +127,6 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok('//input[@placeholder="Create New Dataset"]/parent::div//button[contains(text(), "Create")]', 'xpath', "find 'create' button and create dataset $dataset_name_1")->click;
     sleep(2);
     $t->driver()->accept_alert();
-    sleep(4);
-    $t->driver()->accept_alert();
     sleep(1);
 
 
@@ -152,8 +150,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok('//input[@placeholder="Create New Dataset"]/parent::div//button[contains(text(), "Create")]', 'xpath', "find 'create' button and create dataset $dataset_name_2")->click();
     sleep(1);
     ok($t->driver->get_alert_text() =~ m/Dataset another_dataset_4_columns created/i, 'Created dataset another_dataset_4_columns');
-    $t->driver()->accept_alert();
-    sleep(5);
+    sleep(1);
     $t->driver()->accept_alert();
     sleep(1);
 
