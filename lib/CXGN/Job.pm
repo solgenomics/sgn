@@ -648,14 +648,14 @@ sub get_default_cxgn_tools_run_config {
     if (!$name) {
         $name = "job_".DateTime->now(time_zone => 'local')->strftime('%Y_%m_%d_%H_%M_%S');
     }
-    my $temp_base = "/home/production/volume/tmp/user_$user_id/$name";
-    my $err_file = "$temp_base/job.err";
-    my $out_file = "$temp_base/job.out";
+    # my $temp_base = "/home/production/volume/tmp/user_$user_id/$name";
+    # my $err_file = "$temp_base/job.err";
+    # my $out_file = "$temp_base/job.out";
     $cxgn_tools_run_config = {
         #'err_file' => $err_file,
         'submit_host' => 'localhost',
         #'out_file' => $out_file,
-        'temp_base' => $temp_base, 
+        #'temp_base' => $temp_base, 
         'queue' => 'batch',
         'max_cluster_jobs' => 1000000000,
         'is_cluster' => 1,
