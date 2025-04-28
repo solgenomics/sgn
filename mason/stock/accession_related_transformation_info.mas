@@ -3,17 +3,17 @@ $stock_id
 $stock_uniquename => undef
 </%args>
 
-<&| /page/info_section.mas, id=>'transformation_experiment', title => 'Transformation Experiment', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'transformation_experiment', title => 'Transformation Experiment', collapsible=>1, collapsed=>0 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <table id = "transformation_experiment_info" class="table table-hover table-striped">
+                <table id = "transformant_experiment_info" class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>Project</th>
-                            <th>Transformation ID</th>
                             <th>Vector Construct</th>
                             <th>Plant Material</th>
+                            <th>Transformation ID</th>
+                            <th>Project</th>
                         </tr>
                     </thead>
                 </table>
@@ -27,6 +27,18 @@ $stock_uniquename => undef
 jQuery(document).ready(function(){
 
     const stock_id = "<%$stock_id%>";
+
+    const related_transformation_info_table = jQuery('#transformant_experiment_info').DataTable({
+        'ajax': '/ajax/transformation/transformant_experiment_info/'+stock_id,
+        'autoWidth': false,
+        'searching' : false,
+        'dom': 'rtip',
+        'ordering': false,
+        'paging': false,
+        'info': false,
+
+    });
+
 
 
 });
