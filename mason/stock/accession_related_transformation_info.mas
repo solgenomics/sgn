@@ -44,6 +44,29 @@ $stock_uniquename => undef
     </div>
 </&>
 
+<&| /page/info_section.mas, title => 'Control Transformants (Accessions)', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="control_transformants_table">
+                    </table>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <&| /page/info_section.mas, title => 'Add accession names to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding accession names to a new or exisiting list</i>'&>
+                            <br>
+                            <div id="control_transformants_to_new_list" style="display:none"></div>
+                            <div id="control_transformants_add_to_list"></div>
+                        </&>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+
 <script>
 
 jQuery(document).ready(function(){
@@ -87,6 +110,33 @@ jQuery(document).ready(function(){
 
     });
 
+
+    const control_transformants_table = jQuery('#control_transformants_table').DataTable({
+        'ajax': '/ajax/transformation/control_transformants/'+stock_id,
+        'autoWidth': false,
+        'columns': [
+            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.control_transformant_id+"/view'>"+row.control_transformant_name+"</a>"; } },
+        ],
+
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#control_transformants_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                let html = "";
+                for(let i=0; i<json.data.length; i++){
+                    html += json.data[i].control_transformant_name+"\n";
+                }
+
+                jQuery("#control_transformants_to_new_list").html(html);
+                addToListMenu("control_transformants_add_to_list", "control_transformants_to_new_list", {
+                    selectText: true,
+                    listType: 'accessions',
+                });
+            }
+        }
+
+    });
 
 });
 

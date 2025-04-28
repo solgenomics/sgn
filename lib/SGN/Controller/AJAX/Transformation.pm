@@ -1117,6 +1117,40 @@ sub get_related_transformants :Path('/ajax/transformation/related_transformants'
 }
 
 
+sub get_control_transformants :Path('/ajax/transformation/control_transformants') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformant_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
+    my $experiment_info = $transformant_obj->get_transformant_experiment_info();
+    my $transformation_id = $experiment_info->[0]->[4];
+
+    my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
+    my $transformation_control_rs = $schema->resultset("Stock::StockRelationship")->find({ object_id => $transformation_id, type_id => $control_of_type_id});
+    my $control_id;
+    if ($transformation_control_rs) {
+        $control_id = $transformation_control_rs->subject_id();
+    }
+
+    my $control_transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$control_id});
+    my $result = $control_transformation_obj->transformants();
+
+    my @control_transformants;
+    foreach my $r (@$result){
+        my ($stock_id, $stock_name) =@$r;
+        push @control_transformants, {
+            control_transformant_id => $stock_id,
+            control_transformant_name => $stock_name,
+        };
+    }
+
+    $c->stash->{rest} = { data => \@control_transformants };
+
+}
+
 
 
 
