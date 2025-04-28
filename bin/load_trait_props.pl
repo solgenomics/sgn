@@ -120,6 +120,7 @@ my @trait_property_names = qw(
     trait_maximum
     trait_categories
     trait_details
+    trait_repeat_type
     );
 
 #check header for property names
