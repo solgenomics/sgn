@@ -57,6 +57,8 @@ my $trait_id = $sp_data->{options}->[0]->[0];
 
 $mech->get_ok('http://localhost:3010/ajax/gcpc/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id."&method_id=GCPC&replicate_factor=fixed&studyDesign_factor=None&sin_list_id=$sin_id", 'run the GCPC analysis');
 
+sleep(5);
+
 my $rdata = JSON::Any->decode($mech->content());
 
 ok($rdata->{data}, "data created");

@@ -47,6 +47,8 @@ my $trait_id = $sp_data->{options}->[0]->[0];
 
 $mech->get_ok('http://localhost:3010//ajax/stability/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id."&method_id=AMMI", 'run the AMMI analysis');
 
+sleep(5);
+
 my $rdata = JSON::Any->decode($mech->content());
 
 # check if files were created
@@ -59,6 +61,8 @@ ok( -e "static/".$rdata->{AMMITable}, "AMMI table created");
 # print STDERR "trait_id :", $trait_id;
 
 $mech->get_ok('http://localhost:3010//ajax/stability/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id."&method_id=GGE", 'run the GGE analysis');
+
+sleep(5);
 
 my $rdata2 = JSON::Any->decode($mech->content());
 # print STDERR "RDATA2: ".Dumper($rdata2);
