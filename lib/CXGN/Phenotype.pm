@@ -321,7 +321,7 @@ sub BUILD {
 	$self->experiment( $self->schema()->resultset("NaturalDiversity::NdExperiment")->find( { nd_experiment_id => $nd_experiment_id }) );
     }
     else {
-	print STDERR "no phenotype_id - creating empty object\n";
+	#print STDERR "no phenotype_id - creating empty object\n";
     }
 }
 
@@ -357,7 +357,7 @@ sub store {
 	# check if a value needs to be removed.
 	#
 	if ($self->remove_empty_value() && (!defined($self->value()) || $self->value() eq '')) {
-	    print STDERR "REMOVE VALUES SET. REMOVING THE VALUE ".$self->value()." BECAUSE IT IS NOT DEFINED.\n";
+	    #print STDERR "REMOVE VALUES SET. REMOVING THE VALUE ".$self->value()." BECAUSE IT IS NOT DEFINED.\n";
 	    $self->delete_phenotype();
 	    return { success => 1, remove_count => 1, reason => "DELETED ENTRY - DELETE VALUES SET ON EMPTY VALUE.\n" };
 	    
@@ -366,21 +366,21 @@ sub store {
 	# update only if overwrite is set
 	#
 	if ($self->overwrite()) {
-	    print STDERR "OVERWRITE SET (".$self->overwrite()."). OVERWRITING OLD VALUE ".$self->old_value()." WITH NEW VALUE ".$self->value()."\n";
+	    #print STDERR "OVERWRITE SET (".$self->overwrite()."). OVERWRITING OLD VALUE ".$self->old_value()." WITH NEW VALUE ".$self->value()."\n";
 	    
 	    if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
-		print STDERR "DELETE VALUES NOT SET FOR EMPTY VALUE. IGNORING EMPTY VALUES!\n";
+		#print STDERR "DELETE VALUES NOT SET FOR EMPTY VALUE. IGNORING EMPTY VALUES!\n";
 		return { succes => 1, skip_count => 1, reason => "SKIPPING EMPTY VALUE WITHOUT DELETE_VALUES\n" }; 
 	    }
 
 	    if ($self->old_value() && ($self->old_value() eq $self->value())) {
-		print STDERR "OLD VALUE AND NEW VALUE ARE THE SAME (".$self->value()."). NOT UPDATING\n";
+		#print STDERR "OLD VALUE AND NEW VALUE ARE THE SAME (".$self->value()."). NOT UPDATING\n";
 		return { success => 1, skip_count => 1, reason => "NEW AND OLD VALUES ARE IDENTICAL.\n" };
 		
 	    }
 	    
 	   # else { 
-	    print STDERR "UPDATING ".$self->phenotype_id()." WITH NEW VALUE ".$self->value()."\n";
+	    #print STDERR "UPDATING ".$self->phenotype_id()." WITH NEW VALUE ".$self->value()."\n";
 	    my $phenotype_row = $self->schema->resultset('Phenotype::Phenotype')->
 		find( { phenotype_id  => $self->phenotype_id() });
 	    ## should check that unit and variable (also checked here) are conserved in parse step,
@@ -421,15 +421,15 @@ sub store {
 	return { success => 1, skip_count => 1, reason => "Overwrite not set - skipping" };
     }  # if phenotype-id
     else { # INSERT
-	print STDERR "OLD VALUE = ".$self->old_value()."\n";
+	#print STDERR "OLD VALUE = ".$self->old_value()."\n";
 	if ($self->old_value() eq $self->value()) {
-	    print STDERR "TRYING TO INSERT WITH SAME VALUE ALREADY PRESENT... SKIPPING!\n";
+	    #print STDERR "TRYING TO INSERT WITH SAME VALUE ALREADY PRESENT... SKIPPING!\n";
 	    return { success => 1, skip_count => 1, reason => "VALUE ALREADY PRESENT FOR TRAIT, OBS UNIT AND TIMESTAMP.\n" };
 	}
 	
-	print STDERR "INSERTING... ".$self->value()."\n";
+	#print STDERR "INSERTING... ".$self->value()."\n";
 	if (! $self->image_id() && ($self->value() eq "" || ! defined($self->value()) || $self->value() eq ".") || $self->value() eq "NA") {
-	    print STDERR "NOT STORING EMTPY VALUE\n";
+	    #print STDERR "NOT STORING EMTPY VALUE\n";
 	    return { success => 1, skip_count => 1, message => "Not storing empty values" };
 	}
 	#print STDERR "INSERTING new value ...\n";
@@ -462,7 +462,7 @@ sub store {
 	}
 
 	$self->phenotype_id($phenotype_row->phenotype_id());
-	print STDERR "INSERTED ROW WITH NEW PHENOTYPE_ID ".$self->phenotype_id()."\n";
+	#print STDERR "INSERTED ROW WITH NEW PHENOTYPE_ID ".$self->phenotype_id()."\n";
     }
     return { success => 1, new_count => 1, phenotype_id => $self->phenotype_id() };
 }
@@ -593,7 +593,7 @@ sub check_categories {
 		$error_message =  "<small> This trait value should be one of $valid_values: <br/>Value: ".$self->value()."</small><hr>";
 	    }
 	    else {
-		print STDERR "Trait value ".$self->value()." is valid\n";
+		#print STDERR "Trait value ".$self->value()." is valid\n";
 	    }
 	}
     }
@@ -668,7 +668,7 @@ sub check {
     }
 
     if ($self->trait_repeat_type() eq "multiple" or $self->trait_repeat_type() eq "time_series") {
-	print STDERR "Trait repeat type: ".$self->trait_repeat_type()."\n";
+	#print STDERR "Trait repeat type: ".$self->trait_repeat_type()."\n";
 	if (!$self->collect_date()) {
 	    # print STDERR "cvterm_id : ".$self->cvterm_id()." is multiple without timestamp \n";
 	    push @errors, "For trait with cvterm_id ".$self->cvterm_id()." that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
@@ -719,11 +719,11 @@ sub check_trait_minimum {
     my $self = shift;
 
     if ($self->trait_format() ne "numeric") {
-	print STDERR "Format is not numeric, can't check minimum\n";
+	#print STDERR "Format is not numeric, can't check minimum\n";
 	return 1;
     }
     if (! defined($self->trait_min_value()) ) {
-	print STDERR "Warning. Checking trait minimum but minimum value is not set.\n";
+	#print STDERR "Warning. Checking trait minimum but minimum value is not set.\n";
 	return 1;
     }
     elsif ($self->value() < $self->trait_min_value()) {
@@ -736,11 +736,11 @@ sub check_trait_maximum {
     my $self = shift;
     
     if ($self->trait_format() ne "numeric") {
-	print STDERR "Format is not numeric, can't check maximum.";
+	#print STDERR "Format is not numeric, can't check maximum.";
 	return 1;	
     }
     if (! defined($self->trait_max_value())) {
-	print STDERR "Warning. Checking trait maximum but maximum value is not set\n";
+	#print STDERR "Warning. Checking trait maximum but maximum value is not set\n";
 	return 1;
     }
     if ($self->value() > $self->trait_max_value()) {
