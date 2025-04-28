@@ -449,64 +449,6 @@ sub store_data {
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-<<<<<<< HEAD
-    my $saved_analysis_object;
-
-    eval {
-        my $m = CXGN::Analysis::AnalysisCreate->new({
-            bcs_schema=>$bcs_schema,
-            people_schema=>$people_schema,
-            metadata_schema=>$metadata_schema,
-            phenome_schema=>$phenome_schema,
-            archive_path=>$c->config->{archive_path},
-            tempfile_for_deleting_nd_experiment_ids=>$temp_file_nd_experiment_id,
-            base_path=>$c->config->{basepath},
-            dbhost=>$c->config->{dbhost},
-            dbname=>$c->config->{dbname},
-            dbuser=>$c->config->{dbuser},
-            dbpass=>$c->config->{dbpass},
-            analysis_to_save_boolean=>$analysis_to_save_boolean,
-            analysis_name=>$analysis_name,
-            analysis_description=>$analysis_description,
-            analysis_year=>$analysis_year,
-            analysis_breeding_program_id=>$analysis_breeding_program_id,
-            analysis_protocol=>$analysis_protocol,
-            analysis_dataset_id=>$analysis_dataset_id,
-            analysis_accession_names=>$analysis_accession_names,
-            analysis_trait_names=>$analysis_trait_names,
-            analysis_statistical_ontology_term=>$analysis_statistical_ontology_term,
-            analysis_precomputed_design_optional=>$analysis_precomputed_design_optional,
-            analysis_result_values=>$analysis_result_values,
-            analysis_result_values_type=>$analysis_result_values_type,
-            analysis_result_summary=>$analysis_result_summary,
-            analysis_result_trait_compose_info_time=>$analysis_result_trait_compose_info,
-            analysis_model_id=>$analysis_model_id,
-            analysis_model_name=>$analysis_model_name,
-            analysis_model_description=>$analysis_model_description,
-            analysis_model_is_public=>$analysis_model_is_public,
-            analysis_model_language=>$analysis_model_language,
-            analysis_model_type=>$analysis_model_type,
-            analysis_model_properties=>$analysis_model_properties,
-            analysis_model_application_name=>$analysis_model_application_name,
-            analysis_model_application_version=>$analysis_model_application_version,
-            analysis_model_file=>$analysis_model_file,
-            analysis_model_file_type=>$analysis_model_file_type,
-            analysis_model_training_data_file=>$analysis_model_training_data_file,
-            analysis_model_training_data_file_type=>$analysis_model_training_data_file_type,
-            analysis_model_auxiliary_files=>$analysis_model_auxiliary_files,
-            allowed_composed_cvs=>\@allowed_composed_cvs,
-            composable_cvterm_delimiter=>$composable_cvterm_delimiter,
-            composable_cvterm_format=>$composable_cvterm_format,
-            user_id=>$user_id,
-            user_name=>$user_name,
-            user_role=>$user_role
-        });
-        $saved_analysis_object = $m->store();
-    };
-    if ($@) {
-        die "An error occurred storing analysis! $@";
-    }
-=======
     my $m = CXGN::Analysis::AnalysisCreate->new({
         bcs_schema=>$bcs_schema,
         people_schema=>$people_schema,
@@ -558,7 +500,6 @@ sub store_data {
         user_role=>$user_role
     });
     my $saved_analysis_object = $m->store();
->>>>>>> master
 
     $c->stash->{rest} = $saved_analysis_object;
 }
