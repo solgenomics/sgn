@@ -10,7 +10,7 @@ my $t = SGN::Test::Fixture->new();
 
 $t->dbh()->begin_work();
 
-my $job_finish_log = $t->config->{job_finish_log} ? $t->config->{job_finish_log} : '~/testlog.txt';
+my $job_finish_log = $t->config->{job_finish_log} ? $t->config->{job_finish_log} : '/home/production/volume/logs/job_finish.log';
 
 my $job = CXGN::Job->new({
     schema => $t->bcs_schema(),
@@ -48,10 +48,10 @@ SKIP: {
     eval {
         $job->delete();
     };
-    ok($@ =~ m/No such file or directory/, 'Making sure DB deletion worked, catching expected error for finish_logfile');
+    ok($@ !~ m/No such file or directory/, 'Making sure DB deletion worked, making sure job finish log was handled right');
 };
 
-system('rm ~/testlog.txt');
+system('rm /home/production/volume/logs/job_finish.log');
 
 $t->dbh->rollback();
 
