@@ -230,7 +230,7 @@ sub store {
       }
       else { 
 	  #get the cvterm for the trait
-	  my $trait_cvterm = $chado_schema->resultset("Cv::Cvterm")
+	  $trait_cvterm = $chado_schema->resultset("Cv::Cvterm")
 	      ->find( {
 		  'dbxref.db_id' => $db_rs->first()->db_id(),
 		      'name'=> $trait_name,
