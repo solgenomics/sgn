@@ -26,6 +26,7 @@ $trial_owner => undef
 $genotyping_project_link => undef
 $number_of_samples => undef
 $number_of_samples_with_data => undef
+$assay_type => undef
 </%args>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;"><% $trial_id %></div>
@@ -61,7 +62,7 @@ $number_of_samples_with_data => undef
                     <tr><td><b>Trial Type</b></td><td>Genotyping Plate</td></tr>
                     <tr><td><b>Plate Format</b></td><td><% $genotyping_plate_format %></td></tr>
                     <tr><td><b>Plate Sample Type</b></td><td><% $genotyping_plate_sample_type %></td></tr>
-                    <tr><td><b>Number od Samples</b></td><td><% $number_of_samples %></td></tr>
+                    <tr><td><b>Number of Samples</b></td><td><% $number_of_samples %></td></tr>
                     <tr><td><b>Number of Samples with Data</b></td><td><% $number_of_samples_with_data %></td></tr>
                     <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
                     <tr><td><b>Description</b></td><td><% $trial_description %></td></tr>
@@ -97,9 +98,10 @@ $number_of_samples_with_data => undef
 
         </div>
         <div class="col-sm-3">
-
-            <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"stock_qrcode"  &></center><br />
-
+            <div style="text-align: center">
+                <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"stock_qrcode"  &>
+            </div>
+            <br/>
         </div>
     </div>
 </div>
@@ -141,7 +143,9 @@ $number_of_samples_with_data => undef
 
 <!--
 DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
-<center><a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br />
+<div style="text-align: center">
+    <a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a>
+</div><br />
 -->
 
 <div class="row">
@@ -224,6 +228,13 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
         </div>
     </div>
 </div>
+
+% if ($assay_type eq 'KASP') {
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data derived from this genotyping plate.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="plate_genotyping_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="plate_genotyping_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button><button class="btn btn-default" style="margin:3px" id="plate_kasp_genotype_data_download_csv">Download All Genotype Data (CSV)</button>', info_section_id => "plate_genotyping_data" &>
+% } else {
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data derived from this genotyping plate.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="plate_genotyping_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="plate_genotyping_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button>', info_section_id => "plate_genotyping_data" &>
+
+% }
 <div class="row">
     <div class="col-sm-12">
         <div class="well">
@@ -264,6 +275,10 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
         </div>
     </div>
 </div>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, number_of_samples_with_data => $number_of_samples_with_data, info_section_title => "<h4 style='display:inline'>Deletion</h4>", info_section_subtitle => 'Deleting genotyping data derived from this genotyping plate or genotyping plate layout.', icon_class => "glyphicon glyphicon-trash", info_section_id => "delete_genotyping_plate_section" &>
+
+<!--
 <div class="row">
     <div class="col-sm-12">
         <div class="well">
@@ -283,6 +298,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
         </div>
     </div>
 </div>
+-->
 
 <&| /page/info_section.mas, id=>"genotyping_trial_check_layout_section", title=>"Check Plate Design", collapsible=>1, collapsed=>1 &>
     <div id="genotyping_trial_check_layout_section_div">
@@ -314,6 +330,7 @@ genotyping_facility => $genotyping_facility
 <script>
 
     jQuery(document).ready(function(){
+
         load_breeding_program_info(<% $trial_id %>);
         //load_genotyping_status_info(<% $plate_id %>);
     });
