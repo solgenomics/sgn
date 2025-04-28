@@ -306,6 +306,10 @@ sub check_status {
     my $backend_id = $self->backend_id();
     my $logfile = $self->finish_logfile();
 
+    unless (-e $logfile) {
+        system("touch $logfile");
+    }
+
     if ($self->status() eq "canceled") {
         return $self->status();
     }
@@ -368,6 +372,10 @@ sub read_finish_timestamp {
         die "No logfile to read.\n";
     }
 
+    unless (-e $logfile) {
+        system("touch $logfile");
+    }
+
     my @rows = read_file( $logfile, { binmode => ':utf8' } );
 
     my $db_id = $self->sp_job_id();
@@ -400,6 +408,10 @@ sub delete {
 
     my $logfile = $self->finish_logfile();
 
+    unless (-e $logfile) {
+        system("touch $logfile");
+    }
+
     my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
     if (!$row){
@@ -431,6 +443,10 @@ sub cancel {
         die "Cannot cancel a job without a backend ID.\n";
     }
     my $logfile = $self->finish_logfile();
+
+    unless (-e $logfile) {
+        system("touch $logfile");
+    }
 
     my $backend_id = $self->backend_id();
 
@@ -466,6 +482,11 @@ sub submit {
     }
 
     my $logfile = $self->finish_logfile();
+
+    unless (-e $logfile) {
+        system("touch $logfile");
+    }
+
     my $cmd = $self->cmd();
     my $cxgn_tools_run_config;
     
@@ -578,6 +599,10 @@ sub generate_finish_timestamp_cmd {
     my $self = shift;
 
     my $logfile = $self->finish_logfile();
+
+    unless (-e $logfile) {
+        system("touch $logfile");
+    }
 
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
