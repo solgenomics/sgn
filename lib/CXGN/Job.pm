@@ -376,7 +376,13 @@ sub read_finish_timestamp {
         system("touch $logfile");
     }
 
-    my @rows = read_file( $logfile, { binmode => ':utf8' } );
+    my @rows;
+    eval {
+        @rows = read_file( $logfile, { binmode => ':utf8' } );
+    }; 
+    if ($@) {
+        return "";
+    }  
 
     my $db_id = $self->sp_job_id();
     my @finish_row = grep {/$db_id\s+/} @rows;
@@ -425,7 +431,13 @@ sub delete {
         die "An error occurred deleting job from database: $@\n";
     }
     my $job_id = $self->sp_job_id();
-    my @rows = read_file( $logfile, { binmode => ':utf8' } );
+    my @rows;
+    eval {
+        @rows = read_file( $logfile, { binmode => ':utf8' } );
+    }; 
+    if ($@) {
+        return "";
+    }  
     @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
     write_file($logfile,{binmode => ':utf8'},@rows);
 }
