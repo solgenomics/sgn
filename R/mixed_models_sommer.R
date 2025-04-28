@@ -76,18 +76,19 @@ for(i in 1:length(trait)){
     if (genotypeEffectType=="random") {
 
         mixmodel = mmer(as.formula(fixed_model), random = as.formula(random_model), rcov = ~ units, data=pd)
-        print(paste("MIXED MODEL: ", mixmodel))
-	      varcomp<- summary(mixmodel)$varcomp
-        print(varcomp)
+        # print(paste("MIXED MODEL: ", mixmodel))
+	    #   varcomp<- summary(mixmodel)$varcomp
+        # print(varcomp)
 
-        print("---------")
+        # print("---------")
 
-        print("---------")
+        # print("---------")
 
         ##BLUPS
         res <- randef(mixmodel) ##obtain the blups
-        BLUP <- as.data.frame(res)<
-        #print(BLUP)
+        BLUP <- as.data.frame(res)
+        BLUP <- tibble::rownames_to_column(BLUP, var = 'accession name')
+        print(BLUP)
 
         ##ajusted means
         p0 = predict.mmer(mixmodel, D="germplasmName") ##runs the prediction
@@ -95,7 +96,7 @@ for(i in 1:length(trait)){
         adj = p0$pvals                                        ##obtains the predictions
         adjusted_means = as.data.frame(adj)
         #print(paste("adj", adj))
-        print(adjusted_means)
+        # print(adjusted_means)
 
 
     } else {

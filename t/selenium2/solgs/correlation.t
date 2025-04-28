@@ -10,7 +10,13 @@ use SGN::Test::solGSData;
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
-my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 160, 'plots_list_subset' => 160});
+my $solgs_data = SGN::Test::solGSData->new({
+    'fixture' => $f, 
+    'accessions_list_subset' => 160, 
+    'plots_list_subset' => 160, 
+    'user_id' => 40,
+});
+
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
 
 my $plots_list =  $solgs_data->load_plots_list();
@@ -38,7 +44,6 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get_ok('/correlation/analysis', 'correlation home page');
     sleep(5);
-
     $d->find_element_ok('//tr[@id="' . $plots_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');

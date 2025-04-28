@@ -33,17 +33,27 @@ solGS.dataset = {
     return datasets;
   },
 
-  addDataTypeAttr(datasets) {
+  addDataTypeAttr(datasets, analysis) {
+
+    // for (var i = 0; i < datasets.length; i++) {
+    //   if (datasets[i].type.match(/accessions/)) {
+    //     datasets[i]["data_type"] = ["Genotype"];
+    //   } else if (datasets[i].type.match(/plots/)) {
+    //     datasets[i]["data_type"] = ["Phenotype"];
+    //   } else if (datasets[i].type.match(/trials/)) {
+    //     datasets[i]["data_type"] = ["Genotype", "Phenotype"];
+    //   }
+  
+    // }
+    var type_opts;
+    if (analysis == "Population Structure") {
+      type_opts = ["Genotype", "Phenotype"];
+    } else if (analysis == "Clustering") {
+      type_opts = ["Genotype", "Phenotype", "GEBV"];
+    }
 
     for (var i = 0; i < datasets.length; i++) {
-      if (datasets[i].type.match(/accessions/)) {
-        datasets[i]["data_type"] = ["Genotype"];
-      } else if (datasets[i].type.match(/plots/)) {
-        datasets[i]["data_type"] = ["Phenotype"];
-      } else if (datasets[i].type.match(/trials/)) {
-        datasets[i]["data_type"] = ["Genotype", "Phenotype"];
-      }
-  
+      datasets[i]["data_type"] = type_opts;
     }
 
     return datasets;
@@ -68,6 +78,7 @@ solGS.dataset = {
               name: name,
               type: datasetTypes[j],
               data_str: "dataset",
+              tool_compatibility: d.tool_compatibility
             };
             datasetPops.push(dsObj);
             dsIds.push(id);
@@ -96,6 +107,7 @@ solGS.dataset = {
     privateDatasets = this.addDataOwnerAttr(privateDatasets, 'private')
     
     var allDatasets = [privateDatasets, publicDatasets];
+    console.log(allDatasets);
     return allDatasets.flat();
     
   },

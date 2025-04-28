@@ -5,8 +5,6 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
-use SimulateC;
-
 use Data::Dumper;
 
 use CXGN::Trial;
@@ -17,6 +15,7 @@ use CXGN::Trial::Folder;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::Search;
 use SGN::Model::Cvterm;
+use DateTime;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
@@ -979,6 +978,30 @@ my $error = $trial->set_project_type("77106");
 
 is($trial->get_project_type()->[1], "Clonal Evaluation", "set type test");
 
+# test for recently_modified_* functions
+#
+my $new_trials = CXGN::Project::get_recently_added_trials($f->bcs_schema(), $f->phenome_schema, $f->people_schema, $f->metadata_schema, 'week');
+
+print STDERR "RECENT TRIALS: ".Dumper($new_trials);
+is(scalar(@$new_trials), 2, "check that there are two recently added trials");
+
+my $now = DateTime->now();
+my $phenotype_row = $f->bcs_schema()->resultset('Phenotype::Phenotype')->find( { phenotype_id => 737043 });
+$phenotype_row->create_date($now->iso8601());
+$phenotype_row->update();
+
+my $modified_trials = CXGN::Project::get_recently_modified_trials($f->bcs_schema(), $f->phenome_schema, $f->people_schema, $f->metadata_schema, 'week');
+print STDERR "RECENTLY MODIFIED TRIALS: ".Dumper($modified_trials);
+is(scalar(@$modified_trials), 1, "check there is 1 modified trial in the database");
+
+my $accession_row = $f->bcs_schema->resultset('Stock::Stock')->find( { stock_id => 41723 });
+$accession_row->create_date($now->iso8601());
+$accession_row->update();
+
+my $new_accessions = CXGN::Project::get_recently_added_accessions($f->bcs_schema(), 'week');
+print STDERR "RECENTLY ADDED ACCESSIONS: ".Dumper($new_accessions);
+is(scalar(@$new_accessions), 1, "check that there is one new accession");
+
 print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();
 print STDERR "Done.\n";
@@ -989,7 +1012,7 @@ eval {
 };
 
 if ($@) { print "An error occurred: $@\n"; }
-ok($@, "deleted trial id (".$@.")");
 
+like($@, qr/The trial $trial_id does not exist/, "check that trial was deleted");
 
 done_testing();
