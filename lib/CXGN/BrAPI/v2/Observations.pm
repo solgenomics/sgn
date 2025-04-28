@@ -252,7 +252,7 @@ sub _search {
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $start_date = $params->{observationTimeStampRangeStart}->[0] || undef;
     my $end_date = $params->{observationTimeStampRangeEnd}->[0] || undef;
-    my $repetitive_measurements_type = $params->{repetitiveMeasurements_type} || 'average'; #use default to average 
+    my $repetitive_measurements_type = $params->{repetitiveMeasurementsType} || 'average'; #use default to average 
     my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
     # observationUnitLevelName
     # observationUnitLevelOrder
