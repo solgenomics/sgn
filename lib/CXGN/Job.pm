@@ -261,7 +261,7 @@ sub BUILD {
         }
         my $logfile;
         if (!$self->has_finish_logfile()) {
-            $logfile = `cat /home/production/volume/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
+            $logfile = `cat /home/production/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
             $self->finish_logfile($logfile);
         }
         $self->create_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
@@ -290,7 +290,7 @@ sub BUILD {
         $self->additional_args($job_args->{additional_args});
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
-        my $logfile = $job_args->{finish_logfile} ? $job_args->{finish_logfile} : `cat /home/production/volume/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
+        my $logfile = $job_args->{finish_logfile} ? $job_args->{finish_logfile} : `cat /home/production/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
         $self->finish_logfile($logfile);
     }
 }
@@ -307,11 +307,7 @@ sub check_status {
     my $backend_id = $self->backend_id();
     my $logfile = $self->finish_logfile();
 
-    unless (-e $logfile) {
-        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
-        make_path($directory);
-        system("touch $logfile");
-    }
+    $self->enforce_finish_logfile();
 
     if ($self->status() eq "canceled") {
         return $self->status();
@@ -365,21 +361,18 @@ Returns the finish timestamp if already recorded. Otherwise, reads the logfile, 
 
 sub read_finish_timestamp {
     my $self = shift;
+
+    if (!$self->has_finish_logfile()) {
+        die "No finish logfile to read.\n";
+    }
+
     my $logfile = $self->finish_logfile();
 
     if ($self->finish_timestamp()) {
         return $self->finish_timestamp();
     }
 
-    if (!$logfile) {
-        die "No logfile to read.\n";
-    }
-
-    unless (-e $logfile) {
-        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
-        make_path($directory);
-        system("touch $logfile");
-    }
+    $self->enforce_finish_logfile();
 
     my @rows;
     eval {
@@ -419,11 +412,7 @@ sub delete {
 
     my $logfile = $self->finish_logfile();
 
-    unless (-e $logfile) {
-        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
-        make_path($directory);
-        system("touch $logfile");
-    }
+    $self->enforce_finish_logfile();
 
     my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
@@ -461,13 +450,10 @@ sub cancel {
     if (!$self->has_backend_id()) {
         die "Cannot cancel a job without a backend ID.\n";
     }
+
     my $logfile = $self->finish_logfile();
 
-    unless (-e $logfile) {
-        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
-        make_path($directory);
-        system("touch $logfile");
-    }
+    $self->enforce_finish_logfile();
 
     my $backend_id = $self->backend_id();
 
@@ -502,13 +488,13 @@ sub submit {
         die "Background jobs must have a command to run.\n";
     }
 
+    if (!$self->has_finish_logfile()) {
+        die "Need a finish logfile for job submission.\n";
+    }
+
     my $logfile = $self->finish_logfile();
 
-    unless (-e $logfile) {
-        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
-        make_path($directory);
-        system("touch $logfile");
-    }
+    $self->enforce_finish_logfile();
 
     my $cmd = $self->cmd();
     my $cxgn_tools_run_config;
@@ -621,13 +607,13 @@ Generates a command that gives the finish timestamp. Use to append to a cmd befo
 sub generate_finish_timestamp_cmd {
     my $self = shift;
 
+    if (!$self->has_finish_logfile()) {
+        return "";
+    }
+
     my $logfile = $self->finish_logfile();
 
-    unless (-e $logfile) {
-        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
-        make_path($directory);
-        system("touch $logfile");
-    }
+    $self->enforce_finish_logfile();
 
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
@@ -730,6 +716,28 @@ sub alive {
        return 0;
     } else {
         return 1;
+    }
+}
+
+=head2 enforce_finish_logfile()
+
+Checks to see if the finish logfile has been created, and makes it if necessary.
+
+=cut
+
+sub enforce_finish_logfile {
+    my $self = shift;
+
+    if (!$self->has_finish_logfile()) {
+        die "No finish logfile specified.\n";
+    }
+
+    my $logfile = $self->finish_logfile();
+
+    unless (-e $logfile) {
+        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
+        make_path($directory);
+        system("touch $logfile");
     }
 }
 
