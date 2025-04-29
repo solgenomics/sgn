@@ -293,6 +293,8 @@ sub BUILD {
         my $logfile = $job_args->{finish_logfile} ? $job_args->{finish_logfile} : `cat /home/production/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
         $self->finish_logfile($logfile);
     }
+
+    $self->enforce_finish_logfile();
 }
 
 =head2 check_status()
@@ -306,8 +308,6 @@ sub check_status {
 
     my $backend_id = $self->backend_id();
     my $logfile = $self->finish_logfile();
-
-    $self->enforce_finish_logfile();
 
     if ($self->status() eq "canceled") {
         return $self->status();
@@ -372,8 +372,6 @@ sub read_finish_timestamp {
         return $self->finish_timestamp();
     }
 
-    $self->enforce_finish_logfile();
-
     my @rows;
     eval {
         @rows = read_file( $logfile, { binmode => ':utf8' } );
@@ -411,8 +409,6 @@ sub delete {
     } 
 
     my $logfile = $self->finish_logfile();
-
-    $self->enforce_finish_logfile();
 
     my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
@@ -453,8 +449,6 @@ sub cancel {
 
     my $logfile = $self->finish_logfile();
 
-    $self->enforce_finish_logfile();
-
     my $backend_id = $self->backend_id();
 
     eval {
@@ -493,8 +487,6 @@ sub submit {
     }
 
     my $logfile = $self->finish_logfile();
-
-    $self->enforce_finish_logfile();
 
     my $cmd = $self->cmd();
     my $cxgn_tools_run_config;
@@ -612,8 +604,6 @@ sub generate_finish_timestamp_cmd {
     }
 
     my $logfile = $self->finish_logfile();
-
-    $self->enforce_finish_logfile();
 
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
