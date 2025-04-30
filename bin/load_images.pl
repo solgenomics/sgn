@@ -54,6 +54,14 @@ image file extension. Defaults to 'jpg'
 
 trial mode . Nothing will be stored.
 
+=item -P
+
+password (for unit tests)
+
+=item -y
+
+confirm automatically (for unit tests)
+
 =back
 
 Errors and messages are output on STDERR.
@@ -84,32 +92,41 @@ use Getopt::Std;
 use CXGN::Tools::File::Spreadsheet;
 use File::Glob qw | bsd_glob |;
 
-our ($opt_H, $opt_D, $opt_t, $opt_i, $opt_u, $opt_r, $opt_d, $opt_e, $opt_m, $opt_b);
-getopts('H:D:u:i:e:f:tdr:m:b:');
+our ($opt_H, $opt_D, $opt_t, $opt_i, $opt_u, $opt_r, $opt_d, $opt_e, $opt_m, $opt_b, $opt_P, $opt_y);
+getopts('H:D:u:i:e:f:tdr:m:b:P:y');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
+my $dbpass = $opt_P;
 my $dirname = $opt_i;
 my $sp_person=$opt_u;
 my $db_image_dir = $opt_b;
 my $chado_table = $opt_r;
 my $ext = $opt_e || 'jpg';
 
+print STDERR "LOAD IMAGES STARTING... $dbhost $dbname $dbpass $dirname\n";
+
 if (!$dbhost && !$dbname) { 
-    print "dbhost = $dbhost , dbname = $dbname\n";
-    print "opt_t = $opt_t, opt_u = $opt_u, opt_r = $chado_table, opt_i = $dirname\n";
+    print STDERR "dbhost = $dbhost , dbname = $dbname\n";
+    print STDERR "opt_t = $opt_t, opt_u = $opt_u, opt_r = $chado_table, opt_i = $dirname\n";
     usage();
 }
 
-if (!$dirname) { print "dirname = $dirname\n" ; usage(); }
+if (!$dirname) { print STDERR "dirname = $dirname\n" ; usage(); }
 
-my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
-				      dbname=>$dbname,
-				    } );
+my $dbh;
 
-my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public;'] }
-    );
+if ($opt_P) {
+    print STDERR "PASSWORD SUPPLIED... CONNECTING...\n";
+    $dbh = CXGN::DB::Connection->new( { dbhost=> $dbhost, dbname=> $dbname, dbpass => $opt_P, dbuser => "postgres" });
+}
+else {
+    print STDERR "INTERACTIVE PASSWORD...\n";
+    $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost, dbname=>$dbname } );
+}
 
+
+my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public;'] } );
 
 print STDERR "Generate metadata_id... ";
 my $metadata_schema = CXGN::Metadata::Schema->connect("dbi:Pg:database=$dbname;host=".$dbh->dbhost(), "postgres", $dbh->dbpass(), {on_connect_do => "SET search_path TO 'metadata', 'public'", });
@@ -119,12 +136,14 @@ my %name2id = ();
 
 
 #my $ch = SGN::Context->new();
-print "PLEASE VERIFY:\n";
-print "Using dbhost: $dbhost. DB name: $dbname. \n";
-print "Path to image is: $db_image_dir\n";
-print "CONTINUE? ";
-my $a = (<STDIN>);
-if ($a !~ /[yY]/) { exit(); }
+if (! $opt_y) { 
+    print "PLEASE VERIFY:\n";
+    print "Using dbhost: $dbhost. DB name: $dbname. \n";
+    print "Path to image is: $db_image_dir\n";
+    print "CONTINUE? ";
+    my $a = (<STDIN>);
+    if ($a !~ /[yY]/) { exit(); }
+}
 
 my %image_hash = ();  # used to retrieve images that are already loaded
 my %connections = (); # keep track of object -- image connections that have already been made.
@@ -194,7 +213,7 @@ if ($opt_m) {
 	    
 	    my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $stock_name } );
 	    if (!$stock_row) {
-		print STDERR "STOCK $stock_name NOT FOUND! PLEASE CHECK THIS!\n";
+		print STDERR "STOCK $stock_name NOT FOUND! PLEASE CHECK THIS ENTRY! IMAGE STORED WITHOUT LINKING.\n";
 	    }
 	    else { 
 		print STDERR "FOUND STOCK $stock_name... associating...\n";
