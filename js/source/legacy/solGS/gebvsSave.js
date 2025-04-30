@@ -5,7 +5,7 @@ jQuery(document).ready(function () {
   solGS.analysisSave.checkStoredAnalysis(analysisArgs).done(function (res) {
     if (res.analysis_id) {
       jQuery("#save_gebvs").hide();
-      var link = ' | <a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a>';
+      var link = ' | <a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a> |';
       jQuery("#gebvs_output").append(link);
     }
   });
@@ -122,7 +122,7 @@ jQuery(document).ready(function () {
             } else {
               jQuery("#gebvs_save_message").hide();
   
-              var link = '<a href="/analyses/' + res.analysis_id + '">View stored genetic values</a>';
+              var link = '| <a href="/analyses/' + res.analysis_id + '">View stored genetic values</a> |';
               jQuery("#gebvs_output").append(link);
             }
           });
