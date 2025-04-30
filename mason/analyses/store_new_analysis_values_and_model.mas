@@ -547,6 +547,13 @@ jQuery(document).ready(function() {
         var generic_save_analysis_model_archived_training_data_file_type = jQuery('#generic_save_analysis_model_archived_training_data_file_type').val();
         var generic_save_analysis_model_auxiliary_files = jQuery('#generic_save_analysis_model_auxiliary_files').val();
 
+        // var analysis_result_stock_names = [];
+
+        // if (generic_save_analysis_result_values_type == 'analysis_result_new_stocks') {
+        //     var stocks = Object.keys(JSON.parse(generic_save_analysis_result_values));
+        //     analysis_result_stock_names = stocks.map((stock, index) => generic_save_analysis_analysis_name + "_" + stock);
+        // }
+
         if (generic_save_analysis_analysis_to_save_boolean == 'yes') {
             if (generic_save_analysis_analysis_name == '') {
                 alert('Please give an analysis name');
@@ -656,6 +663,7 @@ jQuery(document).ready(function() {
                 'analysis_precomputed_design_optional':generic_save_analysis_precomputed_design_optional,
                 'analysis_result_values':generic_save_analysis_result_values,
                 'analysis_result_values_type':generic_save_analysis_result_values_type,
+                //'analysis_result_stock_names':analysis_result_stock_names,
                 'analysis_result_summary':generic_save_analysis_result_summary_values,
                 'analysis_result_trait_compose_info':generic_save_analysis_result_compose_trait_info,
                 'analysis_model_id':analysis_model_id,

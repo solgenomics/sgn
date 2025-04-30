@@ -327,7 +327,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     headers => \@spl,
 	download_link => $download_link,
     pheno_filepath => $pheno_filepath,
-    phenotype_file => $pheno_filepath.".clean",
+    phenotype_file => "$pheno_filepath.clean"
 
     # data_fitted => \@data_fitted,
     # headers_fitted => \@spl_fitted,
@@ -341,7 +341,6 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     };
 }
 sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
-    #my ($c) = @_; # $c is the catalyst object
     my ($self, $c) = @_;
     my $dataTableData = $c->req->param("dataTableData");
     print STDERR "DATA TABLE DATA: $dataTableData\n";
@@ -366,102 +365,95 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     # Define the command to run the second R script
     my $cmd = CXGN::Tools::Run->new({
-	backend => $c->config->{backend},
-	submit_host=>$c->config->{cluster_host},
-	temp_base => $c->config->{cluster_shared_tempdir} . "/spatial_model_files",
-	queue => $c->config->{'web_cluster_queue'},
-	do_cleanup => 0,
-	# don't block and wait if the cluster looks full
-	max_cluster_jobs => 1_000_000_000,
+        backend => $c->config->{backend},
+        submit_host=>$c->config->{cluster_host},
+        temp_base => $c->config->{cluster_shared_tempdir} . "/spatial_model_files",
+        queue => $c->config->{'web_cluster_queue'},
+        do_cleanup => 0,
+        # don't block and wait if the cluster looks full
+        max_cluster_jobs => 1_000_000_000,
     });
-    # my $command = "Rscript /R/Spatial_Correction.R $phenotype_file $temp_file \"$headers_string\" ";
-      $cmd->run_cluster(
-	"Rscript ",
-	#$c->config->{basepath} . "/R/spatial_modeling.R",
-    $c->config->{basepath} . "/R/Spatial_Correction.R",
-    $phenotype_file,
-    $phenotype_file.".spatial_correlation_summary",
-    # $temp_file, 
-	"'".$headers_string."'",
-
+    
+    $cmd->run_cluster(
+	    "Rscript ",
+        $c->config->{basepath} . "/R/Spatial_Correction.R",
+        $phenotype_file,
+        $phenotype_file.".spatial_correlation_summary", 
+        "'".$headers_string."'",
 	);
 
     while ($cmd->alive) {
-	sleep(1);
+	    sleep(1);
     }
 
    #getting the spatial correlation results
     my @result;
 
-    open(my $F, "<", $phenotype_file.".blues") || die "Can't open result file $phenotype_file".".blues";
-    my $header = <$F>;
-    my @h = split(/\t/, $header);
-    #my @h = split(',', $header); @ because it is an array
-    my @spl;
-    foreach my $item (@h) {
-    push  @spl, {title => $item};
-  }
-    print STDERR "Header: ".Dumper(\@spl);
-    while (<$F>) {
-	chomp;
-	my @fields = split /\s+/; #split /,/; #split by space use /\s+/;
-	foreach my $f (@fields) { $f =~ s/\"//g; }
-	push @result, \@fields;
-    }
-    #change the trait name back to the original trait name
-    my $trait_hash_file = $phenotype_file.".trait_hash";
-    my $trait_hash = retrieve($trait_hash_file);
+    open(my $F, "<", "$phenotype_file.spatially_corrected") || die "Can't open result file $phenotype_file.spatially_corrected";
 
-    my @result_original;
-    foreach my $r (@result) {
-        my @result_original_row;
-        foreach my $r2 (@$r) {
-            if (exists($trait_hash->{$r2})) {
-                push @result_original_row, $trait_hash->{$r2};
-            } else {
-                push @result_original_row, $r2;
-            }
+    my $accessions = {}; # keeps list of unique accessions
+    my $nested_data = {}; # formats the result data for saving the analysis
+    my @data; # formats for the datatable
+
+    my $header = <$F>;
+    # header will have plot, accession, row, column, replicate, [...traits...]
+    my (undef, undef, undef, undef, undef, @trait_columns) = split(/\s+/, $header);
+
+    sub fix_trait_name {
+        my $trait = shift;
+
+        $trait =~ s/_([A-Z]+(_\d+)*)_(\d+)/\|$1:$3/;
+
+        my ($name, $onto) = split(/\|/, $trait);
+
+        $name = join(" ", split("_", $name));
+
+        $trait = join('|', ($name, $onto));
+
+        return $trait;
+    }
+
+    @trait_columns = map {fix_trait_name($_)} @trait_columns; #need to fix trait names!
+
+    my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
+
+    while (<$F>) {
+        chomp;
+        my ($plot, $accession, $row, $column, $replicate, @trait_values) = split(/\s+/, $_);
+
+        for (my $i = 0; $i < @trait_values; $i += 3) {
+            push @data, [$plot, $accession, $traits[$i / 3], $trait_values[$i], $trait_values[$i + 1], $trait_values[$i + 2] ];
+            $nested_data->{$plot}->{$traits[$i / 3]} = [
+                $trait_values[$i + 1], 
+                strftime("%Y-%m-%dT%H:%M:%S", localtime), 
+                $c->user->get_object()->get_first_name().' '.$c->user->get_object()->get_last_name(), 
+                '', 
+                ''
+            ];
         }
-        push @result_original, \@result_original_row;
+
+        $accessions->{$accession} = 1;
     }
-    @result = @result_original;
-    #get the accession names
-    my @accessions;
+
+    my @accessions = sort(keys(%{$accessions}));
+
     # print STDERR "FORMATTED DATA: ".Dumper(\@result);
-    my $traits = {};
-    my $nested_data = {};
-    foreach my $r (@result) {
-        my $trait = $r->[1];
-        $traits->{$trait} = 1;
-        my $accession = $r->[2];
-        push @accessions, $accession;
-        my $value = $r->[3];
-        $nested_data->{$accession}->{$trait} = [
-            $value, 
-            strftime("%Y-%m-%dT%H:%M:%S", localtime), 
-            $c->user->get_object()->get_first_name().' '.$c->user->get_object()->get_last_name(), 
-            '', 
-            ''
-        ];
-    }
 
     # print STDERR Dumper $nested_data;
     
-    
-    my $basename = basename($phenotype_file.".clean.blues");
+    my $basename = basename("$phenotype_file.spatially_corrected");
 
-    copy($phenotype_file.".clean.corrected", $c->config->{basepath}."/static/documents/tempfiles/spatial_model_files/".$basename);
+    copy("$phenotype_file.spatially_corrected", $c->config->{basepath}."/static/documents/tempfiles/spatial_model_files/$basename");
 
-    my $download_url = '/documents/tempfiles/spatial_model_files/'.$basename;
+    my $download_url = "/documents/tempfiles/spatial_model_files/$basename";
     my $download_link = "<a href=\"$download_url\">Download Results</a>";
 
     $c->stash->{rest} = {
-	result => \@result,
-    headers => \@spl,
+	result => \@data,
 	download_link => $download_link,
     accession_names => \@accessions,
-    phenotype_file => $phenotype_file,
-    traits => [keys(%{$traits})],
+    phenotype_file => "$phenotype_file.clean",
+    traits => \@traits,
     nested_data => JSON::Any->encode($nested_data)
     };
 

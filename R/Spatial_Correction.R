@@ -1,24 +1,24 @@
-################################################################################
-# Modeling Spatial Variation
-################################################################################
+# ################################################################################
+# # Modeling Spatial Variation
+# ################################################################################
 
-# There are ten main steps to this protocol:
-# 1. Load the software needed.
-# 2. Declare user-supplied variables.
-# 3. Process the phenotypic data.
-# 4. Fit the two models with and without 2D Spline model in sommer
-# 5. Format the information needed for output.
+# # There are ten main steps to this protocol:
+# # 1. Load the software needed.
+# # 2. Declare user-supplied variables.
+# # 3. Process the phenotypic data.
+# # 4. Fit the two models with and without 2D Spline model in sommer
+# # 5. Format the information needed for output.
 
 
-################################################################################
-# 1. Load software needed
-################################################################################
+# ################################################################################
+# # 1. Load software needed
+# ################################################################################
 
-library(sommer)
+library(SpATS)
 
-################################################################################
-# 2. Declare user-supplied variables.
-################################################################################
+# ################################################################################
+# # 2. Declare user-supplied variables.
+# ################################################################################
 # Get Arguments
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 2) {
@@ -28,143 +28,44 @@ phenotypeFile <- args[1]
 spatialFile <- args[2]
 spatialHeaders <- args[3]
 
-################################################################################
-# 3. Process the phenotypic data.
-################################################################################
-# read in the phenotypic data
+# ################################################################################
+# # 3. Process the phenotypic data.
+# ################################################################################
+# # read in the phenotypic data
 
 userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE)
 spatialPheno <- read.delim(spatialFile, header = TRUE, sep = "\t", fill = TRUE)
 colnames(spatialPheno) <- c("Trait", "Data.Quality", "Moran.P.Value", "Correction.Needed")
-# print the trait column to stderr
-# write(paste("spatialPheno$Trait:", spatialPheno$Trait), stderr())
-write(paste("spatialPheno:", head(spatialPheno)), stderr())
-# select all the traits that need correction: Correction.Needed == "YES" and save them in a vector
-# traits <- paste(spatialPheno$Trait[spatialPheno$Correction.Needed == "YES"], collapse = ",")
 traits <- spatialPheno$Trait[spatialPheno$Correction.Needed == "YES"]
-write(paste("traits:", traits), stderr())
 # The user should be able to select their response variables from a drop-down menu
 #    of the column names of the userPheno object. Then, those strings should be passed
 #    to this vector, 'userResponse'.
 userResponse <- unlist(strsplit(traits, split = ",", fixed = T))
-write(paste("userResponse:", userResponse), stderr())
 userResponse <- userResponse[!userResponse == "notes"] # x[ !x == 'A'] # remove notes from userResponse
-replicate <- "replicate"
-userID <- "germplasmName"
-row <- "rowNumber"
-col <- "colNumber"
-userPheno$R <- as.factor(userPheno$rowNumber)
-userPheno$C <- as.factor(userPheno$colNumber)
+rownames(userPheno) <- userPheno$observationUnitName
+userPheno$germplasmName <- as.factor(userPheno$germplasmName)
 
-################################################################################
-# 4. Fit the two models with and without 2D Spline model in sommer
-################################################################################
-# Make a list to save the models.
-userModelsWith <- list()
-userModelsWithout <- list()
+output <- data.frame(
+    observationUnitName = userPheno$observationUnitName,
+    germplasmName = userPheno$germplasmName,
+    rowNumber = userPheno$rowNumber,
+    colNumber = userPheno$colNumber,
+    replicate = userPheno$replicate
+)
 
-# Make lists to save the outputs for AIC, blues and fitted values
-AIC_output <- data.frame()
-output <- data.frame()
-fitted_output <- data.frame()
-
-# Loop through the response variables running the model with and without spatial variation
-for (i in 1:length(userResponse)) {
-    write(paste("userResponse:", userResponse[i]), stderr())
-
-    ## Fit the model without spatial variation ##
-    modArg <- paste(userResponse[i], " ~ ", userID, " + ", replicate, sep = "")
-    write(paste("modArg:", modArg), stderr())
-    mod <- mmer(
-        as.formula(modArg),
-        data = userPheno,
-        verbose = FALSE
+for (trait in userResponse) {
+    spatial_model <- SpATS(
+        response = trait,
+        spatial = ~ SAP(colNumber, rowNumber),
+        genotype = "germplasmName",
+        genotype.as.random = TRUE,
+        data = userPheno
     )
-
-    write(paste("modArg:", modArg), stderr())
-    userModelsWithout[[i]] <- mod
-
-    ## Fit the model with spatial variation ##
-
-    # create a formula for the fixed effects
-    fixedArg <- paste(userResponse[i], " ~ ", "1 +", userID, sep = "")
-    write(paste("fixedArg:", fixedArg), stderr())
-    # create a formula for the random effects
-    randArg <- paste("~vsr(R)+vsr(C)+ spl2Da(", col, ",", row, ")", sep = "")
-    write(paste("randArg:", randArg), stderr())
-    # the model
-    m2.sommer <- mmer(
-        fixed = as.formula(fixedArg),
-        random = as.formula(randArg),
-        rcov = ~units,
-        data = userPheno, verbose = FALSE
-    )
-
-    userModelsWith[[i]] <- m2.sommer
-
-    ## Obtaining the results from the models: AIC, blues and fitted values ##
-    # AIC
-    AIC.without <- summary(mod)$logo$AIC
-    AIC.with <- summary(m2.sommer)$logo$AIC
-
-    # Obtain all userIDs
-    userIDs <- unique(userPheno[, userID])
-    # blues
-    blue <- summary(m2.sommer)$betas
-    blue_sum <- 0
-    is_intercept <- FALSE
-    # Iterate over each row in the data
-    for (i in 1:nrow(blue)) {
-        # Check if the current row is an Intercept row
-        if (grepl("\\(Intercept\\)", blue$Effect[i])) {
-            # If it is an Intercept row, update the blue_sum variable
-            blue_sum <- blue$Estimate[i]
-            is_intercept <- TRUE
-            # If the first row is an Intercept row, assign the blue_sum to BLUE
-            if (i == 1) {
-                blue$BLUE[i] <- blue_sum
-            }
-        } else {
-            # If it is not an Intercept row, add the blue_sum to the current Estimate value
-            if (is_intercept) {
-                blue$BLUE[i] <- blue_sum + blue$Estimate[i]
-            } else {
-                # If the first row is not an Intercept row, assign NA to BLUE
-                blue$BLUE[i] <- NA
-            }
-        }
-
-        # Update the is_intercept flag if the next row is an Intercept row
-        if (i < nrow(blue) && grepl("\\(Intercept\\)", blue$Effect[i + 1])) {
-            is_intercept <- FALSE
-        }
-    }
-    blue_tab <- blue[, c("Trait", "Effect", "BLUE", "Std.Error")]
-    # remove "germplasmName" in Effect row eg germplasmNameTDr0900013 to TDr0900013
-    blue_tab$Effect <- gsub(paste(userID, "", sep = ""), "", blue_tab$Effect)
-
-    # blue_tab$Effect <- gsub(paste(userID, "\\+", sep = ""), "", blue_tab$Effect) #
-    # take all Effect names and compare them to the userIDs to find the missing one
-    missing <- setdiff(userIDs, blue_tab$Effect) # setdiff returns the elements of x that are not in y
-    write(paste("missing:", missing), stderr())
-    # replace (Intercept) with the missing userID
-    blue_tab$Effect[blue_tab$Effect == "(Intercept)"] <- missing
-    # print number of rows in blue_tab
-    write(paste("nrow(blue_tab):", nrow(blue_tab)), stderr())
-    output <- rbind(output, blue_tab)
+    output[[trait]] <- userPheno[[trait]]
+    output[[paste(trait, "_spatially_corrected", sep = "")]] <- fitted(spatial_model);
+    output[[paste(trait, "_spatial_adjustment", sep = "")]] <- output[[paste(trait, "_spatially_corrected", sep = "")]] - output[[trait]]
 }
 
-################################################################################
-# 5. Write the results to files.
-################################################################################
-### deal with AIC output
-outfile_AIC <- paste(phenotypeFile, ".AIC", sep = "")
-write.table(AIC_output, outfile_AIC)
+outfile <- paste(phenotypeFile, ".spatially_corrected", sep="")
 
-## dealing with blues output
-print(colnames(output))
-colnames(output) <- c("Trait", "Name", "Estimate", "Std.Error")
-BLUE <- as.data.frame(output)
-
-outfile_blue <- paste(phenotypeFile, ".blues", sep = "")
-write.table(BLUE, outfile_blue)
+write.table(output, file = outfile, quote = FALSE, sep = "\t", col.names = TRUE, row.names = FALSE)
