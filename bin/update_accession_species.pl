@@ -118,7 +118,7 @@ if ($worksheet->get_cell(0,1)) {
 #
 #my ($cvterm_new_value, $cvterm_old_value);
 my ($accession_name, $species);
-for (my $n=1; $n<$row_max; $n++) {
+for (my $n=1; $n<=$row_max; $n++) {
 
     if ($worksheet->get_cell($n,0)) {
 	$accession_name  = $worksheet->get_cell($n,0)->value();
