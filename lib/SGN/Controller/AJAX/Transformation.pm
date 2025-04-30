@@ -1048,6 +1048,44 @@ sub set_transformation_control_POST :Args(0){
 }
 
 
+sub set_as_control : Path('/ajax/transformation/set_as_control') : ActionClass('REST') {}
+
+sub set_as_control_POST :Args(0){
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    my $transformation_stock_id = $c->req->param('transformation_id');
+    print STDERR "TRANSFORMATION ID =".Dumper($transformation_stock_id)."\n";
+#    my $program_name = $c->req->param('program_name');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to set default plant material for this project." };
+        return;
+    }
+
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+#    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+#        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to set default plant material for transformation." };
+#        return;
+#    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
 sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_experiment_info') :Args(1) {
     my $self = shift;
     my $c = shift;

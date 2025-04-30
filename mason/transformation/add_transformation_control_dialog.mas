@@ -75,6 +75,34 @@ $project_id
     </div>
 </div>
 
+<div class="modal fade" id="set_as_a_control_dialog" name="set_as_a_control_dialog" tabindex="-1" role="dialog" aria-labelledby="setAsAControlDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="reset" class="close" id="set_as_a_control_dismiss_button_1" name="set_as_a_control_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="setAsAControlDialog">Set as a Control</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" name="set_transformation_control_form" id="set_transformation_control_form">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Set this Transformation ID as a Control: </label>
+                            <div class="col-sm-6" >
+                                <input class="form-control" name="set_as_a_control" id="set_as_a_control" disabled value="<% $transformation_name %>">
+                                <input name="transformation_id_as_control" id="transformation_id_as_control" type="hidden" value="<% $transformation_id %>">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="set_as_a_control_submit">Submit</button>
+                <button id="set_as_a_control_dismiss_button_2" name="set_as_a_control_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -83,8 +111,12 @@ jQuery(document).ready(function(){
     const transformation_id = '<%$transformation_id%>';
     get_select_box('control_transformation_ids', 'transformation_control_select_div', { 'name' : 'transformation_control_id', 'id' : 'transformation_control_id', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
 
-    jQuery('#set_transformation_control_link').click(function(){
+    jQuery('#select_a_transformation_control_link').click(function(){
         jQuery('#set_transformation_control_dialog').modal('show');
+    });
+
+    jQuery('#set_as_a_control_link').click(function(){
+        jQuery('#set_as_a_control_dialog').modal('show');
     });
 
     jQuery('#set_transformation_control_submit').click(function(){
@@ -123,10 +155,43 @@ jQuery(document).ready(function(){
         });
     });
 
+    jQuery('#set_as_a_control_submit').click(function(){
+        const transformation_id = jQuery('#transformation_id_as_control').val();
+        if (!transformation_id) {
+            alert ("Error retrieving transformation ID info");
+            return;
+        }
+
+        jQuery.ajax({
+            url : '/ajax/transformation/set_as_control',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'transformation_id': transformation_id,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#set_as_a_control_dialog').modal('hide');
+                    jQuery('#set_transformation_control_saved_dialog_message').modal("show");
+
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred setting transformation control');
+            }
+        });
+    });
 
 
 });
-
 
 
 </script>
