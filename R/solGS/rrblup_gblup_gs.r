@@ -1106,7 +1106,7 @@ if (length(selection_pop_data) != 0) {
     
     if (!is.null(selection_pop_genetic_values) &&
         !is.null(selection_pop_gebvs)) {
-        combined_selection_gebvs_genetic_values <- inner_join(selection_gebvs,
+        combined_selection_gebvs_genetic_values <- inner_join(selection_pop_gebvs,
         selection_pop_genetic_values, 
         by = 'genotypes')
     }
