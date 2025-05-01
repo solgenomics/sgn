@@ -202,6 +202,7 @@ my $map_file = $opt_m; #
 my %name_map;
 
 if ($opt_m) {
+    eval { 
     my $s = CXGN::Tools::File::Spreadsheet->new($map_file); #
     my @rows = $s->row_labels(); #
     my $image_id;
@@ -220,6 +221,14 @@ if ($opt_m) {
 		link_image($image_id, $stock_row->stock_id, $metadata_id);
 	    }
 	}
+    }
+    };
+    if ($@) {
+	print STDERR "ERROR OCCURRED WHILE SAVING NEW INFORMATION. $@\n";
+	$dbh->rollback();
+    }
+    else {
+	$dbh->commit();
     }
 
     print STDERR "DONE WITH MAPPING FILE $opt_m\n";
@@ -368,7 +377,8 @@ sub store_image {
     
     print STDERR "IMAGE ID $image_id, ERROR: $error\n";
     
-    if ($error eq "ok") { 
+    if ($error eq "ok") {
+	print STDERR "Storing image... \n";
 	$image->set_description("$description");
 	$image->set_name(basename($filename , ".$ext"));
 	$image->set_sp_person_id($sp_person_id);
@@ -377,7 +387,7 @@ sub store_image {
 	#link the image with the BCS object 
 	$new_image_count++;
 	my $image_subpath = $image->image_subpath();
-	print STDERR "FINAL IMAGE PATH = $db_image_dir/$image_subpath\n";
+	print STDERR "FINAL IMAGE PATH for IMAGE ".$image->get_image_id()." = $db_image_dir/$image_subpath\n";
     }
 
     return $image_id;
