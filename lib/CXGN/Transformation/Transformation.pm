@@ -67,6 +67,12 @@ has 'transformation_control_stock_id' => (
     is => 'rw',
 );
 
+has 'is_a_control' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0,
+);
+
 
 sub get_active_transformations_in_project {
     my $self = shift;
@@ -493,6 +499,40 @@ sub set_transformation_control {
     }
 
 }
+
+
+sub set_as_control {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $is_a_control = $self->is_a_control();
+
+    eval {
+        my $transformation_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation','stock_type')->cvterm_id();
+        my $is_a_transformation_control_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a_transformation_control', 'stock_property');
+        my $transformation_rs = $schema->resultset("Stock::Stock")->find({stock_id => $transformation_stock_id, type_id => $transformation_cvterm_id });
+
+        if ($transformation_rs && $is_a_control) {
+            my $previous_stockprop_rs = $transformation_rs->stockprops({type_id=>$is_a_transformation_control_cvterm->cvterm_id});
+            if ($previous_stockprop_rs) {
+                die "This transformation ID has already been set as a control.\n";
+            } else {
+                $transformation_rs->create_stockprops({$is_a_transformation_control_cvterm->name() => $is_a_control});
+            }
+        }
+
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while setting transformation as a control for stock id ".$transformation_stock_id."$@\n";
+	    return $@;
+    } else {
+	    return 0;
+    }
+
+}
+
 
 
 

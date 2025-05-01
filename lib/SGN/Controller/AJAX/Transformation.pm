@@ -1055,7 +1055,7 @@ sub set_as_control_POST :Args(0){
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_id');
-    print STDERR "TRANSFORMATION ID =".Dumper($transformation_stock_id)."\n";
+    my $is_a_control = $c->req->param('is_a_control');
 #    my $program_name = $c->req->param('program_name');
 
     if (!$c->user()) {
@@ -1078,8 +1078,12 @@ sub set_as_control_POST :Args(0){
 #    }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
-
-
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, is_a_control=>$is_a_control});
+    my $error = $transformation_obj->set_as_control();
+    if ($error) {
+        $c->stash->{rest} = { error => "An error occurred attempting to set the transformation ID as a control. ($@)" };
+        return;
+    }
 
     $c->stash->{rest} = { success => 1 };
 
