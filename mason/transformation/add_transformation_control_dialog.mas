@@ -2,6 +2,7 @@
 $transformation_id
 $transformation_name
 $project_id
+$program_name
 </%args>
 
 
@@ -109,6 +110,7 @@ $project_id
 jQuery(document).ready(function(){
 
     const transformation_id = '<%$transformation_id%>';
+    const program_name = '<%$program_name%>';
     get_select_box('control_transformation_ids', 'transformation_control_select_div', { 'name' : 'transformation_control_id', 'id' : 'transformation_control_id', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
 
     jQuery('#select_a_transformation_control_link').click(function(){
@@ -133,6 +135,7 @@ jQuery(document).ready(function(){
             data : {
                 'transformation_stock_id': transformation_id,
                 'control_stock_id': control_stock_id,
+                'program_name': program_name,
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -169,6 +172,7 @@ jQuery(document).ready(function(){
             data : {
                 'transformation_id': transformation_id,
                 'is_a_control': 1,
+                'program_name': program_name
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

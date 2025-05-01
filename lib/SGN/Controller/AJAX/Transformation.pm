@@ -1015,6 +1015,7 @@ sub set_transformation_control_POST :Args(0){
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
     my $control_stock_id = $c->req->param('control_stock_id');
+    my $program_name = $c->req->param('program_name');
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -1030,12 +1031,11 @@ sub set_transformation_control_POST :Args(0){
     my %has_roles = ();
     map { $has_roles{$_} = 1; } @user_roles;
 
-#    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-#        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to set a control for transformation." };
-#        return;
-#    }
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to set a control for this transformation ID." };
+        return;
+    }
 
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_control_stock_id=>$control_stock_id});
     my $error = $transformation_obj->set_transformation_control();
     if ($error) {
@@ -1056,7 +1056,7 @@ sub set_as_control_POST :Args(0){
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_id');
     my $is_a_control = $c->req->param('is_a_control');
-#    my $program_name = $c->req->param('program_name');
+    my $program_name = $c->req->param('program_name');
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -1064,7 +1064,7 @@ sub set_as_control_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to set default plant material for this project." };
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to set this transformation ID as a control." };
         return;
     }
 
@@ -1072,12 +1072,11 @@ sub set_as_control_POST :Args(0){
     my %has_roles = ();
     map { $has_roles{$_} = 1; } @user_roles;
 
-#    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-#        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to set default plant material for transformation." };
-#        return;
-#    }
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to set this transformation ID as a control." };
+        return;
+    }
 
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, is_a_control=>$is_a_control});
     my $error = $transformation_obj->set_as_control();
     if ($error) {
