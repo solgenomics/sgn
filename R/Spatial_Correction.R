@@ -40,6 +40,8 @@ traits <- spatialPheno$Trait[spatialPheno$Correction.Needed == "YES"]
 # The user should be able to select their response variables from a drop-down menu
 #    of the column names of the userPheno object. Then, those strings should be passed
 #    to this vector, 'userResponse'.
+# write(colnames(userPheno), stderr())
+
 userResponse <- unlist(strsplit(traits, split = ",", fixed = T))
 userResponse <- userResponse[!userResponse == "notes"] # x[ !x == 'A'] # remove notes from userResponse
 rownames(userPheno) <- userPheno$observationUnitName
@@ -50,7 +52,9 @@ output <- data.frame(
     germplasmName = userPheno$germplasmName,
     rowNumber = userPheno$rowNumber,
     colNumber = userPheno$colNumber,
-    replicate = userPheno$replicate
+    replicate = userPheno$replicate,
+    blockNumber = userPheno$blockNumber,
+    plotNumber = userPheno$plotNumber
 )
 
 for (trait in userResponse) {

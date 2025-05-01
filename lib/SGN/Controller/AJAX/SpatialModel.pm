@@ -393,11 +393,12 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     my $accessions = {}; # keeps list of unique accessions
     my $nested_data = {}; # formats the result data for saving the analysis
+    my $analysis_design = {}; # retains the trial layout data for analysis submission
     my @data; # formats for the datatable
 
     my $header = <$F>;
-    # header will have plot, accession, row, column, replicate, [...traits...]
-    my (undef, undef, undef, undef, undef, @trait_columns) = split(/\s+/, $header);
+    # header will have plot, accession, row, column, replicate, blockNumber, plotNumber [...traits...]
+    my (undef, undef, undef, undef, undef, undef, undef, @trait_columns) = split(/\s+/, $header);
 
     sub fix_trait_name {
         my $trait = shift;
@@ -417,9 +418,10 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
 
+    my $datarow_num = 1;
     while (<$F>) {
         chomp;
-        my ($plot, $accession, $row, $column, $replicate, @trait_values) = split(/\s+/, $_);
+        my ($plot, $accession, $row, $column, $replicate, $block_number, $plot_number, @trait_values) = split(/\s+/, $_);
 
         for (my $i = 0; $i < @trait_values; $i += 3) {
             push @data, [$plot, $accession, $traits[$i / 3], $trait_values[$i], $trait_values[$i + 1], $trait_values[$i + 2] ];
@@ -430,9 +432,19 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
                 '', 
                 ''
             ];
+            $analysis_design->{$datarow_num} = {
+                'stock_name' => $accession,
+                'plot_name' => $plot,
+                'plot_number' => $plot_number,
+                'block_number' => $block_number,
+                'rep_number' => $replicate,
+                'row_number' => $row,
+                'col_number' => $column
+            };
         }
 
         $accessions->{$accession} = 1;
+        $datarow_num++;
     }
 
     my @accessions = sort(keys(%{$accessions}));
@@ -452,9 +464,10 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 	result => \@data,
 	download_link => $download_link,
     accession_names => \@accessions,
-    phenotype_file => "$phenotype_file.clean",
+    phenotype_file => $phenotype_file,
     traits => \@traits,
-    nested_data => JSON::Any->encode($nested_data)
+    nested_data => JSON::Any->encode($nested_data),
+    analysis_design => JSON::Any->encode($analysis_design)
     };
 
 };
