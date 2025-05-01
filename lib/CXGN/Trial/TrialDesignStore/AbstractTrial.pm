@@ -224,6 +224,8 @@ has 'seedlot_cvterm_id'  => (isa => 'Int', is => 'rw');
 
 has 'accession_cvterm_id'  => (isa => 'Int', is => 'rw');
 
+has 'analysis_result_cvterm_id'  => (isa => 'Int', is => 'rw');
+
 has 'tissue_sample_cvterm_id'  => (isa => 'Int', is => 'rw');
 
 has 'tissue_sample_of_cvterm_id'  => (isa => 'Int', is => 'rw');
@@ -310,6 +312,8 @@ sub BUILD {
 
     $self->set_accession_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id());
 
+    $self->set_analysis_result_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'analysis_result', 'stock_type')->cvterm_id());
+    
     $self->set_tissue_sample_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id());
 
     $self->set_tissue_sample_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id());
@@ -501,7 +505,6 @@ sub store {
         my $stock_rs = $chado_schema->resultset("Stock::Stock");
 
         foreach my $key (keys %design) {
-
             if ($key eq 'treatments'){
                 next;
             }
@@ -528,6 +531,7 @@ sub store {
             if ($design{$key}->{subplots_plant_names}) {
                 $subplots_plant_names = $design{$key}->{subplots_plant_names};
             }
+            
             my $stock_name;
             if ($design{$key}->{stock_name}) {
                 $stock_name = $design{$key}->{stock_name};
@@ -624,6 +628,7 @@ sub store {
             }
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
+            
             if ($stock_data{$stock_name}) {
                 $stock_id_checked = $stock_data{$stock_name}[0];
                 $organism_id_checked = $stock_data{$stock_name}[1];

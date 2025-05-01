@@ -53,7 +53,7 @@ sub seasons {
         push @data, {
             seasonDbId=>qq|$projectprop_id|,
             season=>$season,
-            year=>$year
+            year=>int($year)
         };
     }
     my %result = (data=>\@data);

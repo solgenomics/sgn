@@ -68,7 +68,7 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
     stock.stock_id AS stock_id,
     phenotype.phenotype_id as phenotype_id,
     phenotype.cvalue_id as trait_id,
-    STRING_AGG(ics.stock_id::text, ',') AS intercrop_accession_ids
+    STRING_AGG(DISTINCT(ics.stock_id)::text, ',') AS intercrop_accession_ids
   FROM stock accession
   LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('plot_of', 'subplot_of', 'plant_of', 'tissue_sample_of' ,'analysis_of'))
   LEFT JOIN stock ON stock_relationship.subject_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('plot', 'subplot', 'plant', 'tissue_sample','analysis_instance'))

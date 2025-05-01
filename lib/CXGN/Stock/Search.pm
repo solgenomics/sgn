@@ -223,7 +223,15 @@ has 'offset' => (
     is => 'rw',
 );
 
+# when true, include both non-obsolete and obsolete stocks
 has 'include_obsolete' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0
+);
+
+# when true, include only obsolete stocks
+has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
     default => 0
@@ -514,7 +522,7 @@ sub search {
         my $f = {
             "-or" => [
                 {
-                    "to_char(me.create_date, 'YYYYMMDD')" => $acquisition_date
+                    "to_char(me.create_date, 'YYYY-MM-DD')" => $acquisition_date #Use ISO Date format
                 },
                 {
                     'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
@@ -528,7 +536,7 @@ sub search {
         my $f = {
             "-or" => [
                 {
-                    "to_char(me.create_date, 'YYYYMMDD')" => { '>=', $min_acquisition_date }
+                    "to_char(me.create_date, 'YYYY-MM-DD')" => { '>=', $min_acquisition_date } #Use ISO Date format
                 },
                 {
                     'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
@@ -542,7 +550,7 @@ sub search {
         my $f = {
             "-or" => [
                 {
-                    "to_char(me.create_date, 'YYYYMMDD')" => { '<=', $max_acquisition_date }
+                    "to_char(me.create_date, 'YYYY-MM-DD')" => { '<=', $max_acquisition_date } #Use ISO Date format
                 },
                 {
                     'stockprops_2.type_id' => SGN::Model::Cvterm->get_cvterm_row($schema, 'acquisition date', 'stock_property')->cvterm_id(),
@@ -563,6 +571,9 @@ sub search {
     };
     if (!$self->include_obsolete) {
         $search_query->{'me.is_obsolete'} = 'f';
+    }
+    if ($self->is_obsolete) {
+        $search_query->{'me.is_obsolete'} = 't';
     }
     if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
@@ -687,10 +698,10 @@ ORDER BY organism_id ASC;";
         push @{$organism_props{$organism_id}->{$prop_type}}, $prop_value;
     }
 
-    # Get additional stock properties (pedigree, synonyms, donor info)
+    # Get additional stock properties (pedigree, synonyms, donor info, create date in ISO Date format)
     my $stock_query = "SELECT stock.stock_id, stock.uniquename, stock.organism_id,
                mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
-               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name, to_char(stock.create_date, 'YYYYMMDD')
+               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name, to_char(stock.create_date, 'YYYY-MM-DD')
         FROM stock
         LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
         LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
