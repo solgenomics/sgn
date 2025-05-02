@@ -257,6 +257,12 @@ sub get_db_stats {
     $rs = $self->phenome_schema()->resultset('ProjectMdImage')->search( {}, { columns => [ { 'project_md_image_id_max' => { max => 'project_md_image_id' }} ] });
     $stats->{project_images} = defined $rs->get_column('project_md_image_id_max')->first() ? $rs->get_column('project_md_image_id_max')->first() : 0;
 
+    # count images
+    $rs = $self->metadata_schema()->resultset('MdImage')->search( {}, { columns => [ { image_id_max => { max => 'image_id' }} ] });
+    $stats->{images} = defined $rs->get_column('image_id_max')->first() ? $rs->get_column('image_id_max')->first() :0;
+
+    print STDERR "IMAGE STATS : $stats->{images}\n";
+    
     # count metadata file entries
     $rs = $self->metadata_schema()->resultset('MdFiles')->search( {}, { columns => [ { 'file_id_max' => { max => 'file_id' }} ] } );
     $stats->{metadata_files} = $rs->get_column('file_id_max')->first();
@@ -312,7 +318,7 @@ sub clean_up_db {
 
     if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
 
-    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments');
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images');
     foreach my $table (@deletion_order) {
 	    print STDERR "CLEANING $table...\n";
 	    my $count = $stats->{$table} - $self->dbstats_start()->{$table};
@@ -437,6 +443,11 @@ sub delete_table_entries {
         $h2->execute($previous_max_id);
     }
 
+    if ($table eq "images") {
+	my $q = "DELETE FROM metadata.md_image where image_id > ?";
+	my $h = $self->dbh()->prepare($q);
+	$h->execute($previous_max_id);
+    }
 
     my $count = 0;
     print STDERR "rs value: $rs";
