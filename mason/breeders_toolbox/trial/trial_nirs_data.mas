@@ -4,26 +4,41 @@ $trial_id
 $stockref => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/source/legacy/d3/graphers/nirsDataLineGraph.js"></script>
 
+<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables', 'd3.graphers.nirsDataLineGraph.js', 'd3.d3v4Min' ] &>
+
+<style>
+    #nirs_spectra_table tbody tr {
+        background-color: white !important;
+    }
+    .nirs-table-container {
+        margin-top: 30px;
+    }
+</style>
 
 <div class="well well-sm" id="nirs_analysis_plot_spectra_protocol_select">
     <p>TEST3</p>
 </div>
 
 <center>
-    <button class="btn btn-success" id="submit_protocol_selection">Select</button>
+    <button class="btn btn-sm btn-primary" id="submit_protocol_selection">Select</button>
 </center>
-            
+
+<div class="well mt-4">
+    <table id="nirs_data_table" class="display" style="width:100%">
+    </table>
+</div>
 
 <script>
-
 var trial_id = '<% $trial_id %>';
 
-jQuery(document).ready( function() {
+jQuery(document).ready(function() {
+
     jQuery('#trial_nirs_section_onswitch').click(function() {
         get_select_box('high_dimensional_phenotypes_protocols','nirs_analysis_plot_spectra_protocol_select', {'checkbox_name':'nirs_analysis_plot_spectra_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
-    })
+    });
 
     jQuery('#submit_protocol_selection').click(function() {
         const selected = [];
@@ -34,28 +49,163 @@ jQuery(document).ready( function() {
         if (selected.length !== 1) {
             alert('Please select only one protocol.');
         } else {
-            selectedProtocolId = selected[0];
+            const selectedProtocolId = selected[0];
             console.log('Selected protocol ID:', selectedProtocolId);
-
-            jQuery.ajax({
-                url: '/ajax/breeders/trial/'+<% $trial_id %>+'/nirs_samples',
-                dataType: 'json',
-                data: {
-                    'nd_protocol_id': selectedProtocolId
-                },
-                beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-                },
-                success: function(response) {
-                    console.log("NIRS data matrix:", response);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error fetching NIRS samples:", error);
-                    alert("There was an error retrieving NIRS sample data.");
-                }
+            jQuery('#working_modal').modal('show');
+            Promise.all([
+                get_nirs_data(trial_id, selectedProtocolId),
+                get_nirs_protocol(selectedProtocolId)
+            ])
+            .then(([nirsDataResponse, protocolResponse]) => {
+                console.log("NIRS data:", nirsDataResponse.result);
+                console.log("frequencies response:", protocolResponse);
+                const frequencies = protocolResponse.result.data[0].header_column_names;
+                console.log('frequnecy data:', frequencies);
+                show_nirs_data(nirsDataResponse.result, frequencies);
+            })
+            .catch((error) => {
+                console.error('Error fetching NIRS data:', error);
+                alert('An error occurred while fetching data');
+            })
+            .finally(() => {
+                jQuery('#working_modal').modal('hide');
             });
         }
     });
+
+    function get_nirs_protocol(selectedProtocolId) {
+        return jQuery.ajax({
+            'url': "/brapi/v2/nirs/" + selectedProtocolId,
+            'method': "GET"
+        });
+    }
+
+    function get_nirs_data(trial_id, selectedProtocolId) {
+        return jQuery.ajax({
+            'url': "/brapi/v2/nirs/" + selectedProtocolId + "/matrix",
+            'data': {
+                studyDbId: trial_id,
+            },
+            'method': "GET"
+        });
+    }
+
+    function show_nirs_data(result, frequencies) {
+        var data = [];
+        samples_map = {};
+
+        result.data.forEach(item => {
+            var unique_key = item.germplasmDbId;
+            if (!samples_map[unique_key]) {
+                samples_map[unique_key] = {
+                    germplasmName: item.germplasmName,
+                    germplasmDbId: item.germplasmDbId,
+                    values: []
+                };
+            }
+
+            const pairedValues = item.row.map((value, index) => ({
+                value: parseFloat(value),
+                frequency: parseFloat(frequencies[index])
+            }));
+
+            samples_map[unique_key].values.push({
+                pairedValues
+            })
+        });
+
+        for (var unique_id in samples_map) {
+            var group = samples_map[unique_id]
+
+            var line_graph = `<div class="small-graph" data-observation="${unique_id}"></div>`;
+            data.push([group.germplasmName, group.germplasmDbId, line_graph]);
+        }
+        console.log("data 2", data);
+        console.log("group values", group.values);
+
+
+        jQuery('#nirs_data_table').html(`
+            <thead>
+                <tr>
+                    <th>Sample Name</th>
+                    <th>Sample ID</th>
+                    <th>Spectra Graph</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `);
+        jQuery('#nirs_data_table').DataTable( {
+            'destroy': true,
+            'columns': [
+                { title: 'Sample Name' },
+                { title: 'Sample ID'},
+                { title: 'Spectra Graph'}
+            ],
+            'data': data,
+            'drawCallback': function (settings) {
+                jQuery(".small-graph").each(function () {
+                    var container = jQuery(this);
+                    var sampleKey = container.data('observation');
+                    var group = samples_map[sampleKey];
+                    var small_graph_data = group.values;
+
+                    draw_small_graph(container, small_graph_data);
+                });
+            }
+            
+        });
+    }
+
+    function draw_small_graph(container, data) {
+        console.log("draw_small_graph called with container:", container, "and data:", data);
+        var small_graph_dim = {
+            "width": 60,
+            "height": 20,
+            "margin": { "top": 5, "right": 5, "bottom": 5, "left":5}  
+        };
+
+        var options = {
+            showXAxis: false, 
+            showYAxis: false, 
+            showDots: false, 
+            showTitle: false
+        };
+
+        const flattened_data = data.flatMap(d => d.pairedValues);
+        console.log("flattened data", flattened_data);
+        nirsDataLineGraph.drawLineGraph(flattened_data, container.get(0), small_graph_dim, '', '', options);
+
+        jQuery(container).on('click', function() {
+            var sampleKey = container.data('observation');
+            var group = samples_map[sampleKey];
+            var graph_data = group.values;
+            var label_sample_name = group.germplasmName;
+            open_large_graph(graph_data, 'Spectra Data', label_sample_name);
+        });
+    }
+
+    function open_large_graph(data, trait_name, label_observation_unit_name) {
+        jQuery('#title_trait_name').text(trait_name);
+        jQuery('#large_graph_container').html('');
+        jQuery('#large_graph').modal('show');
+
+        var options = {
+            showXAxis:true, 
+            showYAxis:true, 
+            showTitle:true,
+            showDots: true
+        };
+
+        nirsDataLineGraph.drawLineGraph(
+            data,
+            "#large_graph_container",
+            null,
+            trait_name,
+            label_observation_unit_name,
+            options
+        );
+    }
+
 });
 
     
