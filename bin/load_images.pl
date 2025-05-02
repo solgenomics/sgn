@@ -337,9 +337,10 @@ foreach my $file (@files) {
 			}
 		    }
 		}
+		if ($image_id) { link_image($image_id, $name2id{lc($object)}, $metadata_id); }
 	    }
 
-	    link_image($image_id, $name2id{lc($object)}, $metadata_id);
+
 	    
 	    # print STDERR "Connecting image $filename and id $image_id with stock ".$stock->stock_id()."\n";
             # #store the image_id - stock_id link
@@ -376,6 +377,10 @@ sub store_image {
     my ($image_id, $error) = $image->process_image("$filename", $chado_table , $name2id->{lc($object)}, 1);
     
     print STDERR "IMAGE ID $image_id, ERROR: $error\n";
+
+    if ($error =~ /duplicate/i) {
+	return 0;
+    }
     
     if ($error eq "ok") {
 	print STDERR "Storing image... \n";
