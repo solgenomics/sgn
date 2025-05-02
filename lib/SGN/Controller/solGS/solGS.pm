@@ -699,7 +699,8 @@ sub predict_selection_pop_multi_traits {
 
     $c->stash->{pop_id} = $training_pop_id;
 
-    my @traits = @{ $c->stash->{training_traits_ids} }
+    my @traits;
+    @traits = @{ $c->stash->{training_traits_ids} }
       if $c->stash->{training_traits_ids};
 
     $self->traits_with_valid_models($c);
@@ -954,7 +955,8 @@ sub build_multiple_traits_models {
 
     my $pop_id          = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my @selected_traits = @{ $c->stash->{training_traits_ids} };
-    my $trait_id        = $selected_traits[0] if scalar(@selected_traits) == 1;
+    my $trait_id;
+    $trait_id = $selected_traits[0] if scalar(@selected_traits) == 1;
 
     my $traits;
 

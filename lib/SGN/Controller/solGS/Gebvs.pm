@@ -302,7 +302,8 @@ sub training_pop_analyzed_traits {
 
     my $training_pop_id;
     $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id};
-    my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
+    my @selected_analyzed_traits;
+    @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
 
     my @traits;
     my @traits_ids;
