@@ -753,6 +753,7 @@ jQuery(document).ready( function() {
                 }
             },
             error: function(response) {
+                jQuery("#working_modal").modal("hide");
                 alert('Error displaying traits assayed heatmap');
             }
         })
@@ -764,6 +765,7 @@ jQuery(document).ready( function() {
                     FieldMap.meta_data.retain_layout = true;
                     FieldMap.meta_data.transpose = false;
                     FieldMap.load();
+                    jQuery('#working_modal').modal("hide");
             }
         )
     }
@@ -771,9 +773,9 @@ jQuery(document).ready( function() {
     function heatmap(selected) {
         jQuery('#working_modal').modal("show");
         get_heatmap_observations(selected).then((observations) => {
-            jQuery('#working_modal').modal("hide");
             FieldMap.filter_heatmap(observations);
             FieldMap.load();
+            jQuery('#working_modal').modal("hide");
         }).catch((err) => {
             jQuery('#working_modal').modal("hide");
             alert(`ERROR: Could not load phenotype heatmap: ${err}`);
@@ -808,12 +810,15 @@ jQuery(document).ready( function() {
 
                         FieldMap.heatmap_cached_data[observationVariableDbId] = observations;
                         resolve(observations);
+                        jQuery('#working_modal').modal("hide");
                     }
                     else {
+                        jQuery('#working_modal').modal("hide");
                         reject(`Error loading heatmap obsevations (page: ${page})`);
                     }
                 },
                 error: function(response) {
+                    jQuery('#working_modal').modal("hide");
                     reject(`Error loading heatmap observations (page: ${page})`);
                 }
             });
@@ -1013,10 +1018,12 @@ jQuery(document).ready( function() {
                         jQuery('#working_modal').modal("hide");
                     }
                 } else {
+                    jQuery('#working_modal').modal("hide");
                     alert(response.error);
                 }
             },
             error: function(response) {
+                jQuery('#working_modal').modal("hide");
                 alert(response);
             }
         });
@@ -1059,8 +1066,11 @@ jQuery(document).ready( function() {
                 'trial_id': trial_id,
             },
 
-            success: function(response) {},
+            success: function(response) {
+                jQuery('#working_modal').modal("hide");
+            },
             error: function(response) {
+                jQuery('#working_modal').modal("hide");
                 alert('Error refreshing cache');
             },
         })
