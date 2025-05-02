@@ -200,7 +200,8 @@ sub get_gebv_files_of_traits {
         $valid_gebv_files = join("\t", @{$c->stash->{training_pop_analyzed_valid_traits_files}});
     }
 
-    my $pred_file_suffix =   '_' . $selection_pop_id if $selection_pop_id;
+    my $pred_file_suffix;    
+    $pred_file_suffix =   '_' . $selection_pop_id if $selection_pop_id;
     my $name = "gebv_files_of_traits_${training_pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
@@ -248,7 +249,7 @@ sub catalogue_traits_selection {
     } else {
         my @combo = ($entry);
 
-        my @entries = map{ $_ =~ s/\n// ? $_ : undef } read_file($file, {binmode => ':utf8'});
+        my @entries = map { ($_ =~ s/\n//r) } read_file($file, {binmode => ':utf8'});
         my @intersect = intersect(@combo, @entries);
 
         unless( @intersect ) {
@@ -299,7 +300,8 @@ sub create_traits_selection_id {
 sub training_pop_analyzed_traits {
     my ($self, $c) = @_;
 
-    my $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id};
+    my $training_pop_id;
+    $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id};
     my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
 
     my @traits;
@@ -341,7 +343,8 @@ sub training_pop_analyzed_traits {
 sub selection_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
 
-    my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
+    my @selected_analyzed_traits;
+    @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
 
     no warnings 'uninitialized';
 

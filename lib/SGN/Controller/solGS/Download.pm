@@ -111,7 +111,7 @@ sub download_traits_acronym :Path('/solgs/download/traits/acronym') Args(0) {
 sub selection_prediction_download_urls {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
 
-    my $selected_model_traits = $c->stash->{training_traits_ids} || [$c->stash->{trait_id}];
+    my $training_model_traits_ids = $c->stash->{training_traits_ids} || [$c->stash->{trait_id}];
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     no warnings 'uninitialized';
@@ -122,15 +122,17 @@ sub selection_prediction_download_urls {
       'genotyping_protocol_id' => $protocol_id,
     };
 
-    my $selection_traits_ids;
+    my $selection_pop_analyzed_traits_ids;
 
     if ($selection_pop_id) {
         $c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-        $selection_traits_ids = $c->stash->{selection_pop_analyzed_traits_ids};
+        $selection_pop_analyzed_traits_ids = $c->stash->{selection_pop_analyzed_traits_ids};
     }
 
-    my @selection_traits_ids = sort(@$selection_traits_ids) if $selection_traits_ids->[0];
-    my @selected_model_traits = sort(@$selected_model_traits) if $selected_model_traits->[0];
+    my @selection_pop_traits_ids;
+    @selection_pop_traits_ids = sort(@$selection_pop_analyzed_traits_ids) if $selection_pop_analyzed_traits_ids->[0];
+    my @selected_model_traits_ids;
+    @selected_model_traits_ids = sort(@$training_model_traits_ids) if $training_model_traits_ids->[0];
 
     my $page = $c->req->referer;
     my $data_set_type = $page =~ /combined/ ? 'combined_populations' : 'single_population';
@@ -139,8 +141,8 @@ sub selection_prediction_download_urls {
     my $sel_pop_page;
     my $download_url;
 
-    if (@selected_model_traits ~~ @selection_traits_ids) {
-        foreach my $trait_id (@selection_traits_ids) {
+    if (@selected_model_traits_ids ~~ @selection_pop_traits_ids) {
+        foreach my $trait_id (@selection_pop_traits_ids) {
             $url_args->{trait_id} = $trait_id;
 
             $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
@@ -157,7 +159,7 @@ sub selection_prediction_download_urls {
     }
 
     if (!$download_url) {
-        my $trait_id = $selected_model_traits[0];
+        my $trait_id = $selected_model_traits_ids[0];
         $url_args->{trait_id} = $trait_id;
 
         $sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);
