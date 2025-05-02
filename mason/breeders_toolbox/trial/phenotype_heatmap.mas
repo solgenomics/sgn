@@ -115,7 +115,6 @@ $has_plant_entries => undef
                 <div id="heatmap_traits_assayed_dropdown">
                     Loading Traits Assayed...
                 </div>
-                <input type='checkbox' disabled id='spatial_corrected_values'/> Spatially Corrected Values
             </div>
         </div>
         <div id="include_linked_trials" class="form-group form-group-sm">
