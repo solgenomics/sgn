@@ -36,7 +36,7 @@ $control_name
 </div>
 
 <div class="modal fade" id="set_transformation_control_saved_dialog_message" name="set_transformation_control_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="setTransformationControlSavedDialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -44,10 +44,9 @@ $control_name
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The transformation control was stored successfully.
-                    </p>
+                    <table>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
             <div class="modal-footer">
@@ -133,7 +132,10 @@ jQuery(document).ready(function(){
             return;
         }
 
-        var confirmation = confirm("This transformation ID already has " +control_name+ " as a control. Do you want to replace with a new one?");
+        if (control_name) {
+            var confirmation = confirm("This transformation ID already has " +control_name+ " as a control. Do you want to replace with a new one?");
+
+
         if (confirmation) {
             jQuery.ajax({
                 url : '/ajax/transformation/set_transformation_control',
@@ -151,7 +153,10 @@ jQuery(document).ready(function(){
                     jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
                         jQuery('#set_transformation_control_dialog').modal('hide');
+                        jQuery("#set_transformation_control_saved_dialog_message tbody").html('');
+                        jQuery("#set_transformation_control_saved_dialog_message tbody").append('The transformation control was stored successfully.');
                         jQuery('#set_transformation_control_saved_dialog_message').modal("show");
+                        return;
                     }
                     if (response.error) {
                         alert(response.error);
@@ -162,6 +167,40 @@ jQuery(document).ready(function(){
                     alert('An error occurred setting transformation control');
                 }
             });
+        }
+
+        } else {
+        jQuery.ajax({
+            url : '/ajax/transformation/set_transformation_control',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'transformation_stock_id': transformation_id,
+                'control_stock_id': control_stock_id,
+                'program_name': program_name,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#set_transformation_control_dialog').modal('hide');
+                    jQuery("#set_transformation_control_saved_dialog_message tbody").html('');
+                    jQuery("#set_transformation_control_saved_dialog_message tbody").append('The transformation control was stored successfully.');
+                    jQuery('#set_transformation_control_saved_dialog_message').modal("show");
+                    return;
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred setting transformation control');
+            }
+        });
+
         }
     });
 
@@ -193,8 +232,10 @@ jQuery(document).ready(function(){
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
                     jQuery('#set_as_a_control_dialog').modal('hide');
+                    jQuery("#set_transformation_control_saved_dialog_message tbody").html('');
+                    jQuery("#set_transformation_control_saved_dialog_message tbody").append('This transformation ID was set as a control successfully.');
                     jQuery('#set_transformation_control_saved_dialog_message').modal("show");
-
+                    return;
                 }
                 if (response.error) {
                     alert(response.error);
@@ -206,6 +247,11 @@ jQuery(document).ready(function(){
             }
         });
     });
+
+    jQuery("#dismiss_set_transformation_control_saved_dialog").click(function(){
+        location.reload();
+    });
+
 
 
 });
