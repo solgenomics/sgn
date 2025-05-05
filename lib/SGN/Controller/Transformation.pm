@@ -157,7 +157,8 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{has_associated_transformants} = $has_associated_transformants;
     $c->stash->{project_id} = $project_id;
     $c->stash->{is_a_control} = $is_a_control;
-    $c->stash->{control_id} = $control_id;    
+    $c->stash->{control_name} = $control_name;
+    $c->stash->{control_id} = $control_id;            
     $c->stash->{control_link} = $control_link;
 
     $c->stash->{template} = '/transformation/transformation.mas';

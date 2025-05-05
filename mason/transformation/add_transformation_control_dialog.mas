@@ -3,6 +3,8 @@ $transformation_id
 $transformation_name
 $project_id
 $program_name
+$is_a_control
+$control_name
 </%args>
 
 
@@ -111,6 +113,9 @@ jQuery(document).ready(function(){
 
     const transformation_id = '<%$transformation_id%>';
     const program_name = '<%$program_name%>';
+    const control_name = '<%$control_name%>';
+    const is_a_control = '<%$is_a_control%>';
+
     get_select_box('control_transformation_ids', 'transformation_control_select_div', { 'name' : 'transformation_control_id', 'id' : 'transformation_control_id', 'project_id':'<% $project_id %>', 'transformation_id': '<% $transformation_id %>','exclude_self': '1', 'empty': '1'});
 
     jQuery('#select_a_transformation_control_link').click(function(){
@@ -128,40 +133,47 @@ jQuery(document).ready(function(){
             return;
         }
 
-        jQuery.ajax({
-            url : '/ajax/transformation/set_transformation_control',
-            dataType: "json",
-            type: 'POST',
-            data : {
-                'transformation_stock_id': transformation_id,
-                'control_stock_id': control_stock_id,
-                'program_name': program_name,
-            },
-            beforeSend: function(response){
-                jQuery('#working_modal').modal('show');
-            },
-            success: function(response) {
-                jQuery('#working_modal').modal('hide');
-                if (response.success == 1) {
-                    jQuery('#set_transformation_control_dialog').modal('hide');
-                    jQuery('#set_transformation_control_saved_dialog_message').modal("show");
-
+        var confirmation = confirm("This transformation ID already has " +control_name+ " as a control. Do you want to replace with a new one?");
+        if (confirmation) {
+            jQuery.ajax({
+                url : '/ajax/transformation/set_transformation_control',
+                dataType: "json",
+                type: 'POST',
+                data : {
+                    'transformation_stock_id': transformation_id,
+                    'control_stock_id': control_stock_id,
+                    'program_name': program_name,
+                },
+                beforeSend: function(response){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        jQuery('#set_transformation_control_dialog').modal('hide');
+                        jQuery('#set_transformation_control_saved_dialog_message').modal("show");
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred setting transformation control');
                 }
-                if (response.error) {
-                    alert(response.error);
-                }
-            },
-            error: function(response){
-                jQuery('#working_modal').modal('hide');
-                alert('An error occurred setting transformation control');
-            }
-        });
+            });
+        }
     });
 
     jQuery('#set_as_a_control_submit').click(function(){
         const transformation_id = jQuery('#transformation_id_as_control').val();
         if (!transformation_id) {
             alert ("Error retrieving transformation ID info");
+            return;
+        }
+
+        if (is_a_control) {
+            alert ("This transformation ID has already been set as a control");
             return;
         }
 

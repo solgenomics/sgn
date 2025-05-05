@@ -26,6 +26,7 @@ $status_display => undef
 $has_associated_transformants => undef
 $project_id
 $is_a_control => undef
+$control_name => undef
 $control_id => undef
 $control_link => undef
 
@@ -110,7 +111,7 @@ $control_link => undef
 <& /transformation/add_transformants_using_list_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, program_name => $program_name &>
 <& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id, material_id => $material_id, material_name => $material_name, updated_status_type => $updated_status_type, program_name => $program_name, stock_type_page => $stock_type_page &>
 <& /tracking_activities/update_status_usage_info_dialog.mas &>
-<& /transformation/add_transformation_control_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, project_id => $project_id, program_name => $program_name &>
+<& /transformation/add_transformation_control_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, project_id => $project_id, program_name => $program_name, is_a_control => $is_a_control, control_name => $control_name &>
 
 <script>
 
