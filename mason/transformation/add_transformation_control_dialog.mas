@@ -7,7 +7,6 @@ $is_a_control
 $control_name
 </%args>
 
-
 <div class="modal fade" id="set_transformation_control_dialog" name="set_transformation_control_dialog" tabindex="-1" role="dialog" aria-labelledby="setTransformationControlDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ">
@@ -127,6 +126,7 @@ jQuery(document).ready(function(){
 
     jQuery('#set_transformation_control_submit').click(function(){
         const control_stock_id = jQuery('#transformation_control_id').val();
+
         if (!control_stock_id) {
             alert ("Please select a control");
             return;
@@ -134,73 +134,11 @@ jQuery(document).ready(function(){
 
         if (control_name) {
             var confirmation = confirm("This transformation ID already has " +control_name+ " as a control. Do you want to replace with a new one?");
-
-
-        if (confirmation) {
-            jQuery.ajax({
-                url : '/ajax/transformation/set_transformation_control',
-                dataType: "json",
-                type: 'POST',
-                data : {
-                    'transformation_stock_id': transformation_id,
-                    'control_stock_id': control_stock_id,
-                    'program_name': program_name,
-                },
-                beforeSend: function(response){
-                    jQuery('#working_modal').modal('show');
-                },
-                success: function(response) {
-                    jQuery('#working_modal').modal('hide');
-                    if (response.success == 1) {
-                        jQuery('#set_transformation_control_dialog').modal('hide');
-                        jQuery("#set_transformation_control_saved_dialog_message tbody").html('');
-                        jQuery("#set_transformation_control_saved_dialog_message tbody").append('The transformation control was stored successfully.');
-                        jQuery('#set_transformation_control_saved_dialog_message').modal("show");
-                        return;
-                    }
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                },
-                error: function(response){
-                    jQuery('#working_modal').modal('hide');
-                    alert('An error occurred setting transformation control');
-                }
-            });
-        }
-
-        } else {
-        jQuery.ajax({
-            url : '/ajax/transformation/set_transformation_control',
-            dataType: "json",
-            type: 'POST',
-            data : {
-                'transformation_stock_id': transformation_id,
-                'control_stock_id': control_stock_id,
-                'program_name': program_name,
-            },
-            beforeSend: function(response){
-                jQuery('#working_modal').modal('show');
-            },
-            success: function(response) {
-                jQuery('#working_modal').modal('hide');
-                if (response.success == 1) {
-                    jQuery('#set_transformation_control_dialog').modal('hide');
-                    jQuery("#set_transformation_control_saved_dialog_message tbody").html('');
-                    jQuery("#set_transformation_control_saved_dialog_message tbody").append('The transformation control was stored successfully.');
-                    jQuery('#set_transformation_control_saved_dialog_message').modal("show");
-                    return;
-                }
-                if (response.error) {
-                    alert(response.error);
-                }
-            },
-            error: function(response){
-                jQuery('#working_modal').modal('hide');
-                alert('An error occurred setting transformation control');
+            if (confirmation) {
+                setTransformationControl(transformation_id, control_stock_id, program_name);
             }
-        });
-
+        } else {
+            setTransformationControl(transformation_id, control_stock_id, program_name);
         }
     });
 
@@ -214,38 +152,9 @@ jQuery(document).ready(function(){
         if (is_a_control) {
             alert ("This transformation ID has already been set as a control");
             return;
+        } else {
+            setAsAControl(transformation_id, program_name)
         }
-
-        jQuery.ajax({
-            url : '/ajax/transformation/set_as_control',
-            dataType: "json",
-            type: 'POST',
-            data : {
-                'transformation_id': transformation_id,
-                'is_a_control': 1,
-                'program_name': program_name
-            },
-            beforeSend: function(response){
-                jQuery('#working_modal').modal('show');
-            },
-            success: function(response) {
-                jQuery('#working_modal').modal('hide');
-                if (response.success == 1) {
-                    jQuery('#set_as_a_control_dialog').modal('hide');
-                    jQuery("#set_transformation_control_saved_dialog_message tbody").html('');
-                    jQuery("#set_transformation_control_saved_dialog_message tbody").append('This transformation ID was set as a control successfully.');
-                    jQuery('#set_transformation_control_saved_dialog_message').modal("show");
-                    return;
-                }
-                if (response.error) {
-                    alert(response.error);
-                }
-            },
-            error: function(response){
-                jQuery('#working_modal').modal('hide');
-                alert('An error occurred setting transformation control');
-            }
-        });
     });
 
     jQuery("#dismiss_set_transformation_control_saved_dialog").click(function(){
