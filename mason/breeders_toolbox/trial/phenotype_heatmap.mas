@@ -772,14 +772,64 @@ jQuery(document).ready( function() {
 
     function heatmap(selected) {
         jQuery('#working_modal').modal("show");
-        get_heatmap_observations(selected).then((observations) => {
-            FieldMap.filter_heatmap(observations);
-            FieldMap.load();
-            jQuery('#working_modal').modal("hide");
-        }).catch((err) => {
-            jQuery('#working_modal').modal("hide");
-            alert(`ERROR: Could not load phenotype heatmap: ${err}`);
-        });
+        if (selected.includes("(corrected)")) {
+            jQuery.ajax({
+                'url': '/ajax/spatial_model/retrieve_spatial_adjustments/'+trial_id,
+                'success': function(response) {
+                    if (response.error) {
+                        jQuery('#working_modal').modal('hide');
+                        alert("Error displaying "+ selected + " : " +response.error);
+                    }  else if (response.message) {
+                        jQuery('#working_modal').modal('hide');
+                        alert(response.message);
+                    } else {
+                        var data = JSON.parse(response.data);
+                        var corrected_vals = Object.values(data).filter(pheno => pheno.observationVariableName.includes("(corrected)"));
+                        FieldMap.filter_heatmap(corrected_vals);
+                        FieldMap.load();
+                        jQuery('#working_modal').modal("hide");
+                    }
+                },
+                'error': function(error) {
+                    jQuery('#working_modal').modal('hide');
+                    alert("Error displaying "+ selected + " : " +error);
+                }
+            });
+        } else if (selected.includes("(adjustment)")) {
+            jQuery.ajax({
+                'url': '/ajax/spatial_model/retrieve_spatial_adjustments/'+trial_id,
+                'success': function(response) {
+                    if (response.error) {
+                        jQuery('#working_modal').modal('hide');
+                        alert("Error displaying "+ selected + " : " +response.error);
+                    } else if (response.message) {
+                        jQuery('#working_modal').modal('hide');
+                        alert(response.message);
+                    } else {
+                        var data = JSON.parse(response.data);
+                        var adjustment_vals = Object.values(data).filter(pheno => pheno.observationVariableName.includes("(adjustment)"));
+                        FieldMap.filter_heatmap(adjustment_vals);
+                        FieldMap.load();
+                        jQuery('#working_modal').modal("hide");
+                    }
+                },
+                'error': function(error) {
+                    jQuery('#working_modal').modal('hide');
+                    alert("Error displaying "+ selected + " : " +error);
+                }
+            });
+        } else {
+            get_heatmap_observations(selected).then((observations) => {
+                // console.log("Heatmap formatted data: ");
+                // console.log(observations);
+                FieldMap.filter_heatmap(observations);
+                FieldMap.load();
+                jQuery('#working_modal').modal("hide");
+            }).catch((err) => {
+                jQuery('#working_modal').modal("hide");
+                alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+            });
+        }
     }
 
     async function get_heatmap_observations(observationVariableDbId, pageSize=5000, page=0, observations=[]) {
@@ -1202,6 +1252,24 @@ jQuery(document).ready( function() {
                 });
                 traits_assayed_html = traits_assayed_html +"</optgroup>";
                 traits_assayed_html = traits_assayed_html +"</select>";
+
+                // add adjusted traits here?
+
+                jQuery.ajax({
+                    'url':'/ajax/spatial_model/verify_corrections_exist/'+trial_id,
+                    success: function(response) {
+                        if (response.error) {
+                            // do nothing
+                        } else {
+                            let adjusted_traits = jQuery('<optgroup>', {label:"Spatial corrections"});
+                            Object.keys(variables).sort().forEach((name) => {
+                                adjusted_traits.append(jQuery("<option>", {value : `${name} (corrected)`, text : `${name} (corrected)` }));
+                                adjusted_traits.append(jQuery("<option>", {value : `${name} (adjustment)`, text : `${name} (adjustment)` }));
+                            });
+                            jQuery('#trait_list_dropdown').append(adjusted_traits);
+                        }
+                    }
+                });
 
                 // traits_assayed_html = traits_assayed_html + "<br/><button class='btn btn-primary btn-sm' id='trial_phenotype_heatmap_download'>Download Heatmap</button>";
 

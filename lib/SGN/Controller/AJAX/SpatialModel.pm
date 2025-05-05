@@ -166,22 +166,22 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     close($CLEAN);
 
     my $cmd = CXGN::Tools::Run->new({
-	backend => $c->config->{backend},
-	submit_host=>$c->config->{cluster_host},
-	temp_base => $c->config->{cluster_shared_tempdir} . "/spatial_model_files",
-	queue => $c->config->{'web_cluster_queue'},
-	do_cleanup => 0,
-	# don't block and wait if the cluster looks full
-	max_cluster_jobs => 1_000_000_000,
+        backend => $c->config->{backend},
+        submit_host=>$c->config->{cluster_host},
+        temp_base => $c->config->{cluster_shared_tempdir} . "/spatial_model_files",
+        queue => $c->config->{'web_cluster_queue'},
+        do_cleanup => 0,
+        # don't block and wait if the cluster looks full
+        max_cluster_jobs => 1_000_000_000,
     });
 
 
     $cmd->run_cluster(
-	"Rscript ",
-	#$c->config->{basepath} . "/R/spatial_modeling.R",
-    $c->config->{basepath} . "/R/spatial_correlation_check.R",
-	$pheno_filepath.".clean",
-	"'".$si_traits."'",
+        "Rscript ",
+        #$c->config->{basepath} . "/R/spatial_modeling.R",
+        $c->config->{basepath} . "/R/spatial_correlation_check.R",
+        $pheno_filepath.".clean",
+        "'".$si_traits."'",
 
 	);
 
@@ -232,92 +232,6 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     my $download_link = "<a href=\"$download_url\">Download Results</a>";
 
 ####################################################################
-#     #getting the blue results
-#     my @data;
-
-#     open(my $F, "<", $pheno_filepath.".clean.blues") || die "Can't open result file $pheno_filepath".".clean.blues";
-#     my $header = <$F>;
-#     my @h = split(/\s+/, $header);
-#     #my @h = split(',', $header);
-#     my @spl;
-#     foreach my $item (@h) {
-#     push  @spl, {title => $item};
-#   }
-#     print STDERR "Header: ".Dumper(\@spl);
-#     while (<$F>) {
-# 	chomp;
-# 	my @fields = split /\s+/;
-# 	foreach my $f (@fields) { $f =~ s/\"//g; }
-# 	push @data, \@fields;
-#     }
-
-#     # print STDERR "FORMATTED DATA: ".Dumper(\@data);
-
-#     my $basename = basename($pheno_filepath.".clean.blues");
-
-#     copy($pheno_filepath.".clean.blues", $c->config->{basepath}."/static/documents/tempfiles/spatial_model_files/".$basename);
-
-#     my $download_url = '/documents/tempfiles/spatial_model_files/'.$basename;
-#     my $download_link = "<a href=\"$download_url\">Download Results</a>";
-
-
-
-#     #############################################################
-#     ##getting with fitted results
-#     my @data_fitted;
-
-#     open(my $F_fitted, "<", $pheno_filepath.".clean.fitted") || die "Can't open result file $pheno_filepath".".clean.fitted";
-#     my $header_fitted = <$F_fitted>;
-#     my @h_fitted = split(/\s+/, $header_fitted);
-#     #my @h = split(',', $header);
-#     my @spl_fitted;
-#     foreach my $item_fitted (@h_fitted) {
-#     push  @spl_fitted, {title => $item_fitted};
-#   }
-#     print STDERR "Header: ".Dumper(\@spl_fitted);
-#     while (<$F_fitted>) {
-# 	chomp;
-# 	my @fields_fitted = split /\s+/;
-# 	foreach my $f_fitted (@fields_fitted) { $f_fitted =~ s/\"//g; }
-# 	push @data_fitted, \@fields_fitted;
-#     }
-
-#     # print STDERR "FORMATTED DATA: ".Dumper(\@data);
-
-#     my $basename = basename($pheno_filepath.".clean.fitted");
-
-#     copy($pheno_filepath.".clean.fitted", $c->config->{basepath}."/static/documents/tempfiles/spatial_model_files/".$basename);
-#     my $fitted_hash;
-#     ($fitted_hash) = $self->result_file_to_hash($c, $F_fitted);
-#     my $download_url_fitted = '/documents/tempfiles/spatial_model_files/'.$basename;
-#     my $download_link_fitted = "<a href=\"$download_url\">Download Fitted values</a>";
-    ###############################################################
-    #getting the AIC results
-#     my @data_AIC;
-
-#     open(my $F_AIC, "<", $pheno_filepath.".clean.AIC") || die "Can't open result file $pheno_filepath".".clean.AIC";
-#     my $header_AIC = <$F_AIC>;
-#     my @h_AIC = split(/\s+/, $header_AIC);
-#     #my @h = split(',', $header);
-#     my @spl_AIC;
-#     foreach my $item_AIC (@h_AIC) {
-#     push  @spl_AIC, {title => $item_AIC};
-#   }
-#     print STDERR "Header: ".Dumper(\@spl_AIC);
-#     while (<$F_AIC>) {
-# 	chomp;
-# 	my @fields_AIC = split /\s+/;
-# 	foreach my $f_AIC (@fields_AIC) { $f_AIC =~ s/\"//g; }
-# 	push @data_AIC, \@fields_AIC;
-#     }
-
-#     my $basename = basename($pheno_filepath.".clean.AIC");
-
-#     copy($pheno_filepath.".clean.AIC", $c->config->{basepath}."/static/documents/tempfiles/spatial_model_files/".$basename);
-
-#     my $download_url_AIC = '/documents/tempfiles/spatial_model_files/'.$basename;
-#     my $download_link_AIC = "<a href=\"$download_url_AIC\">Download Results</a>";
-    ######################################################
 
     # convert row data into nested structure that can be saved as analysis
 
@@ -328,16 +242,6 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 	download_link => $download_link,
     pheno_filepath => $pheno_filepath,
     phenotype_file => "$pheno_filepath.clean"
-
-    # data_fitted => \@data_fitted,
-    # headers_fitted => \@spl_fitted,
-
-    # download_link_fitted => $download_link_fitted,
-    # data_AIC => \@data_AIC,
-    # headers_AIC => \@spl_AIC,
-    # download_link_AIC => $download_link_AIC,
-    # input_file => $temppath,
-    # fitted_hash => $fitted_hash,
     };
 }
 sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
@@ -393,6 +297,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     my $accessions = {}; # keeps list of unique accessions
     my $nested_data = {}; # formats the result data for saving the analysis
+    my $projectprop_data = {}; # Stores adjustments only, for saving as projectprop
+        # needs to have 
     my $analysis_design = {}; # retains the trial layout data for analysis submission
     my @data; # formats for the datatable
 
@@ -418,7 +324,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
 
-    my $datarow_num = 1;
+    my $datarow_num = 2;
     while (<$F>) {
         chomp;
         my ($plot, $accession, $row, $column, $replicate, $block_number, $plot_number, @trait_values) = split(/\s+/, $_);
@@ -432,7 +338,23 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
                 '', 
                 ''
             ];
-            $analysis_design->{$datarow_num} = {
+            $projectprop_data->{$datarow_num - 1} = {
+                'germplasmName' => $accession,
+                'observationUnitName' => $plot,
+                'observationUnitDbId' => $plot_number,
+                'observationDbId' => '',
+                'value' => $trait_values[$i + 1],
+                'observationVariableName' => $traits[$i / 3]." (corrected)"
+            };
+            $projectprop_data->{$datarow_num} = {
+                'germplasmName' => $accession,
+                'observationUnitName' => $plot,
+                'observationUnitDbId' => $plot_number,
+                'observationDbId' => '',
+                'value' => $trait_values[$i + 2],
+                'observationVariableName' => $traits[$i / 3]." (adjustment)"
+            };
+            $analysis_design->{$datarow_num / 2} = {
                 'stock_name' => $accession,
                 'plot_name' => $plot,
                 'plot_number' => $plot_number,
@@ -444,7 +366,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         }
 
         $accessions->{$accession} = 1;
-        $datarow_num++;
+        $datarow_num += 2;
     }
 
     my @accessions = sort(keys(%{$accessions}));
@@ -461,13 +383,14 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my $download_link = "<a href=\"$download_url\">Download Results</a>";
 
     $c->stash->{rest} = {
-	result => \@data,
-	download_link => $download_link,
-    accession_names => \@accessions,
-    phenotype_file => $phenotype_file,
-    traits => \@traits,
-    nested_data => JSON::Any->encode($nested_data),
-    analysis_design => JSON::Any->encode($analysis_design)
+        result => \@data,
+        download_link => $download_link,
+        accession_names => \@accessions,
+        phenotype_file => $phenotype_file,
+        traits => \@traits,
+        nested_data => JSON::Any->encode($nested_data),
+        analysis_design => JSON::Any->encode($analysis_design),
+        projectprop_data => JSON::Any->encode($projectprop_data)
     };
 
 };
@@ -544,6 +467,128 @@ sub make_R_trait_name {
     $trait =~ s/\-/\_/g;
 
     return $trait;
+}
+
+sub store_spatial_adjustments: Path('/ajax/spatial_model/store_spatial_adjustments') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $spatial_adjustments = $c->req->param("spatial_adjustments"); # should be a JSON of plot->trait->adjustment
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+
+    my $trial = $schema->resultset('Project::Project')->find({
+        project_id => $trial_id, 
+    });
+
+    if (!$trial) {
+        $c->stash->{rest} = {error => "Error: no trial with ID $trial_id found.\n"};
+        return;
+    }
+
+    my $spatial_adjustments_cvtermid = SGN::Model::Cvterm->get_cvterm_row($schema, 'spatially_corrected_trait_adjustments_json', 'project_property')->cvterm_id();
+
+    my $row_to_overwrite = $schema->resultset('Project::Projectprop')->find({
+        project_id => $trial_id, 
+        type_id => $spatial_adjustments_cvtermid
+    });
+
+    eval {
+        if ($row_to_overwrite) {
+            $row_to_overwrite->delete();
+        }
+        my $row = $schema->resultset("Project::Projectprop")->create({
+            project_id => $trial_id,
+            type_id=>$spatial_adjustments_cvtermid,
+            value=>$spatial_adjustments
+        });
+    };
+    
+    if ($@) {
+        $c->stash->{rest} = {error => "An error occurred saving spatial corrections to this trial. It may still be saved as a standalone analysis. \n $@ \n"};
+        return;
+    }
+
+
+
+    $c->stash->{rest} = {success => 1};
+    
+}
+
+sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adjustments') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+
+    my $trial = $schema->resultset('Project::Project')->find({
+        project_id => $trial_id, 
+    });
+
+    if (!$trial) {
+        $c->stash->{rest} = {error => "Error: no trial with ID $trial_id found.\n"};
+        return;
+    }
+
+    my $spatial_adjustments_cvtermid = SGN::Model::Cvterm->get_cvterm_row($schema, 'spatially_corrected_trait_adjustments_json', 'project_property')->cvterm_id();
+
+    my $q = 'SELECT value FROM projectprop
+    WHERE project_id=? AND type_id=?';
+
+    my $spatial_adjustments_data_row = $schema->storage->dbh()->prepare($q);
+
+    $spatial_adjustments_data_row->execute($trial_id, $spatial_adjustments_cvtermid);
+
+    my $spatial_adjustments_json = $spatial_adjustments_data_row->fetchrow_array();
+
+    if (!$spatial_adjustments_json) {
+        $c->stash->{rest} = {data => "", message => "No spatial corrections associated with this trial.\n"};
+        return;
+    } 
+
+    $c->stash->{rest} = {data => $spatial_adjustments_json};
+    return;
+}
+
+sub verify_corrections_exist: Path('/ajax/spatial_model/verify_corrections_exist/') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+
+    my $trial = $schema->resultset('Project::Project')->find({
+        project_id => $trial_id, 
+    });
+
+    if (!$trial) {
+        $c->stash->{rest} = {error => "Error: no trial with ID $trial_id found.\n"};
+        return;
+    }
+
+    my $spatial_adjustments_cvtermid = SGN::Model::Cvterm->get_cvterm_row($schema, 'spatially_corrected_trait_adjustments_json', 'project_property')->cvterm_id();
+
+    my $q = 'SELECT projectprop_id FROM projectprop
+    WHERE project_id=? AND type_id=?';
+
+    my $spatial_adjustments_data_row = $schema->storage->dbh()->prepare($q);
+
+    $spatial_adjustments_data_row->execute($trial_id, $spatial_adjustments_cvtermid);
+
+    my $spatial_adjustments_exists = $spatial_adjustments_data_row->fetchrow_array();
+
+    if (!$spatial_adjustments_exists) {
+        $c->stash->{rest} = {error => "No spatial corrections associated with this trial.\n"};
+        return;
+    } 
+
+    $c->stash->{rest} = {success => 1};
+    return;
 }
 
 1;

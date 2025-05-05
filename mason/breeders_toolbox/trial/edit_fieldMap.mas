@@ -419,8 +419,28 @@ jQuery("#correct_spatial").click(function() {
       var accessionNamesArray = response.accession_names;
       var model_properties = JSON.stringify({ "properties": { "traits": traits } });
       var analysis_design = response.analysis_design;
+      var projectprop_data = response.projectprop_data;
 
       jQuery(document).on('click', '#confirm_store_spatial_correction', async function(e) {
+
+        //save data as projectprop
+        jQuery.ajax({
+          'url': '/ajax/spatial_model/store_spatial_adjustments/' + trial_id,
+          'data' : {
+            'spatial_adjustments': projectprop_data
+          },
+          'success' : function(response) {
+            if (response.error) {
+              alert(response.error);
+            } else {
+              alert("Spatial corrections have been stored in association with this trial. You may also wish to save them as a standalone analysis for use in downstream analyses.\n");
+            }
+          },
+          'error' : function(error) {
+            alert("An error occurred: " + error);
+          }
+        });
+
         jQuery('#generic_save_analysis_dialog').modal("show");
         jQuery('#generic_save_analysis_model_properties').val(model_properties);
         jQuery('#generic_save_analysis_protocol').val("SpATS(trait ~ spatial(colNumber, rowNumber) + (1|genotype))");

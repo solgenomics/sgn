@@ -67,6 +67,10 @@ sub patch {
         name => 'Adjusted Means from Spatial Correction using SpATS R',
         cv => 'SGNStatistics_ontology'
     });
+    $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'spatially_corrected_trait_adjustments_json',
+        cv => 'project_property'
+    });
 
     print "You're done!\n";
 }
