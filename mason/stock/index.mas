@@ -378,7 +378,7 @@ function jqueryStuff() {
 % }
 
 % if ($is_a_transgenic_line) {
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Transformation Info</h4>", info_section_subtitle => 'View related information about transformation experiment.', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "related_transformation_info_section" &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Transformation Info</h4>", info_section_subtitle => 'View related information about transformation experiment.', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "related_transformation_info_section" &>
 % }
 
 % if ($type_name eq 'accession'){
