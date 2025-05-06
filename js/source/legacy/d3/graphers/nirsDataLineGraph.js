@@ -49,7 +49,7 @@
         // Set the x-axis scale
         var xExtent = d3.extent(data, function(d) { return d.frequency; });
         var xPadding = 0.05 * (xExtent[1] - xExtent[0]);
-        var x = d3.scaleTime()
+        var x = d3.scaleLinear()
         .domain([
             d3.timeMillisecond.offset(xExtent[0], -xPadding),
             d3.timeMillisecond.offset(xExtent[1], xPadding)
@@ -66,8 +66,8 @@
         if (options.showXAxis) {
             svg.append("g")
             .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x)
-            .tickFormat(d3.timeFormat("%Y-%m-%d")))
+            .call(d3.axisBottom(x))
+            //.tickFormat(d3.timeFormat("%Y-%m-%d")))
             .selectAll("text")
             .attr("transform", "rotate(-45)") //the labels will be at 45 degree angle because of the space !!
             .style("text-anchor", "end");
@@ -128,7 +128,7 @@
                 tooltip
                     .html(
                         "<strong>Value:</strong> " + d.value + "<br/>" +
-                        "<strong>Frequency:</strong> " + d3.timeFormat("%Y-%m-%d")(d.frequency)
+                        "<strong>Frequency:</strong> " + d.frequency
                     )
                     .style("left", (e.pageX + 10) + "px")
                     .style("top",  (e.pageY - 25) + "px")
@@ -177,4 +177,11 @@
 
     };
 
+    /*
+    exports.drawLineGraph = function drawMultiLineGraph(datasets, selector, xLabel, yLabel, title, options) {
+        const margin = { top: 60, right: 100, bottom: 50, left: 60 };
+        const width = 900 - margin.left - margin.right;
+        const height = 400 - margin.top - margin.bottom;
+    };
+    */
 }(typeof exports === 'undefined' ? this.nirsDataLineGraph = {} : exports));

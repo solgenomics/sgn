@@ -31,6 +31,22 @@ $stockref => undef
     </table>
 </div>
 
+<div id="large_graph" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Sample Name: <span id="title_sample_name"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div id="large_graph_container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 var trial_id = '<% $trial_id %>';
 
@@ -92,6 +108,7 @@ jQuery(document).ready(function() {
 
     function show_nirs_data(result, frequencies) {
         var data = [];
+        var mulitGraphData = [];
         samples_map = {};
 
         result.data.forEach(item => {
@@ -118,7 +135,8 @@ jQuery(document).ready(function() {
             var group = samples_map[unique_id]
 
             var line_graph = `<div class="small-graph" data-observation="${unique_id}"></div>`;
-            data.push([group.germplasmName, group.germplasmDbId, line_graph]);
+            var plot_button = `<button class="btn btn-sm plot-btn" data-sample="${unique_id}">Plot</button>`;
+            data.push([group.germplasmName, group.germplasmDbId, line_graph, plot_button]);
         }
         console.log("data 2", data);
         console.log("group values", group.values);
@@ -130,6 +148,7 @@ jQuery(document).ready(function() {
                     <th>Sample Name</th>
                     <th>Sample ID</th>
                     <th>Spectra Graph</th>
+                    <th>Plot on Large Graph</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -139,7 +158,8 @@ jQuery(document).ready(function() {
             'columns': [
                 { title: 'Sample Name' },
                 { title: 'Sample ID'},
-                { title: 'Spectra Graph'}
+                { title: 'Spectra Graph'},
+                { title: 'Plot on Large Graph'}
             ],
             'data': data,
             'drawCallback': function (settings) {
@@ -151,6 +171,21 @@ jQuery(document).ready(function() {
 
                     draw_small_graph(container, small_graph_data);
                 });
+                /*
+                jQuery("plot-btn").click(function () {
+                    var sampleKey = jQuery(this).data('sample');
+                    var group = samples_map[sampleKey];
+                    var graph_data = group.values.flatMap(d => d.pairedValues);
+                    var label_sample_name = group.germplasmName;
+
+                    multiGraphData.push({
+                        data: graph_data,
+                        label: label_sample_name
+                    });
+
+                    update_multi_graph();
+                });
+                */
             }
             
         });
@@ -175,12 +210,13 @@ jQuery(document).ready(function() {
         console.log("flattened data", flattened_data);
         nirsDataLineGraph.drawLineGraph(flattened_data, container.get(0), small_graph_dim, '', '', options);
 
-        jQuery(container).on('click', function() {
+        container.on('click', function() {
             var sampleKey = container.data('observation');
             var group = samples_map[sampleKey];
             var graph_data = group.values;
+            var flattened_graph_data = graph_data.flatMap(d => d.pairedValues);
             var label_sample_name = group.germplasmName;
-            open_large_graph(graph_data, 'Spectra Data', label_sample_name);
+            open_large_graph(flattened_graph_data, 'Spectral Value', label_sample_name);
         });
     }
 
