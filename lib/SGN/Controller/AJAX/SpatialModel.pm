@@ -325,7 +325,6 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
 
     my $datarow_num = 1;
-    my $projectprop_datarow_num = 1;
     while (<$F>) {
         chomp;
         my ($plot, $accession, $row, $column, $replicate, $block_number, $plot_number, @trait_values) = split(/\s+/, $_);
@@ -339,24 +338,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
                 '', 
                 ''
             ];
-            $projectprop_data->{$projectprop_datarow_num} = {
-                'germplasmName' => $accession,
-                'observationUnitName' => $plot,
-                'observationUnitDbId' => $plot_number,
-                # 'observationDbId' => '',
-                'value' => $trait_values[$i + 1],
-                'observationVariableName' => $traits[$i / 3]." (corrected)"
-            };
-            $projectprop_datarow_num++;
-            $projectprop_data->{$projectprop_datarow_num} = {
-                'germplasmName' => $accession,
-                'observationUnitName' => $plot,
-                'observationUnitDbId' => $plot_number,
-                # 'observationDbId' => '',
-                'value' => $trait_values[$i + 2],
-                'observationVariableName' => $traits[$i / 3]." (adjustment)"
-            };
-            $projectprop_datarow_num++;
+            $projectprop_data->{$plot_number}->{$traits[$i / 3]} = $trait_values[$i + 2];
         }
 
         $analysis_design->{$datarow_num} = {

@@ -784,11 +784,20 @@ jQuery(document).ready( function() {
                         alert(response.message);
                     } else {
                         var data = JSON.parse(response.data);
-                        var corrected_vals = Object.values(data).filter(pheno => pheno.observationVariableName == selected);
-                        console.log("Corrected values:");
-                        console.log(corrected_vals);
-                        FieldMap.filter_heatmap(corrected_vals);
-                        FieldMap.load();
+                        var trait_name = selected.replace(" (corrected)", "");
+                        get_heatmap_observations(trait_name).then((observations) => {
+                            var corrected_observations = Object.fromEntries(
+                                Object.entries(observations).map(([key, pheno]) =>[
+                                    key,
+                                    { ...pheno, value : data[pheno.observationUnitDbId][trait_name] + pheno.value}
+                                ])
+                            );
+                            FieldMap.filter_heatmap(corrected_observations);
+                            FieldMap.load();
+                        }).catch((err) => {
+                            jQuery('#working_modal').modal("hide");
+                            alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+                        });
                         jQuery('#working_modal').modal("hide");
                     }
                 },
@@ -809,23 +818,30 @@ jQuery(document).ready( function() {
                         alert(response.message);
                     } else {
                         var data = JSON.parse(response.data);
-                        var adjustment_vals = Object.values(data).filter(pheno => pheno.observationVariableName == selected);
-                        console.log("Plot value adjustments:");
-                        console.log(adjustment_vals);
-                        FieldMap.filter_heatmap(adjustment_vals);
-                        FieldMap.load();
+                        var trait_name = selected.replace(" (adjustment)", "");
+                        get_heatmap_observations(trait_name).then((observations) => {
+                            var adjusted_observations = Object.fromEntries(
+                                Object.entries(observations).map(([key, pheno]) =>[
+                                    key,
+                                    { ...pheno, value : data[pheno.observationUnitDbId][trait_name]}
+                                ])
+                            );
+                            FieldMap.filter_heatmap(adjusted_observations);
+                            FieldMap.load();
+                        }).catch((err) => {
+                            jQuery('#working_modal').modal("hide");
+                            alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+                        });
                         jQuery('#working_modal').modal("hide");
                     }
                 },
                 'error': function(error) {
                     jQuery('#working_modal').modal('hide');
-                    alert("Error displaying "+ selected + " : " +error);
+                    alert(`ERROR: Could not load phenotype heatmap: ${err}`);
                 }
             });
         } else {
             get_heatmap_observations(selected).then((observations) => {
-                console.log("Heatmap formatted data: ");
-                console.log(observations);
                 FieldMap.filter_heatmap(observations);
                 FieldMap.load();
                 jQuery('#working_modal').modal("hide");
