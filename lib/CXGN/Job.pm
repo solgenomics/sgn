@@ -503,6 +503,7 @@ sub submit {
 
     my $job;
     my $backend_id;
+    # my $cxgn_tools_run_id;
     my $status;
 
     eval {
@@ -522,6 +523,8 @@ sub submit {
 
     $self->backend_id($backend_id);
     $self->update_status($status);
+    $self->cxgn_tools_run_config->{out_file} = $job->out_file();
+    $self->cxgn_tools_run_config->{jobid} = $job->jobid();
 
     return $sp_job_id;
 }
