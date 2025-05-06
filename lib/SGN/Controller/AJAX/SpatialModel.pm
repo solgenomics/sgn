@@ -324,7 +324,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
 
-    my $datarow_num = 2;
+    my $datarow_num = 1;
+    my $projectprop_datarow_num = 1;
     while (<$F>) {
         chomp;
         my ($plot, $accession, $row, $column, $replicate, $block_number, $plot_number, @trait_values) = split(/\s+/, $_);
@@ -338,40 +339,43 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
                 '', 
                 ''
             ];
-            $projectprop_data->{$datarow_num - 1} = {
+            $projectprop_data->{$projectprop_datarow_num} = {
                 'germplasmName' => $accession,
                 'observationUnitName' => $plot,
                 'observationUnitDbId' => $plot_number,
-                'observationDbId' => '',
+                # 'observationDbId' => '',
                 'value' => $trait_values[$i + 1],
                 'observationVariableName' => $traits[$i / 3]." (corrected)"
             };
-            $projectprop_data->{$datarow_num} = {
+            $projectprop_datarow_num++;
+            $projectprop_data->{$projectprop_datarow_num} = {
                 'germplasmName' => $accession,
                 'observationUnitName' => $plot,
                 'observationUnitDbId' => $plot_number,
-                'observationDbId' => '',
+                # 'observationDbId' => '',
                 'value' => $trait_values[$i + 2],
                 'observationVariableName' => $traits[$i / 3]." (adjustment)"
             };
-            $analysis_design->{$datarow_num / 2} = {
-                'stock_name' => $accession,
-                'plot_name' => $plot,
-                'plot_number' => $plot_number,
-                'block_number' => $block_number,
-                'rep_number' => $replicate,
-                'row_number' => $row,
-                'col_number' => $column
-            };
+            $projectprop_datarow_num++;
         }
 
+        $analysis_design->{$datarow_num} = {
+            'stock_name' => $accession,
+            'plot_name' => $plot,
+            'plot_number' => $plot_number,
+            'block_number' => $block_number,
+            'rep_number' => $replicate,
+            'row_number' => $row,
+            'col_number' => $column
+        };
+
         $accessions->{$accession} = 1;
-        $datarow_num += 2;
+        $datarow_num++;
     }
 
     my @accessions = sort(keys(%{$accessions}));
 
-    # print STDERR "FORMATTED DATA: ".Dumper(\@result);
+    # print STDERR "FORMATTED DATA: ".Dumper($projectprop_data);
 
     # print STDERR Dumper $nested_data;
     

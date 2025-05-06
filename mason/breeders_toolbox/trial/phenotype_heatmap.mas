@@ -784,7 +784,9 @@ jQuery(document).ready( function() {
                         alert(response.message);
                     } else {
                         var data = JSON.parse(response.data);
-                        var corrected_vals = Object.values(data).filter(pheno => pheno.observationVariableName.includes("(corrected)"));
+                        var corrected_vals = Object.values(data).filter(pheno => pheno.observationVariableName == selected);
+                        console.log("Corrected values:");
+                        console.log(corrected_vals);
                         FieldMap.filter_heatmap(corrected_vals);
                         FieldMap.load();
                         jQuery('#working_modal').modal("hide");
@@ -807,7 +809,9 @@ jQuery(document).ready( function() {
                         alert(response.message);
                     } else {
                         var data = JSON.parse(response.data);
-                        var adjustment_vals = Object.values(data).filter(pheno => pheno.observationVariableName.includes("(adjustment)"));
+                        var adjustment_vals = Object.values(data).filter(pheno => pheno.observationVariableName == selected);
+                        console.log("Plot value adjustments:");
+                        console.log(adjustment_vals);
                         FieldMap.filter_heatmap(adjustment_vals);
                         FieldMap.load();
                         jQuery('#working_modal').modal("hide");
@@ -820,8 +824,8 @@ jQuery(document).ready( function() {
             });
         } else {
             get_heatmap_observations(selected).then((observations) => {
-                // console.log("Heatmap formatted data: ");
-                // console.log(observations);
+                console.log("Heatmap formatted data: ");
+                console.log(observations);
                 FieldMap.filter_heatmap(observations);
                 FieldMap.load();
                 jQuery('#working_modal').modal("hide");
