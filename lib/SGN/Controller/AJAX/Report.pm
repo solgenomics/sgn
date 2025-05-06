@@ -141,7 +141,7 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
 
         print("Starting command $script_cmd \n");
 
-        my $report_record = CXGN::Job->new({
+        my $report_job = CXGN::Job->new({
             schema => $schema,
             people_schema => $people_schema,
             sp_person_id => $sp_person_id,
@@ -150,9 +150,10 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
             job_type => 'report',
             finish_logfile => $c->config->{job_finish_log}
         });
-        my $run_script = CXGN::Tools::Run->new();
-        $report_record->update_status("submitted");
-        my $result_hash = $run_script->run($script_cmd.$report_record->generate_finish_timestamp_cmd());
+        # my $run_script = CXGN::Tools::Run->new();
+        # $report_record->update_status("submitted");
+        # my $result_hash = $run_script->run($script_cmd.$report_record->generate_finish_timestamp_cmd());
+        $report_job->submit();
 
         my $json_file = File::Spec->catfile($out_directory, $json_filename);
         print("Reading output from file: $json_file \n");

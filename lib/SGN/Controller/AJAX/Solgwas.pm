@@ -482,9 +482,9 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
         };
-    my $cmd = CXGN::Tools::Run->new(
-        $cxgn_tools_run_config
-    );
+    # my $cmd = CXGN::Tools::Run->new(
+    #     $cxgn_tools_run_config
+    # );
     my $cmd_str = join(" ",(
         "Rscript ",
         $c->config->{basepath} . "/R/solgwas/solgwas_script.R",

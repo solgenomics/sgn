@@ -48,7 +48,7 @@ my $trait_id = $sp_data->{options}->[0]->[0];
 
 $mech->get_ok('http://localhost:3010/ajax/heritability/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id, 'run the heritability analysis');
 
-sleep(5);
+sleep(2);
 
 my $rdata = JSON::Any->decode($mech->content());
 

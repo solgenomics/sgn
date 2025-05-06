@@ -96,7 +96,7 @@ my $outliers_excluded_trait_id = "fresh root weight";
 
 # Test for dataset with outliers but with false outliers parameter
 $mech->get_ok('http://localhost:3010/ajax/solgwas/generate_results?dataset_id='.$outliers_excluded_dataset_id.'&trait_id='.$outliers_excluded_trait_id.'&pc_check=0&kinship_check=0', 'run the solgwas analysis for outliers dataset with outliers included');
-sleep(5);
+sleep(2);
 
 my $rdata_outliers_included = JSON::Any->decode($mech->content());
 ok($rdata_outliers_included->{figure3}, "Manhattan plot returned");
@@ -109,7 +109,7 @@ is(@$gwas_outliers_included[10]->[1], '0.241138827431124', "check value of row 1
 
 # Test for dataset with outliers but with true outliers parameter -> outliers points are excluded from computation
 $mech->get_ok('http://localhost:3010/ajax/solgwas/generate_results?dataset_id='.$outliers_excluded_dataset_id.'&trait_id='.$outliers_excluded_trait_id.'&pc_check=0&kinship_check=0&dataset_trait_outliers=1', 'run the solgwas analysis for outliers dataset with outliers excluded');
-sleep(5);
+sleep(2);
 
 my $rdata_outliers_excluded = JSON::Any->decode($mech->content());
 ok($rdata_outliers_excluded->{figure3}, "Manhattan plot returned");

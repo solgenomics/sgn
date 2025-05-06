@@ -15,6 +15,7 @@ use File::Spec qw | catfile |;
 use File::Slurp qw | read_file write_file |;
 use File::NFSLock qw | uncache |;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
@@ -98,6 +99,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 #    print STDERR "JOB ID CREATED: $jobid\n";
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
 
     my %arg_handlers =
 	(
@@ -282,10 +284,25 @@ sub run : Path('/tools/blast/run') Args(0) {
 	    max_cluster_jobs => 1_000_000_000,
 	    
 	};
+
+  my $cmd = join (' ', @command);
 	    
-	$job = CXGN::Tools::Run->new($config);
-	$job->do_not_cleanup(1);
-	$job->run_cluster(@command);
+	# $job = CXGN::Tools::Run->new($config);
+	# $job->do_not_cleanup(1);
+	# $job->run_cluster(@command);
+
+  $job = CXGN::Job->new({
+    schema => $schema,
+    people_schema => $people_schema,
+    sp_person_id => $sp_person_id,
+    name => $params->{program},
+    cmd => $cmd,
+    cxgn_tools_run_config => $config,
+    job_type => 'sequence_analysis',
+    finish_logfile => $c->config->{job_finish_log}
+  });
+
+  $job->submit();
    
 	
 
