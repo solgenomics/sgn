@@ -267,7 +267,11 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transgenic_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property')->cvterm_id;
-    my $is_a_transgenic_line = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $transgenic_type_id})->value();
+    my $transgenic_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $transgenic_type_id});
+    my $is_a_transgenic_line;
+    if ($transgenic_stockprop_rs) {
+        $is_a_transgenic_line = $transgenic_stockprop_rs->value();
+    }
 
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 	################
