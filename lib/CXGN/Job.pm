@@ -106,7 +106,7 @@ User ID of the owner (submitter) of the job
 
 =cut 
 
-has 'sp_person_id' => ( isa => 'Int', is => 'rw' );
+has 'sp_person_id' => ( isa => 'Maybe[Int]', is => 'rw' );
 
 =head2 backend_id()
 
@@ -614,7 +614,7 @@ sub generate_finish_timestamp_cmd {
 
     my $sp_job_id = $self->sp_job_id();
 
-    return ' ;
+    return ';
 
 FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z"); 
 echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$logfile.' ;
@@ -631,6 +631,10 @@ Update the status of the job and store with the new value.
 sub update_status {
     my $self = shift;
     my $new_status = shift;
+
+    if ($new_status eq "finished") {
+        $self->finish_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
+    }
 
     $self->status($new_status);
     $self->store();
