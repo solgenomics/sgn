@@ -55,7 +55,7 @@ $trial_owner => undef
 <& /breeders_toolbox/cross/upload_update_crosses.mas &>
 <& /breeders_toolbox/cross/upload_crossingtrial_seedlots_dialog.mas, breeding_program_id => $breeding_program_id, breeding_program_name => $breeding_program_name, locations_by_program_json => $locations_by_program_json&>
 <& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => ''."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", trial_stock_type => '' &>
-<& /breeders_toolbox/cross/upload_crosses_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/cross/upload_crosses_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_id => $breeding_program_id &>
 <& /breeders_toolbox/cross/intercross_file_upload.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/cross/intercross_parents_download.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/cross/intercross_wishlist_download.mas, trial_id => $trial_id &>
