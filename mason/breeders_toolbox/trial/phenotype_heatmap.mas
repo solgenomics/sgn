@@ -771,6 +771,7 @@ jQuery(document).ready( function() {
     }
 
     function heatmap(selected) {
+        console.log(selected);
         jQuery('#working_modal').modal("show");
         if (selected.includes("(corrected)")) {
             jQuery.ajax({
@@ -1283,8 +1284,8 @@ jQuery(document).ready( function() {
                         } else {
                             let adjusted_traits = jQuery('<optgroup>', {label:"Spatial corrections"});
                             Object.keys(variables).sort().forEach((name) => {
-                                adjusted_traits.append(jQuery("<option>", {value : `${name} (corrected)`, text : `${name} (corrected)` }));
-                                adjusted_traits.append(jQuery("<option>", {value : `${name} (adjustment)`, text : `${name} (adjustment)` }));
+                                adjusted_traits.append(jQuery("<option>", {value : `${variables[name]} (corrected)`, text : `${name} (corrected)` }));
+                                adjusted_traits.append(jQuery("<option>", {value : `${variables[name]} (adjustment)`, text : `${name} (adjustment)` }));
                             });
                             jQuery('#trait_list_dropdown').append(adjusted_traits);
                         }

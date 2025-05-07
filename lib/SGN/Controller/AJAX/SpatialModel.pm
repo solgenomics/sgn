@@ -324,6 +324,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
 
+    # need to make a trait->trait_id has here
+
     my $datarow_num = 1;
     while (<$F>) {
         chomp;
