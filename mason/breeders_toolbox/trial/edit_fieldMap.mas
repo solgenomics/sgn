@@ -391,7 +391,6 @@ jQuery("#correct_spatial").click(function() {
       phenotype_file: phenotype_file,
     },
     success: function(response) {
-      console.log(response);
       jQuery('#working_modal').modal('hide');
       if (response.error) {
         alert(response.error);

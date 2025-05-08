@@ -771,7 +771,6 @@ jQuery(document).ready( function() {
     }
 
     function heatmap(selected) {
-        console.log(selected);
         jQuery('#working_modal').modal("show");
         if (selected.includes("(corrected)")) {
             jQuery.ajax({
@@ -785,14 +784,12 @@ jQuery(document).ready( function() {
                         alert(response.message);
                     } else {
                         var data = JSON.parse(response.data);
-                        var trait_name = selected.replace(" (corrected)", "");
-                        get_heatmap_observations(trait_name).then((observations) => {
-                            var corrected_observations = Object.fromEntries(
-                                Object.entries(observations).map(([key, pheno]) =>[
-                                    key,
-                                    { ...pheno, value : data[pheno.observationUnitDbId][trait_name] + pheno.value}
-                                ])
-                            );
+                        var trait_id = selected.replace(" (corrected)", "");
+                        get_heatmap_observations(trait_id).then((observations) => {
+                            var corrected_observations = observations.map(pheno => ({
+                                ... pheno, 
+                                value : data.hasOwnProperty(pheno.observationUnitName) ? Number(data[pheno.observationUnitName][trait_id]) + Number(pheno.value) : pheno.value
+                            }));
                             FieldMap.filter_heatmap(corrected_observations);
                             FieldMap.load();
                         }).catch((err) => {
@@ -819,15 +816,13 @@ jQuery(document).ready( function() {
                         alert(response.message);
                     } else {
                         var data = JSON.parse(response.data);
-                        var trait_name = selected.replace(" (adjustment)", "");
-                        get_heatmap_observations(trait_name).then((observations) => {
-                            var adjusted_observations = Object.fromEntries(
-                                Object.entries(observations).map(([key, pheno]) =>[
-                                    key,
-                                    { ...pheno, value : data[pheno.observationUnitDbId][trait_name]}
-                                ])
-                            );
-                            FieldMap.filter_heatmap(adjusted_observations);
+                        var trait_id = selected.replace(" (adjustment)", "");
+                        get_heatmap_observations(trait_id).then((observations) => {
+                            var adjustment_observations = observations.map(pheno => ({
+                                ... pheno, 
+                                value : data.hasOwnProperty(pheno.observationUnitName) ? data[pheno.observationUnitName][trait_id] : 0
+                            }));
+                            FieldMap.filter_heatmap(adjustment_observations);
                             FieldMap.load();
                         }).catch((err) => {
                             jQuery('#working_modal').modal("hide");
@@ -1353,7 +1348,8 @@ jQuery(document).ready( function() {
             jQuery("#view_ctrl_button").show();
             jQuery("#include_linked_trials").css("display", "block");
             FieldMap.heatmap_selected = true;
-            FieldMap.heatmap_selection = jQuery("#trait_list_dropdown option:selected").text();
+            var selection_text = jQuery("#trait_list_dropdown option:selected").text().replace(/ \(adjustment\)| \(corrected\)/,'');
+            FieldMap.heatmap_selection = selection_text;
             heatmap(selected);
         }
     }

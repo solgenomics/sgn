@@ -324,7 +324,19 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
 
-    # need to make a trait->trait_id has here
+    # need to make a trait->cvterm_id hash here
+    my $traits_to_id = {};
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+
+    foreach my $trait (@traits) {
+        my ($short_name, $onto) = split(/\|/,$trait);
+        my $cvterm_id = $schema->resultset('Cv::Cvterm')->find({
+            name => $short_name,
+        })->cvterm_id;
+        $traits_to_id->{$trait} = $cvterm_id;
+    }
 
     my $datarow_num = 1;
     while (<$F>) {
@@ -332,15 +344,26 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         my ($plot, $accession, $row, $column, $replicate, $block_number, $plot_number, @trait_values) = split(/\s+/, $_);
 
         for (my $i = 0; $i < @trait_values; $i += 3) {
-            push @data, [$plot, $accession, $traits[$i / 3], $trait_values[$i], $trait_values[$i + 1], $trait_values[$i + 2] ];
+            my $original = $trait_values[$i];
+            my $corrected;
+            my $adjustment = 0;
+            if ($trait_values[$i + 2] ne "NA") {
+                $adjustment = $trait_values[$i + 2];
+            }
+            if ($original eq "NA") {
+                $corrected = "NA";
+            } else {
+                $corrected = $trait_values[$i + 1];
+            }
+            push @data, [$plot, $accession, $traits[$i / 3], $original, $corrected, $adjustment ];
             $nested_data->{$plot}->{$traits[$i / 3]} = [
-                $trait_values[$i + 1], 
+                $corrected, 
                 strftime("%Y-%m-%dT%H:%M:%S", localtime), 
                 $c->user->get_object()->get_first_name().' '.$c->user->get_object()->get_last_name(), 
                 '', 
                 ''
             ];
-            $projectprop_data->{$plot_number}->{$traits[$i / 3]} = $trait_values[$i + 2];
+            $projectprop_data->{$plot}->{$traits_to_id->{$traits[$i / 3]}} = $adjustment;
         }
 
         $analysis_design->{$datarow_num} = {
