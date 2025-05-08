@@ -727,10 +727,10 @@ export function init() {
             this.addEventListeners();
             var cc = this.clickcancel();
             const colors = [
-                "#ffffd9",
-                "#edf8b1",
-                "#c7e9b4",
-                "#7fcdbb",
+                "#E4F3F5",
+                "#BDE5EA",
+                "#9BDCE4",
+                "#5CC3D0",
                 "#41b6c4",
                 "#1d91c0",
                 "#225ea8",

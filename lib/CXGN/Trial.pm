@@ -59,6 +59,9 @@ use SGN::Model::Cvterm;
 use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
+use CXGN::Metadata::Schema;
+use CXGN::Phenome::Schema;
+use CXGN::People::Schema;
 use JSON;
 use File::Basename qw | basename dirname|;
 use CXGN::BrAPI::v2::ExternalReferences;
@@ -98,6 +101,21 @@ sub new {
             return CXGN::CrossingTrial->new($args);
         }
         elsif ($name eq "analysis_experiment") {
+            my $metadata_schema = CXGN::Metadata::Schema->connect(
+                sub { $schema->storage()->dbh() },
+                { on_connect_do => [ 'SET search_path TO metadata'], limit_dialect => 'LimitOffset' }
+            );
+            my $phenome_schema = CXGN::Phenome::Schema->connect( 
+                sub {$schema->storage->dbh()}, 
+                { on_connect_do => ['SET search_path TO public,phenome;']}
+            );
+            my $people_schema = CXGN::People::Schema->connect( 
+                sub {$schema->storage->dbh()}, 
+                { on_connect_do => ['SET search_path TO sgn_people;']}
+            );
+            $args->{metadata_schema} = $metadata_schema;
+            $args->{phenome_schema} = $phenome_schema;
+            $args->{people_schema} = $people_schema;
             return CXGN::Analysis->new($args);
         }
         elsif ($val eq "treatment") {

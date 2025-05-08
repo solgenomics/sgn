@@ -250,7 +250,11 @@ sub create_hash_lookups {
     #print STDERR "Cvterm ids are @cvterm_ids";
     if (scalar @cvterm_ids > 0) {
         my $cvterm_ids_sql = join ("," , @cvterm_ids);
-        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype LEFT JOIN nd_experiment_phenotype USING(phenotype_id) LEFT JOIN nd_experiment USING(nd_experiment_id) LEFT JOIN nd_experiment_stock USING(nd_experiment_id) LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
+        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype 
+        LEFT JOIN nd_experiment_phenotype USING(phenotype_id) 
+        LEFT JOIN nd_experiment USING(nd_experiment_id) 
+        LEFT JOIN nd_experiment_stock USING(nd_experiment_id) 
+        LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
         my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
         $h->execute();
 
@@ -305,8 +309,8 @@ sub verify {
         print STDERR "Plots or traits not valid\n";
         print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
         print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
-        $error_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
-        $error_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
+        $error_message = "Invalid plots: \n".join(", \n", map { "'$_'" } @plots_missing) if (@plots_missing);
+        $error_message = "Invalid traits: \n".join(", \n", map { "'$_'" } @traits_missing) if (@traits_missing);
 
         # Display matches of traits with the wrong id
         if ( scalar(@traits_wrong_ids) > 0 ) {
