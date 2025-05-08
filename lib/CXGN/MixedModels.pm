@@ -27,6 +27,7 @@ use Data::Dumper;
 use File::Basename;
 use File::Copy;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use CXGN::Phenotypes::File;
 
 =head2 dependent_variables()
@@ -452,6 +453,7 @@ sub run_model {
     my $backend = shift || 'Slurm';
     my $cluster_host = shift || "localhost";
     my $cluster_shared_tempdir = shift;
+	my $job_config = shift;
 
     my $random_factors = '"'.join('","', @{$self->random_factors()}).'"';
     my $fixed_factors = '"'.join('","',@{$self->fixed_factors()}).'"';
@@ -500,7 +502,7 @@ sub run_model {
 	elsif ($self->engine() eq "sommer" || $self->engine() eq "spl2D"){
 	    print $F "fixed_model <- \"$model->[0]\"\n";
 	    print $F "random_model <- \"$model->[1]\"\n";
-	    print Dumper($fixed_factors);
+	    # print Dumper($fixed_factors);
 	}
 	close($F);
 
@@ -512,17 +514,41 @@ sub run_model {
 	# run r script to create model
 	#
 	my $cmd = "R CMD BATCH  '--args datafile=\"".$clean_tempfile."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
-	print STDERR "running R command $cmd...\n";
+	# print STDERR "running R command $cmd...\n";
 	
-	print STDERR "running R command $clean_tempfile...\n";
+	# print STDERR "running R command $clean_tempfile...\n";
 	
-	my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host } );
+	my $cxgn_tools_run_config = { backend => $backend, temp_base => dirname($self->tempfile()), submit_host => $cluster_host };
+	# my $ctr = CXGN::Tools::Run->new( $cxgn_tools_run_config );
+	my $job = CXGN::Job->new({
+		schema => $job_config->{schema},
+		people_schema => $job_config->{people_schema},
+		sp_person_id => $job_config->{user},
+		cmd => $cmd,
+		cxgn_tools_run_config => $cxgn_tools_run_config,
+		name => $job_config->{name},
+		job_type => 'mixed_model_analysis',
+		finish_logfile => $job_config->{finish_logfile}
+	});
+
+	$job->submit();
+
+	# $job_record->update_status("submitted");
+	# $ctr->run_cluster($cmd.$job_record->generate_finish_timestamp_cmd());
 	
-	
-	$ctr->run_cluster($cmd);
-	
-	while ($ctr->alive()) {
-	    sleep(1);
+	# while ($ctr->alive()) {
+	#     sleep(1);
+	# }
+
+	while ($job->alive()) {
+		sleep (1);
+	}
+
+	my $finished = $job->read_finish_timestamp();
+	if (!$finished) {
+		$job->update_status("failed");
+	} else {
+		$job->update_status("finished");
 	}
 	
 	# replace the R-compatible traits with original trait names

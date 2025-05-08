@@ -17,15 +17,16 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 <div id="analysis_log_div" style="display:none">
-  <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Clear failed and timed out jobs</button>
+  <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Dismiss failed and timed out jobs</button>
   <br>
-  <button id="clear_jobs_cache_button" class='btn btn-sm btn-primary'>Clear all jobs older than</button> 
+  <button id="clear_jobs_cache_button" class='btn btn-sm btn-primary'>Dismiss all jobs older than</button> 
   <select id="keep_recent_jobs_select">
     <option value='one_week'>One week</option>
     <option value='one_month'>One month</option>
     <option value='six_months'>Six months</option>
     <option value='one_year'>One year</option>
   </select>
+  <br>
   <table class="table" id="analysis_list" style="text-align: left;">
     <thead>
       <tr>
