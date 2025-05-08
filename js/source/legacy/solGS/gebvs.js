@@ -99,7 +99,7 @@ solGS.gebvs = {
 
       var gebvsHistoPlotDivId = this.histoPlotId.replace(/#/, '');
       var histoDownloadBtn = "download_" + gebvsHistoPlotDivId;
-      var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'> Histogram</a>";
+      var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'> Histogram (GEBVs)</a>";
     
       var downloadLinks = `Download:  ${gebvsFileLink} | ${histoPlotLink}`;
       return downloadLinks;
