@@ -18,9 +18,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
  <& /util/import_javascript.mas, classes => ["solGS.analysisSave", "solGS.gebvsSave"] &>
- <div id="gebvs_output">
- 		 <button id="save_gebvs" class="btn btn-success">Save GEBVs</button>	
-		<& /solgs/spinner/spinner.mas &>
-		<div id="gebvs_save_message" class="message"" style="display:none"></div>
+ <div id="gebvs_output" class="mb-2">
+ 	<button id="save_gebvs" class="btn btn-success">Save GEBVs</button>
+    <button id="save_genetic_values" class="btn btn-success">Save genetic values</button>	
+    <input type="hidden" id="analysis_result_save_type" value="gebvs" />
+    <div id="gebvs_save_message" class="message"" style="display:none"></div>
+    <& /solgs/spinner/spinner.mas &>
 </div>
-<br />

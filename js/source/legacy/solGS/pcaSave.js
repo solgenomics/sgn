@@ -15,7 +15,7 @@ jQuery(document).ready(function () {
         var pcaFileId = elemId.replace("save_pcs_btn_", '');
         var pcaSaveMsgDiv = `#${pcaFileId}_pca_save_message`;
 
-        solGS.save.checkStoredAnalysis(pcaArgs).done(function (res) {
+        solGS.analysisSave.checkStoredAnalysis(pcaArgs).done(function (res) {
             if (res.analysis_id) {
                 jQuery("#save_pcs_btn").hide();
                 var link = '<a href="/analyses/' + res.analysis_id + '">View stored PCs</a>';
@@ -26,7 +26,7 @@ jQuery(document).ready(function () {
                 .show();
                 jQuery(`#${elemId}`).hide();
 
-                solGS.save.checkUserStatus().done(function (res) {
+                solGS.analysisSave.checkUserStatus().done(function (res) {
                     if (!res.loggedin) {
                         solGS.submitJob.loginAlert();
                     } 
@@ -34,7 +34,7 @@ jQuery(document).ready(function () {
                     solGS.alertMessage("Error occured checking for user status");
                 });
 
-                solGS.save.getPcaResultDetails(pcaArgs).done(function (res) {
+                solGS.analysisSave.getPcaResultDetails(pcaArgs).done(function (res) {
                     if (res.error) {
                         jQuery("#download_pca_output .multi-spinner-container").hide();
                         jQuery(pcaSaveMsgDiv)
@@ -43,7 +43,7 @@ jQuery(document).ready(function () {
                         .fadeOut(50000);
                         jQuery(`#${elemId}`).show();
                     } else {
-                        solGS.save.storeAnalysisResults(res.analysis_details).done(function (res) {
+                        solGS.analysisSave.storeAnalysisResults(res.analysis_details).done(function (res) {
                             jQuery("#download_pca_output .multi-spinner-container").hide();
                             if (res.error) {
                                 jQuery(pcaSaveMsgDiv).html(res.error).show().fadeOut(50000);

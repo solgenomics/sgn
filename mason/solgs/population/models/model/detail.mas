@@ -99,17 +99,16 @@ $analysis_type => ''
    accuracy_report        => $accuracy_report,
 &>
 
-<& gebvs.mas,
-   pop_id             => $training_pop_id,
-  trait_id            => $trait_id
-  &>
-
-  <& gebv_pheno_regression.mas,
+<& gebv_pheno_regression.mas,
         pop_id       => $training_pop_id,
        trait_id      => $trait_id,
        combo_pops_id => $combo_pops_id,
 &>
 
+<& gebvs.mas,
+   pop_id             => $training_pop_id,
+  trait_id            => $trait_id
+  &>
 
 <& /solgs/tools/kinship/analysis.mas,
    pop_id  => $training_pop_id,
