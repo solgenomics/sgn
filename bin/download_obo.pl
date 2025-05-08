@@ -89,6 +89,7 @@ my $dbuser = $opt_U;
 my $dbpass = $opt_P;
 my $prefix = $opt_i;
 
+my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
         dbname=>$dbname,
         dbargs => {AutoCommit => 0,
         RaiseError => 1}
@@ -116,7 +117,6 @@ write_file( $obo_file,  {append => 0 }, $obo_header  ) ;
 my $count=0;
 while(my $cvterm = $cvterm_rs->next() ) {
     my $accession = $cvterm->dbxref->accession();
-    my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
     print STDERR "Looking at Accession $accession\n";
     my $cvterm_name = $cvterm->name();
     my $namespace = $cvterm->cv->name();
