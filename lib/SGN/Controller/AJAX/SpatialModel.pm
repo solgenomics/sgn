@@ -306,7 +306,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     # header will have plot, accession, row, column, replicate, blockNumber, plotNumber [...traits...]
     my (undef, undef, undef, undef, undef, undef, undef, @trait_columns) = split(/\s+/, $header);
 
-    sub fix_trait_name {
+    my sub fix_trait_name {
         my $trait = shift;
 
         $trait =~ s/_([A-Z]+(_\d+)*)_(\d+)/\|$1:$3/;

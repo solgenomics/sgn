@@ -259,7 +259,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my $plant_sex_variable_name_R = "";
 
     print STDERR "CVNAMES = ".Dumper(\@cv_names);
-    if (@cv_names & $plant_sex_variable_name) {
+    if (@cv_names && $plant_sex_variable_name) {
 	$plant_sex_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plant_sex_variable_name, $cv_names[0])->cvterm_id();
     }
 
