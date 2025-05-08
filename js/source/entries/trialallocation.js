@@ -2,12 +2,14 @@
 import '../legacy/jquery.js';
 import '../legacy/d3/d3v4Min.js';
 
+
 document.addEventListener('DOMContentLoaded', () => {
 
   /******** global state ********/
   let gridReady = false;
   let lastUnusedRows = '';
   let lastUnusedCols = '';
+  const trialDesignCache = {};
 
   /******** constants and utils ********/
   const qs  = s => document.querySelector(s);
@@ -96,57 +98,258 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  
+
+
+
+
+
   /******** grid ********/
-  function drawGrid() {
-    const rows   = +qs('#farm-rows')?.value || 0;
-    const cols   = +qs('#farm-cols')?.value || 0;
-    const grid   = qs('#farm-grid');
-    const loader = qs('#grid-loader');
 
-    gridReady = false;
-    loader?.classList.remove('hidden');
+  /***************************************************************
+   *  Virtual-grid renderer  (50 × 50 cell window, cell pool reuse)
+   ***************************************************************/
+  const VISIBLE_ROWS = 50, VISIBLE_COLS = 50;
 
-    grid.classList.toggle('edit-mode', qs('#edit-toggle').checked);
-    grid.innerHTML = '';
-    grid.style.gridTemplateColumns = `repeat(${cols + 1}, ${CELL}px)`;
-    grid.style.gridTemplateRows    = `repeat(${rows + 1}, ${CELL}px)`;
+  /* DOM scaffolding ------------------------------------------------ */
+  const grid     = document.getElementById('farm-grid');
+  const viewport = document.createElement('div');
+  viewport.id = 'virtual-viewport';
+  viewport.style.position      = 'absolute';
+  viewport.style.pointerEvents = 'none';   // trial plots float over cells
+  grid.appendChild(viewport);
 
-    const makeHeader = (cls, val = '') => {
-      const d = document.createElement('div');
-      d.className = `grid-cell header-cell ${cls}`;
-      if (val) d.textContent = val;
-      return d;
-    };
+  /* State ---------------------------------------------------------- */
+  let totalRows = 0, totalCols = 0;
+  let lastRow   = 0, lastCol   = 0;
 
-    const fragment = document.createDocumentFragment();
-    fragment.appendChild(makeHeader('corner'));
-    for (let c = 0; c < cols; c++) fragment.appendChild(makeHeader('col-header', c + 1));
-    grid.appendChild(fragment);
+  /* One-time cell pool -------------------------------------------- */
+  const cellPool = [];
+  (function buildPool () {
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < VISIBLE_ROWS * VISIBLE_COLS; i++) {
+      const d  = document.createElement('div');
+      d.className = 'grid-cell border';
+      d.style.position = 'absolute';
+      d.style.width  = `${CELL}px`;
+      d.style.height = `${CELL}px`;
+      frag.appendChild(d);
+      cellPool.push(d);
+    }
+    viewport.appendChild(frag);
+  })();
 
-    let currentRow = 0;
-    const chunkSize = 10;
+  /* ——— row / column label pools ——————————————————————— */
+  const rowLabelContainer = document.createElement('div');
+  rowLabelContainer.style.position      = 'absolute';
+  rowLabelContainer.style.left = '0';            
+  rowLabelContainer.style.top  = `${STEP}px`;    
+  rowLabelContainer.style.pointerEvents = 'none';
+  viewport.appendChild(rowLabelContainer);
 
-    function drawChunk() {
-      const frag = document.createDocumentFragment();
-      for (let r = currentRow; r < Math.min(currentRow + chunkSize, rows); r++) {
-        frag.appendChild(makeHeader('row-header', r + 1));
-        for (let c = 0; c < cols; c++) {
-          frag.appendChild(createCell(r, c));
+  const colLabelContainer = document.createElement('div');
+  colLabelContainer.style.position      = 'absolute';
+  colLabelContainer.style.left = `${STEP}px`;    
+  colLabelContainer.style.top  = '0';            
+  colLabelContainer.style.pointerEvents = 'none';
+  viewport.appendChild(colLabelContainer);
+
+  /* pools the renderer can re-use */
+  const rowLabelPool = [], colLabelPool = [];
+  for (let i = 0; i < VISIBLE_ROWS; i++) {
+    const d = document.createElement('div');
+    d.className = 'bg-green-200 text-xs text-center leading-[40px]';
+    d.style.position = 'absolute';
+    d.style.width  = `${CELL}px`;
+    d.style.height = `${CELL}px`;
+    rowLabelContainer.appendChild(d);
+    rowLabelPool.push(d);
+  }
+  for (let i = 0; i < VISIBLE_COLS; i++) {
+    const d = document.createElement('div');
+    d.className = 'bg-green-200 text-xs text-center leading-[40px]';
+    d.style.position = 'absolute';
+    d.style.width  = `${CELL}px`;
+    d.style.height = `${CELL}px`;
+    colLabelContainer.appendChild(d);
+    colLabelPool.push(d);
+  }
+
+
+  /* Render current 50×50 window ----------------------------------- */
+  function renderVisibleCells(startRow, startCol) {
+    let idx = 0;
+
+    /* —— rows ——————————————————————————————————————— */
+    for (let r = 0; r < VISIBLE_ROWS; r++) {
+      const gRow = r + startRow;            // global row index (0‑based)
+
+      /* row label (green bar at left) */
+      const rl = rowLabelPool[r];
+      rl.style.top       = `${r * STEP}px`;
+      rl.textContent     = gRow < totalRows ? gRow + 1 : '';
+
+      /* —— columns inside this visible row —— */
+      for (let c = 0; c < VISIBLE_COLS; c++, idx++) {
+        const gCol = c + startCol;          // global col index
+        const cell = cellPool[idx];
+
+        /* hide cells that are outside farm bounds */
+        if (gRow >= totalRows || gCol >= totalCols) {
+          cell.style.display = 'none';
+          continue;
         }
-      }
-      grid.appendChild(frag);
-      currentRow += chunkSize;
-      if (currentRow < rows) {
-        requestAnimationFrame(drawChunk);
-      } else {
-        loader?.classList.add('hidden');
-        repositionTrials();
-        gridReady = true;
+
+        cell.style.display = 'block';
+        cell.style.left = `${c * STEP}px`;
+        cell.style.top  = `${r * STEP}px`;
+
+        /* cache row/col in data‑attrs for hit‑tests later */
+        if (cell.dataset.row !== String(gRow)) cell.dataset.row = gRow;
+        if (cell.dataset.col !== String(gCol)) cell.dataset.col = gCol;
+
+        /* paint state */
+        const k        = key(gRow, gCol);
+        const isUnused = cellIsUnused(gRow, gCol);
+        const isBorder = manualBorders.has(k);
+
+        cell.style.backgroundColor = isUnused ? '#d1d5db' : '#ffffff';
+
+        if (isBorder) {
+          cell.textContent = 'B';
+          cell.classList.add('border-plot');
+        } else {
+          cell.textContent = '';
+          cell.classList.remove('border-plot');
+        }
       }
     }
 
-    drawChunk();
+    /* —— column labels (green bar on top) ——————————————— */
+    for (let c = 0; c < VISIBLE_COLS; c++) {
+      const gCol = c + startCol;
+      const cl = colLabelPool[c];
+      cl.style.left      = `${c * STEP}px`;
+      cl.textContent     = gCol < totalCols ? gCol + 1 : '';
+    }
   }
+
+
+
+  /* Init / resize -------------------------------------------------- */
+  function initVirtualGrid(rows, cols) {
+    totalRows = rows;
+    totalCols = cols;
+
+    /* grid shell */
+    grid.style.position = 'relative';
+    grid.style.overflow = 'auto';
+    grid.style.width  = `${VISIBLE_COLS * STEP}px`;
+    grid.style.height = `${VISIBLE_ROWS * STEP}px`;
+    grid.style.paddingLeft = `${STEP}px`;   
+    grid.style.paddingTop  = `${STEP}px`;   
+
+    /* fake scroller div */
+    let scroller = grid.querySelector('.fake-scroller');
+    if (!scroller) {
+      scroller = document.createElement('div');
+      scroller.className = 'fake-scroller';
+      grid.appendChild(scroller);
+    }
+    scroller.style.width  = `${cols * STEP + STEP}px`; 
+    scroller.style.height = `${rows * STEP + STEP}px`; 
+
+    /* first draw */
+    viewport.style.transform = 'translate(0,0)';
+    renderVisibleCells(0, 0);
+    lastRow = lastCol = 0;
+  }
+
+  /* Scroll handler (rAF throttled) -------------------------------- */
+  let needsPaint = false;
+  grid.addEventListener('scroll', () => {
+    if (needsPaint) return;
+    needsPaint = true;
+    requestAnimationFrame(() => {
+      const newCol = Math.floor(grid.scrollLeft / STEP);
+      const newRow = Math.floor(grid.scrollTop  / STEP);
+      if (newRow !== lastRow || newCol !== lastCol) {
+        renderVisibleCells(newRow, newCol);
+        viewport.style.transform =
+          `translate(${newCol * STEP}px, ${newRow * STEP}px)`;
+        rowLabelContainer.style.transform = `translateY(${newRow * STEP}px)`;
+        colLabelContainer.style.transform = `translateX(${newCol * STEP}px)`;
+        lastRow = newRow;
+        lastCol = newCol;
+      }
+      needsPaint = false;
+    });
+  }, { passive: true });
+
+
+  let gridInitialised = false;
+
+  /* keep these in module scope so we can compare */
+  let prevRows = 0, prevCols = 0;
+
+  function drawGrid () {
+    /* 1. current values from the UI */
+    const rows = +qs('#farm-rows')?.value || 0;
+    const cols = +qs('#farm-cols')?.value || 0;
+
+    /* ── first run? build everything ─────────────────────────── */
+    if (!gridInitialised) {
+      initVirtualGrid(rows, cols);
+      gridInitialised   = true;
+      prevRows = rows;  prevCols = cols;
+      gridReady = true;                 // for drag-&-drop logic
+      return;
+    }
+
+    /* ── dimensions unchanged → just repaint window ─────────── */
+    if (rows === prevRows && cols === prevCols) {
+      /* keep scroll position; only redraw visible cells */
+      renderVisibleCells(lastRow, lastCol);
+      return;
+    }
+
+    /* ── only scroller size changes → quick resize ───────────── */
+    totalRows = rows;
+    totalCols = cols;
+
+    /* update fake scroller div */
+    const scroller = grid.querySelector('.fake-scroller');
+    if (scroller) {
+      scroller.style.width  = `${cols * STEP + STEP}px`;
+      scroller.style.height = `${rows * STEP + STEP}px`;
+    }
+
+    /* if user shrank the grid and current scroll is out-of-bounds,
+       bring it back into range */
+    const maxLeft = Math.max(0, cols * STEP - grid.clientWidth);
+    const maxTop  = Math.max(0, rows * STEP - grid.clientHeight);
+    if (grid.scrollLeft > maxLeft) grid.scrollLeft = maxLeft;
+    if (grid.scrollTop  > maxTop)  grid.scrollTop  = maxTop;
+
+    /* repaint visible area */
+    const newCol = Math.floor(grid.scrollLeft / STEP);
+    const newRow = Math.floor(grid.scrollTop  / STEP);
+    renderVisibleCells(newRow, newCol);
+    viewport.style.transform =
+      `translate(${newCol * STEP}px, ${newRow * STEP}px)`;
+
+    /* remember for next call */
+    prevRows = rows;
+    prevCols = cols;
+  }
+
+  /* ─── hook UI controls back to the optimised drawGrid() ─── */
+  qs('#farm-rows')?.addEventListener('change', drawGrid);
+  qs('#farm-cols')?.addEventListener('change', drawGrid);
+
+  /* first paint on page load */
+  window.addEventListener('load', drawGrid);
+
 
 
   function createCell(r, c) {
@@ -216,7 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
     d.className = 'border rounded p-4 mb-4 bg-gray-100';
     d.innerHTML = `
       <h4 class='font-semibold mb-2'>Trial ${i}</h4>
-
       <label class='block mb-2'>Name
         <input id='tname${i}' class='w-full border rounded px-2 py-1' />
       </label>
@@ -294,53 +496,131 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     qs('#trial-details').appendChild(d);
+    loadGlobalFarmDropdown();
 
-    // Design toggle logic
+    // Design-specific toggles ────────────────
     const designSelect = d.querySelector(`#tdesign${i}`);
-    const rowcol = d.querySelector(`#rowcol-container${i}`);
-    const repsblocks = d.querySelector(`#repsblocks-container${i}`);
+    const rowcol       = d.querySelector(`#rowcol-container${i}`);
+    const repsblocks   = d.querySelector(`#repsblocks-container${i}`);
 
     designSelect.addEventListener('change', () => {
-      const isRCBD = designSelect.value === 'RCBD';
+      const val        = designSelect.value;
+      const isRCBD     = val === 'RCBD';
+      const isAugRC    = val === 'Augmented Row-Column';
 
-      repsblocks.innerHTML = isRCBD
-        ? `
+      /* ── REPS / BLOCKS PANEL ───────────────────────────── */
+      if (isRCBD) {
+        repsblocks.innerHTML = `
           <label>Reps / Blocks
-            <input id='trepsblocks${i}' type='number' min='1' value='1' class='w-full border rounded px-2 py-1' />
+            <input id='trepsblocks${i}' type='number' min='1' value='1'
+                   class='w-full border rounded px-2 py-1' />
           </label>
-          <div></div>
-        `
-        : `
+          <div></div>`;
+      } else if (isAugRC) {
+        // Augmented row-column: super-rows & super-cols replace reps/blocks
+        repsblocks.innerHTML = '';          // nothing needed here
+      } else {
+        // all other designs (Row-Column, DRRC, etc.)
+        repsblocks.innerHTML = `
           <label>Reps
-            <input id='treps${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
+            <input id='treps${i}' type='number' min='1'
+                   class='w-full border rounded px-2 py-1' />
           </label>
           <label>Blocks
-            <input id='tblocks${i}' type='number' min='1' class='w-full border rounded px-2 py-1' />
-          </label>
-        `;
+            <input id='tblocks${i}' type='number' min='1'
+                   class='w-full border rounded px-2 py-1' />
+          </label>`;
+      }
 
-      rowcol.innerHTML = isRCBD
-        ? `
+      /* ── ROW / COL PANEL ────────────────────────────────── */
+      if (isRCBD) {
+        rowcol.innerHTML = `
           <label>Number of Rows per Block
-            <input id='tblockrows${i}' type='number' min='1' value='1' class='w-full border rounded px-2 py-1' />
+            <input id='tblockrows${i}' type='number' min='1' value='1'
+                   class='w-full border rounded px-2 py-1' />
           </label>
-          <div></div>
-        `
-        : `
+          <div></div>`;
+      } else if (isAugRC) {
+        // four inputs: super-rows, super-cols, rows, cols
+        rowcol.innerHTML = `
+          <label>Rows per block  
+            <input id='tblockrows${i}' type='number' min='1'
+                   class='w-full border rounded px-2 py-1' />
+          </label>
+          <label>Cols per block
+            <input id='tblockcols${i}' type='number' min='1'
+                   class='w-full border rounded px-2 py-1' />
+          </label>
+          <label>Total rows in trial
+            <input id='tsuperrows${i}' type='number' min='1'
+                   class='w-full border rounded px-2 py-1' />
+          </label>
+          <label>Total cols in trial
+            <input id='tsupercols${i}' type='number' min='1'
+                   class='w-full border rounded px-2 py-1' />
+          </label>`;
+      } else {
+        // default two-input panel
+        rowcol.innerHTML = `
           <label>Rows
-            <input id='trows${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
+            <input id='trows${i}' type='number' min='1'
+                   class='w-full border rounded px-2 py-1' />
           </label>
           <label>Cols
-            <input id='tcols${i}' type='number' value='1' min='1' class='w-full border rounded px-2 py-1' />
-          </label>
-        `;
+            <input id='tcols${i}' type='number' min='1'
+                   class='w-full border rounded px-2 py-1' />
+          </label>`;
+      }
     });
+
 
     // Load dropdown lists
     loadTreatmentsList(i, null, function (selectedTreatmentListId) {
       loadControlsList(i, selectedTreatmentListId);
     });
+
   }
+
+  function loadGlobalFarmDropdown() {
+    const $select = $('#farm_dropdown');
+
+    // Show loading state
+    $select.html('<option value="">Loading...</option>');
+
+    $.ajax({
+      url: '/ajax/trialallocation/farms',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        if (!data.success || !Array.isArray(data.farms)) {
+          $select.html('<option value="">Failed to load farms</option>');
+          return;
+        }
+
+        // Populate dropdown
+        $select.empty().append('<option value="">-- Select Farm --</option>');
+        data.farms.forEach(loc => {
+          $select.append(`<option value="${loc.location_id}">${loc.name}</option>`);
+        });
+
+        // Initialize Select2 *after* data is populated
+        $select.select2({
+          placeholder: 'Select or type a farm',
+          allowClear: true,
+          width: '100%',
+          dropdownParent: $('#farm_dropdown').closest('div')
+        });
+      },
+      error: function(xhr, status, error) {
+        console.error('Failed to load global farm list:', error);
+        $select.html('<option value="">Failed to load</option>');
+      }
+    });
+  }
+
+
+
+
 
 
 
@@ -353,7 +633,8 @@ document.addEventListener('DOMContentLoaded', () => {
     box.draggable = true;
     box.ondragstart = startDrag;
     qs('#trial-boxes').appendChild(box);
-    if(document.querySelector(`.trial-group[data-trial="${i}"]`)) disablePal(i);
+    // if(document.querySelector(`.trial-group[data-trial="${i}"]`)) disablePal(i);
+    disablePal(i);
   }
 
   /******** getting lists **********/
@@ -438,23 +719,40 @@ document.addEventListener('DOMContentLoaded', () => {
   
   /******** Gereate trial Design *************/
   window.generateDesign = function(i, rowStart = 0, colStart = 0, btn) {
-    const design = $(`#tdesign${i}`).val();
-    const isRCBD = design === 'RCBD';
+    const design  = $(`#tdesign${i}`).val();
     const layoutType = $(`#tlayout${i}`).val();
+    const isRCBD  = design === 'RCBD';
+    const isAugRC = design === 'Augmented Row-Column';
+
+    if (btn && btn.textContent.includes('Re-Run')) {
+      delete trialDesignCache[i];
+      console.log(`Cache for trial ${i} cleared`);
+    }
 
     const trial = {
-      name: $(`#tname${i}`).val(),
-      description: $(`#tdesc${i}`).val(),
-      type: $(`#ttype${i}`).val(),
-      design: design,
-      treatment_list_id: $(`#ttreatments${i}`).val(),
-      control_list_id: $(`#tcontrols${i}`).val(),
-      layout_type: layoutType, 
-      reps: isRCBD ? 0 : parseInt($(`#treps${i}`).val()) || 0,
-      blocks: isRCBD ? parseInt($(`#trepsblocks${i}`).val()) || 0 : parseInt($(`#tblocks${i}`).val()) || 0,
-      rows: isRCBD ? parseInt($(`#tblockrows${i}`).val()) || 0 : parseInt($(`#trows${i}`).val()) || 0,
-      cols: parseInt($(`#tcols${i}`).val()) || 0
+      name:             $(`#tname${i}`).val(),
+      description:      $(`#tdesc${i}`).val(),
+      type:             $(`#ttype${i}`).val(),
+      design:           design,
+      treatment_list_id:$(`#ttreatments${i}`).val(),
+      control_list_id:  $(`#tcontrols${i}`).val(),
+      layout_type:      layoutType,
+
+      // reps / blocks logic
+      reps: parseInt($(`#treps${i}`).val()) || 0,
+      blocks: isRCBD ? (parseInt($(`#trepsblocks${i}`).val()) || 0) : (isAugRC ? 0 : parseInt($(`#tblocks${i}`).val())   || 0),
+
+      // super-row / super-col only for AugRC
+      rows_in_field: isAugRC ? parseInt($(`#tsuperrows${i}`).val()) || 0 : 0,
+      cols_in_field: isAugRC ? parseInt($(`#tsupercols${i}`).val()) || 0 : 0,
+      rows_per_block: isAugRC ? parseInt($(`#tblockrows${i}`).val()) || 0 : 0,
+      cols_per_block: isAugRC ? parseInt($(`#tblockcols${i}`).val()) || 0 : 0,
+
+      // rows / cols in the whole trial
+      rows: isRCBD ? parseInt($(`#tblockrows${i}`).val()) || 0 : parseInt($(`#trows${i}`).val())      || 0,
+      cols: parseInt($(`#tcols${i}`).val()) || 0       // same input for all designs
     };
+
 
     // Reset state before AJAX
     if (btn) {
@@ -474,6 +772,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
         btn.classList.add('bg-green-600', 'hover:bg-green-700');
         btn.textContent = 'Design Ready/Re-Run?';
+        enablePal(i);
+      }
+      trialDesignCache[i] = {
+          design_file: response.design_file,
+          param_file: response.param_file,
+          design: response.design,
+          n_row: response.n_row,
+          n_col: response.n_col
       }
     }).fail(function(err) {
       if (btn) {
@@ -529,68 +835,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ───── request design from server ───── */
-    generateDesign(tn, row, col)
-      .done(function (response) {
+    const cached = trialDesignCache[tn];
+    if (!cached) {
+      alert("Please click 'Generate Design' before placing the trial.");
+      return;
+    }
 
-        if (!response.success) {
-          alert('Design failed: ' + response.error);
-          return;
+    const rowsWanted = cached.n_row;
+    const colsWanted = cached.n_col;
+    const loading = qs('#grid-loader');
+    if (loading) {
+      loading.querySelector('span').textContent = 'Placing trial...';
+      loading.classList.remove('hidden');
+    }
+
+    const coords = placeTrial({
+      tn,
+      name,
+      rowsWanted,
+      colsWanted,
+      total: rowsWanted * colsWanted,
+      rowStart: row,
+      colStart: col,
+      colour,
+      rootId: null,
+      design: cached.design
+    });
+
+    // save coordinates
+    $.ajax({
+      url: '/ajax/trialallocation/save_coordinates',
+      method: 'POST',
+      data: {
+        trial: JSON.stringify({
+          trial_name: name,
+          trial_id: tn,
+          coordinates: coords,
+          design_file: cached.design_file,
+          param_file: cached.param_file,
+          r_output: cached.r_output
+        })
+      },
+      success: function (saveResponse) {
+        if (loading) loading.classList.add('hidden');
+        if (saveResponse.success) {
+          console.log(`Coordinates for "${name}" saved successfully.`);
+          recolorTrialPlots(tn, cached.design_file, colour);
+        } else {
+          console.warn('Save failed: ' + saveResponse.error);
         }
-
-        const rowsWanted = response.n_row;
-        const colsWanted = response.n_col;
-
-        /* inner helper does the actual placement + save-back */
-        const applyPlacement = (rowsWanted, colsWanted) => {
-          const total = rowsWanted * colsWanted;   // rectangular footprint
-
-          const coords = placeTrial({
-            tn,
-            name,
-            rowsWanted,
-            colsWanted,
-            total,
-            rowStart: row,
-            colStart: col,
-            colour,
-            rootId: null,
-            design: response.design
-          });
-
-          console.log('Generated coords:', coords);
-          console.log('Design file:', response.design_file);
-
-          /* save coords back to backend */
-          $.ajax({
-            url: '/ajax/trialallocation/save_coordinates',
-            method: 'POST',
-            data: {
-              trial: JSON.stringify({
-                trial_name: name,
-                trial_id: tn,
-                coordinates: coords,
-                design_file: response.design_file,
-                param_file: response.param_file,
-                r_output: response.r_output
-              })
-            },
-            success: function (saveResponse) {
-              if (saveResponse.success) {
-                console.log(`Coordinates for "${name}" saved successfully.`);
-                recolorTrialPlots(tn, response.design_file, colour);
-              } else {
-                console.warn('Save failed: ' + saveResponse.error);
-              }
-            },
-            error: function (xhr, status, error) {
-              console.error('Error saving coordinates:', error);
-            }
-          });
-        };
-
-        /* ←─── ACTUALLY RUN IT ───→ */
-        applyPlacement(rowsWanted, colsWanted);
-      })
+      },
+      error: function (xhr, status, error) {
+        if (loading) loading.classList.add('hidden');
+        console.error('Error saving coordinates:', error);
+      }
+    })
       .fail(function (xhr, status, error) {
         console.error('AJAX error:', error);
         alert('Error generating design.');
@@ -612,6 +911,11 @@ document.addEventListener('DOMContentLoaded', () => {
   farmGridEl.addEventListener('drop', handleDrop);
 
   /************* grab coodinates from grd ****************/
+
+  function clearTrialCache(i) {
+    delete trialDesignCache[i];
+    alert(`Trial ${i} design cache cleared.`);
+  }
 
   function getTrialCoordinates(trialName) {
     const coords = [];
@@ -783,6 +1087,13 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         };
         g.appendChild(rm);
+
+        /* ⇄ transpose button (one per root) */
+        const tp = document.createElement('div');
+        tp.className = 'transpose-btn';
+        tp.textContent = '⇄';
+        tp.onclick = () => transposeTrial(root);
+        g.appendChild(tp);
       }
 
       qs('#field-zoom-container').appendChild(g);
@@ -851,6 +1162,77 @@ document.addEventListener('DOMContentLoaded', () => {
       error: (_, __, err) => console.error('Recolor failed:', err)
     });
   }
+
+  /* ─── Helper: is the rectangle free? ────────────────────── */
+function regionHasConflict(r0, c0, h, w, ignoreRoot){
+  for(let r=r0; r<r0+h; r++){
+    for(let c=c0; c<c0+w; c++){
+      const k = key(r,c);
+      if(cellIsUnused(r,c) || manualBorders.has(k)) return true;
+
+      const clash = [...document.querySelectorAll('.trial-group')]
+        .some(g=>{
+          if(g.dataset.root === ignoreRoot) return false;
+          const gr = +g.dataset.row;
+          const gc = +g.dataset.col;
+          const gw = g.style.gridTemplateColumns.split(' ').length;
+          const gh = Math.round(g.offsetHeight / (CELL+GAP));
+          return r>=gr && r<gr+gh && c>=gc && c<gc+gw;
+        });
+      if(clash) return true;
+    }
+  }
+  return false;
+}
+
+  /* ─── Transpose (rows↔cols) ─────────────────────────────── */
+  function transposeTrial(root){
+    const parts = [...document.querySelectorAll(`.trial-group[data-root="${root}"]`)];
+    if(!parts.length) return;
+
+    /* derive footprint */
+    let minR=1e9,minC=1e9,maxR=-1,maxC=-1;
+    parts.forEach(g=>{
+      const gr = +g.dataset.row;
+      const gc = +g.dataset.col;
+      const gw = g.style.gridTemplateColumns.split(' ').length;
+      const gh = Math.round(g.offsetHeight / (CELL+GAP));
+      minR = Math.min(minR, gr);           minC = Math.min(minC, gc);
+      maxR = Math.max(maxR, gr+gh-1);      maxC = Math.max(maxC, gc+gw-1);
+    });
+
+    const curH = maxR-minR+1, curW = maxC-minC+1;
+    const newH = curW,          newW = curH;
+
+    /* bounds + overlap check */
+    const rowsMax = +qs('#farm-rows').value,
+          colsMax = +qs('#farm-cols').value;
+
+    if(minR+newH > rowsMax || minC+newW > colsMax ||
+       regionHasConflict(minR, minC, newH, newW, root)){
+      alert('Cannot transpose – no free space at current position.');
+      return;
+    }
+
+    /* remove old, place new */
+    const tn     = parts[0].dataset.trial;
+    const name   = parts[0].querySelector('.trial-box').textContent;
+    const colour = colourFor(tn);
+
+    parts.forEach(p=>p.remove());                // clear existing
+    placeTrial({
+      tn, name,
+      rowsWanted: newH,
+      colsWanted: newW,
+      total: newH*newW,
+      rowStart: minR,
+      colStart: minC,
+      colour,
+      rootId: root,         // reuse same root → buttons stay unique
+      design: null          // unchanged; placement only
+    });
+  }
+
 
 
 
@@ -992,6 +1374,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   window.onload = ()=>{
+    loadGlobalFarmDropdown();
     makeTrials();
     drawGrid();
     qs('#farm-rows').addEventListener('change',drawGrid);

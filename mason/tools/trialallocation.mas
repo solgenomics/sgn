@@ -16,6 +16,9 @@ Chris Simoes – ccs263@cornell.edu
 
 </%args>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 <& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['trialallocation' ] &>
 <& /page/page_title.mas, title=>"Trial Allocation" &>
 
@@ -31,7 +34,6 @@ Chris Simoes – ccs263@cornell.edu
     --cell: 40px;
     --gap: 2px;
   }
-
   #farm-scroll {
     overflow: auto;
     max-height: 70vh;
@@ -128,20 +130,37 @@ Chris Simoes – ccs263@cornell.edu
   <&| /page/info_section.mas, id=>"farm_settings_section", title=>"2 - Farm settings", collapsible=>1, collapsed=>0 &>
     <div class="space-y-4">
       <div class="grid grid-cols-3 gap-4">
-        <label>Farm <select class="w-full border rounded px-2 py-1"><option>Select Farm</option></select></label>
-        <label>Year <input type="number" class="w-full border rounded px-2 py-1" /></label>
-        <label>Season <input type="text" class="w-full border rounded px-2 py-1" /></label>
+        <label>Farm
+          <select id="farm_dropdown" class="w-full border rounded px-2 py-1">
+            <option value="">Select Farm</option>
+          </select>
+        </label>
+        <label>Year
+          <input type="number" class="w-full border rounded px-2 py-1" />
+        </label>
+        <label>Season
+          <input type="text" class="w-full border rounded px-2 py-1" />
+        </label>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <label>Total Rows <input type="number" id="farm-rows" class="w-full border rounded px-2 py-1" /></label>
-        <label>Total Columns <input type="number" id="farm-cols" class="w-full border rounded px-2 py-1"/></label>
+        <label>Total Rows
+          <input type="number" id="farm-rows" class="w-full border rounded px-2 py-1" />
+        </label>
+        <label>Total Columns
+          <input type="number" id="farm-cols" class="w-full border rounded px-2 py-1"/>
+        </label>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <label>Plot Width <input type="number" id="plot-width" class="w-full border rounded px-2 py-1" /></label>
-        <label>Plot Length <input type="number" id="plot-length" class="w-full border rounded px-2 py-1" /></label>
+        <label>Plot Width
+          <input type="number" id="plot-width" class="w-full border rounded px-2 py-1" />
+        </label>
+        <label>Plot Length
+          <input type="number" id="plot-length" class="w-full border rounded px-2 py-1" />
+        </label>
       </div>
     </div>
   </&>
+
 
   <&| /page/info_section.mas, id=>"trial_settings_section", title=>"3 - Trial Settings", collapsible=>1, collapsed=>0 &>
     <div class="mb-6">
