@@ -103,7 +103,7 @@ field_book$CHECKS[field_book$CHECKS > 0] <- 1
 
 if(engine == 'trial_allocation'){
   library(dplyr)
-  field_book <- field_book %>% select(PLOT, EXPT, TREATMENT, LOCATION, CHECKS, ROW)
+  field_book <- field_book %>% select(PLOT, EXPT, TREATMENT, LOCATION, CHECKS)
   colnames(field_book) <- c("plots", "block", "all_entries", "rep", "is_control")
   field_book <- field_book[order(field_book$plots),]
 }

@@ -12,6 +12,7 @@ use DateTime;
 use Bio::Chado::Schema;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
+use SGN::Controller::AJAX::Locations;
 use Text::CSV;
 use JSON;
 
@@ -83,9 +84,18 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     my $description = $trial->{description};
     my $treatments = $trial->{treatment_list_id};
     my $controls   = $trial->{control_list_id};
-    my $rows_per_block = $trial->{rows};       # corresponds to tblockrows
-    my $cols_per_block = $trial->{cols};       # corresponds to tblockrows
-    my $blocks         = $trial->{blocks};     # corresponds to trepsblocks
+    
+    my $rows = $trial->{rows};
+    my $rows_per_block = $trial->{rows_per_block};  
+    my $rows_in_field = $trial->{rows_in_field};    
+    
+    my $cols = $trial->{cols};
+    my $cols_per_block = $trial->{cols_per_block};  
+    my $cols_in_field = $trial->{cols_in_field};    
+    
+    my $reps = $trial->{reps};
+    my $blocks = $trial->{blocks}; 
+    
     my $layout_type = $trial->{layout_type} || 'serpentine';
     my $engine = 'trial_allocation';
     my $trial_design;
@@ -113,16 +123,10 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     # Full base path (no extension)
     my $temppath = $c->config->{basepath} . "/" . $tempfile;
     print STDERR "***** temppath = $temppath\n";
-    
-    
-    
-    ## Call for rrc
 
-    ## Call for DRRC
-
-    ## Call for URDD
+    print Dumper \$trial;
     
-
+ 
     # Define specific file names with extensions
     my $paramfile = $temppath . ".params";  # for R input
     my $outfile   = $temppath . ".out";     # for R output
@@ -134,14 +138,20 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
 
     print $F "treatments <- c($treatment_string)\n";
     print $F "controls <- c($control_string)\n";
-    print $F "n_rep <- nRep <- " . ($trial->{reps} // '') . "\n";
-    print $F "n_row <- nRow <- " . ($trial->{rows} // '') . "\n";
-    print $F "n_col <- nCol <- " . ($trial->{cols} // '') . "\n";
-    print $F "n_blocks <- nBlocks <- " . ($trial->{blocks} // '') . "\n";
+    print $F "n_rep <- nRep <- " . $reps . "\n";
+    print $F "n_row <- nRow <- " . $rows . "\n";
+    print $F "rows_per_block <- " . $rows_per_block . "\n";
+    print $F "rows_in_field <- " . $rows_in_field . "\n";
+    print $F "n_col <- nCol <- " . $cols . "\n";
+    print $F "cols_per_block <- " . $cols_per_block . "\n";
+    print $F "cols_in_field <- " . $cols_in_field . "\n";
+    print $F "n_blocks <- nBlocks <- " . $blocks . "\n";
     print $F "serie <- " . ($trial->{serie} // 1) . "\n";  # optional
     print $F "plot_type <- layout <- \"$layout_type\"\n";  # optional
     print $F "engine <- \"$engine\"\n";  # optional
     close($F);
+    
+    print STDERR "***** The design is = $design\n";
 
     # Run R if needed
     if ($design eq "RCBD") {
@@ -156,8 +166,6 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
         system($cmd);
     }
     
-    print STDERR "***** The design is = $design\n";
-
     if ($design eq "Un-Replicated Diagonal") {
         my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/urdd_design.R $outfile";
         print STDERR "Running: $cmd\n";
@@ -166,6 +174,12 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
 
     if ($design eq "Row-Column Design") {
         my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/rrc_design.R $outfile";
+        print STDERR "Running: $cmd\n";
+        system($cmd);
+    }
+
+    if ($design eq "Augmented Row-Column") {
+        my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/augmented_row_column.R $outfile";
         print STDERR "Running: $cmd\n";
         system($cmd);
     }
@@ -180,25 +194,33 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
     }
 
 
-    print STDERR "***** Rows = $rows_per_block\n";
-    print STDERR "***** Cols = $cols_per_block\n";
+    
     ## Adjusting variables for RCBD
     my $json_desing;
     if( $design eq "RCBD"){
-        my ($n_row, $n_col, $error, $trial_design) = create_rcbd($rows_per_block, $blocks, $n_trt, $n_ctl, $design_file);
+        my ($n_row, $n_col, $trial_design) = create_rcbd($rows, $blocks, $n_trt, $n_ctl, $design_file);
         $trial->{n_row} = $n_row;
         $trial->{n_col} = $n_col;
         $json_desing = encode_json($trial_design);
     } else {
-        my $trial_design = arrange_design($design_file, $design);
+        my ($trial_design) = arrange_design($design_file, $design);
         $json_desing = encode_json($trial_design);
-        $trial->{n_row} = $rows_per_block;
-        $trial->{n_col} = $cols_per_block;
+        my ($n_row, $n_col);
+        
+        if ($design eq 'Augmented Row-Column'){
+            $n_row = $rows_in_field;
+            $n_col = $cols_in_field; 
+        } else {
+            $n_row = $rows;
+            $n_col = $cols;
+        }
+
+        # print STDERR "***** Rows = $n_row\n";
+        # print STDERR "***** Cols = $n_col\n";
+        $trial->{n_row} = $n_row;
+        $trial->{n_col} = $n_col;
     }
     
-    
-
-    print STDERR Dumper \$json_desing;
 
     # Return filenames
     $c->stash->{rest} = {
@@ -215,6 +237,31 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
 
 }
 
+sub farms :Path('/ajax/trialallocation/farms') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $project_obj = CXGN::BreedersToolbox::Projects->new({ schema => $c->dbic_schema('Bio::Chado::Schema') });
+    my $locations = $project_obj->get_location_geojson_data();
+
+    my @farms;
+    foreach my $l (@$locations) {
+        push @farms, {
+            location_id => $l->{properties}->{location_id},
+            name        => $l->{properties}->{Name}
+        };
+    }
+
+    @farms = sort { lc($a->{name}) cmp lc($b->{name}) } @farms;
+    
+    $c->stash->{rest} = {
+        success => 1,
+        farms   => \@farms
+    };
+}
+
+
+
 
 
 sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
@@ -223,7 +270,7 @@ sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
     my $json_string = $c->req->param('trial');
     my $data = eval { decode_json($json_string) };
 
-    print STDERR Dumper \$data;
+    # print STDERR Dumper \$data;
 
     if (!$data) {
     $c->stash->{rest} = {
@@ -356,7 +403,7 @@ sub create_rcbd {
 
   close $fh;
 
-  return ($n_row, $n_col, undef, \@design);
+  return ($n_row, $n_col, \@design);
 }
 
 sub arrange_design {
@@ -439,12 +486,10 @@ sub arrange_design {
     }
   }
 
+
+
   return (\@design);
 }
-
-
-
-
 
 
 1;
