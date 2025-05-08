@@ -264,6 +264,9 @@ $field_headers => ()
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
 % }
 % } #End trial_analysis_tools
+% if ($info_section_id eq 'trial_nirs_section'){
+                                <& /breeders_toolbox/trial/trial_nirs_data.mas, trial_id => $trial_id &>
+% } #End trial nirs data
 % if ($info_section_id eq 'trial_weather_data'){
                                 <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
 % } #End trial_weather_data
