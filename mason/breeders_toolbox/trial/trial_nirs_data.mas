@@ -13,8 +13,13 @@ $stockref => undef
     #nirs_spectra_table tbody tr {
         background-color: white !important;
     }
-    .nirs-table-container {
+    #nirs_data_table {
         margin-top: 30px;
+    }
+    #clear_graph_btn {
+        float: right;
+        margin-top: -2.5em;
+        margin-right: 1em;
     }
 </style>
 
@@ -26,9 +31,16 @@ $stockref => undef
     <button class="btn btn-sm btn-primary" id="submit_protocol_selection">Select</button>
 </center>
 
-<div class="well mt-4">
+<div class="well mt-4" id="nirs_table_section" style="display: none;">
     <table id="nirs_data_table" class="display" style="width:100%">
     </table>
+</div>
+
+<div class="well mt-4" id ="multi_graph_section" style="display: none;">
+    <h4>Multiple Sample Graph</h4>
+    <button class="btn btn-sm btn-primary" id="clear_graph_btn">Clear Graph</button>
+    <div id="multi_graph_container" style="width: 110%; height: 500px;"></div>
+    
 </div>
 
 <div id="large_graph" class="modal fade" role="dialog">
@@ -49,6 +61,13 @@ $stockref => undef
 
 <script>
 var trial_id = '<% $trial_id %>';
+
+document.getElementById("submit_protocol_selection").addEventListener("click", function() {
+    document.getElementById("nirs_table_section").style.display = "block";
+    document.getElementById("multi_graph_section").style.display = "block";
+
+    nirsDataLineGraph.drawMultiLineGraph();
+});
 
 jQuery(document).ready(function() {
 
@@ -106,9 +125,11 @@ jQuery(document).ready(function() {
         });
     }
 
+    var multiGraphData = [];
+    let plottedSamples = new Set();
+
     function show_nirs_data(result, frequencies) {
         var data = [];
-        var mulitGraphData = [];
         samples_map = {};
 
         result.data.forEach(item => {
@@ -161,6 +182,12 @@ jQuery(document).ready(function() {
                 { title: 'Spectra Graph'},
                 { title: 'Plot on Large Graph'}
             ],
+            'columnDefs': [
+                {
+                    "targets": 3,
+                    "className": "text-center",
+                }
+            ],
             'data': data,
             'drawCallback': function (settings) {
                 jQuery(".small-graph").each(function () {
@@ -171,25 +198,43 @@ jQuery(document).ready(function() {
 
                     draw_small_graph(container, small_graph_data);
                 });
-                /*
-                jQuery("plot-btn").click(function () {
+                
+                jQuery(".plot-btn").click(function () {
                     var sampleKey = jQuery(this).data('sample');
-                    var group = samples_map[sampleKey];
-                    var graph_data = group.values.flatMap(d => d.pairedValues);
-                    var label_sample_name = group.germplasmName;
+                    var button = jQuery(this);
+                    var isPlotted = plottedSamples.has(sampleKey);
 
-                    multiGraphData.push({
-                        data: graph_data,
-                        label: label_sample_name
-                    });
+                    if (isPlotted) {
+                        multiGraphData = multiGraphData.filter(d => d.label !== samples_map[sampleKey].germplasmName);
+                        plottedSamples.delete(sampleKey);
+                        button.text("Plot");
+                    } else {
+                        var group = samples_map[sampleKey];
+                        var graph_data = group.values.flatMap(d => d.pairedValues);
+                        var label_sample_name = group.germplasmName;
 
-                    update_multi_graph();
+                        multiGraphData.push({
+                            data: graph_data,
+                            label: label_sample_name
+                        });
+                        plottedSamples.add(sampleKey);
+                        button.text("Unplot");
+                    }
+                    update_multi_graph(multiGraphData);
                 });
-                */
+                
             }
             
         });
     }
+
+    jQuery('#clear_graph_btn').on('click', function() {
+        nirsDataLineGraph.clearGraph('#multi_graph_container');
+        multiGraphData = [];
+        plottedSamples.clear();
+
+        jQuery('.plot-btn').text('Plot');
+    });
 
     function draw_small_graph(container, data) {
         console.log("draw_small_graph called with container:", container, "and data:", data);
@@ -241,6 +286,30 @@ jQuery(document).ready(function() {
             options
         );
     }
+
+    function update_multi_graph(data) {
+        jQuery("#multi_graph_container").html('');
+        console.log("data passed to multi_graph", data);
+
+        var options = {
+            showXAxis: true,
+            showYAxis: true,
+            showTitle: true,
+            showDots: true,
+            multiLine: true
+        };
+
+        nirsDataLineGraph.drawMultiLineGraph(
+            data,
+            "#multi_graph_container",
+            'Wavelength',
+            'Spectral Value',
+            '',
+            options
+        );
+    }
+
+    
 
 });
 
