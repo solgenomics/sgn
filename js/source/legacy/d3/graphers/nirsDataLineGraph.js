@@ -177,11 +177,181 @@
 
     };
 
-    /*
-    exports.drawLineGraph = function drawMultiLineGraph(datasets, selector, xLabel, yLabel, title, options) {
+    var currentYMax = null;
+
+    exports.drawMultiLineGraph = function(datasets, selector, xLabel, yLabel, title, options) {
         const margin = { top: 60, right: 100, bottom: 50, left: 60 };
-        const width = 900 - margin.left - margin.right;
-        const height = 400 - margin.top - margin.bottom;
+        const width = 970 - margin.left - margin.right;
+        const height = 500 - margin.top - margin.bottom;
+
+        console.log("dataset", datasets);
+
+        d3.select(selector).select("svg").remove();
+
+        const svg = d3.select(selector)
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .style("background-color", "#fff")
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        //Flatten all data to get global x and y domains
+        const allPoints = datasets.flatMap(d => d.data);
+        const xExtent = d3.extent(allPoints, d => d.frequency);
+        const yMax = d3.max(allPoints, d => d.value);
+
+        if (currentYMax == null || yMax > currentYMax) {
+            currentYMax = yMax;
+        }
+
+        // Scales
+        const x = d3.scaleLinear().domain(xExtent).range([0, width]);
+        const y = d3.scaleLinear().domain([0, currentYMax]).range([height, 0]);
+
+        //Axes
+        if (options.showXAxis !== false) {
+            svg.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x));
+        }
+
+        if (options.showYAxis !== false) {
+            svg.append("g")
+                .call(d3.axisLeft(y));
+        }
+        // Axis labels
+        if (xLabel) {
+            svg.append("text")
+                .attr("text-anchor", "end")
+                .attr("x", width / 2 + margin.left)
+                .attr("y", height + margin.bottom - 5)
+                .text(xLabel)
+                .style("font-size", "12px");
+        }
+
+        if (yLabel) {
+            svg.append("text")
+                .attr("text-anchor", "end")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 15)
+                .text(yLabel)
+                .style("font-size", "12px");
+        }
+
+        //Title
+        if (options.showTitle !== false && title) {
+            svg.append("text")
+                .attr("x", width / 2)
+                .attr("y", -20)
+                .attr("text-anchor", "middle")
+                .style("font-size", "16px")
+                .style("font-weight", "bold")
+                .text(title);
+        }
+
+        const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+        const line = d3.line()
+            .x(function(d) {return x(d.frequency); })
+            .y(function(d) {return y(d.value); })
+            .curve(d3.curveMonotoneX);
+
+        let added_lines = [];
+        datasets.forEach((dataset, i) => {
+            if (!added_lines.includes(dataset.label)) {
+                svg.append("path")
+                    .datum(dataset.data)
+                    .attr("fill", "none")
+                    .attr("stroke-width", 2)
+                    .attr("stroke", color(i))
+                    .attr("d", line)
+                    .attr("class", "data-line")
+                    .attr("data-label", dataset.label);
+                    
+                svg.append("path")
+                    .datum(dataset.data)
+                    .attr("fill", "none")
+                    .attr("stroke", "transparent")
+                    .attr("stroke-width", 20)
+                    .attr("d", line)
+                    .attr("class", "data-line-hover")
+                    .attr("data-label", dataset.label)
+                    .style("cursor", "pointer")
+                    .on("mouseenter", function(event) {
+                        d3.selectAll(".data-line").style("opacity", 0.2);
+                        d3.select(`.data-line[data-label ='${dataset.label}']`)
+                            .style("stroke-width", 3)
+                            .style("opacity", 1);
+                        
+                        d3.selectAll(".legend-text").style("opacity", 0.3);
+                        d3.select(`.legend-text[data-label ='${dataset.label}']`)
+                            .style("font-weight", "bold")
+                            .style("opacity", 1);
+
+                        d3.selectAll(".legend-color").style("opacity", 0.3);
+                        d3.select(`.legend-color[data-label ='${dataset.label}']`)
+                            .style("font-weight", "bold")
+                            .style("opacity", 1);
+                    })
+                    .on("mouseleave", function() {
+                        d3.selectAll(".data-line").style("opacity", 1).style("stroke-width", 2);
+                        d3.selectAll(".legend-text").style("opacity", 1).style("font-weight", "normal");
+                        d3.selectAll(".legend-color").style("opacity", 1);
+                    });
+            
+                if (options.showdots) {
+                    svg.selectAll(`.dot-${i}`)
+                        .data(dataset.data)
+                        .enter()
+                        .append("circle")
+                        .attr("cx", d => x(d.frequency))
+                        .attr("cy", d => y(d.value))
+                        .attr("r", 2)
+                        .attr("fill", color(i));
+                }
+                added_lines.push(dataset.label);
+            }
+        });
+
+        const legend = svg.append("g")
+            .attr("transform", `translate(${width + 1}, 0)`);
+
+        let added_samples = [];
+        datasets.forEach((dataset, i) => {
+            if (!added_samples.includes(dataset.label)) {
+                legend.append("rect")
+                    .attr("x", 0)
+                    .attr("y", i * 20)
+                    .attr("width", 10)
+                    .attr("height", 10)
+                    .attr("fill", color(i))
+                    .attr("cursor", "pointer")
+                    .attr("data-label", dataset.label)
+                    .attr("class", "legend-color");
+
+                legend.append("text")
+                    .attr("x", 15)
+                    .attr("y", i * 20 + 9)
+                    .text(dataset.label || `Sample ${i + 1}`)
+                    .style("font-size", "12px")
+                    .attr("alignment-baseline", "middle")
+                    .attr("data-label", dataset.label)
+                    .attr("class", "legend-text");
+
+                added_samples.push(dataset.label);
+            }
+        });
     };
-    */
+
+    exports.clearGraph = function(selector) {
+        const svg = d3.select(selector).select("svg");
+        
+        svg.selectAll(".data-line").remove();
+        svg.selectAll("circle").remove();
+        svg.selectAll(".legend-text").remove();
+        svg.selectAll(".legend-color").remove();
+    };
+    
 }(typeof exports === 'undefined' ? this.nirsDataLineGraph = {} : exports));
