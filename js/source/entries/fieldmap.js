@@ -4,7 +4,7 @@ import "../legacy/brapi/BrAPI.js";
 
 // Colors to use when labelling multiple trials
 const trial_colors = [
-    "#2f4f4f",
+    //"#2f4f4f",
     "#ff8c00",
     "#ffff00",
     "#00ff00",
@@ -800,7 +800,7 @@ export function init() {
                 } else {
                     var cs = heatmap_object.hasOwnProperty(trait_name) && heatmap_object[trait_name].hasOwnProperty(plot.observationUnitDbId)
                         ? colorScale(heatmap_object[trait_name][plot.observationUnitDbId].val)
-                        : "white";
+                        : "darkgrey";
                     color = cs ? cs : "lightgrey";
                 }
                 return color;
