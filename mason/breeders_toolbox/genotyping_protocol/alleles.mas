@@ -2,16 +2,22 @@
     $protocol_id
 </%args>
 
+<& /util/import_javascript.mas, entries => [], classes => [ 'jquery', 'jquery.dataTables' ],  &>
+
 <div id="major_loci_alleles_loading">
     <p>Loading...</p>
 </div>
 
-<div id="major_loci_alleles_table" style="display:none">
-
+<div id="major_loci_alleles_table_container" style="display: none">
+    <table id="major_loci_alleles_table" class="table table-hover table-bordered" style="width: 100%"></table>
 </div>
 
 <div id="major_loci_alleles_upload" style="display:none">
-    <p>Upload information goes here</p>
+    <p>
+        To upload allele values for markers in this protocol, go to the 
+        <a href="/breeders/genotyping_projects">Manage Genotyping Projects</a>
+        page and select the <strong>Add Major Loci Alleles</strong> button.
+    </p>
 </div>
 
 <script type="text/javascript">
@@ -26,32 +32,38 @@
 
     function displayAlleles(response) {
         console.log(response);
-        let html = "";
 
         // Allele values found, generate table...
         if ( response && Object.keys(response).length > 0 ) {
-            html = "Results go here";
             jQuery("#major_loci_alleles_upload").hide();
+            new jQuery("#major_loci_alleles_table").DataTable({
+                data: Object.values(response),
+                columns: [
+                    { title: "Marker", render: (data, type, row) => { return `<a href='/locus/${row.locus_id}/view'>${row.locus_name}</a>` }},
+                    { title: "Description", data: "locus_description" },
+                    { title: "Alleles", render: (data, type, row) => { return row.alleles.map((x) => x.allele_name).join('<br />') } }
+                ]
+            })
         }
 
         // No Allele values found, show upload information...
         else {
-            html = "<p style='font-style: italic; padding-bottom: 10px'>There are no allele values set for the markers in this protocol.</p>";
+            let html = "<p style='font-style: italic; padding-bottom: 10px'>There are no allele values set for the markers in this protocol.</p>";
+            jQuery("#major_loci_alleles_table_container").html(html);
             jQuery("#major_loci_alleles_upload").show();
         }
 
-        jQuery("#major_loci_alleles_table").html(html);
         jQuery("#major_loci_alleles_loading").hide();
-        jQuery("#major_loci_alleles_table").show();
+        jQuery("#major_loci_alleles_table_container").show();
 
     }
 
     function displayError() {
         let html = "<p><strong>ERROR:</strong> There was an error getting the major loci allele values for this protocol.</p>";
-        jQuery("#major_loci_alleles_table").html(html);
+        jQuery("#major_loci_alleles_table_container").html(html);
 
         jQuery("#major_loci_alleles_loading").hide();
-        jQuery("#major_loci_alleles_table").show();
+        jQuery("#major_loci_alleles_table_container").show();
         jQuery("#major_loci_alleles_upload").hide();
     }
 </script>
