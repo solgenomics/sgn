@@ -334,6 +334,9 @@ $field_headers => ()
 % if ($info_section_id eq 'vector_obsoleted_accessions_section'){
                                 <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End vector_related_accessions_section
+% if ($info_section_id eq 'related_transformation_info_section'){
+                                <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
+% } #End vector_related_accessions_section
 
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>
