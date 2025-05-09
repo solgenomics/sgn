@@ -495,7 +495,7 @@ sub set_alleles {
         # Add each allele value for the locus
         foreach my $av (@$allele_values) {
             my $av_symbol = $av;
-            $q = "INSERT INTO phenome.allele (locus_id, allele_name, allele_symbol) VALUES (?,?,?)";
+            $q = "INSERT INTO phenome.allele (locus_id, allele_name, allele_symbol, is_default) VALUES (?,?,?,FALSE)";
             $sth = $dbh->prepare($q);
             $sth->execute($locus_id, $av, $av_symbol);
         }
