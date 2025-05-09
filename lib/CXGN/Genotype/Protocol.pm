@@ -483,8 +483,8 @@ sub set_alleles {
         my $locus = $ml->{'locus'};
         my $locus_description = $ml->{'description'};
         my $allele_values = $ml->{'alleles'};
-        my $unique_locus_name = $protocol_id . '|' . $locus;
-        my $locus_symbol = $unique_locus_name;
+        my $unique_locus_name = $locus;
+        my $locus_symbol = $locus;
 
         # Add the Major Locus to the phenome.locus table
         my $q = "INSERT INTO phenome.locus (locus_name, locus_symbol, description, common_name_id) VALUES (?,?,?,?) RETURNING locus_id";
@@ -494,8 +494,7 @@ sub set_alleles {
 
         # Add each allele value for the locus
         foreach my $av (@$allele_values) {
-            my $av_symbol = uc($av);
-            $av_symbol =~ s/\s//g;
+            my $av_symbol = $av;
             $q = "INSERT INTO phenome.allele (locus_id, allele_name, allele_symbol) VALUES (?,?,?)";
             $sth = $dbh->prepare($q);
             $sth->execute($locus_id, $av, $av_symbol);

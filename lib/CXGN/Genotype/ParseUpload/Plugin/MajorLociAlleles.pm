@@ -20,19 +20,11 @@ sub _validate_with_plugin {
         file => $filename,
         required_columns => [ 'Locus', 'Allele' ],
         optional_columns => [ 'Description', 'Category' ],
-        column_aliases => [ 'Allele', 'Category' ]
+        column_arrays => [ 'Allele', 'Category' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
     my $parsed_data = $parsed->{data};
-
-
-
-    print STDERR "\n\n\n\n\n=====> PARSED DATA:\n";
-    print STDERR Dumper $parsed_data;
-    push @error_messages, "Not implemented!";
-
-
     my @markers = @{$parsed->{values}->{'Locus'}};
 
     # Return if parsing errors
@@ -83,23 +75,20 @@ sub _parse_with_plugin {
     my $self = shift;
     my $parsed = $self->parsed_allele_data();
     my $parsed_data = $parsed->{data};
-    my $allele_columns = $parsed->{additional_columns};
 
     # Aggregate allele values by locus name
     my %major_loci;
     foreach my $row (@$parsed_data) {
         my $locus = $row->{'Locus'};
         my $description = $row->{'Description'};
-
-        my @a;
-        foreach my $col (@$allele_columns) {
-            push(@a, $row->{$col}) if $row->{$col};
-        }
+        my $alleles = $row->{'Allele'};
+        my $categories = $row->{'Cateogry'};
 
         $major_loci{$locus} = {
             locus => $locus,
             description => $description,
-            alleles => \@a
+            alleles => $alleles,
+            categories => $categories
         };
     }
 
