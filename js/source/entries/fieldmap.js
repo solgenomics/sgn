@@ -1,6 +1,7 @@
 import "../legacy/d3/d3v4Min.js";
 import "../legacy/jquery.js";
 import "../legacy/brapi/BrAPI.js";
+import { html } from "d3";
 
 // Colors to use when labelling multiple trials
 const trial_colors = [
@@ -26,6 +27,18 @@ const trial_colors_text = [
     "#ffffff",
     "#000000",
     "#ffffff",
+];
+
+const colors = [
+    "#E4F3F5",
+    "#BDE5EA",
+    "#9BDCE4",
+    "#5CC3D0",
+    "#41b6c4",
+    "#1d91c0",
+    "#225ea8",
+    "#253494",
+    "#081d58",
 ];
 
 export function init() {
@@ -63,6 +76,10 @@ export function init() {
 
         get_linked_trials() {
             return this.linked_trials;
+        }
+
+        get_pheno_colors () {
+            return colors;
         }
 
         format_brapi_post_object() {
@@ -726,17 +743,8 @@ export function init() {
         FieldMap() {
             this.addEventListeners();
             var cc = this.clickcancel();
-            const colors = [
-                "#E4F3F5",
-                "#BDE5EA",
-                "#9BDCE4",
-                "#5CC3D0",
-                "#41b6c4",
-                "#1d91c0",
-                "#225ea8",
-                "#253494",
-                "#081d58",
-            ];
+            // this is where colors was originally
+
             var trait_name = this.heatmap_selection;
             var heatmap_object = this.heatmap_object;
             var plot_click = !this.heatmap_selected
@@ -805,6 +813,7 @@ export function init() {
                 }
                 return color;
             };
+
             var get_stroke_color = function (plot) {
                 var stroke_color;
                 if (plot.observationUnitPosition.observationLevel) {

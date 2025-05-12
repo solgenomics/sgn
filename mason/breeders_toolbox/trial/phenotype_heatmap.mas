@@ -88,7 +88,7 @@ $has_plant_entries => undef
       }
 
       .legend { list-style: none; }
-      .legend li { float: left; margin-right: 10px; }
+      .legend li { float: left; margin-left: 10px; margin-right: 10px;}
       .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
 
       .legend .border_plots { background-color: #d3d3d3}
@@ -98,6 +98,8 @@ $has_plant_entries => undef
       .legend .rep_even_number { background-color: red;}
       .legend .rep_odd_number { background-color: green;}
       .legend .overlapping_plot { background-color: #000; }
+      .legend .trait_not_measured {background-color: darkgrey;} 
+      .legend .value_scale {display: inline-block; width: 80px;}
 
       .rotated {
           transform: rotate(-180deg);
@@ -150,14 +152,16 @@ $has_plant_entries => undef
 <div id="container_legend">
 
     <ul class="legend">
-        <li><span class="border_plots"></span> Border Plots and Filler Plots</li>
-        <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+        <li><span class="border_plots"></span> Border Plots and Filler Plots </li>
+        <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...) </li>
         <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
         <li><span class="checks"></span> Checks</li>
-        <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
-        <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-        <li><span class="overlapping_plot"></span> Overlapping Plots (2+ plots at some position)</li>
-        <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
+        <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...) </li>
+        <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...) </li>
+        <li><span class="overlapping_plot"></span> Overlapping Plots (2+ plots at some position)  </li>
+        <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image </li>
+        <li><span class="trait_not_measured"></span>No measurement </li>
+        <li style='display:flex'><div>Low trait value</div> <span class="value_scale" id="pheno_color_scale"></span> <div>High trait value</div></li>
     </ul>
 </div>
 <br><br>
@@ -726,6 +730,8 @@ jQuery(document).ready( function() {
 
     function field_map_view() {
         jQuery("#ctrldiv").css("display", "none");
+        var colors = FieldMap.get_pheno_colors();
+        jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors[0]},${colors[colors.length - 1]})`)
         jQuery.ajax({
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
             method: 'GET',
