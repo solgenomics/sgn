@@ -13,6 +13,7 @@ sub parse {
   my $super = shift;
   my $file = $super->file();
   my $type = $super->type();
+  my $column_arrays = $super->column_arrays();
 
   # Parsed data to return
   my %rtn = (
@@ -48,11 +49,18 @@ sub parse {
   my @col_indices;    # array of column indices to process
 
   # Get column / header information
+  my %seen_column_headers;
   my $skips_in_a_row = 0;
   for my $col ( 0 .. $col_max ) {
     my $c = $worksheet->get_cell(0, $col);
     my $v = $c ? $c->value() : undef;
     $v = $super->clean_header($v);
+
+    # check for duplicated column header
+    if ( exists $seen_column_headers{$v} && !exists $column_arrays->{$v} ) {
+      push @{$rtn{errors}}, "The column header $v was duplicated in column " . ($col+1) . " of your file and should only be included once.";
+    }
+    $seen_column_headers{$v}++;
 
     if ( $v && $v ne '' ) {
       push @{$rtn{columns}}, $v;
@@ -80,11 +88,11 @@ sub parse {
       my $c = $worksheet->get_cell($row, $col);
       my $v = $c ? $c->value() : undef;
       $v = $super->clean_value($v, $hv);
-      $row_info{$hv} = $v;
 
       if ( defined($v) && $v ne '' ) {
         if ( ref($v) eq 'ARRAY' ) {
           if ( scalar(@$v) > 0 ) {
+            push @{$row_info{$hv}}, @$v;
             foreach (@$v) {
               $values_map{$hv}->{$_} = 1;
             }
@@ -92,6 +100,7 @@ sub parse {
           }
         }
         else {
+          $row_info{$hv} = $v;
           $values_map{$hv}->{$v} = 1;
           $skip_row = 0;
         }
