@@ -87,7 +87,7 @@ sub patch {
 
     foreach my $cv (keys %$terms){
         foreach my $term (@{$terms->{$cv}}){
-            $schema->resultset("Cv::Cvterm")->find_or_create({
+            $schema->resultset("Cv::Cvterm")->create_with({
                 name => $term,
                 cv => $cv,
             });
