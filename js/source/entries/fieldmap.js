@@ -4,7 +4,7 @@ import "../legacy/brapi/BrAPI.js";
 
 // Colors to use when labelling multiple trials
 const trial_colors = [
-    //"#2f4f4f",
+    "#2f4f4f",
     "#ff8c00",
     "#ffff00",
     "#00ff00",
