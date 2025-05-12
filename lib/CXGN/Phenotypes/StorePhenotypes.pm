@@ -730,7 +730,9 @@ sub check_measurement {
 	    if (exists($self->unique_trait_stock_timestamp()->{$trait_cvterm_id, $stock_id, $timestamp})) {
 		# print STDERR "trait name : $trait_name  with timestamp \n";
 		$warning_message .= "<small>For the multiple measurement trait $trait_name the observation unit $plot_name already has a value associated with it at exactly the same time. Skipping.";
-		$self->same_value_count($self->same_value_count() +1);
+		if ($trait_value = $self->unique_trait_stock_timestamp()) { 
+		    $self->same_value_count($self->same_value_count() +1);
+		}
 	    }
 	}
 	
