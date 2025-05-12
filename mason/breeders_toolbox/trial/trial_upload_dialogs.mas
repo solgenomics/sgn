@@ -780,7 +780,7 @@ $design_types => ()
 
                     <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), stripplot (Strip Plot / Split Block), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
                     <li>description (Additional text with any other relevant information about the trial.)</li>
-                    <li>accession_name (The accession being tested in the plot, must exist in the database.)</li>
+                    <li>accession_name OR cross_unique_id (The accession or cross being tested in the plot, must exist in the database.)</li>
                     <li>plot_number (A sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). These numbers should be unique for the trial.)</li>
                     <li>block_number (A design parameter indicating which block the plot is in.)</li>
                     </ul>

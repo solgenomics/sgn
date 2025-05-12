@@ -56,7 +56,10 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new(
         file => $filename,
         required_columns => \@REQUIRED_COLUMNS,
-        optional_columns => \@OPTIONAL_COLUMNS
+        optional_columns => \@OPTIONAL_COLUMNS,
+        column_aliases => {
+            'accession_name' => [ 'stock_name', 'cross_name', 'cross_unique_id' ]
+        }
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{'errors'};
@@ -360,8 +363,12 @@ sub _validate_with_plugin {
     my @accessions_missing = @{$accessions_hashref->{'missing'}};
     my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
-    if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "Accession(s) <strong>".join(',',@accessions_missing)."</strong> are not in the database as uniquenames or synonyms.";
+    # Allow stock names to be crosses, so check missing accessions as crosses
+    my $crosses_hashref = $validator->validate($schema, 'crosses', \@accessions_missing);
+    my @accessions_crosses_missing = @{$crosses_hashref->{'missing'}};
+
+    if (scalar(@accessions_crosses_missing) > 0) {
+        push @error_messages, "Stocks(s) <strong>".join(',',@accessions_crosses_missing)."</strong> are not in the database as uniquenames or synonyms of accessions or crosses.";
     }
     if (scalar(@multiple_synonyms) > 0) {
         my @msgs;
