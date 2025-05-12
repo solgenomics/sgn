@@ -83,6 +83,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
         # } 
         if ($status eq "submitted") {
             $actions_html .= "<button id=\"cancel_job_$job_id\" onclick=\"jsMod['job'].cancel_job($job_id)\" class=\"btn btn-small btn-danger\">Cancel</button>";
+            $results_page = "In progress";
         }
         if ($status eq "finished") {
             $results_page = $job->results_page();

@@ -67,6 +67,10 @@ sub patch {
             'report',
             'search',
             'cluster_analysis',
+            'training_model',
+            'selection_prediction',
+            'multiple_models',
+            'training_dataset',
             'kinship_analysis',
             'heritability_analysis',
             'solGWAS_analysis',
@@ -83,7 +87,7 @@ sub patch {
 
     foreach my $cv (keys %$terms){
         foreach my $term (@{$terms->{$cv}}){
-            $schema->resultset("Cv::Cvterm")->create_with({
+            $schema->resultset("Cv::Cvterm")->find_or_create({
                 name => $term,
                 cv => $cv,
             });

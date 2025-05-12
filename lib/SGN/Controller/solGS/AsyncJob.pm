@@ -780,17 +780,14 @@ sub submit_job_cluster {
 
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
-    my $name = $c->stash->{analysis_profile}->{analysis_name};
-    my $results_page = $c->stash->{analysis_profile}->{analysis_page};
-    my @url = split("/", $results_page);
-    pop(@url);
-    pop(@url);
-    pop(@url);
-    $results_page = join("/", @url);
-    my $job_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
-    my $data_type = $job_arguments->{analysis_type} =~ s/ /_/gr;
     print STDERR "[JOB DATA]\n";
     print STDERR Dumper $c->stash->{analysis_profile};
+
+    my $name = $c->stash->{analysis_profile}->{analysis_name};
+    my $analysis_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
+    my $results_page = $analysis_arguments->{analysis_page};
+    my $job_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
+    my $data_type = $job_arguments->{analysis_type} =~ s/ /_/gr;
 
     my $job_record = CXGN::Job->new({
       schema => $c->dbic_schema("Bio::Chado::Schema"),
@@ -801,7 +798,8 @@ sub submit_job_cluster {
       results_page => $results_page,
       cmd => $args->{cmd},
       cxgn_tools_run_config => $args->{config},
-      finish_logfile => $c->config->{job_finish_log}
+      finish_logfile => $c->config->{job_finish_log},
+      additional_args => $analysis_arguments
     });
     $job_record->update_status("submitted");
     my $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();

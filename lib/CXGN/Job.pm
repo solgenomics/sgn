@@ -255,7 +255,8 @@ sub BUILD {
     my $people_schema = $args->{people_schema};
 
     if (!$self->has_sp_job_id()) { # New job, no ID yet.
-        my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find({name => $self->job_type()});
+        my $cv_id = $self->schema()->resultset("Cv::Cv")->find({name => 'job_type'})->cv_id();
+        my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find_or_create({name => $self->job_type(), cv_id => $cv_id});
         if ($cvterm_row) {
             $self->type_id($cvterm_row->cvterm_id());
         }
