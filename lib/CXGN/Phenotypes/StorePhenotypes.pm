@@ -716,7 +716,8 @@ sub check_measurement {
 	    if (grep /$repeat_type/, ("single", "multiple", "time_series")) {
 		$repeat_type = $self->check_trait_repeat_type->{$trait_cvterm_id};
 		#print STDERR "Trait repeat type: $repeat_type\n";
-	    }else {
+	    }
+	    else {
 		print STDERR "the trait repeat type of $self->check_trait_repeat_type->{$trait_cvterm_id} has no meaning. Assuming 'single'.\n";
 	    }
 	}
@@ -1014,7 +1015,6 @@ sub store {
 			$phenotype_object->experiment($experiment);
 			#print STDERR "Existing value $existing_trait_value. New value: ".$phenotype_object->value()."\n";
 			
-
 			my $plot_trait_uniquename = "stock: " .
 			    $stock_id . ", trait: " .
 			    $trait_cvterm->name .
@@ -1053,7 +1053,11 @@ sub store {
 			}
 			
 			$phenotype_object->old_value($old_value);
-			$phenotype_object->phenotype_id($old_phenotype_id);
+			if ($self->overwrite_values()) {
+			    $phenotype_object->phenotype_id($old_phenotype_id);
+			    $plot_trait_uniquename .= ", overwritten: $upload_date, old_value=$old_value";
+			    $phenotype_object->uniquename($plot_trait_uniquename);
+			}
 			
 			#print STDERR "\nREPEAT TYPE for $trait_cvterm_id: $repeat_type\n\n";
 
@@ -1098,8 +1102,6 @@ sub store {
 			    
 			    print STDERR "STORING THE VALUE $trait_value FOR TRAIT $trait_cvterm_id\n";
 
-			$plot_trait_uniquename .= ", overwritten: $upload_date, old_value=$old_value";
-			$phenotype_object->uniquename($plot_trait_uniquename);
 			my $result = $phenotype_object->store();
 
 			print STDERR "RESULT FROM STORE: ".Dumper($result)."\n";
