@@ -780,8 +780,7 @@ sub record_job_submission {
         my $analysis_name = $c->stash->{analysis_profile}->{analysis_name};
         my $analysis_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
         my $results_page = $analysis_arguments->{analysis_page};
-        my $job_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
-        my $analysis_type = $job_arguments->{analysis_type} =~ s/ /_/gr;
+        my $analysis_type = $analysis_arguments->{analysis_type} =~ s/ /_/gr;
 
         $job_record = CXGN::Job->new({
             schema => $c->dbic_schema("Bio::Chado::Schema"),
