@@ -770,39 +770,54 @@ sub create_cluster_config {
     return $config;
 }
 
+sub record_job_submission {
+    my ($self, $c, $args) = @_;
+
+    my $job_record;
+    if ( $c->stash->{analysis_profile} ) {
+        
+        my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
+        my $analysis_name = $c->stash->{analysis_profile}->{analysis_name};
+        my $analysis_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
+        my $results_page = $analysis_arguments->{analysis_page};
+        my $job_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
+        my $analysis_type = $job_arguments->{analysis_type} =~ s/ /_/gr;
+
+        $job_record = CXGN::Job->new({
+            schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            sp_person_id => $user,
+            job_type => $analysis_type,
+            name => $analysis_name,
+            results_page => $results_page,
+            cmd => $args->{cmd},
+            cxgn_tools_run_config => $args->{config},
+            finish_logfile => $c->config->{job_finish_log},
+            additional_args => $analysis_arguments
+        });
+
+        $job_record->update_status("submitted");
+
+    }
+
+    return $job_record;
+
+}
+
+
 sub submit_job_cluster {
     my ( $self, $c, $args ) = @_;
 
-    # print STDERR "[APOCALYPSE] catalyst stash:\n";
-    # print STDERR Dumper $c->stash;
+
+    my $job_record = $self->record_job_submission($c, $args);
+    my $finish_timestamp_cmd;
+
+    if ($job_record) {
+        $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
+    }
+    
 
     my $job;
-
-    my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-
-    print STDERR "[JOB DATA]\n";
-    print STDERR Dumper $c->stash->{analysis_profile};
-
-    my $name = $c->stash->{analysis_profile}->{analysis_name};
-    my $analysis_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
-    my $results_page = $analysis_arguments->{analysis_page};
-    my $job_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
-    my $data_type = $job_arguments->{analysis_type} =~ s/ /_/gr;
-
-    my $job_record = CXGN::Job->new({
-      schema => $c->dbic_schema("Bio::Chado::Schema"),
-      people_schema => $c->dbic_schema("CXGN::People::Schema"),
-      sp_person_id => $user,
-      job_type => $data_type,
-      name => $name,
-      results_page => $results_page,
-      cmd => $args->{cmd},
-      cxgn_tools_run_config => $args->{config},
-      finish_logfile => $c->config->{job_finish_log},
-      additional_args => $analysis_arguments
-    });
-    $job_record->update_status("submitted");
-    my $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
 
     eval {
         $job = CXGN::Tools::Run->new( $args->{config} );
@@ -810,25 +825,28 @@ sub submit_job_cluster {
 
         if ( $args->{background_job} ) {
             $job->is_async(1);
-            $job->run_async( $args->{cmd}.$finish_timestamp_cmd );
+            $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
 
             $c->stash->{r_job_tempdir}  = $job->job_tempdir();
             $c->stash->{r_job_id}       = $job->jobid();
             $c->stash->{cluster_job_id} = $job->cluster_job_id();
             $c->stash->{cluster_job}    = $job;
 
-            $job_record->backend_id($job->cluster_job_id());
-            $job_record->store();
+            if ($job_record) {
+                $job_record->backend_id($job->cluster_job_id());
+                $job_record->store();
+            }
         }
         else {
-            $job->run_async( $args->{cmd}.$finish_timestamp_cmd );
+            $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
             $job->wait();
         }
     };
 
     if ($@) {
-      $job_record->update_status("failed");
-      print STDERR "Error submitting a job or job record:\n $@\n";
+        
+        $job_record->update_status("failed") if $job_record;;
+        print STDERR "Error submitting a job or job record:\n $@\n";
         $c->stash->{Error} =
           'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
         $c->stash->{status} =
