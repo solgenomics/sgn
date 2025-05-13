@@ -114,7 +114,7 @@ $project_id => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Analysis Tools</h4>", info_section_subtitle => 'Run correlation, anova, population structure (PCA), or clustering. Also access HIDAP, if enabled on this site.', icon_class => "glyphicon glyphicon-signal", info_section_id => "trial_analysis_tools", hidap_enabled => $hidap_enabled, main_production_site_url => $main_production_site_url, breeding_program_name => $breeding_program_name, folder_name => $folder_name, trial_name => $trial_name &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>NIRS Data</h4>", info_section_subtitle => 'View and plot NIRS data for this trial.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px'>Upload NIRS</button>", icon_class => "glyphicon glyphicon-stats", info_section_id => "trial_nirs_section" &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>NIRS Data</h4>", info_section_subtitle => 'View and plot NIRS data for this trial.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' name='upload_high_dim_phenotypes_spreadsheet_link'>Upload NIRS</button>", icon_class => "glyphicon glyphicon-stats", info_section_id => "trial_nirs_section" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Weather Data</h4>", info_section_subtitle => 'View rainfall, temperature, light intensity and other weather data for this location.', icon_class => "glyphicon glyphicon-cloud", info_section_id => "trial_weather_data", location_name => $location_name &>
 
@@ -168,6 +168,8 @@ $project_id => undef
 <& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
 
 <& /breeders_toolbox/upload_images.mas &>
+
+<& /tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas &>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;

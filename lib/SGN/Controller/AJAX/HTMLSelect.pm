@@ -912,7 +912,7 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
         FROM nd_protocol
         JOIN nd_protocolprop USING(nd_protocol_id)
         WHERE nd_protocol.type_id=$protocol_type_cvterm_id AND nd_protocolprop.type_id=$protocolprop_type_cvterm_id;";
-        my $h = $schema->storage->dbh()->prepare($q);
+        $h = $schema->storage->dbh()->prepare($q);
         $h->execute();
     }
 

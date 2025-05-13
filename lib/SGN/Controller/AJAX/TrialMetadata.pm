@@ -2235,56 +2235,6 @@ sub trial_tissue_samples : Chained('trial') PathPart('tissue_samples') Args(0) {
     $c->stash->{rest} = { trial_tissue_samples => $data };
 }
 
-sub trial_nirs_samples : Chained('trial') PathPart('nirs_samples') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-    my $nd_protocol_id = $c->req->param('nd_protocol_id');
-    my $high_dimensional_phenotype_type = "NIRS";
-    my $query_associated_stocks = 1;
-    my $high_dimensional_phenotype_identifier_list = [];
-
-    my $trial = $c->stash->{trial};
-
-    my $plots = $trial->get_plots();
-    my @plot_ids;
-    foreach (@$plots) {
-        push @plot_ids, $_->[0];
-    }
-
-    my $accessions = $trial->get_accessions();
-    my @accession_ids;
-    foreach (@$accessions) {
-        push @accession_ids, $_->{stock_id};
-    }
-
-    my $plants = $trial->get_plants();
-    my @plant_ids;
-    foreach (@$plants) {
-        push @plant_ids, $_->[0];
-    }
-
-    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
-        bcs_schema=>$schema,
-        nd_protocol_id=>$nd_protocol_id,
-        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
-        query_associated_stocks=>$query_associated_stocks,
-        high_dimensional_phenotype_identifier_list=>$high_dimensional_phenotype_identifier_list,
-        accession_list=>\@accession_ids,
-        plot_list=>\@plot_ids,
-        plant_list=>\@plant_ids,
-    });
-
-    my ($data_matrix, $identifier_metadata, $identifer_names) = $phenotypes_search->search();
-
-    $c->stash->{rest} = {
-        datamatrix => $data_matrix,
-        identifier_metadata => $identifier_metadata,
-        identifer_names => $identifer_names,
-    };
-}
-
 sub trial_phenotype_metadata : Chained('trial') PathPart('phenotype_metadata') Args(0) {
     my $self = shift;
     my $c = shift;
