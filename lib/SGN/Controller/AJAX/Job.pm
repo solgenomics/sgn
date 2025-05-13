@@ -232,3 +232,25 @@ sub delete_older_than :Path('/ajax/job/delete_older_than') Args(2) {
     );
     $c->stash->{rest} = {success => 1};
 }
+
+sub delete_finished :Path('/ajax/job/delete_finished') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = shift;
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
+    my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
+    if ($sp_person_id ne $logged_user && $role ne "curator") {
+        die "You do not have permission to delete these job logs.\n";
+    }
+
+    CXGN::Job->delete_finished_jobs(
+        $bcs_schema,
+        $people_schema,
+        $sp_person_id
+    );
+    $c->stash->{rest} = {success => 1};
+}

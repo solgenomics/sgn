@@ -872,4 +872,41 @@ sub delete_jobs_older_than {
     }
 }
 
+=head2 delete_finished_jobs(bcs_schema, people_schema, user_id)
+
+Deletes finished and canceled jobs for the given user. 
+
+=cut
+
+sub delete_finished_jobs {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.\n";
+    } 
+
+    eval {
+        my @job_ids;
+        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
+        while(my $row = $rs->next()) {
+            push @job_ids, $row->sp_job_id();
+        }
+        foreach my $job_id (@job_ids){
+            my $job = $class->new({
+                people_schema => $people_schema,
+                schema => $bcs_schema,
+                sp_job_id => $job_id
+            });
+            $job->delete();
+        }
+    };
+
+    if ($@) {
+        die "Encountered an error trying to delete jobs: $@\n";
+    }
+}
+
 1;

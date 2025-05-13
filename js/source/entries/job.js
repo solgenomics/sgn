@@ -27,6 +27,28 @@ export function dismiss_job(job_id) {
     } 
 }
 
+export function dismiss_finished_jobs(user_id) {
+    if (confirm("Dismiss all finished and canceled jobs?")){
+
+        $.ajax({
+            url: '/ajax/job/delete_finished/'+user_id,
+            success: function(response) {
+                if (response.error) {
+                    alert("Error dismissing jobs.");
+                    window.location.reload();
+                } else {
+                    alert("Jobs cleared.");
+                    window.location.reload();
+                }
+            },
+            error: function(response) {
+                alert("Error dismissing jobs.");
+                window.location.reload();
+            }
+        });
+    }
+}
+
 export function cancel_job(job_id) {
     if(confirm("Are you sure you want to cancel?")) {
         $.ajax({
