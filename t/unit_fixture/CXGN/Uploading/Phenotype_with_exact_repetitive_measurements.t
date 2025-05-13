@@ -234,7 +234,134 @@ $h->execute(22.22, '2025-05-12 21:19:00');
 print STDERR "FOUND ANOTHER ENTRY AT PHENOTYPE_ID= $phenotype_id\n";
 ok(!$phenotype_id, "Find multiple phenotype entry 12");
 
+###
+### Upload same timestamps, but without overwrite
+###
 
+my $filename = "t/data/trial/upload_phenotypin_spreadsheet_exact_repeats3.xlsx";
+
+my $basename = basename($filename);
+print STDERR "BASENAME: $basename\n";
+
+my $uploader = CXGN::UploadFile->new(
+    {
+	tempfile => $filename,
+	subdirectory => 'temp_fieldbook',
+	archive_path => '/tmp',
+	archive_filename => $timestamp."_".$basename,
+	timestamp => $timestamp,
+	user_id => 41, #janedoe in fixture
+	user_role => 'curator'
+    });
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path = $uploader->archive();
+
+print STDERR "ARCHIVED FILENAME: $archived_filename_with_path\n";
+
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+print STDERR "MD5SUM: ".Dumper($md5);
+
+ok($archived_filename_with_path);
+ok($md5);
+
+
+#Now parse phenotyping spreadsheet file using correct parser
+my $parser = CXGN::Phenotypes::ParseUpload->new();
+
+my $validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+
+print STDERR "VALIDATE FILE = ".Dumper($validate_file);
+ok($validate_file == 1, "Check if parse validate works for phenotype file");
+
+if (ref($validate_file) && exists($validate_file->{error})) {
+    die "parse did not validate\n";
+}
+
+my $parsed_file = $parser->parse('phenotype spreadsheet simple generic', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse phenotype spreadsheet works");
+
+print STDERR "PARSED FILE: ".Dumper($parsed_file);
+
+my %phenotype_metadata;
+$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2025-04-12_22:00:00";
+my %parsed_data = %{$parsed_file->{'data'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$f->config->{composable_validation_check_name}
+    );
+
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
+
+print STDERR "VERIFIED WARNING: ".Dumper($verified_warning)."\n";
+print STDERR "VERIFIED ERROR: ".Dumper($verified_error)."\n";
+
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works 1");
+
+ok($store_success, "store success check");
+
+print STDERR "STORED PHENO ERROR: ".Dumper($stored_phenotype_error_msg)."\n";
+
+$h->execute(55.55, '2025-05-12 21:19:00');
+my ($phenotype_id) = $h->fetchrow_array();
+print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
+print STDERR "FOUND ENTRY AT PHENOTYPE_ID = $phenotype_id\n";
+ok($phenotype_id, "Found original value 22.22");
+
+$h->execute(33.33, '2025-05-12 21:20:00');
+($phenotype_id) = $h->fetchrow_array();
+print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
+print STDERR "FOUND ANOTHER ENTRY AT PHENOTYPE_ID= $phenotype_id\n";
+ok($phenotype_id, "FInd multiple phenotype entry 2");
+
+$h->execute(77.77, '2025-05-12 21:21:00');
+($phenotype_id) = $h->fetchrow_array();
+print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
+print STDERR "FOUND ANOTHER ENTRY AT PHENOTYPE_ID= $phenotype_id\n";
+ok($phenotype_id, "FInd multiple phenotype entry 3");
+print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
+
+$h->execute(0.111, '2025-05-12 21:19:00');
+my ($phenotype_id) = $h->fetchrow_array();
+print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
+print STDERR "FOUND ENTRY AT PHENOTYPE_ID = $phenotype_id\n";
+ok($phenotype_id, "Find multiple phenotype entry 1");
+
+$h->execute(0.222, '2025-05-12 21:20:00');
+($phenotype_id) = $h->fetchrow_array();
+print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
+print STDERR "FOUND ANOTHER ENTRY AT PHENOTYPE_ID= $phenotype_id\n";
+ok($phenotype_id, "FInd multiple phenotype entry 2");
+
+$h->execute(0.333, '2025-05-12 21:21:00');
+($phenotype_id) = $h->fetchrow_array();
+print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
+print STDERR "FOUND ANOTHER ENTRY AT PHENOTYPE_ID= $phenotype_id\n";
+ok($phenotype_id, "FInd multiple phenotype entry 3");
+print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
 
 
 done_testing();
