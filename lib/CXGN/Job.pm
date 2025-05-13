@@ -257,7 +257,19 @@ sub BUILD {
     if (!$self->has_sp_job_id()) { # New job, no ID yet.
         my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
         my $cv_id = $cv_rs->cv_id();
-        my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find_or_create({name => $self->job_type(), cv_id => $cv_id});
+        
+        my $db_id = $self->schema->resultset("General::Db")->find_or_new( { 'name' => 'null' } )->db_id;
+        my $dbxref_id = $self->schema->resultset("General::Dbxref")->find_or_create({
+            'accession' => $self->job_type(),
+            'db_id'     => $db_id
+        })->dbxref_id;
+
+        my $cvterm_row = $self->schema()->resultset("Cv::Cvterm")->find_or_create({
+            name => $self->job_type(), 
+            cv_id => $cv_id, 
+            dbxref_id => $dbxref_id
+        });
+
         if ($cvterm_row) {
             $self->type_id($cvterm_row->cvterm_id());
         }
