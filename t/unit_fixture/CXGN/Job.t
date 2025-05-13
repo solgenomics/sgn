@@ -12,15 +12,31 @@ $t->dbh()->begin_work();
 
 my $job_finish_log = $t->config->{job_finish_log} ? $t->config->{job_finish_log} : '/home/production/volume/logs/job_finish.log';
 
-my $job = CXGN::Job->new({
-    schema => $t->bcs_schema(),
-    people_schema => $t->people_schema(),
-    sp_person_id => 41, #for Jane Doe
-    name => 'unit_fixture test job',
-    cmd => 'sleep 5',
-    job_type => 'report',
-    finish_logfile => $job_finish_log
-});
+my $job;
+
+eval {
+    $job = CXGN::Job->new({
+        schema => $t->bcs_schema(),
+        people_schema => $t->people_schema(),
+        sp_person_id => 41, #for Jane Doe
+        name => 'unit_fixture test job',
+        cmd => 'sleep 5',
+        job_type => 'report', # try to create a job with a valid cvterm
+        finish_logfile => $job_finish_log
+    });
+
+    my $job2 = CXGN::Job->new({
+        schema => $t->bcs_schema(),
+        people_schema => $t->people_schema(),
+        sp_person_id => 41, #for Jane Doe
+        name => 'unit_fixture test job',
+        cmd => 'sleep 5',
+        job_type => 'unknown_job_type', # try to create a job with a missing cvterm
+        finish_logfile => $job_finish_log
+    });
+};
+
+ok($@ eq '', "Check for successful object creation");
 
 ok($job->name() eq "unit_fixture test job", 'Check for correct arg parsing');
 ok($job->create_timestamp() ne "", 'Check for create timestamp');
