@@ -184,8 +184,6 @@
         const width = 970 - margin.left - margin.right;
         const height = 500 - margin.top - margin.bottom;
 
-        console.log("dataset", datasets);
-
         d3.select(selector).select("svg").remove();
 
         const svg = d3.select(selector)
@@ -258,6 +256,15 @@
             .y(function(d) {return y(d.value); })
             .curve(d3.curveMonotoneX);
 
+        const tooltip2 = d3.select("body").append("div")
+                    .attr("class", "tooltip2")
+                    .style("position", "absolute")
+                    .style("background-color", "#fff")
+                    .style("border", "1px solid #ccc")
+                    .style("padding", "5px")
+                    .style("z-index", 9999)
+                    .style("opacity", 0);
+
         let added_lines = [];
         datasets.forEach((dataset, i) => {
             if (!added_lines.includes(dataset.label)) {
@@ -269,48 +276,77 @@
                     .attr("d", line)
                     .attr("class", "data-line")
                     .attr("data-label", dataset.label);
-                    
-                svg.append("path")
-                    .datum(dataset.data)
-                    .attr("fill", "none")
-                    .attr("stroke", "transparent")
-                    .attr("stroke-width", 20)
-                    .attr("d", line)
-                    .attr("class", "data-line-hover")
-                    .attr("data-label", dataset.label)
-                    .style("cursor", "pointer")
-                    .on("mouseenter", function(event) {
+
+                svg.selectAll(`.dot-${i}`)
+                    .data(dataset.data)
+                    .enter()
+                    .append("circle")
+                    .attr("class", `dot dot-${i}`)
+                    .attr("cx", function(d) { return x(d.frequency); })
+                    .attr("cy", function(d) { return y(d.value); })
+                    .attr("r", 4)
+                    .attr("fill", color(i))
+                    .style("pointer-events", "all")
+                    .style("opacity", 0);
+
+                const currentLabel = dataset.label;
+                
+                svg.append("g")
+                    .selectAll("circle")
+                    .data(dataset.data)
+                    .enter()
+                    .append("circle")
+                    .attr("class", `hover-dot hover-dot-${i}`)
+                    .attr("cx", function(d) { return x(d.frequency); })
+                    .attr("cy", function(d) { return y(d.value); })
+                    .attr("r", 10)
+                    .style("fill", "transparent")
+                    .style("pointer-events", "all")
+                    .on("mouseover", function(d) {
+                        var e = d3.event;
                         d3.selectAll(".data-line").style("opacity", 0.2);
-                        d3.select(`.data-line[data-label ='${dataset.label}']`)
+                        d3.select(`.data-line[data-label ='${currentLabel}']`)
                             .style("stroke-width", 3)
                             .style("opacity", 1);
                         
                         d3.selectAll(".legend-text").style("opacity", 0.3);
-                        d3.select(`.legend-text[data-label ='${dataset.label}']`)
+                        d3.select(`.legend-text[data-label ='${currentLabel}']`)
                             .style("font-weight", "bold")
                             .style("opacity", 1);
 
                         d3.selectAll(".legend-color").style("opacity", 0.3);
-                        d3.select(`.legend-color[data-label ='${dataset.label}']`)
+                        d3.select(`.legend-color[data-label ='${currentLabel}']`)
                             .style("font-weight", "bold")
                             .style("opacity", 1);
+
+                        d3.selectAll(".dot").style("opacity", 0);
+                        d3.selectAll(`.dot-${i}`).style("opacity", 1);
+
+                        tooltip2
+                            .html(
+                                "<strong>Sample:<strong> " + dataset.label + "<br/>" +
+                                "<strong>Value:</strong> " + d.value + "<br/>" +
+                                "<strong>Frequency:</strong> " + d.frequency
+                            )
+                            .style("left", (e.clientX + 10) + "px")
+                            .style("top",  (e.clientY - 25 + window.scrollY) + "px")
+                            .style("opacity", 1);
+                    })
+                    .on("mousemove", function() {
+                        var e = d3.event;
+                        tooltip2
+                            .style("left", (e.pageX + 10) + "px")
+                            .style("top", (e.pageY - 25) + "px");
                     })
                     .on("mouseleave", function() {
                         d3.selectAll(".data-line").style("opacity", 1).style("stroke-width", 2);
                         d3.selectAll(".legend-text").style("opacity", 1).style("font-weight", "normal");
                         d3.selectAll(".legend-color").style("opacity", 1);
+                        d3.selectAll(".dot").style("opacity", 0);
+
+                        tooltip2.style("opacity", 0);
                     });
             
-                if (options.showdots) {
-                    svg.selectAll(`.dot-${i}`)
-                        .data(dataset.data)
-                        .enter()
-                        .append("circle")
-                        .attr("cx", d => x(d.frequency))
-                        .attr("cy", d => y(d.value))
-                        .attr("r", 2)
-                        .attr("fill", color(i));
-                }
                 added_lines.push(dataset.label);
             }
         });

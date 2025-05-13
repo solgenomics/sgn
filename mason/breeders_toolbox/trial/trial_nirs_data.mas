@@ -65,18 +65,17 @@ var trial_id = '<% $trial_id %>';
 document.getElementById("submit_protocol_selection").addEventListener("click", function() {
     document.getElementById("nirs_table_section").style.display = "block";
     document.getElementById("multi_graph_section").style.display = "block";
-
-    nirsDataLineGraph.drawMultiLineGraph();
 });
 
 jQuery(document).ready(function() {
 
     jQuery('#trial_nirs_section_onswitch').click(function() {
-        get_select_box('high_dimensional_phenotypes_protocols','nirs_analysis_plot_spectra_protocol_select', {'checkbox_name':'nirs_analysis_plot_spectra_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
+        get_select_box('high_dimensional_phenotypes_protocols','nirs_analysis_plot_spectra_protocol_select', {'checkbox_name':'nirs_analysis_plot_spectra_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol', 'trial_id': trial_id});
     });
 
     jQuery('#submit_protocol_selection').click(function() {
         const selected = [];
+        const blank_data = [];
         jQuery('input[name="nirs_analysis_plot_spectra_protocol_id"]:checked').each(function() {
             selected.push(jQuery(this).val());
         });
@@ -85,18 +84,19 @@ jQuery(document).ready(function() {
             alert('Please select only one protocol.');
         } else {
             const selectedProtocolId = selected[0];
-            console.log('Selected protocol ID:', selectedProtocolId);
+            //console.log('Selected protocol ID:', selectedProtocolId);
             jQuery('#working_modal').modal('show');
             Promise.all([
                 get_nirs_data(trial_id, selectedProtocolId),
                 get_nirs_protocol(selectedProtocolId)
             ])
             .then(([nirsDataResponse, protocolResponse]) => {
-                console.log("NIRS data:", nirsDataResponse.result);
-                console.log("frequencies response:", protocolResponse);
+                //console.log("NIRS data:", nirsDataResponse.result);
+                //console.log("frequencies response:", protocolResponse);
                 const frequencies = protocolResponse.result.data[0].header_column_names;
-                console.log('frequnecy data:', frequencies);
+                //console.log('frequnecy data:', frequencies);
                 show_nirs_data(nirsDataResponse.result, frequencies);
+                update_multi_graph(blank_data);
             })
             .catch((error) => {
                 console.error('Error fetching NIRS data:', error);
@@ -127,6 +127,7 @@ jQuery(document).ready(function() {
 
     var multiGraphData = [];
     let plottedSamples = new Set();
+    let samples_map = {};
 
     function show_nirs_data(result, frequencies) {
         var data = [];
@@ -136,9 +137,11 @@ jQuery(document).ready(function() {
             var unique_key = item.germplasmDbId;
             if (!samples_map[unique_key]) {
                 samples_map[unique_key] = {
+                    observationUnitName: item.observationUnitName,
                     germplasmName: item.germplasmName,
-                    germplasmDbId: item.germplasmDbId,
-                    values: []
+                    observationUnitDbId: item.observationUnitDbId,
+                    values: [],
+                    germplasmDbId: item.germplasmDbId
                 };
             }
 
@@ -157,17 +160,16 @@ jQuery(document).ready(function() {
 
             var line_graph = `<div class="small-graph" data-observation="${unique_id}"></div>`;
             var plot_button = `<button class="btn btn-sm plot-btn" data-sample="${unique_id}">Plot</button>`;
-            data.push([group.germplasmName, group.germplasmDbId, line_graph, plot_button]);
+            var accession_link = `<a href='/stock/${group.germplasmDbId}/view'>${group.germplasmName}</a>`;
+            data.push([group.observationUnitName, group.observationUnitDbId, accession_link, line_graph, plot_button]);
         }
-        console.log("data 2", data);
-        console.log("group values", group.values);
-
 
         jQuery('#nirs_data_table').html(`
             <thead>
                 <tr>
                     <th>Sample Name</th>
                     <th>Sample ID</th>
+                    <th>Accession</th>
                     <th>Spectra Graph</th>
                     <th>Plot on Large Graph</th>
                 </tr>
@@ -178,7 +180,8 @@ jQuery(document).ready(function() {
             'destroy': true,
             'columns': [
                 { title: 'Sample Name' },
-                { title: 'Sample ID'},
+                { title: 'Sample ID' },
+                { title: 'Accession' },
                 { title: 'Spectra Graph'},
                 { title: 'Plot on Large Graph'}
             ],
@@ -198,34 +201,61 @@ jQuery(document).ready(function() {
 
                     draw_small_graph(container, small_graph_data);
                 });
-                
+                /*
                 jQuery(".plot-btn").click(function () {
                     var sampleKey = jQuery(this).data('sample');
                     var button = jQuery(this);
                     var isPlotted = plottedSamples.has(sampleKey);
 
                     if (isPlotted) {
-                        multiGraphData = multiGraphData.filter(d => d.label !== samples_map[sampleKey].germplasmName);
+                        multiGraphData = multiGraphData.filter(d => d.label !== samples_map[sampleKey].observationUnitName);
                         plottedSamples.delete(sampleKey);
                         button.text("Plot");
                     } else {
                         var group = samples_map[sampleKey];
                         var graph_data = group.values.flatMap(d => d.pairedValues);
-                        var label_sample_name = group.germplasmName;
+                        var label_sample_name = group.observationUnitName;
 
                         multiGraphData.push({
                             data: graph_data,
                             label: label_sample_name
                         });
                         plottedSamples.add(sampleKey);
-                        button.text("Unplot");
+                        button.text("Remove Plot");
                     }
                     update_multi_graph(multiGraphData);
                 });
-                
-            }
-            
+                */
+            } 
         });
+        jQuery('#nirs_data_table tbody').on('click', '.plot-btn', function () {
+            var sampleKey = jQuery(this).data('sample');
+            var button = jQuery(this);
+            var isPlotted = plottedSamples.has(sampleKey);
+
+            if (!samples_map[sampleKey]) {
+                console.warn("Missing sampleKey in samples_map", sampleKey);
+                return;
+            }
+
+            if (isPlotted) {
+                multiGraphData = multiGraphData.filter(d => d.label !== samples_map[sampleKey].observationUnitName);
+                plottedSamples.delete(sampleKey);
+                button.text(plottedSamples.has(sampleKey) ? 'Remove Plot' : 'Plot');
+            } else {
+                var group = samples_map[sampleKey];
+                var graph_data = group.values.flatMap(d => d.pairedValues);
+                var label_sample_name = group.observationUnitName;
+
+                multiGraphData.push({
+                    data: graph_data,
+                    label: label_sample_name
+                });
+                plottedSamples.add(sampleKey);
+                button.text(plottedSamples.has(sampleKey) ? 'Remove Plot' : 'Plot');
+            }
+            update_multi_graph(multiGraphData);
+        }); 
     }
 
     jQuery('#clear_graph_btn').on('click', function() {
@@ -233,11 +263,11 @@ jQuery(document).ready(function() {
         multiGraphData = [];
         plottedSamples.clear();
 
-        jQuery('.plot-btn').text('Plot');
+        const table = jQuery('#nirs_data_table').DataTable();
+        table.rows().invalidate().draw(false);
     });
 
     function draw_small_graph(container, data) {
-        console.log("draw_small_graph called with container:", container, "and data:", data);
         var small_graph_dim = {
             "width": 60,
             "height": 20,
@@ -252,7 +282,6 @@ jQuery(document).ready(function() {
         };
 
         const flattened_data = data.flatMap(d => d.pairedValues);
-        console.log("flattened data", flattened_data);
         nirsDataLineGraph.drawLineGraph(flattened_data, container.get(0), small_graph_dim, '', '', options);
 
         container.on('click', function() {
@@ -260,7 +289,7 @@ jQuery(document).ready(function() {
             var group = samples_map[sampleKey];
             var graph_data = group.values;
             var flattened_graph_data = graph_data.flatMap(d => d.pairedValues);
-            var label_sample_name = group.germplasmName;
+            var label_sample_name = group.observationUnitName;
             open_large_graph(flattened_graph_data, 'Spectral Value', label_sample_name);
         });
     }
@@ -289,7 +318,6 @@ jQuery(document).ready(function() {
 
     function update_multi_graph(data) {
         jQuery("#multi_graph_container").html('');
-        console.log("data passed to multi_graph", data);
 
         var options = {
             showXAxis: true,
