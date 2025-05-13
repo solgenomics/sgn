@@ -41,13 +41,9 @@ sub get_training_pop_gebvs : Path('/solgs/get/gebvs/training/population/')
   Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->stash->{training_pop_id} = $c->req->param('training_pop_id');
-    $c->stash->{trait_id}        = $c->req->param('trait_id');
-    $c->stash->{population_type} = 'training_population';
 
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
-    $c->controller('solGS::genotypingProtocol')
-      ->stash_protocol_id( $c, $protocol_id );
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
     $c->stash->{rest}{gebv_exists} = undef;
 
@@ -69,14 +65,8 @@ sub get_selection_pop_gebvs : Path('/solgs/get/gebvs/selection/population/')
   Args(0) {
     my ( $self, $c ) = @_;
 
-    $c->stash->{selection_pop_id} = $c->req->param('selection_pop_id');
-    $c->stash->{training_pop_id}  = $c->req->param('training_pop_id');
-    $c->stash->{trait_id}         = $c->req->param('trait_id');
-    $c->stash->{population_type}  = 'selection_prediction';
-
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
-    $c->controller('solGS::genotypingProtocol')
-      ->stash_protocol_id( $c, $protocol_id );
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
     $c->stash->{rest}{gebv_exists} = undef;
 
@@ -98,6 +88,7 @@ sub genetic_gain_boxplot : Path('/solgs/genetic/gain/boxplot/') Args(0) {
     my ( $self, $c ) = @_;
 
     my $args = $c->req->param('arguments');
+    print STDERR "genetic_gain_boxplot args: $args\n";
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
     $c->stash->{rest}{boxplot} = undef;
@@ -171,8 +162,7 @@ sub get_selection_pop_gebv_file {
     my $gebv_file;
 
     if ( $selection_pop_id && $trait_id && $training_pop_id ) {
-
-        # my $identifier = "${training_pop_id}_${selection_pop_id}";
+        
         $c->controller('solGS::Files')
           ->rrblup_selection_gebvs_file( $c, $training_pop_id,
             $selection_pop_id, $trait_id, $protocol_id);
