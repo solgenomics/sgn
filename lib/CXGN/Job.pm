@@ -262,7 +262,7 @@ sub BUILD {
             $self->type_id($cvterm_row->cvterm_id());
         } else {
             $bcs_schema->resultset("Cv::Cvterm")->create_with({
-                name => $self->job_type()
+                name => $self->job_type(),
                 cv_id => $cv_id
             });
         }
