@@ -157,21 +157,21 @@ sub store_composed_term {
           accession => sprintf("%07d",$accession)
       });
 
-      my $parent_term= $schema->resultset("Cv::Cvterm")->find(
-        { cv_id  =>$cv->cv_id(),
+      my $parent_term= $schema->resultset("Cv::Cvterm")->create_with(
+        { cv     =>$cv,
           name   => 'Composed traits',
       });
 
-    #print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
+    print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
 
     my $new_term = $schema->resultset('Cv::Cvterm')->find({ name=>$name });
     if ($new_term){
         print STDERR "Cvterm with name $name already exists... so components must be new\n";
     } else {
-        $new_term= $schema->resultset("Cv::Cvterm")->create({
-            cv_id  =>$cv->cv_id(),
+        $new_term= $schema->resultset("Cv::Cvterm")->create_with({
+            cv     =>$cv,
             name   => $name,
-            dbxref_id  => $new_term_dbxref-> dbxref_id()
+            dbxref => $new_term_dbxref
         });
 
     }
