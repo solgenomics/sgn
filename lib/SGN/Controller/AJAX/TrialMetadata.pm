@@ -2787,6 +2787,9 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     my $plant_owner_username = $c->user->get_object->get_username;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $include_plant_coordinates = $c->req->param('include_plant_coordinates');
+    my $num_rows = $c->req->param('rows_per_plot');
+    my $num_cols = $c->req->param('cols_per_plot');
     my $plants_with_treatments;
     if($inherits_plot_treatments eq '1'){
         $plants_with_treatments = 1;
@@ -2805,7 +2808,25 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments, $user_id)) {
+    my @plant_entity_params = ($plants_per_plot, $plants_with_treatments, $user_id, $plant_owner_username);
+
+    if ($include_plant_coordinates) {
+
+        if (!$num_rows || !$num_cols || $num_rows * $num_cols == 0) {
+            $c->stash->{rest} = { error => "To include plant coordinate data, rows and columns must be specified." };
+            return;
+        }
+
+        if ($num_rows * $num_cols < $plants_per_plot) {
+            $c->stash->{rest} = { error => "You cannot have more plants than available spaces. Decrease plants per plot or increase rows or columns." };
+            return;
+        }
+
+        push @plant_entity_params, $num_rows;
+        push @plant_entity_params, $num_cols;
+    }
+
+    if ($t->create_plant_entities(@plant_entity_params)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

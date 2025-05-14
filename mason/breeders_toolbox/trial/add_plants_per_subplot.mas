@@ -27,6 +27,20 @@ $trial_name => undef
                 <input name="add_plants_per_subplot_inherit_treatments" id="add_plants_per_subplot_inherit_treatments" type="checkbox" checked disabled/>
               </div>
 	        </div>
+            <div class="form-group">
+      	      <label class="col-sm-3 control-label">Assign row and column data to plants within plots?</label>
+      	      <div class="col-sm-9" >
+                <input name="add_rows_and_columns_to_subplot_plants" id="add_rows_and_columns_to_subplot_plants" type="checkbox"/>
+                <div id="subplot_plant_row_column_format_dialog" style="display:none">
+                    <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a zigzag pattern. Row and column numbers start at 1 within each subplot.</i></p>
+                    <label>Number of rows per plot</label>
+                    <input name="rows_per_subplot" id="rows_per_subplot" type="number"/>
+                    <br>
+                    <label>Number of columns per plot</label>
+                    <input name="cols_per_subplot" id="cols_per_subplot" type="number"/>
+                </div>
+              </div>
+	        </div>
 	       </form><br/>
          
         </div>
@@ -362,6 +376,15 @@ jQuery(document).ready(function() {
 
     jQuery('#upload_plants_subplot_with_num_plants_save_button').click( function () {
         upload_plants_subplot_with_num_plants_to_trial();
+    });
+
+    jQuery('#add_rows_and_columns_to_subplot_plants').click( function () {
+        if (jQuery('#add_rows_and_columns_to_subplot_plants').is(':checked')){
+            jQuery('#subplot_plant_row_column_format_dialog').show();
+        } else {
+            jQuery('#subplot_plant_row_column_format_dialog').hide();
+        }
+        
     });
 
 
