@@ -29,7 +29,31 @@ const trial_colors_text = [
     "#ffffff",
 ];
 
-const colors = [
+const base_colors = [
+    "#E4F3F5",
+    "#BDE5EA",
+    "#9BDCE4",
+    "#5CC3D0",
+    "#41b6c4",
+    "#1d91c0",
+    "#225ea8",
+    "#253494",
+    "#081d58",
+];
+
+const alt_colors = [
+    '#a60305',
+    '#d80b0d',
+    '#f14546',
+    '#ef8889',
+    '#FFFFFF',
+    "#BDE5EA",
+    "#5CC3D0",
+    "#225ea8",
+    "#081d58",
+];
+
+var colors = [
     "#E4F3F5",
     "#BDE5EA",
     "#9BDCE4",
@@ -755,10 +779,19 @@ export function init() {
 
             if (this.heatmap_selected) {
                 let plots_with_selected_trait = heatmap_object[trait_name] || {};
+                var has_negatives = 0;
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
                     trait_vals.push(obs_unit.val);
+                    if (obs_unit.val < 0) {
+                        has_negatives = 1;
+                    }
                 }
-
+                
+                if (has_negatives == 1) {
+                    colors = alt_colors;
+                } else {
+                    colors = base_colors;
+                }
                 var colorScale = d3.scaleQuantile().domain(trait_vals).range(colors);
             }
 

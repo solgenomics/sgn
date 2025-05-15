@@ -133,7 +133,7 @@ $project_id => undef
           <&| /util/workflow.mas:step, title=> "Run Spatial Analysis" &>
             <& /page/page_title.mas, title=>"Run spatial analysis on selected traits" &>
               <div id="spatial_correction_results_buttons">
-                <input name="include_rc_random_effects" id="include_rc_random_effects" type="checkbox" checked/> <label for="include_rc_random_effects">Include rows and columns as random effects?</label><br> <p><i>The spatial corrections model will smooth with 2D splines, but can also include rows and columns as random effects to capture more variability due to spatial autocorrelation. If doing so, be sure that subsequent analyses based on these corrections do not attempt to model row and column data as random effects a second time.</i></p>
+                <input name="include_rc_random_effects" id="include_rc_random_effects" type="checkbox" checked/> <label for="include_rc_random_effects">Include rows and columns as random effects?</label><br> <p><i>The spatial corrections model will smooth with 2D splines, but can also include rows and columns as random effects to capture more variability due to spatial autocorrelation. Be sure that subsequent analyses based on these corrections do not attempt to model spatial effects a second time.</i></p>
                 <br>
                 <button id="correct_spatial" type="button" class="btn btn-default"> Run Spatial Correction </button>
               </div>
