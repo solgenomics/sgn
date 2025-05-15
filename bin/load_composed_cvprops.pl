@@ -7,6 +7,7 @@ load_composed_cvprops.pl
 =head1 SYNOPSIS
 
 load_composed_cvprops.pl -H [dbhost] -D [dbname]  -T [trait_ontology cv name] -c [composed_trait_ontology cv name] -o [object_ontology cv name] -a [attribute_ontology cv name] -m [method_ontology cv name] -u [unit_ontology cv name] -t [time_ontology cv name]
+-d [metadata_ontology]
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -14,13 +15,14 @@ load_composed_cvprops.pl -H [dbhost] -D [dbname]  -T [trait_ontology cv name] -c
  -D  database name
 
  optional:
- -T [trait_ontology cv name]
- -c [composed_trait_ontology cv name]
- -o [object_ontology cv name]
- -a [attribute_ontology cv name]
+ -T [trait_ontology cv name] cassava_trait - the main trait ontology for the database 
+ -c [composed_trait_ontology cv name] composed_trait
+ -o [object_ontology cv name] cxgn_plant_section | cxgn_plant_level_ontology
+ -a [attribute_ontology cv name]  cxgn_plant_treatment | cxgn_plant_cycle
  -m [method_ontology cv name]
- -u [unit_ontology cv name]
- -t [time_ontology cv name]
+ -u [unit_ontology cv name] cxgn_units_ontology
+ -t [time_ontology cv name] cxgn_time_ontology
+ -d [metadata_ontology cv name] cxgn_metadata
 
 =head2 DESCRIPTION
 
@@ -42,12 +44,12 @@ use CXGN::DB::InsertDBH;
 use CXGN::DB::Connection;
 use Try::Tiny;
 
-our ( $opt_H, $opt_D, $opt_T, $opt_c, $opt_o, $opt_a, $opt_m, $opt_u, $opt_t );
-getopts('H:D:T:c:o:a:m:u:t:');
+our ( $opt_H, $opt_D, $opt_T, $opt_c, $opt_o, $opt_a, $opt_m, $opt_u, $opt_t, $opt_d );
+getopts('H:D:T:c:o:a:m:u:t:d:');
 
 sub print_help {
     print STDERR
-"A script to load composed cvprops\nUsage: load_composed_cvprops.pl -H [dbhost] -D [dbname]  -T [trait_ontology cv name] -c [composed_trait_ontology cv name] -o [object_ontology cv name] -a [attribute_ontology cv name] -m [method_ontology cv name] -u [unit_ontology cv name] -t [time_ontology cv name] \n";
+"A script to load composed cvprops\nUsage: load_composed_cvprops.pl -H [dbhost] -D [dbname]  -T [trait_ontology cv name] -c [composed_trait_ontology cv name] -o [object_ontology cv name] -a [attribute_ontology cv name] -m [method_ontology cv name] -u [unit_ontology cv name] -t [time_ontology cv name] -d [metadata_ontology cv name]\n";
 }
 
 if ( !$opt_D || !$opt_H ) {
@@ -75,7 +77,8 @@ my %cvprop_hash = (
     attribute_ontology      => $opt_a,
     method_ontology         => $opt_m,
     unit_ontology           => $opt_u,
-    time_ontology           => $opt_t
+    time_ontology           => $opt_t,
+    metadata_ontology       => $opt_d
 );
 
 my $coderef = sub {
@@ -96,7 +99,7 @@ my $coderef = sub {
 
             if ( !$ontology ) {
                 print STDERR
-"No cv was found with the name '$value' in database '$opt_D'.\n";
+"No cv was found with the name '$value' in database '$opt_D'. Make sure all db patches were run\n";
             }
 
             $ontology_cvtype = $schema->resultset("Cv::Cvterm")->find(
