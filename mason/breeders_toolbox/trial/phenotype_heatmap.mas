@@ -731,7 +731,7 @@ jQuery(document).ready( function() {
     function field_map_view() {
         jQuery("#ctrldiv").css("display", "none");
         var colors = FieldMap.get_pheno_colors();
-        jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors[0]},${colors[4]},${colors[colors.length - 1]})`)
+        jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
         jQuery.ajax({
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
             method: 'GET',
@@ -799,7 +799,7 @@ jQuery(document).ready( function() {
                             FieldMap.filter_heatmap(corrected_observations);
                             FieldMap.load();
                             var colors = FieldMap.get_pheno_colors();
-                            jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors[0]},${colors[4]},${colors[colors.length - 1]})`)
+                            jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
                         }).catch((err) => {
                             jQuery('#working_modal').modal("hide");
                             alert(`ERROR: Could not load phenotype heatmap: ${err}`);
@@ -833,7 +833,7 @@ jQuery(document).ready( function() {
                             FieldMap.filter_heatmap(adjustment_observations);
                             FieldMap.load();
                             var colors = FieldMap.get_pheno_colors();
-                            jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors[0]},${colors[4]},${colors[colors.length - 1]})`)
+                            jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
                         }).catch((err) => {
                             jQuery('#working_modal').modal("hide");
                             alert(`ERROR: Could not load phenotype heatmap: ${err}`);
@@ -851,7 +851,7 @@ jQuery(document).ready( function() {
                 FieldMap.filter_heatmap(observations);
                 FieldMap.load();
                 var colors = FieldMap.get_pheno_colors();
-                jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors[0]},${colors[4]},${colors[colors.length - 1]})`)
+                jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
                 jQuery('#working_modal').modal("hide");
             }).catch((err) => {
                 jQuery('#working_modal').modal("hide");
