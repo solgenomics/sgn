@@ -181,16 +181,14 @@ $locations_by_program_json
 <script>
 jQuery(document).ready(function(){
 
-    var locations_by_program_json = <% $locations_by_program_json %>;
-    var locations_string = locations_by_program_json.toString();
-    var locations_array = locations_string.split(",");
+    var locations_array = <% $locations_by_program_json %>;
 
     jQuery('#upload_seedlots_from_crosses').click( function() {
         jQuery('#upload_cross_seedlot_dialog').modal('show');
 
         var html = '<select id = "upload_seedlot_location" >';
         for (var i=0; i<locations_array.length; i++) {
-            html = html + '<option value='+locations_array[i]+'>'+locations_array[i]+'</option>';
+            html += `<option value="${locations_array[i]}">${locations_array[i]}</option>`;
         }
         html = html + "</select>";
 

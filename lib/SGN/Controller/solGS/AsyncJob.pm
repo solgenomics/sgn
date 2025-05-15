@@ -834,7 +834,7 @@ sub modeling_jobs {
                 || ( $selection_pop_id && !-s $selection_pop_gebvs_file ) )
             {
                 $self->get_gs_r_temp_file($c);
-                $c->stash->{r_script} = 'R/solGS/gs.r';
+                $c->stash->{r_script} = 'R/solGS/rrblup_gblup_gs.r';
                 $self->get_cluster_r_job_args($c);
 
                 push @modeling_jobs, $c->stash->{cluster_r_job_args};

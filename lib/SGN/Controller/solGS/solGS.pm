@@ -596,6 +596,8 @@ sub output_files {
     $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
     $c->controller('solGS::Files')->marker_effects_file($c);
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+    $c->controller('solGS::Files')->rrblup_training_genetic_values_file($c);
+    $c->controller('solGS::Files')->rrblup_combined_training_gebvs_genetic_values_file($c);
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller("solGS::Files")->model_phenodata_file($c);
     $c->controller("solGS::Files")->model_genodata_file($c);
@@ -615,13 +617,19 @@ sub output_files {
 
     if ($selection_pop_id) {
         $c->controller('solGS::Files')
-          ->rrblup_selection_gebvs_file( $c, $training_pop_id,
-            $selection_pop_id, $trait_id );
+          ->rrblup_selection_gebvs_file($c, $training_pop_id,
+            $selection_pop_id, $trait_id);
+
+        $c->controller('solGS::Files')->rrblup_selection_genetic_values_file($c);
+        $c->controller('solGS::Files')->rrblup_combined_selection_gebvs_genetic_values_file($c);
+        
         $c->controller('solGS::Files')->filtered_selection_genotype_file($c);
     }
 
-    my $file_list = join( "\t",
+    my $file_list = join("\t",
         $c->stash->{rrblup_training_gebvs_file},
+        $c->stash->{rrblup_training_genetic_values_file},
+        $c->stash->{rrblup_combined_training_gebvs_genetic_values_file},
         $c->stash->{marker_effects_file},
         $c->stash->{validation_file},
         $c->stash->{model_phenodata_file},
@@ -638,6 +646,8 @@ sub output_files {
         $c->stash->{filtered_training_genotype_file},
         $c->stash->{filtered_selection_genotype_file},
         $c->stash->{rrblup_selection_gebvs_file},
+        $c->stash->{rrblup_selection_genetic_values_file},
+        $c->stash->{rrblup_combined_selection_gebvs_genetic_values_file},
         $c->stash->{"${analysis_type}_report_file"},
         $c->stash->{genotype_filtering_log_file},
     );
@@ -689,7 +699,8 @@ sub predict_selection_pop_multi_traits {
 
     $c->stash->{pop_id} = $training_pop_id;
 
-    my @traits = @{ $c->stash->{training_traits_ids} }
+    my @traits;
+    @traits = @{ $c->stash->{training_traits_ids} }
       if $c->stash->{training_traits_ids};
 
     $self->traits_with_valid_models($c);
@@ -944,7 +955,8 @@ sub build_multiple_traits_models {
 
     my $pop_id          = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my @selected_traits = @{ $c->stash->{training_traits_ids} };
-    my $trait_id        = $selected_traits[0] if scalar(@selected_traits) == 1;
+    my $trait_id;
+    $trait_id = $selected_traits[0] if scalar(@selected_traits) == 1;
 
     my $traits;
 
@@ -1519,7 +1531,7 @@ sub run_rrblup_trait {
 
     $self->input_files($c);
     $self->output_files($c);
-    $c->stash->{r_script} = 'R/solGS/gs.r';
+    $c->stash->{r_script} = 'R/solGS/rrblup_gblup_gs.r';
 
     my $training_pop_gebvs_file  = $c->stash->{rrblup_training_gebvs_file};
     my $selection_pop_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
