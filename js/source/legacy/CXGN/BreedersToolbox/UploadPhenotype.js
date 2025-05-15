@@ -115,6 +115,14 @@ jQuery( document ).ready( function() {
 		alert('Deleted successfully.');
         });
 
+    
+
+    jQuery('#reset_dialog').click( function() {
+	alert("click!");
+	reset_dialog(jQuery('#upload_spreadsheet_phenotype_file_format').val());
+    });
+				   
+    
 });
 
 function initializeUploadPhenotype(uploadFile, message, file_form, url, upload_format) {
@@ -259,4 +267,22 @@ function displayPhenotypeUploadStoreResponse(response, upload_type) {
     }
     message_text += "</ul>";
     jQuery(upload_phenotype_status).html(message_text);
+}
+
+function reset_dialog(upload_type) {
+
+    alert("UPLOAD TYPE: "+upload_type);
+
+	jQuery("#upload_spreadsheet_phenotype_submit_verify").attr('disabled', false);
+	jQuery("#upload_spreadsheet_phenotype_submit_store").attr('disabled', true);
+	jQuery('#upload_phenotype_spreadsheet_verify_status').html("");
+
+        jQuery("#upload_datacollector_phenotype_submit_verify").attr('disabled', false);
+	jQuery("#upload_datacollector_phenotype_submit_store").attr('disabled', true);
+        jQuery("#upload_phenotype_datacollector_verify_status").html("");
+
+	jQuery("#upload_fieldbook_phenotype_submit_verify").attr('disabled', false);
+        jQuery("#upload_fieldbook_phenotype_submit_store").attr('disabled', true);
+        jQuery("#upload_phenotype_fieldbook_verify_status").html("");
+    
 }
