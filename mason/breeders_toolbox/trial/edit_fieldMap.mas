@@ -381,6 +381,10 @@ jQuery("#correct_spatial").click(function() {
   //var dataTableData = jQuery("#spatial_correction_needed_results_table").DataTable().data();
   //alert(JSON.stringify(dataTableData));
   //console.log(dataTableData);
+  var include_rc_random = 0;
+  if (jQuery('#include_rc_random_effects').is(":checked")) {
+    include_rc_random = 1;
+  }
   jQuery('#working_modal').modal('show');
   jQuery.ajax({
     url: '/ajax/spatial_model/correct_spatial/' + trial_id,
@@ -389,6 +393,7 @@ jQuery("#correct_spatial").click(function() {
       pheno_filepath: pheno_filepath,
       headers: headers,
       phenotype_file: phenotype_file,
+      include_rc_random : include_rc_random
     },
     success: function(response) {
       jQuery('#working_modal').modal('hide');
@@ -419,6 +424,12 @@ jQuery("#correct_spatial").click(function() {
       var model_properties = JSON.stringify({ "properties": { "traits": traits } });
       var analysis_design = response.analysis_design;
       var projectprop_data = response.projectprop_data;
+      var model_string;
+      if (jQuery('#include_rc_random_effects').is(":checked")) {
+        model_string = "SpATS(trait ~ spline(colNumber, rowNumber) + (1|rowNumber) + (1|colNumber) + (1|genotype))";
+      } else {
+        model_string = "SpATS(trait ~ spline(colNumber, rowNumber) + (1|genotype))";
+      }
 
       jQuery(document).on('click', '#confirm_store_spatial_correction', async function(e) {
 
@@ -442,7 +453,7 @@ jQuery("#correct_spatial").click(function() {
 
         jQuery('#generic_save_analysis_dialog').modal("show");
         jQuery('#generic_save_analysis_model_properties').val(model_properties);
-        jQuery('#generic_save_analysis_protocol').val("SpATS(trait ~ spatial(colNumber, rowNumber) + (1|genotype))");
+        jQuery('#generic_save_analysis_protocol').val(model_string);
         //jQuery('#generic_save_analysis_dataset_id').val("dataset_id");
         jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(accessionNamesArray));
         jQuery('#generic_save_analysis_trial_id').val(trial_id);

@@ -247,6 +247,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my ($self, $c) = @_;
     my $dataTableData = $c->req->param("dataTableData");
+    my $include_rc_random = $c->req->param("include_rc_random");
     print STDERR "DATA TABLE DATA: $dataTableData\n";
     # Convert the DataTable data back into an array
     my @dataTableArray = map { [split(/\t/, $_)] } split(/\n/, $dataTableData);
@@ -283,6 +284,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         $c->config->{basepath} . "/R/Spatial_Correction.R",
         $phenotype_file,
         $phenotype_file.".spatial_correlation_summary", 
+        $include_rc_random,
         "'".$headers_string."'",
 	);
 
