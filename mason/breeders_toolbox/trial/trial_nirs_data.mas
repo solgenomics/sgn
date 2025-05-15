@@ -91,7 +91,7 @@ jQuery(document).ready(function() {
                 get_nirs_protocol(selectedProtocolId)
             ])
             .then(([nirsDataResponse, protocolResponse]) => {
-                //console.log("NIRS data:", nirsDataResponse.result);
+                console.log("NIRS data:", nirsDataResponse);
                 //console.log("frequencies response:", protocolResponse);
                 const frequencies = protocolResponse.result.data[0].header_column_names;
                 //console.log('frequnecy data:', frequencies);
