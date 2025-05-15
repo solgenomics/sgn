@@ -771,9 +771,13 @@ sub check_measurement {
 	    $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
 	    
 	}
-	else {   ## multiple or time_series - warn only if the timestamp/value are identical
+	else {   ## multiple or time_series - warn if the timestamp/value are identical
 	    if (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp}) && $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp} eq $trait_value) {
 		$warning_message .= "For multiple trait with id $trait_cvterm_id, the  timepoint $timestamp for stock  $stock_id already has a measurement with the same value $trait_value associated with it.<hr>";
+		$self->same_value_count($self->same_value_count() + 1);
+	    }
+	    elsif ($self->overwrite_values() && exists($self->unique_trait_stock->{$trait_cvterm_id, $stock_id})) {
+		$warning_message .= "For multiple trait with id $trait_cvterm_id, the value ".$self->unique_trait_stock->{$trait_cvterm_id, $stock_id}." at timestamp $timestamp will be overwritten with the value $trait_value as the overwrite values option is active.";
 		$self->same_value_count($self->same_value_count() + 1);
 	    }
 	}
