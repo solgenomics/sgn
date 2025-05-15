@@ -150,10 +150,12 @@ solGS.geneticGain = {
 
   getTrainingPopulationGEBVs: function (gebvParams) {
     var ggMsgDiv = this.ggMsgDiv;
+    gebvParams = JSON.stringify(gebvParams);
+
     jQuery.ajax({
       type: "POST",
       dataType: "json",
-      data: gebvParams,
+      data:{'arguments': gebvParams},
       url: "/solgs/get/gebvs/training/population",
       success: function (res) {
         if (res.gebv_exists) {
@@ -177,11 +179,12 @@ solGS.geneticGain = {
 
   getSelectionPopulationGEBVs: function (gebvParams) {
     var ggMsgDiv = this.ggMsgDiv;
+    gebvParams = JSON.stringify(gebvParams);
 
     jQuery.ajax({
       type: "POST",
       dataType: "json",
-      data: gebvParams,
+      data:{'arguments': gebvParams},
       url: "/solgs/get/gebvs/selection/population",
       success: function (res) {
         if (res.gebv_exists) {

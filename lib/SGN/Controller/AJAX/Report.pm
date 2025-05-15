@@ -9,6 +9,7 @@ use File::Path qw(make_path);
 use File::Spec;
 use Data::Dumper;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use Excel::Writer::XLSX;
 use POSIX qw(strftime);
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
@@ -86,6 +87,9 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
     ## checking the user role
     my @user_roles = $c->user ? $c->user->roles : ();
     my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     unless ($curator) {
         $c->stash->{rest} = {
@@ -137,8 +141,19 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
 
         print("Starting command $script_cmd \n");
 
-        my $run_script = CXGN::Tools::Run->new();
-        my $result_hash = $run_script->run($script_cmd);
+        my $report_job = CXGN::Job->new({
+            schema => $schema,
+            people_schema => $people_schema,
+            sp_person_id => $sp_person_id,
+            name => $excel_filename." report generation",
+            cmd => $script_cmd,
+            job_type => 'report',
+            finish_logfile => $c->config->{job_finish_log}
+        });
+        # my $run_script = CXGN::Tools::Run->new();
+        # $report_record->update_status("submitted");
+        # my $result_hash = $run_script->run($script_cmd.$report_record->generate_finish_timestamp_cmd());
+        $report_job->submit();
 
         my $json_file = File::Spec->catfile($out_directory, $json_filename);
         print("Reading output from file: $json_file \n");

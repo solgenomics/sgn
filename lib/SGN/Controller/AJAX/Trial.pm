@@ -54,6 +54,7 @@ use CXGN::Contact;
 use CXGN::File::Parse;
 use CXGN::People::Person;
 use CXGN::Tools::Run;
+use CXGN::Job;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1217,15 +1218,26 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     $cmd .= " -iw" if $ignore_warnings;
 
     # Run asynchronously if email option is enabled
-    my $runner = CXGN::Tools::Run->new();
+    # my $runner = CXGN::Tools::Run->new();
+    my $job = CXGN::Job->new({
+        sp_person_id => $user_id,
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        cmd => $cmd,
+        name => "$upload_original_name multiple trial designs upload",
+        results_page => '/breeders/trials',
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log}
+    });
     if ( $email_option_enabled && $email_address ) {
-        $runner->run_async($cmd);
-        my $err = $runner->err();
-        my $out = $runner->out();
+        #$runner->run_async($cmd);
+        $job->submit();
+        #my $err = $runner->err();
+        #my $out = $runner->out();
 
         print STDERR "Upload Trials Output (async):\n";
-        print STDERR "$err\n";
-        print STDERR "$out\n";
+        #print STDERR "$err\n";
+        #print STDERR "$out\n";
 
         $c->stash->{rest} = {background => 1};
         return;
@@ -1233,13 +1245,23 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
     # Otherwise run synchronously
     else {
-        $runner->run($cmd);
-        my $err = $runner->err();
-        my $out = $runner->out();
+        #$runner->run($cmd.$job->generate_finish_timestamp_cmd());
+        #$job->update_status("submitted");
+        #my $err = $runner->err();
+        #my $out = $runner->out();
 
-        print STDERR "Upload Trials Output (sync):\n";
-        print STDERR "$err\n";
-        print STDERR "$out\n";
+        $job->submit();
+
+        while($job->alive()) {
+            sleep(1);
+        }
+
+        # print STDERR "Upload Trials Output (sync):\n";
+        # print STDERR "$err\n";
+        # print STDERR "$out\n";
+
+        my $err = $job->cxgn_tools_run_config->{temp_base}."/job.err";
+        my $out = $job->cxgn_tools_run_config->{temp_base}."/job.out";
 
         # Collect errors and warnings from STDERR
         my @errors;
@@ -1257,6 +1279,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
         if ( scalar(@errors) > 0 ) {
             $c->stash->{rest} = {errors => \@errors};
+            $job->update_status("failed");
             return;
         }
         if ( scalar(@warnings) > 0 ) {

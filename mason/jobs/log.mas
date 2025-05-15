@@ -1,0 +1,69 @@
+<%doc>
+
+=head1 NAME
+
+/jobs/log.mas - Displays slurm jobs submitted to the site. Deprecates /solgs/jobs/log.mas
+
+=AUTHOR
+
+Ryan Preble <rsp98@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$sp_person_id
+</%args>
+
+<& /util/import_javascript.mas, entries => ["job"], classes => ["jquery.dataTables"] &>
+
+<div id ="job_log_div" style="display:none;">
+    <div style='display:flex;justify-content:center;'>
+        <button id="clear_dead_jobs_button" class='btn btn-sm btn-primary'>Dismiss failed and timed out jobs</button>
+        <span style="display: inline-block; width: 100px;"></span>
+        <button id="clear_finished_jobs_button" class='btn btn-sm btn-primary'>Dismiss finished and canceled jobs</button> 
+        <span style="display: inline-block; width: 100px;"></span>
+        <button id="clear_old_jobs_button" class='btn btn-sm btn-primary'>Dismiss all jobs older than</button> 
+        &nbsp;
+        <select id="keep_recent_jobs_select">
+            <option value='one_week'>One week</option>
+            <option value='one_month'>One month</option>
+            <option value='six_months'>Six months</option>
+            <option value='one_year'>One year</option>
+        </select>
+    </div>
+    <br>
+    <table id="user_job_log_table" class="table" style="text-align:left;">
+    </table>
+</div>
+
+<script>
+jQuery(document).ready(function (){
+    $.ajax({
+        url: '/ajax/job/jobs_by_user/<% $sp_person_id %>',
+        success: function(response) {
+            if (response.error) {
+                alert("Error fetching submitted jobs, check console.");
+                console.error(response.error);
+            } else {
+                jQuery('#job_log_div').removeAttr('style');
+                jQuery('#user_job_log_table').DataTable(response.data);
+                console.log(response.data);
+                jQuery('#clear_dead_jobs_button').click(function() {
+                    jsMod['job'].dismiss_dead_jobs(<% $sp_person_id %>);
+                });
+                jQuery('#clear_old_jobs_button').click(function() {
+                    jsMod['job'].keep_recent_jobs(<% $sp_person_id %>);
+                });
+                jQuery('#clear_finished_jobs_button').click(function() {
+                    jsMod['job'].dismiss_finished_jobs(<% $sp_person_id %>);
+                });
+            }
+        }, 
+        error: function(response) {
+            alert("Error fetching submitted jobs");
+        }
+    });
+});
+</script>
