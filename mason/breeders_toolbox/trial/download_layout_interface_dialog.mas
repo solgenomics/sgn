@@ -244,7 +244,7 @@ jQuery(document).ready(function() {
             for ( let i = 0; i < selected_trial_ids.length; i++ ) {
                 let trial_id = parseInt(selected_trial_ids[i]);
                 if ( trial_id && trial_id !== '' ) {
-                    new jQuery.ajax({
+                    jQuery.ajax({
                         type: 'POST',
                         url: '/ajax/breeders/trial/'+trial_id+'/has_plants',
                         dataType: "json",
@@ -274,7 +274,7 @@ jQuery(document).ready(function() {
                             alert('An error occurred checking trial for plants or subplots.');
                         }
                     });
-                    new jQuery.ajax({
+                    jQuery.ajax({
                         type: 'POST',
                         url: '/ajax/breeders/trial/'+trial_id+'/has_subplots',
                         dataType: "json",
@@ -304,7 +304,7 @@ jQuery(document).ready(function() {
                             alert('An error occurred checking trial for plants or subplots.');
                         }
                     });
-                    new jQuery.ajax({
+                    jQuery.ajax({
                         type: 'POST',
                         url: '/ajax/breeders/trial/'+trial_id+'/has_tissue_samples',
                         dataType: "json",
@@ -520,7 +520,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     jQuery("#working_modal").modal("show");
     for ( let i = 0; i < trial_ids.length; i++ ) {
         let trial_id = trial_ids[i];
-        new jQuery.ajax({
+        jQuery.ajax({
             type: 'POST',
             url: '/ajax/fieldbook/create',
             dataType: "json",
@@ -547,7 +547,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
                     jQuery("#working_modal").modal("hide");
                     alert(response.error_string);
                 } else {
-                    _finish(response.file_id, response.file)
+                    _finish(response.file_id, response.file);
                 }
             },
             error: function () {
