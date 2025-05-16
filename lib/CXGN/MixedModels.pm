@@ -555,7 +555,7 @@ sub run_model {
     return $error;    
 }
 
-=head2 make_R_variable_name
+=head1 make_R_variable_name
 
  Usage:
  Desc:
@@ -685,7 +685,6 @@ sub read_conversion_matrix {
 	$conversion_matrix{$new} = $old;
     }
     return \%conversion_matrix;
-    }
-
+}
 
 1;

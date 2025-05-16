@@ -44,6 +44,7 @@ solGS.analysisSave = {
   },
 
   storeAnalysisResults: function (args) {
+    console.log(args);
     var save = jQuery.ajax({
       dataType: "json",
       type: "POST",

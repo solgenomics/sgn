@@ -21,7 +21,7 @@ $has_plant_entries => undef
     #plot_image_ids {display: none;}
 
 
-    #tooltip {	
+    #tooltip {
         position: absolute;
         max-width: 400px;
         max-height: 200px;
@@ -32,7 +32,7 @@ $has_plant_entries => undef
         border-radius: 8px;
         pointer-events: none;
     }
-    
+
     #container_heatmap {
         /*border:2px dashed #000;*/
         height: 390px;
@@ -67,10 +67,10 @@ $has_plant_entries => undef
         margin-left: auto;
         margin-right: auto;
     }
-    
+
     rect.bordered {
         stroke: #E6E6E6;
-        stroke-width:2px;   
+        stroke-width:2px;
       }
 
       text.mono {
@@ -86,9 +86,9 @@ $has_plant_entries => undef
       text.axis-worktime {
         fill: #000;
       }
-      
+
       .legend { list-style: none; }
-      .legend li { float: left; margin-right: 10px; }
+      .legend li { float: left; margin-left: 10px; margin-right: 10px;}
       .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
 
       .legend .border_plots { background-color: #d3d3d3}
@@ -98,13 +98,16 @@ $has_plant_entries => undef
       .legend .rep_even_number { background-color: red;}
       .legend .rep_odd_number { background-color: green;}
       .legend .overlapping_plot { background-color: #000; }
-      
+      .legend .trait_not_measured {background-color: darkgrey;} 
+      .legend .value_scale {display: inline-block; width: 80px;}
+
       .rotated {
           transform: rotate(-180deg);
       }
 
-    
+
 </style>
+
 
 <div class="well well-sm">
     <div style="display: flex; gap: 25px">
@@ -145,19 +148,24 @@ $has_plant_entries => undef
 </div>
 
 <div id="container_heatmap" ></div>
+
 <div id="container_legend">
+
     <ul class="legend">
-        <li><span class="border_plots"></span> Border Plots and Filler Plots</li>
-        <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+        <li><span class="border_plots"></span> Border Plots and Filler Plots </li>
+        <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...) </li>
         <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
         <li><span class="checks"></span> Checks</li>
-        <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
-        <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-        <li><span class="overlapping_plot"></span> Overlapping Plots (2+ plots at some position)</li>
-        <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
+        <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...) </li>
+        <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...) </li>
+        <li><span class="overlapping_plot"></span> Overlapping Plots (2+ plots at some position)  </li>
+        <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image </li>
+        <li><span class="trait_not_measured"></span>No measurement </li>
+        <li style='display:flex'><div>Low trait value</div> <span class="value_scale" id="pheno_color_scale"></span> <div>High trait value</div></li>
     </ul>
 </div>
 <br><br>
+
 <div id="container_fm">
     <div style="margin-top: 2%; position: relative">
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
@@ -177,19 +185,19 @@ $has_plant_entries => undef
         <br />
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
             <div class="form-inline">
-                <label for="top_border_selection">Top Border</label>                       
+                <label for="top_border_selection">Top Border</label>
                 <input type="checkbox" id="top_border_selection" name="top_border_selection" value="yes" class="fieldmap_edit">
             </div>
             <div class="form-inline">
-                <label for="left_border_selection">Left Border</label>                       
+                <label for="left_border_selection">Left Border</label>
                 <input type="checkbox" id="left_border_selection" name="left_border_selection" value="yes" class="fieldmap_edit">
             </div>
             <div class="form-inline">
-                <label for="right_border_selection">Right Border</label>                       
+                <label for="right_border_selection">Right Border</label>
                 <input type="checkbox" id="right_border_selection" name="right_border_selection" value="yes" class="fieldmap_edit">
             </div>
             <div class="form-inline">
-                <label for="bottom_border_selection">Bottom Border</label>                       
+                <label for="bottom_border_selection">Bottom Border</label>
                 <input type="checkbox" id="bottom_border_selection" name="bottom_border_selection" value="yes" class="fieldmap_edit">
             </div>
         </div>
@@ -200,7 +208,7 @@ $has_plant_entries => undef
         <div class="interactive_fieldmap_buttons">
             <button type="button" class="btn btn-primary fieldmap_edit" id="transpose_fieldmap">Transpose</button>
             <button type="button" class="btn btn-primary fieldmap_edit" id="change_dimensions_button">Change Dimensions</button>
-            <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success fieldmap_edit">Submit Field Layout</button>  
+            <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success fieldmap_edit">Submit Field Layout</button>
         </div>
     </div>
     <div id="fieldmap_wrapper">
@@ -341,35 +349,35 @@ $has_plant_entries => undef
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="suppress_plot_pheno_form" name="suppress_plot_pheno_form">
-                    
+
                     <center>
                     <p3> Suppressed measurement will be seen as an outlier and can be excluded during phenotype analysis and download.</p3>
                     </center></br>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Plot Name:</label>
                             <div class="col-sm-8" id="myplot_name">
-                                
+
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Phenotype Value: </label>
                             <div class="col-sm-8" id="pheno_value">
-                            
+
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Phenotype ID: </label>
                             <div class="col-sm-8" id="mypheno_id">
-                            
+
                             </div>
                         </div>
-                         
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Trait ID: </label>
                             <div class="col-sm-8" id="mytrait_id">
-                            
+
                             </div>
                         </div>
 
@@ -496,7 +504,7 @@ $has_plant_entries => undef
                         </div>
                       </div>
 
-                      
+
                       <div class="form-group">
                         <label class="col-sm-3 control-label">Enter New Accession: </label>
                         <div class="col-sm-9" >
@@ -579,7 +587,7 @@ $has_plant_entries => undef
                 <div class="container-fluid">
 
                     <big>
-                        <span>&#9888;</span> 
+                        <span>&#9888;</span>
                         <p3>
                             One or more traits have been assayed for this trial; <br>
                             It is not recommended to change accessions at this point. Are you sure?
@@ -614,11 +622,11 @@ my $image_ids =  $stockref->{image_ids} || [] ;
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="view_plot_image_form" name="view_plot_image_form">
-                    
+
                     <div class="col-sm-9" id="plot_image_ids"></div>
-                    
+
                     <div class="col-sm-9" id="show_plot_image_ids"></div>
-                    
+
                     </form>
                 </div>
             </div>
@@ -642,12 +650,12 @@ my $image_ids =  $stockref->{image_ids} || [] ;
                     <label style="margin-left: 15%;">Dimensions: </label>
                     <div style="display: inline;">
                         <div style="margin-left: 4%; margin-right: 2%; display: inline-block; width: 10%;">
-                            <label for="row-dims" style="display:block;">Rows</label> 
+                            <label for="row-dims" style="display:block;">Rows</label>
                             <input style="width: 100%;" type="text" id="row-dims" name="row-dims">
                         </div>
                         x
                         <div style="margin: 2%; display: inline-block; width: 10%;">
-                            <label for="col-dims" style="display:block">Columns</label> 
+                            <label for="col-dims" style="display:block">Columns</label>
                             <input style="width: 100%;" type="text" id="col-dims" name="col-dims">
                         </div>
                     </div><br><br>
@@ -711,17 +719,19 @@ jQuery(document).ready( function() {
       } else {
         jQuery("#hm_view_plot_image_submit").removeClass("disabled");
       }
-      return true; 
+      return true;
     }
     var list_of_checks;
     var checks = {};
     var data;
     var additionalInfo = [];
 
-   
+
 
     function field_map_view() {
         jQuery("#ctrldiv").css("display", "none");
+        var colors = FieldMap.get_pheno_colors();
+        jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
         jQuery.ajax({
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
             method: 'GET',
@@ -749,10 +759,11 @@ jQuery(document).ready( function() {
                 }
             },
             error: function(response) {
-                alert('Error displaying traits assayed heatmap');   
+                jQuery("#working_modal").modal("hide");
+                alert('Error displaying traits assayed heatmap');
             }
         })
-       
+
         .then(
             function() {
                     num_real_plots = Object.keys(FieldMap.plot_object).length;
@@ -760,20 +771,93 @@ jQuery(document).ready( function() {
                     FieldMap.meta_data.retain_layout = true;
                     FieldMap.meta_data.transpose = false;
                     FieldMap.load();
+                    jQuery('#working_modal').modal("hide");
             }
         )
     }
 
     function heatmap(selected) {
         jQuery('#working_modal').modal("show");
-        get_heatmap_observations(selected).then((observations) => {
-            jQuery('#working_modal').modal("hide");
-            FieldMap.filter_heatmap(observations);
-            FieldMap.load();
-        }).catch((err) => {
-            jQuery('#working_modal').modal("hide");
-            alert(`ERROR: Could not load phenotype heatmap: ${err}`);
-        });
+        if (selected.includes("(corrected)")) {
+            jQuery.ajax({
+                'url': '/ajax/spatial_model/retrieve_spatial_adjustments/'+trial_id,
+                'success': function(response) {
+                    if (response.error) {
+                        jQuery('#working_modal').modal('hide');
+                        alert("Error displaying "+ selected + " : " +response.error);
+                    }  else if (response.message) {
+                        jQuery('#working_modal').modal('hide');
+                        alert(response.message);
+                    } else {
+                        var data = JSON.parse(response.data);
+                        var trait_id = selected.replace(" (corrected)", "");
+                        get_heatmap_observations(trait_id).then((observations) => {
+                            var corrected_observations = observations.map(pheno => ({
+                                ... pheno, 
+                                value : data.hasOwnProperty(pheno.observationUnitName) ? Number(data[pheno.observationUnitName][trait_id]) + Number(pheno.value) : pheno.value
+                            }));
+                            FieldMap.filter_heatmap(corrected_observations);
+                            FieldMap.load();
+                            var colors = FieldMap.get_pheno_colors();
+                            jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
+                        }).catch((err) => {
+                            jQuery('#working_modal').modal("hide");
+                            alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+                        });
+                        jQuery('#working_modal').modal("hide");
+                    }
+                },
+                'error': function(error) {
+                    jQuery('#working_modal').modal('hide');
+                    alert("Error displaying "+ selected + " : " +error);
+                }
+            });
+        } else if (selected.includes("(adjustment)")) {
+            jQuery.ajax({
+                'url': '/ajax/spatial_model/retrieve_spatial_adjustments/'+trial_id,
+                'success': function(response) {
+                    if (response.error) {
+                        jQuery('#working_modal').modal('hide');
+                        alert("Error displaying "+ selected + " : " +response.error);
+                    } else if (response.message) {
+                        jQuery('#working_modal').modal('hide');
+                        alert(response.message);
+                    } else {
+                        var data = JSON.parse(response.data);
+                        var trait_id = selected.replace(" (adjustment)", "");
+                        get_heatmap_observations(trait_id).then((observations) => {
+                            var adjustment_observations = observations.map(pheno => ({
+                                ... pheno, 
+                                value : data.hasOwnProperty(pheno.observationUnitName) ? data[pheno.observationUnitName][trait_id] : 0
+                            }));
+                            FieldMap.filter_heatmap(adjustment_observations);
+                            FieldMap.load();
+                            var colors = FieldMap.get_pheno_colors();
+                            jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
+                        }).catch((err) => {
+                            jQuery('#working_modal').modal("hide");
+                            alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+                        });
+                        jQuery('#working_modal').modal("hide");
+                    }
+                },
+                'error': function(error) {
+                    jQuery('#working_modal').modal('hide');
+                    alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+                }
+            });
+        } else {
+            get_heatmap_observations(selected).then((observations) => {
+                FieldMap.filter_heatmap(observations);
+                FieldMap.load();
+                var colors = FieldMap.get_pheno_colors();
+                jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
+                jQuery('#working_modal').modal("hide");
+            }).catch((err) => {
+                jQuery('#working_modal').modal("hide");
+                alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+            });
+        }
     }
 
     async function get_heatmap_observations(observationVariableDbId, pageSize=5000, page=0, observations=[]) {
@@ -804,24 +888,27 @@ jQuery(document).ready( function() {
 
                         FieldMap.heatmap_cached_data[observationVariableDbId] = observations;
                         resolve(observations);
+                        jQuery('#working_modal').modal("hide");
                     }
                     else {
+                        jQuery('#working_modal').modal("hide");
                         reject(`Error loading heatmap obsevations (page: ${page})`);
                     }
                 },
                 error: function(response) {
+                    jQuery('#working_modal').modal("hide");
                     reject(`Error loading heatmap observations (page: ${page})`);
                 }
             });
         });
     }
-    
+
     function geo_field_map_view(){
 
         jQuery('#container_heatmap_geo_div').width(jQuery('#container_heatmap_geo').parent().width());
         jQuery('#container_heatmap_geo_div').height(jQuery('#container_heatmap_geo').parent().width()*0.7);
 
-     
+
         var brapi_endpoint = "/brapi/v2";
         var auth_token;
         var require_login = "<%  $c->get_conf('brapi_require_login') %>";
@@ -837,21 +924,21 @@ jQuery(document).ready( function() {
         fieldMap.brapi_endpoint = brapi_endpoint;
         fieldMap.opts.brapi_pageSize = 1000;
         fieldMap.opts.brapi_auth = auth_token;
-        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert("No geo reference data in this trial!"); } ); 
+        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert("No geo reference data in this trial!"); } );
 
     }
 
-    var r = 0; 
+    var r = 0;
     var toggleWidthFM = 0;
-    jQuery('#rotate_map').click(function(){ 
+    jQuery('#rotate_map').click(function(){
         jQuery("#container_fm").css('transform','rotate(' + (r += 90) + 'deg)');
         jQuery("#container_fm").width(390 + 'px');
         //toggleWidthFM = jQuery("#container_fm").width();
         if ((r/90) % 2 == 0){
             jQuery("#container_fm").width(700 + 'px');
         }
-    }); 
-    
+    });
+
     jQuery('#change_dimensions_button').click(function() {
         jQuery("#change_dimensions_dialog").modal("show");
         jQuery("#row-dims").val(FieldMap.meta_data.num_rows);
@@ -885,7 +972,7 @@ jQuery(document).ready( function() {
                         FieldMap.meta_data.num_rows = changed_dim_rows;
                         FieldMap.meta_data.num_cols = changed_dim_cols;
                         FieldMap.meta_data.retain_layout = false;
-                        FieldMap.load();         
+                        FieldMap.load();
                     }
                 },
                 error: function(response) {
@@ -997,7 +1084,7 @@ jQuery(document).ready( function() {
             type: "POST",
             url: '/ajax/breeders/trial/<% $trial_id %>/check_curator_privileges',
             dataType: "json",
-            data: { 
+            data: {
                 'trial_id': trial_id,
             },
             success: function(response) {
@@ -1009,20 +1096,22 @@ jQuery(document).ready( function() {
                         jQuery('#working_modal').modal("hide");
                     }
                 } else {
+                    jQuery('#working_modal').modal("hide");
                     alert(response.error);
                 }
             },
             error: function(response) {
+                jQuery('#working_modal').modal("hide");
                 alert(response);
             }
         });
-        
+
     });
 
     jQuery("#hm_view_plot_image_submit").click( function() {
         jQuery("#view_plot_image_dialog").modal("show");
     });
-    
+
     jQuery("#hm_accession").autocomplete({
         appendTo: "#hm_replace_plot_accessions_dialog",
         source: '/ajax/stock/accession_autocomplete',
@@ -1055,8 +1144,11 @@ jQuery(document).ready( function() {
                 'trial_id': trial_id,
             },
 
-            success: function(response) {},
+            success: function(response) {
+                jQuery('#working_modal').modal("hide");
+            },
             error: function(response) {
+                jQuery('#working_modal').modal("hide");
                 alert('Error refreshing cache');
             },
         })
@@ -1069,7 +1161,7 @@ jQuery(document).ready( function() {
     };
 
     function submit_fieldmap_metadata() {
-        jQuery('#working_modal').modal("show");  
+        jQuery('#working_modal').modal("show");
         let filler_plot_object = FieldMap.format_brapi_post_object();
         var stringifiedPostData = JSON.stringify(filler_plot_object);
         if (FieldMap.meta_data.post) {
@@ -1152,7 +1244,7 @@ jQuery(document).ready( function() {
         }
       });
     }
-    
+
     jQuery('#pheno_heatmap_onswitch').click( function() {
         jQuery("#trait_heatmap").css("display", "none");
         field_map_view();
@@ -1189,17 +1281,37 @@ jQuery(document).ready( function() {
                 traits_assayed_html = traits_assayed_html +"</optgroup>";
                 traits_assayed_html = traits_assayed_html +"</select>";
 
+                // add adjusted traits here?
+
+                jQuery.ajax({
+                    'url':'/ajax/spatial_model/verify_corrections_exist/'+trial_id,
+                    success: function(response) {
+                        if (response.error) {
+                            // do nothing
+                        } else {
+                            let adjusted_traits = jQuery('<optgroup>', {label:"Spatial corrections"});
+                            Object.keys(variables).sort().forEach((name) => {
+                                adjusted_traits.append(jQuery("<option>", {value : `${variables[name]} (corrected)`, text : `${name} (corrected)` }));
+                                adjusted_traits.append(jQuery("<option>", {value : `${variables[name]} (adjustment)`, text : `${name} (adjustment)` }));
+                            });
+                            jQuery('#trait_list_dropdown').append(adjusted_traits);
+                        }
+                    }
+                });
+
                 // traits_assayed_html = traits_assayed_html + "<br/><button class='btn btn-primary btn-sm' id='trial_phenotype_heatmap_download'>Download Heatmap</button>";
 
                 jQuery("#trait_heatmap").css("display", "none");
                 jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
+                
             },
             error: function(response){
+                jQuery('#working_modal').modal('hide');
                 alert('Error retrieving traits assayed in this trial');
             }
-        });           
+        });
     });
-    
+
     jQuery('#pheno_heatmap_offswitch').click( function() {
         d3.select("svg").remove();
         jQuery("#trait_heatmap").css("display", "none");
@@ -1248,7 +1360,8 @@ jQuery(document).ready( function() {
             jQuery("#view_ctrl_button").show();
             jQuery("#include_linked_trials").css("display", "block");
             FieldMap.heatmap_selected = true;
-            FieldMap.heatmap_selection = jQuery("#trait_list_dropdown option:selected").text();
+            var selection_text = jQuery("#trait_list_dropdown option:selected").text().replace(/ \(adjustment\)| \(corrected\)/,'');
+            FieldMap.heatmap_selection = selection_text;
             heatmap(selected);
         }
     }
@@ -1295,7 +1408,7 @@ jQuery(document).ready( function() {
             _finish();
         }
 
-        function _finish() {
+function _finish() {
             jQuery(".fieldmap_edit").prop("disabled", include_linked_trials);
             jQuery("#fieldmap_edit_info").css("display", include_linked_trials ? 'block' : 'none');
             jQuery("#include_linked_trials_list_container").css("display", include_linked_trials ? 'block' : 'none');
@@ -1344,9 +1457,9 @@ jQuery(document).ready( function() {
     let hiddenElement = document.createElement('a');
         hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
         hiddenElement.target = '_blank';
-        
+
         hiddenElement.download = `Trial_${FieldMap.trial_id}_spatial_layout.csv`;
-        hiddenElement.click();  
+        hiddenElement.click();
   });
 
   jQuery(document).on('click', '#trial_phenotype_heatmap_download', function(){
@@ -1355,7 +1468,7 @@ jQuery(document).ready( function() {
             .attr("xmlns", "http://www.w3.org/2000/svg")
             .node().parentNode.innerHTML;
       var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
-      var img = '<img src="'+imgsrc+'">'; 
+      var img = '<img src="'+imgsrc+'">';
 
       var canvas = document.getElementById("trial_phenotype_heatmap_download_image_canvas"),
       context = canvas.getContext("2d");
@@ -1367,7 +1480,7 @@ jQuery(document).ready( function() {
 
         var canvasdata = canvas.toDataURL("image/png");
 
-        var pngimg = '<img src="'+canvasdata+'">'; 
+        var pngimg = '<img src="'+canvasdata+'">';
 
         var a = document.createElement("a");
         a.download = "trial_phenotype_heatmap.png";
@@ -1379,14 +1492,14 @@ jQuery(document).ready( function() {
   jQuery("#suppress_plot_pheno_dialog_submit").click(function() {
     suppress_plot_phenotype();
   });
-  
+
   function suppress_plot_phenotype() {
     jQuery("#suppress_plot_pheno_dialog").modal("hide");
     var sup_plotName = jQuery('#myplot_name').html();
     var sup_traitValue = jQuery('#pheno_value').html();
     var sup_traitID = jQuery('#mytrait_id').html();
     var sup_phenoID = jQuery('#mypheno_id').html();
-    
+
     new jQuery.ajax({
         type: 'POST',
         url: '/ajax/breeders/trial/<% $trial_id %>/suppress_phenotype',
@@ -1414,14 +1527,14 @@ jQuery(document).ready( function() {
           }
     });
   }
-  
+
   jQuery("#delete_trait").click(function() {
     jQuery("#delete_trait_dialog_confirm_message").modal("show");
   });
   jQuery("#delete_selected_trait_dialog_submit").click(function() {
     delete_selected_assayed_trait();
-  }); 
-  
+  });
+
   function delete_selected_assayed_trait() {
     var pheno_id = phenotypes_id;
     new jQuery.ajax({
@@ -1448,9 +1561,9 @@ jQuery(document).ready( function() {
             alert('An error occurred deleting trait');
         }
     });
-  
+
   }
-  
+
   function heatmap_check_change(value) {
       var val = jQuery("#check_list_dropdown").val(value);
       var ret = value.split(",");
@@ -1458,12 +1571,12 @@ jQuery(document).ready( function() {
       var valPlot = ret[1];
       jQuery('#check_plot_link').html(valPlot + " came from Plot:"+ valStock);
   }
-  
+
    jQuery("#view_ctrl_id_button").click(function(){
        jQuery("#view_ctrl_button").css("display", "none");
        jQuery("#ctrldiv").css("display", "inline-block");
-       
-       var list_of_checks = checks;  
+
+       var list_of_checks = checks;
        var trial_checks_html = "<select class='form-control' id='check_list_dropdown'>";
        trial_checks_html = trial_checks_html + "<option value=''>checks and plot numbers</option>";
        jQuery.each(list_of_checks, function( key, value) {
@@ -1475,7 +1588,7 @@ jQuery(document).ready( function() {
            heatmap_check_change(this.value);
        });
    });
-      
+
 });
 
 </script>
