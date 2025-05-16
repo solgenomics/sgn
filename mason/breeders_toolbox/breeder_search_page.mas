@@ -456,6 +456,36 @@ $dataset_id => undef
           </div>
         </div>
       </div>
+
+      <div class="panel panel-default">
+        <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-4-c" aria-controls="wiz-down-4-c">
+          <span class="btnn btn-link">Related Accession Location and Layout Data</span>
+        </div>
+        <div id="wiz-down-4-c" class="panel-collapse collapse" role="tabpanel">
+          <table class="table">
+            <tr>
+              <td colspan="4">
+                <span class="glyphicon glyphicon-info-sign" title="To download related genotype data, select 1 or more Accessions and optionally no more than 1 Genotyping Protocol in the wizard. If no genotyping protocol is selected, the database default protocol will be used. Click the checkbox here to compute genotypes for the selected accessions from genotypes of parents; this works for downloading genotypes, downloading the GRM, and performing GWAS."></span>
+                <span>Download Accession Location Data</span>
+                <input class="wizard-download-acclocation-info form-control input-sm" type="text" disabled></input>
+              </td>
+              <td>
+                <select class="wizard-download-acclocation-format form-control input-sm">
+                  <option value="" disabled>Format</option>
+                  <option selected value="csv">CSV</option>
+                  <option value="xlsx">XLSX</option>
+                </select>
+              </td>
+            </tr>
+          </table>
+          <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <button class="wizard-download-acclocation btn btn-sm btn-primary">
+                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                Metadata
+            </button>
+          </div>
+        </div>
+      </div>
     </&>
   </div>
 

@@ -150,6 +150,7 @@ export function WizardDownloads(main_id,wizard){
       });
     // Download Trial Metadata
     var trials = categories.indexOf("trials")!=-1 ? selections["trials"] : [];
+    var accessions = categories.indexOf("accessions")!=-1 ? selections["accessions"] : [];
     main.selectAll(".wizard-download-tmetadata-info")
       .attr("value",`${trials.length||"Too few"} trials`);
     main.selectAll(".wizard-download-tmetadata")
@@ -220,6 +221,23 @@ export function WizardDownloads(main_id,wizard){
             include_row_and_column_numbers: 1,
             exclude_phenotype_outlier: outliers,
             include_pedigree_parents: 0,
+        });
+      });
+
+    // Download Accession Location and Layout Data
+    var accessions = categories.indexOf("accessions")!=-1 ? selections["accessions"] : [];
+    main.selectAll(".wizard-download-acclocation-info")
+      .attr("value",`${accessions.length||"Too few"} accessions`);
+    main.selectAll(".wizard-download-acclocation")
+      .attr("disabled",accessions.length>0?null:true)
+      .on("click",()=>{
+        var acc_ids = JSON.stringify(accessions.map(d=>d.id));
+        var format = d3.select(".wizard-download-acclocation-format").node().value;
+        var url = document.location.origin+'/breeders/trials/phenotype/download';
+        openWindowWithPost(url, {
+            trial_list: t_ids,
+            format: format,
+            dataLevel: 'metadata'
         });
       });
 });
