@@ -684,6 +684,8 @@ ername.";}
 	$new_user_login->set_username(encode_entities($username));
 	$new_user_login->set_password($password);
 	$new_user_login->set_private_email(encode_entities($email_address));
+	$new_user_login->set_pending_email(encode_entities($email_address));
+	$new_user_login->set_contact_email(encode_entities($email_address));
 	$new_user_login->set_user_type(encode_entities($new_user_type));
 	$new_user_login->store();
 	my $new_user_person_id=$new_user_login->get_sp_person_id();
