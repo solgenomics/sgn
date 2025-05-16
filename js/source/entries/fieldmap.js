@@ -791,7 +791,6 @@ export function init() {
                     domain = [Math.min(...trait_vals), 0, Math.max(...trait_vals)];
                 }
                 colorScale = d3.scalePow().exponent(power).domain(domain).range(colors).interpolate(d3.interpolateRgb);
-                
             }
 
             var is_plot_overlapping = function (plot) {
