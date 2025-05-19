@@ -39,8 +39,6 @@ use CXGN::List;
 use CXGN::List::Validate;
 use CXGN::List::Transform;
 use Data::Dumper;
-use strict;
-use warnings;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
