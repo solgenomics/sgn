@@ -161,6 +161,13 @@ sub store_composed_term {
         { cv     =>$cv,
           name   => 'Composed traits',
       });
+      #parent term for post-composed traits should already be in teh database.
+      #Using here create_with if for some reason the root term for the COMP ontology needs to be created
+      my $parent_term= $schema->resultset("Cv::Cvterm")->create_with(
+        { cv     =>$cv,
+          name   => 'Composed traits',
+          db     => $db,      });
+      });
 
     print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
 
