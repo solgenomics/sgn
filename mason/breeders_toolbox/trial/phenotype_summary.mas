@@ -309,6 +309,7 @@ function trait_summary_hist_display_change(value) {
 
         },
         error: function(response){
+            jQuery("#working_modal").modal("hide");
             alert('Error retrieving traits assayed in this trial');
         }
 
