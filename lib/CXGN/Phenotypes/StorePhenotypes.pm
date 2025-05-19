@@ -363,7 +363,13 @@ sub create_hash_lookups {
     
     if (scalar @cvterm_ids > 0) {
         my $cvterm_ids_sql = join ("," , @cvterm_ids);
-        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id, phenotype_id FROM phenotype LEFT JOIN nd_experiment_phenotype USING(phenotype_id) LEFT JOIN nd_experiment USING(nd_experiment_id) LEFT JOIN nd_experiment_stock USING(nd_experiment_id) LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
+        
+        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id, phenotype_id FROM phenotype 
+        LEFT JOIN nd_experiment_phenotype USING(phenotype_id) 
+        LEFT JOIN nd_experiment USING(nd_experiment_id) 
+        LEFT JOIN nd_experiment_stock USING(nd_experiment_id) 
+        LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql)";
+        
         my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
         $h->execute();
 	
