@@ -16,6 +16,7 @@
 
 library(SpATS)
 library(spdep)
+library(dplyr)
 
 # ################################################################################
 # # 2. Declare user-supplied variables.
@@ -61,46 +62,73 @@ output <- data.frame(
     plotNumber = userPheno$plotNumber
 )
 
+round_to_even <- function(n) {
+    ifelse(n %% 2 == 0, round(n), round(n / 2) * 2)
+}
+
+moran_outfile <- paste(phenotypeFile, ".moran", sep="")
+
 for (trait in userResponse) {
     spatial_model <- NULL
     if (row_col_as_rc == 1) {
         spatial_model <- SpATS(
             response = trait,
-            spatial = ~ SAP(colNumber, rowNumber, 
-                nseg = c(round(max(userPheno$rowNumber) / 3), round(max(userPheno$colNumber) / 3)),
-                degree = c(3,3)),
+            spatial = ~ PSANOVA(colNumber, rowNumber, 
+                nseg = c(round_to_even(max(userPheno$colNumber) / 3), round_to_even(max(userPheno$rowNumber) / 3)),
+                degree = c(3,3),
+                nest.div = 2),
             genotype = "germplasmName",
-            genotype.as.random = TRUE,
+            genotype.as.random = FALSE,
             random = ~ R + C ,
-            data = userPheno
+            fixed = NULL,
+            data = userPheno,
+            control = list(tolerance = 1e-03, monitoring = 1)
         )
     } else {
         spatial_model <- SpATS(
             response = trait,
-            spatial = ~ SAP(colNumber, rowNumber, 
-                nseg = c(round(max(userPheno$rowNumber) / 3), round(max(userPheno$colNumber) / 3)),
-                degree = c(3,3)),
+            spatial = ~ PSANOVA(colNumber, rowNumber, 
+                nseg = c(round_to_even(max(userPheno$colNumber) / 3), round_to_even(max(userPheno$rowNumber) / 3)),
+                degree = c(3,3),
+                nest.div = 2),
             genotype = "germplasmName",
-            genotype.as.random = TRUE,
+            genotype.as.random = FALSE,
             # random = ~ R + C ,
-            data = userPheno
+            data = userPheno,
+            fixed = NULL,
+            control = list(tolerance = 1e-03, monitoring = 1)
         )
     }
     
     summary(spatial_model)
-    residuals <- residuals(spatial_model)
+    residuals <- as.data.frame(residuals(spatial_model))
+    acc_blues <- as.data.frame(predict.SpATS(spatial_model, which='germplasmName'))
 
-    trait_vals <- userPheno[[trait]]
+    userPheno$residuals <- residuals[["residuals(spatial_model)"]]
+
+    plot_adjusted_vals <- merge(userPheno, acc_blues, by = 'germplasmName', sort = FALSE, all.x = TRUE)
+    rownames(plot_adjusted_vals) <- plot_adjusted_vals$observationUnitName
+
     coordinates <- userPheno[, c("rowNumber", "colNumber"), drop = FALSE]
     k <- 3
     kn <- knearneigh(coordinates, k = k)
     nb <- knn2nb(kn)
     weights <- nb2listw(nb)
-    moran <- moran.test(residuals, weights, na.action = na.exclude )
-    print(paste("Moran p-value for trait ",trait, " : ", moran$p.value)) #sanity check, spatial autocorrelation should be gone
+    moran <- NULL
+    tryCatch({
+            moran <- moran.test(plot_adjusted_vals[[trait]] + plot_adjusted_vals$residuals, weights, na.action = na.exclude )
+        },
+        error = function(e) { #This happens when there is missing data. 
+            moran$p.value <- NaN
+        }, 
+        finally = {
+            print(paste("Moran p-value for trait ",trait, " : ", moran$p.value)) #sanity check, spatial autocorrelation should be gone, residuals should not show a spatial pattern
+            cat(trait, moran$p.value, sep="\t", file = moran_outfile)
+        }
+    )
 
     output[[trait]] <- userPheno[[trait]]
-    output[[paste(trait, "_spatially_corrected", sep = "")]] <- fitted(spatial_model);
+    output[[paste(trait, "_spatially_corrected", sep = "")]] <- plot_adjusted_vals[[trait]] + plot_adjusted_vals$residuals
     output[[paste(trait, "_spatial_adjustment", sep = "")]] <- output[[paste(trait, "_spatially_corrected", sep = "")]] - output[[trait]]
 }
 

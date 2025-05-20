@@ -135,15 +135,20 @@ $project_id => undef
               <div id="spatial_correction_results_buttons">
                 <input name="include_rc_random_effects" id="include_rc_random_effects" type="checkbox" checked/> <label for="include_rc_random_effects">Include rows and columns as random effects?</label><br> <p><i>The spatial corrections model will smooth with 2D splines, but can also include rows and columns as random effects to capture more variability due to spatial autocorrelation. Be sure that subsequent analyses based on these corrections do not attempt to model spatial effects a second time.</i></p>
                 <br>
-                <button id="correct_spatial" type="button" class="btn btn-default"> Run Spatial Correction </button>
+                <table style="width:100%">
+                  <tr>
+                <td><button id="correct_spatial" type="button" class="btn btn-default"> Run Spatial Correction </button></td>
+                <td style="float:right"><button type="button" class="btn btn-primary" name="confirm_store_spatial_correction" id="confirm_store_spatial_correction" data-toggle="modal" data-analysis_type="fitted" data-target="#generic_save_analysis_dialog" disabled>Store Spatial Correction</button></td>
+                  </tr>
+                </table>
               </div>
               <br />
               <hr>
               <div id="trait_spatial_selector"><select id="dropdown" style="">  <option value="">All</option></select></div>
               <br />
+              <table id= "spatial_correction_new_moran_table" ></table>
               <table id= "spatial_correction_blue_results_table" ></table>
               <!-- <table id= "spatial_correction_fitted_results_table" ></table> -->
-              <button type="button" class="btn btn-primary" disabled name="confirm_store_spatial_correction" id="confirm_store_spatial_correction" data-toggle="modal" data-analysis_type="fitted" data-target="#generic_save_analysis_dialog">Store Spatial Correction</button>
           </&>
         </&>
       </div>

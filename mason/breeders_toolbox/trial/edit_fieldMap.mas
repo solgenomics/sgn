@@ -327,7 +327,7 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
       alert(response.error);
       alert("Error calculating spatial correction");
     } else {
-      jQuery("#confirm_store_spatial_correction").prop("disabled", false);
+      //jQuery("#confirm_store_spatial_correction").prop("disabled", false);
       jQuery("#spatial_correction_results_buttons button").show();
       headers = response.headers;
       pheno_filepath = response.pheno_filepath;
@@ -401,6 +401,7 @@ jQuery("#correct_spatial").click(function() {
         alert(response.error);
         alert("Error calculating spatial correction");
       } else {
+        jQuery('#confirm_store_spatial_correction').prop('disabled', false);
         jQuery("#spatial_correction_blue_results_table").DataTable({
           'destroy': true,
           'timeout': 6000000,
@@ -413,6 +414,16 @@ jQuery("#correct_spatial").click(function() {
             { 'title': 'Original' },
             { 'title': 'Corrected' },
             { 'title': 'Adjustment'}
+          ]
+        });
+        jQuery("#spatial_correction_new_moran_table").DataTable({
+          'destroy': true,
+          'timeout': 6000000,
+          'data': response.moran_p_values,
+          'scrollX': true,
+          'columns': [
+            { 'title': 'Trait' },
+            { 'title': 'Moran P-value after spatial corrections' },
           ]
         });
       }

@@ -297,6 +297,15 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     open(my $F, "<", "$phenotype_file.spatially_corrected") || die "Can't open result file $phenotype_file.spatially_corrected";
 
+    open(my $moranF, "<", "$phenotype_file.moran") || die "Can't get new moran p values file!";
+
+    my @moran_p_values;
+    while (<$moranF>) {
+        chomp;
+        my ($trait, $p_value) = split("\t", $_);
+        push @moran_p_values, [$trait, $p_value];
+    }
+
     my $accessions = {}; # keeps list of unique accessions
     my $nested_data = {}; # formats the result data for saving the analysis
     my $projectprop_data = {}; # Stores adjustments only, for saving as projectprop
@@ -366,6 +375,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
                 ''
             ];
             $projectprop_data->{$plot}->{$traits_to_id->{$traits[$i / 3]}} = $adjustment;
+            # $projectprop_data->{$plot}->{$traits[$i / 3]} = $adjustment;
         }
 
         $analysis_design->{$datarow_num} = {
@@ -403,7 +413,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         traits => \@traits,
         nested_data => JSON::Any->encode($nested_data),
         analysis_design => JSON::Any->encode($analysis_design),
-        projectprop_data => JSON::Any->encode($projectprop_data)
+        projectprop_data => JSON::Any->encode($projectprop_data),
+        moran_p_values => \@moran_p_values
     };
 
 };
@@ -567,7 +578,7 @@ sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adj
     return;
 }
 
-sub verify_corrections_exist: Path('/ajax/spatial_model/verify_corrections_exist/') Args(1) {
+sub get_spatial_adjusted_traits: Path('/ajax/spatial_model/get_spatial_adjusted_traits/') Args(1) {
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
@@ -586,7 +597,7 @@ sub verify_corrections_exist: Path('/ajax/spatial_model/verify_corrections_exist
 
     my $spatial_adjustments_cvtermid = SGN::Model::Cvterm->get_cvterm_row($schema, 'spatially_corrected_trait_adjustments_json', 'project_property')->cvterm_id();
 
-    my $q = 'SELECT projectprop_id FROM projectprop
+    my $q = 'SELECT value FROM projectprop
     WHERE project_id=? AND type_id=?';
 
     my $spatial_adjustments_data_row = $schema->storage->dbh()->prepare($q);
@@ -600,7 +611,19 @@ sub verify_corrections_exist: Path('/ajax/spatial_model/verify_corrections_exist
         return;
     } 
 
-    $c->stash->{rest} = {success => 1};
+    my $traits = {};
+
+    my $spatial_adjustments = JSON::Any->decode($spatial_adjustments_exists);
+
+    foreach my $plot (keys(%{$spatial_adjustments})) {
+        foreach my $trait (keys(%{$plot})) {
+            $traits->{$trait} = 1;
+        }
+    }
+
+    $c->stash->{rest} = {
+        data => JSON::Any->encode($traits)
+    };
     return;
 }
 
