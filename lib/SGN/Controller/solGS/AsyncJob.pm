@@ -770,36 +770,86 @@ sub create_cluster_config {
     return $config;
 }
 
-sub record_job_submission {
-    my ($self, $c, $args) = @_;
+sub create_multi_jobs_log_list {
+    my ($self, $c) = @_;
 
-    my $job_record;
+    my @multi_prediction_entries;
     if ( $c->stash->{analysis_profile} ) {
         
         my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
         my $analysis_name = $c->stash->{analysis_profile}->{analysis_name};
-        my $analysis_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
-        my $results_page = $analysis_arguments->{analysis_page};
-        my $analysis_type = $analysis_arguments->{analysis_type} =~ s/ /_/gr;
+        my $main_job_analysis_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
 
-        $job_record = CXGN::Job->new({
-            schema => $c->dbic_schema("Bio::Chado::Schema"),
-            people_schema => $c->dbic_schema("CXGN::People::Schema"),
-            sp_person_id => $user,
-            job_type => $analysis_type,
-            name => $analysis_name,
-            results_page => $results_page,
-            cmd => $args->{cmd},
-            cxgn_tools_run_config => $args->{config},
-            finish_logfile => $c->config->{job_finish_log},
-            additional_args => $analysis_arguments
-        });
+        my $traits_ids = $main_job_analysis_arguments->{training_traits_ids} || $main_job_analysis_arguments->{trait_id};
+        my @traits_ids = ref($traits_ids) eq 'ARRAY' ? @$traits_ids : ($traits_ids);
+        my $analysis_type = $main_job_analysis_arguments->{analysis_type} =~ s/ /_/gr;
 
-        $job_record->update_status("submitted");
+        if ( @traits_ids > 1 && $analysis_type =~ /selection/ ) {
+            $main_job_analysis_arguments->{analysis_page} = $main_job_analysis_arguments->{referer};
+        }
+        
+        push @multi_prediction_entries, JSON::Any->encode($main_job_analysis_arguments);
+        
+        if ( @traits_ids > 1 && $analysis_type =~ /model|selection/ ) {
+            my $job_entries =
+            $c->controller("solGS::AnalysisQueue")->create_itemized_prediction_log_entries( $c,  $c->stash->{analysis_profile} );
 
+            if ($job_entries) {
+                my @job_entries = split("\n", $job_entries);
+
+                for my $job_entry (@job_entries) {
+                    my @job_args = split("\t", $job_entry);
+                    push @multi_prediction_entries, $job_args[5];
+
+                }
+            }
+
+        }
+            
     }
 
-    return $job_record;
+    return @multi_prediction_entries;
+
+}
+
+sub record_job_submission {
+    my ($self, $c, $args) = @_;
+
+    my @job_records;
+    if ( $c->stash->{analysis_profile} ) {
+        
+        my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
+    
+
+        my @multi_prediction_entries  = $self->create_multi_jobs_log_list($c);
+    
+        foreach my $job_entry (@multi_prediction_entries) {
+    
+            my $job_args = JSON::Any->decode($job_entry);
+
+            my $job_record = CXGN::Job->new({
+                schema => $c->dbic_schema("Bio::Chado::Schema"),
+                people_schema => $c->dbic_schema("CXGN::People::Schema"),
+                sp_person_id => $user,
+                job_type => $job_args->{analysis_type},
+                name => $job_args->{analysis_name},
+                results_page => $job_args->{analysis_page},
+                cmd => $args->{cmd},
+                cxgn_tools_run_config => $args->{config},
+                finish_logfile => $c->config->{job_finish_log},
+                additional_args => $job_args
+            });
+
+            if ($job_record) {
+                $job_record->update_status("submitted");
+            }
+
+            push @job_records, $job_record;
+        }
+        
+    }
+
+    return \@job_records;
 
 }
 
@@ -808,13 +858,15 @@ sub submit_job_cluster {
     my ( $self, $c, $args ) = @_;
 
 
-    my $job_record = $self->record_job_submission($c, $args);
+    my $job_records = $self->record_job_submission($c, $args);
     my $finish_timestamp_cmd;
 
-    if ($job_record) {
+    my @finish_timestamp_cmds;
+    foreach my $job_record (@$job_records) {
         $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
+        push @finish_timestamp_cmds, $finish_timestamp_cmd;
     }
-    
+
 
     my $job;
 
@@ -824,27 +876,41 @@ sub submit_job_cluster {
 
         if ( $args->{background_job} ) {
             $job->is_async(1);
-            $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+
+            foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
+                $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+            }
 
             $c->stash->{r_job_tempdir}  = $job->job_tempdir();
             $c->stash->{r_job_id}       = $job->jobid();
             $c->stash->{cluster_job_id} = $job->cluster_job_id();
             $c->stash->{cluster_job}    = $job;
 
-            if ($job_record) {
+            foreach my $job_record (@$job_records) {
                 $job_record->backend_id($job->cluster_job_id());
                 $job_record->store();
+            
+                if ($job_record) {
+                    $job_record->backend_id($job->cluster_job_id());
+                    $job_record->store();
+                }
             }
         }
         else {
-            $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+            foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
+                $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+            }
+
             $job->wait();
         }
     };
 
     if ($@) {
         
-        $job_record->update_status("failed") if $job_record;;
+        for my $job_record (@$job_records) {
+            $job_record->update_status("failed") if $job_record;        
+        }
+        
         print STDERR "Error submitting a job or job record:\n $@\n";
         $c->stash->{Error} =
           'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
