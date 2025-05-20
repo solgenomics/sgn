@@ -663,9 +663,22 @@ sub population_seedlots_GET : Args(1) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
-    my $members = $ac->get_population_members($stock_id);
+    my $result = $ac->get_population_seedlots($stock_id);
 
-    $c->stash->{rest} = { data => $members };
+    my @population_seedlots = ();
+    foreach my $r (@$result){
+        my ($member_id, $member_name, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram) =@$r;
+        push @population_seedlots, {
+            member_id => $member_id,
+            member_name => $member_name,
+            seedlot_id => $seedlot_id,
+            seedlot_name => $seedlot_name,
+            current_count => $current_count,
+            current_weight_gram => $current_weight_gram,
+        };
+    }
+
+    $c->stash->{rest} = { data => \@population_seedlots };
 }
 
 

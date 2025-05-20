@@ -21,22 +21,11 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         destroy: true,
         columns: [
-            { title: "Member Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
-            { title: "Member Type", "data": "stock_type" },
+            { title: "Member Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.member_id+"/view'>"+row.member_name+"</a>"; } },
+            { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) {return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"; } },
+            { title: "Current Count", "data": "current_count" },
+            { title: "Current Weight (g) ", "data": "current_weight_gram" },
         ],
-        "fnInitComplete": function(oSettings, json) {
-            //console.log(json);
-            var html = "";
-            for(var i=0; i<json.data.length; i++){
-                html += json.data[i].name+"\n";
-            }
-            jQuery("#populations_members_add_to_list_data_"+population_id).html(html);
-            addToListMenu("populations_members_add_to_list_menu_"+population_id, "populations_members_add_to_list_data_"+population_id, {
-                selectText: true,
-                listType: 'accessions',
-                listName: population_name
-            });
-        }
     });
 
 });

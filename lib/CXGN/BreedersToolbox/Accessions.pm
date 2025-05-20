@@ -135,6 +135,37 @@ sub get_population_members {
     return \@members_in_population;
 }
 
+sub get_population_seedlots {
+    my $self = shift;
+    my $population_stock_id = shift;
+    my $schema = $self->schema();
+    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'collection_of', 'stock_relationship')->cvterm_id();
+    my $current_count_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_count', 'stock_property')->cvterm_id();
+    my $current_weight_gram_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_weight_gram', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT member.stock_id, member.uniquename, seedlot.stock_id, seedlot.uniquename, current_count.value, current_weight_gram.value
+        FROM stock
+        JOIN stock_relationship AS member_relationship ON (stock.stock_id = member_relationship.object_id) AND member_relationship.type_id = ?
+        JOIN stock AS member ON (member_relationship.subject_id = member.stock_id)
+        LEFT JOIN stock_relationship AS seedlot_relationship ON (member.stock_id = seedlot_relationship.subject_id) AND seedlot_relationship.type_id = ?
+        LEFT JOIN stock as seedlot ON (seedlot_relationship.object_id = seedlot.stock_id)
+        LEFT JOIN stockprop AS current_count ON (current_count.stock_id = seedlot.stock_id) AND current_count.type_id = ?
+        LEFT JOIN stockprop AS current_weight_gram ON (current_weight_gram.stock_id = seedlot.stock_id) AND current_weight_gram.type_id = ?
+        where member_relationship.object_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($member_of_type_id, $collection_of_type_id, $current_count_type_id, $current_weight_gram_type_id, $population_stock_id);
+
+    my @population_seedlots = ();
+    while(my($member_id, $member_name, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram) = $h->fetchrow_array()){
+        push @population_seedlots, [$member_id, $member_name, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram]
+    }
+
+    return \@population_seedlots;
+}
+
 sub get_possible_seedlots {
     my $self = shift;
     my $uniquenames = shift; #array ref to list of accession unique names
