@@ -152,38 +152,32 @@ sub store_composed_term {
         $h->execute();
         my $accession = $h->fetchrow_array();
 
-      my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create( {
-          db_id     => $db->get_column('db_id'),
-          accession => sprintf("%07d",$accession)
-      });
-
-      my $parent_term= $schema->resultset("Cv::Cvterm")->create_with(
-        { cv     =>$cv,
-          name   => 'Composed traits',
-      });
-      #parent term for post-composed traits should already be in teh database.
-      #Using here create_with if for some reason the root term for the COMP ontology needs to be created
-      my $parent_term= $schema->resultset("Cv::Cvterm")->create_with(
-        { cv     =>$cv,
-          name   => 'Composed traits',
-          db     => $db,      });
-      });
-
-    print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
-
-    my $new_term = $schema->resultset('Cv::Cvterm')->find({ name=>$name });
-    if ($new_term){
-        print STDERR "Cvterm with name $name already exists... so components must be new\n";
-    } else {
-        $new_term= $schema->resultset("Cv::Cvterm")->create_with({
-            cv     =>$cv,
-            name   => $name,
-            dbxref => $new_term_dbxref
+        my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create( {
+            db_id     => $db->get_column('db_id'),
+            accession => sprintf("%07d",$accession)
         });
 
-    }
+        #parent term for post-composed traits should already be in teh database.
+        #Using here create_with if for some reason the root term for the COMP ontology needs to be created
+        my $parent_term= $schema->resultset("Cv::Cvterm")->create_with(
+            { cv     =>$cv,
+            name   => 'Composed traits',
+            db     => $db,
+        });
 
-    #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
+        print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
+
+        my $new_term = $schema->resultset('Cv::Cvterm')->find({ name=>$name });
+        if ($new_term){
+            print STDERR "Cvterm with name $name already exists... so components must be new\n";
+        } else {
+            $new_term= $schema->resultset("Cv::Cvterm")->create_with({
+                cv     =>$cv,
+                name   => $name,
+                dbxref => $new_term_dbxref
+            });
+        }
+        #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
         my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->find_or_create({
             subject_id => $new_term->cvterm_id(),
