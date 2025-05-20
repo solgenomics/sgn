@@ -304,16 +304,16 @@ function jqueryStuff() {
                         my $no_img_url_test = '/data/images/image_files_test/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/small';
 
                         if (index($image_url, $no_img_url) != -1 || index($image_url, $no_img_url_test) != -1) {
-                        </%perl>                      
+                        </%perl>
                         <p>No accession image to display</p>
                         <%perl>
-                            } else { 
+                            } else {
                         </%perl>
                         <img src="<% $image_url %>" class="img-responsive" style="max-width: 100%; height: auto;" />
                         <%perl>
-                            } 
+                            }
                         </%perl>
-                        
+
                     </div>
                     <br /><br />
                 </div>
@@ -356,6 +356,7 @@ function jqueryStuff() {
 
 % if ($type_name eq 'population') {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name,  info_section_title => "<h4 style='display:inline'>Members</h4>", info_section_subtitle => 'View members in this population .', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "population_members_section", info_section_collapsed => 0 &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name,  info_section_title => "<h4 style='display:inline'>Seedlot Info</h4>", info_section_subtitle => 'View seedlot information of each member in this population .', icon_class => "glyphicon glyphicon-retweet", info_section_id => "population_seedlot_info_section", info_section_collapsed => 1 &>
 % }
 
 % my $subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_synonym\" >Add Synonym</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Synonym</button>";
@@ -417,7 +418,7 @@ function jqueryStuff() {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View any plots, plants, tissue_sample, and/or accessions that are linked to this stock.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
 
 % }
-    
+
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Images</h4>", info_section_subtitle => 'View and add images of this stock and of related stocks.', icon_class => "glyphicon glyphicon-camera", info_section_id => "stock_images_section", image_ids => $image_ids, related_image_ids => $related_image_ids, dbh => $dbh, curator =>$curator, buttons_html => qq|<a id="add_new_image_button" class="btn btn-sm btn-default" style="margin:3px" href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">Add new image</a><a class="btn btn-sm btn-default" style="margin:3px" id="stock_images_section_compare_images_button">Compare Images</a>| &>
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Upload any additional files for this Accession.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "stock_upload_files" &>
