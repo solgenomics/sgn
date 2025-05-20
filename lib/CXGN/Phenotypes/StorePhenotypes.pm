@@ -542,6 +542,9 @@ sub verify {
             }
         }
     }
+    if ( defined($self->same_value_count()) && ($self->same_value_count > 0) ) {
+        $warning_message .= "There are ".$self->same_value_count()." values in your file that are the same as values already stored in the database.";
+    }
     return ($warning_message, $error_message);
 }
 
@@ -752,7 +755,7 @@ sub check_measurement {
 
                 if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
                     $self->same_value_count($self->same_value_count() + 1);
-                    $warning_message .= "For single trait with id $trait_cvterm_id the same value ($trait_value) is already recorded in the database, skipping!\n";
+                    # $warning_message .= "For single trait with id $trait_cvterm_id the same value ($trait_value) is already recorded in the database, skipping!\n";
                 }
             }
             elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
@@ -787,9 +790,9 @@ sub check_measurement {
     }
 
     # combine all warnings about the same values into a summary count
-    if ( defined($self->same_value_count()) && ($self->same_value_count > 0) ) {
-        $warning_message .= "<small>There are ".$self->same_value_count()." values in your file that are the same as values already stored in the database.</small>";
-    }
+    # if ( defined($self->same_value_count()) && ($self->same_value_count > 0) ) {
+    #     $warning_message .= "<small>There are ".$self->same_value_count()." values in your file that are the same as values already stored in the database.</small>";
+    # }
 
     ## Verify metadata
     if ($self->metadata_hash->{'archived_file'} && (!$self->metadata_hash->{'archived_file_type'} || $self->metadata_hash->{'archived_file_type'} eq "")) {
