@@ -633,19 +633,19 @@ sub check_measurement {
                 my $trait_min = defined $self->check_trait_min_value->{$trait_cvterm_id} ? $self->check_trait_min_value->{$trait_cvterm_id} : undef;
                 my $trait_max = defined $self->check_trait_max_value->{$trait_cvterm_id} ? $self->check_trait_max_value->{$trait_cvterm_id} : undef;
 
-                print STDERR "the trait minimum: Trait Minimum for trait $trait_name: ", (defined $trait_min ? $trait_min : undef), "\n";
-                print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
+                # print STDERR "the trait minimum: Trait Minimum for trait $trait_name: ", (defined $trait_min ? $trait_min : undef), "\n";
+                # print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
 
                 if (defined $trait_min && $trait_value < $trait_min) {
                     $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, $trait_min.</small><hr>";
                 } else {
-                    print STDERR "the trait min and trait value : No minimum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id).\n";
+                    # print STDERR "the trait min and trait value : No minimum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id).\n";
                 }
 
                 if (defined $trait_max && $trait_value > $trait_max) {
                     $error_message .= "<small>For the trait '$trait_name' the trait value $trait_value should not be larger than the defined trait_maximum, $trait_max.</small><hr>";
                 } else {
-                    print STDERR "the trait max and trait value: No maximum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id). \n";
+                    # print STDERR "the trait max and trait value: No maximum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id). \n";
                 }
             }
 
@@ -670,7 +670,7 @@ sub check_measurement {
             my %trait_categories_hash;
 
             @trait_categories = sort(split /\//, $self->check_trait_category->{$trait_cvterm_id});
-            print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
+            # print STDERR "Trait categories: ".Dumper(\@trait_categories)."\n";
             if ($self->check_trait_format->{$trait_cvterm_id} eq 'Ordinal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Nominal' || $self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
                 # we are dealing with a multicat trait - split it into individual values and check each against the categories.
                 # Ordinal looks like <value>=<category>
@@ -685,17 +685,17 @@ sub check_measurement {
                 %trait_categories_hash = map { $_ => 1 } @trait_categories;
             }
 
-            print STDERR "TRAIT CATEGORIES: ".Dumper(\%trait_categories_hash)."\n";
+            # print STDERR "TRAIT CATEGORIES: ".Dumper(\%trait_categories_hash)."\n";
 
 
             my @check_values;
             if (exists($self->check_trait_category()->{$trait_cvterm_id}) &&
                 $self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
 
-                print STDERR "Dealing with a categorical trait!\n\n";
+                # print STDERR "Dealing with a categorical trait!\n\n";
 
 
-                print STDERR "Trait categories hash: ".Dumper(\%trait_categories_hash)."\n";
+                # print STDERR "Trait categories hash: ".Dumper(\%trait_categories_hash)."\n";
                 if ($trait_value =~ /\:/) {
                     @check_values = split /\:/, $trait_value;
                 }
@@ -703,16 +703,16 @@ sub check_measurement {
                     @check_values = ( $trait_value );
                 }
 
-                print STDERR "CHECK VALUES : ".Dumper(\@check_values);
+                # print STDERR "CHECK VALUES : ".Dumper(\@check_values);
 
                 foreach my $value (@check_values) {
                     if ($value ne '' && !exists($trait_categories_hash{$value})) {
                         my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
                         $error_message = "<small> This trait value should be one of $valid_values: $valid_values<br/>Plot Name: $plot_name <br/>Trait Name: $trait_name <br/>Value: $trait_value</small><hr>";
-                        print STDERR "The error in the value $error_message \n";
+                        # print STDERR "The error in the value $error_message \n";
                     }
                     else {
-                        print STDERR "Trait value $trait_value is valid\n";
+                        # print STDERR "Trait value $trait_value is valid\n";
                     }
                 }
             }
@@ -731,9 +731,9 @@ sub check_measurement {
         }
 
         if ($repeat_type eq "multiple" or $repeat_type eq "time_series") {
-            print STDERR "Trait repeat type: $repeat_type\n";
+            # print STDERR "Trait repeat type: $repeat_type\n";
             if (!$timestamp) {
-                print STDERR "trait name : $trait_name is multiple without timestamp \n";
+                # print STDERR "trait name : $trait_name is multiple without timestamp \n";
                 $error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
             }
             if (exists($self->unique_trait_stock_timestamp()->{$trait_cvterm_id, $stock_id, $timestamp})) {
@@ -788,11 +788,6 @@ sub check_measurement {
             }
         }
     }
-
-    # combine all warnings about the same values into a summary count
-    # if ( defined($self->same_value_count()) && ($self->same_value_count > 0) ) {
-    #     $warning_message .= "<small>There are ".$self->same_value_count()." values in your file that are the same as values already stored in the database.</small>";
-    # }
 
     ## Verify metadata
     if ($self->metadata_hash->{'archived_file'} && (!$self->metadata_hash->{'archived_file_type'} || $self->metadata_hash->{'archived_file_type'} eq "")) {
@@ -962,6 +957,7 @@ sub store {
                     foreach my $value_array (@$measurements_array) {
                         print STDERR "ABOUT TO STORE $plot_name, $trait_name, ".Dumper($value_array)."\n";
 
+                        # Do we need to check the measurement again?  Verification would not have passed if there were errors...
                         my ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
 
                         if ($errors) { die "Trying to store phenotypes with the following errors: $errors"; }
