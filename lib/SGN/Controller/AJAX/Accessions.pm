@@ -667,7 +667,7 @@ sub population_seedlots_GET : Args(1) {
 
     my @population_seedlots = ();
     foreach my $r (@$result){
-        my ($member_id, $member_name, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram) =@$r;
+        my ($member_id, $member_name, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location) =@$r;
         push @population_seedlots, {
             member_id => $member_id,
             member_name => $member_name,
@@ -675,6 +675,8 @@ sub population_seedlots_GET : Args(1) {
             seedlot_name => $seedlot_name,
             current_count => $current_count,
             current_weight_gram => $current_weight_gram,
+            box_name => $box_name,
+            location => $location
         };
     }
 

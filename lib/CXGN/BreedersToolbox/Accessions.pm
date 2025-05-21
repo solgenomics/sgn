@@ -143,8 +143,10 @@ sub get_population_seedlots {
     my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'collection_of', 'stock_relationship')->cvterm_id();
     my $current_count_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_count', 'stock_property')->cvterm_id();
     my $current_weight_gram_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_weight_gram', 'stock_property')->cvterm_id();
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+    my $box_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'location_code', 'stock_property')->cvterm_id();
 
-    my $q = "SELECT member.stock_id, member.uniquename, seedlot.stock_id, seedlot.uniquename, current_count.value, current_weight_gram.value
+    my $q = "SELECT member.stock_id, member.uniquename, seedlot.stock_id, seedlot.uniquename, current_count.value, current_weight_gram.value, box_name.value, nd_geolocation.description
         FROM stock
         JOIN stock_relationship AS member_relationship ON (stock.stock_id = member_relationship.object_id) AND member_relationship.type_id = ?
         JOIN stock AS member ON (member_relationship.subject_id = member.stock_id)
@@ -152,15 +154,19 @@ sub get_population_seedlots {
         LEFT JOIN stock as seedlot ON (seedlot_relationship.object_id = seedlot.stock_id)
         LEFT JOIN stockprop AS current_count ON (current_count.stock_id = seedlot.stock_id) AND current_count.type_id = ?
         LEFT JOIN stockprop AS current_weight_gram ON (current_weight_gram.stock_id = seedlot.stock_id) AND current_weight_gram.type_id = ?
+        LEFT JOIN stockprop AS box_name ON (box_name.stock_id = seedlot.stock_id) AND box_name.type_id = ?
+        LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = seedlot.stock_id) AND nd_experiment_stock.type_id = ?
+        LEFT JOIN nd_experiment ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        LEFT JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)
         where member_relationship.object_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($member_of_type_id, $collection_of_type_id, $current_count_type_id, $current_weight_gram_type_id, $population_stock_id);
+    $h->execute($member_of_type_id, $collection_of_type_id, $current_count_type_id, $current_weight_gram_type_id, $box_name_type_id, $experiment_type_id, $population_stock_id);
 
     my @population_seedlots = ();
-    while(my($member_id, $member_name, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram) = $h->fetchrow_array()){
-        push @population_seedlots, [$member_id, $member_name, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram]
+    while(my($member_id, $member_name, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location) = $h->fetchrow_array()){
+        push @population_seedlots, [$member_id, $member_name, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location]
     }
 
     return \@population_seedlots;
