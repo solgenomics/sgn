@@ -58,7 +58,7 @@ sub _validate_with_plugin {
         required_columns => \@REQUIRED_COLUMNS,
         optional_columns => \@OPTIONAL_COLUMNS,
         column_aliases => {
-            'accession_name' => [ 'stock_name', 'cross_unique_id' ]
+            'accession_name' => [ 'stock_name', 'cross_unique_id', 'family_name' ]
         }
     );
     my $parsed = $parser->parse();
@@ -345,6 +345,7 @@ sub _validate_with_plugin {
     # Accession Names: must exist in the database
     my @accessions = @{$parsed_values->{'accession_name'}};
     my $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+    my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
     #find unique synonyms. Sometimes trial uploads use synonym names instead of the unique accession name. We allow this if the synonym is unique and matches one accession in the database
     my @synonyms = @{$accessions_hashref->{'synonyms'}};
@@ -359,16 +360,11 @@ sub _validate_with_plugin {
     }
 
     #now validate again the accession names
-    $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+    $accessions_hashref = $validator->validate($schema,'accessions_or_crosses_or_familynames',\@accessions);
     my @accessions_missing = @{$accessions_hashref->{'missing'}};
-    my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
-    # Allow stock names to be crosses, so check missing accessions as crosses
-    my $crosses_hashref = $validator->validate($schema, 'crosses', \@accessions_missing);
-    my @accessions_crosses_missing = @{$crosses_hashref->{'missing'}};
-
-    if (scalar(@accessions_crosses_missing) > 0) {
-        push @error_messages, "Stocks(s) <strong>".join(',',@accessions_crosses_missing)."</strong> are not in the database as uniquenames or synonyms of accessions or crosses.";
+    if (scalar(@accessions_missing) > 0) {
+        push @error_messages, "Stocks(s) <strong>".join(',',@accessions_missing)."</strong> are not in the database as uniquenames or synonyms of accessions, crosses, or families.";
     }
     if (scalar(@multiple_synonyms) > 0) {
         my @msgs;
