@@ -76,13 +76,13 @@ sub parse {
     my $c = $rows[0]->[$col];
     my $v = $super->clean_header($c);
 
-    # check for duplicated column header
-    if ( exists $seen_column_headers{$v} && !exists $column_arrays->{$v} ) {
-      push @{$rtn{errors}}, "The column header $v was duplicated in column " . ($col+1) . " of your file and should only be included once.";
-    }
-    $seen_column_headers{$v}++;
-
     if ( $v && $v ne '' ) {
+      # check for duplicated column header
+      if ( exists $seen_column_headers{$v} && !exists $column_arrays->{$v} ) {
+        push @{$rtn{errors}}, "The column header $v was duplicated in column " . ($col+1) . " of your file and should only be included once.";
+      }
+      $seen_column_headers{$v}++;
+
       push @{$rtn{columns}}, $v;
       push @col_indices, $col;
       $values_map{$v} = {};
