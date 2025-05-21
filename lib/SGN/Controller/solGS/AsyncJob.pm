@@ -857,17 +857,17 @@ sub record_job_submission {
 sub submit_job_cluster {
     my ( $self, $c, $args ) = @_;
 
-
     my $job_records = $self->record_job_submission($c, $args);
     my $finish_timestamp_cmd;
-
     my @finish_timestamp_cmds;
-    foreach my $job_record (@$job_records) {
-        $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
-        push @finish_timestamp_cmds, $finish_timestamp_cmd;
+
+    if (@$job_records) {
+        foreach my $job_record (@$job_records) {
+            $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
+            push @finish_timestamp_cmds, $finish_timestamp_cmd;
+        }
     }
-
-
+    
     my $job;
 
     eval {
@@ -897,18 +897,26 @@ sub submit_job_cluster {
             }
         }
         else {
-            foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
+
+            if (@$job_records) {
+                foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
+                    $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+                }
+            } else {
                 $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
             }
 
+            print STDERR "Waiting for job to finish...\n";
             $job->wait();
         }
     };
 
     if ($@) {
-        
-        for my $job_record (@$job_records) {
-            $job_record->update_status("failed") if $job_record;        
+
+        if (@$job_records) {
+            foreach my $job_record (@$job_records) {
+                $job_record->update_status("failed") if $job_record;        
+            }
         }
         
         print STDERR "Error submitting a job or job record:\n $@\n";
