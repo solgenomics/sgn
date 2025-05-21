@@ -58,7 +58,7 @@ sub _validate_with_plugin {
         required_columns => \@REQUIRED_COLUMNS,
         optional_columns => \@OPTIONAL_COLUMNS,
         column_aliases => {
-            'accession_name' => [ 'stock_name', 'cross_name', 'cross_unique_id' ]
+            'accession_name' => [ 'stock_name', 'cross_unique_id' ]
         }
     );
     my $parsed = $parser->parse();
