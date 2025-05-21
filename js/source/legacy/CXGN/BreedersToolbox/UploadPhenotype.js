@@ -49,10 +49,10 @@ jQuery( document ).ready( function() {
             timeout: 0,
             success: function(response) {
                 hidePhenotypeUploadWorkingModal();
-                displayPhenotypeUploadVerifyResponse(response, "spreadsheet");
+                displayPhenotypeUploadStoreResponse(response, "spreadsheet");
             },
             error: function() {
-                displayPhenotypeUploadStoreResponse();
+                hidePhenotypeUploadWorkingModal();
                 alert("An error occurred while trying to store this file. Please check the formatting and try again");
             }
         });
