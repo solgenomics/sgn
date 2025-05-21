@@ -1048,8 +1048,8 @@ sub store {
                         }
 
                         $phenotype_object->old_value($old_value);
+                        $phenotype_object->phenotype_id($old_phenotype_id);
                         if ($self->overwrite_values()) {
-                            $phenotype_object->phenotype_id($old_phenotype_id);
                             $plot_trait_uniquename .= ", overwritten: $upload_date, old_value=$old_value";
                             $phenotype_object->uniquename($plot_trait_uniquename);
                         }
