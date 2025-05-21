@@ -5,6 +5,14 @@ $stock_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Accessions' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+<div class = "well well-sm">
+    <form id="download_population_seedlots_action" action="/breeders/download_population_seedlots_action" method="POST">
+        <button class="btn btn-primary" type="button" id="population_seedlots_download_button">Download Seedlot Info</button>
+        <input name="population_stock_id" id="population_stock_id" type="hidden" value="<% $stock_id %>">
+        <input type="hidden" id="population_seedlots_download_token" name="population_seedlots_download_token"/>
+    </form>
+</div>
+
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="population_seedlots_table">
     </table>
@@ -34,6 +42,12 @@ jQuery(document).ready(function(){
             { title: "Box Name", "data": "box_name" },
             { title: "Location", "data": "location" },
         ],
+    });
+
+    jQuery('#population_seedlots_download_button').click(function() {
+        var token = new Date().getTime(); //use the current timestamp as the token name and value
+        jQuery('#population_seedlots_download_token').val(token);
+        jQuery('#download_population_seedlots_action').submit();
     });
 
 });

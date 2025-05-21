@@ -49,6 +49,7 @@ use SGN::Image;
 use Archive::Tar;
 use CXGN::Stock::ObsoletedStocks;
 use CXGN::People::Person;
+use CXGN::BreedersToolbox::Accessions;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -1949,6 +1950,61 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
     $c->res->body($output);
 
 }
+
+
+sub download_population_seedlots_action : Path('/breeders/download_population_seedlots_action') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+    my $population_stock_id = $c->req->param("population_stock_id");
+    print STDERR "POPULATION ID =".Dumper($population_stock_id)."\n";
+
+    my $dl_token = $c->req->param("population_seedlots_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
+    my $result = $ac->get_population_seedlots($population_stock_id);
+    print STDERR "RESULT =".Dumper($result)."\n";
+
+    my @download_rows = ();
+    foreach my $r (@$result) {
+        my ($member_id, $member_name, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location) =@$r;
+        push @download_rows, [$member_name, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location];
+    }
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "population_seedlots_download_XXXXX", UNLINK=> 0);
+
+    my $file_path = $tempfile . ".xlsx";
+    my $file_name = basename($file_path);
+
+    my $workbook = Excel::Writer::XLSX->new($file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+    my @header = ("Member Name", "Seedlot Name", "Current Count", "Current Weight(g)", "Box Name", "Location");
+    $worksheet->write_row(0, 0, \@header);
+
+    my $row_count = 1;
+    foreach my $row (@download_rows) {
+        $worksheet->write_row($row_count, 0, $row);
+        $row_count++;
+    }
+    $workbook->close();
+
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($file_path);
+
+    $c->res->body($output);
+
+}
+
 
 
 #=pod

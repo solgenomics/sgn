@@ -158,7 +158,7 @@ sub get_population_seedlots {
         LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = seedlot.stock_id) AND nd_experiment_stock.type_id = ?
         LEFT JOIN nd_experiment ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         LEFT JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)
-        where member_relationship.object_id = ?";
+        where member_relationship.object_id = ? ORDER BY member.uniquename ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
