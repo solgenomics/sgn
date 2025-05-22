@@ -147,9 +147,8 @@ sub get_population_seedlots {
     my $box_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'location_code', 'stock_property')->cvterm_id();
 
     my $q = "SELECT member.stock_id, member.uniquename, cvterm.name, seedlot.stock_id, seedlot.uniquename, current_count.value, current_weight_gram.value, box_name.value, nd_geolocation.description
-        FROM stock
-        JOIN stock_relationship AS member_relationship ON (stock.stock_id = member_relationship.object_id) AND member_relationship.type_id = ?
-        JOIN stock AS member ON (member_relationship.subject_id = member.stock_id)
+        FROM stock_relationship AS member_relationship
+        JOIN stock AS member ON (member_relationship.subject_id = member.stock_id) AND member_relationship.type_id = ?
         JOIN cvterm ON (member.type_id = cvterm.cvterm_id)
         LEFT JOIN stock_relationship AS seedlot_relationship ON (member.stock_id = seedlot_relationship.subject_id) AND seedlot_relationship.type_id = ?
         LEFT JOIN stock as seedlot ON (seedlot_relationship.object_id = seedlot.stock_id)
