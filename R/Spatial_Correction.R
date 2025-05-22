@@ -75,6 +75,8 @@ round_to_even <- function(n) {
 
 moran_outfile <- paste(phenotypeFile, ".moran", sep="")
 
+cat("", sep="\t", file = moran_outfile, append = FALSE) #clear this file if not alreay empty
+
 for (trait in userResponse) {
     spatial_model <- NULL
     if (row_col_as_rc == 1) {
@@ -130,7 +132,8 @@ for (trait in userResponse) {
         }, 
         finally = {
             print(paste("Moran p-value for trait ",trait, " : ", moran$p.value)) #sanity check, spatial autocorrelation should be gone, residuals should not show a spatial pattern
-            cat(trait, moran$p.value, sep="\t", file = moran_outfile)
+            cat(trait, moran$p.value, sep="\t", file = moran_outfile, append = TRUE)
+            cat("\n", sep="\t", file = moran_outfile, append = TRUE)
         }
     )
     domain <- NULL

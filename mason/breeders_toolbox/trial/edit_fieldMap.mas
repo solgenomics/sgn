@@ -340,6 +340,9 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
       var dataTable = jQuery("#spatial_correction_needed_results_table").DataTable({
         'destroy': true,
         'timeout': 6000000,
+        'searching':false,
+        'info':false,
+        'paging':false,
         'data': response.data,
         'columns': [
           { 'title': 'Trait' },
@@ -428,6 +431,10 @@ jQuery("#correct_spatial").click(function() {
         jQuery("#spatial_correction_new_moran_table").DataTable({
           'destroy': true,
           'timeout': 6000000,
+          'searching': false,
+          'lengthChange': false,
+          'info':false,
+          'paging':false,
           'data': response.moran_p_values,
           'scrollX': true,
           'columns': [
