@@ -370,7 +370,7 @@ sub _get_design_from_trial {
 	} else {
 	print STDERR "Regenerating cache...\n";
         my $design = $self->generate_and_cache_layout();
-	    print STDERR "_get_design_from_trial Generated DESIGN (and cached) : ".Dumper($design);
+	    # print STDERR "_get_design_from_trial Generated DESIGN (and cached) : ".Dumper($design);
 	return $design;
     }
 }
@@ -626,8 +626,8 @@ sub retrieve_plot_info {
     }
 
     my $type = $accession->type;
-    print STDERR "ABSTRACTLayout stock TYPE: ".$type->name."\n";
-    print STDERR "ABSTRACTLayout stock name: ".$accession_name."\n";
+    # print STDERR "ABSTRACTLayout stock TYPE: ".$type->name."\n";
+    # print STDERR "ABSTRACTLayout stock name: ".$accession_name."\n";
     if ($type->name eq 'analysis_result'){
         if ($accession_name) {
             $design_info{"analysis_result_stock_name"} = $accession_name;
@@ -922,8 +922,8 @@ sub _get_plots {
     @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => {-in => $self->get_target_stock_type_ids()  } });
 
     #debug...
-    print STDERR "PLOT LIST: \n";
-    print STDERR  join( "\n", map { $_->name() } @plots)."\n";
+    # print STDERR "PLOT LIST: \n";
+    # print STDERR  join( "\n", map { $_->name() } @plots)."\n";
 
     return \@plots;
 }
