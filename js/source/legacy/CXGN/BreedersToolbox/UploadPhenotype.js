@@ -1,7 +1,7 @@
 
 jQuery( document ).ready( function() {
 
-    function verifyData(formSelector, fileSelector, url) {
+    function verifyData(formSelector, fileSelector, url, upload_type) {
         jQuery("#upload_spreadsheet_phenotype_submit_store").attr('disabled', true);
         jQuery('#upload_phenotype_spreadsheet_verify_status').html("");
         jQuery("#upload_datacollector_phenotype_submit_store").attr('disabled', true);
@@ -24,7 +24,7 @@ jQuery( document ).ready( function() {
             timeout: 0,
             success: function(response) {
                 hidePhenotypeUploadWorkingModal();
-                displayPhenotypeUploadVerifyResponse(response, "spreadsheet");
+                displayPhenotypeUploadVerifyResponse(response, upload_type);
             },
             error: function() {
                 hidePhenotypeUploadWorkingModal();
@@ -33,7 +33,7 @@ jQuery( document ).ready( function() {
         });
     }
 
-    function storeData(formSelector, fileSelector, url) {
+    function storeData(formSelector, fileSelector, url, upload_type) {
         let file = jQuery(fileSelector).val();
         if ( !file || file === '' ) {
             return alert("Please select a file");
@@ -49,7 +49,7 @@ jQuery( document ).ready( function() {
             timeout: 0,
             success: function(response) {
                 hidePhenotypeUploadWorkingModal();
-                displayPhenotypeUploadStoreResponse(response, "spreadsheet");
+                displayPhenotypeUploadStoreResponse(response, upload_type);
             },
             error: function() {
                 hidePhenotypeUploadWorkingModal();
@@ -63,7 +63,8 @@ jQuery( document ).ready( function() {
         verifyData(
             "#upload_spreadsheet_phenotype_file_form",
             "#upload_spreadsheet_phenotype_file_input",
-            "/ajax/phenotype/upload_verify/spreadsheet"
+            "/ajax/phenotype/upload_verify/spreadsheet",
+            "spreadsheet"
         );
     });
 
@@ -71,7 +72,8 @@ jQuery( document ).ready( function() {
         storeData(
             "#upload_spreadsheet_phenotype_file_form",
             "#upload_spreadsheet_phenotype_file_input",
-            "/ajax/phenotype/upload_store/spreadsheet"
+            "/ajax/phenotype/upload_store/spreadsheet",
+            "spreadsheet"
         );
     });
 
@@ -80,7 +82,8 @@ jQuery( document ).ready( function() {
         verifyData(
             "#upload_datacollector_phenotype_file_form",
             "#upload_datacollector_phenotype_file_input",
-            "/ajax/phenotype/upload_verify/datacollector"
+            "/ajax/phenotype/upload_verify/datacollector",
+            "datacollector"
         );
     });
 
@@ -88,7 +91,8 @@ jQuery( document ).ready( function() {
         storeData(
             "#upload_datacollector_phenotype_file_form",
             "#upload_datacollector_phenotype_file_input",
-            "/ajax/phenotype/upload_store/datacollector"
+            "/ajax/phenotype/upload_store/datacollector",
+            "datacollector"
         );
     });
 
@@ -97,7 +101,8 @@ jQuery( document ).ready( function() {
         verifyData(
             "#upload_fieldbook_phenotype_file_form",
             "#upload_fieldbook_phenotype_file_input",
-            "/ajax/phenotype/upload_verify/fieldbook"
+            "/ajax/phenotype/upload_verify/fieldbook",
+            "fieldbook"
         );
     });
 
@@ -105,7 +110,8 @@ jQuery( document ).ready( function() {
         storeData(
             "#upload_fieldbook_phenotype_file_form",
             "#upload_fieldbook_phenotype_file_input",
-            "/ajax/phenotype/upload_store/fieldbook"
+            "/ajax/phenotype/upload_store/fieldbook",
+            "fieldbook"
         );
     });
 
