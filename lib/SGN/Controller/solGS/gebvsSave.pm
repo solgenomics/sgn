@@ -35,7 +35,7 @@ sub gebvs_result_details :Path('/solgs/gebvs/result/details') Args() {
         my $analysis_details;
 
         eval {	
-            $analysis_details = $self->structure_gebvs_result_details($c, $params);
+            $analysis_details = $self->structure_prediction_result_details($c, $params);
         };
 
         if ($@) {
@@ -48,22 +48,28 @@ sub gebvs_result_details :Path('/solgs/gebvs/result/details') Args() {
 
 }
 
-sub structure_gebvs_result_details {
+sub structure_prediction_result_details {
     my ($self, $c, $params) = @_;
 
-    my $gebvs = $self->structure_gebvs_values($c, $params);
-    my @accessions = keys %$gebvs;
+    my $output_values = $self->structure_output_values($c, $params);
+    my @accessions = keys %$output_values;
 
     my $trait_names		= $c->controller('solGS::AnalysisSave')->analysis_traits($c);
     my $model_details   = $self->model_details($c);
     my $app_details		= $c->controller('solGS::AnalysisSave')->app_details();
-    my $log			    = $c->controller('solGS::AnalysisSave')->get_analysis_job_info($c);
     my $breeding_prog_id = $c->controller('solGS::AnalysisSave')->analysis_breeding_prog($c);
     my $analysis_year = $c->controller('solGS::AnalysisSave')->analysis_year($c);
 
+    my $analysis_name = $c->controller('solGS::AnalysisSave')->get_analysis_result_specific_analysis_name($c);
+    # $log->{analysis_name};
+    # my $analysis_result_save_type = $c->stash->{analysis_result_save_type};
+    # $analysis_name .= " -- $analysis_result_save_type" if $analysis_result_save_type;
+
+    my $log = $c->controller('solGS::AnalysisSave')->get_analysis_job_info($c);
+
     my $details = {
         'analysis_to_save_boolean' => 'yes',
-        'analysis_name' => $log->{analysis_name},
+        'analysis_name' => $analysis_name,
         'analysis_description' => $log->{training_pop_desc},
         'analysis_year' => $analysis_year,
         'analysis_breeding_program_id' => $breeding_prog_id,
@@ -72,7 +78,7 @@ sub structure_gebvs_result_details {
         'analysis_accession_names' => encode_json(\@accessions),
         'analysis_trait_names' => encode_json($trait_names),
         'analysis_precomputed_design_optional' =>'',
-        'analysis_result_values' => to_json($gebvs),
+        'analysis_result_values' => to_json($output_values),
         'analysis_result_values_type' => 'analysis_result_values_match_accession_names',
         'analysis_result_summary' => '',
         'analysis_result_trait_compose_info' =>  "",
@@ -82,7 +88,7 @@ sub structure_gebvs_result_details {
         'analysis_model_language' => $model_details->{model_lang},
         'analysis_model_is_public' => 'yes',
         'analysis_model_description' =>  $model_details->{model_desc},
-        'analysis_model_name' => $log->{analysis_name},
+        'analysis_model_name' => $analysis_name,
         'analysis_model_type' => $model_details->{model_type},
     };
 
@@ -139,30 +145,121 @@ sub gebvs_values {
 
 }
 
-sub structure_gebvs_values {
+
+sub get_genetic_values {
+    my ($self, $c, $params) = @_;
+
+    my $training_pop_id = $params->{training_pop_id};
+    my $selection_pop_id = $params->{selection_pop_id};
+    my $trait_id = $params->{trait_id};
+    my $protocol_id = $params->{genotyping_protocol_id};
+
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+
+    my $analysis_page = $params->{analysis_page}; 
+    $analysis_page = $c->controller('solGS::Path')->page_type($c, $analysis_page);
+
+    my $genetic_values_file;
+    if ($analysis_page =~ /training_model/) {
+        $genetic_values_file = $c->controller('solGS::Files')->rrblup_training_genetic_values_file($c, $training_pop_id, $trait_id);
+    }
+    elsif ($analysis_page =~ /selection_prediction/) {
+        $genetic_values_file = $c->controller('solGS::Files')->rrblup_selection_genetic_values_file($c, $training_pop_id, $selection_pop_id, $trait_id);
+    }
+
+    return $c->controller('solGS::Utils')->read_file_data($genetic_values_file);
+
+}
+
+
+sub get_combined_gebvs_genetic_values {
+    my ($self, $c, $params) = @_;
+
+    my $combined_values_file = $self->get_combined_gebvs_genetic_values_file($c, $params);
+
+    return $c->controller('solGS::Utils')->read_file_data($combined_values_file);
+
+}
+
+sub get_combined_gebvs_genetic_values_file {
+    my ($self, $c, $params) = @_;
+
+    my $analysis_page = $params->{analysis_page}; 
+    $analysis_page = $c->controller('solGS::Path')->page_type($c, $analysis_page);
+
+    my $combined_values_file;
+    if ($analysis_page =~ /training_model/) {
+        $combined_values_file = $c->controller('solGS::Files')->rrblup_combined_training_gebvs_genetic_values_file($c);
+    }
+    elsif ($analysis_page =~ /selection_prediction/) {
+        $combined_values_file = $c->controller('solGS::Files')->rrblup_combined_selection_gebvs_genetic_values_file($c);
+    }
+
+    return $combined_values_file;
+
+}
+
+
+sub structure_output_values {
     my ($self, $c, $params) = @_;
 
     my $trait_name = $c->controller('solGS::AnalysisSave')->extended_trait_name($c, $params->{trait_id});
 
-    my $gebvs = $self->gebvs_values($c, $params);
-    my $gebvs_ref = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($gebvs);
+    my $output_values;
+    my $analysis_result_save_type = $c->stash->{analysis_result_save_type};
 
-    my %gebvs_hash;
-    my $now = DateTime->now();
-    my $timestamp = $now->ymd()."T".$now->hms();
-
-    my $user = $c->controller('solGS::AnalysisQueue')->get_user_detail($c);
-    my $user_name = $user->{user_name};
-
-    my @accessions = keys %$gebvs_ref;
-
-    foreach my $accession (@accessions) {
-        $gebvs_hash{$accession} = {
-            $trait_name => [$gebvs_ref->{$accession}->[0], $timestamp, $user_name, "", ""]
-        };
+    if ($analysis_result_save_type =~ /gebvs/) {
+        $output_values = $self->gebvs_values($c, $params);
+    } elsif ($analysis_result_save_type =~ /genetic_values/) {
+        $output_values = $self->get_genetic_values($c, $params);
     }
 
-    return \%gebvs_hash;
+    if ($output_values) {
+        my $output_values_ref = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($output_values);
+
+        my %output_values_hash;
+        my $now = DateTime->now();
+        my $timestamp = $now->ymd()."T".$now->hms();
+
+        my $user = $c->controller('solGS::AnalysisQueue')->get_user_detail($c);
+        my $user_name = $user->{user_name};
+
+        my @accessions = keys %$output_values_ref;
+
+        foreach my $accession (@accessions) {
+            $output_values_hash{$accession} = {$trait_name => [$output_values_ref->{$accession}->[0], $timestamp, $user_name, "", ""]};
+        }
+
+        return \%output_values_hash;
+    } else {
+        $c->stash->{rest}{error} = 'No prediction values found';
+        return;
+    }
+}
+
+
+sub format_output_col_names {
+    my ($self, $c, $params) = @_;
+    
+    my $combined_values_file = $self->get_combined_gebvs_genetic_values_file($c, $params);
+	my @col_names= $c->controller('solGS::Utils')->get_data_col_headers($combined_values_file);
+
+	my @extended_names;
+
+	foreach my $col_name (@col_names) {
+        my $trait_name;
+        if ($col_name !~ /_genetic_values/) {
+            $trait_name = $col_name;
+            my $extended_trait_name = $c->controller('solGS::AnalysisSave')->extended_trait_name($c, $params->{trait_id});
+            push @extended_names, $extended_trait_name;
+
+        } else {
+            push @extended_names, $col_name;
+        }
+
+	}
+
+	return \@extended_names;
 
 }
 
