@@ -561,6 +561,7 @@ function _load_image_search_results() {
         'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url':  '/ajax/search/images',
+            'method': 'POST',
             'data': function(d) {
               d.html_select_box = "image_analysis_select";
               d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();

@@ -484,7 +484,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         return;
     }
 
-    print STDERR "FORMATTED DATA: ".Dumper(\@data);
+    #print STDERR "FORMATTED DATA: ".Dumper(\@data);
 
     my $basename = basename($pheno_filepath.".clean.out");
     my $imagename = basename($pheno_filepath.".clean.png");
