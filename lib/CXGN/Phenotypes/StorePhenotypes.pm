@@ -227,19 +227,19 @@ has 'unique_trait_stock_phenotype_id' => (
     default => sub { {} },
     );
 
-has 'unique_value_trait_stock_timestampdate' => (
+has 'unique_value_trait_stock_timestamp' => (
     isa => "HashRef",
     is => 'rw',
     default => sub { {} },
 );
 
-has 'unique_trait_stock_timestampdate' => (
+has 'unique_trait_stock_timestamp' => (
     isa => "HashRef",
     is => 'rw',
     default => sub { {} },
     );
 
-has 'unique_trait_stock_timestampdate_phenotype_id' => (
+has 'unique_trait_stock_timestamp_phenotype_id' => (
     isa => "HashRef",
     is => 'rw',
     default => sub { {} },
@@ -369,7 +369,7 @@ sub create_hash_lookups {
     if (scalar @cvterm_ids > 0) {
         my $cvterm_ids_sql = join ("," , @cvterm_ids);
 
-        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, DATE(phenotype.collect_date::timestamp), stock.stock_id, phenotype_id FROM phenotype
+        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id, phenotype_id FROM phenotype
         LEFT JOIN nd_experiment_phenotype USING(phenotype_id)
         LEFT JOIN nd_experiment USING(nd_experiment_id)
         LEFT JOIN nd_experiment_stock USING(nd_experiment_id)
@@ -378,16 +378,16 @@ sub create_hash_lookups {
         my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
         $h->execute();
 
-        while (my ($previous_value, $cvterm_id, $collect_timestampdate, $stock_id, $phenotype_id) = $h->fetchrow_array()) {
+        while (my ($previous_value, $cvterm_id, $collect_timestamp, $stock_id, $phenotype_id) = $h->fetchrow_array()) {
 
             if ($stock_id){
                 #my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
-                $collect_timestampdate = $collect_timestampdate || 'NA';
+                $collect_timestamp = $collect_timestamp || 'NA';
                 $self->unique_trait_stock->{$cvterm_id, $stock_id} = $previous_value;
                 $self->unique_trait_stock_phenotype_id->{$cvterm_id, $stock_id} = $phenotype_id;
-                $self->unique_value_trait_stock_timestampdate->{$previous_value, $cvterm_id, $stock_id, $collect_timestampdate} = $previous_value;
-                $self->unique_trait_stock_timestampdate->{$cvterm_id, $stock_id, $collect_timestampdate} = $previous_value;
-                $self->unique_trait_stock_timestampdate_phenotype_id->{$cvterm_id, $stock_id, $collect_timestampdate} = $phenotype_id;
+                $self->unique_value_trait_stock_timestamp->{$previous_value, $cvterm_id, $stock_id, $collect_timestamp} = $previous_value;
+                $self->unique_trait_stock_timestamp->{$cvterm_id, $stock_id, $collect_timestamp} = $previous_value;
+                $self->unique_trait_stock_timestamp_phenotype_id->{$cvterm_id, $stock_id, $collect_timestamp} = $phenotype_id;
                 $self->unique_value_trait_stock->{$previous_value, $cvterm_id, $stock_id} = 1;
             }
         }
@@ -602,7 +602,7 @@ sub check_measurement {
     #print STDERR "check_measurement for trait $trait_name and values ".Dumper($value_array)."\n";
 
     #print STDERR Dumper $value_array;
-    my ($trait_value, $timestamp, $timestampdate);
+    my ($trait_value, $timestamp);
     if (ref($value_array) eq 'ARRAY') {
         # the entry represents trait + timestamp
         #
@@ -634,9 +634,8 @@ sub check_measurement {
                     if( !$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
                         $error_message .= "<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
                     }
-                    if ( $timestamp =~ /(\d{4}-\d{2}-\d{2})/ ) {
-                        $timestampdate = $1;
-                    }
+                    # remove timezone from timestamp since it is not stored in the database
+                    $timestamp =~ s/[\-\+][0-9]{4}$//;
                 }
             }
         }
@@ -748,18 +747,18 @@ sub check_measurement {
                 $error_message .= "For trait $trait_name that is defined as a 'multiple' or 'time_series' repeat type trait, a timestamp is required.\n";
             }
 
-            if (exists($self->unique_value_trait_stock_timestampdate->{$trait_value, $trait_cvterm_id, $stock_id, $timestampdate})) {
-                my $prev = $self->unique_value_trait_stock_timestampdate->{$trait_value, $trait_cvterm_id, $stock_id, $timestampdate};
+            if (exists($self->unique_value_trait_stock_timestamp->{$trait_value, $trait_cvterm_id, $stock_id, $timestamp})) {
+                my $prev = $self->unique_value_trait_stock_timestamp->{$trait_value, $trait_cvterm_id, $stock_id, $timestamp};
 
                 if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
                     $self->same_value_count($self->same_value_count() + 1);
                     # $warning_message .= "For single trait with id $trait_cvterm_id the same value ($trait_value) is already recorded in the database, skipping!\n";
                 }
             }
-            elsif (exists($self->unique_trait_stock_timestampdate->{$trait_cvterm_id, $stock_id, $timestampdate})) {
-                my $prev = $self->unique_trait_stock_timestampdate->{$trait_cvterm_id, $stock_id, $timestampdate};
+            elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
+                my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
                 if ( defined($prev) ) {
-                    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the date $timestampdate.</small><hr>";
+                    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name on $timestamp.</small><hr>";
                 }
             }
         }
@@ -768,7 +767,7 @@ sub check_measurement {
         #check if the plot_name, trait_name combination already exists in database.
         elsif ($repeat_type eq "single") {
 
-            # print STDERR "Processing this trait with value $trait_value as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
+            print STDERR "Processing this trait with value $trait_value as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
             if (exists($self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id})) {
                 my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};
 
@@ -777,16 +776,16 @@ sub check_measurement {
                     # $warning_message .= "For single trait with id $trait_cvterm_id the same value ($trait_value) is already recorded in the database, skipping!\n";
                 }
             }
-            elsif (exists($self->unique_trait_stock_timestampdate->{$trait_cvterm_id, $stock_id, $timestampdate})) {
-                my $prev = $self->unique_trait_stock_timestampdate->{$trait_cvterm_id, $stock_id, $timestampdate};
+            elsif (exists($self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp})) {
+                my $prev = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
                 if ( defined($prev) ) {
-                    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+                    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name.</small><hr>";
                 }
             }
             elsif (exists($self->unique_trait_stock->{$trait_cvterm_id, $stock_id})) {
                 my $prev = $self->unique_trait_stock->{$trait_cvterm_id, $stock_id};
                 if ( defined($prev) ) {
-                    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+                    $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name.</small><hr>";
                 }
             }
 
@@ -977,6 +976,8 @@ sub store {
 
                         $phenotype_object->value($trait_value);
                         my $timestamp = $value_array->[1];
+                        # remove timezone from timestamp since it is not stored in the database
+                        $timestamp =~ s/[\-\+][0-9]{4}$//;
 
                         if ($timestamp eq "") { $timestamp = undef; }
                         $phenotype_object->collect_date($timestamp);
@@ -1052,12 +1053,8 @@ sub store {
                             $old_phenotype_id = $self->unique_trait_stock_phenotype_id()->{$trait_cvterm_id, $stock_id};
                         }
                         else {
-                            my $timestampdate = $timestamp;
-                            if ( $timestamp =~ /(\d{4}-\d{2}-\d{2})/ ) {
-                                $timestampdate = $1;
-                            }
-                            $old_value = $self->unique_trait_stock_timestampdate->{$trait_cvterm_id, $stock_id, $timestampdate};
-                            $old_phenotype_id = $self->unique_trait_stock_timestampdate_phenotype_id->{$trait_cvterm_id, $stock_id, $timestampdate};
+                            $old_value = $self->unique_trait_stock_timestamp->{$trait_cvterm_id, $stock_id, $timestamp};
+                            $old_phenotype_id = $self->unique_trait_stock_timestamp_phenotype_id->{$trait_cvterm_id, $stock_id, $timestamp};
                         }
 
                         $phenotype_object->old_value($old_value);
