@@ -76,16 +76,6 @@ sub patch {
         }
     }
 
-    my $subject_id;
-    my $subject = SGN::Model::Cvterm->get_cvterm_row($schema, 'fieldbook_image', 'cassava_trait');
-    if ($subject) {
-        $subject_id = $subject->cvterm_id ;
-    } else {
-        print STDERR "Cvterm fieldbook_image does not exist in the database. Exiting\n";
-    }
-    my $cvterm = $schema->resultset( "Cv::Cvterm" )->find({ cvterm_id  => $subject_id  });
-    $cvterm->delete();
-
     print "You're done!\n";
 }
 
