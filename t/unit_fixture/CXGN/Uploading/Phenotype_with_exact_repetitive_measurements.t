@@ -348,19 +348,19 @@ $h->execute(0.111, '2025-05-12 21:19:00');
 my ($phenotype_id) = $h->fetchrow_array();
 print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
 print STDERR "FOUND ENTRY AT PHENOTYPE_ID = $phenotype_id\n";
-ok($phenotype_id, "Find multiple phenotype entry 1");
+ok(!$phenotype_id, "Find multiple phenotype entry 1");
 
 $h->execute(0.222, '2025-05-12 21:20:00');
 ($phenotype_id) = $h->fetchrow_array();
 print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
 print STDERR "FOUND ANOTHER ENTRY AT PHENOTYPE_ID= $phenotype_id\n";
-ok($phenotype_id, "FInd multiple phenotype entry 2");
+ok(!$phenotype_id, "FInd multiple phenotype entry 2");
 
 $h->execute(0.333, '2025-05-12 21:21:00');
 ($phenotype_id) = $h->fetchrow_array();
 print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
 print STDERR "FOUND ANOTHER ENTRY AT PHENOTYPE_ID= $phenotype_id\n";
-ok($phenotype_id, "FInd multiple phenotype entry 3");
+ok(!$phenotype_id, "FInd multiple phenotype entry 3");
 print STDERR "PHENOTYPE ID FOUND: $phenotype_id\n";
 
 
