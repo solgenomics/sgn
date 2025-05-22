@@ -672,8 +672,13 @@ sub population_seedlots_GET : Args(1) {
         $member_type = 'accessions';
     }
 
+    my $result;
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
-    my $result = $ac->get_population_seedlots($stock_id);
+    if (($member_type eq 'plots') || ($member_type eq 'plants')) {
+        $result = $ac->get_population_source_seedlots($stock_id);        
+    } else {
+        $result = $ac->get_population_seedlots($stock_id);
+    }
 
     my @population_seedlots = ();
     foreach my $r (@$result){

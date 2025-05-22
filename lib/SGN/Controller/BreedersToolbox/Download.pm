@@ -1963,8 +1963,22 @@ sub download_population_seedlots_action : Path('/breeders/download_population_se
     my $dl_token = $c->req->param("population_seedlots_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
+    my $member_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property')->cvterm_id();
+    my $member_type;
+    my $member_type_row = $schema->resultset("Stock::Stockprop")->find({ stock_id => $population_stock_id, type_id => $member_type_cvterm_id });
+    if($member_type_row) {
+        $member_type = $member_type_row->value();
+    } else {
+        $member_type = 'accessions';
+    }
+
+    my $result;
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
-    my $result = $ac->get_population_seedlots($population_stock_id);
+    if (($member_type eq 'plots') || ($member_type eq 'plants')) {
+        $result = $ac->get_population_source_seedlots($population_stock_id);
+    } else {
+        $result = $ac->get_population_seedlots($population_stock_id);
+    }
 
     my @download_rows = ();
     foreach my $r (@$result) {
