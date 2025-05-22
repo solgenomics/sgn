@@ -105,15 +105,14 @@ solGS.anova = {
   },
 
   populateAnovaMenu: function (traits) {
-    var menuId = this.anovaTraitsSelectMenuId;
+    var selectId = this.anovaTraitsSelectMenuId;
+    var menuDivId = this.anovaTraitsDiv;
+
     var optionsLabel = "Select a trait";
     var menuClass = "form-control";
-    var menu = new SelectMenu(menuId, menuClass, optionsLabel);
-    traits = traits.flat();
-    var menuElem = menu.addOptions(traits);
-
-    var anovaTraitsDiv = this.anovaTraitsDiv;
-    jQuery(anovaTraitsDiv).empty().append(menuElem).show();
+    var menu = new SelectMenu(menuDivId, selectId, menuClass, optionsLabel);
+    menu.populateMenu(traits)
+  
   },
 
   clearTraitSelection: function () {
@@ -177,7 +176,7 @@ jQuery(document).ready(function () {
     var traitId = jQuery("#anova_selected_trait_id").val();
     if (traitId) {
       jQuery(runDiv).hide();
-      solGS.anova.showMessage("Please wait...Querying the database for trait data...");
+      solGS.anova.showMessage("Please wait...querying the database for the trait data...");
       jQuery(`${canvas} .multi-spinner-container`).show();
 
       solGS.anova.queryPhenoData(traitId).done(function (queryRes) {
@@ -188,7 +187,7 @@ jQuery(document).ready(function () {
         } else {
           var traitsAbbrs = queryRes.traits_abbrs;
           traitsAbbrs = JSON.parse(traitsAbbrs);
-          solGS.anova.showMessage("Validated trait data...Now running ANOVA...");
+          solGS.anova.showMessage("Validated trait data...now running ANOVA...");
 
           solGS.anova
             .runAnovaAnalysis(traitsAbbrs)

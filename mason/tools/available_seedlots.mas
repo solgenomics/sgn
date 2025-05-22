@@ -6,7 +6,7 @@
         <th rowspan="2" style="text-align: center;">Accessions</th><th colspan="7" style="text-align: center;">Seedlots</th>
       </tr>
       <tr>
-        <th></th>
+        <th style="text-align: center;"><button id="selectallaccessions" type="button" disabled>Select/Deselect All</button></th>
         <th style="text-align: center;">Breeding Program</th>
         <th style="text-align: center;">Seedlot Name</th>
         <th style="text-align: center;">Contents</th>
@@ -22,8 +22,26 @@
     var mainFormSelector = "#available-seedlots";
     var d3 = global.d3v4;
     var ex = {};
+
+	const selectall_button = document.getElementById('selectallaccessions'); 
+    const seedlot_form = document.getElementById('available-seedlots');
+    function selectAllAccessions(event){
+		var seedlot_checkboxes = seedlot_form.querySelectorAll('input[type="checkbox"]:not(#selectallaccessions):not(:disabled)');
+		var any_checked = false;
+		seedlot_checkboxes.forEach(function(checkbox){
+			if (checkbox.checked == true){
+				any_checked = true;
+			}
+		});
+		seedlot_checkboxes.forEach(function(checkbox){
+			checkbox.checked = !any_checked;
+		});
+    }
+    selectall_button.addEventListener('click', selectAllAccessions);
+
     ex.build_table = function(accession_names, list_type){
       jQuery('#working_modal').modal('show');
+	  selectall_button.setAttribute('disabled', 'true'); //Reset the checkbox if looking at a different list
       jQuery.ajax({
         type: 'POST',
         url: '/ajax/accessions/possible_seedlots',
@@ -31,6 +49,10 @@
         dataType: "json",
         success: function(response) {
           _build_table(accession_names,response.seedlots,response.synonyms);
+		  var seedlot_checkboxes = seedlot_form.querySelectorAll('input[type="checkbox"]:not(#selectallaccessions):not(:disabled)');
+		  if (seedlot_checkboxes.length > 0){
+			selectall_button.removeAttribute('disabled');
+		  }
           jQuery('#working_modal').modal('hide');
         },
         error: function(response) {

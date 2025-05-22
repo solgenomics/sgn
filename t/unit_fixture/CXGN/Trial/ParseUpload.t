@@ -9,7 +9,7 @@ use Data::Dumper;
 
 my $f = SGN::Test::Fixture->new();
 
-for my $extension ("xls", "xlsx") {
+for my $extension ("xls", "xlsx", "csv") {
 
     my $p = CXGN::Trial::ParseUpload->new({ filename => "t/data/genotype_trial_upload/CASSAVA_GS_74Template.csv", chado_schema => $f->bcs_schema() });
     $p->load_plugin("ParseIGDFile");
@@ -40,7 +40,7 @@ for my $extension ("xls", "xlsx") {
     ok($errors->{'error_messages'}->[0] eq "All trial names in the trial column must be identical", "detect messed up trial name");
 
     $p = CXGN::Trial::ParseUpload->new({ filename => "t/data/trial/trial_layout_bad_accessions.$extension", chado_schema => $f->bcs_schema() });
-    $p->load_plugin("TrialExcelFormat");
+    $p->load_plugin("TrialGeneric");
 
     $results = $p->parse();
     $errors = $p->get_parse_errors();
@@ -50,11 +50,18 @@ for my $extension ("xls", "xlsx") {
     ok(scalar(@{$errors->{'missing_stocks'}}) == 8, 'check that accessions not in db');
 
     $p = CXGN::Trial::ParseUpload->new({ filename => "t/data/genotype_trial_upload/CASSAVA_GS_74Template_messed_up_trial_name.csv", chado_schema => $f->bcs_schema() });
-    $p->load_plugin("TrialExcelFormat");
+    $p->load_plugin("TrialGeneric");
 
     $results = $p->parse();
     $errors = $p->get_parse_errors();
-    ok($errors->{'error_messages'}->[0] eq "No Excel data found in file", 'check that accessions not in db');
+    my $expected = {
+        'error_messages' => [
+            'Required column stock_name is missing',
+            'Required column plot_number is missing',
+            'Required column block_number is missing'
+        ]
+    };
+    is_deeply($errors, $expected, 'check file format errors');
 
     $f->clean_up_db();
 }

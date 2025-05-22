@@ -36,7 +36,7 @@ jQuery(document).ready(function ($) {
         $("#pedigrees_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
-    var archived_file_name;
+    var pedigree_data;
     $('#upload_pedigrees_form').iframePostForm({
         json: false,
         post: function () {
@@ -57,15 +57,20 @@ jQuery(document).ready(function ($) {
             $('#working_modal').modal("hide");
 
             var html;
-            archived_file_name = response.archived_file_name;
+            pedigree_data = response.pedigree_data;
             if (response.error) {
                 html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
-            }
-            else {
+                $("#upload_pedigrees_validate_display tbody").html(html);
+                $("#upload_pedigrees_validate_display").modal('show');
+            } else if (response.error_string) {
+                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error_string+'</p>';
+                $("#upload_pedigrees_error_display tbody").html(html);
+                $("#upload_pedigrees_error_display").modal('show');
+            } else {
                 html = '<h3>There Were No Issues Identified</h3>';
+                $("#upload_pedigrees_validate_display tbody").html(html);
+                $("#upload_pedigrees_validate_display").modal('show');
             }
-            $("#upload_pedigrees_validate_display tbody").html(html);
-            $("#upload_pedigrees_validate_display").modal('show');
         }
     });
 
@@ -86,8 +91,9 @@ jQuery(document).ready(function ($) {
     jQuery('#upload_pedigrees_store').click(function(){
         jQuery.ajax( {
             url: '/ajax/pedigrees/upload_store',
+	    type: 'POST',
             data: {
-                'archived_file_name':archived_file_name,
+                'pedigree_data':pedigree_data,
                 'overwrite_pedigrees':jQuery('#pedigree_upload_overwrite_pedigrees').is(":checked")
             },
             beforeSend: function(){

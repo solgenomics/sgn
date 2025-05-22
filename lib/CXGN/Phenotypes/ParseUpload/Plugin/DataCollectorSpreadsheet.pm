@@ -217,7 +217,7 @@ sub parse {
             $cell_val = $worksheet->get_cell(0,$col)->value();
             $cell_val =~ s/^\s+|\s+$//g;
         }
-        if ($cell_val) {
+        if ($cell_val || $cell_val == 0) {
             $header_column_info{$cell_val} = $col;
             $traits_seen{$cell_val} = 1;
         }

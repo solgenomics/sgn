@@ -1,0 +1,71 @@
+
+<%args>
+$stock_id
+$stock_uniquename => undef
+$stock_type => undef
+</%args>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="vector_obsoleted_transformants_table">
+
+        <thead>
+            <tr>
+                <th>Accession</th>
+                <th>Note</th>
+                <th>Date</th>
+                <th>Obsoleted by</th>
+                <th>Transformation ID</th>
+            </tr>
+        </thead>
+
+    </table>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <&| /page/info_section.mas, title => 'Copy obsoleted accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the obsoleted accession names to a new or exisiting list</i>'&>
+        <br>
+        <div id="obsoleted_transformant_names" style="display:none"></div>
+        <div id="obsoleted_transformants_to_list_menu"></div>
+        </&>
+    </div>
+</div>
+
+<style>
+    .table th {
+        white-space: nowrap;
+    }
+</style>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+        var related_stocks_table = jQuery('#vector_obsoleted_transformants_table').DataTable({
+            'ordering': false,
+            'autoWidth': false,
+            'ajax':'/stock/'+ <% $stock_id %> + '/datatables/vector_obsoleted_accessions',
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i][5]+"\n";
+                    }
+                    jQuery("#obsoleted_transformant_names").html(html);
+                    addToListMenu("obsoleted_transformants_to_list_menu", "obsoleted_transformant_names", {
+                        selectText: true,
+                        listType:'accessions'
+                    });
+                }
+            }
+        });
+
+
+});
+
+
+</script>

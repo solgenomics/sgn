@@ -6,8 +6,10 @@ $editable_stock_props_definitions
 
 <%perl>
     my $user_role = '';
+    my $email_address = '';
     if ($c->user) {
         $user_role = $c->user->get_object()->get_user_type();
+        $email_address = $c->user->get_object()->get_private_email();
     }
 </%perl>
 
@@ -45,13 +47,13 @@ $editable_stock_props_definitions
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
                             <div class="col-sm-8">
-% if ( $user_role eq 'curator' ) {
-                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked></input>
-% } else { 
-                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
-% }
+%# if ( $user_role eq 'curator' ) {
+                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
+%# } else {
+%#                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
+%# }
                                 <br/>
-                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
+                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. </small>
                             </div>
                         </div>
                     </form>
@@ -75,13 +77,21 @@ $editable_stock_props_definitions
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-4 control-label">Email Alert: </label>
+                            <div class="col-sm-8">
+                                <input id="email_option_to_recieve_accession_upload_status" name="email_option_to_recieve_upload_status" type="checkbox" data-toggle="toggle" style="margin-right: 10px;">
+                                <label id="email_label_upload" class="control-label" style="display: none; margin-right: 10px;">Email:</label>
+                                <input id="email_address_upload" name="email_address_upload" type="email" value="<% $email_address %>" style="display: none;">
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
                             <div class="col-sm-8">
-% if ( $user_role eq 'curator' ) {
-                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked></input>
-% } else {
-                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked disabled></input>
-% }
+%# if ( $user_role eq 'curator' ) {
+                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions"></input>
+%# } else {
+%#                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked disabled></input>
+%# }
                                 <br/>
                                 <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
                             </div>
@@ -96,7 +106,7 @@ $editable_stock_props_definitions
                         </div>
                     </form>
 
-                    <& /help/file_upload_type.mas, type => "Accessions" &>
+                    <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
 
                 </div>
 
@@ -135,6 +145,7 @@ $editable_stock_props_definitions
                                 <td>population_name</td>
                                 <td>organization_name</td>
                                 <td>synonym</td>
+				<td>description</td>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
 %                               print "<td>$editable_stockprop</td>";
 % }
@@ -158,7 +169,8 @@ $editable_stock_props_definitions
                     </ul>
                     <b>Optional Fields:</b>
                     <ul>
-                    <li>population_name (a population is a grouping of accessions. if the population already exists in the database, the accession will be added into it, otherwise, the new population will be created.)</li>
+		    <li>description - a free text description of the stock.</li>
+                    <li>population_name (a population is a grouping of accessions. If the population already exists in the database, the accession will be added to it; otherwise, a new population will be created). Multiple populations can be specified, using the pipe symbol (|) as the separator (for example, pop1|pop2|pop3)</li>
                     <li>organization_name (the name(s) of the organization(s) which use this accession e.g. NARO,IITA)</li>
                     <li>synonym (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. e.g. accession_synonym1,accession_synonym001)</li>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
@@ -170,7 +182,7 @@ $editable_stock_props_definitions
 %  }
                     </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "Accessions" &>
+                <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>

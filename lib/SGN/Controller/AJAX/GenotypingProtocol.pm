@@ -66,7 +66,7 @@ sub genotyping_protocol_delete_GET : Args(1) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    if ($user_role ne 'submitter' && $user_role ne 'curator') {
+    if ($user_role ne 'curator') {
         $c->stash->{rest} = { error => 'Must have correct permissions to delete genotypes! Please contact us.' };
         $c->detach();
     }

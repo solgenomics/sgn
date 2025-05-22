@@ -44,7 +44,7 @@
                 <br><b>Optional values:</b><br>
                 <b>NOAA Station ID:</b> The NOAA Station ID that is nearest and most relevant to the location. <a href="https://www.ncdc.noaa.gov/cdo-web/search" target="_blank">Search Here</a><br>
 
-          <& /help/file_upload_type.mas, type => "Locations" &>
+          <& /help/file_upload_type.mas, type => "Locations" , optional_column => 1 &>
           <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_locations_form" name="upload_locations_form">
     <label for="locations_upload_file" style="display: inline-block;">Location File:</label>
     <input type="file" name="locations_upload_file" id="locations_upload_file" encoding="multipart/form-data" />

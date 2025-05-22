@@ -909,7 +909,7 @@ sub init_genotype_iterator {
         LEFT JOIN genotypeprop AS igd_number_genotypeprop ON(igd_number_genotypeprop.genotype_id = genotype.genotype_id AND igd_number_genotypeprop.type_id = $igd_genotypeprop_cvterm_id)
         JOIN project USING(project_id)
         $where_clause
-        ORDER BY stock.stock_id, genotype.genotype_id ASC
+        ORDER BY stock.stock_id, genotype.genotype_id ASC, accession_of_tissue_sample.stock_id DESC
         $limit_clause
         $offset_clause;";
 
@@ -961,6 +961,7 @@ sub init_genotype_iterator {
         $seen_protocol_ids{$protocol_id}++;
         push @genotypeprop_infos, \%genotypeprop_info;
     }
+
     $self->_genotypeprop_infos(\@genotypeprop_infos);
     $self->_genotypeprop_infos_counter(0);
 
@@ -1649,7 +1650,6 @@ sub get_cached_file_VCF {
         my $counter = 0;
         my $usingGT;
         while (my $geno = $self->get_next_genotype_info) {
-
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
@@ -1659,8 +1659,6 @@ sub get_cached_file_VCF {
             }
 
             $unique_germplasm{$geno->{germplasmDbId}}++;
-
-	    #print STDERR "GENO = ".Dumper($geno);
 
             my $genotype_string = "";
             if ($counter == 0) {

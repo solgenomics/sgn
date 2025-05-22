@@ -161,13 +161,11 @@ $latest_trial_activity => undef
 
             <tr><td><b>Description</b></td>
                 <td>
-                    <div id="trial_description">
 % if ($trial_description) {
-%  print "$trial_description";
+%  print "<div id='trial_description' style='white-space: pre-wrap;'>$trial_description</div>";
 % } else {
-%  print "<span class='text-danger'>[No Description]</span>";
+%  print "<div id='trial_description'><span class='text-danger'>[No Description]</span></div>";
 % }
-                    </div>
                 </td>
             </tr>
 

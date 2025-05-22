@@ -278,11 +278,10 @@ sub _parse_with_plugin {
 
     my $F;
     open($F, "<", $filename) || die "Can't open file $filename\n";
-
-    foreach (1..9) { my $trash = <$F>; } # remove first 9 lines
+    while (<$F> =~ m/^\##/) {
+        #Trash header lines
+    }
     $self->_fh($F);
-
-
 }
 
 sub extract_protocol_data {
@@ -345,22 +344,15 @@ sub next_genotype {
         print STDERR "No next genotype... Done!\n";
         close($F);
         return ( [$observation_unit_name], $genotypeprop );
-    }
-    else {
+    } else {
 	$line =~ s/\r//g;
         chomp($line);
 
-        LABEL: if ($line =~ m/^\#/) {
-            #print STDERR "Skipping header line: $line\n";
-            $line = <$F>;
-            goto LABEL;
-        }
-
         if ($self->_is_first_line()) {
-            print STDERR "Skipping 8 more lines... ";
-            for (0..7) {
+            print STDERR "Skipping 7 more lines... ";
+            for (0..6) {
                 $line = <$F>;
-                # print STDERR Dumper $line;
+		#print STDERR Dumper $line;
             }
         }
 	$line =~ s/\r//g;

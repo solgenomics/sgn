@@ -43,16 +43,17 @@ $locations
                                         <div class="col-sm-9">
                                             <input class="form-control" type="text" id="activity_project_name" name="activity_project_name"  />
                                         </div>
-                                    </div><br/><br/>
+                                    </div><br/>
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Activity Type: </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="activity_type" name="activity_type">
                                                 <option value="">Select an activity type</option>
-                                                <option value="tissue_culture">tissue culture</option>
+                                                <option value="tissue_culture">Tissue Culture</option>
+                                                <option value="transformation">Transformation</option>                                                
                                             </select>
                                         </div>
-                                    </div><br/><br/>
+                                    </div><br/>
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Breeding Program: </label>
                                         <div class="col-sm-9">
@@ -69,7 +70,7 @@ foreach my $program (@$programs) {
 </%perl>
                                             </select>
                                         </div>
-                                    </div><br/><br/>
+                                    </div><br/>
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Location of this project: </label>
                                         <div class="col-sm-9">
@@ -85,13 +86,13 @@ foreach my $program (@$programs) {
 </%perl>
                                             </select>
                                         </div>
-                                    </div><br/><br/>
+                                    </div><br/>
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Year:</label>
                                         <div class="col-sm-9">
                                             <div id="activity_project_year" name="activity_project_year" ></div>
                                         </div>
-                                    </div><br/><br/>
+                                    </div><br/>
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Description:</label>
                                         <div class="col-sm-9">

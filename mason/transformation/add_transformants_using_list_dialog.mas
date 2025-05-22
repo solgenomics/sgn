@@ -1,0 +1,151 @@
+<%args>
+$transformation_id
+$transformation_name
+$program_name
+</%args>
+
+
+<div class="modal fade" id="add_transformants_using_list_dialog" name="add_transformants_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addTransformantsUsingListDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="reset" class="close" id="add_transformants_using_list_dismiss_button_1" name="add_transformants_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addTransformantsUsingList">Add New Transformants Using a List</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" name="add_new_transformants_form" id="add_new_transformants_form">
+                        <div class="form-group">
+                            <label class="control-label col-sm-6">Select a List of Accessions to Add:</label>
+                            <div class="col-sm-6" >
+                                <div class="input-group">
+                                    <select class="form-control" id="new_transformants_list_select"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="new_transformants_list_submit">Submit</button>
+                <button id="add_transformants_using_list_dismiss_button_2" name="add_transformants_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_transformants_using_list_saved_dialog_message" name="add_transformants_using_list_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addTransformantsUsingListSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTransformantsUsingListSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The new transformants were stored successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_add_transformants_using_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_transformants_using_list_error_dialog" name="add_transformants_using_list_error_dialog" tabindex="-1" role="dialog" aria-labelledby="addTransformantsUsingListErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTransformantsUsingListErrorDialog">Add Transformants Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var lo = new CXGN.List();
+
+    jQuery('#new_transformants_list_select').html(lo.listSelect('new_transformants_list_select', ['accessions'], 'Select a list', undefined, undefined));
+
+
+    jQuery('#add_transformants_using_list_link').click(function(){
+        jQuery('#add_transformants_using_list_dialog').modal('show');
+    });
+
+    jQuery("#new_transformants_list_submit").click(function(){
+        var transformants_list_id = jQuery('#new_transformants_list_select').val();
+
+        if (!transformants_list_id) {
+            alert("Please select a list");
+            return;
+        }
+
+        jQuery.ajax({
+            url : '/ajax/transformation/add_transformants_using_list',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'list_id' : transformants_list_id,
+                'transformation_name': "<%$transformation_name%>",
+                'program_name': "<%$program_name%>",
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery("#add_transformants_using_list_dialog").modal("hide");
+                    jQuery("#add_transformants_using_list_saved_dialog_message").modal("show");
+                }
+                if (response.error_string) {
+                    jQuery("#add_transformants_using_list_error_dialog tbody").html('');
+                    jQuery("#add_transformants_using_list_error_dialog tbody").append(response.error_string);
+                    jQuery("#add_transformants_using_list_error_dialog").modal("show");
+                    return;
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding new transformants');
+            }
+        });
+
+    });
+
+    jQuery("#dismiss_add_transformants_using_list_saved_dialog").click(function(){
+        jQuery("#add_transformants_using_list_saved_dialog_message").modal("hide");
+        jQuery('#new_transformants_list_select').val('');
+        location.reload();
+    });
+
+    jQuery("[name = 'generate_tracking_identifiers_dismiss_button']").click(function() {
+        jQuery("#add_transformants_using_list_dialog").modal("hide");
+        jQuery('#new_transformants_list_select').val('');
+        location.reload();
+    });
+
+});
+
+
+
+</script>

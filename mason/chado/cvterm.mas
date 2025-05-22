@@ -47,6 +47,7 @@ my $db_name     = $cvterm->db->name;
 my $accession   = $cvterm->accession;
 my $cvterm_name = $cvterm->name;
 my $definition  = $cvterm->definition;
+my $is_variable = $cvterm->is_variable;
 my $comment     = '' ;#$cvterm->comment;
 #$stockref->{props} (hash of arrayrefs of cvtermprops. Keys = prop name, value = prop value)
 my $editable_cvterm_props_string = $cvtermref->{editable_cvterm_props};
@@ -144,7 +145,7 @@ my $edit_privs = $curator ;
 <b>Obsolete:</b> TRUE <br />
 % }
 
-<br /><b>Synoyms</b><br />
+<br /><b>Synonyms</b><br />
 % foreach my $synonym (@synonyms) {
 <% $synonym %> <br />
 % }
@@ -165,7 +166,8 @@ my $edit_privs = $curator ;
 
 % my $props_subtitle = $edit_privs ? "[<a id=\"cvterm_add_props\" href=\"javascript:cvtermprops_addPropDialog()\">Add...</a>]" : "[Add]";
 
-<&| /page/info_section.mas, title => "Trait Properties" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
+% if ($is_variable) { 
+<&| /page/info_section.mas, title => "Variable Properties" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /chado/cvtermprops.mas,
        cv_name    => 'trait_property',
        cvterm_id  =>$cvterm_id,
@@ -176,11 +178,15 @@ my $edit_privs = $curator ;
 	editable   => \@editable_cvterm_props  &>
 </&>
 
-<h4>Add this term to a list</h4>
+% }
+% else {
+
+
+%}
 
 <div id="cvterm_id" style="display:none" ><% $cvterm_name %>|<% $accession %></div>
 
-<&| /page/info_section.mas, title=>"Add to list", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Add this term to a list", collapsible=>1, collapsed=>1 &>
 <div id="paste_to_list">
 LOAD...
 </div>

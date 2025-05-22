@@ -3,15 +3,13 @@
   <& /breeders_toolbox/breeder_search_page.mas &>
 </div>
 
-<button type="button" class="btn btn-success" id="go_back" >Back</button>
+<button type="button" class="btn btn-success" id="go_back">Back</button>
    
 <script>
-var referer = new URL(document.referrer)
-var analysis = referer.pathname.replace(/\//g, ' ');
 
-jQuery('#go_back').html(`Back to ${analysis}`);
+jQuery('#go_back').html(`Back to solGS`);
 jQuery('#go_back').click( function(){
-  window.location.href=  referer.pathname;
+  window.location.href=  document.referrer;
   });
 </script>
     

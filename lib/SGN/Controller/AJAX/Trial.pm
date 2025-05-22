@@ -50,6 +50,10 @@ use YAML;
 use CXGN::TrialStatus;
 use CXGN::Calendar;
 use CXGN::BreedersToolbox::SoilData;
+use CXGN::Contact;
+use CXGN::File::Parse;
+use CXGN::People::Person;
+use CXGN::Tools::Run;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -990,7 +994,7 @@ sub upload_trial_file_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type, trial_name => $trial_name);
-    $parser->load_plugin('TrialExcelFormat');
+    $parser->load_plugin('TrialGeneric');
     $parsed_data = $parser->parse();
 
     if (!$parsed_data) {
@@ -1144,54 +1148,42 @@ sub upload_multiple_trial_designs_file : Path('/ajax/trial/upload_multiple_trial
 
 sub upload_multiple_trial_designs_file_POST : Args(0) {
     my ($self, $c) = @_;
+    my $upload                     = $c->req->upload('multiple_trial_designs_upload_file');
+    my $ignore_warnings            = $c->req->param('upload_multiple_trials_ignore_warnings') eq 'on';
+    my $email_address              = $c->req->param('trial_email_address_upload');
+    my $email_option_enabled       = $c->req->param('email_option_to_recieve_trial_upload_status') eq 'on';
 
-    # print STDERR "Check 1: ".localtime()."\n";
+    my $dbhost                     = $c->config->{dbhost};
+    my $dbname                     = $c->config->{dbname};
+    my $dbpass                     = $c->config->{dbpass};
+    my $basepath                   = $c->config->{basepath};
+    my $dbuser                     = $c->config->{dbuser};
+    my $time                       = DateTime->now();
+    my $timestamp                  = $time->ymd()."_".$time->hms();
+    my $upload_original_name       = $upload->filename();
+    my $upload_tempfile            = $upload->tempname;
+    my $subdirectory               = "trial_upload";
+    my $archive_filename           = $timestamp . "_" . $upload_original_name;
 
-    # print STDERR Dumper $c->req->params();
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('multiple_trial_designs_upload_file');
-    my $ignore_warnings = $c->req->param('upload_multiple_trials_ignore_warnings');
-    my $parser;
-    my $parsed_data;
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "trial_upload";
-    my $archived_filename_with_path;
-    my $md5;
-    my $validate_file;
-    my $parsed_file;
-    my $parse_errors;
-    my %parsed_data;
-    my %upload_metadata;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_id;
-    my $user_name;
-    my $error;
-
-    # print STDERR "Check 2: ".localtime()."\n";
-    print STDERR "Ignore warnings is $ignore_warnings\n";
-    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
-        print STDERR "File name must not have spaces or slashes.\n";
-        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
-        return;
-    }
-
+    # Check if user is logged in and has curator or submitter privileges
     if (!$c->user()) {
         print STDERR "User not logged in... not uploading a trial.\n";
         $c->stash->{rest} = {errors => "You need to be logged in to upload a trial." };
         return;
     }
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
         $c->stash->{rest} = {errors =>  "You have insufficient privileges to upload a trial." };
         return;
     }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $username = $c->user()->get_object()->get_username();
 
-    $user_id = $c->user()->get_object()->get_sp_person_id();
-    $user_name = $c->user()->get_object()->get_username();
+    # Check filename for spaces and/or slashes
+    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+        print STDERR "File name must not have spaces or slashes.\n";
+        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
+        return;
+    }
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
@@ -1203,175 +1195,187 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         user_id => $user_id,
         user_role => $c->user->get_object->get_user_type()
     });
-    $archived_filename_with_path = $uploader->archive();
-    $md5 = $uploader->get_md5($archived_filename_with_path);
+    my $archived_filename_with_path = $uploader->archive();
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {errors => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
         return;
     }
     unlink $upload_tempfile;
 
-    # print STDERR "Check 3: ".localtime()."\n";
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="trial upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
+    # Build the backend script command to parse, validate, and upload the trials
+    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -i \"$archived_filename_with_path\" -un \"$username\"";
+    $cmd .= " -e \"$email_address\"" if $email_option_enabled && $email_address;
+    $cmd .= " -iw" if $ignore_warnings;
+
+    # Run asynchronously if email option is enabled
+    my $runner = CXGN::Tools::Run->new();
+    if ( $email_option_enabled && $email_address ) {
+        $runner->run_async($cmd);
+        my $err = $runner->err();
+        my $out = $runner->out();
+
+        print STDERR "Upload Trials Output (async):\n";
+        print STDERR "$err\n";
+        print STDERR "$out\n";
+
+        $c->stash->{rest} = {background => 1};
+        return;
+    }
+
+    # Otherwise run synchronously
+    else {
+        $runner->run($cmd);
+        my $err = $runner->err();
+        my $out = $runner->out();
+
+        print STDERR "Upload Trials Output (sync):\n";
+        print STDERR "$err\n";
+        print STDERR "$out\n";
+
+        # Collect errors and warnings from STDERR
+        my @errors;
+        my @warnings;
+        foreach (split(/\n/, $err)) {
+            if ($_ =~ /^ERROR/) {
+                $_ =~ s/ERROR:? ?//;
+                push @errors, $_;
+            }
+            elsif ($_ =~ /^WARNING/) {
+                $_ =~ s/WARNING:? ?//;
+                push @warnings, $_;
+            }
+        }
+
+        if ( scalar(@errors) > 0 ) {
+            $c->stash->{rest} = {errors => \@errors};
+            return;
+        }
+        if ( scalar(@warnings) > 0 ) {
+            $c->stash->{rest} = {warnings => \@warnings};
+            return;
+        }
+    }
 
 
-    #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('MultipleTrialDesignExcelFormat');
-    $parsed_data = $parser->parse();
+    # Return success
+    $c->stash->{rest} = {success => "1"};
+    return;
 
+}
+
+
+sub upload_trial_metadata_file : Path('/ajax/trial/upload_trial_metadata_file') : ActionClass('REST') { }
+
+sub upload_trial_metadata_file_POST : Args(0) {
+    my ($self, $c)                 = @_;
+    my $upload                     = $c->req->upload('trial_metadata_upload_file');
+
+    my $chado_schema               = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbhost                     = $c->config->{dbhost};
+    my $dbname                     = $c->config->{dbname};
+    my $dbpass                     = $c->config->{dbpass};
+    my $basepath                   = $c->config->{basepath};
+    my $dbuser                     = $c->config->{dbuser};
+    my $time                       = DateTime->now();
+    my $timestamp                  = $time->ymd()."_".$time->hms();
+    my $upload_original_name       = $upload->filename();
+    my $upload_tempfile            = $upload->tempname;
+    my $subdirectory               = "trial_metadata";
+    my $archive_filename           = $timestamp . "_" . $upload_original_name;
+
+    # Check if user is logged in and has curator or submitter privileges
+    if (!$c->user()) {
+        $c->stash->{rest} = {errors => "You need to be logged in to update a trial." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $username = $c->user()->get_object()->get_username();
+    my @user_roles = $c->user()->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    # User must be a curator or submitter
+    if ( !(exists($has_roles{'submitter'}) || exists($has_roles{'curator'}) ) ) {
+        $c->stash->{rest} = {errors =>  "You must be a curator or submitter to update a trial." };
+        return;
+    }
+
+    # Check filename for spaces and/or slashes
+    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+        print STDERR "File name must not have spaces or slashes.\n";
+        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
+        return;
+    }
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user->get_object->get_user_type()
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    # parse uploaded file with trial metadata plugin
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialMetadataGeneric');
+    my $parsed_data = $parser->parse();
+
+    my @errors;
+    my @warnings;
     if (!$parsed_data) {
-        my $return_error = '';
-
-        if (! $parser->has_parse_errors() ){
-            $c->stash->{rest} = {errors => "Could not get parsing errors"};
-            return;
-        }
-        else {
-            print STDERR "Parse errors are:\n";
-            print STDERR Dumper $parse_errors;
-            $parse_errors = $parser->get_parse_errors();
-            $c->stash->{rest} = {errors => $parse_errors->{'error_messages'}};
-            return;
-        }
+        my $parse_errors = $parser->get_parse_errors();
+        $c->stash->{rest} = { errors => $parse_errors ? $parse_errors->{'error_messages'} : ['No data returned'] };
+        return;
     }
 
     if ($parser->has_parse_warnings()) {
-        unless ($ignore_warnings) {
-            my $warnings = $parser->get_parse_warnings();
-            $c->stash->{rest} = {warnings => $warnings->{'warning_messages'}};
+        my $warnings = $parser->get_parse_warnings();
+        $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
+        return;
+    }
+
+    # Check breeding program permissions, if not a curator
+    if ( ! exists($has_roles{'curator'}) ) {
+        my $breeding_programs = $parsed_data->{'breeding_programs'};
+        my @missing_breeding_programs;
+        foreach my $breeding_program (@$breeding_programs) {
+            if ( ! exists($has_roles{$breeding_program}) ) {
+                push @missing_breeding_programs, $breeding_program;
+            }
+        }
+        if ( scalar(@missing_breeding_programs) > 0 ) {
+            $c->stash->{rest} = { errors => "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s)." };
             return;
         }
     }
 
-    # print STDERR "Check 4: ".localtime()."\n";
-    my %all_designs = %{$parsed_data};
-    my %save;
-    $save{'errors'} = [];
-
-    my $coderef = sub {
-
-      for my $trial_name ( keys %all_designs ) {
-        my $trial_design = $all_designs{$trial_name};
-        # print STDERR "\nSaving trial $trial_name:\n";
-        my %trial_info_hash = (
-            chado_schema => $chado_schema,
-            dbh => $dbh,
-            owner_id => $user_id,
-            trial_year => $trial_design->{'year'},
-            trial_description => $trial_design->{'description'},
-            trial_location => $trial_design->{'location'},
-            trial_name => $trial_name,
-            design_type => $trial_design->{'design_type'},
-            design => $trial_design->{'design_details'},
-            program => $trial_design->{'breeding_program'},
-            upload_trial_file => $upload,
-            operator => $user_name,
-            owner_id => $user_id
-        );
-        my $entry_numbers = $trial_design->{'entry_numbers'};
-
-        if ($trial_design->{'trial_type'}){
-            $trial_info_hash{trial_type} = $trial_design->{'trial_type'};
+    # Update each trial
+    eval {
+        my $trial_data = $parsed_data->{'trial_data'};
+        foreach my $trial_id (keys %$trial_data) {
+            my $details = $trial_data->{$trial_id};
+            my $trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $trial_id });
+            my $error = $trial->update_metadata($details);
+            die $error if $error;
         }
-        if ($trial_design->{'plot_width'}){
-            $trial_info_hash{plot_width} = $trial_design->{'plot_width'};
-        }
-        if ($trial_design->{'plot_length'}){
-            $trial_info_hash{plot_length} = $trial_design->{'plot_length'};
-        }
-        if ($trial_design->{'field_size'}){
-            $trial_info_hash{field_size} = $trial_design->{'field_size'};
-        }
-        if ($trial_design->{'planting_date'}){
-            $trial_info_hash{planting_date} = $trial_design->{'planting_date'};
-        }
-        if ($trial_design->{'harvest_date'}){
-            $trial_info_hash{harvest_date} = $trial_design->{'harvest_date'};
-        }
-        if ($trial_design->{'transplanting_date'}){
-            $trial_info_hash{transplanting_date} = $trial_design->{'transplanting_date'};
-        }
-        my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
-        my $current_save = $trial_create->save_trial();
-
-        if ($current_save->{error}){
-            $chado_schema->txn_rollback();
-            push @{$save{'errors'}}, $current_save->{'error'};
-        } elsif ($current_save->{'trial_id'}) {
-            my $trial_id = $current_save->{'trial_id'};
-            my $timestamp = $time->ymd();
-            my $calendar_funcs = CXGN::Calendar->new({});
-            my $formatted_date = $calendar_funcs->check_value_format($timestamp);
-            my $upload_date = $calendar_funcs->display_start_date($formatted_date);
-
-            my %trial_activity;
-            $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
-            $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
-
-            my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
-            $trial_activity_obj->trial_activities(\%trial_activity);
-            $trial_activity_obj->parent_id($trial_id);
-            my $activity_prop_id = $trial_activity_obj->store();
-        }
-
-        # save entry numbers, if provided
-        if ( $entry_numbers && scalar(keys %$entry_numbers) > 0 && $current_save->{'trial_id'} ) {
-            my %entry_numbers_prop;
-            my @stock_names = keys %$entry_numbers;
-
-            # Convert stock names from parsed trial template to stock ids for data storage
-            my $stocks = $chado_schema->resultset('Stock::Stock')->search({ uniquename=>{-in=>\@stock_names} });
-            while (my $s = $stocks->next()) {
-                $entry_numbers_prop{$s->stock_id} = $entry_numbers->{$s->uniquename};
-            }
-
-            # Lookup synonyms of accession names
-            my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_synonym', 'stock_property')->cvterm_id();
-            my $acc_synonym_rs = $chado_schema->resultset("Stock::Stock")->search({
-                'me.is_obsolete' => { '!=' => 't' },
-                'stockprops.value' => { -in => \@stock_names},
-                'stockprops.type_id' => $synonym_cvterm_id
-            },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
-            while (my $r=$acc_synonym_rs->next) {
-                if ( exists($entry_numbers->{$r->get_column('synonym')}) ) {
-                    $entry_numbers_prop{$r->stock_id} = $entry_numbers->{$r->get_column('synonym')};
-                }
-            }
-
-            # store entry numbers
-            my $trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $current_save->{'trial_id'} });
-            $trial->set_entry_numbers(\%entry_numbers_prop);
-        }
-      }
-
+    };
+    if ($@) {
+        $c->stash->{rest} = { errors => "There was an error updating one or more trials: $@" };
+        return;
     };
 
-    try {
-        $chado_schema->txn_do($coderef);
-    } catch {
-        print STDERR "Transaction Error: $_\n";
-        push @{$save{'errors'}}, $_;
-    };
-
-    #print STDERR "Check 5: ".localtime()."\n";
-    if (scalar @{$save{'errors'}} > 0) {
-        print STDERR "Errors saving trials: ".@{$save{'errors'}};
-        $c->stash->{rest} = {errors => $save{'errors'}};
-        return;
-    # } elsif ($save->{'trial_id'}) {
-    } else {
-        my $dbh = $c->dbc->dbh();
-        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'all_but_genoview', 'concurrent', $c->config->{basepath});
-
-        $c->stash->{rest} = {success => "1",};
-        return;
-    }
-
+    # All Done
+    $c->stash->{rest} = { success => 1 };
+    return;
 }
 
 

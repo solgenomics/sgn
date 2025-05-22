@@ -8,6 +8,10 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
+#
+# DEPRECATED: This plugin has been replaced by the SeedlotFromAccessionGeneric plugin
+#
+
 sub _validate_with_plugin {
     my $self = shift;
 
@@ -236,7 +240,7 @@ sub _validate_with_plugin {
 
     my @sources = keys %seen_source_names;
     my $source_validator = CXGN::List::Validate->new();
-    my @sources_missing = @{$source_validator->validate($schema,'seedlots_or_plots_or_crosses_or_accessions',\@sources)->{'missing'}};
+    my @sources_missing = @{$source_validator->validate($schema,'seedlots_or_plots_or_subplots_or_plants_or_crosses_or_accessions',\@sources)->{'missing'}};
 
     if (scalar(@sources_missing) > 0) {
 	push @error_messages, "The following source seedlots could not be found in the database: ".join(',',@sources_missing);
@@ -430,9 +434,9 @@ sub _parse_with_plugin {
             description => $description,
             box_name => $box_name,
             operator_name => $operator_name,
-	    quality => $quality,
-	    source => $source,
-	    source_id => $source_id,
+            quality => $quality,
+            source => $source,
+            source_id => $source_id,
         };
 
     }

@@ -265,7 +265,7 @@ sub get_year {
     my $rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $self->get_trial_id() })->search_related('projectprops', { 'projectprops.type_id' => $type_id } );
 
     if ($rs->count() == 0) {
-	return undef;
+	return;
     }
     else {
 	return $rs->first()->value();
@@ -944,7 +944,7 @@ sub get_project_type {
 	    }
 	}
     }
-    return undef;
+    return;
 
 }
 
@@ -1029,21 +1029,21 @@ sub get_breeding_program {
     my $self = shift;
 
     my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search({
-			subject_project_id => $self->get_trial_id(),
-	    type_id => $self->get_breeding_program_trial_relationship_cvterm_id(),
-		});
+        subject_project_id => $self->get_trial_id(),
+        type_id => $self->get_breeding_program_trial_relationship_cvterm_id(),
+    });
     if ($rs->count() == 0) {
-			return undef;
+        return;
     }
 
     my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search({
-			project_id => $rs->first()->object_project_id()
-		});
+        project_id => $rs->first()->object_project_id()
+    });
     if ($bp_rs->count > 0) {
-			return $bp_rs->first()->name();
+        return $bp_rs->first()->name();
     }
 
-    return undef;
+    return;
 }
 
 sub set_breeding_program {
@@ -1083,6 +1083,40 @@ sub set_breeding_program {
 	}
 	return {};
 }
+
+=head2 accessors get_breeding_program_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_breeding_program_id {
+
+    my $self = shift;
+
+    my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search({
+        subject_project_id => $self->get_trial_id(),
+        type_id => $self->get_breeding_program_trial_relationship_cvterm_id(),
+    });
+    if ($rs->count() == 0) {
+        return;
+    }
+
+    my $bp_rs = $self->bcs_schema()->resultset("Project::Project")->search({
+        project_id => $rs->first()->object_project_id()
+    });
+    if ($bp_rs->count > 0) {
+        return $bp_rs->first()->project_id();
+    }
+
+    return;
+}
+
 
 
 =head2 accessors get_name(), set_name()
@@ -1344,7 +1378,7 @@ sub get_transplanting_date {
     if ($row){
         my $harvest_date = $calendar_funcs->display_start_date($row->value());
         return $harvest_date;
-    } 
+    }
     else {
         return;
     }
@@ -1363,7 +1397,7 @@ sub set_transplanting_date {
         });
         $row->value($transplanting_event);
         $row->update();
-    } 
+    }
     else{
         print STDERR "date format did not pass check while preparing to set transplanting date: $transplanting_date \n";
     }
@@ -1377,14 +1411,14 @@ sub remove_transplanting_date {
         my $transplanting_date_cvterm_id = $self->get_transplanting_date_cvterm_id();
         my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
             project_id => $self->get_trial_id(),
-            type_id => $transplanting_date_cvterm_id,  
+            type_id => $transplanting_date_cvterm_id,
             value => $transplanting_event,
         });
         if ($row){
             print STDERR "Removing transplanting date $transplanting_event from trial ".$self->get_trial_id()."\n";
             $row->delete();
-        }   
-    } 
+        }
+    }
     else {
         print STDERR "date format did not pass check while preparing to delete transplanting date: $transplanting_date  \n";
     }
@@ -2139,54 +2173,59 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
     my $dbname = shift;
     my $dbuser = shift;
     my $dbpass = shift;
-    my $temp_file_nd_experiment_id = shift;
+    my $temp_file_nd_experiment_id = shift || "/tmp/tempfile_nd_exp_id_deletion_$$";
     my $basepath = shift;
     my $schema = shift;
     my $phenotype_ids_and_nd_experiment_ids_to_delete = shift;
 
     my $coderef = sub {
-        my $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}});
-        my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
-        my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
-        $h2->execute();
+	my $phenotype_id_sql = "";
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids})) { 
+	    $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}});
+	    
+	    my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
+	    my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
+	    $h2->execute();
+	    
+	    print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
+	}
 
-        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) { 
+	    my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
+	    
+	    # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
+	    #
+	    my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
+	    my $check_h = $schema->storage->dbh()->prepare($checkq);
+	    $check_h ->execute();
+	    
+	    my @nd_experiment_ids;
+	    while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
+		push @nd_experiment_ids, $nd_experiment_id;
+	    }
+	    
+	    if (scalar(@nd_experiment_ids)>0) {
+		$nd_experiment_id_sql = join(",", @nd_experiment_ids);
+		
+		my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+		my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
+		$h3->execute();
 
-        my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
-
-        # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
-        #
-        my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
-        my $check_h = $schema->storage->dbh()->prepare($checkq);
-        $check_h ->execute();
-
-        my @nd_experiment_ids;
-        while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
-            push @nd_experiment_ids, $nd_experiment_id;
-        }
-
-        if (scalar(@nd_experiment_ids)>0) {
-            $nd_experiment_id_sql = join(",", @nd_experiment_ids);
-
-            my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-            my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
-            $h3->execute();
-
-            my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
-            my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
-            $h_nd_json->execute();
-
-            my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-            my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
-            $h4->execute();
-
-            open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
+		my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
+		my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
+		$h_nd_json->execute();
+		
+		my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+		my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
+		$h4->execute();
+		
+		open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
                 foreach (@nd_experiment_ids) {
                     print $fh "$_\n";
                 }
-            close($fh);
-
-            my $async_delete = CXGN::Tools::Run->new();
+		close($fh);
+	    }
+	    my $async_delete = CXGN::Tools::Run->new();
             $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
 
             print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (and ".scalar(@nd_experiment_ids)." nd_experiment entries may still be in deletion in asynchronous process.)\n";
@@ -2238,20 +2277,20 @@ sub delete_field_layout {
     # Note: metadata entries need to be deleted separately using delete_metadata()
     #
     my $error = '';
-    eval {
-        $self->bcs_schema()->txn_do(
-            sub {
+#    eval {
+ #       $self->bcs_schema()->txn_do(
+  #          sub {
                 #print STDERR "DELETING FIELD LAYOUT FOR TRIAL $trial_id...\n";
                 $self->_delete_field_layout_experiment();
                 #print STDERR "DELETE MANAGEMENT FACTORS FOR TRIAL $trial_id...\n";
                 $self->_delete_management_factors_experiments();
-            }
-        );
-    };
-    if ($@) {
-        print STDERR "ERROR $@\n";
-        return "An error occurred: $@\n";
-    }
+   #         }
+    #    );
+#    };
+#    if ($@) {
+#        print STDERR "ERROR $@\n";
+#        return "An error occurred: $@\n";
+#    }
 
     return '';
 }
@@ -2298,8 +2337,8 @@ sub get_phenotype_metadata {
 
 sub delete_phenotype_metadata {
     my $self = shift;
-    my $metadata_schema = shift;
-    my $phenome_schema = shift;
+    my $metadata_schema = $self->metadata_schema() || shift;
+    my $phenome_schema = $self->phenome_schema || shift;
 
     if (!$metadata_schema || !$phenome_schema) { die "Need metadata schema parameter\n"; }
 
@@ -2317,13 +2356,13 @@ sub delete_phenotype_metadata {
 	#print STDERR "Associated metadata id: $md_id\n";
 	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
 	if ($mdmd_row) {
-	    #print STDERR "Obsoleting $md_id...\n";
+	    print STDERR "Obsoleting $md_id...\n";
 
 	    $mdmd_row -> update( { obsolete => 1 });
 	}
     }
 
-    #print STDERR "Deleting the entries in the linking table...\n";
+    print STDERR "Deleting the entries in the linking table...\n";
 
     # delete the entries from the linking table...
     $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
@@ -2356,8 +2395,8 @@ sub delete_phenotype_metadata {
 
 sub delete_metadata {
     my $self = shift;
-    my $metadata_schema = $self->metadata_schema;
-    my $phenome_schema = $self->phenome_schema;
+    my $metadata_schema = $self->metadata_schema || shift;
+    my $phenome_schema = $self->phenome_schema || shift;
 
     if (!$metadata_schema || !$phenome_schema) { die "Need metadata schema parameter\n"; }
 
@@ -2376,7 +2415,7 @@ sub delete_metadata {
         return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
     }
 
-    #print STDERR "Deleting metadata for trial $trial_id...\n";
+    print STDERR "Deleting metadata for trial $trial_id...\n";
 
     # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
     #
@@ -2385,16 +2424,20 @@ sub delete_metadata {
     $h->execute($trial_id);
 
     while (my ($md_id) = $h->fetchrow_array()) {
-	#print STDERR "Associated metadata id: $md_id\n";
-	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
-	if ($mdmd_row) {
-	    #print STDERR "Obsoleting $md_id...\n";
+	print STDERR "Associated metadata id: $md_id\n";
 
-	    $mdmd_row -> update( { obsolete => 1 });
-	}
+	my $uq = "UPDATE metadata.md_metadata set obsolete=1 where metadata_id=?";
+	my $uh = $self->bcs_schema->storage->dbh->prepare($uq);
+	$uh->execute($md_id);
+	#my $mdmd_row = $self->metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
+	#if ($mdmd_row) {
+	 #   print STDERR "Obsoleting $md_id...\n";
+
+	  #  $mdmd_row -> update( { obsolete => 1 });
+	#}
     }
 
-    #print STDERR "Deleting the entries in the linking table...\n";
+    print STDERR "Deleting the entries in the linking table...\n";
 
     # delete the entries from the linking table... (left joins are due to sometimes missing md_file entries)
     $q = "SELECT distinct(file_id) FROM nd_experiment_project LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
@@ -2435,6 +2478,10 @@ sub _delete_field_layout_experiment {
     my $layout_design = $self->get_layout->get_design;
     my @all_stock_ids;
     while( my($plot_num, $design_info) = each %$layout_design){
+	if (! ref($design_info)) {
+	    print STDERR "Design info missing for plot $plot_num. Skipping.\n";
+	    next;
+	}
         my $plot_id = $design_info->{plot_id}; #this includes the "tissue_sample" in "genotyping_layout"
         my @plant_ids = $design_info->{plant_ids} ? @{$design_info->{plant_ids}} : ();
         my @subplot_ids = $design_info->{subplot_ids} ? @{$design_info->{subplot_ids}} : ();
@@ -2490,9 +2537,9 @@ sub _delete_field_layout_experiment {
     }
 
     my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id, $analysis_experiment_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
-    if ($nde_rs->count != 1){
-        die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
-    }
+#    if ($nde_rs->count != 1){
+#        die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
+#    }
     while( my $r = $nde_rs->next){
         $r->delete();
     }
@@ -5385,7 +5432,266 @@ sub genotyping_protocol_count {
 }
 
 
+=head2 function delete_empty_transformation_project()
 
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_empty_transformation_project {
+    my $self = shift;
+    my $project_id = $self->get_trial_id();
+
+    if ($self->transformation_id_count() > 0) {
+        return 'Cannot delete transformation project with associated transformation IDs.';
+    }
+
+    my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {$self->bcs_schema->storage->dbh()},{on_connect_do => ['SET search_path TO public,phenome;']});
+    my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $project_id });
+    if ($project_owner_row) {
+        $project_owner_row->delete();
+    }
+
+    eval {
+        my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $project_id });
+        $row->delete();
+        print STDERR "deleted project ".$project_id."\n";
+    };
+    if ($@) {
+        print STDERR "An error occurred during deletion: $@\n";
+        return $@;
+    }
+}
+
+sub get_create_date {
+    my $self = shift;
+    my $q = "select create_date from project where project_id=?";
+    my $h = $self->bcs_schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+
+    my ($create_date) = $h->fetchrow_array();
+    return $create_date;
+}
+
+=head2 function transformation_id_count()
+
+ Usage:
+ Desc:    The number of transformation ids associated with this transformation project
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub transformation_id_count {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $project_id = $self->get_trial_id();
+    my $transformation_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation_experiment", "experiment_type")->cvterm_id();
+
+    my $q = "SELECT count(nd_experiment_project.nd_experiment_id)
+        FROM nd_experiment_project
+        JOIN nd_experiment on (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+        WHERE nd_experiment.type_id = ?
+        AND nd_experiment_project.project_id = ?";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($transformation_experiment_type_id, $project_id);
+    my ($count) = $h->fetchrow_array();
+    return $count;
+}
+
+=head2 class function get_recently_added_trials()
+
+ Usage:   my @trials = CXGN::Project::get_recently_added_trials()
+ Params:  $interval - one of day, week, month, year
+ Returns: a list of trials, consisting of listrefs listing
+          trial_name (with link), trial_type, breeding program 
+          (with link)
+
+=cut
+
+sub get_recently_added_trials {
+    my $bcs_schema = shift;
+    my $phenome_schema = shift;
+    my $people_schema = shift;
+    my $metadata_schema = shift;
+    my $interval = shift;
+    my $limit = shift || 10;
+    
+    if (! grep($interval, qw| day week month year | )) {
+	print STDERR "Interval $interval not recognized, aborting query\n";
+	return;
+    }
+
+    my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
+    
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute($limit);
+    
+    my @recent_trials = ();
+    while (my ($trial_id) = $h->fetchrow_array()) {
+	print STDERR "Formatting entry with trial id $trial_id...\n";
+	my $t = CXGN::Trial->new({ bcs_schema => $bcs_schema, phenome_schema => $phenome_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, trial_id => $trial_id });
+	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
+	my $trial_type = ref($t);
+	$trial_type =~ s/^CXGN\:\://g;
+	
+	my $breeding_program = $t->get_breeding_program();
+	my $breeding_program_id = $t->get_breeding_program_id();
+	my $create_date = $t->get_create_date();
+	my $breeding_program_link = "<a href=\"/breeders/program/".$breeding_program_id."\">$breeding_program</a>";
+       push @recent_trials, [ $trial_link, $trial_type, $breeding_program_link, $create_date ];
+    }
+    return \@recent_trials;
+}
+
+=head2 class function get_recently_modified_trials()
+
+  Usage:   my $accs = $p->get_recenlty_modified_trials($bcs_schema, $interval, $limit)
+  Params:  $bcs_schema - Bio::Chado::Schema schema
+           $interval - day, week, month, year
+           $limit - the maximum number of accessions to report (default 10)
+
+  Returns: list ref of [ $trial_link, $trial_type, $breeding_program, $create_date ]
+
+=cut
+
+sub get_recently_modified_trials {
+    my $bcs_schema = shift;
+    my $phenome_schema = shift;
+    my $people_schema = shift;
+    my $metadata_schema = shift;
+    my $interval = shift;
+    my $limit = shift || 10;
+
+    if (! grep($interval, qw| day week month year | )) {
+	print STDERR "Interval $interval not recognized, aborting query\n";
+	return;
+    }
+        
+    #print STDERR "INTERVAL is $interval\n";
+    my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc limit ? ";
+    
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute($limit);
+    
+    my @recent_trials;
+    while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
+	print STDERR "Formatting entry with trial id $trial_id...\n";
+	my $t = CXGN::Trial->new( { bcs_schema => $bcs_schema, phenome_schema => $phenome_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, trial_id => $trial_id });
+	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
+	my $trial_type = ref($t);
+	$trial_type =~ s/^CXGN\:\://g;
+	
+	my $breeding_program = $t->get_breeding_program();
+	my $breeding_program_id = $t->get_breeding_program_id();
+
+	my $breeding_program_link = "<a href=\"/breeders/program/".$breeding_program_id."\">$breeding_program</a>";
+       push @recent_trials, [ $trial_link, $trial_type, $breeding_program_link, $create_date ];
+    }
+    return \@recent_trials;
+}
+
+=head2 class function get_recently_added_accessions()
+
+  Usage:   my $accs = CXGN::Project::get_recenlty_added_accessions($bcs_schema, $interval, $limit)
+  Params:  $bcs_schema - Bio::Chado::Schema object
+           $interval - day, week, month, year
+           $limit - the maximum number of accessions to report (default 10)
+
+  Returns: list ref of [ $uniquename, $create_date ]
+
+=cut
+
+sub get_recently_added_accessions {
+    my $bcs_schema = shift;
+    my $interval = shift;
+    my $limit = shift || 10;
+
+    if (! grep($interval, qw| day week month year | )) {
+	print STDERR "Interval $interval not recognized, aborting query\n";
+	return;
+    }
+    
+    my $q = "select stock.stock_id from stock where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
+
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute($limit);
+
+    my @stock_table;
+    while (my ($stock_id) = $h->fetchrow_array()) {
+	my $s = CXGN::Stock->new( { schema => $bcs_schema, stock_id => $stock_id });
+	my $uniquename = $s->uniquename();
+	my $create_date = $s->create_date();
+
+	push @stock_table, [ $uniquename, $create_date ];
+    }
+
+    return \@stock_table;
+    
+}
+
+=head2 function update_metadata()
+
+ Usage:         $trial->update_metadata(\%details);
+ Desc:          Update the trial metadata details using the provided hashref of properties
+ Ret:           An error message if an error was encountered
+ Args:          details = a hashref of trial metadata properties
+ Side Effects:
+ Example:       my %details = ( location => 'New Location, ST', planting_date => '2024-01-01' );
+                $trial->update_metadata(\%details);
+
+=cut
+
+sub update_metadata {
+    my $self = shift;
+    my $details = shift;
+
+    eval {
+        if ($details->{name}) { $self->set_name($details->{name}); }
+        if ($details->{breeding_program}) { $self->set_breeding_program($details->{breeding_program}); }
+        if ($details->{location}) { $self->set_location($details->{location}); }
+        if ($details->{year}) { $self->set_year($details->{year}); }
+        if ($details->{type}) { $self->set_project_type($details->{type}); }
+        if ($details->{design_type}) { $self->set_design_type($details->{design_type}); }
+        if ($details->{planting_date}) {
+            if ($details->{planting_date} eq 'remove') { $self->remove_planting_date($self->get_planting_date()); }
+            else { $self->set_planting_date($details->{planting_date}); }
+        }
+        if ($details->{transplanting_date}) {
+            if ($details->{transplanting_date} eq 'remove') { $self->remove_transplanting_date($self->get_transplanting_date()); }
+            else { $self->set_transplanting_date($details->{transplanting_date}); }
+        }
+        if ($details->{harvest_date}) {
+            if ($details->{harvest_date} eq 'remove') { $self->remove_harvest_date($self->get_harvest_date()); }
+            else { $self->set_harvest_date($details->{harvest_date}); }
+        }
+        if ($details->{description}) { $self->set_description($details->{description}); }
+        if ($details->{field_size}) { $self->set_field_size($details->{field_size}); }
+        if ($details->{plot_width}) { $self->set_plot_width($details->{plot_width}); }
+        if ($details->{plot_length}) { $self->set_plot_length($details->{plot_length}); }
+        if ($details->{plan_to_genotype}) { $self->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
+        if ($details->{plan_to_cross}) { $self->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
+        if ($details->{plate_format}) { $self->set_genotyping_plate_format($details->{plate_format}); }
+        if ($details->{plate_sample_type}) { $self->set_genotyping_plate_sample_type($details->{plate_sample_type}); }
+        if ($details->{facility}) { $self->set_genotyping_facility($details->{facility}); }
+        if ($details->{facility_submitted}) { $self->set_genotyping_facility_submitted($details->{facility_submitted}); }
+        if ($details->{facility_status}) { $self->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
+        if ($details->{raw_data_link}) { $self->set_raw_data_link($details->{raw_data_link}); }
+    };
+    if ($@) {
+        return "An error occurred setting the new trial details of trial " . $self->get_name() . ": $@";
+    }
+}
 
 1;
 

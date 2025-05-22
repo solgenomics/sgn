@@ -130,6 +130,7 @@ solGS.kinship = {
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
       "<th>Population</th>" +
       "<th>Data structure type</th>" +
+      "<th>Compatibility</th>" + 
       "<th>Ownership</th>" +
       "<th>Data type</th>" +
       "<th>Run Kinship</th>" +
@@ -154,6 +155,7 @@ solGS.kinship = {
     var popId = kinshipPop.id;
     var popName = kinshipPop.name;
     var dataStr = kinshipPop.data_str;
+    var tool_compatibility = kinshipPop.tool_compatibility;
 
     var kinshipPopId = solGS.kinship.getKinshipPopId(popId, dataStr);
    
@@ -193,18 +195,31 @@ solGS.kinship = {
       `<button type="button" id=${runKinshipBtnId}` +
       ` class="btn btn-success" data-selected-pop='${kinshipArgs}'>Run kinship</button>`;
 
+    var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
+      if (tool_compatibility == null || tool_compatibility == "(not calculated)"){
+        compatibility_message = "(not calculated)";
+      } else {
+          if (tool_compatibility["Kinship & Inbreeding"]['compatible'] == 0) {
+          compatibility_message = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
+          } else {
+              if ('warn' in tool_compatibility["Kinship & Inbreeding"]) {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + tool_compatibility["Kinship & Inbreeding"]['warn'] + '"></span></b>';
+              } else {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-ok" style="color:green"></span></b>';
+              }
+          }
+      }
     }
     var rowData = [popName,
-      dataStr, kinshipPop.owner, dataTypeOpts, runKinshipBtn, `${dataStr}_${popId}`];
+      dataStr, compatibility_message, kinshipPop.owner, dataTypeOpts, runKinshipBtn, `${dataStr}_${popId}`];
 
     return rowData;
   },
 
   displayKinshipPopsTable: function (tableId, data) {
 
-    console.log(`displayKinshipPopsTable data: ${data}`)
     var table = jQuery(`#${tableId}`).DataTable({
       'searching': true,
       'ordering': true,
@@ -213,7 +228,7 @@ solGS.kinship = {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[5]
+        return a[6]
       }
     });
 
@@ -244,6 +259,7 @@ solGS.kinship = {
     lists = list.addDataStrAttr(lists);
 
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+
     var kinshipPops = [lists, datasets];
 
     return kinshipPops.flat();
@@ -275,7 +291,7 @@ solGS.kinship = {
     if (selectedPopDiv) {
       var selectedPopData = selectedPopDiv.dataset;
 
-      var kinshipArgs = JSON.parse(selectedPopData.selectedPop);
+      kinshipArgs = JSON.parse(selectedPopData.selectedPop);
       var kinshipPopId = kinshipArgs.data_str + "_" + kinshipArgs.id;
 
       var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("kinship_div");
@@ -384,13 +400,10 @@ jQuery(document).ready(function () {
     var runKinshipBtnId = e.target.id;
     if (runKinshipBtnId.match(/run_kinship/)) {
       var kinshipArgs = solGS.kinship.getKinshipArgs();
-      console.log(`kinshipArgs: ${JSON.stringify(kinshipArgs)}`)
       var kinshipPopId = kinshipArgs.kinship_pop_id;
       if (!kinshipPopId) {
         kinshipArgs = solGS.kinship.getSelectedPopKinshipArgs(runKinshipBtnId);
       }
-
-      console.log(`kinshipArgs: ${JSON.stringify(kinshipArgs)}`)
 
       kinshipPopId = kinshipArgs.kinship_pop_id;
       var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("kinship_div");
@@ -414,7 +427,7 @@ jQuery(document).ready(function () {
         .checkCachedKinship(kinshipUrl, kinshipArgs)
         .done(function (res) {
           if (res.data) {
-            jQuery(this.kinshipMsgDiv).html("Generating heatmap... please wait...").show();
+            jQuery(kinshipMsgDiv).html("Generating heatmap... please wait...").show();
 
             kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
 
@@ -493,7 +506,7 @@ jQuery(document).ready(function () {
                         }
                       })
                       .fail(function () {
-                        jQuery(this.kinshipMsgDiv)
+                        jQuery(kinshipMsgDiv)
                           .html("Error occured running the kinship.")
                           .show()
                           .fadeOut(8400);
@@ -533,17 +546,34 @@ jQuery(document).ready(function () {
       if (args.data_structure) {
         args["kinship_pop_id"] = args.data_structure + "_" + args.kinship_pop_id;
       }
-      solGS.kinship.checkCachedKinship(url, args);
-    }
+      solGS.kinship.checkCachedKinship(url, args).done(function (res) {
+        if (res.data) {
+          var kinshipMsgDiv = solGS.kinship.kinshipMsgDiv;
+          var canvas = solGS.kinship.canvas;
+
+          jQuery(kinshipMsgDiv).html("Generating heatmap... please wait...").show();
+          jQuery(`${canvas} .multi-spinner-container`).show();
+
+          var kinshipPlotDivId = solGS.kinship.kinshipPlotDivPrefix;
+          kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
+
+          var links = solGS.kinship.addDowloandLinks(res);
+          solGS.heatmap.plot(res.data, canvas, kinshipPlotDivId, links);
+
+          jQuery(`${canvas} .multi-spinner-container`).hide();
+          jQuery(kinshipMsgDiv).empty();
+        }
+    })
   }
+}
 });
 
 jQuery(document).ready(function () {
   var kinshipCanvas = solGS.kinship.canvas;
   jQuery(kinshipCanvas).on("click", "a", function (e) {
     var buttonId = e.target.id;
-    var kinPlotId = buttonId.replace(/download_/, "");
-    saveSvgAsPng(document.getElementById("#" + kinPlotId), kinPlotId + ".png", { scale: 1 });
+    var kinshipPlotId = buttonId.replace(/download_/, "");
+    saveSvgAsPng(document.getElementById("#" + kinshipPlotId), kinshipPlotId + ".png", { scale: 1 });
   });
 });
 
@@ -553,12 +583,13 @@ jQuery(document).ready(function () {
   if (url.match(/kinship\/analysis/)) {
     kinshipPopsDataDiv = solGS.kinship.kinshipPopsDataDiv;
     var tableId = 'kinship_pops_table';
-    var kinshipPopsTable = solGS.kinship.createTable(tableId)
+    var kinshipPopsTable = solGS.kinship.createTable(tableId);
     jQuery(kinshipPopsDataDiv).append(kinshipPopsTable).show();
 
-    var kinshipPops = solGS.kinship.getKinshipPops()
+    var kinshipPops = solGS.kinship.getKinshipPops();
     var kinshipPopsRows = solGS.kinship.getKinshipPopsRows(kinshipPops);
 
-    solGS.kinship.displayKinshipPopsTable(tableId, kinshipPopsRows)
+    solGS.kinship.displayKinshipPopsTable(tableId, kinshipPopsRows);
+    jQuery("#create_new_list_dataset").show();
   }
 });

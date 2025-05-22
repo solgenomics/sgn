@@ -6,7 +6,7 @@ $facilities
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
 <div class="modal fade" id="create_genotyping_project_dialog" name="create_genotyping_project_dialog" tabindex="-1" role="dialog" aria-labelledby="createGenotypingProjectdialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -33,7 +33,7 @@ $facilities
                                     <div class="col-sm-7">
                                         <input class="form-control" id="new_genotyping_project_name" name="new_genotyping_project_name" type="text" placeholder="Should match Vendor Project if you have one"/>
                                     </div>
-                                </div><br/><br/>
+                                </div><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Facility: </label>
                                     <div class="col-sm-7">
@@ -43,7 +43,7 @@ $facilities
 %  }
                                         </select>
                                     </div>
-                                </div><br/><br/>
+                                </div><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Data Type: </label>
                                     <div class="col-sm-7">
@@ -53,25 +53,25 @@ $facilities
                                             <option value="ssr">SSR</option>
                                         </select>
                                     </div>
-                                </div><br/><br/>
+                                </div><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Breeding Program: </label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_breeding_program_select_div"></span>
                                     </div>
-                                </div><br/><br/>
+                                </div><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Year: </label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_year_select_div"></span>
                                     </div>
-                                </div><br/><br/>
+                                </div><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Location of Data Generation (optional): </label>
                                     <div class="col-sm-7">
                                         <span id="genotyping_project_location_select_div"></span>
                                     </div>
-                                </div><br/><br/>
+                                </div><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Description: </label>
                                     <div class="col-sm-7">

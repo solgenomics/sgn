@@ -33,6 +33,34 @@ solGS.dataset = {
     return datasets;
   },
 
+  addDataTypeAttr(datasets, analysis) {
+
+    // for (var i = 0; i < datasets.length; i++) {
+    //   if (datasets[i].type.match(/accessions/)) {
+    //     datasets[i]["data_type"] = ["Genotype"];
+    //   } else if (datasets[i].type.match(/plots/)) {
+    //     datasets[i]["data_type"] = ["Phenotype"];
+    //   } else if (datasets[i].type.match(/trials/)) {
+    //     datasets[i]["data_type"] = ["Genotype", "Phenotype"];
+    //   }
+  
+    // }
+    var type_opts;
+    if (analysis == "Population Structure") {
+      type_opts = ["Genotype", "Phenotype"];
+    } else if (analysis == "Clustering") {
+      type_opts = ["Genotype", "Phenotype", "GEBV"];
+    }
+
+    for (var i = 0; i < datasets.length; i++) {
+      datasets[i]["data_type"] = type_opts;
+    }
+
+    return datasets;
+
+  },
+
+
   converDatasetArrayToJson(datasets, datasetTypes) {
 
     var dataset = new CXGN.Dataset();
@@ -42,7 +70,6 @@ solGS.dataset = {
       var id = datasets[i][0];
       var name = datasets[i][1];
       var d = dataset.getDataset(id);
-      console.log(`d: ${JSON.stringify(d)}`)
       for (var j = 0; j < datasetTypes.length; j++) {
         if (d.categories[datasetTypes[j]] && d.categories[datasetTypes[j]].length) {
           if (!dsIds.includes(id)) {
@@ -51,6 +78,7 @@ solGS.dataset = {
               name: name,
               type: datasetTypes[j],
               data_str: "dataset",
+              tool_compatibility: d.tool_compatibility
             };
             datasetPops.push(dsObj);
             dsIds.push(id);
@@ -79,6 +107,7 @@ solGS.dataset = {
     privateDatasets = this.addDataOwnerAttr(privateDatasets, 'private')
     
     var allDatasets = [privateDatasets, publicDatasets];
+    console.log(allDatasets);
     return allDatasets.flat();
     
   },
@@ -153,69 +182,68 @@ solGS.dataset = {
     solGS.waitPage(page, args);
   },
 
-  createDatasetTrainingReqArgs: function (datasetId, datasetName) {
+
+  getDatasetGenoProtocolId: function (datasetId) {
     var dataset = new CXGN.Dataset();
     var d = dataset.getDataset(datasetId);
 
     var protocolId = d.categories["genotyping_protocols"]
-      ? d.categories["genotyping_protocols"][0]
-      : null;
+    ? d.categories["genotyping_protocols"][0]
+    : null;
 
     if (!protocolId) {
       protocolId = jQuery("#genotyping_protocol_id").val();
     }
 
-    var popId = "dataset_" + datasetId;
-    var popType = "dataset_training";
+    return protocolId;
+
+  },
+
+  createDatasetTrainingReqArgs: function (datasetId, datasetName) {
+   
+    var protocolId = this.getDatasetGenoProtocolId(datasetId);
 
     var args = {
       dataset_name: datasetName,
       dataset_id: datasetId,
-      analysis_type: "training_dataset",
+      analysis_type: "dataset_type_training",
       data_set_type: "single_population",
-      training_pop_id: popId,
+      training_pop_id: `dataset_${datasetId}`,
       training_pop_name: datasetName,
-      population_type: popType,
+      population_type: "dataset_training",
       genotyping_protocol_id: protocolId,
+      data_structure: 'dataset'
     };
 
     return args;
   },
 
-  createDatasetSelectionArgs: function (datasetId, datasetName) {
-    var trainingPopDetails = solGS.getPopulationDetails();
+  createDatasetTypeSelectionReqArgs: function (datasetId, datasetName) {
     var selectionPopId = "dataset_" + datasetId;
 
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
-
-    var dataset = new CXGN.Dataset();
-    var d = dataset.getDataset(datasetId);
-
-    var protocolId;
-    if (d.categories["genotyping_protocols"]) {
-      protocolId = d.categories["genotyping_protocols"][0];
-    } else {
-      protocolId = jQuery("#genotyping_protocol_id").val();
-    }
-
+    var modelArgs = solGS.getModelArgs();
+    var protocolId = this.getDatasetGenoProtocolId(datasetId);
+   
     var args = {
       dataset_id: datasetId,
       dataset_name: datasetName,
-      training_pop_id: trainingPopDetails.training_pop_id,
+      training_pop_id: modelArgs.training_pop_id,
       selection_pop_id: selectionPopId,
       selection_pop_name: datasetName,
-      training_traits_ids: trainingTraitsIds,
+      training_traits_ids: modelArgs.training_traits_ids,
       population_type: "dataset_selection",
-      data_set_type: trainingPopDetails.data_set_type,
+      data_set_type: modelArgs.data_set_type,
       genotyping_protocol_id: protocolId,
+      data_structure: 'dataset'
     };
 
     return args;
+
   },
 
-  checkPredictedDatasetSelection: function (datasetId, datasetName) {
-    var args = this.createDatasetSelectionArgs(datasetId, datasetName);
 
+  checkPredictedDatasetSelection: function (datasetId, datasetName) {
+    var args = this.createDatasetTypeSelectionReqArgs(datasetId, datasetName);
     var trainingPopGenoPro = jQuery("#genotyping_protocol_id").val();
     var selectionPopGenoPro = args.genotyping_protocol_id;
 
@@ -230,43 +258,33 @@ solGS.dataset = {
     } else {
       args = JSON.stringify(args);
 
-      jQuery.ajax({
+      var checkPredicted = jQuery.ajax({
         type: "POST",
         dataType: "json",
-        data: {
-          arguments: args,
-        },
+        data: { arguments: args },
         url: "/solgs/check/predicted/dataset/selection",
-        success: function (response) {
-          args = JSON.parse(args);
-
-          if (response.output) {
-            solGS.listTypeSelectionPopulation.displayListTypeSelectionPops(
-              args,
-              response.output
-            );
-
-            if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-              solGS.sIndex.populateSindexMenu();
-              solGS.correlation.populateGenCorrMenu();
-              solGS.geneticGain.ggSelectionPopulations();
-              solGS.cluster.listClusterPopulations();
-            }
-          } else {
-            solGS.dataset.queueDatasetSelectionPredictionJob(datasetId);
-          }
-        },
       });
-    }
+
+      return checkPredicted;
+  }
+
   },
 
-  queueDatasetSelectionPredictionJob: function (datasetId) {
-    var args = this.createDatasetSelectionArgs(datasetId);
+  queueDatasetSelectionPredictionJob: function (datasetId, datasetName) {
+    var args = this.createDatasetTypeSelectionReqArgs(datasetId, datasetName);
     var modelId = args.training_pop_id;
     var selectionPopId = args.selection_pop_id;
+    var traitId = args.training_traits_ids;
+    var protocolId = args.genotyping_protocol_id;
 
     var hostName = window.location.protocol + "//" + window.location.host;
-    var page = hostName + "/solgs/selection/" + selectionPopId + "/model/" + modelId;
+    var page;
+
+    if (document.URL.match(/combined/)) {
+      page = `${hostName}/solgs/combined/model/${modelId}/selection/${selectionPopId}/trait/${traitId}/gp/${protocolId}`;
+    } else {
+      page = `${hostName}/solgs/selection/${selectionPopId}/model/${modelId}/trait/${traitId}/gp/${protocolId}`;
+    }
 
     solGS.waitPage(page, args);
   },

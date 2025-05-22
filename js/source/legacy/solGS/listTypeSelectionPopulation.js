@@ -12,9 +12,172 @@ var solGS = solGS || function solGS() {};
 solGS.listTypeSelectionPopulation = {
   selectionPopsDiv: "#list_type_selection_pops_select_div",
   selectionPopsSelectMenuId: "#list_type_selection_pops_select",
+  selectionListPopsDataDiv: "#list_type_selection_pops_data_div",
+  selectionListPopsTable: "#list_type_selection_pops_table",
+
+ 
+  getSelectionListPops: function () {
+    var list = new solGSList();
+    var lists = list.getLists(["accessions"]);
+    lists = list.addDataStrAttr(lists);
+
+    var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    var selectionPops = [lists, datasets];
+
+    return selectionPops.flat();
+
+  },
+
+
+  getSelectionListPopsRows: function(selectionPops) {
+    var selectionPopsRows = [];
+
+    for (var i = 0; i < selectionPops.length; i++) {
+      if (selectionPops[i]) {
+        var selectionPopRow = this.createRowElements(selectionPops[i]);
+        selectionPopsRows.push(selectionPopRow);
+      }
+    }
+
+    return selectionPopsRows;
+
+  },
+
+  getSelectionPopId: function (popId, dataStr) {
+    var selectionPopId;
+
+    if (dataStr) {
+      selectionPopId = `${dataStr}_${popId}`;
+    } else {
+      selectionPopId = popId;
+    }
+
+    return selectionPopId;
+  },
+
+  getSelectionPopArgs(selectionPop) {
+    var popId = selectionPop.id;
+    var dataStr = selectionPop.data_str;
+  
+    var protocolId;
+    if (dataStr.match(/dataset/)) {
+      protocolId = solGS.dataset.getDatasetGenoProtocolId(popId);
+    } else if (dataStr.match(/list/)) {
+      protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
+    }
+
+    var modelArgs = solGS.getModelArgs();
+    var selectionPopId = this.getSelectionPopId(popId, dataStr);
+
+    var selectionPopArgs = {
+      training_pop_id: modelArgs.training_pop_id,
+      selection_pop_id: selectionPopId,
+      selection_pop_name: selectionPop.name,
+      training_traits_ids: modelArgs.training_traits_ids,
+      population_type: `${dataStr}_selection`,
+      data_set_type: modelArgs.data_set_type,
+      genotyping_protocol_id: protocolId,
+      analysis_type: `${dataStr}_type_selection`,
+      data_structure: dataStr,
+    };
+
+    return selectionPopArgs;
+
+  },
+
+  createRowElements: function (selectionPop) {
+    var popId = selectionPop.id;
+    var popName = selectionPop.name;
+    var dataStr = selectionPop.data_str;
+
+    if (dataStr.match(/dataset/)) {
+      popName = `<a href="/dataset/${popId}">${popName}</a>`;  
+    } 
+
+    var runSolgsCol = this.getRunSolgsBtnElement(selectionPop);
+    var rowData = [popName,
+    dataStr, selectionPop.owner, runSolgsCol, `${dataStr}_${popId}`];
+    
+    return rowData;
+  },
+
+
+  getRunSolgsBtnElement: function(selectionPop) {
+    var popId = selectionPop.id;
+    var dataStr = selectionPop.data_str;
+
+    var selectionPopId = this.getSelectionPopId(popId, dataStr);
+    var runSolgsBtnId = this.getRunSolgsId(selectionPopId);
+
+    var selectionArgs = this.getSelectionPopArgs(selectionPop);
+    selectionArgs = JSON.stringify(selectionArgs);
+
+    var runSolgsBtn =
+      `<button type="button" id=${runSolgsBtnId}` +
+      ` class="btn btn-success" data-selected-pop='${selectionArgs}'>Predict</button>`;
+
+      return runSolgsBtn;
+
+  },
+
+  getRunSolgsId: function (selectionPopId) {
+    if (selectionPopId) {
+      return `run_solgs_${selectionPopId}`;
+    } else {
+      return "run_solgs";
+    }
+  },
+
+
+  createTable: function (tableId) {
+    tableId = tableId.replace('#', "");
+
+    var selectionTable =
+      `<table id="${tableId}" class="table table-striped"><thead><tr>` +
+      "<th>Population</th>" +
+      "<th>Data structure</th>" +
+      "<th>Ownership</th>" +
+      "<th>Run solGS</th>" +
+      "</tr></thead></table>";
+
+    return selectionTable;
+  },
+
+  displaySelectionListPopsTable: function (tableId, data) {
+
+    var table = jQuery(tableId).DataTable({
+      'searching': true,
+      'ordering': true,
+      'processing': true,
+      'paging': true,
+      'info': false,
+      'pageLength': 5,
+      'rowId': function (a) {
+        return a[4]
+      },
+      "oLanguage": {
+        "sSearch": "Filter"
+      }
+    });
+
+    table.rows.add(data).draw();
+
+  },
+
+  getSelectedPopSolgsArgs: function (runSolgsElemId) {
+    var solgsArgs;
+
+    var selectedPopDiv = document.getElementById(runSolgsElemId);
+    if (selectedPopDiv) {
+      var selectedPopData = selectedPopDiv.dataset;
+      solgsArgs = JSON.parse(selectedPopData.selectedPop);
+    }
+
+    return solgsArgs;
+  },
 
   checkPredictedListSelection: function (listId) {
-    var args = this.createSelectionReqArgs(listId);
+    var args = this.createListTypeSelectionReqArgs(listId);
     args = JSON.stringify(args);
 
     var checkPredicted = jQuery.ajax({
@@ -27,21 +190,26 @@ solGS.listTypeSelectionPopulation = {
     return checkPredicted;
   },
 
-  askSelectionJobQueueing: function (listId) {
-    var args = this.createSelectionReqArgs(listId);
+  showJobSubmissionDialog: function (listId) {
+    var args = this.createListTypeSelectionReqArgs(listId);
     var modelId = args.training_pop_id;
     var selectionPopId = args.selection_pop_id;
     var protocolId = args.genotyping_protocol_id;
+    var traitId = args.training_traits_ids;
 
     var hostName = window.location.protocol + "//" + window.location.host;
-    var page =
-      hostName + "/solgs/selection/" + selectionPopId + "/model/" + modelId + "/gp/" + protocolId;
+    var page;
+
+    if (document.URL.match(/combined/)) {
+      page = `${hostName}/solgs/combined/model/${modelId}/selection/${selectionPopId}/trait/${traitId}/gp/${protocolId}`;
+    } else {
+     page = `${hostName}/solgs/selection/${selectionPopId}/model/${modelId}/trait/${traitId}/gp/${protocolId}`;
+    }
 
     solGS.waitPage(page, args);
   },
 
-  createSelectionReqArgs: function (listId) {
-    if (typeof listId == "number") {
+  createListTypeSelectionReqArgs: function (listId) {
       const listObj = new solGSList(listId);
       var listDetail = listObj.getListDetail();
       var listName = listDetail.name;
@@ -69,133 +237,69 @@ solGS.listTypeSelectionPopulation = {
       };
 
       return args;
-    }
+
   },
 
-  displayListTypeSelectionPops: function (args, output) {
-    var selPopName = args.selection_pop_name;
-    var selPopId = args.selection_pop_id;
+  replaceSolgsBtn: function(selectionPopId, predictedLink) {
 
-    var popDetail = { id: selPopId, name: selPopName, pop_type: args.population_type };
-    popDetail = JSON.stringify(popDetail);
+    var tableId = this.selectionListPopsTable;
+    var selDataTable = jQuery(tableId).DataTable()
+    var tableRowIdx = selDataTable.row('[id='+selectionPopId + ']').index();
+    selDataTable.cell(tableRowIdx, 3).data(predictedLink).draw();  
 
-    var tableId = "list_type_selection_pops_table";
-    var listTypeSelectionTable = jQuery(`#${tableId}`).doesExist();
-
-    if (listTypeSelectionTable == false) {
-      listTypeSelectionTable =
-        `<table id="${tableId}" class="table"><thead><tr>` +
-        "<th>List/dataset type selection population</th>" +
-        "<th>View GEBVs</th>" +
-        "</tr></thead><tbody>";
-
-      jQuery("#list_type_selection_pops_selected").append(listTypeSelectionTable).show();
-    }
-
-    var trId = `${args.population_type}_${selPopId}`;
-    var popDisplayed = jQuery(`#${trId}`).doesExist();
-    if (popDisplayed == false) {
-      var row =
-        `<tr id='${trId}' data-list-selection-pop='${popDetail}'>` +
-        `<td><b>${selPopName}</b></td>` +
-        `<td>${output}</td>` +
-        "</tr>";
-
-      jQuery(`#${tableId} tr:last`).after(row);
-    }
   },
 
-  populateSelectionPopsMenu: function () {
-    var list = new CXGN.List();
-    var lists = list.getLists(["accessions", "trials"]);
-    var selectionPrivatePops = list.convertArrayToJson(lists.private_lists);
+  getPredictedSelectionPopArgs: function(selectionPopArgs) {
+    var predictedPopArgs = {
+      'id' : selectionPopArgs.selection_pop_id,
+      'name': selectionPopArgs.selection_pop_name,
+      'data_str': selectionPopArgs.data_structure,
+      'pop_type': 'selection'
+    };
 
-    var menuId = this.selectionPopsSelectMenuId;
-    var menu = new SelectMenu(menuId);
-    selectionPrivatePops = selectionPrivatePops.flat();
-    var menuElem = menu.addOptions(selectionPrivatePops);
-
-    if (lists.public_lists[0]) {
-      var selectionPublicLists = list.convertArrayToJson(lists.public_lists);
-      menu.addOptionsSeparator("public lists");
-      menuElem = menu.addOptions(selectionPublicLists);
-    }
-
-    var datasetPops = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    if (datasetPops) {
-      menu.addOptionsSeparator("datasets");
-      menuElem = menu.addOptions(datasetPops);
-    }
-
-    var selectionPopsDiv = this.selectionPopsDiv;
-    jQuery(selectionPopsDiv).append(menuElem).show();
+      return predictedPopArgs;
   },
 
-  getListTypeSelPopulations: function () {
-    var listTypeSelPopsDiv = document.getElementById("list_type_selection_pops_selected");
-    var listTypeSelPopsTable = listTypeSelPopsDiv.getElementsByTagName("table");
-    var listTypeSelPopsRows = listTypeSelPopsTable[0].rows;
-
-    var popsList = [];
-    for (var i = 1; i < listTypeSelPopsRows.length; i++) {
-      var row = listTypeSelPopsRows[i];
-      var notPredicted = row.innerHTML.match(/predict/gi);
-      if (!notPredicted) {
-        var selectedPop = row.dataset.listSelectionPop;
-        selectedPop = JSON.parse(selectedPop);
-
-        if (selectedPop.id.match(/\w+_/)) {
-          if (selectedPop.id.match(/list/)) {
-            selectedPop.data_str = "list";
-          } else {
-            selectedPop.data_str = "dataset";
-          }
-          selectedPop.id = selectedPop.id.replace(/\w+_/, "");
-        }
-
-        popsList.push(selectedPop);
-      }
-    }
-    return popsList;
-  },
 };
 
 jQuery.fn.doesExist = function () {
   return jQuery(this).length > 0;
 };
 
-jQuery(document).ready(function () {
-  solGS.listTypeSelectionPopulation.populateSelectionPopsMenu();
-});
 
 jQuery(document).ready(function () {
-  var menuId = solGS.listTypeSelectionPopulation.selectionPopsSelectMenuId;
-  jQuery(`${menuId}`).change(function () {
-    var selectedPop = jQuery("option:selected", this).data("pop");
+  var selectionListPopsDataDiv = solGS.listTypeSelectionPopulation.selectionListPopsDataDiv;
+  
+  jQuery(selectionListPopsDataDiv).on("click", function (e) {
+    var runSolgsBtnId = e.target.id;
+      
+    if (runSolgsBtnId.match(/run_solgs/)) {
 
-    if (selectedPop.id) {
-      jQuery(" #list_type_selection_pop_go_btn").click(function () {
-        if (typeof selectedPop.data_str === "undefined" || selectedPop.data_str.match(/list/i)) {
-          const listObj = new solGSList(selectedPop.id);
+      var selectedPop = solGS.listTypeSelectionPopulation.getSelectedPopSolgsArgs(runSolgsBtnId);
+      var selectionPopId = selectedPop.selection_pop_id;
+      
+      if (selectionPopId.match(/list/)) {
+          var listId = selectionPopId.replace(/\w+_/, "");
+  
+          const listObj = new solGSList(listId);
           var listDetail = listObj.getListDetail();
-
           if (listDetail.type.match(/accessions/)) {
             solGS.listTypeSelectionPopulation
-              .checkPredictedListSelection(selectedPop.id)
+              .checkPredictedListSelection(listId)
               .done(function (res) {
-                var args = solGS.listTypeSelectionPopulation.createSelectionReqArgs(selectedPop.id);
-
-                if (res.output) {
-                  solGS.listTypeSelectionPopulation.displayListTypeSelectionPops(args, res.output);
-
+                if (!res.output.match(/Predict/)) {
+                  solGS.listTypeSelectionPopulation.replaceSolgsBtn(selectionPopId, res.output);
+   
                   if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-                    solGS.sIndex.populateSindexMenu();
-                    solGS.correlation.populateGenCorrMenu();
-                    solGS.geneticGain.ggSelectionPopulations();
-                    solGS.cluster.listClusterPopulations();
+                    var predictedPop = solGS.listTypeSelectionPopulation.getPredictedSelectionPopArgs(selectedPop)
+
+                    solGS.sIndex.populateSindexMenu(predictedPop);
+                    solGS.correlation.populateGenCorrMenu(predictedPop);
+                    solGS.geneticGain.populateGeneticGainMenu(predictedPop);
+                    solGS.cluster.populateClusterMenu(predictedPop);
                   }
                 } else {
-                  solGS.listTypeSelectionPopulation.askSelectionJobQueueing(selectedPop.id);
+                  solGS.listTypeSelectionPopulation.showJobSubmissionDialog(listId);
                 }
               })
               .fail(function () {
@@ -207,10 +311,53 @@ jQuery(document).ready(function () {
             //	var trialsNames = listDetail.elementsNames;
             //	loadTrialListTypeSelectionPop(trialsNames);
           }
+          
         } else {
-          solGS.dataset.checkPredictedDatasetSelection(selectedPop.id, selectedPop.name);
+          var selectedPop = solGS.listTypeSelectionPopulation.getSelectedPopSolgsArgs(runSolgsBtnId);
+          var datasetId = selectedPop.selection_pop_id.replace(/\w+_/,'');
+          var datasetName = selectedPop.selection_pop_name;
+
+          solGS.dataset.checkPredictedDatasetSelection(datasetId, datasetName).done(function (res) { 
+            if (!res.output.match(/Predict/)) {
+              solGS.listTypeSelectionPopulation.replaceSolgsBtn(selectionPopId, res.output);
+            
+              if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
+                var predictedPop = solGS.listTypeSelectionPopulation.getPredictedSelectionPopArgs(selectedPop)
+
+                solGS.sIndex.populateSindexMenu(predictedPop);
+                solGS.correlation.populateGenCorrMenu(predictedPop);
+                solGS.geneticGain.populateGeneticGainMenu(predictedPop);
+                solGS.cluster.populateClusterMenu(predictedPop);
+              }
+            } else {
+              solGS.dataset.queueDatasetSelectionPredictionJob(datasetId, datasetName);
+            }
+          })
+          .fail(function () {
+            alert("Error occured checking if the selection population has predicted output.");
+          });
         }
-      });
-    }
+      }
   });
+});
+
+jQuery(document).ready(function () {
+  jQuery("#lists_datasets_message").show();
+  jQuery("#lists_datasets_progress .multi-spinner-container").show();
+
+  var selectionPopsDataDiv = solGS.listTypeSelectionPopulation.selectionListPopsDataDiv;
+  var tableId = solGS.listTypeSelectionPopulation.selectionListPopsTable;
+  var selectionPopsTable = solGS.listTypeSelectionPopulation.createTable(tableId);
+
+  jQuery(selectionPopsDataDiv).append(selectionPopsTable).show();
+  
+  var selectionPops = solGS.listTypeSelectionPopulation.getSelectionListPops();
+  var selectionPopsRows = solGS.listTypeSelectionPopulation.getSelectionListPopsRows(selectionPops);
+
+  solGS.listTypeSelectionPopulation.displaySelectionListPopsTable(tableId, selectionPopsRows);
+
+  jQuery("#lists_datasets_message").hide();
+  jQuery("#lists_datasets_progress .multi-spinner-container").hide();
+  jQuery("#create_new_list_dataset").show();
+
 });

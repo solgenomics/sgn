@@ -24,7 +24,7 @@ is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 is($response->{'userDisplayName'}, 'Jane Doe');
 is($response->{'expires_in'}, '7200');
 
-$mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> $population_name, "accessions[]"=> ['test_accession1', 'test_accession2', 'test_accession3'] ]);
+$mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> $population_name, "accessions[]"=> ['test_accession1', 'test_accession2', 'test_accession3'], "member_type" => 'accessions']);
 $response = decode_json $mech->content;
 is($response->{'success'}, "Success! Population $population_name created");
 
@@ -35,7 +35,7 @@ $response = decode_json $mech->content;
 is($response->{'success'}, "Population $population_name deleted successfully!");
 
 #test deleting a population used in a cross
-$mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_2', "accessions[]"=> ['test_accession1', 'test_accession2', 'test_accession3'] ]);
+$mech->post_ok('http://localhost:3010/ajax/population/new', [ "population_name"=> 'test_population_2', "accessions[]"=> ['test_accession1', 'test_accession2', 'test_accession3'], "member_type" => 'accessions' ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, "Success! Population test_population_2 created");
 my $new_population2_id = $response->{'population_id'};

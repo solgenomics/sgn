@@ -43,6 +43,8 @@ $design_name
 %        $method = 'greenhouse';
 %    } elsif ($type eq 'Split Plot'){
 %        $method = 'splitplot';
+%    } elsif ($type eq 'Strip Plot'){
+%        $method = 'stripplot';
 %    } elsif ($type eq 'Partially Replicated'){
 %        $method = 'p-rep';
 %    } else {

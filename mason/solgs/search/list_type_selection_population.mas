@@ -17,16 +17,19 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%args>
 
 <%perl>
-my $referer = $c->req->path;
-my $search_params = '?dsp=genotyping_protocols,trials|accessions&dsr=/' . $referer;
+my $referer = '/' .$c->req->path;
+
+my $search_params = '?dsp=genotyping_protocols,trials|accessions&dsr=' . $referer;
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["solGS.List", "solGS.listTypeSelectionPopulation"] &>
 
-<& /solgs/tools/select_menu.mas,
-analysis_type => 'list_type_selection',
-wizard_link_txt => 'Create a new list or dataset of clones',
-breeder_search_params => $search_params 
+
+<& /solgs/tools/login.mas,
+    tool_url => $referer,
+    analysis_type => 'list_type_selection',
+    wizard_link_txt => 'Create a new dataset of accessions or trials',
+    breeder_search_params => $search_params  
 &>
 
 

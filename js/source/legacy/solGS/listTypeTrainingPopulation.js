@@ -11,31 +11,169 @@ var solGS = solGS || function solGS() {};
 solGS.listTypeTrainingPopulation = {
   trainingPopsDiv: "#list_type_training_pops_select_div",
   trainingPopsSelectMenuId: "#list_type_training_pops_select",
+  trainingListPopsDataDiv: "#list_type_training_pops_data_div",
+  trainingListPopsTable: "#list_type_training_pops_table",
 
-  populateTrainingPopsMenu: function () {
-    var list = new CXGN.List();
+ 
+  getTrainingListPops: function () {
+
+    var list = new solGSList();
     var lists = list.getLists(["plots", "trials"]);
-    var trainingPrivatePops = list.convertArrayToJson(lists.private_lists);
+    lists = list.addDataStrAttr(lists);
+   
+    var datasets = solGS.dataset.getDatasetPops(["trials"]);
+   
+    var trainingPops = [lists, datasets];
 
-    var menuId = this.trainingPopsSelectMenuId;
-    var menu = new SelectMenu(menuId);
-    trainingPrivatePops = trainingPrivatePops.flat();
-    var menuElem = menu.addOptions(trainingPrivatePops);
+    return trainingPops.flat();
 
-    if (lists.public_lists[0]) {
-      var trainingPublicLists = list.convertArrayToJson(lists.public_lists);
-      menu.addOptionsSeparator("public lists");
-      menuElem = menu.addOptions(trainingPublicLists);
+  },
+
+
+  getTrainingListPopsRows: function(trainingPops) {
+
+    var trainingPopsRows = [];
+
+    for (var i = 0; i < trainingPops.length; i++) {
+      if (trainingPops[i]) {
+        var trainingPopRow = this.createRowElements(trainingPops[i]);
+        trainingPopsRows.push(trainingPopRow);
+      }
     }
 
-    var datasetPops = solGS.dataset.getDatasetPops(["accessions", "plots", "trials"]);
-    if (datasetPops) {
-      menu.addOptionsSeparator("datasets");
-      menuElem = menu.addOptions(datasetPops);
+    return trainingPopsRows;
+
+  },
+
+  getTrainingPopId: function (popId, dataStr) {
+
+    var trainingPopId;
+    if (dataStr) {
+      trainingPopId = `${dataStr}_${popId}`;
+    } else {
+      trainingPopId = popId;
     }
 
-    var trainingPopsDiv = this.trainingPopsDiv;
-    jQuery(trainingPopsDiv).append(menuElem).show();
+    return trainingPopId;
+  },
+
+  createRowElements: function (trainingPop) {
+    var popId = trainingPop.id;
+    var popName = trainingPop.name;
+    var dataStr = trainingPop.data_str;
+   
+    if (dataStr.match(/dataset/)) {
+      popName = `<a href="/dataset/${popId}">${popName}</a>`;
+    }
+
+    var runSolgsBtn = this.getRunSolgsBtnElement(trainingPop);
+
+    var rowData = [popName,
+      dataStr, trainingPop.owner, runSolgsBtn, `${dataStr}_${popId}`];
+
+    return rowData;
+
+  },
+
+  getRunSolgsBtnElement: function(trainingPop) {
+    var popId = trainingPop.id;
+    var popName = trainingPop.name;
+    var dataStr = trainingPop.data_str;
+
+    var trainingPopId = this.getTrainingPopId(popId, dataStr);
+    var runSolgsBtnId = this.getRunSolgsId(trainingPopId);
+
+    var trainingArgs = this.getTrainingPopArgs(trainingPop);
+    trainingArgs = JSON.stringify(trainingArgs);
+
+    var runSolgsBtn =
+      `<button type="button" id=${runSolgsBtnId}` +
+      ` class="btn btn-success" data-selected-pop='${trainingArgs}'>Create Training Population</button>`;
+
+      return runSolgsBtn;
+
+  },
+
+  getTrainingPopArgs: function(trainingPop) {
+    var popId = trainingPop.id;
+    var dataStr = trainingPop.data_str;
+
+    var trainingPopId = this.getTrainingPopId(popId, dataStr);
+    var trainingArgs = {
+      training_pop_id: trainingPopId,
+      training_pop_name: trainingPop.name,
+      population_type: `${dataStr}_training`,
+      data_structure: dataStr
+    };
+
+    var protocolId;
+    if (dataStr.match(/dataset/)) {
+      protocolId = solGS.dataset.getDatasetGenoProtocolId(popId);
+    } else if (dataStr.match(/list/)) {
+      protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
+    }
+
+    trainingArgs['analysis_type'] = `${dataStr}_type_training`;
+    trainingArgs['genotyping_protocol_id'] = protocolId;
+
+    return trainingArgs;
+
+  },
+
+  getRunSolgsId: function (trainingPopId) {
+    if (trainingPopId) {
+      return `run_solgs_${trainingPopId}`;
+    } else {
+      return "run_solgs";
+    }
+  },
+
+
+  createTable: function (tableId) {
+
+    tableId = tableId.replace('#', "");
+    var trainingTable =
+      `<table id="${tableId}" class="table table-striped"><thead><tr>` +
+      "<th>Population</th>" +
+      "<th>Data structure</th>" +
+      "<th>Ownership</th>" +
+      "<th>Run solGS</th>" +
+      "</tr></thead></table>";
+
+    return trainingTable;
+  },
+
+  displayTrainingListPopsTable: function (tableId, data) {
+
+    var table = jQuery(`${tableId}`).DataTable({
+      'searching': true,
+      'ordering': true,
+      'processing': true,
+      'paging': true,
+      'info': false,
+      'pageLength': 5,
+      'rowId': function (a) {
+        return a[4]
+      },
+      "oLanguage": {
+        "sSearch": "Filter"
+      }
+    });
+
+    table.rows.add(data).draw();
+
+  },
+
+  getSelectedPopSolgsArgs: function (runSolgsElemId) {
+    var solgsArgs;
+    var selectedPopDiv = document.getElementById(runSolgsElemId);
+
+    if (selectedPopDiv) {
+      var selectedPopData = selectedPopDiv.dataset;
+      solgsArgs = JSON.parse(selectedPopData.selectedPop);
+    }
+
+    return solgsArgs;
   },
 
   loadTrialListTypeTrainingPop: function (trialsNames) {
@@ -49,8 +187,8 @@ solGS.listTypeTrainingPopulation = {
     return trialsList;
   },
 
-  askTrainingJobQueueing: function (listId) {
-    var args = this.createTrainingReqArgs(listId);
+  showJobSubmissionDialog: function (listId) {
+    var args = this.createListTypeTrainingReqArgs(listId);
     var modelId = args.training_pop_id;
     var protocolId = args.genotyping_protocol_id;
 
@@ -64,71 +202,27 @@ solGS.listTypeTrainingPopulation = {
     solGS.waitPage(page, args);
   },
 
-  createTrainingReqArgs: function (listId) {
+  createListTypeTrainingReqArgs: function (listId) {
     const listObj = new solGSList(listId);
     var listDetail = listObj.getListDetail();
     var listName = listDetail.name;
 
-    var popId = this.getModelId(listId);
     var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
-    var popType = "list_training";
-
+    
     var args = {
       list_name: listName,
       list_id: listId,
-      analysis_type: "training_dataset",
-      data_set_type: "single_population",
-      training_pop_id: popId,
+      list_type: listDetail.type,
+      training_pop_id: `list_${listId}`,
       training_pop_name: listName,
-      population_type: popType,
+      population_type: "list_training",
       genotyping_protocol_id: protocolId,
+      data_structure: 'list'
     };
 
     return args;
   },
 
-  getModelId: function (listId) {
-    var modelId = "list_" + listId;
-    return modelId;
-  },
-
-  displayListTypeTrainingPops: function (args) {
-    var trainingPopId = args.training_pop_id;
-    var trainingPopName = args.training_pop_name;
-    var popType = args.population_type;
-    var protocolId = args.genotyping_protocol_id;
-
-    var popDetail = { id: trainingPopId, name: trainingPopName, pop_type: popType };
-    popDetail = JSON.stringify(popDetail);
-
-    var tableId = "list_type_training_pops_table";
-    var listTypeTrainingTable = jQuery(`#${tableId}`).doesExist();
-
-    if (listTypeTrainingTable == false) {
-      listTypeTrainingTable =
-        `<table id="${tableId}" class="table"><thead><tr>` +
-        "<th>List/dataset type training population</th>" +
-        "<th>Detail page</th>" +
-        "</tr></thead><tbody>";
-
-      jQuery("#list_type_training_pops_selected").append(listTypeTrainingTable).show();
-    }
-
-    var popPath = `/solgs/population/${trainingPopId}/gp/${protocolId}`;
-    var popLink = `<a href="${popPath}"  data-selected-pop='${popDetail}'>${trainingPopName}</a>`;
-
-    var trId = `${popType}_${trainingPopId}`;
-    var popDisplayed = jQuery(`#${trId}`).doesExist();
-    if (popDisplayed == false) {
-      var row =
-        `<tr id='${trId}' data-selected-pop='${popDetail}'>` +
-        `<td><b>${trainingPopName}</b></td>` +
-        `<td>${popLink}</td>` +
-        "</tr>";
-
-      jQuery(`#${tableId} tr:last`).after(row);
-    }
-  },
 };
 
 jQuery.fn.doesExist = function () {
@@ -136,62 +230,63 @@ jQuery.fn.doesExist = function () {
 };
 
 jQuery(document).ready(function () {
-  solGS.listTypeTrainingPopulation.populateTrainingPopsMenu();
+  trainingListPopsDataDiv = solGS.listTypeTrainingPopulation.trainingListPopsDataDiv;
+
+  jQuery(trainingListPopsDataDiv).on("click", function (e) {
+    var runSolgsBtnId = e.target.id;
+
+    if (runSolgsBtnId.match(/run_solgs/)) {
+
+      var selectedPop = solGS.listTypeTrainingPopulation.getSelectedPopSolgsArgs(runSolgsBtnId);
+      var trainingPopId = selectedPop.training_pop_id;
+
+      if (trainingPopId.match(/list/)) {
+
+        var listId = trainingPopId.replace(/\w+_/, "");
+        const list = new solGSList(listId);
+        var listDetail = list.getListDetail();
+
+        if (listDetail.type.match(/plots/)) {
+          solGS.listTypeTrainingPopulation.showJobSubmissionDialog(listId);
+        } else {
+          var trialsNames = list.getListElementsNames();
+
+          solGS.listTypeTrainingPopulation
+            .loadTrialListTypeTrainingPop(trialsNames)
+            .done(function (res) {
+              solGS.combinedTrials.getCombinedPopsId(res.trials_ids);
+            })
+            .fail(function (res) {
+              alert("Error occured querying for trials ids");
+            });
+        }
+      } else {
+        var datasetId = trainingPopId.replace(/\w+_/, "");
+        solGS.dataset.datasetTrainingPop(datasetId, selectedPop.training_pop_name);
+      }
+    }
+  });
 });
+
 
 jQuery(document).ready(function () {
-  jQuery("#list_type_training_pops_select").change(function () {
-    var selectedPop = jQuery("option:selected", this).data("pop");
-    if (selectedPop.id) {
-      jQuery("#list_type_training_pop_go_btn").click(function () {
-        if (typeof selectedPop.data_str === "undefined" || selectedPop.data_str.match(/list/i)) {
-          const list = new solGSList(selectedPop.id);
-          var listDetail = list.getListDetail();
-          var args;
-          if (listDetail.type.match(/plots|trials/)) {
-            args = solGS.listTypeTrainingPopulation.createTrainingReqArgs(selectedPop.id);
-            solGS.listTypeTrainingPopulation.displayListTypeTrainingPops(args);
-          }
-        } else {
-          args = solGS.dataset.createDatasetTrainingReqArgs(selectedPop.id, selectedPop.name);
-        }
-        solGS.listTypeTrainingPopulation.displayListTypeTrainingPops(args);
-      });
-    }
-  });
-});
 
-jQuery("#list_type_training_pops_table").ready(function () {
-  jQuery("body").on("click", "#list_type_training_pops_table tr a", function (row) {
-    row.preventDefault();
+  jQuery("#lists_datasets_message").show();
+  jQuery("#lists_datasets_progress .multi-spinner-container").show();
+ 
+  var trainingPopsDataDiv = solGS.listTypeTrainingPopulation.trainingListPopsDataDiv;
+  
+  var tableId = solGS.listTypeTrainingPopulation.trainingListPopsTable;
+  var trainingPopsTable = solGS.listTypeTrainingPopulation.createTable(tableId)
 
-    var selectedPop = row.target.dataset.selectedPop;
+  jQuery(trainingPopsDataDiv).append(trainingPopsTable).show();
+  var trainingPops = solGS.listTypeTrainingPopulation.getTrainingListPops()
+  var trainingPopsRows = solGS.listTypeTrainingPopulation.getTrainingListPopsRows(trainingPops);
 
-    selectedPop = JSON.parse(selectedPop);
-    if (selectedPop.id.match(/\w+_/)) {
-      selectedPop.id = selectedPop.id.replace(/\w+_/, "");
-    }
+  solGS.listTypeTrainingPopulation.displayTrainingListPopsTable(tableId, trainingPopsRows);
 
-    if (selectedPop.pop_type.match(/list/)) {
-    
-      const list = new solGSList(selectedPop.id);
-      var listDetail = list.getListDetail();
-      if (listDetail.type.match(/plots/)) {
-        solGS.listTypeTrainingPopulation.askTrainingJobQueueing(selectedPop.id);
-      } else {
-        var trialsNames = list.getListElementsNames();
+  jQuery("#lists_datasets_message").hide();
+  jQuery("#lists_datasets_progress .multi-spinner-container").hide();
+  jQuery("#create_new_list_dataset").show();
 
-        solGS.listTypeTrainingPopulation
-          .loadTrialListTypeTrainingPop(trialsNames)
-          .done(function (res) {
-            solGS.combinedTrials.getCombinedPopsId(res.trials_ids);
-          })
-          .fail(function (res) {
-            alert("Error occured querying for trials ids");
-          });
-      }
-    } else {
-      solGS.dataset.datasetTrainingPop(selectedPop.id, selectedPop.name);
-    }
-  });
 });

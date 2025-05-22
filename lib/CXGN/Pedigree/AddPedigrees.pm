@@ -307,6 +307,50 @@ sub _get_available_stocks {
     return (\%accessions_crosses_hash, \%accessions_crosses_populations_hash);
 }
 
+sub generate_pedigrees {
+    my $self = shift;
+    my $pedigree_data = shift;
+    my $schema = $self->get_schema();
+
+    my @generated_pedigrees;
+    foreach my $pedigree (@$pedigree_data) {
+        my $female_parent;
+        my $male_parent;
+        my $progeny = $pedigree->{'progeny name'};
+        my $female = $pedigree->{'female parent accession'};
+        my $male = $pedigree->{'male parent accession'};
+        my $cross_type = $pedigree->{'type'};
+
+        if ($cross_type ne "open") {
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+        } elsif($cross_type eq "open") {
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = undef;
+            if ($male){
+                $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+            }
+        }
+
+        my $opts = {
+            cross_type => $cross_type,
+            female_parent => $female_parent,
+            name => $progeny
+        };
+
+        if ($male_parent) {
+            $opts->{male_parent} = $male_parent;
+        }
+
+        my $p = Bio::GeneticRelationships::Pedigree->new($opts);
+        push @generated_pedigrees, $p;
+    }
+
+    return \@generated_pedigrees;
+
+}
+
+
 #######
 1;
 #######

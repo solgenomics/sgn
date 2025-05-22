@@ -1,0 +1,58 @@
+
+
+<%doc>
+
+=head1 NAME
+
+/phenome/assign_owner.mas - a component for displaying object (locus/stock etc) owner form
+
+=head1 DESCRIPTION
+
+
+Parameters:
+
+=over 3
+
+=item object_id
+
+object  id
+
+=item  object_type
+
+the type of the object (e.g. 'locus', 'stock')
+
+
+=item owners_div
+defaults to 'object_owners'
+
+=back
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+
+$object_id
+$object_type
+$owners_div => 'object_owners'
+</%args>
+
+<div id = "<% $owners_div %>" >&nbsp;Loading..</div>
+
+<script language="javascript">
+
+jQuery(document).ready(function() {
+    display_owners("<% $owners_div %>");
+    function display_owners(owners_div) {
+        jQuery.ajax( { url: "/<% $object_type %>/<% $object_id %>/owners" , dataType: "json",
+            success: function(response) {
+                jQuery("#"+owners_div).html(response.html);
+            }
+        } );
+    }
+});

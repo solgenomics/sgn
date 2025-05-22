@@ -6,13 +6,12 @@ load_images.pl
 
 =head1 SYNOPSYS
 
-load_images.pl -D [ sandbox | cxgn | trial ] -H hostname -i dirname -r chado table name [script will load image ids into ChadoTableprop ]  
+load_images.pl -D database_name -H hostname -i dirname -r chado table name [script will load image ids into ChadoTableprop ]  
 
 =head1 DESCRIPTION
 
 Loads  images  into the SGN database, using the SGN::Image framework.
 Then link the loaded image with the user-supplied chado objects (e.g. stock, nd_experiment)  
-    
 
 Requires the following parameters: 
 
@@ -20,7 +19,7 @@ Requires the following parameters:
 
 =item -D
 
-a database parameter, which can either be "cxgn", "sandbox", or "trial". "cxgn" and "sandbox" will cause the script to connect to the respective databases; "trial" will connect to sandbox, but not perform any of the database modifications. 
+database name 
 
 =item -H 
 
@@ -43,27 +42,26 @@ use name - from sgn_people.sp_person.
 
 the dir where the database stores the images (the concatenated values from image_path and image_dir from sgn_local.conf or sgn.conf)
 
-=item -d 
+=item -d
 
 files are stored in sub directories named after database accessions 
 
 =item -e 
 
-image file extension . Defaults to 'jpg'
+image file extension. Defaults to 'jpg'
 
-
-=item -t 
+=item -t
 
 trial mode . Nothing will be stored.
 
-
 =back
 
-The script will generate an error file, named like the filename supplied, with the extension .err.
+Errors and messages are output on STDERR.
 
 =head1 AUTHOR(S)
 
 Naama Menda (nm249@cornell.edu) October 2010.
+
 Tweaks and move to sgn/bin: Lukas Mueller (lam87@cornell.edu) December 2023.
 
 =cut
@@ -151,7 +149,9 @@ while ( my $hashref = $sth->fetchrow_hashref() ) {
     my $image_id = $hashref->{image_id};
     my $chado_table_id = $hashref->{stock_id};  ##### table specific
 
-    print STDERR "\n\nCHADO TABLE ID = $chado_table_id\n\n";
+    if ($chado_table_id % 10000 == 0) {
+	print STDERR "CACHING $chado_table_id\n";
+    }
 
     my $i = CXGN::Image->new(dbh=>$dbh, image_id=>$image_id, image_dir=>$db_image_dir); # SGN::Image...$ch
     my $original_filename = $i->get_original_filename();

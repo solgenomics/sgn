@@ -3,6 +3,10 @@
 
 drop_test_databases.pl - a script to remove test databases from the postgres instance
 
+=head1 SYNOPSYS
+
+perl drop_test_databases.pl -h dbhost
+
 =head1 DESCRIPTION
 
 When using t/test_fixture.pl with the --nocleanup option, a lot of test databases (named test_db_* ) can accumulate in the postgres instance. 

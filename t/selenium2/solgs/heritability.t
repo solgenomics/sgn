@@ -63,9 +63,9 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get('/solgs', 'solgs home page');
     sleep(4);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(3);
@@ -79,9 +79,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(90);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(15);

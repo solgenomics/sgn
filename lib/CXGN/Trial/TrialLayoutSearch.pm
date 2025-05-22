@@ -174,11 +174,11 @@ sub search {
         LEFT JOIN stockprop AS is_a_control ON (observationunit.stock_id=is_a_control.stock_id AND is_a_control.type_id = $is_a_control_type_id) ";
 
 
-    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, treatment.name, treatment.description, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count ";
+    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, STRING_AGG(treatment.name, '|'), STRING_AGG(treatment.description, '|'), seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count ";
 
     my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY project.name, observationunit.uniquename";
 
-    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description, rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, treatment.name, treatment.description, seedlot.stock_id, seedlot.uniquename ";
+    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description, rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename ";
 
     # WHERE
     my @where_clause;
@@ -253,7 +253,20 @@ sub search {
     $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $treatment_name, $treatment_description, $seedlot_id, $seedlot_name, $full_count) = $h->fetchrow_array()) {
 
         my $location_name = $location_id ? $location_id_lookup{$location_id} : undef;
-        my $treatments = $treatment_name ? { $treatment_name => $treatment_description } : { 'No ManagementFactor'=>undef };
+
+        # Split treatment names and descriptions on | and parse into an array
+        my @names = split(/\|/, $treatment_name);
+        my @descriptions = split(/\|/, $treatment_description);
+        my @treatments;
+        for my $i (0 .. $#names) {
+            my $n = $names[$i];
+            my $d = $descriptions[$i];
+            push @treatments, { $n => $d };
+        }
+        if ( scalar(@treatments) == 0 ) {
+            push @treatments, { 'No ManagementFactor' => undef };
+        }
+        # my $treatments = $treatment_name ? { $treatment_name => $treatment_description } : { 'No ManagementFactor'=>undef };
 
         if ($project_description) { $project_description =~ s/\R//g; }
         if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };
@@ -307,7 +320,7 @@ sub search {
             row_number => $row_number,
             col_number => $col_number,
             plant_number => $plant_number,
-            treatments => $treatments ,
+            treatments => \@treatments ,
             full_count => $full_count,
             seedlot_id => $seedlot_id,
             seedlot_name => $seedlot_name,

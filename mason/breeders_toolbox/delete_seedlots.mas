@@ -4,38 +4,42 @@ $user_role => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.List' ] &>
-  
 
-  <&| /page/info_section.mas, title=>"Delete seedlots using a list",  collapsible => 1, collapsed=>1 &>
-    
-
-% if ($user_role eq "curator" ) { 
-    <div style="margin-left:20px">
-      
-      
-      <p><strong>Select a list of type "seedlot" to delete from the database</strong></p>
-      Note:
-      <ul><li>Only seedlots that are not associated with crosses or trials can be deleted.</li>
-	<li>Deleting seedlots cannot be undone.</li>
-      </ul>
-      <form class="form-horizontal" role="form" method="post" id="delete_seedlots_form" name="delete_seedlots_form">
-        <div class="form-group">
-	  <div style="width:300px;margin-left:40px;margin-top:30px;" id="seedlots_to_delete_html">
-	  </div>
-	</div>
-      </form>
-      <br /><br />
-      <button type="button" class="btn btn-primary" name="delete_seedlots_submit" id="delete_seedlots_submit">Delete Seedlots</button>
+<div class="modal fade" id="delete_seedlots_using_list_dialog" name="delete_seedlots_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="deleteSeedlotsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deleteSeedlotsDialog">Delete Seedlots </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="well well-sm">
+                        <form class="form-horizontal" id="delete_seedlot_info" name="delete_seedlot_info">
+                            <div class="form-group form-group-sm">
+                                <ul>
+                                    <strong>Note:</strong>
+                                    <li>Only seedlots that are not associated with crosses or trials can be deleted.</li>
+                                    <li>Deleting seedlots cannot be undone.</li>
+                                </ul>
+                            </div>
+                        </form>
+                    </div>
+                    <form class="form-horizontal" role="form" method="post" id="delete_seedlots_form" name="delete_seedlots_form">
+                        <div class="form-group" id="delete_seedlot_list_section" >
+                            <label class="col-sm-4 control-label">Select a List of Seedlots:</label>
+                            <div class="col-sm-8" id="seedlots_to_delete_html" name="seedlots_to_delete_html"></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_seedlots_submit" id="delete_seedlots_submit">Delete Seedlots</button>
+            </div>
+        </div>
     </div>
 </div>
-
-%}
-% else {
-
-You need to be logged in or you do not have sufficient privileges to delete seedlots using lists.
-
-%}
-</&>
 
 <div class="modal fade" id="delete_seedlots_modal" name="delete_seedlots_modal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -61,8 +65,14 @@ You need to be logged in or you do not have sufficient privileges to delete seed
 
 <script>
 
-jQuery(window).ready( function() { 
+jQuery(window).ready( function() {
+
+    jQuery("#delete_seedlots_link").click( function() {
+        jQuery('#delete_seedlots_using_list_dialog').modal('show');
+    });
+
     jQuery("#seedlots_to_delete_html").append(list.listSelect("seedlots_to_delete_html_select", [ 'seedlots' ], 'None', undefined, undefined));
+    
 });
 
 jQuery('#delete_seedlots_submit').click( function() {
@@ -122,4 +132,3 @@ function display_seedlot_deletion_info(r) {
 }
 
 </script>
-

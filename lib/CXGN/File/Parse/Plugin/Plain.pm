@@ -1,5 +1,8 @@
 package CXGN::File::Parse::Plugin::Plain;
 
+use strict;
+
+use Data::Dumper;
 use CXGN::File::Parse;
 use Text::CSV;
 use List::MoreUtils qw|uniq|;
@@ -61,30 +64,42 @@ sub parse {
   }
   close $fh;
 
-  # Set data columns
-  foreach my $c (@{$rows[0]}) {
-    $c = $super->clean_header($c);
-    push @{$rtn{columns}}, $c;
-  }
   my $row_max = scalar(@rows);
   my $col_max = scalar(@{$rows[0]})-1;
 
-  # Setup values map for unique values per column
-  my %values_map;
-  for my $c ( 1..$col_max ) {
-    $values_map{$rows[0]->[$c]} = {};
+  my %values_map;     # map of values by column
+  my @col_indices;    # array of column indices to process
+
+  # Set data columns
+  my $skips_in_a_row = 0;
+  foreach my $col ( 0 .. $col_max ) {
+    my $c = $rows[0]->[$col];
+    my $v = $super->clean_header($c);
+
+    if ( $v && $v ne '' ) {
+      push @{$rtn{columns}}, $v;
+      push @col_indices, $col;
+      $values_map{$v} = {};
+      $skips_in_a_row = 0;
+    }
+    else {
+      $skips_in_a_row++;
+    }
+
+    last if $skips_in_a_row >= 5;
   }
 
   # Set data values
-  my $skips_in_a_row = 0;
+  $skips_in_a_row = 0;
   for my $r ( 1..$row_max ) {
     my $row = $rows[$r];
     my %row_info = (
       _row => $r+1
     );
     my $skip_row = 1;
-    for my $c ( 0..$col_max ) {
+    for my $c (@col_indices) {
       my $h = $rows[0]->[$c];
+      $h = $super->clean_header($h);
       my $v = $rows[$r]->[$c];
       $v = $super->clean_value($v, $h);
 
@@ -97,7 +112,7 @@ sub parse {
         $row_info{$h} = $v;
       }
 
-      if ( $v && $v ne '' ) {
+      if ( defined($v) && $v ne '' ) {
         if ( ref($v) eq 'ARRAY' ) {
           if ( scalar(@$v) > 0 ) {
             foreach (@$v) {

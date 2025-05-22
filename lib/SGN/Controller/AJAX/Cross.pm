@@ -82,30 +82,14 @@ sub upload_cross_file_POST : Args(0) {
     } elsif ($experiment_page_crossing_experiment_id) {
         $crossing_trial_id = $experiment_page_crossing_experiment_id;
     }
-    my $crosses_simple_upload = $c->req->upload('xls_crosses_simple_file');
-    my $crosses_plots_upload = $c->req->upload('xls_crosses_plots_file');
-    my $crosses_plants_upload = $c->req->upload('xls_crosses_plants_file');
-    my $crosses_simplified_parents_upload = $c->req->upload('xls_crosses_simplified_parents_file');
+    my $crosses_upload = $c->req->upload('upload_crosses_file');
 
     my $upload;
     my $upload_type;
-    if ($crosses_plots_upload) {
-        $upload = $crosses_plots_upload;
-        $upload_type = 'CrossesExcelFormat';
-    }
-    if ($crosses_plants_upload) {
-        $upload = $crosses_plants_upload;
-        $upload_type = 'CrossesExcelFormat';
-    }
 
-    if ($crosses_simple_upload) {
-        $upload = $crosses_simple_upload;
-        $upload_type = 'CrossesSimpleExcel';
-    }
-
-    if ($crosses_simplified_parents_upload) {
-        $upload = $crosses_simplified_parents_upload;
-        $upload_type = 'CrossesSimplifiedParentInfoExcel';
+    if ($crosses_upload) {
+        $upload = $crosses_upload;
+        $upload_type = 'CrossesGeneric';
     }
 
     my $parser;
@@ -274,12 +258,11 @@ sub add_cross_POST :Args(0) {
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
     my $crossing_trial_id = $c->req->param('crossing_trial_id');
-    my $female_plot_id = $c->req->param('female_plot');
-    my $male_plot_id = $c->req->param('male_plot');
+    my $female_plot_plant_id = $c->req->param('female_plot_plant');
+    my $male_plot_plant_id = $c->req->param('male_plot_plant');
     my $cross_combination = $c->req->param('cross_combination');
     $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
 
-    print STDERR "CROSS COMBINATION=".Dumper($cross_combination)."\n";
     my $user_id;
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a cross.\n";
@@ -308,7 +291,7 @@ sub add_cross_POST :Args(0) {
             my $maternal = $maternal_parents[$i];
             my $polycross_name = $cross_name . '_' . $maternal;
             print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
-            my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+            my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_plant_id, $male_plot_plant_id, $maternal, $paternal);
             if (!$success) {
                 return;
             }
@@ -326,7 +309,7 @@ sub add_cross_POST :Args(0) {
                     next;
                 }
                 my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
-                my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+                my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $female_plot_plant_id, $male_plot_plant_id, $maternal, $paternal);
                 if (!$success) {
                     return;
                 }
@@ -341,7 +324,7 @@ sub add_cross_POST :Args(0) {
             my $maternal = $maternal_parents[$i];
             my $paternal = $paternal_parents[$i];
             my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot_plant_id, $male_plot_plant_id, $maternal, $paternal);
             if (!$success) {
                 return;
             }
@@ -350,7 +333,7 @@ sub add_cross_POST :Args(0) {
     else {
         my $maternal = $c->req->param('maternal');
         my $paternal = $c->req->param('paternal');
-        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $cross_combination);
+        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_plant_id, $male_plot_plant_id, $maternal, $paternal, $cross_combination);
         if (!$success) {
             return;
         }
@@ -755,10 +738,12 @@ sub add_individual_cross {
     my $cross_name = shift;
     my $cross_type = shift;
     my $crossing_trial_id = shift;
-    my $female_plot_id = shift;
+    my $female_plot_plant_id = shift;
     my $female_plot;
-    my $male_plot_id = shift;
+    my $female_plant;
+    my $male_plot_plant_id = shift;
     my $male_plot;
+    my $male_plant;
     my $maternal = shift;
     my $paternal = shift;
     my $cross_combination = shift;
@@ -775,16 +760,29 @@ sub add_individual_cross {
     my $progeny_number = $c->req->param('progeny_number');
     my $visible_to_role = $c->req->param('visible_to_role');
 
-    if ($female_plot_id){
-        my $female_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $female_plot_id});
-        $female_plot = $female_plot_rs->name();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+
+
+    if ($female_plot_plant_id){
+        my $female_plot_plant_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $female_plot_plant_id});
+        my $female_type = $female_plot_plant_rs->type_id();
+        if ($female_type == $plot_cvterm_id) {
+            $female_plot = $female_plot_plant_rs->name();
+        } elsif ($female_type == $plant_cvterm_id) {
+            $female_plant = $female_plot_plant_rs->name();
+        }
     }
 
-    if ($male_plot_id){
-        my $male_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $male_plot_id});
-        $male_plot = $male_plot_rs->name();
+    if ($male_plot_plant_id){
+        my $male_plot_plant_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $male_plot_plant_id});
+        my $male_type = $male_plot_plant_rs->type_id();
+        if ($male_type == $plot_cvterm_id) {
+            $male_plot = $male_plot_plant_rs->name();
+        } elsif ($male_type == $plant_cvterm_id) {
+            $male_plant = $male_plot_plant_rs->name();
+        }
     }
-
 
     #check that progeny number is an integer less than maximum allowed
     my $maximum_progeny_number = 999; #higher numbers break cross name convention
@@ -852,6 +850,16 @@ sub add_individual_cross {
         $cross_to_add->set_male_plot($male_plot_individual);
     }
 
+    if ($female_plant) {
+        my $female_plant_individual = Bio::GeneticRelationships::Individual->new(name => $female_plant);
+        $cross_to_add->set_female_plant($female_plant_individual);
+    }
+
+    if ($male_plant) {
+        my $male_plant_individual = Bio::GeneticRelationships::Individual->new(name => $male_plant);
+        $cross_to_add->set_male_plant($male_plant_individual);
+    }
+
     $cross_to_add->set_cross_type($cross_type);
     $cross_to_add->set_name($cross_name);
     $cross_to_add->set_cross_combination($cross_combination);
@@ -917,9 +925,11 @@ sub add_crossingtrial : Path('/ajax/cross/add_crossingtrial') : ActionClass('RES
 sub add_crossingtrial_POST :Args(0){
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
     my $crossingtrial_name = $c->req->param('crossingtrial_name');
     my $breeding_program_id = $c->req->param('crossingtrial_program_id');
+    my $program_name = $schema->resultset('Project::Project')->find({project_id => $breeding_program_id})->name();
     my $location = $c->req->param('crossingtrial_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
@@ -930,9 +940,14 @@ sub add_crossingtrial_POST :Args(0){
         return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        print STDERR "User does not have sufficient privileges.\n";
+    my @user_roles = $c->user->roles();
+    my $check_roles = CXGN::People::Roles->new({ people_schema => $people_schema});
+    my $invalid_roles = $check_roles->check_sp_roles(\@user_roles, $program_name);
+    if ($invalid_roles->{'invalid_role'}) {
         $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossing experiment." };
+        return;
+    } elsif ($invalid_roles->{'invalid_program'}) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add new crossing experiment." };
         return;
     }
 

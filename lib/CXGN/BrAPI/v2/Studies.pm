@@ -53,7 +53,7 @@ sub seasons {
         push @data, {
             seasonDbId=>qq|$projectprop_id|,
             season=>$season,
-            year=>$year
+            year=>int($year)
         };
     }
     my %result = (data=>\@data);
@@ -80,12 +80,14 @@ sub study_types {
 sub search {
     my $self = shift;
     my $search_params = shift;
-	my $c = shift;
+    my $c = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema;
     my $supported_crop = $c->config->{"supportedCrop"};
+    my $data_out;
+    my $total_count;
 
     my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
  	my @program_names = $search_params->{programNames} ? @{$search_params->{programNames}} : ();
@@ -125,7 +127,7 @@ sub search {
 		push @$status, { 'error' => 'The studyPUI search parameters are not implemented.' };
 	}
 
-    my ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,\@study_dbids,\@location_names,\@location_ids,\@study_type_list,\@study_names,\@program_names,\@program_dbids,\@folder_dbids,\@folder_names,\@obs_variable_ids,\@germplasm_dbids,\@germplasm_names,\@year_list,\@externalReferenceIds,\@externalReferenceSource,$sortBy,$sortOrder);
+    ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,\@study_dbids,\@location_names,\@location_ids,\@study_type_list,\@study_names,\@program_names,\@program_dbids,\@folder_dbids,\@folder_names,\@obs_variable_ids,\@germplasm_dbids,\@germplasm_names,\@year_list,\@externalReferenceIds,\@externalReferenceSource,$sortBy,$sortOrder);
 
     my %result = (data=>$data_out);
     my @data_files;
@@ -180,7 +182,7 @@ sub store {
 	    my $trial_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
 	    my $trial_year = $params->{seasons} ? $params->{seasons}->[0] : undef;
 		my $trial_location_id = $params->{locationDbId} ? $params->{locationDbId} : undef;
-	    my $trial_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
+	    my $trial_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, splitplot, or stripplot;
 	    my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
 	    my $study_type = $params->{studyType} ? $params->{studyType} : undef;
 	    my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
@@ -199,9 +201,9 @@ sub store {
 		}
 
 		# Check that a supported study design type was passed
-		my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","greenhouse","Westcott","Analysis");
+		my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","stripplot","greenhouse","Westcott","Analysis");
 		if (!exists($supported_methods{$trial_design_method})) {
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $trial_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','greenhouse','Westcott','Analysis'.", 400);
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $trial_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','stripplot', 'greenhouse','Westcott','Analysis'.", 400);
 		}
 
 		# Check the trial exists
@@ -370,6 +372,7 @@ sub update {
 	my $params = shift;
 	my $user_id =shift;
 	my $c = shift;
+	my $data_out;
 
 	if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to update studies!'));
@@ -405,7 +408,7 @@ sub update {
 	my $study_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
 	my $study_year = $params->{seasons} ? $params->{seasons}->[0] : undef;
 	my $study_location = $params->{locationDbId} ? $params->{locationDbId} : undef;
-	my $study_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
+	my $study_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, splitplot, or stripplot;
 	my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
 	my $study_t = $params->{studyType} ? $params->{studyType} : undef;
 	my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
@@ -425,9 +428,9 @@ sub update {
 	my $harvest_date = $params->{endDate} ? $params->{endDate} : undef;
 
 	# Check that a supported study design type was passed
-	my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","greenhouse","Westcott","Analysis");
+	my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","stripplot","greenhouse","Westcott","Analysis");
 	if (!exists($supported_methods{$study_design_method})) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $study_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','greenhouse','Westcott','Analysis'.", 400);
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $study_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','stripplot','greenhouse','Westcott','Analysis'.", 400);
 	}
 
 	# Check the brapi trial exists
@@ -523,7 +526,7 @@ sub update {
 
 	my $supported_crop = $c->config->{"supportedCrop"};
 
-	my ($data_out,$total_count) = _search($self,$self->bcs_schema(),$page_size,$page,$supported_crop,[$trial_id]);
+	($data_out,$total_count) = _search($self,$self->bcs_schema(),$page_size,$page,$supported_crop,[$trial_id]);
 
 	my $result = @$data_out[0];
 	my @data_files;

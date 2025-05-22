@@ -39,29 +39,48 @@ print STDERR $sgn_session_id."\n";
 
 my $breeding_program_id = $schema->resultset('Project::Project')->find({name=>'test'})->project_id();
 
-my $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_named_accessions";
+my $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_named_accessions.xlsx";
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
         'http://localhost:3010/ajax/breeders/seedlot-upload',
         Content_Type => 'form-data',
         Content => [
-            seedlot_uploaded_file => [ $file, 'seedlot_upload', Content_Type => 'application/vnd.ms-excel', ],
+            seedlot_uploaded_file => [ $file, 'seedlot_upload_named_accessions.xlsx', Content_Type => 'application/vnd.ms-excel', ],
             "upload_seedlot_breeding_program_id"=>$breeding_program_id,
             "upload_seedlot_location"=>'test_location',
             "upload_seedlot_organization_name"=>"testorg1",
+            "upload_seedlot_material_type"=>"seed",
             "sgn_session_id"=>$sgn_session_id
         ]
     );
 
-#print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
-print STDERR "MESSAGE: $message\n";
 my $message_hash = JSON::XS->new->decode($message);
 
 is_deeply($message_hash->{'success'}, 1);
 my $added_seedlot = $message_hash->{'added_seedlot'};
 
+#test uploading with invalid source
+my $error_file = $f->config->{basepath}."/t/data/stock/seedlot_upload_named_accessions_error.xlsx";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/seedlot-upload',
+        Content_Type => 'form-data',
+        Content => [
+            seedlot_uploaded_file => [ $error_file, 'seedlot_upload_named_accessions_error.xlsx', Content_Type => 'application/vnd.ms-excel', ],
+            "upload_seedlot_breeding_program_id"=>$breeding_program_id,
+            "upload_seedlot_location"=>'test_location',
+            "upload_seedlot_organization_name"=>"testorg1",
+            "upload_seedlot_material_type"=>"seed",
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = JSON::XS->new->decode($message);
+is($message_hash->{'error_string'}, 'The source name: test_trial21 is not linked to the same accession as the access content: test_accession1<br><br>');
 
 $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_harvested";
 $ua = LWP::UserAgent->new;
@@ -73,6 +92,7 @@ $response = $ua->post(
             "upload_seedlot_breeding_program_id"=>$breeding_program_id,
             "upload_seedlot_location"=>'test_location',
             "upload_seedlot_organization_name"=>"testorg1",
+            "upload_seedlot_material_type"=>"seed",
             "sgn_session_id"=>$sgn_session_id
         ]
     );
@@ -123,6 +143,7 @@ my $third_row = $seedlots[2];
 is($first_row->{'seedlot_name'}, 'seedlot_test1');
 is($first_row->{'content_name'}, 'test_accession1');
 is($first_row->{'content_type'}, 'accession');
+is($first_row->{'material_type'}, 'seed');
 is($first_row->{'current_count'}, '10');
 is($first_row->{'box_name'}, 'box1');
 is($first_row->{'quality'}, 'mold');
@@ -130,6 +151,7 @@ is($first_row->{'quality'}, 'mold');
 is($third_row->{'seedlot_name'}, 'seedlot_test_from_cross_1');
 is($third_row->{'content_name'}, 'cross_test1');
 is($third_row->{'content_type'}, 'cross');
+is($third_row->{'material_type'}, 'seed');
 is($third_row->{'current_count'}, '5');
 is($third_row->{'box_name'}, 'b1');
 is($third_row->{'quality'}, '');

@@ -62,17 +62,19 @@ $d->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list")->click();
+    ## Combine two lists using union
+
+    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list 808")->click();
 
     sleep(1);
 
-    $d->find_element_ok("list_select_checkbox_810", "id", "checkbox select list")->click();
+    $d->find_element_ok("list_select_checkbox_810", "id", "checkbox select list 810")->click();
 
     sleep(1);
 
-    $d->find_element_ok("new_combined_list_name", "id", "combine selected list group")->send_keys("combined_list");
+    $d->find_element_ok("new_combined_list_name", "id", "name selected list group - union")->send_keys("combined_list_union");
 
-    $d->find_element_ok("combine_selected_list_group", "id", "combine selected list group")->click();
+    $d->find_element_ok("combine_selected_list_group_union", "id", "combine selected list group - union")->click();
 
     sleep(1);
 
@@ -80,15 +82,56 @@ $d->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $d->find_element_ok("view_list_combined_list", "id", "check view combined list");
+    ok($d->driver->get_alert_text() =~ m/Added 4 items to the new List combined_list_union/i, 'created selected list group - union');
+    $d->accept_alert_ok();
 
     sleep(1);
 
-    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list")->click();
+    $d->find_element_ok("view_list_combined_list_union", "id", "check view combined list - union");
 
     sleep(1);
 
-    $d->find_element_ok("list_select_checkbox_810", "id", "checkbox select list")->click();
+    ## Combine two lists using intersection
+
+    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list 808")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("list_select_checkbox_4", "id", "checkbox select list 4")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("new_combined_list_name", "id", "name selected list group - intersection")->send_keys("combined_list_intersection");
+
+    $d->find_element_ok("combine_selected_list_group_intersection", "id", "combine selected list group - intersection")->click();
+
+    sleep(1);
+
+    $d->accept_alert_ok();
+
+    sleep(1);
+
+    # Accept alert about mismatched list types (one list doesn't have it's type set)
+    $d->accept_alert_ok();
+
+    sleep(1);
+
+    ok($d->driver->get_alert_text() =~ m/Added 2 items to the new List combined_list_intersection/i, 'created selected list group - intersection');
+    $d->accept_alert_ok();
+
+    sleep(1);
+
+    $d->find_element_ok("view_list_combined_list_intersection", "id", "check view combined list - intersection");
+
+    sleep(1);
+
+    ## Delete list group
+
+    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list 808")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("list_select_checkbox_810", "id", "checkbox select list 810")->click();
 
     sleep(1);
 
