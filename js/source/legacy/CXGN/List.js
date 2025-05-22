@@ -1521,6 +1521,7 @@ function addMultipleItemsToList(div, list_id) {
     //  var duplicates = new Array();
     var items = content.split("\n");
     lo.addBulk(list_id, items);
+    alert("New item(s) added to list! With the addition of these new items, you may want to validate (or re-validate) your list.");
     // for (var n=0; n<items.length; n++) {
     //	var id = lo.addItem(list_id, items[n]);
     //	if (id == 0) {
