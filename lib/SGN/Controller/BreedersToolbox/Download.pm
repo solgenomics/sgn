@@ -1959,19 +1959,17 @@ sub download_population_seedlots_action : Path('/breeders/download_population_se
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $dbh = $schema->storage->dbh;
     my $population_stock_id = $c->req->param("population_stock_id");
-    print STDERR "POPULATION ID =".Dumper($population_stock_id)."\n";
 
     my $dl_token = $c->req->param("population_seedlots_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
     my $result = $ac->get_population_seedlots($population_stock_id);
-    print STDERR "RESULT =".Dumper($result)."\n";
 
     my @download_rows = ();
     foreach my $r (@$result) {
-        my ($member_id, $member_name, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location) =@$r;
-        push @download_rows, [$member_name, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location];
+        my ($member_id, $member_name, $member_type, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location) =@$r;
+        push @download_rows, [$member_name, $member_type, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location];
     }
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "population_seedlots_download_XXXXX", UNLINK=> 0);
@@ -1982,7 +1980,7 @@ sub download_population_seedlots_action : Path('/breeders/download_population_se
     my $workbook = Excel::Writer::XLSX->new($file_path);
     my $worksheet = $workbook->add_worksheet();
 
-    my @header = ("Member Name", "Seedlot Name", "Current Count", "Current Weight(g)", "Box Name", "Location");
+    my @header = ("Member Name", "Member Type", "Seedlot Name", "Current Count", "Current Weight(g)", "Box Name", "Location");
     $worksheet->write_row(0, 0, \@header);
 
     my $row_count = 1;

@@ -662,15 +662,26 @@ sub population_seedlots_GET : Args(1) {
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+
+    my $member_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property')->cvterm_id();
+    my $member_type;
+    my $member_type_row = $schema->resultset("Stock::Stockprop")->find({ stock_id => $stock_id, type_id => $member_type_cvterm_id });
+    if($member_type_row) {
+        $member_type = $member_type_row->value();
+    } else {
+        $member_type = 'accessions';
+    }
+
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
     my $result = $ac->get_population_seedlots($stock_id);
 
     my @population_seedlots = ();
     foreach my $r (@$result){
-        my ($member_id, $member_name, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location) =@$r;
+        my ($member_id, $member_name, $member_type, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location) =@$r;
         push @population_seedlots, {
             member_id => $member_id,
             member_name => $member_name,
+            member_type => $member_type,
             seedlot_id => $seedlot_id,
             seedlot_name => $seedlot_name,
             current_count => $current_count,

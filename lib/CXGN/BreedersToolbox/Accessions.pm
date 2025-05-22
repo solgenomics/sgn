@@ -146,10 +146,11 @@ sub get_population_seedlots {
     my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
     my $box_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'location_code', 'stock_property')->cvterm_id();
 
-    my $q = "SELECT member.stock_id, member.uniquename, seedlot.stock_id, seedlot.uniquename, current_count.value, current_weight_gram.value, box_name.value, nd_geolocation.description
+    my $q = "SELECT member.stock_id, member.uniquename, cvterm.name, seedlot.stock_id, seedlot.uniquename, current_count.value, current_weight_gram.value, box_name.value, nd_geolocation.description
         FROM stock
         JOIN stock_relationship AS member_relationship ON (stock.stock_id = member_relationship.object_id) AND member_relationship.type_id = ?
         JOIN stock AS member ON (member_relationship.subject_id = member.stock_id)
+        JOIN cvterm ON (member.type_id = cvterm.cvterm_id)
         LEFT JOIN stock_relationship AS seedlot_relationship ON (member.stock_id = seedlot_relationship.subject_id) AND seedlot_relationship.type_id = ?
         LEFT JOIN stock as seedlot ON (seedlot_relationship.object_id = seedlot.stock_id)
         LEFT JOIN stockprop AS current_count ON (current_count.stock_id = seedlot.stock_id) AND current_count.type_id = ?
@@ -165,8 +166,8 @@ sub get_population_seedlots {
     $h->execute($member_of_type_id, $collection_of_type_id, $current_count_type_id, $current_weight_gram_type_id, $box_name_type_id, $experiment_type_id, $population_stock_id);
 
     my @population_seedlots = ();
-    while(my($member_id, $member_name, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location) = $h->fetchrow_array()){
-        push @population_seedlots, [$member_id, $member_name, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location]
+    while(my($member_id, $member_name, $member_type, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location) = $h->fetchrow_array()){
+        push @population_seedlots, [$member_id, $member_name, $member_type, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location]
     }
 
     return \@population_seedlots;

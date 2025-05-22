@@ -30,6 +30,7 @@ jQuery(document).ready(function(){
         destroy: true,
         columns: [
             { title: "Member Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.member_id+"/view'>"+row.member_name+"</a>"; } },
+            { title: "Member Type", "data": "member_type" },
             { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) {
                 if (row.seedlot_id === null){
                     return 'No Seedlot'
