@@ -377,14 +377,21 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
   }
 });
 
+var projectprop_data;
+
 jQuery("#correct_spatial").click(function() {
   //var dataTableData = jQuery("#spatial_correction_needed_results_table").DataTable().data();
   //alert(JSON.stringify(dataTableData));
   //console.log(dataTableData);
-  var include_rc_random = 0;
+  let include_rc_random = 0;
   if (jQuery('#include_rc_random_effects').is(":checked")) {
     include_rc_random = 1;
   }
+  let genotype_as_random = 0;
+  if (jQuery('#genotype_as_random').is(":checked")) {
+    genotype_as_random = 1;
+  }
+  let nseg_degree = (100 - jQuery('#nseg_ratio_select').val()) / 100;
   jQuery('#working_modal').modal('show');
   jQuery.ajax({
     url: '/ajax/spatial_model/correct_spatial/' + trial_id,
@@ -393,7 +400,9 @@ jQuery("#correct_spatial").click(function() {
       pheno_filepath: pheno_filepath,
       headers: headers,
       phenotype_file: phenotype_file,
-      include_rc_random : include_rc_random
+      include_rc_random : include_rc_random,
+      genotype_as_random : genotype_as_random,
+      nseg_degree : nseg_degree
     },
     success: function(response) {
       jQuery('#working_modal').modal('hide');
@@ -427,66 +436,66 @@ jQuery("#correct_spatial").click(function() {
           ]
         });
       }
-      var input_file = response.phenotype_file;
-      var fitted_data = response.result;
-      var nested_data = response.nested_data;
-      var traits = response.traits;
-      var accessionNamesArray = response.accession_names;
-      var model_properties = JSON.stringify({ "properties": { "traits": traits } });
-      var analysis_design = response.analysis_design;
-      var projectprop_data = response.projectprop_data;
-      var model_string;
+      let input_file = response.phenotype_file;
+      let fitted_data = response.result;
+      let nested_data = response.nested_data;
+      let traits = response.traits;
+      let accessionNamesArray = response.accession_names;
+      let model_properties = JSON.stringify({ "properties": { "traits": traits } });
+      let analysis_design = response.analysis_design;
+      projectprop_data = response.projectprop_data;
+      let model_string;
       if (jQuery('#include_rc_random_effects').is(":checked")) {
         model_string = "SpATS(trait ~ spline(colNumber, rowNumber) + (1|rowNumber) + (1|colNumber) + (1|genotype))";
       } else {
         model_string = "SpATS(trait ~ spline(colNumber, rowNumber) + (1|genotype))";
       }
-
-      jQuery(document).on('click', '#confirm_store_spatial_correction', async function(e) {
-
-        //save data as projectprop
-        jQuery.ajax({
-          'url': '/ajax/spatial_model/store_spatial_adjustments/' + trial_id,
-          'data' : {
-            'spatial_adjustments': projectprop_data
-          },
-          'success' : function(response) {
-            if (response.error) {
-              alert(response.error);
-            } else {
-              alert("Spatial corrections have been stored in association with this trial. You may also wish to save them as a standalone analysis for use in downstream analyses.\n");
-            }
-          },
-          'error' : function(error) {
-            alert("An error occurred: " + error);
-          }
-        });
-
-        jQuery('#generic_save_analysis_dialog').modal("show");
-        jQuery('#generic_save_analysis_model_properties').val(model_properties);
-        jQuery('#generic_save_analysis_protocol').val(model_string);
-        //jQuery('#generic_save_analysis_dataset_id').val("dataset_id");
-        jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(accessionNamesArray));
-        jQuery('#generic_save_analysis_trial_id').val(trial_id);
-        jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(traits));
-        jQuery('#generic_save_analysis_statistical_ontology_term').val('Adjusted Means from Spatial Correction using SpATS R|SGNSTAT:0000054');
-        jQuery('#generic_save_analysis_design').val(analysis_design);
-        jQuery('#generic_save_analysis_model_language').val('R');
-        jQuery('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
-        jQuery('#generic_save_analysis_model_application_version').val('0.01');
-        jQuery('#generic_save_analysis_model_type').val('spatial_model_SpATS');
-        jQuery('#generic_save_analysis_result_values').val(nested_data);
-        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_precomputed_design');
-        jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase spatial correction tool" }');
-        jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
-        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
-      });
     }, 
     error: function(error) {
       jQuery('#working_modal').modal('hide');
       alert("Error calculating spatial corrections: "+error);
     }
   });
+});
+
+jQuery(document).on('click', '#confirm_store_spatial_correction', async function(e) {
+
+    //save data as projectprop
+    jQuery.ajax({
+        'url': '/ajax/spatial_model/store_spatial_adjustments/' + trial_id,
+        'data' : {
+        'spatial_adjustments': projectprop_data
+        },
+        'success' : function(response) {
+        if (response.error) {
+            alert(response.error);
+        } else {
+            alert("Spatial corrections have been stored in association with this trial. You may also wish to save them as a standalone analysis for use in downstream analyses.\n");
+        }
+        },
+        'error' : function(error) {
+        alert("An error occurred: " + error);
+        }
+    });
+
+    jQuery('#generic_save_analysis_dialog').modal("show");
+    jQuery('#generic_save_analysis_model_properties').val(model_properties);
+    jQuery('#generic_save_analysis_protocol').val(model_string);
+    //jQuery('#generic_save_analysis_dataset_id').val("dataset_id");
+    jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(accessionNamesArray));
+    jQuery('#generic_save_analysis_trial_id').val(trial_id);
+    jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(traits));
+    jQuery('#generic_save_analysis_statistical_ontology_term').val('Adjusted Means from Spatial Correction using SpATS R|SGNSTAT:0000054');
+    jQuery('#generic_save_analysis_design').val(analysis_design);
+    jQuery('#generic_save_analysis_model_language').val('R');
+    jQuery('#generic_save_analysis_model_application_name').val('Breedbase Spatial Correction Tool');
+    jQuery('#generic_save_analysis_model_application_version').val('0.01');
+    jQuery('#generic_save_analysis_model_type').val('spatial_model_SpATS');
+    jQuery('#generic_save_analysis_result_values').val(nested_data);
+    jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_precomputed_design');
+    jQuery('#generic_save_analysis_result_summary_values').val('{ "method" : "Breedbase spatial correction tool" }');
+    jQuery('#generic_save_analysis_model_training_data_file').val(input_file);
+    jQuery('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
 });
 
 

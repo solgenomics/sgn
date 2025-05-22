@@ -248,6 +248,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my ($self, $c) = @_;
     my $dataTableData = $c->req->param("dataTableData");
     my $include_rc_random = $c->req->param("include_rc_random");
+    my $genotype_as_random = $c->req->param("genotype_as_random");
+    my $nseg_degree = $c->req->param("nseg_degree");
     print STDERR "DATA TABLE DATA: $dataTableData\n";
     # Convert the DataTable data back into an array
     my @dataTableArray = map { [split(/\t/, $_)] } split(/\n/, $dataTableData);
@@ -285,6 +287,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         $phenotype_file,
         $phenotype_file.".spatial_correlation_summary", 
         $include_rc_random,
+        $genotype_as_random,
+        $nseg_degree,
         "'".$headers_string."'",
 	);
 

@@ -135,6 +135,10 @@ $project_id => undef
               <div id="spatial_correction_results_buttons">
                 <input name="include_rc_random_effects" id="include_rc_random_effects" type="checkbox" checked/> <label for="include_rc_random_effects">Include rows and columns as random effects?</label><br> <p><i>The spatial corrections model will smooth with 2D splines, but can also include rows and columns as random effects to capture more variability due to spatial autocorrelation. Be sure that subsequent analyses based on these corrections do not attempt to model spatial effects a second time.</i></p>
                 <br>
+                <input name="genotype_as_random" id="genotype_as_random" type="checkbox"/> <label for="genotype_as_random">Use genotype (accession) as a random effect instead of fixed?</label><br> <p><i>In general, accessions should be a fixed effect. But if the accessions of this trial are representative of genetic diversity in the crop as a whole, and are drawn randomly from a larger population of genotypes, you can model them as a random effect.</i></p>
+                <br>
+                <input name="nseg_ratio_select" id="nseg_ratio_select" type="range" min="1" max="100" value="33"><label for="nseg_ratio_select">Degree of smoothing</label><br> <p><i>A high degree of smoothing may oversmooth plot-level variation, but a low degree of smoothing may overfit the data and fail to smooth out field-level spatial variation. The value given is a good starting point.</i></p>
+                <br>
                 <table style="width:100%">
                   <tr>
                 <td><button id="correct_spatial" type="button" class="btn btn-default"> Run Spatial Correction </button></td>
