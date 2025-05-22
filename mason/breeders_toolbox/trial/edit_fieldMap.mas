@@ -352,7 +352,7 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
         ],
         'dom': 'Bfrtip',
         'buttons': [
-          'csv', 'excel', 'pdf'
+          'csv', 'excel'
         ]
       });
 
@@ -426,7 +426,11 @@ jQuery("#correct_spatial").click(function() {
             { 'title': 'Original' },
             { 'title': 'Corrected' },
             { 'title': 'Adjustment'}
-          ]
+          ],
+          'dom': 'Bfrtip',
+          'buttons': [
+          'csv', 'excel'
+        ]
         });
         jQuery("#spatial_correction_new_moran_table").DataTable({
           'destroy': true,
