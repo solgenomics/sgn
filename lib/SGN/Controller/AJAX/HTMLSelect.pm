@@ -41,6 +41,7 @@ use URI::Encode qw(uri_encode uri_decode);
 use Array::Utils qw(:all);
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Transformation::Transformation;
+use Sort::Naturally;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -1613,7 +1614,8 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         }
     }
 
-    @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
+    @ontology_children = sort { ncmp($a->[1], $b->[1]) } @ontology_children;
+
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
