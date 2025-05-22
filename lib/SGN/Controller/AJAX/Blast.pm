@@ -15,6 +15,7 @@ use File::Spec qw | catfile |;
 use File::Slurp qw | read_file write_file |;
 use File::NFSLock qw | uncache |;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
@@ -271,8 +272,12 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     my $job;
     my $jobid;
+    my $job_record;
+    my $job_record_id;
+
     eval {
-	my $config = { 
+
+    my $config = { 
 	    backend => $c->config->{backend},
 	    submit_host => $c->config->{cluster_host},
 	    temp_base => $blast_tmp_output,
@@ -282,17 +287,30 @@ sub run : Path('/tools/blast/run') Args(0) {
 	    max_cluster_jobs => 1_000_000_000,
 	    
 	};
+    $job_record = CXGN::Job->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $sp_person_id,
+        name => $params->{program}.' analysis',
+        job_type => 'sequence_analysis',
+        cmd => join(' ', @command),
+        cxgn_tools_run_config => $config,
+        finish_logfile => $c->config->{job_finish_log}
+    });
+
+    $job_record->update_status('submitted');
 	    
 	$job = CXGN::Tools::Run->new($config);
 	$job->do_not_cleanup(1);
-	$job->run_cluster(@command);
-   
-	
 
+	$job->run_cluster(@command);
+
+    $job_record_id = $job_record->sp_job_id();
    
     };
 
     if ($@) {
+    $job_record->update_status('failed');
 	print STDERR "An error occurred! $@\n";
 	$c->stash->{rest} = { error => $@ };
     }
@@ -312,15 +330,23 @@ sub run : Path('/tools/blast/run') Args(0) {
 	print STDERR "Passing jobid code ".$job->jobid()."\n";
 	$c->stash->{rest} = { jobid => $job->jobid(),
   	                      seq_count => $seq_count,
+                          job_dbid => $job_record_id
 	};
     }
 }
 
 
-sub check : Path('/tools/blast/check') Args(1) {
+sub check : Path('/tools/blast/check') Args(2) {
     my $self = shift;
     my $c = shift;
     my $jobid = shift;
+    my $job_record_id = shift;
+
+    my $job_record = CXGN::Job->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_job_id => $job_record_id
+    });
 
     # my $t0 = [gettimeofday]; #-------------------------- TIME CHECK
 
@@ -350,6 +376,8 @@ sub check : Path('/tools/blast/check') Args(1) {
       return;
     }
     else {
+
+        $job_record->update_status("finished");
 
       # my $t3 = [gettimeofday]; #-------------------------- TIME CHECK
 
