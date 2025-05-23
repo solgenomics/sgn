@@ -1625,6 +1625,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         id => $select_id,
         multiple => $multiple,
         size     => 10,
+        class   => "form-control",
         choices => \@ontology_children,
         selected => $selected
     );

@@ -109,7 +109,8 @@ $composable_meta_root_cvterm => undef
     </div>
     <div id="toy_div" class="col-md-6" style="display: none;">
       <label for="toy_select_div" class="control-label">Time of Year</label>
-      <p class="help-block"><small><i>Optional</i> Pick the week or month in which the new trait is measured</small></p>
+      <p class="help-block"><small><i>Optional</i> Pick the day, week, or month in which the new trait is measured</small></p>
+      <input type="text" id="toy_search" class="form-control input-sm" placeholder="Search minute, hour, day, week, month...">
       <div id="toy_select_div"></div><br>
       <button class="btn btn-default btn-sm" id="toy_select_all" name="toy_select_all"/>Select All</button>
       <button class="btn btn-default btn-sm" id="toy_select_clear" name="toy_select_clear"/>Clear</button>
@@ -428,23 +429,64 @@ jQuery(document).ready(function() {
 });
 
 jQuery(document).ready(function () {
-    jQuery(document).on('keyup', '#trait_search', function () {
-        var filter = jQuery(this).val().toLowerCase();
-        jQuery('#trait_select_div select option').each(function () {
-            var text = jQuery(this).text().toLowerCase();
-            jQuery(this).toggle(text.includes(filter));
+    const searchable = ['trait', 'toy'];
+
+    searchable.forEach(function (prefix) {
+        const searchSelector = '#' + prefix + '_search';
+        const selectSelector = '#' + prefix + '_select_div select';
+        const selectAllSelector = '#' + prefix + '_select_all';
+        const clearSelector = '#' + prefix + '_select_clear';
+
+        jQuery(document).on('keyup', searchSelector, function () {
+            const filter = jQuery(this).val().toLowerCase();
+            const $select = jQuery(selectSelector);
+
+            const originalOptions = $select.data('original-options') ||
+                $select.find('option').map(function () {
+                    return { value: this.value, text: jQuery(this).text() };
+                }).get();
+
+            if (!$select.data('original-options')) {
+                $select.data('original-options', originalOptions);
+            }
+
+            $select.empty(); // clear the select box
+
+            originalOptions.forEach(function (opt) {
+                if (opt.text.toLowerCase().includes(filter)) {
+                    $select.append(jQuery('<option>', {
+                        value: opt.value,
+                        text: opt.text
+                    }));
+                }
+            });
+        });
+
+        jQuery(document).on('click', selectAllSelector, function (e) {
+            e.preventDefault();
+            jQuery(selectSelector + ' option').prop('selected', true);
+        });
+
+        jQuery(document).on('click', clearSelector, function (e) {
+            e.preventDefault();
+            jQuery(selectSelector + ' option').prop('selected', false);
+            jQuery(searchSelector).val(''); // Clear the search input
+
+            const $select = jQuery(selectSelector);
+            const originalOptions = $select.data('original-options');
+
+            if (originalOptions) {
+                $select.empty();
+                originalOptions.forEach(function (opt) {
+                    $select.append(jQuery('<option>', {
+                        value: opt.value,
+                        text: opt.text
+                    }));
+                });
+            }
         });
     });
-
-    jQuery(document).on('click', '#trait_select_all', function (e) {
-        e.preventDefault();
-        jQuery('#trait_select_div select option:visible').prop('selected', true);
-    });
-
-    jQuery(document).on('click', '#trait_select_clear', function (e) {
-        e.preventDefault();
-        jQuery('#trait_select_div select option').prop('selected', false);
-    });
 });
+
 
 </script>
