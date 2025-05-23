@@ -106,6 +106,12 @@ $trial_stock_type => undef
 
     </&>
 
+    <&| /page/info_section.mas, id => "summary_of_stock_entries", title=>"Summary of Accession, Plot, Subplot, Plant and Tissue Sample Entries",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <div id="summary_entries_section">
+            <& /breeders_toolbox/trial/summary_stock_entries.mas, trial_id => $trial_id &>
+        </div>
+    </&>
+
     <&| /page/info_section.mas, id => "trial_treatments", title=>"Field Management Factors",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_treatments.mas, trial_id => $trial_id &>
     </&>
@@ -113,5 +119,7 @@ $trial_stock_type => undef
     <&| /page/info_section.mas, id=>"trial_entry_numbers", title=>"Entry Numbers", is_subsection=>1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_entry_numbers.mas, trial_id => $trial_id, trial_name => $trial_name &>
     </&>
+
+
 
 </div><!-- closes well -->

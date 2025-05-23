@@ -1,0 +1,45 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <button class="btn btn-primary" id="download_summary_stock_entries_button">Download Entries</button>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+                <table class="table table-hover table-bordered" id="summary_stock_entry_table">
+                    <thead>
+                        <tr>
+                            <th>Accession</th>
+                            <th>Plot</th>
+                            <th>Sublot</th>
+                            <th>Plant</th>
+                            <th>Tissue Sample</th>
+                        </tr>
+                    </thead>
+                </table>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#summary_of_stock_entries_onswitch').click(function(){
+        jQuery('#summary_stock_entry_table').DataTable({
+            'destroy': true,
+            ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stock_entry_summary',
+        });
+    });
+
+});
+
+
+</script>
