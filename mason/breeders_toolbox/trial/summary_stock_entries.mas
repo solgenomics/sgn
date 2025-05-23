@@ -18,7 +18,6 @@ $trial_id
                         <tr>
                             <th>Accession</th>
                             <th>Plot</th>
-                            <th>Sublot</th>
                             <th>Plant</th>
                             <th>Tissue Sample</th>
                         </tr>
@@ -32,12 +31,10 @@ $trial_id
 
 jQuery(document).ready(function () {
 
-    jQuery('#summary_of_stock_entries_onswitch').click(function(){
         jQuery('#summary_stock_entry_table').DataTable({
             'destroy': true,
-            ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stock_entry_summary',
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stock_entry_summary',
         });
-    });
 
 });
 
