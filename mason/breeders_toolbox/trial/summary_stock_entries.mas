@@ -11,9 +11,9 @@ $trial_id
             <button class="btn btn-primary" id="download_summary_stock_entries_button">Download Entries</button>
         </div>
     </div>
-    <div class="panel panel-default">
+    <div class="panel panel-default" style="overflow:scroll">
         <div class="panel-body">
-                <table class="table table-hover table-bordered" id="summary_stock_entry_table">
+                <table class="table table-hover table-bordered display nowrap" id="summary_stock_entry_table">
                     <thead>
                         <tr>
                             <th>Accession</th>
