@@ -21,14 +21,6 @@ solGS.correlation = {
     var dataSetType = jQuery("#data_set_type").val();
     var dataStr = jQuery("#data_structure").val();
 
-    var listId;
-    var datasetId;
-
-    if (dataStr.match(/dataset/)) {
-      datasetId = selectId;
-    } else if (dataStr.match(/list/)) {
-      listId = selectId;
-    }
 
     var corrDivs = this.getCorrDivs(corrPopId);
 
@@ -36,8 +28,6 @@ solGS.correlation = {
       corr_pop_id: corrPopId,
       data_set_type: dataSetType,
       data_structure: dataStr,
-      dataset_id: datasetId,
-      list_id: listId,
       data_type: "phenotype",
       correlation_type: "phenotypic",
       canvas: corrDivs.canvas,
@@ -101,7 +91,6 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     corrPopId = selectedPop.corr_pop_id;
 
     var dataType = this.getSelectedDataType(corrPopId);
-    // var corrUrl = this.generateCorrUrl(corrPopId);
 
     corrArgs = selectedPopData.selectedPop;
     corrArgs = JSON.parse(corrArgs);
@@ -109,7 +98,6 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     if (dataType.match(/Phenotype/)){
       corrArgs['correlation_type'] = 'phenotypic';
     }
-    // corrArgs["analysis_page"] = corrUrl;
   }
 
   return corrArgs;
@@ -224,9 +212,9 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       'processing': true,
       'paging': true,
       'info': false,
-      'pageLength': 5,
+      'pageLength': 15,
       'rowId': function (a) {
-        return a[5]
+        return a[6]
       }
     });
   
@@ -462,7 +450,6 @@ jQuery(document).ready(function () {
 
         jQuery(`${canvas} .multi-spinner-container`).hide();
         jQuery(corrMsgDiv).empty();
-        jQuery(runCorrBtnId).show();
       } else {
         jQuery(`${canvas} .multi-spinner-container`).hide();
 
