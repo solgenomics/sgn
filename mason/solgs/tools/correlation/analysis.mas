@@ -35,7 +35,7 @@ $data_set_type => undef
 
 <%perl>
 
-$corr_pop_id = $trial_id if !$corr_pop_id;
+$corr_pop_id = $trial_id || $dataset_id || $list_id if !$corr_pop_id;
 
 if (!$data_structure) {
    if ($dataset_id) {
