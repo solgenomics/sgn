@@ -7,6 +7,7 @@ use JSON::Any;
 use Try::Tiny;
 use Bio::Chado::Schema;
 use SGN::Model::Cvterm;
+use Sort::Naturally;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -42,12 +43,13 @@ sub get_terms {
 
       my @results;
       while (my ($id, $accession, $name) = $h->fetchrow_array()) {
-	  if ($accession +0 != 0) {
-	      push @results, [$id, $name];
-	  }
+          if ($accession +0 != 0) {
+              push @results, [$id, $name];
+          }
       }
-
-      return @results;
+      #sort naturally by cvterm name
+      my @sorted = sort { ncmp($a->[1], $b->[1]) } @results;
+      return @sorted;
 }
 
 =head2 get_variables
@@ -89,8 +91,10 @@ sub get_variables {
               push @results, [$id, $name];
           }
       }
+      #sort naturally by cvterm name
+      my @sorted = sort { ncmp($a->[1], $b->[1]) } @results;
 
-      return @results;
+      return @sorted;
 }
 
 sub get_root_nodes {
