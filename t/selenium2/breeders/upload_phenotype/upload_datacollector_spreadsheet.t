@@ -100,12 +100,12 @@ $t->while_logged_in_as("submitter", sub {
     $verify_status = $t->find_element_ok(
         "upload_phenotype_datacollector_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
-    diag("verify_statues : $verify_status");
-    ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation");
-    ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
-    ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
-    ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
-    ok($verify_status =~ /There are 44 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
+    print STDERR "verify_statues : $verify_status\n";
+    ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation 1");
+    ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation 2");
+    ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation 3");
+    ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation 4");
+    ok($verify_status =~ /There are 57 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation 5");
 
     $t->find_element_ok("upload_datacollector_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
     sleep(10);

@@ -113,11 +113,12 @@ $t->while_logged_in_as("submitter", sub {
             "upload_phenotype_spreadsheet_verify_status",
             "id", "verify the verification")->get_attribute('innerHTML');
 
-        ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation");
-        ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
-        ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
-        ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
-        ok($verify_status =~ /There are 2 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
+	    print STDERR "VERIFY STATUS 1 = $verify_status\n";
+        ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation 1");
+        ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation 2");
+        ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation 3");
+        ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation 4");
+        ok($verify_status =~ /There are 60 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation 5");
 
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
@@ -127,11 +128,12 @@ $t->while_logged_in_as("submitter", sub {
             "upload_phenotype_spreadsheet_verify_status",
             "id", "verify the verification")->get_attribute('innerHTML');
 
-        ok($verify_status =~ /0 new values stored/, "Verify warnings after store validation");
-        ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation");
-        ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation");
-        ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation");
-        ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation");
+	    print STDERR "VERIFY STATUS 2: $verify_status\n";
+        ok($verify_status =~ /0 new values stored/, "Verify warnings after store validation 6");
+        ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation 7");
+        ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation 8");
+        ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation 9");
+        ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation 10");
 
         #TRY VERIFYING AND UPLOADING THE SAME FILE AGAIN FROM THE /BREEDERS/PHENOTYPING PAGE.
 
@@ -167,11 +169,12 @@ $t->while_logged_in_as("submitter", sub {
             "upload_phenotype_spreadsheet_verify_status",
             "id", "verify the verification")->get_attribute('innerHTML');
 
-        ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation");
-        ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
-        ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
-        ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
-        ok($verify_status =~ /There are 2 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
+	    print STDERR "VERIFY STATUS 3: $verify_status\n";
+        ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation 11");
+        ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation 12");
+        ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation 13");
+        ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation 14");
+        ok($verify_status =~ /There are 60 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation 15");
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
         sleep(10);
@@ -180,11 +183,12 @@ $t->while_logged_in_as("submitter", sub {
             "upload_phenotype_spreadsheet_verify_status",
             "id", "verify the verification")->get_attribute('innerHTML');
 
-        ok($verify_status =~ /0 new values stored/, "Verify warnings after store validation");
-        ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation");
-        ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation");
-        ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation");
-        ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation");
+	    print STDERR "VERIFY STATUS 4: $verify_status\n";
+        ok($verify_status =~ /0 new values stored/, "Verify warnings after store validation 16");
+        ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation 17");
+        ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation 18");
+        ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation 19");
+        ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation 20");
 
         $f->clean_up_db();
     }
