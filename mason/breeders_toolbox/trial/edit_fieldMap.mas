@@ -456,10 +456,14 @@ jQuery("#correct_spatial").click(function() {
       let analysis_design = response.analysis_design;
       projectprop_data = response.projectprop_data;
       let model_string;
-      if (jQuery('#include_rc_random_effects').is(":checked")) {
-        model_string = "SpATS(trait ~ spline(colNumber, rowNumber) + (1|rowNumber) + (1|colNumber) + (1|genotype))";
-      } else {
+      if (jQuery('#include_rc_random_effects').is(":checked") && jQuery('#genotype_as_random').is(":checked")) {
+        model_string = "SpATS(trait ~ spline(colNumber, rowNumber) + (rowNumber|colNumber) + (1|genotype))";
+      } else if (jQuery('#include_rc_random_effects').is(":checked") && !jQuery('#genotype_as_random').is(":checked")) {
+        model_string = "SpATS(trait ~ genotype + spline(colNumber, rowNumber)  + (rowNumber|colNumber))";
+      } else if (!jQuery('#include_rc_random_effects').is(":checked") && jQuery('#genotype_as_random').is(":checked")) {
         model_string = "SpATS(trait ~ spline(colNumber, rowNumber) + (1|genotype))";
+      } else {
+        model_string = "SpATS(trait ~ genotype + spline(colNumber, rowNumber))";
       }
     }, 
     error: function(error) {
