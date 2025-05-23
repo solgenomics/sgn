@@ -1624,6 +1624,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         name => $select_name,
         id => $select_id,
         multiple => $multiple,
+        size     => 10,
         choices => \@ontology_children,
         selected => $selected
     );
@@ -1667,6 +1668,7 @@ sub all_ontology_terms_select : Path('/ajax/html/select/all_ontology_terms') Arg
         name => $select_name,
         id => $select_id,
         multiple => $multiple,
+        size     => 10,
         choices => \@ontology_terms,
     );
     $c->stash->{rest} = { select => $html };
