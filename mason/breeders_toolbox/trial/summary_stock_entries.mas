@@ -7,9 +7,13 @@ $trial_id
 
 <div class="well well-sm">
     <div class="panel panel-default">
-        <div class="panel-body">
-            <button class="btn btn-primary" id="download_summary_stock_entries_button">Download Entries</button>
-        </div>
+        <form id="download_summary_stock_entries" action="/breeders/download_summary_stock_entries" method="POST">
+            <div class="panel-body">
+                <button class="btn btn-primary" id="download_summary_stock_entries_button">Download Entries</button>
+                <input name ="stock_entries_trial_id" id="stock_entries_trial_id" type="hidden" value="<% $trial_id %>" />
+                <input type="hidden" id="trial_stock_entries_download_token" name="trial_stock_entries_download_token" />
+            </div>
+        </form>
     </div>
     <div class="panel panel-default" style="overflow:scroll">
         <div class="panel-body">
@@ -34,6 +38,10 @@ jQuery(document).ready(function () {
         jQuery('#summary_stock_entry_table').DataTable({
             'destroy': true,
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stock_entry_summary',
+        });
+
+        jQuery('#download_summary_stock_entries_button').click(function() {
+            jQuery('#download_summary_stock_entries').submit();
         });
 
 });
