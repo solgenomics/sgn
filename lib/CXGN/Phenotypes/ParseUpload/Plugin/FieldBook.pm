@@ -72,8 +72,8 @@ sub validate {
     # Define possible unit headers for each data level
     my %unit_headers = (
         plots    => [qw(plot_id plot_name ObservationUnitDbId ObservationUnitName)],
-        plants   => [qw(plant_name ObservationUnitDbId ObservationUnitName)],
-        subplots => [qw(subplot_name ObservationUnitDbId ObservationUnitName)],
+        plants   => [qw(plant_name ObservationUnitName)],
+        subplots => [qw(subplot_name ObservationUnitName)],
     );
 
     my %header_column_info;
@@ -103,10 +103,6 @@ sub validate {
         $header_column_number++;
     }
 
-    if (!defined $unit_col) {
-        $parse_result{'error'} = "Header row must contain one of: " . join(', ', @{ $unit_headers{$data_level} }) . " for $data_level level phenotypes.";
-        return \%parse_result;
-    }
     if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
         $parse_result{'error'} = "trait or value column not found. Make sure to use the database Fieldbook format.";
         print STDERR "trait or value column not found. Make sure to use the database Fieldbook format.";
@@ -182,11 +178,7 @@ sub parse {
         }
         $header_column_number++;
     }
-
-    if (!defined $unit_col) {
-        $parse_result{'error'} = "Header row must contain one of: " . join(', ', @{ $unit_headers{$data_level} }) . " for $data_level level phenotypes.";
-        return \%parse_result;
-    }
+    
     if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
         $parse_result{'error'} = "trait or value column not found. Make sure to use the database Fieldbook format.";
         return \%parse_result;
