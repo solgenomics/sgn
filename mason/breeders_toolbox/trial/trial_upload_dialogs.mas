@@ -746,6 +746,7 @@ $design_types => ()
                                 <td>design_type</td>
                                 <td>description</td>
                                 <td>trial_type</td>
+                                <td>trial_stock_type</td>
                                 <td>plot_width</td>
                                 <td>plot_length</td>
                                 <td>field_size</td>
@@ -769,7 +770,7 @@ $design_types => ()
                     </table>
 
                     <b>Header as a string:</b><br/>
-                    <p>trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
+                    <p>trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,trial_stock_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
 
                     <b> Required fields:</b>
                     <ul>
@@ -789,6 +790,7 @@ $design_types => ()
                     <ul>
                     <li>plot_name (Must be unique across entire database. If not provided in the file, it will be automatically generated as <code>{trial_name}-PLOT_{plot_number}</code>)</li>
                     <li>trial_type (The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
+                    <li>trial_stock_type (The type of stocks that are being evaluated in the trial.  Can be either 'accession', 'cross', or 'family_name'.  When not provided, 'accession' is used as the default)
                     <li>plot_width (plot width in meters)</li>
                     <li>plot_length (plot length in meters)</li>
                     <li>field_size (field size in hectares)</li>
