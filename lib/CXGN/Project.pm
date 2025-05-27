@@ -5709,7 +5709,6 @@ sub get_stock_entry_summary {
 	my $self = shift;
     my $trial_id = $self->get_trial_id();
     my $schema = $self->bcs_schema;
-    print STDERR "OBJ TRIAL ID =".Dumper($trial_id)."\n";
     my @stock_entry_summary;
 
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -5719,9 +5718,8 @@ sub get_stock_entry_summary {
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
-    print STDERR "TISSUE SAMPLE TYPE ID =".Dumper($tissue_sample_type_id)."\n";
 
-    my $q = "SELECT distinct(tissue_sample.uniquename) AS tissue_sample_name, accession.uniquename, plot.uniquename, plant.uniquename
+    my $q = "SELECT distinct(tissue_sample.uniquename) AS tissue_sample_name, tissue_sample.stock_id, accession.uniquename, accession.stock_id, plot.uniquename, plot.stock_id, plant.uniquename, plant.stock_id
     FROM nd_experiment_project
     JOIN nd_experiment_stock ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
     JOIN stock AS plot ON (plot.stock_id = nd_experiment_stock.stock_id) AND plot.type_id = ?
@@ -5736,11 +5734,10 @@ sub get_stock_entry_summary {
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 
     $h->execute($plot_type_id, $plot_of_type_id, $accession_type_id, $plant_of_type_id, $plant_type_id, $tissue_sample_of_type_id, $tissue_sample_type_id, $trial_id);
-    while (my ($tissue_sample_name, $accession_name, $plot_name, $plant_name) = $h->fetchrow_array()) {
-        push @stock_entry_summary, [$accession_name, $plot_name, $plant_name, $tissue_sample_name];
+    while (my ($tissue_sample_name, $tissue_sample_id, $accession_name, $accession_id, $plot_name, $plot_id, $plant_name, $plant_id) = $h->fetchrow_array()) {
+        push @stock_entry_summary, [$accession_name, $accession_id, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id];
     }
 
-    print STDERR "STOCK ENTRY SUMMARY =".Dumper(\@stock_entry_summary)."\n";
     return \@stock_entry_summary;
 }
 

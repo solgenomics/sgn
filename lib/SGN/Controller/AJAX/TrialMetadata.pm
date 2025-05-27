@@ -5734,12 +5734,17 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $trial_id = $c->stash->{trial_id};
-    print STDERR "AJAX TRIAL ID =".Dumper($trial_id)."\n";
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
     my $stock_entries = $trial->get_stock_entry_summary();
 
     my @summary;
-    $c->stash->{rest} = { data => $stock_entries };
+    foreach my $entry (@$stock_entries) {
+        my ($accession_name, $accession_id, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$entry;
+        push @summary, [qq{<a href="/stock/$accession_id/view">$accession_name</a>}, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>}];
+    }
+
+
+    $c->stash->{rest} = { data => \@summary };
 }
 
 

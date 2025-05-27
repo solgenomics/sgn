@@ -41,6 +41,8 @@ jQuery(document).ready(function () {
         });
 
         jQuery('#download_summary_stock_entries_button').click(function() {
+            var token = new Date().getTime();
+            jQuery('#trial_stock_entries_download_token').val(token);
             jQuery('#download_summary_stock_entries').submit();
         });
 

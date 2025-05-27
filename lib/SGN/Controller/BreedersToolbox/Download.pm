@@ -1968,8 +1968,8 @@ sub download_summary_stock_entries : Path('/breeders/download_summary_stock_entr
 
     my @download_rows = ();
     foreach my $row (@$stock_entries) {
-        my ($accession_name, $plot_name, $plant_name, $tissue_sample) =@$row;
-        push @download_rows, [$accession_name, $plot_name, $plant_name, $tissue_sample];
+        my ($accession_name, $accession_id, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$row;
+        push @download_rows, [$accession_name, $plot_name, $plant_name, $tissue_sample_name];
     }
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "trial_stock_entries_XXXXX", UNLINK=> 0);
