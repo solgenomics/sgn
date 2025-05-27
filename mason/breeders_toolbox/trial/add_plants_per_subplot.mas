@@ -33,11 +33,23 @@ $trial_name => undef
                 <input name="add_rows_and_columns_to_subplot_plants" id="add_rows_and_columns_to_subplot_plants" type="checkbox"/>
                 <div id="subplot_plant_row_column_format_dialog" style="display:none">
                     <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a zigzag pattern. Row and column numbers start at 1 within each subplot.</i></p>
-                    <label>Number of rows per plot</label>
-                    <input name="rows_per_subplot" id="rows_per_subplot" type="number"/>
-                    <br>
-                    <label>Number of columns per plot</label>
-                    <input name="cols_per_subplot" id="cols_per_subplot" type="number"/>
+                    <table style="width:60%">
+                        <tr>
+                            <td>
+                                <label>Number of rows per plot</label>
+                            </td>
+                            <td>
+                                <input name="rows_per_subplot" id="rows_per_subplot" type="number"/>
+                            </td>
+                        </tr><tr>
+                            <td>
+                                <label>Number of columns per plot</label>
+                            </td>
+                            <td>
+                                <input name="cols_per_subplot" id="cols_per_subplot" type="number"/>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
               </div>
 	        </div>
@@ -396,6 +408,25 @@ jQuery(document).ready(function() {
             is_checked = 1;
         }
 
+        var num_rows = jQuery('#rows_per_subplot').val();
+        var num_cols = jQuery('#cols_per_subplot').val();
+        var plants_per_subplot = jQuery('#add_plants_per_subplot_num').val();
+        var include_plant_coordinates = 0;
+        
+        if (jQuery('#add_rows_and_columns_to_subplot_plants').is(':checked')) { 
+
+            include_plant_coordinates = 1;
+
+            if (num_rows == "" || num_cols == "" || num_rows * num_cols == 0) {
+                alert("You need to specify the number of rows and columns to give plant coordinates within plots.");
+                return;
+            }
+            if (num_rows * num_cols < plants_per_subplot) {
+                alert("Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.");
+                return;
+            }
+        }
+
         jQuery.ajax( {
             url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_plant_subplot_entries/',
             type: 'POST',
@@ -403,8 +434,11 @@ jQuery(document).ready(function() {
                 jQuery("#working_modal").modal("show");
             },
             data: {
-                'plants_per_subplot' : jQuery('#add_plants_per_subplot_num').val(),
-                'inherits_plot_treatments' : is_checked
+                'plants_per_subplot' : plants_per_subplot,
+                'inherits_plot_treatments' : is_checked,
+                'include_plant_coordinates' : include_plant_coordinates,
+                'rows_per_plot' : num_rows,
+                'cols_per_plot' : num_cols
             },
             success: function(response) {
                 jQuery("#working_modal").modal("hide");

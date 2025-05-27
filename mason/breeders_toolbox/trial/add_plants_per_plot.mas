@@ -33,11 +33,23 @@ $trial_name => undef
                 <input name="add_rows_and_columns_to_plants" id="add_rows_and_columns_to_plants" type="checkbox"/>
                 <div id="plant_row_column_format_dialog" style="display:none">
                     <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a zigzag pattern. Row and column numbers start at 1 within each plot.</i></p>
-                    <label>Number of rows per plot</label>
-                    <input name="rows_per_plot" id="rows_per_plot" type="number"/>
-                    <br>
-                    <label>Number of columns per plot</label>
-                    <input name="cols_per_plot" id="cols_per_plot" type="number"/>
+                    <table style="width:60%">
+                        <tr>
+                            <td>
+                                <label>Number of rows per plot</label>
+                            </td>
+                            <td>
+                                <input name="rows_per_plot" id="rows_per_plot" type="number"/>
+                            </td>
+                        </tr><tr>
+                            <td>
+                                <label>Number of columns per plot</label>
+                            </td>
+                            <td>
+                                <input name="cols_per_plot" id="cols_per_plot" type="number"/>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
               </div>
 	        </div>
@@ -522,7 +534,7 @@ function add_plants_to_trial() {
           enable_working_modal();
       },
       data: {
-        'plants_per_plot' : jQuery('#add_plants_per_plot_num').val(),
+        'plants_per_plot' : plants_per_plot,
         'inherits_plot_treatments' : is_checked,
         'include_plant_coordinates' : include_plant_coordinates,
         'rows_per_plot' : num_rows,

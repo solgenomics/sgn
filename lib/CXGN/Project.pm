@@ -3216,7 +3216,7 @@ sub create_plant_entities {
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
-        my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
+        # my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
         #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
         my $treatments;
@@ -3442,6 +3442,8 @@ sub create_plant_subplot_entities {
     my $inherits_plot_treatments = shift;
     my $plant_owner = shift;
     my $plant_owner_username = shift;
+    my $rows_per_plot = shift;
+    my $cols_per_plot = shift;
 
     my $create_plant_entities_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -3461,6 +3463,8 @@ sub create_plant_subplot_entities {
         my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
         my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+        my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
+        my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
@@ -3511,6 +3515,17 @@ sub create_plant_subplot_entities {
             print STDERR " ... creating plants for plot $plot...\n";
 
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
+
+            my @plant_coords = ();
+
+            if ($rows_per_plot && $cols_per_plot) { #if these are defined then we need to record row col data for plants
+                foreach my $row (1..$rows_per_plot) {
+                    foreach my $col (1..$cols_per_plot) {
+                        push @plant_coords, "$row,$col";
+                    }
+                }
+            }
+
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
                 return "The plot $plot is not yet in the database. Cannot create plant entries.";
@@ -3534,11 +3549,19 @@ sub create_plant_subplot_entities {
 
                 foreach my $plant_index_number (1..$plants_per_subplot) {
                     my $plant_name = $subplot."_plant_$plant_index_number";
-                    print STDERR "... ... ... creating plant $plant_name...\n";
+                    # print STDERR "... ... ... creating plant $plant_name...\n";
+
+                    my $row_num;
+                    my $col_num;
+
+                    if (@plant_coords) {
+                        my $coord_pair = shift(@plant_coords);
+                        ($row_num, $col_num) = split(",", $coord_pair);
+                    }
 
                     $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name,
                     $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm,
-                    $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
+                    $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
                     $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
                     $parent_subplot, $plant_subplot_relationship_cvterm);
                 }
