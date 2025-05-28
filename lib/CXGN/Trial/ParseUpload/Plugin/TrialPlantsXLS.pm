@@ -75,10 +75,15 @@ sub _validate_with_plugin {
 
     my %seen_plot_names;
     my %seen_plant_names;
+    my %seen_plant_coords;
+    my $coords_given = 0;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $plot_name;
         my $plant_name;
+        my $row_num;
+        my $col_num;
+        my $coord_pair;
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
@@ -87,6 +92,21 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,1)) {
             $plant_name = $worksheet->get_cell($row,1)->value();
             $plant_name =~ s/^\s+|\s+$//g;
+        }
+
+        if ($worksheet->get_cell($row,2) && $worksheet->get_cell($row,3)) {
+            $row_num = $worksheet->get_cell($row,2)->value();
+            $row_num =~ s/^\s+|\s+$//g;
+            $col_num = $worksheet->get_cell($row,3)->value();
+            $col_num =~ s/^\s+|\s+$//g;
+            $coords_given = 1;
+            $coord_pair = join(',', ($row_num, $col_num));
+            if (exists($seen_plant_coords{$plot_name}{$coord_pair})) {
+                push @error_messages, "Multiple plants were assigned to the same coordinates ($coord_pair) in the same plot ($plot_name).";
+            } 
+            $seen_plant_coords{$plot_name}{$coord_pair} = 1;
+        } elsif ($coords_given) {
+            push @error_messages, "Coordinates were given for some plant entries, but not for $plant_name in $plot_name.";
         }
 
         if (!$plot_name || $plot_name eq '' ) {
@@ -196,9 +216,12 @@ sub _parse_with_plugin {
         $plot_lookup{$r->uniquename} = $r->stock_id;
     }
 
+
     for my $row ( 1 .. $row_max ) {
         my $plot_name;
         my $plant_name;
+        my $row_num;
+        my $col_num;
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
@@ -209,16 +232,33 @@ sub _parse_with_plugin {
             $plant_name =~ s/^\s+|\s+$//g;
         }
 
+        if ($worksheet->get_cell($row,2) && $worksheet->get_cell($row,3)) {
+            $row_num = $worksheet->get_cell($row,2)->value();
+            $row_num =~ s/^\s+|\s+$//g;
+            $col_num = $worksheet->get_cell($row,3)->value();
+            $col_num =~ s/^\s+|\s+$//g;
+        }
+
         #skip blank lines
         if (!$plot_name && !$plant_name) {
             next;
         }
 
-        push @{$parsed_entries{'data'}}, {
-            plot_name => $plot_name,
-            plot_stock_id => $plot_lookup{$plot_name},
-            plant_name => $plant_name,
-        };
+        if ($row_num && $col_num) {
+            push @{$parsed_entries{'data'}}, {
+                plot_name => $plot_name,
+                plot_stock_id => $plot_lookup{$plot_name},
+                plant_name => $plant_name,
+                row_num => $row_num,
+                col_num => $col_num
+            };
+        } else {
+            push @{$parsed_entries{'data'}}, {
+                plot_name => $plot_name,
+                plot_stock_id => $plot_lookup{$plot_name},
+                plant_name => $plant_name,
+            };
+        }
     }
 
     $self->_set_parsed_data(\%parsed_entries);

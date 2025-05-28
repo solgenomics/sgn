@@ -143,9 +143,18 @@ $trial_name => undef
 
                     <b>Required fields:</b>
                     <br/>
-                    plot_name (must exist in the database already)
+                    - plot_name (must exist in the database already)
                     <br />
-                    plant_name (must be globally unique. usually this is a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+                    - plant_name (must be globally unique. usually this is a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+
+                    <br>
+                    <b>Optional fields:</b>
+                    <br>
+                    - row_num
+                    <br>
+                    - col_num
+                    <br>
+                    Rows and columns are at the plot level if each plot contains multiple plants. If including this data, both fields must be present. 
                 </div>
             </div>
             <div class="modal-footer">
@@ -234,9 +243,17 @@ $trial_name => undef
 
                     <b>Required fields:</b>
                     <br/>
-                    plot_name (must exist in the database already)
+                    - plot_name (must exist in the database already)
                     <br />
-                    plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number, such as MyTrial_plot101_plant1.)
+                    - plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number, such as MyTrial_plot101_plant1.)
+                    <br>
+                    <b>Optional fields:</b>
+                    <br>
+                    - row_num
+                    <br>
+                    - col_num
+                    <br>
+                    Rows and columns are at the plot level if each plot contains multiple plants. If including this data, both fields must be present. 
                 </div>
             </div>
             <div class="modal-footer">
@@ -324,9 +341,17 @@ $trial_name => undef
 
                     <b>Required fields:</b>
                     <br/>
-                    plot_name (must exist in the database already)
+                    - plot_name (must exist in the database already)
                     <br />
-                    num_plants_per_plot (must be a number. the number of plants in the plot. the saved plant name will be a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+                    - num_plants_per_plot (must be a number. the number of plants in the plot. the saved plant name will be a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+                    <br>
+                    <b>Optional fields:</b>
+                    <br>
+                    - num_rows
+                    <br>
+                    - num_cols
+                    <br>
+                    The number of spaces given by the rows and columns should be greater than or equal to the num_plants_per_plot. Plants will be assigned rows and columns in zigzag pattern, starting from (1,1). 
                 </div>
             </div>
             <div class="modal-footer">
