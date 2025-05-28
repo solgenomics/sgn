@@ -35,7 +35,6 @@ use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
 use CXGN::BreedersToolbox::SoilData;
 use CXGN::Genotype::GenotypingProject;
-use CXGN::BreedersToolbox::Projects;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
