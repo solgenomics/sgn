@@ -178,7 +178,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                 <div id="add-marker-success" role="alert" style="display: none"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="close_add_marker">Close</button>
                 <button type="button" class="btn btn-primary" name="add_marker" id="add_marker">Add Marker</button>
             </div>
         </div>

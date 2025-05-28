@@ -167,6 +167,8 @@ jQuery(document).ready(function (){
         }
     });
 
+    jQuery("#close_add_marker").click(show_table);
+
     jQuery("#add_parameters").click(function(){
         var markerSetName = $('#selected_marker_set2').val();
         if (!markerSetName) {
