@@ -387,4 +387,32 @@ sub genotyping_protocol_get_mla_GET : Args(1) {
     return;
 }
 
+sub geolocation_autocomplete : Path('/ajax/genotyping_protocol/marker_autocomplete') : ActionClass('REST') { }
+
+sub geolocation_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $protocol_id = $c->req->param('protocol_id');
+    $protocol_id =~ s/(^\s+|\s+)$//g;
+    $protocol_id =~ s/\s+/ /g;
+
+    my $term = $c->req->param('term');
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "SELECT DISTINCT marker_name
+        FROM phenome.locus_geno_marker
+        WHERE nd_protocol_id = ?
+        AND marker_name ILIKE ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute($protocol_id, '%'.$term.'%');
+    while (my ($marker) = $sth->fetchrow_array ) {
+        push @response_list, $marker;
+    }
+
+    $c->stash->{rest} = \@response_list;
+}
+
+
 1;
