@@ -1481,6 +1481,44 @@ for my $extension ("xls", "xlsx") {
             'test_trial25_plant_1_fruit2'   # sample with tissue number
         ]
     }, 'test layout with tissues samples');
+
+
+#retrieving all stock entries for this trial
+    my $trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(), trial_id => $trial_id});
+    my $stock_entries = $trial->get_stock_entry_summary();
+    my @all_entries = @$stock_entries;
+    is(scalar @all_entries, '90');
+
+    my $first_stock_linkage = $all_entries[0];
+    my $accession_name_1 = $first_stock_linkage->[0];
+    my $plot_name_1 = $first_stock_linkage->[2];
+    my $plant_name_1 = $first_stock_linkage->[4];
+    my $tissue_sample_name_1 = $first_stock_linkage->[6];
+    is($accession_name_1, 'test_accession1');
+    is($plot_name_1, 'test_trial211');
+    is($plant_name_1, 'test_trial211_plant_1');
+    is($tissue_sample_name_1,'test_trial211_plant_1_fruit2');
+
+    my $second_stock_linkage = $all_entries[1];
+    my $accession_name_2 = $second_stock_linkage->[0];
+    my $plot_name_2 = $second_stock_linkage->[2];
+    my $plant_name_2 = $second_stock_linkage->[4];
+    my $tissue_sample_name_2 = $second_stock_linkage->[6];
+    is($accession_name_2, 'test_accession1');
+    is($plot_name_2, 'test_trial211');
+    is($plant_name_2, 'test_trial211_plant_1');
+    is($tissue_sample_name_2, 'test_trial211_plant_1_leaf');
+
+    my $third_stock_linkage = $all_entries[2];
+    my $accession_name_3 = $third_stock_linkage->[0];
+    my $plot_name_3 = $third_stock_linkage->[2];
+    my $plant_name_3 = $third_stock_linkage->[4];
+    my $tissue_sample_name_3 = $third_stock_linkage->[6];
+    is($accession_name_3, 'test_accession1');
+    is($plot_name_3, 'test_trial211');
+    is($plant_name_3, 'test_trial211_plant_1');
+    is($tissue_sample_name_3, 'test_trial211_plant_1_root1');
+
     $f->clean_up_db();
 }
 
