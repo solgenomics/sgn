@@ -284,7 +284,30 @@ function showMarkersetDetail (markerset_id){
                     'destroy': true,
                     'data': response.data,
                     'columns': [
-                        {title: "Item", "data": "item_name"},
+                        {
+                            title: "Item",
+                            data: "item_name",
+                            render: function(data) {
+                                let parsed = JSON.parse(data);
+                                let items = [];
+                                Object.entries(parsed).forEach(([key, value]) => {
+                                    items.push(`<strong>${key}</strong>: ${value}`);
+                                });
+                                return items.join('&emsp;');
+                            }
+                        },
+                        {
+                            title: "Remove",
+                            data: "item_id",
+                            render: function(data, type, row, meta) {
+                                let index = meta.row;
+                                let html = '';
+                                if ( index > 0 ) {
+                                    html = `<a href="#" onclick="removeMarkerSetListItem(${markerset_id}, ${data})">Remove</a>`;
+                                }
+                                return html;
+                            }
+                        }
                     ],
                 });
             } else {
@@ -353,4 +376,16 @@ function onMarkerChange() {
 
     jQuery("#allele_1").html(html).attr("disabled", disabled);
     jQuery("#allele_2").html(html).attr("disabled", disabled);
+}
+
+// Remove the specified list item from the list
+// - Display the list details dialog again after removing
+function removeMarkerSetListItem(list_id, list_item_id) {
+    var confirmation = confirm("Are you sure you want remove this item from the marker set?");
+    if ( confirmation ) {
+        var lo = new CXGN.List();
+        lo.removeItem(list_id, list_item_id);
+        showMarkersetDetail(list_id);
+        show_table();
+    }
 }
