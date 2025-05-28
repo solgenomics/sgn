@@ -1,3 +1,6 @@
+// Cached allele values by marker name
+// This is updated each time the selected markerset is changed
+var ALLELES = {}
 
 jQuery(document).ready(function (){
 
@@ -41,14 +44,10 @@ jQuery(document).ready(function (){
         markersetProtocol.genotyping_data_type = data_type;
 
         var markersetProtocolString = JSON.stringify(markersetProtocol);
+        lo.addToList(list_id, markersetProtocolString);
 
-        var protocolAdded = lo.addToList(list_id, markersetProtocolString);
-        if (protocolAdded){
-            alert ("Added new markerset: " + name + " for genotyping protocol: " + protocol_name + " ," + "data type: " + data_type);
-        }
         location.reload();
         return list_id;
-
     });
 
     var markersetType;
@@ -225,6 +224,8 @@ jQuery(document).ready(function (){
 
     show_table();
 
+    jQuery('#selected_marker_set1').on('change', onMarkerSetChange);
+    jQuery('#marker_name_snp').on('input change blur', onMarkerChange);
 });
 
 function show_table() {
@@ -295,4 +296,61 @@ function showMarkersetDetail (markerset_id){
             alert('An error occurred getting markerset detail');
         }
     });
+}
+
+// Handle a change in selected markerset
+// - Update the marker name autocomplete
+// - Update the cached allele values for every marker in markerset protocol
+function onMarkerSetChange() {
+    ALLELES = {};
+    var list_id = jQuery(this).val();
+
+    if ( list_id && list_id !== '' ) {
+        var lo = new CXGN.List();
+        var markerset_list = lo.getList(list_id);
+        var metadata = JSON.parse(markerset_list[0]);
+        var protocol_id = metadata.genotyping_protocol_id;
+
+        // Set marker name autocomplete
+        jQuery("#marker_name_snp").autocomplete({
+            source: `/ajax/genotyping_protocol/marker_autocomplete?protocol_id=${protocol_id}`,
+        });
+        jQuery("#marker_name_snp").on("autocompleteclose", onMarkerChange);
+
+        // Get all possible allele values
+        jQuery.ajax({
+            url: `/ajax/genotyping_protocol/get_major_loci_alleles/${protocol_id}`,
+            success: function(resp) {
+                if ( resp ) {
+                    Object.keys(resp).forEach((marker) => {
+                        ALLELES[marker] = resp[marker].alleles.map((x) => x.allele_name);
+                    });
+                }
+            }
+        });
+    }
+}
+
+// Handle a change in marker name
+// - Update the displayed allele values
+function onMarkerChange() {
+    let html = "<option>Enter marker name first</option>";
+    let disabled = true;
+
+    var marker = jQuery('#marker_name_snp').val();
+    if ( marker && marker !== "" ) {
+        var alleles = ["A", "T", "G", "C"];
+        disabled = false;
+        html = "";
+
+        if ( ALLELES.hasOwnProperty(marker) ) {
+            alleles = ALLELES[marker]
+        }
+        alleles.forEach((allele) => {
+            html += `<option value="${allele}">${allele}</option>`;
+        });
+    }
+
+    jQuery("#allele_1").html(html).attr("disabled", disabled);
+    jQuery("#allele_2").html(html).attr("disabled", disabled);
 }
