@@ -160,7 +160,7 @@ sub get_trial_stock_type {
     my $stock_type_rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $self->get_trial_id() })->search_related('projectprops', { 'projectprops.type_id' => $type_id } );
 
     if ($stock_type_rs->count() == 0) {
-        return undef;
+        return;
     } else {
         return $stock_type_rs->first()->value();
     }
