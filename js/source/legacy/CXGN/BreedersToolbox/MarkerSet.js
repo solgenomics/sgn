@@ -32,11 +32,6 @@ jQuery(document).ready(function (){
         var protocol_name = $('#selected_protocol').find(":selected").text();
         var desc = $('#marker_set_desc').val();
 
-        if (!desc) {
-            alert("Please provide description");
-            return;
-        }
-
         var list_id = lo.newList(name, desc);
         lo.setListType(list_id, 'markers');
 
