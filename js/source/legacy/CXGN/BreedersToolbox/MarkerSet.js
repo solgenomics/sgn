@@ -83,6 +83,7 @@ jQuery(document).ready(function (){
 
     jQuery("#add_marker").click(function(){
         var markerInfo = {};
+        var markerAdded = false;
 
         var markerSetID = $('#selected_marker_set1').val();
         if (markerSetID == '') {
@@ -107,10 +108,7 @@ jQuery(document).ready(function (){
             markerInfo.allele_dosage = dosage;
             var markerInfoString = JSON.stringify(markerInfo);
 
-            var markerAdded = lo.addToList(markerSetID, markerInfoString);
-            if (markerAdded){
-                alert("Added "+markerInfoString);
-            }
+            markerAdded = lo.addToList(markerSetID, markerInfoString);
         }
 
         if (markersetType == "SNP") {
@@ -132,10 +130,7 @@ jQuery(document).ready(function (){
             markerInfo.allele2 = allele2;
             var markerInfoString = JSON.stringify(markerInfo);
 
-            var markerAdded = lo.addToList(markerSetID, markerInfoString);
-            if (markerAdded){
-                alert("Added "+markerInfoString);
-            }
+            markerAdded = lo.addToList(markerSetID, markerInfoString);
         }
 
         if (markersetType == "Download") {
@@ -154,16 +149,22 @@ jQuery(document).ready(function (){
                 markerInfoString = JSON.stringify(markerInfo);
                 markerNameArray.push(markerInfoString);
             }
-            var markerAdded = lo.addBulk(markerSetID, markerNameArray);
-            if (markerAdded){
-                alert("Added "+markerNameArray);
-            }
-
+            markerAdded = lo.addBulk(markerSetID, markerNameArray);
         }
 
-        location.reload();
-        return markerSetName;
+        if ( markerAdded ) {
+            jQuery(".marker_name").val("");
+            onMarkerChange();
 
+            var html = "<strong>New Item Added!</strong>&emsp;";
+            var items = [];
+            Object.entries(markerInfo).forEach(([key, value]) => {
+                items.push(`<strong>${key}</strong>: ${value}`);
+            });
+            html += `<br />${items.join('&emsp;')}`;
+
+            jQuery("#add-marker-success").html(html).css("display", "block");
+        }
     });
 
     jQuery("#add_parameters").click(function(){
@@ -253,7 +254,6 @@ function removeMarkerSet (markerset_id){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert("The markerset has been deleted.");
                     location.reload();
                 }
                 if (response.error) {
@@ -357,6 +357,7 @@ function onMarkerSetChange() {
 // Handle a change in marker name
 // - Update the displayed allele values
 function onMarkerChange() {
+    jQuery("#add-marker-success").css("display", "none");
     let html = "<option>Enter marker name first</option>";
     let disabled = true;
 

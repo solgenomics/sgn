@@ -128,7 +128,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                                 <label class="control-label col-sm-4">Marker Name:</label>
                                                 <div class="col-sm-8">
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control" id="marker_name_dosage" placeholder="Enter marker name">
+                                                        <input type="text" class="form-control marker_name" id="marker_name_dosage" placeholder="Enter marker name">
                                                     </div>
                                                 </div>
                                             </div>
@@ -151,7 +151,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                                 <label class="control-label col-sm-4">Marker Name:</label>
                                                 <div class="col-sm-8">
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control" id="marker_name_snp" placeholder="Enter marker name">
+                                                        <input type="text" class="form-control marker_name" id="marker_name_snp" placeholder="Enter marker name">
                                                     </div>
                                                 </div>
                                             </div>
@@ -175,6 +175,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                         </div>
                     </div>
                 </div>
+                <div id="add-marker-success" role="alert" style="display: none"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -352,6 +353,14 @@ Titima Tantikanjana <tt15@cornell.edu>
 <style>
     .ui-autocomplete {
         z-index: 2147483647;
+    }
+    #add-marker-success {
+        color: #3c763d;
+        background-color: #dff0d8;
+        border-color: #d6e9c6;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
     }
 </style>
 
