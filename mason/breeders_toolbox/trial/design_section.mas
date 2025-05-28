@@ -106,7 +106,7 @@ $trial_stock_type => undef
 
     </&>
 
-    <&| /page/info_section.mas, id => "summary_of_stock_entries", title=>"Summary of Accession, Plot, Subplot, Plant and Tissue Sample Entries",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "summary_of_stock_entries", title=>"Summary of Accession, Plot, Plant and Tissue Sample Entries",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <div id="summary_entries_section">
             <& /breeders_toolbox/trial/summary_stock_entries.mas, trial_id => $trial_id &>
         </div>
