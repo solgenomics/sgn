@@ -174,6 +174,7 @@ has 'order_by' => (
     is => 'rw'
 );
 
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -385,13 +386,13 @@ sub search {
     my $calendar_funcs = CXGN::Calendar->new({});
     my %unique_traits;
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $notes, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments, $observations, $full_count) = $h->fetchrow_array()) {
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $notes, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments_json, $observations_json, $full_count) = $h->fetchrow_array()) {
         my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
         my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
         my $synonyms = $synonym_hash_lookup{$germplasm_uniquename};
         my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
-        my $observations = JSON::XS->new->decode($observations);
-        my $treatments = JSON::XS->new->decode($treatments);
+        my $observations = JSON::XS->new->decode($observations_json);
+        my $treatments = JSON::XS->new->decode($treatments_json);
         my $available_germplasm_seedlots = JSON::XS->new->decode($available_germplasm_seedlots);
         my $seedlot_transaction = $seedlot_transaction ? JSON::XS->new->decode($seedlot_transaction) : {};
 
@@ -401,66 +402,75 @@ sub search {
         }
 
         my @return_observations;
+	my @observations_per_trait;
         foreach my $pheno_id (sort keys %ordered_observations){
-            my $o = $ordered_observations{$pheno_id};
-            my $trait_name = $o->{trait_name};
-            if ($filter_trait_names){
-                my $skip;
-                foreach (@{$self->trait_contains}){
-                    if (index($trait_name, $_) == -1) {
-                        $skip = 1;
-                    }
-                }
-                if ($skip){
-                    next;
-                }
-            }
-            if ($filter_trait_ids){
-                if (!$trait_list_check{$o->{trait_id}}){
-                    next;
-                }
-            }
+	    
+	    my $o = $ordered_observations{$pheno_id};
 
-            if ($filter_observation_ids){
-                my $skip;
-                foreach (@{$self->observation_id_list}){
-                    if (index($o->{phenotype_id}, $_) == -1) {
-                        $skip = 1;
-                    }
-                }
-                if ($skip){
-                    next;
-                }
-            }
+	    ###print STDERR "O: ".Dumper($o);
+	    
+	    my $trait_name = $o->{trait_name};
+	    if ($filter_trait_names){
+		my $skip;
+		foreach (@{$self->trait_contains}){
+		    if (index($trait_name, $_) == -1) {
+			$skip = 1;
+		    }
+		}
+		if ($skip){
+		    next;
+		}
+	    }
+	    if ($filter_trait_ids){
+		if (!$trait_list_check{$o->{trait_id}}){
+		    next;
+		}
+	    }
+	    
+	    if ($filter_observation_ids){
+		my $skip;
+		foreach (@{$self->observation_id_list}){
+		    if (index($o->{phenotype_id}, $_) == -1) {
+			$skip = 1;
+		    }
+		}
+		if ($skip){
+		    next;
+		}
+	    }
+	    
+	    
+	    
+	    my $phenotype_uniquename = $o->{uniquename};
+	    $unique_traits{$trait_name}++;
+	    if ($include_timestamp){
 
-            my $phenotype_uniquename = $o->{uniquename};
-            $unique_traits{$trait_name}++;
-            if ($include_timestamp){
-                my $timestamp_value;
-                my $operator_value;
-                if ($phenotype_uniquename){
-                    my ($p1, $p2) = split /date: /, $phenotype_uniquename;
-                    if ($p2){
-                        my ($timestamp, $operator_value) = split /  operator = /, $p2;
-                        # this regex won't work for timestamps saved in ISO 8601 format
-                        if ( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                            $timestamp_value = $timestamp;
-                        }
-                    }
-                }
-                $o->{timestamp} = $timestamp_value;
-            }
-            if (!$o->{operator}){
-                if ($phenotype_uniquename){
-                    my ($p1, $p2) = split /date: /, $phenotype_uniquename;
-                    if ($p2){
-                        my ($timestamp, $operator_value) = split /  operator = /, $p2;
-                        $o->{operator} = $operator_value;
-                    }
-                }
-            }
-            push @return_observations, $o;
-        }
+		my $timestamp_value;
+		my $operator_value;
+		if ($phenotype_uniquename){
+		    my ($p1, $p2) = split /date: /, $phenotype_uniquename;
+		    if ($p2){
+			my ($timestamp, $operator_value) = split /  operator = /, $p2;
+			# this regex won't work for timestamps saved in ISO 8601 format
+			if ( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+			    $timestamp_value = $timestamp;
+			}
+		    }
+		}
+		$o->{timestamp} = $timestamp_value;
+		
+	    }
+	    if (!$o->{operator}){
+		if ($phenotype_uniquename){
+		    my ($p1, $p2) = split /date: /, $phenotype_uniquename;
+		    if ($p2){
+			my ($timestamp, $operator_value) = split /  operator = /, $p2;
+			$o->{operator} = $operator_value;
+		    }
+		}
+	    }
+	    push @return_observations, $o;
+	}
 
         no warnings 'uninitialized';
 

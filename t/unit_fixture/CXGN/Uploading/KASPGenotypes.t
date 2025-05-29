@@ -606,5 +606,10 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_project_i
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
+$f->clean_up_db();
+
+my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
+
+my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'phenotypes', 'concurrent', $f->config->{basepath});
 
 done_testing();
