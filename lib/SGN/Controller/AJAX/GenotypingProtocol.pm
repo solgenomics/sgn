@@ -387,9 +387,9 @@ sub genotyping_protocol_get_mla_GET : Args(1) {
     return;
 }
 
-sub geolocation_autocomplete : Path('/ajax/genotyping_protocol/marker_autocomplete') : ActionClass('REST') { }
+sub locus_marker_autocomplete : Path('/ajax/genotyping_protocol/locus_marker_autocomplete') : ActionClass('REST') { }
 
-sub geolocation_autocomplete_GET :Args(0) {
+sub locus_marker_autocomplete_GET :Args(0) {
     my ( $self, $c ) = @_;
 
     my $protocol_id = $c->req->param('protocol_id');

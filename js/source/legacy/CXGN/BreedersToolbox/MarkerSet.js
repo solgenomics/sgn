@@ -338,7 +338,7 @@ function onMarkerSetChange() {
 
         // Set marker name autocomplete
         jQuery("#marker_name_snp").autocomplete({
-            source: `/ajax/genotyping_protocol/marker_autocomplete?protocol_id=${protocol_id}`,
+            source: `/ajax/genotyping_protocol/locus_marker_autocomplete?protocol_id=${protocol_id}`,
         });
         jQuery("#marker_name_snp").on("autocompleteclose", onMarkerChange);
 
