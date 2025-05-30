@@ -334,7 +334,8 @@ sub genotyping_protocol_upload_mla_POST : Args(1) {
         chado_schema => $schema,
         filename => $archived_filename_with_path,
         observation_unit_type_name => 'marker',
-        nd_protocol_id => $protocol_id
+        nd_protocol_id => $protocol_id,
+        major_locus_trait_ontology_root => $c->config->{major_locus_trait_ontology_root}
     });
     $parser->load_plugin('MajorLociAlleles');
     my $parsed_data = $parser->parse();
@@ -359,7 +360,8 @@ sub genotyping_protocol_upload_mla_POST : Args(1) {
     # Store the allele information
     my $protocol = CXGN::Genotype::Protocol->new({
         bcs_schema => $schema,
-        nd_protocol_id => $protocol_id
+        nd_protocol_id => $protocol_id,
+        sp_person_id => $user_id
     });
     $protocol->set_alleles($parsed_data);
 

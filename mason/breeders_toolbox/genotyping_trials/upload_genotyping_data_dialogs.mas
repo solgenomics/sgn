@@ -1033,7 +1033,7 @@ $facilities
 
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Major Loci Allele Information" &>
-                            <p>This upload is used to add allele values to Major Loci markers in an existing Genotyping Protocol.</p>
+                            <p>This upload is used to add marker metadata and allele values to Major Loci markers in an existing Genotyping Protocol.</p>
                             <p>For example, the <strong>1RS</strong> Major Locus can have the following allele values:
                                 <ul>
                                     <li>Non-1RS</li>
@@ -1090,7 +1090,7 @@ $facilities
                                 <td>Locus</td>
                                 <td>Description</td>
                                 <td>Category</td>
-                                <td>Allele</td>
+                                <td>...add additional Category columns, as necessary</td>
                                 <td>Allele</td>
                                 <td>...add additional Allele columns, as necessary</td>
                             </tr>

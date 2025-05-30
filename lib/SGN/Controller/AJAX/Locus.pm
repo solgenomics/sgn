@@ -172,6 +172,8 @@ sub display_ontologies_GET  {
     my @ont_annot;
     foreach ( @{ $dbs{'GO'} } ) { push @ont_annot, $_; }
     foreach ( @{ $dbs{'PO'} } ) { push @ont_annot, $_; }
+    foreach ( @{ $dbs{'TO'} } ) { push @ont_annot, $_; }
+    foreach ( @{ $dbs{'T3'} } ) { push @ont_annot, $_; }
     foreach ( @{ $dbs{ $trait_db_name } } ) { push @ont_annot, $_; }
     my @obs_annot;
     my %ont_hash = () ; #keys= cvterms, values= hash of arrays (keys= ontology details, values= list of evidences)

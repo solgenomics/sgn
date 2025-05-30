@@ -54,6 +54,12 @@ has 'igd_numbers_included' => (
     default => 0,
 );
 
+has 'major_locus_trait_ontology_root' => (
+    isa => 'Str|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'parse_errors' => (
     is => 'ro',
     isa => 'HashRef',

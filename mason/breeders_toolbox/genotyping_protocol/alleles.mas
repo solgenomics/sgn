@@ -31,7 +31,6 @@
     });
 
     function displayAlleles(response) {
-        console.log(response);
 
         // Allele values found, generate table...
         if ( response && Object.keys(response).length > 0 ) {

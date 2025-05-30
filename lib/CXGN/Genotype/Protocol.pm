@@ -98,6 +98,11 @@ has 'sample_observation_unit_type_name' => (
     is => 'rw'
 );
 
+has 'sp_person_id' => (
+    isa => 'Int|Undef',
+    is => 'rw'
+);
+
 has 'create_date' => (
     isa => 'Str',
     is => 'rw'
@@ -471,6 +476,7 @@ sub set_alleles {
     my $dbh = $schema->storage->dbh();
     my $species = $self->species_name();
     my $protocol_id = $self->nd_protocol_id;
+    my $sp_person_id = $self->sp_person_id;
 
     # Get the organism to use for the loci
     my $qs = "SELECT common_name_id FROM sgn.common_name WHERE common_name ILIKE '" . $species . "%';";
@@ -483,6 +489,7 @@ sub set_alleles {
         my $locus = $ml->{'locus'};
         my $locus_description = $ml->{'description'};
         my $allele_values = $ml->{'alleles'};
+        my $trait_cvterm_ids = $ml->{'categories'};
         my $unique_locus_name = $locus;
         my $locus_symbol = $locus;
 
@@ -491,6 +498,33 @@ sub set_alleles {
         my $sth = $dbh->prepare($q);
         $sth->execute($unique_locus_name, $locus_symbol, $locus_description, $common_name_id || 1);
         my ($locus_id) = $sth->fetchrow_array();
+
+        # Add the locus trait categories
+        foreach my $cvterm_id (@$trait_cvterm_ids) {
+
+            # get dbxref id of trait cvterm
+            $q = "SELECT dbxref_id FROM cvterm WHERE cvterm_id = ?";
+            $sth = $dbh->prepare($q);
+            $sth->execute($cvterm_id);
+            my ($dbxref_id) = $sth->fetchrow_array();
+
+            # add dbxref to locus, if found
+            if ( defined $dbxref_id ) {
+
+                # Add locus dbxref reference
+                $q = "INSERT INTO phenome.locus_dbxref (locus_id, dbxref_id, obsolete, sp_person_id) VALUES (?, ?, ?, ?) RETURNING locus_dbxref_id;";
+                $sth = $dbh->prepare($q);
+                $sth->execute($locus_id, $dbxref_id, 'FALSE', $sp_person_id);
+                my ($locus_dbxref_id) = $sth->fetchrow_array();
+
+                # Add locus dbxref evidence reference
+                $q = "INSERT INTO phenome.locus_dbxref_evidence (locus_dbxref_id, relationship_type_id, evidence_code_id, sp_person_id, obsolete) SELECT ?, dbxref_id, ?, ?, ? FROM public.dbxref WHERE accession = 'is_a';";
+                $sth = $dbh->prepare($q);
+                $sth->execute($locus_dbxref_id, $dbxref_id, $sp_person_id, 'FALSE');
+
+            }
+
+        }
 
         # Add each allele value for the locus
         foreach my $av (@$allele_values) {
