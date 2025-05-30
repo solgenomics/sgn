@@ -74,7 +74,7 @@ sub _validate_with_plugin {
     if (!$num_plants_per_plot_head || $num_plants_per_plot_head ne 'num_plants_per_plot') {
         push @error_messages, "Cell B1: num_plants_per_plot is missing from the header";
     }
-        if ($worksheet->get_cell(0,2)) {
+    if ($worksheet->get_cell(0,2)) {
         $row_num_head  = $worksheet->get_cell(0,2)->value();
         $row_num_head =~ s/^\s+|\s+$//g;
     }
