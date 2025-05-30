@@ -357,6 +357,7 @@ function jqueryStuff() {
 
 % if ($type_name eq 'population') {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name,  info_section_title => "<h4 style='display:inline'>Members</h4>", info_section_subtitle => 'View members in this population .', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "population_members_section", info_section_collapsed => 0 &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name,  info_section_title => "<h4 style='display:inline'>Seedlot Info</h4>", info_section_subtitle => 'View seedlot information of each member in this population .', icon_class => "glyphicon glyphicon-retweet", info_section_id => "population_seedlot_info_section", info_section_collapsed => 1 &>
 % }
 
 % my $subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_synonym\" >Add Synonym</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Synonym</button>";

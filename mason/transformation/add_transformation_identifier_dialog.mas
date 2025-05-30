@@ -180,7 +180,7 @@ jQuery(document).ready(function(){
 
         jQuery('#vector_construct').val('');
         jQuery('#transformation_notes').val('');
-        jQuery('#is_a_transformation_control_checkbox').prop('checked', false);        
+        jQuery('#is_a_transformation_control_checkbox').prop('checked', false);
     });
 
     jQuery("#dismiss_transformation_id_saved_dialog").click(function(){
@@ -192,6 +192,8 @@ jQuery(document).ready(function(){
 
         jQuery('#vector_construct').val('');
         jQuery('#transformation_notes').val('');
+        jQuery('#is_a_transformation_control_checkbox').prop('checked', false);
+
         location.reload();
     });
 

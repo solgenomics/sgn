@@ -396,6 +396,10 @@ $field_headers => ()
 % if ($info_section_id eq 'population_members_section'){
                                 <& /stock/population_members.mas, stock_id=>$stock_id &>
 % } #End population_members_section
+% if ($info_section_id eq 'population_seedlot_info_section'){
+                                <& /stock/population_seedlots.mas, stock_id=>$stock_id &>
+% } #End population_seedlot_info_section
+
 % if ($info_section_id eq 'manage_tissue_samples_field_trials'){
                                 <& /breeders_toolbox/tissue_samples/field_trials_with_tissue_samples.mas &>
 % } #End manage_tissue_samples_field_trials
