@@ -57,6 +57,8 @@ sub _validate_with_plugin {
     #get column headers
     my $plot_name_head;
     my $num_plants_per_plot_head;
+    my $row_num_head;
+    my $col_num_head;
 
     if ($worksheet->get_cell(0,0)) {
         $plot_name_head  = $worksheet->get_cell(0,0)->value();
@@ -72,13 +74,27 @@ sub _validate_with_plugin {
     if (!$num_plants_per_plot_head || $num_plants_per_plot_head ne 'num_plants_per_plot') {
         push @error_messages, "Cell B1: num_plants_per_plot is missing from the header";
     }
+        if ($worksheet->get_cell(0,2)) {
+        $row_num_head  = $worksheet->get_cell(0,2)->value();
+        $row_num_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,3)) {
+        $col_num_head  = $worksheet->get_cell(0,3)->value();
+        $col_num_head =~ s/^\s+|\s+$//g;
+    }
+    if (($row_num_head && $row_num_head ne "num_rows")||($col_num_head && $col_num_head ne "num_cols")) {
+        push @error_messages, "If including row and column data, cells C1 and D1 must be num_rows and num_cols respectively.";
+    }
 
     my %seen_plot_names;
     my %seen_plant_names;
+    my $coords_given = 0;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $plot_name;
         my $num_plants_per_plot;
+        my $num_rows;
+        my $num_cols;
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
@@ -86,6 +102,17 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,1)) {
             $num_plants_per_plot = $worksheet->get_cell($row,1)->value();
+        }
+        if ($worksheet->get_cell($row,2) && $worksheet->get_cell($row,3)) {
+            $num_rows = $worksheet->get_cell($row,2)->value();
+            $num_cols = $worksheet->get_cell($row,3)->value();
+            $coords_given = 1;
+        }
+        if ($coords_given && (!$num_rows || !$num_cols)) {
+            push @error_messages, "Number of rows and columns given, but missing for plot $plot_name.";
+        }
+        if($coords_given && $num_rows * $num_cols < $num_plants_per_plot) {
+            push @error_messages, "Number of rows and columns not sufficient for the number of plants in $plot_name.";
         }
 
         if (!$plot_name || $plot_name eq '' ) {
@@ -97,6 +124,8 @@ sub _validate_with_plugin {
         else {
             $seen_plot_names{$plot_name}=$row_name;
         }
+
+        if ()
 
         if (!$num_plants_per_plot || $num_plants_per_plot eq '') {
             push @error_messages, "Cell B$row_name: num_plants_per_plot missing";
@@ -197,6 +226,8 @@ sub _parse_with_plugin {
     for my $row ( 1 .. $row_max ) {
         my $plot_name;
         my $num_plants_per_plot;
+        my $num_rows;
+        my $num_cols;
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
@@ -205,21 +236,42 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,1)) {
             $num_plants_per_plot = $worksheet->get_cell($row,1)->value();
         }
+        if ($worksheet->get_cell($row,2) && $worksheet->get_cell($row,3)) {
+            $num_rows = $worksheet->get_cell($row,2)->value();
+            $num_cols = $worksheet->get_cell($row,3)->value();
+        }
 
+        my $rownum = 1;
         for my $i (1 .. $num_plants_per_plot) {
             my $plant_name = $plot_name."_plant_".$i;
+            my $colnum = $i % $num_cols; 
+            if ($colnum == 0) {
+                $colnum = $num_cols;
+                $rownum++;
+            }
 
             #skip blank lines
             if (!$plot_name && !$plant_name) {
                 next;
             }
 
-            push @{$parsed_entries{'data'}}, {
+            if ($num_rows && $num_cols) {
+                push @{$parsed_entries{'data'}}, {
+                    plot_name => $plot_name,
+                    plot_stock_id => $plot_lookup{$plot_name},
+                    plant_name => $plant_name,
+                    plant_index_number => $i,
+                    row_num => $rownum,
+                    col_num => $colnum
+                };
+            } else {
+                push @{$parsed_entries{'data'}}, {
                 plot_name => $plot_name,
                 plot_stock_id => $plot_lookup{$plot_name},
                 plant_name => $plant_name,
                 plant_index_number => $i
             };
+            }
         }
     }
 

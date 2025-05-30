@@ -57,6 +57,8 @@ sub _validate_with_plugin {
     #get column headers
     my $plot_name_head;
     my $plant_name_head;
+    my $row_num_head;
+    my $col_num_head;
 
     if ($worksheet->get_cell(0,0)) {
         $plot_name_head  = $worksheet->get_cell(0,0)->value();
@@ -66,11 +68,22 @@ sub _validate_with_plugin {
         $plant_name_head  = $worksheet->get_cell(0,1)->value();
         $plant_name_head =~ s/^\s+|\s+$//g;
     }
+    if ($worksheet->get_cell(0,2)) {
+        $row_num_head  = $worksheet->get_cell(0,2)->value();
+        $row_num_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,3)) {
+        $col_num_head  = $worksheet->get_cell(0,3)->value();
+        $col_num_head =~ s/^\s+|\s+$//g;
+    }
     if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
         push @error_messages, "Cell A1: plot_name is missing from the header";
     }
     if (!$plant_name_head || $plant_name_head ne 'plant_name') {
         push @error_messages, "Cell B1: plant_name is missing from the header";
+    }
+    if (($row_num_head && $row_num_head ne "row_num")||($col_num_head && $col_num_head ne "col_num")) {
+        push @error_messages, "If including row and column data, cells C1 and D1 must be row_num and col_num respectively.";
     }
 
     my %seen_plot_names;
