@@ -1637,5 +1637,75 @@ sub get_parents_and_numbers_of_progenies {
 }
 
 
+=head2 get_plots_used_in_crossing_experiment
+
+    Class method.
+    Returns all plot names and ids used in a specific crossing_experiment.
+    Example: my @plots = CXGN::Cross->get_plots_used_in_crossing_experiment($schema, $crossing_experiment_id)
+
+=cut
+
+sub get_plots_used_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $crossing_experiment_id = $self->trial_id;
+
+    my $female_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
+    my $male_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id IN (?,?)
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_plot_of_typeid, $male_plot_of_typeid, $crossing_experiment_id);
+
+    my @all_plots = ();
+    while(my($plot_id, $plot_name) = $h->fetchrow_array()){
+        push @all_plots, [$plot_id, $plot_name]
+    }
+
+    return \@all_plots;
+}
+
+
+=head2 get_plots_of_plants_used_in_crossing_experiment
+
+    Class method.
+    Returns all plot names and ids of plants used in a specific crossing_experiment.
+    Example: my @plots = CXGN::Cross->get_plots_of_plants_used_in_crossing_experiment($schema, $crossing_experiment_id)
+
+=cut
+
+sub get_plots_of_plants_used_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $crossing_experiment_id = $self->trial_id;
+
+    my $female_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plant_of", "stock_relationship")->cvterm_id();
+    my $male_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
+    my $plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "plant_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship AS parent_plant_relationship ON (nd_experiment_stock.stock_id = parent_plant_relationship.object_id) AND parent_plant_relationship.type_id IN (?,?)
+        JOIN stock_relationship AS plant_plot_relationship ON (plant_plot_relationship.subject_id = parent_plant_relationship.subject_id) AND plant_plot_relationship.type_id = ?
+        JOIN stock on (plant_plot_relationship.object_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_plant_of_typeid, $male_plant_of_typeid, $plant_of_typeid, $crossing_experiment_id);
+
+    my @all_plots = ();
+    while(my($plot_id, $plot_name) = $h->fetchrow_array()){
+        push @all_plots, [$plot_id, $plot_name]
+    }
+
+    return \@all_plots;
+}
+
+
 
 1;
