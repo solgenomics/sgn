@@ -779,73 +779,37 @@ jQuery(document).ready( function() {
     function heatmap(selected) {
         jQuery('#working_modal').modal("show");
         if (selected.includes("(corrected)")) {
-            jQuery.ajax({
-                'url': '/ajax/spatial_model/retrieve_spatial_adjustments/'+trial_id,
-                'success': function(response) {
-                    if (response.error) {
-                        jQuery('#working_modal').modal('hide');
-                        alert("Error displaying "+ selected + " : " +response.error);
-                    }  else if (response.message) {
-                        jQuery('#working_modal').modal('hide');
-                        alert(response.message);
-                    } else {
-                        var data = JSON.parse(response.data);
-                        var trait_id = selected.replace(" (corrected)", "");
-                        get_heatmap_observations(trait_id).then((observations) => {
-                            var corrected_observations = observations.map(pheno => ({
-                                ... pheno, 
-                                value : data.hasOwnProperty(pheno.observationUnitName) ? Number(data[pheno.observationUnitName][trait_id]) + Number(pheno.value) : pheno.value
-                            }));
-                            FieldMap.filter_heatmap(corrected_observations);
-                            FieldMap.load();
-                            var colors = FieldMap.get_pheno_colors();
-                            jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
-                        }).catch((err) => {
-                            jQuery('#working_modal').modal("hide");
-                            alert(`ERROR: Could not load phenotype heatmap: ${err}`);
-                        });
-                        jQuery('#working_modal').modal("hide");
-                    }
-                },
-                'error': function(error) {
-                    jQuery('#working_modal').modal('hide');
-                    alert("Error displaying "+ selected + " : " +error);
-                }
+            var trait_id = selected.replace(" (corrected)", "");
+            get_heatmap_observations(trait_id).then((observations) => {
+                var corrected_observations = observations.map(pheno => ({
+                    ... pheno, 
+                    value : globalThis.spatial_adjustments.hasOwnProperty(pheno.observationUnitName) ? Number(globalThis.spatial_adjustments[pheno.observationUnitName][trait_id]) + Number(pheno.value) : pheno.value
+                }));
+                FieldMap.filter_heatmap(corrected_observations);
+                FieldMap.load();
+                var colors = FieldMap.get_pheno_colors();
+                jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
+            }).catch((err) => {
+                jQuery('#working_modal').modal("hide");
+                alert(`ERROR: Could not load phenotype heatmap: ${err}`);
             });
+            jQuery('#working_modal').modal("hide");
         } else if (selected.includes("(adjustment)")) {
-            jQuery.ajax({
-                'url': '/ajax/spatial_model/retrieve_spatial_adjustments/'+trial_id,
-                'success': function(response) {
-                    if (response.error) {
-                        jQuery('#working_modal').modal('hide');
-                        alert("Error displaying "+ selected + " : " +response.error);
-                    } else if (response.message) {
-                        jQuery('#working_modal').modal('hide');
-                        alert(response.message);
-                    } else {
-                        var data = JSON.parse(response.data);
-                        var trait_id = selected.replace(" (adjustment)", "");
-                        get_heatmap_observations(trait_id).then((observations) => {
-                            var adjustment_observations = observations.map(pheno => ({
-                                ... pheno, 
-                                value : data.hasOwnProperty(pheno.observationUnitName) ? data[pheno.observationUnitName][trait_id] : 0
-                            }));
-                            FieldMap.filter_heatmap(adjustment_observations);
-                            FieldMap.load();
-                            var colors = FieldMap.get_pheno_colors();
-                            jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
-                        }).catch((err) => {
-                            jQuery('#working_modal').modal("hide");
-                            alert(`ERROR: Could not load phenotype heatmap: ${err}`);
-                        });
-                        jQuery('#working_modal').modal("hide");
-                    }
-                },
-                'error': function(error) {
-                    jQuery('#working_modal').modal('hide');
-                    alert(`ERROR: Could not load phenotype heatmap: ${err}`);
-                }
+            var trait_id = selected.replace(" (adjustment)", "");
+            get_heatmap_observations(trait_id).then((observations) => {
+                var adjustment_observations = observations.map(pheno => ({
+                    ... pheno, 
+                    value : globalThis.spatial_adjustments.hasOwnProperty(pheno.observationUnitName) ? globalThis.spatial_adjustments[pheno.observationUnitName][trait_id] : 0
+                }));
+                FieldMap.filter_heatmap(adjustment_observations);
+                FieldMap.load();
+                var colors = FieldMap.get_pheno_colors();
+                jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
+            }).catch((err) => {
+                jQuery('#working_modal').modal("hide");
+                alert(`ERROR: Could not load phenotype heatmap: ${err}`);
             });
+            jQuery('#working_modal').modal("hide");
         } else {
             get_heatmap_observations(selected).then((observations) => {
                 FieldMap.filter_heatmap(observations);
@@ -1281,18 +1245,31 @@ jQuery(document).ready( function() {
                 traits_assayed_html = traits_assayed_html +"</optgroup>";
                 traits_assayed_html = traits_assayed_html +"</select>";
 
-                // add adjusted traits here?
-
                 jQuery.ajax({
-                    'url':'/ajax/spatial_model/verify_corrections_exist/'+trial_id,
+                    'url':'/ajax/spatial_model/retrieve_spatial_adjustments/'+trial_id,
                     success: function(response) {
                         if (response.error) {
                             // do nothing
                         } else {
+                            globalThis.spatial_adjustments = JSON.parse(response.data);
+
+                            let unique_spatial_traits = new Set();
+                            //find the traits
+                            Object.values(globalThis.spatial_adjustments).forEach(obj => {
+                                Object.keys(obj).forEach(key => unique_spatial_traits.add(key));
+                            });
+
+                            let unique_traits_array = [... unique_spatial_traits];
+
+                            let trait_id_to_trait = Object.fromEntries(
+                                Object.entries(variables).map(([key, value]) => [value, key])
+                            );
+
+
                             let adjusted_traits = jQuery('<optgroup>', {label:"Spatial corrections"});
-                            Object.keys(variables).sort().forEach((name) => {
-                                adjusted_traits.append(jQuery("<option>", {value : `${variables[name]} (corrected)`, text : `${name} (corrected)` }));
-                                adjusted_traits.append(jQuery("<option>", {value : `${variables[name]} (adjustment)`, text : `${name} (adjustment)` }));
+                            unique_traits_array.forEach((trait_id) => {
+                                adjusted_traits.append(jQuery("<option>", {value : `${trait_id} (corrected)`, text : `${trait_id_to_trait[trait_id]} (corrected)` }));
+                                adjusted_traits.append(jQuery("<option>", {value : `${trait_id} (adjustment)`, text : `${trait_id_to_trait[trait_id]} (adjustment)` }));
                             });
                             jQuery('#trait_list_dropdown').append(adjusted_traits);
                         }
