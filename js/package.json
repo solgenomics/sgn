@@ -25,10 +25,9 @@
     "node-fetch": "^2.3.0",
     "requirejs": "2.3.7",
     "save-svg-as-png": "^1.4.17",
-    "source-map-support": "^0.5.10",
     "tape": "^4.10.1",
-    "uglifyjs-webpack-plugin": "^1.2.7",
-    "webpack": "^4.29.5",
+    "terser-webpack-plugin": "^4.2.3",
+    "webpack": "^4.29",
     "webpack-command": "^0.4.2"
   },
   "dependencies": {

@@ -130,6 +130,14 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(15);
 
+    $d->find_element_ok('save_genetic_values', 'id',  'store genetic values')->click();
+    sleep(150);
+	$d->find_element_ok('View stored genetic', 'partial_link_text',  'view store genetic values')->click();
+    sleep(20);
+
+    $d->driver->go_back();
+    sleep(15);
+
     my $sel_pred = $d->find_element('Marker effects', 'partial_link_text', 'scroll to marker effects');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
@@ -199,6 +207,15 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(15);
 
+    $d->find_element_ok('save_genetic_values', 'id',  'store genetic values')->click();
+    sleep(150);
+	$d->find_element_ok('View stored genetic', 'partial_link_text',  'view store genetic values')->click();
+    sleep(20);
+
+    $d->driver->go_back();
+    sleep(15);
+
+
     $d->driver->go_back();
     sleep(5);
 
@@ -233,6 +250,14 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(80);
 	$d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
+    sleep(20);
+
+    $d->driver->go_back();
+    sleep(15);
+
+    $d->find_element_ok('save_genetic_values', 'id',  'store genetic values')->click();
+    sleep(150);
+	$d->find_element_ok('View stored genetic', 'partial_link_text',  'view store genetic values')->click();
     sleep(20);
 
     $d->driver->go_back();
@@ -281,6 +306,15 @@ $d->while_logged_in_as("submitter", sub {
 
 	$d->driver->go_back();
 	sleep(15);
+
+    $d->find_element_ok('save_genetic_values', 'id',  'store genetic values')->click();
+    sleep(150);
+	$d->find_element_ok('View stored genetic', 'partial_link_text',  'view store genetic values')->click();
+    sleep(20);
+
+    $d->driver->go_back();
+    sleep(15);
+
 
     $d->driver->refresh();
     sleep(3);

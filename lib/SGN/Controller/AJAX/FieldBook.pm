@@ -132,6 +132,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         if (scalar(@absent_traits)>0){
             $c->stash->{rest} = {error =>  "Trait list is not valid because of these terms: ".join ',',@absent_traits };
             $c->detach();
+	    return;
         }
         my $lt = CXGN::List::Transform->new();
         @selected_traits = @{$lt->transform($schema, "traits_2_trait_ids", \@trait_list)->{transform}};
@@ -311,16 +312,18 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
 sub _parse_list_from_json {
   my $list_json = shift;
-  my $json = JSON->new();
-  if ($list_json) {
-      #my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-     my $decoded_list = decode_json($list_json);
-    my @array_of_list_items = @{$decoded_list};
-    return \@array_of_list_items;
+  
+  return unless $list_json;
+
+  my $decoded_list;
+  eval {
+      $decoded_list = decode_json($list_json);
+  };
+  if ($@) {
+      die "Invalid JSON: $@";
   }
-  else {
-    return;
-  }
+  my @array_of_list_items = @{$decoded_list};
+  return \@array_of_list_items;
 }
 
 

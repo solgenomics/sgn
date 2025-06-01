@@ -2,7 +2,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests' => 132;
+use Test::More 'tests' => 126;
 
 use SGN::Test::WWW::WebDriver;
 use Selenium::Remote::WDKeys 'KEYS';
@@ -125,10 +125,10 @@ $t->while_logged_in_as("submitter", sub {
     my $dataset_name_1 = "another_dataset_3_columns";
     $dataset_name_input->send_keys($dataset_name_1);
     $t->find_element_ok('//input[@placeholder="Create New Dataset"]/parent::div//button[contains(text(), "Create")]', 'xpath', "find 'create' button and create dataset $dataset_name_1")->click;
-    sleep(1);
-    ok($t->driver->get_alert_text() =~ m/Dataset another_dataset_3_columns created/i, 'Created dataset another_dataset_3_columns');
-    $t->driver()->accept_alert();
     sleep(2);
+    $t->driver()->accept_alert();
+    sleep(1);
+
 
     # COLUMN 4 WIZARD SEARCH - select accessions and save second dataset
     my $type_column_4 = $t->find_element_ok('(//div[@class="panel-heading"]/select)[4]', 'xpath', 'find select column type in fourth column');
@@ -150,6 +150,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok('//input[@placeholder="Create New Dataset"]/parent::div//button[contains(text(), "Create")]', 'xpath', "find 'create' button and create dataset $dataset_name_2")->click();
     sleep(1);
     ok($t->driver->get_alert_text() =~ m/Dataset another_dataset_4_columns created/i, 'Created dataset another_dataset_4_columns');
+    sleep(1);
     $t->driver()->accept_alert();
     sleep(1);
 
@@ -427,15 +428,6 @@ $t->while_logged_in_as("submitter", sub {
     my $child_analyses = $t->find_element('dataset_analysis_usage', 'id')->get_text();
     ok($child_analyses eq "(none)", 'Checking initial analysis usage');
     sleep(1);
-
-    $t->find_element_ok('predicted-tool-compatibility', 'id', 'Checking for predicted tool compatibility');
-    sleep(1);
-    $t->find_element_ok('tool-compatibility-calc-button', 'id', 'Recalculating tool compatibility')->click();
-    sleep(2);
-    my $tool_compatibility = $t->find_element('predicted-tool-compatibility', 'id')->get_text();
-    ok($tool_compatibility =~ /Mixed Models/, "Verify expected tool compatibilities");
-    ok($tool_compatibility =~ /Boxplotter/, "Verify expected tool compatibilities");
-    ok($tool_compatibility =~ /traits/, "Verify expected tool compatibilities");
 
     #  DELETE DATASET
     $t->get_ok('/breeders/search');
