@@ -326,7 +326,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
 
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
     my $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
-    
+
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
         search_type => "Native",
@@ -415,18 +415,18 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
     }
-    
+
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-    
+
     my $trial_stock_type_id;
-    
+
     if ($trial_stock_type eq 'family_name') {
         $trial_stock_type_id = $family_name_type_id;
     } elsif ($trial_stock_type eq 'cross') {
         $trial_stock_type_id = $cross_type_id;
-    } 
+    }
     else {
         $trial_stock_type_id = $accession_type_id;
         if ($display eq 'analysis_instance') {
@@ -434,9 +434,9 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             if ($analysis_stock_type eq 'analysis_result') {
                 my $analysis_result_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_result', 'stock_type')->cvterm_id();
                 $trial_stock_type_id = $analysis_result_type_id;
-            } 
-        }    
-    }    
+            }
+        }
+    }
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -463,7 +463,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
         $order_by_additional;");
-    
+
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
@@ -3792,9 +3792,9 @@ sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
-    my $crossing_trials_from_field_trial = $c->stash->{trial}->get_crossing_trials_from_field_trial();
-    my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trials_source_of_crossing_trial();
-
+#    my $crossing_trials_from_field_trial = $c->stash->{trial}->get_crossing_trials_from_field_trial();
+    my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trials_source_of_crossing_experiment();
+    my $crossing_trials_from_field_trial;
     $c->stash->{rest} = {success => 1, crossing_trials_from_field_trial => $crossing_trials_from_field_trial, field_trials_source_of_crossing_trial => $field_trials_source_of_crossing_trial};
 }
 
@@ -4937,14 +4937,14 @@ sub upload_entry_number_template_POST : Args(0) {
 sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     my $trial_id = $c->req->param("trial_id");
 
     if (! $trial_id) {
 	$c->stash->{rest} = { error_string => 'A trial id must be provided to delete the entry numbers.' };
 	return;
     }
-    
+
     if (!$c->user()) {
         $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
         return;
@@ -4954,15 +4954,15 @@ sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args
 	$c->stash->{rest} = {error_string => "Your account must have the curator role to delete entry numbers" };
 	return;
     }
-    
+
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
     my $project_entry_number_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_entry_number_map', 'project_property')->cvterm_id();
 
-    
+
     my $row = $schema->resultset("Project::Projectprop")->find( { type_id => $project_entry_number_map_cvterm_id, project_id => $trial_id });
 
-    eval { 
+    eval {
 	$row->delete();
     };
 
@@ -5698,7 +5698,7 @@ sub get_analysis_instance_stock_type {
     my $trial_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $project = $schema->resultset('Project::Project')->find({
-        project_id => $trial_id, 
+        project_id => $trial_id,
     });
 
     my $trial_layout_json_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();

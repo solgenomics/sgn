@@ -1653,7 +1653,8 @@ sub get_plots_used_in_crossing_experiment {
     my $female_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
     my $male_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
 
-    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename
+        FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id IN (?,?)
         JOIN stock on (stock_relationship.subject_id = stock.stock_id)
@@ -1688,7 +1689,8 @@ sub get_plots_of_plants_used_in_crossing_experiment {
     my $male_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
     my $plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "plant_of", "stock_relationship")->cvterm_id();
 
-    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename
+        FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock_relationship AS parent_plant_relationship ON (nd_experiment_stock.stock_id = parent_plant_relationship.object_id) AND parent_plant_relationship.type_id IN (?,?)
         JOIN stock_relationship AS plant_plot_relationship ON (plant_plot_relationship.subject_id = parent_plant_relationship.subject_id) AND plant_plot_relationship.type_id = ?
