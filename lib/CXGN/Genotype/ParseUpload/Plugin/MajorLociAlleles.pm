@@ -7,6 +7,7 @@ use Data::Dumper;
 
 has 'parsed_allele_data' => (is => 'rw', isa => 'HashRef');
 has 'parsed_ontology_terms' => (is => 'rw', isa => 'HashRef');
+has 'parsed_dbs' => (is => 'rw', isa => 'HashRef');
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -22,14 +23,16 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new(
         file => $filename,
         required_columns => [ 'Locus', 'Allele' ],
-        optional_columns => [ 'Description', 'Category' ],
-        column_arrays => [ 'Allele', 'Category' ]
+        optional_columns => [ 'Description', 'Category', 'Reference' ],
+        column_arrays => [ 'Allele', 'Category', 'Reference' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
     my $parsed_data = $parsed->{data};
     my @markers = @{$parsed->{values}->{'Locus'}};
+    my @alleles = @{$parsed->{values}->{'Allele'}};
     my @categories = @{$parsed->{values}->{'Category'}};
+    my @references = @{$parsed->{values}->{'Reference'}};
 
     # Return if parsing errors
     if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
@@ -48,17 +51,66 @@ sub _validate_with_plugin {
     # Make sure marker names are valid
     foreach my $marker (@markers) {
         if ( !exists $valid_markers->{$marker} ) {
-            push @error_messages, "The Locus '$marker' in your file does not match any of the markers in the selected protocol.";
+            push @error_messages, "The marker '$marker' in your file does not match any of the markers in the selected protocol.";
         }
     }
 
-    # Make sure the major loci don't already exist in the phenome table
+    # Make sure the major loci don't already exist in the phenome.locus table
     my $phs = join ',', map { "?" } @markers;
     my $q = "SELECT locus_name FROM phenome.locus WHERE locus_name IN ($phs)";
     my $h = $dbh->prepare($q);
     $h->execute(@markers);
-    while (my ($locus_name) = $h->fetchrow_array()){
-        push @error_messages, "The Locus '$locus_name' already exists in the Locus table.";
+    my @existing_loci;
+    while (my ($locus_name) = $h->fetchrow_array()) {
+        push @existing_loci, $locus_name;
+    }
+    if ( scalar @existing_loci > 0 ) {
+        push @error_messages, "The following markers already exist in the Locus table: " . join(', ', sort @existing_loci);
+    }
+
+    # Make sure the allele values don't already exist in the phenome.allele table
+    $phs = join ',', map { "?" } @alleles;
+    $q = "SELECT allele_name FROM phenome.allele WHERE allele_name in ($phs)";
+    $h = $dbh->prepare($q);
+    $h->execute(@alleles);
+    my @existing_alleles;
+    while ( my ($allele_name) = $h->fetchrow_array()) {
+        push @existing_alleles, $allele_name;
+    }
+    if ( scalar @existing_alleles > 0 ) {
+        push @error_messages, "The following alleles already exist in the Allele table: " . join(', ', sort @existing_alleles);
+    }
+
+    # Parse each row to get unique locus and allele counts
+    my %locus_count;
+    my %allele_count;
+    foreach my $row (@$parsed_data) {
+        my $locus = $row->{'Locus'};
+        my $alleles = $row->{'Allele'};
+        $locus_count{$locus}++;
+        foreach (@$alleles) {
+            $allele_count{$_}++;
+        }
+    }
+
+    # Make sure there are no duplicated loci or alleles in the file
+    my @duplicated_loci;
+    my @duplicated_alleles;
+    foreach my $l (keys %locus_count) {
+        if ( $locus_count{$l} > 1 ) {
+            push @duplicated_loci, $l;
+        }
+    }
+    foreach my $a (keys %allele_count) {
+        if ( $allele_count{$a} > 1 ) {
+            push @duplicated_alleles, $a;
+        }
+    }
+    if ( scalar @duplicated_loci > 0 ) {
+        push @error_messages, "The following markers were included in your file more than once: " . join(', ', sort @duplicated_loci);
+    }
+    if ( scalar @duplicated_alleles > 0 ) {
+        push @error_messages, "The following alleles were included in your file more than once: " . join(', ', sort @duplicated_alleles);
     }
 
     # Ensure that the major locus trait ontology root is set in the config
@@ -105,6 +157,36 @@ sub _validate_with_plugin {
         $self->parsed_ontology_terms($ontology_terms);
     }
 
+    # Extract the db names from the references
+    my %db_names;
+    foreach my $reference (@references) {
+        my ($db_name, $entity_name) = split('=', $reference);
+        $db_name =~ s/^\s+|\s+$//g;
+        $db_names{lc $db_name} = $db_name;
+    }
+
+    # Lookup the existing dbs
+    $phs = join ',', map { "?" } keys %db_names;
+    $q = "SELECT db_id, lower(name) FROM public.db WHERE lower(name) IN ($phs)";
+    $h = $dbh->prepare($q);
+    $h->execute(keys %db_names);
+    my %existing_dbs;
+    while ( my ($db_id, $db_name) = $h->fetchrow_array()) {
+        $existing_dbs{$db_name} = $db_id;
+    }
+    $self->parsed_dbs(\%existing_dbs);
+
+    # Find any missing dbs
+    my @missing_dbs;
+    foreach my $db_name (keys %db_names) {
+        if ( ! exists $existing_dbs{$db_name} ) {
+            push @missing_dbs, $db_names{$db_name};
+        }
+    }
+    if ( scalar @missing_dbs > 0 ) {
+        push @error_messages, "The following external reference databases do not exist: " . join(', ', @missing_dbs);
+    }
+
     # return any error messages
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
@@ -147,6 +229,7 @@ sub _parse_with_plugin {
     my $parsed = $self->parsed_allele_data();
     my $parsed_data = $parsed->{data};
     my $ontology_terms = $self->parsed_ontology_terms();
+    my $existing_dbs = $self->parsed_dbs();
 
     # Aggregate allele values by locus name
     my %major_loci;
@@ -155,9 +238,10 @@ sub _parse_with_plugin {
         my $description = $row->{'Description'};
         my $alleles = $row->{'Allele'};
         my $category_names = $row->{'Category'};
-        my @categories;
+        my $reference_values = $row->{'Reference'};
 
         # add category cvterm ids
+        my @categories;
         foreach (@$category_names) {
             my $name = lc $_;
             my $id = $ontology_terms->{$name};
@@ -166,11 +250,24 @@ sub _parse_with_plugin {
             }
         }
 
+        # add references (hash of db id and entity name)
+        my @references;
+        foreach my $ref (@$reference_values) {
+            my ($db_name, $entity_name) = split('=', $ref);
+            $db_name =~ s/^\s+|\s+$//g;
+            $entity_name =~ s/^\s+|\s+$//g;
+            my $db_id = $existing_dbs->{lc $db_name};
+            if ( $db_id && $entity_name ) {
+                push @references, { db => $db_id, entity => $entity_name };
+            }
+        }
+
         $major_loci{$locus} = {
             locus => $locus,
             description => $description,
             alleles => $alleles,
-            categories => \@categories
+            categories => \@categories,
+            references => \@references
         };
     }
 

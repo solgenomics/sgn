@@ -290,6 +290,7 @@ sub genotyping_protocol_upload_mla_POST : Args(1) {
     my $c = shift;
     my $protocol_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
     my $upload = $c->req->upload('upload_mla_file');
     my $upload_original_name = $upload->filename();
@@ -360,6 +361,7 @@ sub genotyping_protocol_upload_mla_POST : Args(1) {
     # Store the allele information
     my $protocol = CXGN::Genotype::Protocol->new({
         bcs_schema => $schema,
+        phenome_schema => $phenome_schema,
         nd_protocol_id => $protocol_id,
         sp_person_id => $user_id
     });

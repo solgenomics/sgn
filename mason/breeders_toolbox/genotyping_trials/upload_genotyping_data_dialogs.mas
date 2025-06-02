@@ -1093,6 +1093,8 @@ $facilities
                                 <td>...add additional Category columns, as necessary</td>
                                 <td>Allele</td>
                                 <td>...add additional Allele columns, as necessary</td>
+                                <td>Reference</td>
+                                <td>...add additional Reference columns, as necessary</td>
                             </tr>
                             </tbody>
                             </table>
@@ -1102,6 +1104,7 @@ $facilities
                             <br /><b>Optional values:</b><br>
                             <b>Description:</b> a description of the major locus (its associated phenotype, etc)<br>
                             <b>Category:</b> the name of the trait category that the Major Locus belongs to (add as many Category columns as necessary - or separate values in one column with a comma) <br>
+                            <b>Reference:</b> a reference to an entity in an external database (such as a matching gene entry in GrainGenes). The format of this value should be: <code>{database name}={entity name}</code> (such as <code>GrainGenes gene=Rht12 (Triticum)</code>).  The database name must already exist as an external database reference.<br>
 
                             <& /help/file_upload_type.mas, type => "Major Loci Alleles" &>
 

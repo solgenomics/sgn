@@ -44,6 +44,11 @@ has 'bcs_schema' => (
     required => 1,
 );
 
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw'
+);
+
 has 'nd_protocol_id' => (
     isa => 'Int',
     is => 'rw',
@@ -473,10 +478,13 @@ sub set_alleles {
     my $self = shift;
     my $parsed_data = shift;
     my $schema = $self->bcs_schema();
+    my $phenome_schema = $self->phenome_schema();
     my $dbh = $schema->storage->dbh();
     my $species = $self->species_name();
     my $protocol_id = $self->nd_protocol_id;
     my $sp_person_id = $self->sp_person_id;
+
+    my $is_a_rel_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a', 'relationship')->cvterm_id();
 
     # Get the organism to use for the loci
     my $qs = "SELECT common_name_id FROM sgn.common_name WHERE common_name ILIKE '" . $species . "%';";
@@ -490,53 +498,97 @@ sub set_alleles {
         my $locus_description = $ml->{'description'};
         my $allele_values = $ml->{'alleles'};
         my $trait_cvterm_ids = $ml->{'categories'};
+        my $dbx_refs = $ml->{'references'};
         my $unique_locus_name = $locus;
         my $locus_symbol = $locus;
 
         # Add the Major Locus to the phenome.locus table
-        my $q = "INSERT INTO phenome.locus (locus_name, locus_symbol, description, common_name_id) VALUES (?,?,?,?) RETURNING locus_id";
-        my $sth = $dbh->prepare($q);
-        $sth->execute($unique_locus_name, $locus_symbol, $locus_description, $common_name_id || 1);
-        my ($locus_id) = $sth->fetchrow_array();
+        my $locus_obj = $phenome_schema->resultset('Locus')->find_or_create({
+            locus_name => $unique_locus_name,
+            locus_symbol => $locus_symbol,
+            description => $locus_description,
+            common_name_id => $common_name_id || 1,
+        });
+        my $locus_id = $locus_obj->locus_id();
 
         # Add the locus trait categories
         foreach my $cvterm_id (@$trait_cvterm_ids) {
 
             # get dbxref id of trait cvterm
-            $q = "SELECT dbxref_id FROM cvterm WHERE cvterm_id = ?";
-            $sth = $dbh->prepare($q);
-            $sth->execute($cvterm_id);
-            my ($dbxref_id) = $sth->fetchrow_array();
+            my $cvterm = $schema->resultset("Cv::Cvterm")->find({ cvterm_id => $cvterm_id });
+            my $dbxref_id = $cvterm->dbxref_id();
 
             # add dbxref to locus, if found
             if ( defined $dbxref_id ) {
 
                 # Add locus dbxref reference
-                $q = "INSERT INTO phenome.locus_dbxref (locus_id, dbxref_id, obsolete, sp_person_id) VALUES (?, ?, ?, ?) RETURNING locus_dbxref_id;";
-                $sth = $dbh->prepare($q);
-                $sth->execute($locus_id, $dbxref_id, 'FALSE', $sp_person_id);
-                my ($locus_dbxref_id) = $sth->fetchrow_array();
+                my $locus_dbxref = $phenome_schema->resultset("LocusDbxref")->find_or_create({
+                    locus_id => $locus_id,
+                    dbxref_id => $dbxref_id,
+                    obsolete => 'FALSE',
+                    sp_person_id => $sp_person_id
+                });
+                my $locus_dbxref_id = $locus_dbxref->locus_dbxref_id();
 
                 # Add locus dbxref evidence reference
-                $q = "INSERT INTO phenome.locus_dbxref_evidence (locus_dbxref_id, relationship_type_id, evidence_code_id, sp_person_id, obsolete) SELECT ?, dbxref_id, ?, ?, ? FROM public.dbxref WHERE accession = 'is_a';";
-                $sth = $dbh->prepare($q);
-                $sth->execute($locus_dbxref_id, $dbxref_id, $sp_person_id, 'FALSE');
+                my $locus_dbxref_evidence = $phenome_schema->resultset("LocusDbxrefEvidence")->find_or_create({
+                    locus_dbxref_id => $locus_dbxref_id,
+                    relationship_type_id => $is_a_rel_id,
+                    evidence_code_id => $dbxref_id,
+                    sp_person_id => $sp_person_id
+                });
 
             }
 
         }
 
+        # Add the locus dbx refs
+        foreach my $ref (@$dbx_refs) {
+            my $db_id = $ref->{'db'};
+            my $entity = $ref->{'entity'};
+
+            # Create dbx ref
+            my $dbxref = $schema->resultset("General::Dbxref")->find_or_create({
+                db_id => $db_id,
+                accession => $entity
+            });
+            my $dbxref_id = $dbxref->dbxref_id();
+
+            # add dbxref to locus, if found
+            if ( defined $dbxref_id ) {
+
+                # Add locus dbxref reference
+                my $locus_dbxref = $phenome_schema->resultset("LocusDbxref")->find_or_create({
+                    locus_id => $locus_id,
+                    dbxref_id => $dbxref_id,
+                    obsolete => 'FALSE',
+                    sp_person_id => $sp_person_id
+                });
+                my $locus_dbxref_id = $locus_dbxref->locus_dbxref_id();
+
+                # Add locus dbxref evidence reference
+                my $locus_dbxref_evidence = $phenome_schema->resultset("LocusDbxrefEvidence")->find_or_create({
+                    locus_dbxref_id => $locus_dbxref_id,
+                    relationship_type_id => $is_a_rel_id,
+                    evidence_code_id => $dbxref_id,
+                    sp_person_id => $sp_person_id
+                });
+
+            }
+        }
+
         # Add each allele value for the locus
         foreach my $av (@$allele_values) {
             my $av_symbol = $av;
-            $q = "INSERT INTO phenome.allele (locus_id, allele_name, allele_symbol, is_default) VALUES (?,?,?,FALSE)";
-            $sth = $dbh->prepare($q);
-            $sth->execute($locus_id, $av, $av_symbol);
+            $locus_obj->create_related('alleles', {
+                allele_name => $av,
+                allele_symbol => $av_symbol 
+            });
         }
 
         # Add the Major Locus / Geno Marker link
-        $q = "INSERT INTO phenome.locus_geno_marker (nd_protocol_id, marker_name, locus_id) VALUES (?,?,?)";
-        $sth = $dbh->prepare($q);
+        my $q = "INSERT INTO phenome.locus_geno_marker (nd_protocol_id, marker_name, locus_id) VALUES (?,?,?)";
+        my $sth = $dbh->prepare($q);
         $sth->execute($protocol_id, $locus, $locus_id);
     }
 }
