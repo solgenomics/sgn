@@ -1693,8 +1693,8 @@ sub get_plots_of_plants_used_in_crossing_experiment {
         FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock_relationship AS parent_plant_relationship ON (nd_experiment_stock.stock_id = parent_plant_relationship.object_id) AND parent_plant_relationship.type_id IN (?,?)
-        JOIN stock_relationship AS plant_plot_relationship ON (plant_plot_relationship.subject_id = parent_plant_relationship.subject_id) AND plant_plot_relationship.type_id = ?
-        JOIN stock on (plant_plot_relationship.object_id = stock.stock_id)
+        JOIN stock_relationship AS plant_plot_relationship ON (plant_plot_relationship.object_id = parent_plant_relationship.subject_id) AND plant_plot_relationship.type_id = ?
+        JOIN stock on (plant_plot_relationship.subject_id = stock.stock_id)
         WHERE nd_experiment_project.project_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);

@@ -24,14 +24,11 @@ sub get_field_trials_source_of_crossing_experiment {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $crossing_experiment_id = $self->get_trial_id();
+    
     my $crossing_experiment = CXGN::Cross->new({schema=>$schema, trial_id => $crossing_experiment_id});
     my $parent_plots = $crossing_experiment->get_plots_used_in_crossing_experiment();
     my $plots_of_plants = $crossing_experiment->get_plots_of_plants_used_in_crossing_experiment();
-    my $plots_of_plants;
     my %all_plots;
-
-    print STDERR "PARENT PLOTS =".Dumper($parent_plots)."\n";
-    print STDERR "PLOTS OF PLANTS =".Dumper($plots_of_plants)."\n";
 
     if ($parent_plots) {
         foreach my $plot (@$parent_plots) {

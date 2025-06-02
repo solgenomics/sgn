@@ -1,0 +1,49 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Field trial sources of parents used in crossing", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+                <table class="table table-hover table-bordered" id="field_trial_sources_of_parents_table">
+                    <thead>
+                        <tr>
+                            <th>Field Trial</th>
+                        </tr>
+                    </thead>
+                </table>
+            </&>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Trial for evaluating crosses", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+                <table class="table table-hover table-bordered" id="trials_for_evaluating_crosses_table">
+                    <thead>
+                        <tr>
+                            <th>Field Trial</th>
+                        </tr>
+                    </thead>
+                </table>
+            </&>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+        jQuery('#field_trial_sources_of_parents_table').DataTable({
+            'autoWidth': false,
+            'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_sources_of_parents',
+        });
+
+});
+
+</script>
