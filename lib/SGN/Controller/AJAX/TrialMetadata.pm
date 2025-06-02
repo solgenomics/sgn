@@ -828,6 +828,9 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         my $parsed_entries = $parsed_data->{data};
         foreach (@$parsed_entries){
             $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
+            }
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });

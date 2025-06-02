@@ -3342,6 +3342,8 @@ sub save_plant_entries {
         my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
         my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+        my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
+        my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
@@ -3403,7 +3405,14 @@ sub save_plant_entries {
                 my $given_plant_index_number = $plant_index_numbers->[$increment];
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
+                my ($row_num, $col_num);
+                # TODO: implement row and col checks
+                if ($)
+
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
+                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
+                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, 
+                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
                 $plant_index_number++;
                 $increment++;
             }
@@ -3625,6 +3634,8 @@ sub save_plant_subplot_entries {
         my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
         my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+        my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
+        my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
@@ -3708,7 +3719,13 @@ sub save_plant_subplot_entries {
                 my $given_plant_index_number = $plant_index_numbers->[$increment];
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
+                my ($row_num, $col_num);
+
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
+                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
+                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, 
+                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, 
+                \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
                 $subplot_stock_id, $plant_subplot_relationship_cvterm);
                 $plant_index_number++;
                 $increment++;

@@ -266,11 +266,11 @@ sub _parse_with_plugin {
                 };
             } else {
                 push @{$parsed_entries{'data'}}, {
-                plot_name => $plot_name,
-                plot_stock_id => $plot_lookup{$plot_name},
-                plant_name => $plant_name,
-                plant_index_number => $i
-            };
+                    plot_name => $plot_name,
+                    plot_stock_id => $plot_lookup{$plot_name},
+                    plant_name => $plant_name,
+                    plant_index_number => $i
+                };
             }
         }
     }
