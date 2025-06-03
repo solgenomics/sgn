@@ -4687,6 +4687,7 @@ sub get_plants {
  Args:
  Side Effects:
  Example:
+ See also:     get_plants_per_plot in CXGN::PhenotypingTrial
 
 =cut
 
@@ -4866,6 +4867,7 @@ sub get_plots_per_accession {
  Args:          none
  Side Effects:  db access
  Example:
+ See also:      get_subplots_per_plot in CXGN::PhenotypingTrial
 
 =cut
 
@@ -4901,6 +4903,7 @@ sub get_subplots {
  Args:
  Side Effects:
  Example:
+ See also:     get_tissue_samples_per_plot in CXGN::PhenotypingTrial
 
 =cut
 
@@ -4939,18 +4942,18 @@ sub get_tissue_samples {
 =cut
 
 sub get_controls {
-	my $self = shift;
-	my @controls;
-
-	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
-	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
-	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
-	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
-	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
-	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
-	my $control_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "is a control", 'stock_property')->cvterm_id();
-
-	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
+    my $self = shift;
+    my @controls;
+    
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+    my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+    my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+    my $control_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "is a control", 'stock_property')->cvterm_id();
+    
+    my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
 		FROM stock as accession
 		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
 		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
@@ -4966,15 +4969,15 @@ sub get_controls {
 		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
 
-	#removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
-
-	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
-	$h->execute($self->get_trial_id());
-	while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
-		push @controls, {accession_name=> $uniquename, stock_id=>$stock_id } ;
-	}
-
-	return \@controls;
+    #removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
+    
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+    while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
+	push @controls, {accession_name=> $uniquename, stock_id=>$stock_id } ;
+    }
+    
+    return \@controls;
 }
 
 =head2 get_controls_by_plot
@@ -4990,22 +4993,22 @@ sub get_controls {
 =cut
 
 sub get_controls_by_plot {
-	my $self = shift;
-	my $plot_ids = shift;
-	my @ids = @$plot_ids;
-	my @controls;
-
+    my $self = shift;
+    my $plot_ids = shift;
+    my @ids = @$plot_ids;
+    my @controls;
+    
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-	my $accession_rs = $self->bcs_schema->resultset('Stock::Stock')->search(
-		{ 'me.type_id'=>$accession_type_id, 'subject.stock_id' => { 'in' => \@ids} , 'type.name' => 'is a control' },
-		{ join => { stock_relationship_objects => { subject => { stockprops => 'type' }}}, group_by => 'me.stock_id',},
-  );
-
-	while(my $accession = $accession_rs->next()) {
-		push @controls, { accession_name => $accession->uniquename, stock_id => $accession->stock_id };
-	}
-
-	return \@controls;
+    my $accession_rs = $self->bcs_schema->resultset('Stock::Stock')->search(
+	{ 'me.type_id'=>$accession_type_id, 'subject.stock_id' => { 'in' => \@ids} , 'type.name' => 'is a control' },
+	{ join => { stock_relationship_objects => { subject => { stockprops => 'type' }}}, group_by => 'me.stock_id',},
+	);
+    
+    while(my $accession = $accession_rs->next()) {
+	push @controls, { accession_name => $accession->uniquename, stock_id => $accession->stock_id };
+    }
+    
+    return \@controls;
 }
 
 =head2 get_treatments
@@ -5695,4 +5698,4 @@ sub update_metadata {
 
 1;
 
-##__PACKAGE__->meta->make_immutable;
+__PACKAGE__->meta->make_immutable;

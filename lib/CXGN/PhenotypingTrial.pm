@@ -166,5 +166,178 @@ sub get_trial_stock_type {
     }
 }
 
+=head2 function get_plants_on_plot($plot)
+
+Desc:   Get the plants that are on plot $plot
+
+=cut
+
+sub get_plants_on_plot {
+    my $self = shift;
+    my $plot = shift;
+
+    my $plant_of_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'plant_of', 'stock_relationship');
+    my $plot_type_id =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'plant', 'stock_type');
+
+    my $q = "select plant.uniquename, plant.stock_id, plot.uniquename, plot.stock_id, plot.type_id stock_relationship.type_id FROM stock as plot join stock_relationship on(subject_id=plot.stock_id) join stock as plant on(object_id=plant.stock_id) where plot.uniquename=? and stock_relationship.type_id=?";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($plot, $plant_of_id);
+
+    my @plants;
+    while (my ($plant_name, $plant_id, $plot_name, $plot_id, $this_plot_type_id, $stock_rel_type_id) = $h->fetchrow_array()) {
+	if ($plot_type_id != $this_plot_type_id) {
+	    die "The plot parameter has to designate a plot - $plot_name has a type_id of $this_plot_type_id which is not plot type id of $plot_type_id";
+	}
+
+	push @plants, [ $plant_id, $plant_name ];
+
+    }
+
+    return \@plants;
+}
+
+=head2 function get_subplots_on_plot($plot)
+
+Desc:   Get the subplots that are on plot $plot
+
+=cut
+
+sub get_subplots_on_plot {
+    my $self = shift;
+    my $plot = shift;
+
+    my $subplot_of_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'subplot_of', 'stock_relationship');
+    my $plot_type_id =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'plot', 'stock_type');
+    my $q = "select subplot.stock_id, subplot.uniquename, plot.stock_id, plot.uniquename, plot.type_id, stock_relationship.type_id FROM stock as subplot join stock_relationship on(subject_id=subplot.stock_id) join stock as plot on(object_id=plot.stock_id) where subplot.uniquename= ? and stock_relationship.type_id= ? ";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($plot, $subplot_of_id);
+
+    my @subplots;
+    while (my ($subplot_name, $subplot_id, $plot_name, $plot_id, $this_plot_type_id, $stock_rel_type_id) = $h->fetchrow_array()) {
+	if ($plot_type_id != $this_plot_type_id) {
+	    die "The plot parameter has to designate a plot - $plot_name has a type_id of $this_plot_type_id which is not plot";
+	}
+
+	push @subplots, [ $subplot_id, $subplot_name ];
+
+    }
+
+    return \@subplots
+
+
+}
+
+=head2 function get_tissue_samples_for_plant($plot)
+
+Desc:   Get the tissue samples for plant $plant
+
+=cut
+
+sub get_tissue_samples_for_plant {
+    my $self = shift;
+    my $plant = shift;
+
+    my $tissue_sample_of_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'tissue_sample_of', 'stock_relationship');
+    my $plant_type_id =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'plant', 'stock_type');
+    my $q = "select tissue_sample.stock_id, tissue_sample.uniquename, plant.stock_id, plant.uniquename, plant.type_id, stock_relationship.type_id FROM stock as tissue_sample join stock_relationship on(subject_id=tissue_sample.stock_id) join stock as plant on(object_id=plant.stock_id) where tissue_sample.uniquename= ? and stock_relationship.type_id= ? ";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($plant, $tissue_sample_of_id);
+
+    my @tissue_samples;
+    while (my ($tissue_sample_name, $tissue_sample_id, $plant_name, $plant_id, $this_plant_type_id, $stock_rel_type_id) = $h->fetchrow_array()) {
+	if ($plant_type_id != $this_plant_type_id) {
+	    die "The plot parameter has to designate a plant - $plant_name has a type_id of $this_plant_type_id which is not the plant type id of $plant_type_id";
+	}
+
+	push @tissue_samples, [ $tissue_sample_id, $tissue_sample_name ];
+
+    }
+
+    return \@tissue_samples;
+
+}
+
+=head2 function get_tissue_samples_for_plant($plot)
+
+Desc:   Get the tissue samples for plant $plant
+
+=cut
+
+sub get_tissue_samples_for_plot {
+    my $self = shift;
+    my $plot = shift;
+
+    my $tissue_sample_of_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'tissue_sample_of', 'stock_relationship');
+    my $plot_type_id =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'plot', 'stock_type');
+    my $q = "select tissue_sample.stock_id, tissue_sample.uniquename, plot.stock_id, plot.uniquename, plot.type_id, stock_relationship.type_id FROM stock as tissue_sample join stock_relationship on(subject_id=tissue_sample.stock_id) join stock as plot on(object_id=plot.stock_id) where tissue_sample.uniquename= ? and stock_relationship.type_id= ? ";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($plot, $tissue_sample_of_id);
+
+    my @tissue_samples;
+    while (my ($tissue_sample_name, $tissue_sample_id, $plot_name, $plot_id, $this_plot_type_id, $stock_rel_type_id) = $h->fetchrow_array()) {
+	if ($plot_type_id != $this_plot_type_id) {
+	    die "The plot parameter has to designate a plant - $plot_name has a type_id of $this_plot_type_id which is not the plot type id of $plot_type_id";
+	}
+
+	push @tissue_samples, [ $tissue_sample_id, $tissue_sample_name ];
+
+    }
+
+    return \@tissue_samples;
+}
+
+=head2 get_accession_associated_with_layout_object()
+
+    Desc:    returns the accession associated with a layout object
+             a layout object can be a plot, subplot, plant, or tissue_sample
+    Params:  layout_object_id, layout_object_name
+    Returns: the stock_id of the accession associated with this item
+
+=cut
+
+sub get_accessions_associated_with_layout_item {
+    my $self = shift;
+    my $layout_item_id = shift;
+    my $layout_item_type_id = shift;
+
+    my $q = "select accession.stock_id, accession.uniquename, source.stock_id, source.uniquename, source.type_id, stock_relationship.type_id FROM stock as accession join stock_relationship on(object_id=accession.stock_id) join stock as source on(subject_id=source.stock_id) where source.uniquename=? and accession.type_id=?";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($plot, $tissue_sample_of_id);
+
+    my @accessions;
+    while (my ($accession_name, $accession_id, $source_name, $source_id, $source_type_id, $stock_rel_type_id) = $h->fetchrow_array()) {
+
+	push @accessions, [ $accession_id, $accession_name ];
+
+    }
+
+    return \@accessions;
+
+
+}
+
+=head2 replace_accession_associated_with_layout_item()
+
+    Desc:    replaces the accession associated with a layout item
+             a layout item can be a plot, subplot, plant, or tissue_sample
+    Params:  layout_item_id, layout_item_name
+    Returns: the stock_id of the accession associated with this item
+
+=cut
+
+sub replace_accession_associated_with_layout_item {
+    my $self = shift;
+    my $layout_item_id = shift;
+    my $layout_item_name = shift;
+    my $old_accession_id = shift;
+    my $new_accession_id = shift;
+
+    
+
+}
+
+
 
 1;
