@@ -1,0 +1,75 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/trials_select.mas - a selection menu of trials in a list or dataset
+
+
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$dataset_id => undef
+$list_id => undef
+$combo_pops_id => undef
+$data_structure => undef
+$data_set_type => undef
+
+
+
+</%args>
+
+<%perl>
+
+$corr_pop_id = $trial_id if !$corr_pop_id;
+
+if (!$data_structure) {
+   if ($dataset_id) {
+      $data_structure = 'dataset';
+   } elsif ($list_id) {
+     $data_structure = 'list';
+   } else {
+    $data_structure = 'combined_trials';
+   }
+}
+
+
+my $url = $c->req->path;
+
+my $title; 
+my $collapsed = 0;
+my $collapsible = 0;
+
+if ($url !~ /correlation\/analysis/) {
+  $title = 'Phenotypic correlation analysis (Pearson)';
+  $collapsible = 1;
+  $collapsed = 1 if $url =~ /breeders\/trial/;
+}
+
+</%perl>
+
+
+<&| /page/info_section.mas,
+  collapsible => $collapsible,
+  collapsed   => $collapsed,
+  title       => $title
+&>
+
+<div id='trials_select_div'>
+    <select id="trial_select" class="form-control">
+        <option value="" disabled selected>Select a trial</option>
+        <!-- Options will be dynamically populated -->
+    </select>
+    <input id="run_correlation" class="btn btn-success" type="button" value="Run correlation" />
+</div>
+
+</&>
+
+<& /util/import_javascript.mas, classes => ["solGS.trialsSelect"] &>
