@@ -181,149 +181,149 @@ sub create_fieldbook_from_trial_POST : Args(0) {
 sub create_trait_file_for_field_book : Path('/ajax/fieldbook/traitfile/create') : ActionClass('REST') { }
 
 sub create_trait_file_for_field_book_POST : Args(0) {
-  my ($self, $c) = @_;
+    my ($self, $c) = @_;
 
-  if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
-    return;
-  }
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
-    return;
-  }
+    if (!$c->user()) {
+	$c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+	return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+	$c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+	return;
+    }
 
-  my @trait_list;
-  my $trait_file_name = $c->req->param('trait_file_name');
-  my $include_notes = $c->req->param('include_notes');
-  my $user_id = $c->user()->get_object()->get_sp_person_id();
-  my $user_name = $c->user()->get_object()->get_username();
-  my $time = DateTime->now();
-  my $timestamp = $time->ymd()."_".$time->hms();
-  my $subdirectory_name = "tablet_trait_files";
-  my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trait_file_name.".trt");
-  my $archive_path = $c->config->{archive_path};
-  my $file_destination =  catfile($archive_path, $archived_file_name);
-  my $dbh = $c->dbc->dbh();
-  my @trait_ids;
+    my @trait_list;
+    my $trait_file_name = $c->req->param('trait_file_name');
+    my $include_notes = $c->req->param('include_notes');
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $subdirectory_name = "tablet_trait_files";
+    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trait_file_name.".trt");
+    my $archive_path = $c->config->{archive_path};
+    my $file_destination =  catfile($archive_path, $archived_file_name);
+    my $dbh = $c->dbc->dbh();
+    my @trait_ids;
 
-  if ($c->req->param('selected_listed')) {
-    @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
-    @trait_ids = @{_parse_list_from_json($c->req->param('trait_ids'))};
-  } else {
-    @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
-    @trait_ids = $c->req->param('trait_ids');
-  }
+    if ($c->req->param('selected_listed')) {
+	@trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
+	@trait_ids = @{_parse_list_from_json($c->req->param('trait_ids'))};
+    } else {
+	@trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
+	@trait_ids = $c->req->param('trait_ids');
+    }
 
-  if (!-d $archive_path) {
-    mkdir $archive_path;
-  }
+    if (!-d $archive_path) {
+	mkdir $archive_path;
+    }
 
-  if (! -d catfile($archive_path, $user_id)) {
-    mkdir (catfile($archive_path, $user_id));
-  }
+    if (! -d catfile($archive_path, $user_id)) {
+	mkdir (catfile($archive_path, $user_id));
+    }
 
-  if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
-    mkdir (catfile($archive_path, $user_id, $subdirectory_name));
-  }
-  print STDERR Dumper($file_destination);
-  open(my $FILE, "> :encoding(UTF-8)", $file_destination) or die $!;
-  my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
-  print $FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
-  my $order = 0;
+    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+	mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    }
+    print STDERR Dumper($file_destination);
+    open(my $FILE, "> :encoding(UTF-8)", $file_destination) or die $!;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    print $FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
+    my $order = 0;
 
-  foreach my $term (@trait_list) {
-      #print STDERR "term is $term\n";
-      my @parts = split (/\|/ , $term);
-      my ($db_name, $accession) = split ":", pop @parts;
-      my $trait_name = join ("|", @parts);
-      #print STDERR "trait name is $trait_name, full cvterm accession is $full_cvterm_accession\n";
-      #my ( $db_name , $accession ) = split (/:/ , $full_cvterm_accession);
+    foreach my $term (@trait_list) {
+	#print STDERR "term is $term\n";
+	my @parts = split (/\|/ , $term);
+	my ($db_name, $accession) = split ":", pop @parts;
+	my $trait_name = join ("|", @parts);
+	#print STDERR "trait name is $trait_name, full cvterm accession is $full_cvterm_accession\n";
+	#my ( $db_name , $accession ) = split (/:/ , $full_cvterm_accession);
 
-      $accession =~ s/\s+$//;
-      $accession =~ s/^\s+//;
-      $db_name =~ s/\s+$//;
-      $db_name =~ s/^\s+//;
+	$accession =~ s/\s+$//;
+	$accession =~ s/^\s+//;
+	$db_name =~ s/\s+$//;
+	$db_name =~ s/^\s+//;
 
-      my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $trait_ids[$order] );
-      my $synonym = $cvterm->get_uppercase_synonym();
-      my $name;
-      if($c->config->{fieldbook_trait_synonym}) {
-          print STDERR "synonym: $synonym, trait_name: $trait_name\n";
-          $name = $synonym || $trait_name; # use uppercase synonym if defined, otherwise use full trait name
-      } else {
-          print STDERR "trait_name: $trait_name\n";
-          $name = $trait_name;
-      }
-      $order++;
+	my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $trait_ids[$order] );
+	my $synonym = $cvterm->get_uppercase_synonym();
+	my $name;
+	if ($c->config->{fieldbook_trait_synonym}) {
+	    print STDERR "synonym: $synonym, trait_name: $trait_name\n";
+	    $name = $synonym || $trait_name; # use uppercase synonym if defined, otherwise use full trait name
+	} else {
+	    print STDERR "trait_name: $trait_name\n";
+	    $name = $trait_name;
+	}
+	$order++;
 
-      #get trait info
+	#get trait info
 
-      my $trait_info_lookup = CXGN::Fieldbook::TraitInfo
-	  ->new({
-	      chado_schema    => $chado_schema,
-	      db_name         => $db_name,
-	      trait_accession => $accession,
-		});
-      my $trait_info_string = $trait_info_lookup->get_trait_info($trait_name);
+	my $trait_info_lookup = CXGN::Fieldbook::TraitInfo
+	    ->new({
+		chado_schema    => $chado_schema,
+		db_name         => $db_name,
+		trait_accession => $accession,
+		  });
+	my $trait_info_string = $trait_info_lookup->get_trait_info($trait_name);
 
-      #return error if not $trait_info_string;
-      #print line with trait info
-      #print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
-      #print STDERR " Adding line \"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\" to trait file\n";
-      print $FILE "\"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
-  }
+	#return error if not $trait_info_string;
+	#print line with trait info
+	#print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
+	#print STDERR " Adding line \"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\" to trait file\n";
+	print $FILE "\"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
+    }
 
-  if ($include_notes eq 'true') {
-      $order++;
-      #print STDERR " Adding notes line \"notes\",\"text\",\"\",\"\",\"\",\"Additional observations for future reference\",\"\",\"TRUE\",\"$order\"\n";
-      print $FILE "\"notes\",\"text\",\"\",\"\",\"\",\"Additional observations for future reference\",\"\",\"TRUE\",\"$order\"\n";
-  }
+    if ($include_notes eq 'true') {
+	$order++;
+	#print STDERR " Adding notes line \"notes\",\"text\",\"\",\"\",\"\",\"Additional observations for future reference\",\"\",\"TRUE\",\"$order\"\n";
+	print $FILE "\"notes\",\"text\",\"\",\"\",\"\",\"Additional observations for future reference\",\"\",\"TRUE\",\"$order\"\n";
+    }
+    
+    close $FILE;
+    
+    open(my $F, "<", $file_destination) || die "Can't open file ";
+    binmode $F;
+    my $md5 = Digest::MD5->new();
+    $md5->addfile($F);
+    close($F);
 
-  close $FILE;
-
-  open(my $F, "<", $file_destination) || die "Can't open file ";
-  binmode $F;
-  my $md5 = Digest::MD5->new();
-  $md5->addfile($F);
-  close($F);
-
-  my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
-
-  my $md_row = $metadata_schema->resultset("MdMetadata")->create({
-								  create_person_id => $user_id,
-								 });
-  $md_row->insert();
-
-  my $file_row = $metadata_schema->resultset("MdFiles")->create({
-								     basename => basename($file_destination),
-								     dirname => dirname($file_destination),
-								     filetype => 'tablet trait file',
-								     md5checksum => $md5->hexdigest(),
-								     metadata_id => $md_row->metadata_id(),
-								    });
-  $file_row->insert();
-
-  my $id = $file_row->file_id();
-
-  $c->stash->{rest} = {success => "1", file_id => $id, };
-
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
+    
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+	create_person_id => $user_id,
+								   });
+    $md_row->insert();
+    
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+	basename => basename($file_destination),
+	dirname => dirname($file_destination),
+	filetype => 'tablet trait file',
+	md5checksum => $md5->hexdigest(),
+	metadata_id => $md_row->metadata_id(),
+								  });
+    $file_row->insert();
+    
+    my $id = $file_row->file_id();
+    
+    $c->stash->{rest} = {success => "1", file_id => $id, };
+    
 }
 
 
 sub _parse_list_from_json {
-  my $list_json = shift;
-  
-  return unless $list_json;
-
-  my $decoded_list;
-  eval {
-      $decoded_list = decode_json($list_json);
-  };
-  if ($@) {
-      die "Invalid JSON: $@";
-  }
-  my @array_of_list_items = @{$decoded_list};
-  return \@array_of_list_items;
+    my $list_json = shift;
+    
+    return unless $list_json;
+    
+    my $decoded_list;
+    eval {
+	$decoded_list = decode_json($list_json);
+    };
+    if ($@) {
+	die "Invalid JSON: $@";
+    }
+    my @array_of_list_items = @{$decoded_list};
+    return \@array_of_list_items;
 }
 
 
