@@ -2,6 +2,9 @@
 package SGN::Controller::FieldBook;
 
 use Moose;
+
+use JSON qw| encode_json |;
+use Imager::QRCode;
 use URI::FromHash 'uri';
 use Spreadsheet::WriteExcel;
 use File::Slurp qw | read_file |;
@@ -10,6 +13,7 @@ use Data::Dumper;
 use CXGN::Trial::TrialLayout;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
+use File::Temp qw | tempfile |;
 use File::Spec::Functions;
 use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
@@ -101,6 +105,35 @@ sub field_book :Path("/fieldbook") Args(0) {
 	}
     }
 
+    my $qc = Imager::QRCode->new();
+
+    my $data = {
+	url => $c->config->{main_production_site_url},
+	name => $c->config->{project_name},
+	v => "2",
+	ps => "10",
+	cs => "10",
+	st => "50000",
+	flow => "implicit",
+	oidc => $c->config->{main_production_site_url}."/.well-known/openid-configuration",
+	cat => "",
+#	clientId => "https://phenoapps.org/field-book",
+    };
+
+    my $json_string = encode_json($data);
+
+    print STDERR "CONFIG JSON: $json_string\n";
+
+    my $img = $qc->plot($json_string);
+
+    my $qrcode_file_url = $c->generated_file_uri("barcode", "fieldbook_config_qrcode.gif");
+    print STDERR "BARCODE URL = $qrcode_file_url\n";
+    my $qrcode_file_path = $c->path_to($qrcode_file_url);
+
+    print STDERR "BARCODE PATH = $qrcode_file_path\n";
+    
+    $img->write( file => $qrcode_file_path );
+    
     $c->stash->{projects} = \@projects;
     $c->stash->{file_metadata} = \@file_metadata;
     $c->stash->{programs} = $breeding_programs;
@@ -108,6 +141,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     $c->stash->{trait_files} = \@trait_files;
     $c->stash->{phenotype_files} = \@phenotype_files;
     $c->stash->{removed_phenotype_files} = \@removed_phenotype_files;
+    $c->stash->{fieldbook_config_qrcode_url} = $qrcode_file_url;
 
     # get roles
     my @roles = $c->user->roles();

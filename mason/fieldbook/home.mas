@@ -9,11 +9,27 @@ $user_id => undef
 @phenotype_files => undef
 @removed_phenotype_files => undef
 @roles => ()
+$fieldbook_config_qrcode_url => ""
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.FieldBook', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
 <& /page/page_title.mas, title=>'Field Book Tools' &>
+
+<div class="container-fluid" style="text-align: center">
+
+<&| /page/info_section.mas, title => "BrAPI setup", subtitle => "" &>
+
+Scan the QRCode with Fieldbook to configure the app for this database for BrAPI access<br />
+
+<div id="configure_fieldbook_qrcode_div">
+<img src="<% $fieldbook_config_qrcode_url %>" />
+
+</&>
+
+</div>
+
+</div>
 
 <div class="container-fluid">
 
