@@ -1,0 +1,36 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Crossing experiment(s) from this field trial", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+                <table class="table table-hover table-bordered" id="crossing_experiments_from_field_trial_table">
+                    <thead>
+                        <tr>
+                            <th>Crossing Experiemnt</th>
+                        </tr>
+                    </thead>
+                </table>
+            </&>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#crossing_experiments_from_field_trial_table').DataTable({
+        'autoWidth': false,
+        'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/crossing_experiments_from_field_trial',
+    });
+
+});
+
+</script>
