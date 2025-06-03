@@ -91,6 +91,8 @@ jQuery(document).ready(function() {
                 //console.log('frequnecy data:', frequencies);
                 show_nirs_data(nirsDataResponse.result, frequencies);
                 update_multi_graph(blank_data);
+                jQuery('#nirs_table_section').show();
+                jQuery('#multi_graph_section').show();
             })
             .catch((error) => {
                 console.error('Error fetching NIRS data:', error);
