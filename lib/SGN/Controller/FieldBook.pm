@@ -229,7 +229,7 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
 sub delete_file : Path('/fieldbook/delete_file/') Args(1) {
      my $self  =shift;
      my $c = shift;
-     my $json = new JSON;
+     my $json = JSON->new();
      my $file_id = shift;
      my $decoded;
      if ($file_id){

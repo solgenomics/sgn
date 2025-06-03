@@ -14,26 +14,26 @@ $fieldbook_config_qrcode_url => ""
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.FieldBook', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
-<& /page/page_title.mas, title=>'Field Book Tools' &>
+  <& /page/page_title.mas, title=>'Field Book Tools' &>
 
-<div class="container-fluid" style="text-align: center">
+    <div class="container-fluid" style="text-align: center">
 
-<&| /page/info_section.mas, title => "BrAPI setup", subtitle => "" &>
+      <&| /page/info_section.mas, title => "BrAPI setup", subtitle => "" &>
 
 Scan the QRCode with Fieldbook to configure the app for this database for BrAPI access<br />
 
-<div id="configure_fieldbook_qrcode_div">
-<img src="<% $fieldbook_config_qrcode_url %>" />
+	<div id="configure_fieldbook_qrcode_div">
+	  <img src="<% $fieldbook_config_qrcode_url %>" />
+	</div>	 
+  </&>
 
-</&>
 
-</div>
 
-</div>
+  </div>
 
-<div class="container-fluid">
+  <div class="container-fluid">
 
-<&| /page/explanation.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, &>
+  <&| /page/explanation.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, &>
   <p>
     <em><b>Field Book</b></em> is an app for collecting phenotypic data on field research plots using an android tablet computer.
     <br/><br/>

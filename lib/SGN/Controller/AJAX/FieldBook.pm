@@ -188,7 +188,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 	return;
     }
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+	$c->stash->{rest} = { error =>  "You have insufficient privileges to create a field book." };
 	return;
     }
 
@@ -225,10 +225,13 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
 	mkdir (catfile($archive_path, $user_id, $subdirectory_name));
     }
+    
     print STDERR Dumper($file_destination);
+    
     open(my $FILE, "> :encoding(UTF-8)", $file_destination) or die $!;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     print $FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
+
     my $order = 0;
 
     foreach my $term (@trait_list) {
