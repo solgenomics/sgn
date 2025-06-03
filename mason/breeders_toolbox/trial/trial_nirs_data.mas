@@ -24,7 +24,6 @@ $stockref => undef
 </style>
 
 <div class="well well-sm" id="nirs_analysis_plot_spectra_protocol_select">
-    <p>TEST3</p>
 </div>
 
 <center>
@@ -62,11 +61,6 @@ $stockref => undef
 <script>
 var trial_id = '<% $trial_id %>';
 
-document.getElementById("submit_protocol_selection").addEventListener("click", function() {
-    document.getElementById("nirs_table_section").style.display = "block";
-    document.getElementById("multi_graph_section").style.display = "block";
-});
-
 jQuery(document).ready(function() {
 
     jQuery('#trial_nirs_section_onswitch').click(function() {
@@ -81,7 +75,7 @@ jQuery(document).ready(function() {
         });
 
         if (selected.length !== 1) {
-            alert('Please select only one protocol.');
+            alert('Please select one protocol.');
         } else {
             const selectedProtocolId = selected[0];
             //console.log('Selected protocol ID:', selectedProtocolId);
