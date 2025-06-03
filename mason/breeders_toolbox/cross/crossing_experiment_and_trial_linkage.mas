@@ -8,7 +8,7 @@ $trial_id
 <div class="well well-sm">
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Field trial sources of parents used in crossing", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+            <&| /page/info_section.mas, title=>"Field trial source(s) of parents used in crossing", is_subsection => 1, collapsible=>1, collapsed=>1 &>
                 <table class="table table-hover table-bordered" id="field_trial_sources_of_parents_table">
                     <thead>
                         <tr>
@@ -21,8 +21,8 @@ $trial_id
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Trial for evaluating crosses", is_subsection => 1, collapsible=>1, collapsed=>1 &>
-                <table class="table table-hover table-bordered" id="trials_for_evaluating_crosses_table">
+            <&| /page/info_section.mas, title=>"Field trial(s) for evaluating crosses in this experiment", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+                <table class="table table-hover table-bordered" id="field_trials_for_evaluating_crosses_table">
                     <thead>
                         <tr>
                             <th>Field Trial</th>
@@ -42,6 +42,11 @@ jQuery(document).ready(function(){
         jQuery('#field_trial_sources_of_parents_table').DataTable({
             'autoWidth': false,
             'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_sources_of_parents',
+        });
+
+        jQuery('#field_trials_for_evaluating_crosses_table').DataTable({
+            'autoWidth': false,
+            'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trials_for_evaluating_crosses',
         });
 
 });
