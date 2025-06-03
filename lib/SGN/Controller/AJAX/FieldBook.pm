@@ -258,12 +258,13 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
 	#get trait info
 
-	my $trait_info_lookup = CXGN::Fieldbook::TraitInfo
-	    ->new({
+	my $trait_info_lookup = CXGN::Fieldbook::TraitInfo->new(
+	    {
 		chado_schema    => $chado_schema,
 		db_name         => $db_name,
 		trait_accession => $accession,
-		  });
+	    });
+	
 	my $trait_info_string = $trait_info_lookup->get_trait_info($trait_name);
 
 	#return error if not $trait_info_string;
