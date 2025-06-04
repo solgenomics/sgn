@@ -9,7 +9,7 @@ use SGN::Model::Cvterm;
 use CXGN::Cross;
 use Data::Dumper;
 
-=head2 function get_field_trials_source_of_crossing_experiment()
+=head2 function get_field_trial_sources_of_crossing_experiment()
 
  Usage:
  Desc:         return associated source field trials for crosses in crossing experiment
@@ -20,7 +20,7 @@ use Data::Dumper;
 
 =cut
 
-sub get_field_trials_source_of_crossing_experiment {
+sub get_field_trial_sources_of_crossing_experiment {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $crossing_experiment_id = $self->get_trial_id();

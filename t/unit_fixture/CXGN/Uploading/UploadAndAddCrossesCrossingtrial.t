@@ -765,6 +765,14 @@ for my $extension ("xls", "xlsx") {
     is($first_cross->[13], 8);
     is($first_cross->[15], 'test_crossingtrial');
 
+    #test_retrieving trial sources of parents linkages
+    my $trial_linkage = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $crossing_trial2_id });
+    my $trial_sources_of_parents = $trial_linkage->get_field_trial_sources_of_crossing_experiment();
+    my $first_field_trial_name = $trial_sources_of_parents->[0]->[1];
+    my $second_field_trial_name = $trial_sources_of_parents->[1]->[1];
+    is($first_field_trial_name, 'Kasese solgs trial');
+    is($second_field_trial_name, 'CASS_6Genotypes_Sampling_2015');
+
     #test deleting cross
     my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id })->count();
     my $before_deleting_accessions = $schema->resultset("Stock::Stock")->search({ type_id => $accession_type_id })->count();

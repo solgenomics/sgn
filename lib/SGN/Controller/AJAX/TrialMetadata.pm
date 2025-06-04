@@ -3792,7 +3792,7 @@ sub field_trial_sources_of_parents : Chained('trial') PathPart('field_trial_sour
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
-    my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trials_source_of_crossing_experiment();
+    my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trial_sources_of_crossing_experiment();
     my @source_trials;
     if ($field_trials_source_of_crossing_trial) {
         foreach my $trial (@$field_trials_source_of_crossing_trial) {
