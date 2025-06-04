@@ -8,7 +8,7 @@ $trial_id
 <div class="well well-sm">
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Field trial source(s) of parents used in crossing", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+            <&| /page/info_section.mas, title=>"Field trial source(s) of parents used in crossing", id => 'field_trial_sources_of_parent_section', is_subsection => 1, collapsible=>1, collapsed=>1 &>
                 <table class="table table-hover table-bordered" id="field_trial_sources_of_parents_table">
                     <thead>
                         <tr>
@@ -21,7 +21,7 @@ $trial_id
     </div>
     <div class="panel panel-default">
         <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Field trial(s) for evaluating crosses in this experiment", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+            <&| /page/info_section.mas, title=>"Field trial(s) for evaluating crosses in this experiment", id => 'field_trials_for_evaluating_crosses_section', is_subsection => 1, collapsible=>1, collapsed=>1 &>
                 <table class="table table-hover table-bordered" id="field_trials_for_evaluating_crosses_table">
                     <thead>
                         <tr>
@@ -39,19 +39,25 @@ $trial_id
 
 jQuery(document).ready(function(){
 
-        jQuery('#field_trial_sources_of_parents_table').DataTable({
+    jQuery('#field_trial_sources_of_parent_section_onswitch').click(function(){
+        var sources_of_parent_table = jQuery('#field_trial_sources_of_parents_table').DataTable({
             'autoWidth': false,
             'paging' : false,
             'searching' : false,
+            'destroy': true,
             'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_sources_of_parents',
         });
+    });
 
-        jQuery('#field_trials_for_evaluating_crosses_table').DataTable({
+    jQuery('#field_trials_for_evaluating_crosses_section_onswitch').click(function(){
+        var trials_for_evaluating_crosses = jQuery('#field_trials_for_evaluating_crosses_table').DataTable({
             'autoWidth': false,
             'paging' : false,
             'searching' : false,
+            'destroy': true,
             'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trials_for_evaluating_crosses',
         });
+    });
 
 });
 

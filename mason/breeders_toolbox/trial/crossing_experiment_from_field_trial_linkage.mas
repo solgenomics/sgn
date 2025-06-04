@@ -23,11 +23,14 @@ $trial_id
 
 jQuery(document).ready(function(){
 
-    jQuery('#crossing_experiments_from_field_trial_table').DataTable({
-        'autoWidth': false,
-        'paging' : false,
-        'searching' : false,
-        'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/crossing_experiments_from_field_trial',
+    jQuery('#crossing_experiment_from_field_trial_section_onswitch').click(function(){
+        var crossing_experiment_from_trial = jQuery('#crossing_experiments_from_field_trial_table').DataTable({
+            'autoWidth': false,
+            'paging' : false,
+            'searching' : false,
+            'destroy': true,
+            'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/crossing_experiments_from_field_trial',
+        });
     });
 
 });
