@@ -41,11 +41,15 @@ jQuery(document).ready(function(){
 
         jQuery('#field_trial_sources_of_parents_table').DataTable({
             'autoWidth': false,
+            'paging' : false,
+            'searching' : false,
             'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_sources_of_parents',
         });
 
         jQuery('#field_trials_for_evaluating_crosses_table').DataTable({
             'autoWidth': false,
+            'paging' : false,
+            'searching' : false,
             'ajax' : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trials_for_evaluating_crosses',
         });
 
