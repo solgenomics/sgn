@@ -38,12 +38,15 @@ $trial_stock_type => undef
     <center><h4>View plots for repetitive measurement traits</h4>
 
     <form class="form-horizontal" role="form">
-    <div class="form-row">
-        <div class="form-group">
+
+        <!-- div class="form-group"  -->
+	<div style="text-align:center; margin-bottom:10px;" >
 		    <label for="select_trait_for_repetitive_data_and_plot">Select Trait:</label>
-            <div id="select_trait_for_repetitive_data_and_plot">[Loading...]</div>
-		</div>
-        <div class="form-group">
+            <span id="select_trait_for_repetitive_data_and_plot">[Loading...]</div>
+		</span>
+	<!-- /div -->
+    <div class="form-row">
+        <div class="form-group" style="text-align:center">
             <label for="repetitive_measurement_start_date">Start Date:</label>
             <input type="text" id="repetitive_measurement_start_date" title="repetitive_measurement_start_date" />
         </div>
