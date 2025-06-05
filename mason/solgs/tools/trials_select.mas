@@ -16,6 +16,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $dataset_id => undef
+$dataset_name => undef
 $list_id => undef
 $combo_pops_id => undef
 $data_structure => undef
@@ -61,6 +62,7 @@ my $collapsible = 0;
 </&>
 
 <input type="hidden" id="dataset_id" value="<% $dataset_id %>" />
+<input type="hidden" id="dataset_name" value="<% $dataset_name %>" />
 <input type="hidden" id="list_id" value="<% $list_id %>">
 <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" />
 <input type="hidden" id="data_structure" value="<% $data_structure %>" />
