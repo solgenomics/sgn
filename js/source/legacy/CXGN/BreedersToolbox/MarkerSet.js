@@ -344,7 +344,7 @@ function onMarkerSetChange() {
 
         // Get all possible allele values
         jQuery.ajax({
-            url: `/ajax/genotyping_protocol/get_major_loci_alleles/${protocol_id}`,
+            url: `/ajax/genotyping_protocol/get_marker_metadata/${protocol_id}`,
             success: function(resp) {
                 if ( resp ) {
                     Object.keys(resp).forEach((marker) => {

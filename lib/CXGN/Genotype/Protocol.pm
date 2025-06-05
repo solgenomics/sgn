@@ -469,12 +469,12 @@ sub set_description {
 
 
 #
-# Set allele values for the markers in this protocol
-# @param param_data = a hashref of major loci data,
+# Add metadata and alleles the markers in this protocol
+# @param param_data = a hashref of marker metadata,
 #   where the key is the marker/locus name
-#   and the value is a hashref of marker details (locus, description, alleles)
+#   and the value is a hashref of marker details (locus, description, categories, references, alleles)
 #
-sub set_alleles {
+sub set_marker_metadata {
     my $self = shift;
     my $parsed_data = shift;
     my $schema = $self->bcs_schema();
@@ -502,7 +502,7 @@ sub set_alleles {
         my $unique_locus_name = $locus;
         my $locus_symbol = $locus;
 
-        # Add the Major Locus to the phenome.locus table
+        # Add the marker to the phenome.locus table
         my $locus_obj = $phenome_schema->resultset('Locus')->find_or_create({
             locus_name => $unique_locus_name,
             locus_symbol => $locus_symbol,
@@ -586,7 +586,7 @@ sub set_alleles {
             });
         }
 
-        # Add the Major Locus / Geno Marker link
+        # Add the Locus / Marker link
         my $q = "INSERT INTO phenome.locus_geno_marker (nd_protocol_id, marker_name, locus_id) VALUES (?,?,?)";
         my $sth = $dbh->prepare($q);
         $sth->execute($protocol_id, $locus, $locus_id);
@@ -594,11 +594,11 @@ sub set_alleles {
 }
 
 #
-# Get the allele values for the marker(s) in this protocol
+# Get the metadata allele values for the marker(s) in this protocol
 # @param marker_name = only return the alleles for this particular marker
 # @return an array of hashes with the keys: nd_protocol_id, locus_id, marker_name, allele_id, allele_name
 #
-sub get_alleles {
+sub get_marker_metadata {
     my $self = shift;
     my $marker_name = shift;
     my $schema = $self->bcs_schema();

@@ -283,9 +283,9 @@ sub genotyping_protocol_details_POST : Args(0) {
 }
 
 
-sub genotyping_protocol_upload_mla : Path('/ajax/genotyping_protocol/add_major_loci_alleles') : ActionClass('REST') { }
+sub genotyping_protocol_add_marker_metadata : Path('/ajax/genotyping_protocol/add_marker_metadata') : ActionClass('REST') { }
 
-sub genotyping_protocol_upload_mla_POST : Args(1) {
+sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
     my $self = shift;
     my $c = shift;
     my $protocol_id = shift;
@@ -301,8 +301,8 @@ sub genotyping_protocol_upload_mla_POST : Args(1) {
     my (@errors, %response);
 
     if (!$c->user()) {
-        print STDERR "User not logged in... not uploading mla.\n";
-        push @errors, "You need to be logged in to upload major loci alleles.";
+        print STDERR "User not logged in... not uploading marker metadata.\n";
+        push @errors, "You need to be logged in to upload marker metadata.";
         $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
         return;
     }
@@ -312,7 +312,7 @@ sub genotyping_protocol_upload_mla_POST : Args(1) {
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
-        subdirectory => 'mla_upload',
+        subdirectory => 'marker_metadata_upload',
         archive_path => $c->config->{archive_path},
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
@@ -331,16 +331,21 @@ sub genotyping_protocol_upload_mla_POST : Args(1) {
     unlink $upload_tempfile;
 
     # Validate the upload file
+    print STDERR "\n\n\n\n===> LOADING MARKER METADATA PLUGIN:\n";
     my $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
         filename => $archived_filename_with_path,
         observation_unit_type_name => 'marker',
         nd_protocol_id => $protocol_id,
-        major_locus_trait_ontology_root => $c->config->{major_locus_trait_ontology_root}
+        marker_metadata_trait_ontology_root => $c->config->{marker_metadata_trait_ontology_root}
     });
-    $parser->load_plugin('MajorLociAlleles');
+    print STDERR "... loading plugin\n";
+    $parser->load_plugin('MarkerMetadata');
+    print STDERR "... parsing file\n";
     my $parsed_data = $parser->parse();
+    print STDERR "... getting parse errors\n";
     my $parse_errors = $parser->get_parse_errors();
+    print STDERR "... done\n";
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -365,15 +370,15 @@ sub genotyping_protocol_upload_mla_POST : Args(1) {
         nd_protocol_id => $protocol_id,
         sp_person_id => $user_id
     });
-    $protocol->set_alleles($parsed_data);
+    $protocol->set_marker_metadata($parsed_data);
 
     $c->stash->{rest} = { success => 1 };
     return;
 }
 
-sub genotyping_protocol_get_mla : Path('/ajax/genotyping_protocol/get_major_loci_alleles') : ActionClass('REST') { }
+sub genotyping_protocol_get_marker_metadata : Path('/ajax/genotyping_protocol/get_marker_metadata') : ActionClass('REST') { }
 
-sub genotyping_protocol_get_mla_GET : Args(1) {
+sub genotyping_protocol_get_marker_metadata_GET : Args(1) {
     my $self = shift;
     my $c = shift;
     my $protocol_id = shift;
@@ -385,9 +390,9 @@ sub genotyping_protocol_get_mla_GET : Args(1) {
         bcs_schema => $schema,
         nd_protocol_id => $protocol_id
     });
-    my $alleles = $protocol->get_alleles($marker_name);
+    my $metadata = $protocol->get_marker_metadata($marker_name);
 
-    $c->stash->{rest} = $alleles || {};
+    $c->stash->{rest} = $metadata || {};
     return;
 }
 

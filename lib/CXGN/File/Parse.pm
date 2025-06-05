@@ -476,6 +476,9 @@ sub clean_value {
     # trim whitespace
     $value =~ s/^\s+|\s+$//g;
 
+    # trim unicode no-break space
+    $value =~s/\xa0//g;
+
     # split values
     if ( $column && $column_arrays && exists $column_arrays->{$column} ) {
       my $delim = $column_arrays->{$column};

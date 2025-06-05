@@ -1,4 +1,4 @@
-package CXGN::Genotype::ParseUpload::Plugin::MajorLociAlleles;
+package CXGN::Genotype::ParseUpload::Plugin::MarkerMetadata;
 
 use Moose::Role;
 use CXGN::File::Parse;
@@ -24,6 +24,12 @@ sub _validate_with_plugin {
         file => $filename,
         required_columns => [ 'Locus', 'Allele' ],
         optional_columns => [ 'Description', 'Category', 'Reference' ],
+        column_aliases => {
+            'Locus' => [ 'Marker', 'Major Locus', 'Gene' ],
+            'Allele' => [ 'Alleles' ],
+            'Category' => [ 'Categories' ],
+            'Reference' => [ 'References' ]
+        },
         column_arrays => [ 'Allele', 'Category', 'Reference' ]
     );
     my $parsed = $parser->parse();
@@ -55,7 +61,7 @@ sub _validate_with_plugin {
         }
     }
 
-    # Make sure the major loci don't already exist in the phenome.locus table
+    # Make sure the markers don't already exist in the phenome.locus table
     my $phs = join ',', map { "?" } @markers;
     my $q = "SELECT locus_name FROM phenome.locus WHERE locus_name IN ($phs)";
     my $h = $dbh->prepare($q);
@@ -113,17 +119,17 @@ sub _validate_with_plugin {
         push @error_messages, "The following alleles were included in your file more than once: " . join(', ', sort @duplicated_alleles);
     }
 
-    # Ensure that the major locus trait ontology root is set in the config
-    if ( ! $self->{major_locus_trait_ontology_root} ) {
-        push @error_messages, "The major locus trait ontology is not set in the server config.";
+    # Ensure that the marker trait ontology root is set in the config
+    if ( ! $self->{marker_metadata_trait_ontology_root} ) {
+        push @error_messages, "The marker metadata trait ontology is not set in the server config.";
     }
 
     # Check the trait categories against the ontology terms
     else {
-        my $ontology_root = $self->{major_locus_trait_ontology_root};
+        my $ontology_root = $self->{marker_metadata_trait_ontology_root};
 
         # Get cvterm of root term
-        my ($db_name, $accession) = split ":", $self->{major_locus_trait_ontology_root};
+        my ($db_name, $accession) = split ":", $self->{marker_metadata_trait_ontology_root};
         my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
         my $dbxref;
         $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
@@ -141,16 +147,15 @@ sub _validate_with_plugin {
 
         # Ensure the trait categories are valid ontology terms
         my @missing_categories;
-        foreach (@categories) {
-            my $category = lc $_;
-            if ( ! exists $ontology_terms->{$category} ) {
+        foreach my $category (@categories) {
+            if ( ! exists $ontology_terms->{lc $category} ) {
                 push @missing_categories, $category;
             }
         }
 
         # Return an error if there are missing categories
         if ( scalar(@missing_categories) > 0 ) {
-            push @error_messages, "The following trait categories are not in the major locus trait ontology: " . join(', ', @missing_categories);
+            push @error_messages, "The following trait categories are not in the marker metadata trait ontology: " . join(', ', @missing_categories);
         }
 
         # Cache the parsed ontology terms
@@ -232,7 +237,7 @@ sub _parse_with_plugin {
     my $existing_dbs = $self->parsed_dbs();
 
     # Aggregate allele values by locus name
-    my %major_loci;
+    my %marker_metadata;
     foreach my $row (@$parsed_data) {
         my $locus = $row->{'Locus'};
         my $description = $row->{'Description'};
@@ -244,6 +249,7 @@ sub _parse_with_plugin {
         my @categories;
         foreach (@$category_names) {
             my $name = lc $_;
+            $name =~ s/^\s+|\s+$//g;
             my $id = $ontology_terms->{$name};
             if ( defined $id ) {
                 push @categories, $id;
@@ -262,7 +268,7 @@ sub _parse_with_plugin {
             }
         }
 
-        $major_loci{$locus} = {
+        $marker_metadata{$locus} = {
             locus => $locus,
             description => $description,
             alleles => $alleles,
@@ -272,7 +278,7 @@ sub _parse_with_plugin {
     }
 
     # Set parsed data
-    $self->_set_parsed_data(\%major_loci);
+    $self->_set_parsed_data(\%marker_metadata);
 }
 
 1;
