@@ -7,16 +7,16 @@ jQuery(document).ready(function (){
     get_select_box('genotyping_protocol','selected_protocol', {'empty':1});
 
     var lo = new CXGN.List();
-    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a markerset', 'refresh', 'hide_public_lists' ));
+    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a list of marker alleles', 'refresh', 'hide_public_lists' ));
 
     var list = new CXGN.List();
-    jQuery('#selected_marker_set2').html(list.listSelect('selected_marker_set2', ['markers'], 'Select a markerset', 'refresh', undefined));
+    jQuery('#selected_marker_set2').html(list.listSelect('selected_marker_set2', ['markers'], 'Select a list of marker alleles', 'refresh', undefined));
 
 
     jQuery("#save_marker_set").click(function(){
         var name = $('#new_marker_set').val();
         if (!name) {
-            alert("Markerset name is required");
+            alert("List name is required");
             return;
         }
 
@@ -87,7 +87,7 @@ jQuery(document).ready(function (){
 
         var markerSetID = $('#selected_marker_set1').val();
         if (markerSetID == '') {
-            alert("Markerset name is required");
+            alert("List name is required");
             return;
         }
 
@@ -172,7 +172,7 @@ jQuery(document).ready(function (){
     jQuery("#add_parameters").click(function(){
         var markerSetName = $('#selected_marker_set2').val();
         if (!markerSetName) {
-            alert("Markerset name is required");
+            alert("List name is required");
             return;
         }
 
@@ -236,7 +236,7 @@ function show_table() {
         'destroy': true,
         'ajax':{'url': '/marker_sets/available'},
         'columns': [
-            {title: "Markerset Name", "data": "markerset_name"},
+            {title: "List Name", "data": "markerset_name"},
             {title: "Number of Markers", "data": "number_of_markers"},
             {title: "Description", "data": "description"},
             {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'showMarkersetDetail("+row.markerset_id+")'>Detail</a>" ;}},
