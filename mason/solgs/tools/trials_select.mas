@@ -52,14 +52,12 @@ my $collapsible = 0;
   title       => $title
 &>
 
-<div id='trials_select_div'>
+<div id='trials_select_div' class="col-xs-12 col-sm-6 col-md-4">
     <select id="trial_select" class="form-control">
         <option value="" disabled selected>Select a trial</option>
         <!-- Options will be dynamically populated -->
     </select>
 </div>
-
-</&>
 
 <input type="hidden" id="dataset_id" value="<% $dataset_id %>" />
 <input type="hidden" id="dataset_name" value="<% $dataset_name %>" />
@@ -67,5 +65,9 @@ my $collapsible = 0;
 <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" />
 <input type="hidden" id="data_structure" value="<% $data_structure %>" />
 <input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
+
+</&>
+
+
 
 <& /util/import_javascript.mas, classes => ["solGS.trialsSelect"] &>

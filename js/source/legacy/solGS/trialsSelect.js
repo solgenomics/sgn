@@ -99,7 +99,7 @@ jQuery(document).ready(function () {
                 // Process and display the trials
                 console.log("Trials for dataset " + datasetName + ": ", trials);
                 var trialSelect = jQuery("#trial_select");
-                trialSelect.empty(); 
+                // trialSelect.empty(); 
 
                 var datasetOption = jQuery("<option></option>")
                     .attr("value", datasetId)
