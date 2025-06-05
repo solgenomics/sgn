@@ -788,13 +788,13 @@ sub check_measurement {
                     $warning_message .= "<small>$plot_name already has a <strong>different value</strong> stored in the database ($prev) than in your file (" . ($trait_value ? $trait_value : "<em>blank</em>") . ") for the trait $trait_name.</small><hr>";
                 }
             }
-
-            #check if the plot_name, trait_name combination already exists in same file.
-            if (exists($self->check_file_stock_trait_duplicates->{$trait_cvterm_id, $stock_id})) {
-                $warning_message .= "<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
-            }
-            $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id} = 1;
         }
+
+        #check if the plot_name, trait_name, timestamp combination already exists in same file.
+        if (exists($self->check_file_stock_trait_duplicates->{$trait_cvterm_id, $stock_id, $timestamp})) {
+            $warning_message .= "<small>$plot_name has a duplicate value ($trait_value) for trait $trait_name in your file</small><hr>";
+        }
+        $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id, $timestamp} = 1;
     }
 
     ## Verify metadata
