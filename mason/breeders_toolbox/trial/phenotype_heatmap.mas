@@ -10,7 +10,7 @@ $has_plant_entries => undef
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
 <& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
-<style>
+<style id='heatmap_stylesheet'>
     #trait_heatmap {display: inline; }
     #trial_no_phenoMSG {display: none; }
     #trial_no_rowColMSG {display: none; }
@@ -151,7 +151,7 @@ $has_plant_entries => undef
 
 <div id="container_legend">
 
-    <ul class="legend">
+    <ul id='legend_list' class="legend">
         <li><span class="border_plots"></span> Border Plots and Filler Plots </li>
         <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...) </li>
         <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
@@ -208,6 +208,7 @@ $has_plant_entries => undef
         <div class="interactive_fieldmap_buttons">
             <button type="button" class="btn btn-primary fieldmap_edit" id="transpose_fieldmap">Transpose</button>
             <button type="button" class="btn btn-primary fieldmap_edit" id="change_dimensions_button">Change Dimensions</button>
+            <button type="button" id="print_fieldmap" name="print_fieldmap" class="btn btn-primary fieldmap_edit">Print Fieldmap</button>
             <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success fieldmap_edit">Submit Field Layout</button>
         </div>
     </div>
@@ -1565,6 +1566,29 @@ function _finish() {
            heatmap_check_change(this.value);
        });
    });
+
+   jQuery('#print_fieldmap').click(function(){
+
+    alert("You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.");
+
+    let printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write('<html><head><title>Print</title></head><body style="display: flex;justify-content: center;align-items: center;flex-direction: column;margin: 0;">')
+
+    var title = document.querySelector("#trait_list_dropdown option:checked").textContent;
+
+    printWindow.document.write('<h1>' + title + '</h1>');
+
+    divIds = ['heatmap_stylesheet','legend_list','fieldmap_chart'];
+    divIds.forEach(id => {
+        let divContent = document.getElementById(id).cloneNode(true); 
+        printWindow.document.body.appendChild(divContent);
+    });
+
+    printWindow.document.write('</body></html>');
+    printWindow.document.close(); 
+    printWindow.print(); 
+
+   })
 
 });
 
