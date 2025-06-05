@@ -80,7 +80,7 @@ $trial_stock_type => undef
         </div>
     </div>
     <div style="display: flex; align-items: center; justify-content: center; margin-top:20px">
-        <button id="repetitive_measurement_select_button" class="btn btn-primary">Submit</button>
+        <button id="repetitive_measurement_select_button" disabled class="btn btn-primary">Submit</button>
     </div>
     <br>
     <table id="repetitive_measurement_data_table" style="width:100%">
@@ -259,6 +259,15 @@ jQuery(document).ready(function() {
         menu += '</select>';
         jQuery('#select_trait_for_repetitive_data_and_plot').html(menu);
         selectedTraitId = jQuery('#selectRawDataTrait option:first').val();
+
+	if (selectedTraitId !== undefined) {
+	   //alert('Enabling button!');
+	   jQuery('#repetitive_measurement_select_button').prop('disabled', false);
+	}
+	else {
+            //alert('disabling  button!');
+            jQuery('#repetitive_measurement_select_button').prop('disabled', true);
+	     }
         //console.log("first trait ID selected:", selectedTraitId);
     }
 
