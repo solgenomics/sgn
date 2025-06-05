@@ -267,6 +267,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my ($self, $c) = @_;
     my $dataTableData = $c->req->param("dataTableData");
     my $include_rc_random = $c->req->param("include_rc_random");
+    my $genotype_as_random = $c->req->param("genotype_as_random");
+    my $nseg_degree = $c->req->param("nseg_degree");
     print STDERR "DATA TABLE DATA: $dataTableData\n";
     # Convert the DataTable data back into an array
     my @dataTableArray = map { [split(/\t/, $_)] } split(/\n/, $dataTableData);
@@ -304,6 +306,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         $phenotype_file,
         $phenotype_file.".spatial_correlation_summary", 
         $include_rc_random,
+        $genotype_as_random,
+        $nseg_degree,
         "'".$headers_string."'",
 	);
 
@@ -315,6 +319,20 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my @result;
 
     open(my $F, "<", "$phenotype_file.spatially_corrected") || die "Can't open result file $phenotype_file.spatially_corrected";
+
+    open(my $moranF, "<", "$phenotype_file.moran") || die "Can't get new moran p values file!";
+
+    open(my $modelF, "<", "$phenotype_file.model_string") || die "Can't get model call file!";
+
+    my @moran_p_values;
+    while (<$moranF>) {
+        chomp;
+        my ($trait, $p_value) = split("\t", $_);
+        push @moran_p_values, [$trait, $p_value];
+    }
+
+    my $model_string = <$modelF>;
+    chomp($model_string);
 
     my $accessions = {}; # keeps list of unique accessions
     my $nested_data = {}; # formats the result data for saving the analysis
@@ -385,6 +403,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
                 ''
             ];
             $projectprop_data->{$plot}->{$traits_to_id->{$traits[$i / 3]}} = $adjustment;
+            # $projectprop_data->{$plot}->{$traits[$i / 3]} = $adjustment;
         }
 
         $analysis_design->{$datarow_num} = {
@@ -422,7 +441,9 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         traits => \@traits,
         nested_data => JSON::Any->encode($nested_data),
         analysis_design => JSON::Any->encode($analysis_design),
-        projectprop_data => JSON::Any->encode($projectprop_data)
+        projectprop_data => JSON::Any->encode($projectprop_data),
+        moran_p_values => \@moran_p_values,
+        model_string => $model_string
     };
 
 };
@@ -586,7 +607,7 @@ sub retrieve_spatial_adjustments: Path('/ajax/spatial_model/retrieve_spatial_adj
     return;
 }
 
-sub verify_corrections_exist: Path('/ajax/spatial_model/verify_corrections_exist/') Args(1) {
+sub get_spatial_adjusted_traits: Path('/ajax/spatial_model/get_spatial_adjusted_traits/') Args(1) {
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
@@ -605,7 +626,7 @@ sub verify_corrections_exist: Path('/ajax/spatial_model/verify_corrections_exist
 
     my $spatial_adjustments_cvtermid = SGN::Model::Cvterm->get_cvterm_row($schema, 'spatially_corrected_trait_adjustments_json', 'project_property')->cvterm_id();
 
-    my $q = 'SELECT projectprop_id FROM projectprop
+    my $q = 'SELECT value FROM projectprop
     WHERE project_id=? AND type_id=?';
 
     my $spatial_adjustments_data_row = $schema->storage->dbh()->prepare($q);
@@ -619,7 +640,19 @@ sub verify_corrections_exist: Path('/ajax/spatial_model/verify_corrections_exist
         return;
     } 
 
-    $c->stash->{rest} = {success => 1};
+    my $traits = {};
+
+    my $spatial_adjustments = JSON::Any->decode($spatial_adjustments_exists);
+
+    foreach my $plot (keys(%{$spatial_adjustments})) {
+        foreach my $trait (keys(%{$plot})) {
+            $traits->{$trait} = 1;
+        }
+    }
+
+    $c->stash->{rest} = {
+        data => JSON::Any->encode($traits)
+    };
     return;
 }
 

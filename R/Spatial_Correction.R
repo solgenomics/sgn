@@ -16,6 +16,7 @@
 
 library(SpATS)
 library(spdep)
+library(dplyr)
 
 # ################################################################################
 # # 2. Declare user-supplied variables.
@@ -28,7 +29,14 @@ if (length(args) < 2) {
 phenotypeFile <- args[1]
 spatialFile <- args[2]
 row_col_as_rc <- args[3]
-spatialHeaders <- args[4]
+genotype_as_random <- FALSE
+if (args[4] == 1) {
+    genotype_as_random <- TRUE
+}
+nseg_degree <- as.numeric(args[5])
+print(nseg_degree)
+spatialHeaders <- args[6]
+
 
 # ################################################################################
 # # 3. Process the phenotypic data.
@@ -61,46 +69,99 @@ output <- data.frame(
     plotNumber = userPheno$plotNumber
 )
 
+round_to_even <- function(n) {
+    ifelse(n %% 2 == 0, round(n), round(n / 2) * 2)
+}
+
+moran_outfile <- paste(phenotypeFile, ".moran", sep="")
+model_string_outfile <- paste(phenotypeFile, ".model_string", sep="")
+
+cat("", sep="\t", file = moran_outfile, append = FALSE) #clear this file if not already empty
+cat("", sep="\t", file = model_string_outfile, append = FALSE)
+
 for (trait in userResponse) {
     spatial_model <- NULL
+    spatial_call <- NULL
     if (row_col_as_rc == 1) {
         spatial_model <- SpATS(
             response = trait,
-            spatial = ~ SAP(colNumber, rowNumber, 
-                nseg = c(round(max(userPheno$rowNumber) / 3), round(max(userPheno$colNumber) / 3)),
-                degree = c(3,3)),
+            spatial = ~ PSANOVA(colNumber, rowNumber, 
+                nseg = c(round_to_even(max(userPheno$colNumber, na.rm = TRUE) * nseg_degree), round_to_even(max(userPheno$rowNumber, na.rm = TRUE) * nseg_degree)),
+                degree = c(3,3),
+                nest.div = 2),
             genotype = "germplasmName",
-            genotype.as.random = TRUE,
+            genotype.as.random = genotype_as_random,
             random = ~ R + C ,
-            data = userPheno
+            fixed = NULL,
+            data = userPheno,
+            control = list(tolerance = 1e-03, monitoring = 1)
         )
+        spatial_call <- paste(sep="", "SpATS(response = trait, spatial = ~ PSANOVA(colNumber, rowNumber, nseg = (", 
+        round_to_even(max(userPheno$colNumber, na.rm = TRUE) * nseg_degree),",", round_to_even(max(userPheno$rowNumber, na.rm = TRUE) * nseg_degree), "), degree = (3,3), nest.div = 2, genotype.as.random = ",
+        genotype_as_random, ", random = ~ R + C, fixed = NULL, control = list(tolerance = 1e-03, monitoring = 1)")
     } else {
         spatial_model <- SpATS(
             response = trait,
-            spatial = ~ SAP(colNumber, rowNumber, 
-                nseg = c(round(max(userPheno$rowNumber) / 3), round(max(userPheno$colNumber) / 3)),
-                degree = c(3,3)),
+            spatial = ~ PSANOVA(colNumber, rowNumber, 
+                nseg = c(round_to_even(max(userPheno$colNumber) * nseg_degree), round_to_even(max(userPheno$rowNumber) * nseg_degree)),
+                degree = c(3,3),
+                nest.div = 2),
             genotype = "germplasmName",
-            genotype.as.random = TRUE,
+            genotype.as.random = genotype_as_random,
             # random = ~ R + C ,
-            data = userPheno
+            data = userPheno,
+            fixed = NULL,
+            control = list(tolerance = 1e-03, monitoring = 1)
         )
+        spatial_call <- paste(sep="", "SpATS(response = trait, spatial = ~ PSANOVA(colNumber, rowNumber, nseg = (", 
+        round_to_even(max(userPheno$colNumber, na.rm = TRUE) * nseg_degree),",", round_to_even(max(userPheno$rowNumber, na.rm = TRUE) * nseg_degree), "), degree = (3,3), nest.div = 2, genotype.as.random = ",
+        genotype_as_random, ", fixed = NULL, control = list(tolerance = 1e-03, monitoring = 1)")
     }
     
     summary(spatial_model)
-    residuals <- residuals(spatial_model)
 
-    trait_vals <- userPheno[[trait]]
+    cat(spatial_call, file = model_string_outfile, append = FALSE)
+
+    residuals <- as.data.frame(residuals(spatial_model))
+    acc_blues <- as.data.frame(predict.SpATS(spatial_model, which='germplasmName'))
+
+    userPheno$residuals <- residuals[["residuals(spatial_model)"]]
+
+    plot_adjusted_vals <- merge(userPheno, acc_blues, by = 'germplasmName', sort = FALSE, all.x = TRUE)
+    rownames(plot_adjusted_vals) <- plot_adjusted_vals$observationUnitName
+
     coordinates <- userPheno[, c("rowNumber", "colNumber"), drop = FALSE]
     k <- 3
     kn <- knearneigh(coordinates, k = k)
     nb <- knn2nb(kn)
     weights <- nb2listw(nb)
-    moran <- moran.test(residuals, weights, na.action = na.exclude )
-    print(paste("Moran p-value for trait ",trait, " : ", moran$p.value)) #sanity check, spatial autocorrelation should be gone
+    moran <- NULL
+    tryCatch({
+            moran <- moran.test(plot_adjusted_vals[[trait]] + plot_adjusted_vals$residuals, weights, na.action = na.exclude )
+        },
+        error = function(e) { #This happens when there is missing data. 
+            moran$p.value <- NaN
+        }, 
+        finally = {
+            print(paste("Moran p-value for trait ",trait, " : ", moran$p.value)) #sanity check, spatial autocorrelation should be gone, residuals should not show a spatial pattern
+            cat(trait, moran$p.value, sep="\t", file = moran_outfile, append = TRUE)
+            cat("\n", sep="\t", file = moran_outfile, append = TRUE)
+        }
+    )
+    domain <- NULL
+    range <- list(min = min(userPheno[[trait]], na.rm = TRUE), max = max(userPheno[[trait]], na.rm = TRUE))
+    if (range$min >= 0 & range$max > 0) { #strictly positive trait vals
+        domain <- list(min = 0, max = Inf)
+    } else if (range$min < 0 & range$max > 0) { # pos or neg trait vals
+        domain <- list(min = -Inf, max = Inf)
+    } else { # strictly neg trait vals
+        domain <- list(min = -Inf, max = 0)
+    }
 
     output[[trait]] <- userPheno[[trait]]
-    output[[paste(trait, "_spatially_corrected", sep = "")]] <- fitted(spatial_model);
+    output[[paste(trait, "_spatially_corrected", sep = "")]] <- plot_adjusted_vals[[trait]] + plot_adjusted_vals$residuals
+    output[[paste(trait, "_spatially_corrected", sep = "")]][output[[paste(trait, "_spatially_corrected", sep = "")]] < domain$min] <- domain$min #prevent out of bounds values
+    output[[paste(trait, "_spatially_corrected", sep = "")]][output[[paste(trait, "_spatially_corrected", sep = "")]] > domain$max] <- domain$max
     output[[paste(trait, "_spatial_adjustment", sep = "")]] <- output[[paste(trait, "_spatially_corrected", sep = "")]] - output[[trait]]
 }
 

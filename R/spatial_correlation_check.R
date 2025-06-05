@@ -222,7 +222,7 @@ for (i in 1:length(userResponse)) {
             moran <- moran.test(trait_vals, weights)
             write(paste("Moran p-value: ", moran$p.value), stderr())
             Moran_pvalue <- round(moran$p.value, 5)
-            spatial_correction_needed <- ifelse(is.na(moran$p.value), "NO", "YES")
+            spatial_correction_needed <- ifelse(moran$p.value > 0.05, "NO", "YES")
         } else {
             # Handle the case when there are not enough data points
             message("There are fewer data points than k.")
