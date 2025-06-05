@@ -381,6 +381,14 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
 });
 
 var projectprop_data;
+var input_file;
+var fitted_data;
+var nested_data;
+var traits;
+var accessionNamesArray;
+var model_properties;
+var analysis_design;
+var model_string;
 
 jQuery("#correct_spatial").click(function() {
   //var dataTableData = jQuery("#spatial_correction_needed_results_table").DataTable().data();
@@ -447,24 +455,18 @@ jQuery("#correct_spatial").click(function() {
           ]
         });
       }
-      let input_file = response.phenotype_file;
-      let fitted_data = response.result;
-      let nested_data = response.nested_data;
-      let traits = response.traits;
-      let accessionNamesArray = response.accession_names;
-      let model_properties = JSON.stringify({ "properties": { "traits": traits } });
-      let analysis_design = response.analysis_design;
+
+      input_file = response.phenotype_file;
+      fitted_data = response.result;
+      nested_data = response.nested_data;
+      traits = response.traits;
+      accessionNamesArray = response.accession_names;
+      console.log(traits);
+      console.log(JSON.stringify({ "properties": { "traits": traits } }));
+      model_properties = JSON.stringify({ "properties": { "traits": traits } });
+      analysis_design = response.analysis_design;
       projectprop_data = response.projectprop_data;
-      let model_string;
-      if (jQuery('#include_rc_random_effects').is(":checked") && jQuery('#genotype_as_random').is(":checked")) {
-        model_string = "SpATS(trait ~ spline(colNumber, rowNumber) + (rowNumber|colNumber) + (1|genotype))";
-      } else if (jQuery('#include_rc_random_effects').is(":checked") && !jQuery('#genotype_as_random').is(":checked")) {
-        model_string = "SpATS(trait ~ genotype + spline(colNumber, rowNumber)  + (rowNumber|colNumber))";
-      } else if (!jQuery('#include_rc_random_effects').is(":checked") && jQuery('#genotype_as_random').is(":checked")) {
-        model_string = "SpATS(trait ~ spline(colNumber, rowNumber) + (1|genotype))";
-      } else {
-        model_string = "SpATS(trait ~ genotype + spline(colNumber, rowNumber))";
-      }
+      model_string = response.model_string;
     }, 
     error: function(error) {
       jQuery('#working_modal').modal('hide');

@@ -137,7 +137,7 @@ $project_id => undef
                 <br>
                 <input name="genotype_as_random" id="genotype_as_random" type="checkbox"/> <label for="genotype_as_random">Use genotype (accession) as a random effect instead of fixed?</label><br> <p><i>In general, accessions should be a fixed effect. But if the accessions of this trial are representative of genetic diversity in the crop as a whole, and are drawn randomly from a larger population of genotypes, you can model them as a random effect.</i></p>
                 <br>
-                <input name="nseg_ratio_select" id="nseg_ratio_select" type="range" min="1" max="100" value="33"><label for="nseg_ratio_select">Degree of smoothing</label><br> <p><i>A high degree of smoothing may oversmooth plot-level variation, but a low degree of smoothing may overfit the data and fail to smooth out field-level spatial variation. The value given is a good starting point.</i></p>
+                <input name="nseg_ratio_select" id="nseg_ratio_select" type="range" min="1" max="100" value="33"><label for="nseg_ratio_select">Degree of smoothing:</label> &nbsp; <span id='nseg_ratio_readout'>0.33</span><br> <p><i>Degree of smoothing refers to the ratio of number of spline segments to the number of rows/columns. A high degree of smoothing may oversmooth plot-level variation, but a low degree of smoothing may overfit the data and fail to smooth out field-level spatial variation. The value given is a good starting point.</i></p>
                 <br>
                 <table style="width:100%">
                   <tr>
@@ -251,6 +251,13 @@ $project_id => undef
 <script defer="defer">
 
 jQuery(document).ready(function () {
+
+  var slider = document.getElementById('nseg_ratio_select');
+  var nseg_val = document.getElementById('nseg_ratio_readout');
+
+  slider.oninput = function() {
+    nseg_val.textContent = this.value / 100;
+  }
 
     var can_modify = '<% $user_can_modify %>';
     // alert('can modify: '+can_modify);

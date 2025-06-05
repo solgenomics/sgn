@@ -303,12 +303,17 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     open(my $moranF, "<", "$phenotype_file.moran") || die "Can't get new moran p values file!";
 
+    open(my $modelF, "<", "$phenotype_file.model_string") || die "Can't get model call file!";
+
     my @moran_p_values;
     while (<$moranF>) {
         chomp;
         my ($trait, $p_value) = split("\t", $_);
         push @moran_p_values, [$trait, $p_value];
     }
+
+    my $model_string = <$modelF>;
+    chomp($model_string);
 
     my $accessions = {}; # keeps list of unique accessions
     my $nested_data = {}; # formats the result data for saving the analysis
@@ -418,7 +423,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
         nested_data => JSON::Any->encode($nested_data),
         analysis_design => JSON::Any->encode($analysis_design),
         projectprop_data => JSON::Any->encode($projectprop_data),
-        moran_p_values => \@moran_p_values
+        moran_p_values => \@moran_p_values,
+        model_string => $model_string
     };
 
 };

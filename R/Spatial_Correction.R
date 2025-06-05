@@ -74,11 +74,14 @@ round_to_even <- function(n) {
 }
 
 moran_outfile <- paste(phenotypeFile, ".moran", sep="")
+model_string_outfile <- paste(phenotypeFile, ".model_string", sep="")
 
-cat("", sep="\t", file = moran_outfile, append = FALSE) #clear this file if not alreay empty
+cat("", sep="\t", file = moran_outfile, append = FALSE) #clear this file if not already empty
+cat("", sep="\t", file = model_string_outfile, append = FALSE)
 
 for (trait in userResponse) {
     spatial_model <- NULL
+    spatial_call <- NULL
     if (row_col_as_rc == 1) {
         spatial_model <- SpATS(
             response = trait,
@@ -93,6 +96,9 @@ for (trait in userResponse) {
             data = userPheno,
             control = list(tolerance = 1e-03, monitoring = 1)
         )
+        spatial_call <- paste(sep="", "SpATS(response = trait, spatial = ~ PSANOVA(colNumber, rowNumber, nseg = (", 
+        round_to_even(max(userPheno$colNumber, na.rm = TRUE) * nseg_degree),",", round_to_even(max(userPheno$rowNumber, na.rm = TRUE) * nseg_degree), "), degree = (3,3), nest.div = 2, genotype.as.random = ",
+        genotype_as_random, ", random = ~ R + C, fixed = NULL, control = list(tolerance = 1e-03, monitoring = 1)")
     } else {
         spatial_model <- SpATS(
             response = trait,
@@ -107,9 +113,15 @@ for (trait in userResponse) {
             fixed = NULL,
             control = list(tolerance = 1e-03, monitoring = 1)
         )
+        spatial_call <- paste(sep="", "SpATS(response = trait, spatial = ~ PSANOVA(colNumber, rowNumber, nseg = (", 
+        round_to_even(max(userPheno$colNumber, na.rm = TRUE) * nseg_degree),",", round_to_even(max(userPheno$rowNumber, na.rm = TRUE) * nseg_degree), "), degree = (3,3), nest.div = 2, genotype.as.random = ",
+        genotype_as_random, ", fixed = NULL, control = list(tolerance = 1e-03, monitoring = 1)")
     }
     
     summary(spatial_model)
+
+    cat(spatial_call, file = model_string_outfile, append = FALSE)
+
     residuals <- as.data.frame(residuals(spatial_model))
     acc_blues <- as.data.frame(predict.SpATS(spatial_model, which='germplasmName'))
 
