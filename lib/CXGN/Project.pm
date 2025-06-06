@@ -3406,8 +3406,10 @@ sub save_plant_entries {
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
 
                 my ($row_num, $col_num);
-                # TODO: implement row and col checks
-                if ($)
+                if ($val->{plant_coords}) {
+                    my $coord_pair = shift(@{$val->{plant_coords}});
+                    ($row_num, $col_num) = split(",", $coord_pair);
+                }
 
                 $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
                 $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
@@ -3720,6 +3722,10 @@ sub save_plant_subplot_entries {
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
 
                 my ($row_num, $col_num);
+                if ($val->{plant_coords}) {
+                    my $coord_pair = shift(@{$val->{plant_coords}});
+                    ($row_num, $col_num) = split(",", $coord_pair);
+                }
 
                 $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
                 $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
