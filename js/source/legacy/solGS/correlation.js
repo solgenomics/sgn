@@ -437,39 +437,42 @@ jQuery(document).ready(function () {
     var corrArgs;
     var corrPopId;
     if (runCorrBtnId.match(/run_corr/)) {
-      corrArgs = solGS.correlation.getPhenoCorrArgs();
-      corrPopId = corrArgs.corr_pop_id;
+        corrArgs = solGS.correlation.getPhenoCorrArgs();
+        corrPopId = corrArgs.corr_pop_id;
 
-      if (!corrPopId) {
-        corrArgs = solGS.correlation.getSelectedPopCorrArgs(runCorrBtnId);
-      }
-  
-    var canvas = solGS.correlation.canvas;
-    var corrPlotDivId = solGS.correlation.corrPlotDivPrefix;
-    var corrMsgDiv = solGS.correlation.corrMsgDiv;
+        if (!corrPopId) {
+            corrArgs = solGS.correlation.getSelectedPopCorrArgs(runCorrBtnId);
+         }
+    
+        corrPopId = corrArgs.corr_pop_id;
+        var canvas = solGS.correlation.canvas;
+        var corrPlotDivId = solGS.correlation.corrPlotDivPrefix;
+        corrPlotDivId = `${corrPlotDivId}_${corrPopId}`;
 
-    runCorrBtnId = `#${runCorrBtnId}`;
-    jQuery(runCorrBtnId).hide();
-    jQuery(`${canvas} .multi-spinner-container`).show();
-    jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
+        var corrMsgDiv = solGS.correlation.corrMsgDiv;
 
-    solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
-      if (res.data) {
-        corrArgs["corr_table_file"] = res.corre_table_file;
-        var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
+        runCorrBtnId = `#${runCorrBtnId}`;
+        jQuery(runCorrBtnId).hide();
+        jQuery(`${canvas} .multi-spinner-container`).show();
+        jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
 
-        solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
+        solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
+        if (res.data) {
+            corrArgs["corr_table_file"] = res.corre_table_file;
+            var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
 
-        jQuery(`${canvas} .multi-spinner-container`).hide();
-        jQuery(corrMsgDiv).empty();
-        jQuery(runCorrBtnId).show();
-      } else {
-        jQuery(`${canvas} .multi-spinner-container`).hide();
+            solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
 
-        jQuery(corrMsgDiv).html("There is no correlation output for this dataset.").fadeOut(8400);
+            jQuery(`${canvas} .multi-spinner-container`).hide();
+            jQuery(corrMsgDiv).empty();
+            jQuery(runCorrBtnId).show();
+        } else {
+            jQuery(`${canvas} .multi-spinner-container`).hide();
 
-        jQuery(runCorrBtnId).show();
-      }
+            jQuery(corrMsgDiv).html("There is no correlation output for this dataset.").fadeOut(8400);
+
+            jQuery(runCorrBtnId).show();
+        }
     });
 
     solGS.correlation.runPhenoCorrelation(corrArgs).fail(function (res) {
