@@ -582,7 +582,9 @@ sub set_marker_metadata {
             my $av_symbol = $av;
             $locus_obj->create_related('alleles', {
                 allele_name => $av,
-                allele_symbol => $av_symbol 
+                allele_symbol => $av_symbol,
+                sp_person_id => $sp_person_id,
+                is_default => 0
             });
         }
 
