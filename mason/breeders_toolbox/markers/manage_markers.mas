@@ -100,11 +100,9 @@ Titima Tantikanjana <tt15@cornell.edu>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-sm-1">
-                        </div>
-                        <div class="col-sm-12 well">
-                            <div class="row">
-                                <div class="col-sm-11">
+                        <div class="col-sm-12">
+                            <div class="row panel panel-default">
+                                <div class="col-sm-12 panel-body">
                                     <div class="form-horizontal">
                                         <div class="form-group">
                                             <label class="control-label col-sm-4">List Name:</label>
@@ -124,6 +122,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                             </div>
                                         </div>
                                         <div id = "markerset_dosage_section" style="display:none">
+                                            <hr />
                                             <div class="form-group">
                                                 <label class="control-label col-sm-4">Marker Name:</label>
                                                 <div class="col-sm-8">
@@ -147,26 +146,58 @@ Titima Tantikanjana <tt15@cornell.edu>
                                             </div>
                                         </div>
                                         <div id = "markerset_snp_section" style="display:none">
-                                            <div class="form-group">
-                                                <label class="control-label col-sm-4">Marker Name:</label>
-                                                <div class="col-sm-8">
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control marker_name" id="marker_name_snp" placeholder="Enter marker name">
+                                            <ul class="nav nav-pills nav-justified" id="markerset_snp_section_tab" style="display: none; margin-bottom: 30px">
+                                                <li class="active" id="markerset_snp_section_single">
+                                                    <a data-toggle="tab" href="#markerset_snp_section_single_tab">
+                                                        Add alleles for a single marker by marker name
+                                                    </a>
+                                                </li>
+                                                <li id="markerset_snp_section_multiple">
+                                                    <a data-toggle="tab" href="#markerset_snp_section_multiple_tab">
+                                                        Add alleles for multiple markers by allele names
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                            <hr />
+                                            <div class="tab-content">
+
+                                                <!-- Specify individual Allele by Marker -->
+                                                <div id="markerset_snp_section_single_tab" class="tab-pane fade in active">
+                                                    <div class="form-group">
+                                                        <label class="control-label col-sm-4">Marker Name:</label>
+                                                        <div class="col-sm-8">
+                                                            <div class="input-group">
+                                                                <input type="text" class="form-control marker_name" id="marker_name_snp" placeholder="Enter marker name">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="control-label col-sm-4">Specify Alleles:</label>
+                                                        <div class="col-sm-8" >
+                                                            <div class="input-group">
+                                                                <select class="form-control" id="allele_1" disabled>
+                                                                    <option value="">Enter marker name first</option>
+                                                                </select>
+                                                                <select class="form-control" id="allele_2" disabled>
+                                                                    <option value="">Enter marker name first</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="control-label col-sm-4">Specify Alleles:</label>
-                                                <div class="col-sm-4" >
-                                                    <div class="input-group">
-                                                        <select class="form-control" id="allele_1" disabled>
-                                                            <option value="">Enter marker name first</option>
-                                                        </select>
-                                                        <select class="form-control" id="allele_2" disabled>
-                                                            <option value="">Enter marker name first</option>
-                                                        </select>
+
+                                                <!-- Specify multiple Alleles by Allele Names -->
+                                                <div id="markerset_snp_section_multiple_tab" class="tab-pane fade in">
+                                                    <div class="form-group">
+                                                        <label class="control-label col-sm-4">Specify Alleles:</label>
+                                                        <div class="col-sm-8" >
+                                                            <div class="input-group">
+                                                                <textarea id="allele_names" class="form-control" rows=10 cols=40></textarea>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
+
                                             </div>
                                         </div>
                                     </div>
