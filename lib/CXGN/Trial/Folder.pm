@@ -74,6 +74,11 @@ has 'folder_for_transformations' => (isa => 'Bool',
 	default => 0,
 );
 
+has 'folder_for_propagations' => (isa => 'Bool',
+	is => 'rw',
+	default => 0,
+);
+
 has 'location_id' => (isa => 'Int',
 	is => 'rw',
 );
@@ -125,6 +130,7 @@ sub BUILD {
 	my $folder_for_genotyping_projects_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_genotyping_projects', 'project_property')->cvterm_id();
 	my $folder_for_tracking_activities_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_tracking_activities', 'project_property')->cvterm_id();
 	my $folder_for_transformations_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_transformations', 'project_property')->cvterm_id();
+	my $folder_for_propagations_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_propagations', 'project_property')->cvterm_id();
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
 	my $analyses_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'analysis_metadata_json', 'project_property')->cvterm_id();
 	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
@@ -154,6 +160,8 @@ sub BUILD {
 			$self->folder_for_tracking_activities(1);
 		} elsif ($folder_type_row->type_id() == $folder_for_transformations_cvterm_id) {
 			$self->folder_for_transformations(1);
+		} elsif ($folder_type_row->type_id() == $folder_for_propagations_cvterm_id) {
+			$self->folder_for_propagations(1);
 		} elsif ($folder_type_row->type_id() == $additional_info_cvterm_id) {
 			my $additional_info = decode_json($folder_type_row->value);
 			$self->additional_info($additional_info);
@@ -222,6 +230,7 @@ sub create {
 	my $folder_for_genotyping_projects = $args->{folder_for_genotyping_projects};
 	my $folder_for_tracking_activities = $args->{folder_for_tracking_activities};
 	my $folder_for_transformations = $args->{folder_for_transformations};
+	my $folder_for_propagations = $args->{folder_for_propagations};
 	my $additional_info = $args->{additional_info} || undef;
 
 	# check if name is already taken
@@ -262,6 +271,10 @@ sub create {
 		my $folder_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_transformations', 'project_property');
 		$project->create_projectprops({ $folder_type_cvterm->name() => '1' });
 	}
+	if ($folder_for_propagations) {
+		my $folder_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_propagations', 'project_property');
+		$project->create_projectprops({ $folder_type_cvterm->name() => '1' });
+	}
 	if ($additional_info){
 		my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_additional_info', 'project_property');
 		$project->create_projectprops({ $additional_info_cvterm->name() => encode_json($additional_info) });
@@ -289,6 +302,7 @@ sub list {
 	my $folder_for_genotyping_projects = $args->{folder_for_genotyping_projects};
 	my $folder_for_tracking_activities = $args->{folder_for_tracking_activities};
 	my $folder_for_transformations = $args->{folder_for_transformations};
+	my $folder_for_propagations = $args->{folder_for_propagations};
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'trial_folder', 'project_property')->cvterm_id();
 	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
 
@@ -318,6 +332,9 @@ sub list {
         $projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
     } elsif ($folder_for_transformations){
         my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_transformations', 'project_property')->cvterm_id();
+        $projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
+    } elsif ($folder_for_propagations){
+        my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_propagations', 'project_property')->cvterm_id();
         $projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
     }
 
@@ -643,6 +660,10 @@ sub get_jstree_html {
         $local_type_of_interest = 'transformation_project';
         $folder_type_of_interest = 'folder_for_transformations';
     }
+	elsif ($project_type_of_interest eq 'propagation') {
+        $local_type_of_interest = 'propagation_project';
+        $folder_type_of_interest = 'folder_for_propagations';
+    }
 
     $html .= _jstree_li_html($schema, $parent_type, $self->{'id'}, $self->{'name'});
     $html .= "<ul>";
@@ -674,7 +695,7 @@ sub get_jstree_html {
             elsif ($children{$child}->{$folder_type_of_interest}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
-            elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_genotyping_trials'} && !$children{$child}->{'folder_for_trials'} && !$children{$child}->{'folder_for_genotyping_projects'} && !$children{$child}->{'folder_for_tracking_activities'} && !$children{$child}->{'folder_for_transformations'} && $children{$child}->{'trial_folder'}) {
+            elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_genotyping_trials'} && !$children{$child}->{'folder_for_trials'} && !$children{$child}->{'folder_for_genotyping_projects'} && !$children{$child}->{'folder_for_tracking_activities'} && !$children{$child}->{'folder_for_transformations'} && !$children{$child}->{'folder_for_propagations'} && $children{$child}->{'trial_folder'}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
             elsif (($local_type_of_interest eq 'design' && $children{$child}->{'genotyping_plate'}) || ($local_type_of_interest eq 'design' && $children{$child}->{'genotype_data_project'}) || ($local_type_of_interest eq 'design' && $children{$child}->{'pcr_genotype_data_project'})){
@@ -710,7 +731,7 @@ sub _jstree_li_html {
         $url = "/breeders/program/".$id;
     } elsif ($type eq 'genotyping_project') {
 		$url = "/breeders/trial/".$id;
-    } elsif ($type eq 'activity' || $type eq 'transformation') {
+    } elsif ($type eq 'activity' || $type eq 'transformation' || $type eq 'propagation') {
         $url = "/breeders/trial/".$id;
     }
 

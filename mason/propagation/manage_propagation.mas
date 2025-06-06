@@ -12,7 +12,7 @@ $user_id
 </%perl>
 
 <br />
-<& /page/page_title.mas, title => "Manage Propagation" &>
+<& /page/page_title.mas, title => "Manage Propagations" &>
 
 <div class="container-fluid">
 
