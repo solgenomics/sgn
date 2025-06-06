@@ -1,0 +1,23 @@
+
+<%args>
+$locations
+$programs
+$roles
+$user_id
+</%args>
+
+<%perl>
+    my $subtitle;
+    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_propagation_project_link">Add Propagation Project</button>';
+</%perl>
+
+<br />
+<& /page/page_title.mas, title => "Manage Propagation" &>
+
+<div class="container-fluid">
+
+        <&| /page/info_section.mas, title=>"Propagation" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
+        <& /propagation/propagation_project_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles,  &>
+    </&>
+
+</div>
