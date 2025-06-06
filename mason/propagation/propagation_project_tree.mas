@@ -9,6 +9,8 @@ $user_id => undef
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
+<& /propagation/add_propagation_project.mas, user_id=>$user_id, programs=>\@programs, locations=>\@locations, roles=>\@roles &>
+
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'propagation_project' &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type=>'propagation_project' &>
 <& /breeders_toolbox/folder/folder_move.mas, project_type=>'propagation_project' &>
@@ -59,6 +61,11 @@ jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
+    jQuery('#add_propagation_project_link').click(function() {
+        var lo = new CXGN.List();
+        get_select_box('years', 'propagation_project_year', {'id':'propagation_project_year_select', 'name':'propagation_project_year_select', 'auto_generate':1});
+        jQuery("#add_propagation_project_dialog").modal("show");
+    });
 
     jQuery.ajax( {
         url: '/ajax/breeders/get_trials_with_folders_cached?type=propagation',

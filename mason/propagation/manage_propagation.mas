@@ -8,7 +8,7 @@ $user_id
 
 <%perl>
     my $subtitle;
-    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_propagation_project_link">Add Propagation Project</button>';
+    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_propagation_project_link">Add Propagation Project</button>';
 </%perl>
 
 <br />

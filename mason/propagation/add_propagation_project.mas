@@ -1,0 +1,219 @@
+<%args>
+$programs
+$locations
+</%args>
+
+
+<& /util/import_javascript.mas, classes => ['CXGN.TrialTreeFolders'] &>
+
+<div class="modal fade" id="add_propagation_project_dialog" name="add_propagation_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addPropagationProjectDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header">
+                <button type="reset" class="close" id="add_propagation_project_dismiss_button_1" name="add_propagation_project_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addPropagationProjectDialog">Add New Propagation Project</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "add_propagation_project_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"What are Propagation Projects?" &>
+                            <hr>
+                            <center>
+                                <button id="next_step_add_new_propagation_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <form class="form-horizontal" role="form" name="add_propagation_project_form" id="add_propagation_project_form">
+                            <&| /util/workflow.mas:step, title=> "Add a propagation project" &>
+                                <& /page/page_title.mas, title=>"Enter basic information about the propagation project" &>
+                                    <br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-lable">Project Name: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" type="text" id="propagation_project_name" name="propagation_project_name"  />
+                                        </div>
+                                    </div><br/>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Propagation Type: </label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="propagation_type" name="propagation_type">
+                                                <option value="">Select a Type</option>
+                                                <option value="propagation">Propagation</option>
+                                                <option value="micro_propagation">Micro Propagation</option>
+                                            </select>
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="propagation_project_program" name="propagation_project_program">
+                                                <option value="">Select Breeding Program</option>
+<%perl>
+foreach my $program (@$programs) {
+    if (@$program[3]) {
+        print "<option selected=\"selected\" value='".@$program[0]."'>".@$program[1]."</option>";
+    } else {
+        print "<option value='".@$program[0]."'>".@$program[1]."</option>";
+    }
+}
+</%perl>
+                                            </select>
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Location: </label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="propagation_project_location" name="propagation_project_location">
+                                                <option value="">Select Location</option>
+<%perl>
+    foreach my $location_hashref (@$locations) {
+        my $properties = $location_hashref->{'properties'};
+        my $program = $properties->{'Program'};
+        my $name = $properties->{'Name'};
+        print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
+    }
+</%perl>
+                                            </select>
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Year:</label>
+                                        <div class="col-sm-9">
+                                            <div id="propagation_project_year" name="propagation_project_year" ></div>
+                                        </div>
+                                    </div><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Description:</label>
+                                        <div class="col-sm-9">
+                                            <textarea class="form-control" id="propagation_project_description" name="propagation_project_description" ></textarea>
+                                        </div>
+                                    </div>
+                                <br/>
+                                <br/>
+                                <br/>
+                                <center>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="add_propagation_project_submit" id="add_propagation_project_submit">Submit</button>
+                                </center>
+                            </&>
+                        </form>
+
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your propagation project is now in the database" &>
+                            <ul>
+                                <li>Please click on 'Refresh' button to view your newly created project on the manage page.</li>
+                            </ul>
+                            <br/>
+                        </&>
+                    </&><!-- End of workflow -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="add_propagation_project_dismiss_button_2" name="add_propagation_project_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var selectedProgram = jQuery('#propagation_project_program option:selected').text()
+
+    filter_options(selectedProgram, 'program', 'propagation_project_location');
+
+    jQuery('#propagation_project_program').change(function() {
+        filter_options(jQuery('#propagation_project_program option:selected').text(), 'program', 'propagation_project_location');
+    });
+
+    jQuery("[name='add_propagation_project_dismiss_button']").click(function() {
+        jQuery('#add_propagation_project_dialog').modal('hide');
+        jQuery('#propagation_project_name').val('');
+        jQuery('#propagation_project_program').val('');
+        jQuery('#propagation_project_location').val('');
+        jQuery('#propagation_project_year').val('');
+        jQuery('#propagation_project_description').val('');
+        jQuery('#propagation_type').val('');
+    });
+
+    jQuery('#add_propagation_project_submit').click(function() {
+        var propagation_project_name = jQuery("#propagation_project_name").val();
+        if (!propagation_project_name) {
+            alert("Project name is required");
+            return;
+        }
+
+        var propagation_type = jQuery("#propagation_type").val();
+        if (!propagation_type) {
+            alert ("Propagation Type is required");
+            return;
+        }
+
+        var selectedProgram = jQuery("#propagation_project_program").val();
+        if (!selectedProgram) {
+            alert("Breeding program is required");
+            return;
+        }
+
+        var propagation_project_location = jQuery("#propagation_project_location").val();
+        if (!propagation_project_location) {
+            alert ("Location is required");
+            return;
+        }
+
+        var year = jQuery("#propagation_project_year_select").val();
+        if (!year) {
+            alert ("Year is required");
+            return;
+        }
+
+        var project_description = jQuery('textarea#propagation_project_description').val();
+        if (!project_description) {
+            alert ("Description is required");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/propagation/add_propagation_project',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'project_name': propagation_project_name,
+                'propagation_type': propagation_type,
+                'project_program_id': selectedProgram,
+                'project_location': propagation_project_location,
+                'year': year,
+                'project_description': project_description,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            error: function(response) {
+                alert("An error occurred!" + JSON.stringify(response));
+                return;
+            },
+            parseerror: function(response) {
+                alert("A parse error occurred!" + response);
+                return;
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                }
+                if (response.success == 1) {
+                    Workflow.focus("#add_propagation_project_workflow", -1); //Go to success page
+                    Workflow.check_complete("#add_propagation_project_workflow");
+                }
+            },
+
+        });
+
+    });
+
+});
+
+</script>
