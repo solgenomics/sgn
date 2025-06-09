@@ -653,6 +653,9 @@ $propagation_type => undef
 % if ($info_section_id eq 'propagation_project_details'){
                                 <& /propagation/propagation_project_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner, propagation_type => $propagation_type &>
 % } #End propagation_project_details
+% if ($info_section_id eq 'propagation_ids_in_project_section'){
+                                <& /propagation/propagations_in_project.mas, trial_id=>$trial_id &>
+% } #End propagation_ids_in_project_section
 
 
 % if (!$info_section_id){

@@ -1,0 +1,35 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.List', 'jquery.iframe-post-form' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="propagations_in_project_table">
+        <thead>
+            <tr>
+                <th>Propagation ID</th>
+                <th>Accession</th>
+                <th>Material Type</th>
+                <th>Material Source</th>
+                <th>Rootstock</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Description</th>
+                <th>Operator</th>
+                <th>Number/Amount</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+    var project_id = "<% $trial_id %>";
+
+});
+
+</script>
