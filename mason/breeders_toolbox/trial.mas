@@ -119,7 +119,7 @@ $project_id => undef
           <&| /util/workflow.mas:step, title=> "Check Data Quality" &>
             <& /page/page_title.mas, title=>"Check data quality before running spatial analysis" &>
               <div class="container-fluid">
-                <p>To proceed to check presence of spatial autocorrelation. Click Confirm.</p>
+                <p>To proceed, check presence of spatial autocorrelation. Click Confirm.</p>
                 <button type="button" class="btn btn-primary" name="confirm_calculating_spatial_correction" id="confirm_calculating_spatial_correction">Confirm</button>
                 <br />
                 <br />
@@ -131,19 +131,31 @@ $project_id => undef
               </div>
             </&>
           <&| /util/workflow.mas:step, title=> "Run Spatial Analysis" &>
-            <& /page/page_title.mas, title=>"Run spatial analysis on selected traits" &>
+            <& /page/page_title.mas, title=>"Run corrections for spatially autocorrelated traits" &>
               <div id="spatial_correction_results_buttons">
                 <input name="include_rc_random_effects" id="include_rc_random_effects" type="checkbox" checked/> <label for="include_rc_random_effects">Include rows and columns as random effects?</label><br> <p><i>The spatial corrections model will smooth with 2D splines, but can also include rows and columns as random effects to capture more variability due to spatial autocorrelation. Be sure that subsequent analyses based on these corrections do not attempt to model spatial effects a second time.</i></p>
                 <br>
-                <button id="correct_spatial" type="button" class="btn btn-default"> Run Spatial Correction </button>
+                <input name="genotype_as_random" id="genotype_as_random" type="checkbox"/> <label for="genotype_as_random">Use genotype (accession) as a random effect instead of fixed?</label><br> <p><i>In general, accessions should be a fixed effect. But if the accessions of this trial are representative of genetic diversity in the crop as a whole, and are drawn randomly from a larger population of genotypes, you can model them as a random effect.</i></p>
+                <br>
+                <input name="nseg_ratio_select" id="nseg_ratio_select" type="range" min="1" max="100" value="33"><label for="nseg_ratio_select">Degree of smoothing:</label> &nbsp; <span id='nseg_ratio_readout'>0.33</span><br> <p><i>Degree of smoothing refers to the ratio of number of spline segments to the number of rows/columns. A high degree of smoothing may oversmooth plot-level variation, but a low degree of smoothing may overfit the data and fail to smooth out field-level spatial variation. The value given is a good starting point.</i></p>
+                <br>
+                <table style="width:100%">
+                  <tr>
+                <td><button id="correct_spatial" type="button" class="btn btn-default"> Run Spatial Correction </button></td>
+                <td style="float:right"><button type="button" class="btn btn-primary" name="confirm_store_spatial_correction" id="confirm_store_spatial_correction" data-toggle="modal" data-analysis_type="fitted" data-target="#generic_save_analysis_dialog" disabled>Store Spatial Correction</button></td>
+                  </tr>
+                </table>
               </div>
               <br />
               <hr>
               <div id="trait_spatial_selector"><select id="dropdown" style="">  <option value="">All</option></select></div>
-              <br />
+              <br>
+              <table id= "spatial_correction_new_moran_table" ></table>
+              <br>
+              <hr>
+              <br>
               <table id= "spatial_correction_blue_results_table" ></table>
               <!-- <table id= "spatial_correction_fitted_results_table" ></table> -->
-              <button type="button" class="btn btn-primary" disabled name="confirm_store_spatial_correction" id="confirm_store_spatial_correction" data-toggle="modal" data-analysis_type="fitted" data-target="#generic_save_analysis_dialog">Store Spatial Correction</button>
           </&>
         </&>
       </div>
@@ -239,6 +251,13 @@ $project_id => undef
 <script defer="defer">
 
 jQuery(document).ready(function () {
+
+  var slider = document.getElementById('nseg_ratio_select');
+  var nseg_val = document.getElementById('nseg_ratio_readout');
+
+  slider.oninput = function() {
+    nseg_val.textContent = this.value / 100;
+  }
 
     var can_modify = '<% $user_can_modify %>';
     // alert('can modify: '+can_modify);
