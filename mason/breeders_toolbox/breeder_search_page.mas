@@ -6,6 +6,9 @@ $dataset_id => undef
 <& /util/import_javascript.mas, entries => ["wizard"] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
 <& /page/page_title.mas, title=>"Search Wizard" &>
 
 <div class="row">
@@ -409,7 +412,7 @@ $dataset_id => undef
               <td>
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-timestamp" type="checkbox">
+                    <input class="wizard-download-phenotypes-timestamp" type="checkbox" />
                     Include timestamps
                   </label>
                 </div>
@@ -417,22 +420,48 @@ $dataset_id => undef
               <td colspan="2">
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox">
+                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox" />
                     Include accession entry numbers
                   </label>
                 </div>
               </td>
             </tr>
             <tr>
-              <td colspan="3" style="border-top: none; padding-top: 0">
+              <td style="border-top: none; padding-top: 0">
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-outliers" type="checkbox">
+                    <input class="wizard-download-phenotypes-outliers" type="checkbox" />
                     Supress user defined phenotype outliers
                   </label>
                 </div>
               </td>
+	      <td style="border-top: none; padding-top: 0">
+		Repetitive measurements: <br />
+
+		<select class="wizard-download-repetitive-measurements-type" >
+                  <option value="first">First value</option>
+                  <option value="last">Last value</option>
+                  <option value="average" selected>Averaged value</option>
+                  <option value="sum">Sum values</option>
+                  <option value="all_values_single_line">All Values Single Line</option>
+                  <option value="all_values_multiple_line">All Values Multiple Line</option>
+		</select>
+	      </td>
+	      <td style="border-top: none; padding-top: 0">
+		&nbsp;
+	      </td>
             </tr>
+	    <tr>
+		<td>
+		    From:  <input type="text" class="wizard-download-start-date" id="phenotype_start_date" title="phenotype_start_date"  />
+		</td>
+		<td>
+		    To: <input type="text" class="wizard-download-end-date" id="phenotype_end_date" title="phenotype_end_date" />	
+		</td>
+		<td>
+		    <input type="checkbox" id="include_dateless_items" checked="1" > include items without a date</input>
+		</td>
+		</tr>	
             <tr>
               <td>
                 <span>Trait Name Contains</span>
@@ -798,5 +827,39 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     $(".wizard-download-genotypes-chromosome-number").html(html);
   }
+
+  jQuery('input[title="phenotype_start_date"]').daterangepicker(
+   {
+       "singleDatePicker": true,
+       "showDropdowns": true,
+       "autoUpdateInput": true,
+       "startDate": "1960-01-01",
+       "yearSelect" : true,
+       "minDate": "1960-01-01",
+       "maxDate": "2030-12-31",
+       locale: { 
+        format: 'YYYY-MM-DD'
+      }
+   },
+
+);
+
+
+jQuery('input[title="phenotype_end_date"]').daterangepicker(
+   {
+       "singleDatePicker": true,
+       "showDropdowns": true,
+       "autoUpdateInput": true,
+       //"startDate": "1960-01-01",
+       "yearSelect" : true,
+       "minDate": "1960-01-01",
+       "maxDate": "2030-12-31",
+       locale: { 
+        format: 'YYYY-MM-DD'
+      }
+   },
+
+);
+
 
 </script>

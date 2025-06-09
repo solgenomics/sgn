@@ -24,8 +24,12 @@ my $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
 });
 my ($result, $total_count) = $trial_search->search();
-print STDERR "ALL TRIAL =".Dumper($result)."\n";
-is_deeply($result, [
+
+
+my @sorted_result = sort { $a->{trial_id} <=> $b->{trial_id} } @$result;
+print STDERR "ALL TRIAL =".Dumper(\@sorted_result)."\n";
+
+my @test_data = (
           {
             'design' => 'RCBD',
             'breeding_program_id' => 134,
@@ -212,7 +216,13 @@ is_deeply($result, [
 		'additional_info' => undef
 
           }
-        ], 'trial search test 1');
+);
+
+my @sorted_test_data = sort { $a->{trial_id} <=> $b->{trial_id} } @test_data;
+
+print STDERR "SORTED TEST DATA = ".Dumper(\@sorted_test_data);
+
+is_deeply(\@sorted_result, \@sorted_test_data, "trial search test 1");
 
 $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
@@ -1014,5 +1024,7 @@ eval {
 if ($@) { print "An error occurred: $@\n"; }
 
 like($@, qr/The trial $trial_id does not exist/, "check that trial was deleted");
+
+$f->clean_up_db();
 
 done_testing();
