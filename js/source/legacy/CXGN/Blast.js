@@ -61,9 +61,10 @@ function run_blast(database_types, input_option_types) {
       }
       else{
         jobid = response.jobid; 
+        job_dbid = response.job_dbid;
         seq_count = response.seq_count;
         //alert("SEQ COUNT = "+seq_count);
-        wait_result(jobid, seq_count);
+        wait_result(jobid, job_dbid, seq_count);
       }
     },
     error: function(response) {
@@ -74,7 +75,7 @@ function run_blast(database_types, input_option_types) {
   });
 }
 
-function wait_result(jobid, seq_count) { 
+function wait_result(jobid, job_dbid, seq_count) { 
   update_status('id='+jobid+' ');
   var done = false;
   var error = false;
@@ -83,7 +84,7 @@ function wait_result(jobid, seq_count) {
     
     jQuery.ajax({ 
       async: false,
-      url: '/tools/blast/check/'+jobid,
+      url: '/tools/blast/check/'+jobid+'/'+job_dbid,
       success: function(response) { 
         if (response.status === "complete") { 
           //alert("DONE!!!!");

@@ -1,25 +1,24 @@
 #!/usr/bin/env perl
 
+
 =head1 NAME
 
- UpdateListTypeLocusCvterms.pm
+AddBiochemOnto
 
 =head1 SYNOPSIS
 
-mx-run UpdateListTypeLocusCvterms [options] -H hostname -D dbname -u username [-F]
+mx-run AddBiochemOnto [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-
-This patch adds locus name list type.
-
+This patch adds biochem_ontology cvterm for the post composing tool
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
- Clay Birkett<clb343@cornell.edu>
+Naama Menda <nm249@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -31,25 +30,23 @@ it under the same terms as Perl itself.
 =cut
 
 
-package UpdateListTypeLocusCvterms;
+package AddBiochemOnto;
 
 use Moose;
 use Bio::Chado::Schema;
-use SGN::Model::Cvterm;
 use Try::Tiny;
 extends 'CXGN::Metadata::Dbpatch';
 
 
-
 has '+description' => ( default => <<'' );
-This patch adds locus and locus_alleles list type
+This patch adds the 'biochem_ontology' composable_cvtypes cvterm
 
 has '+prereq' => (
 	default => sub {
         [],
     },
 
-  );
+);
 
 sub patch {
     my $self=shift;
@@ -61,20 +58,12 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-    my $terms = {
-        'list_types' => [
-            'locus',
-	    ],
-    };
+    print STDERR "INSERTING CV TERMS...\n";
 
-    foreach my $t (keys %$terms){
-        foreach (@{$terms->{$t}}){
-            $schema->resultset("Cv::Cvterm")->create_with({
-                name => $_,
-                cv => $t
-            });
-        }
-    }
+    $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'biochem_ontology',
+        cv => 'composable_cvtypes'
+    });
 
     print "You're done!\n";
 }

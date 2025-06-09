@@ -9,6 +9,7 @@ use File::Temp qw| tempfile tempdir |;
 use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
+use CXGN::Job;
 use Text::CSV ("csv");
 use strict;
 use warnings;
@@ -54,16 +55,16 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
     foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols genotyping_projects trial_types trial_designs category_order |) {
 	#print STDERR "Storing data: $type\n";
 
-	my $json = $c->req->param($type);
-	if ($json) {
-	    my $obj = JSON::Any->jsonToObj($json);
-	    $dataset->$type($obj);
-	}
+        my $json = $c->req->param($type);
+        if ($json) {
+            my $obj = JSON::Any->jsonToObj($json);
+            $dataset->$type($obj);
+        }
     }
 
     my $new_id = $dataset->store();
-    print STDERR "==========================\nNew dataset ID: $new_id \n=============================\n";
-    # $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
+
+
 
     $c->stash->{rest} = { message => "Stored Dataset Successfully!", id => $new_id };
 }
@@ -142,8 +143,8 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     }
     close $fh;
 
-    # run cluster with R
-    my $cmd = CXGN::Tools::Run->new({
+    my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $cxgn_tools_run_config = {
         backend => $c->config->{backend},
         submit_host=>$c->config->{cluster_host},
         temp_base => $c->config->{cluster_shared_tempdir} . "/rosners_files",
@@ -151,17 +152,47 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
         do_cleanup => 0,
         # don't block and wait if the cluster looks full
         max_cluster_jobs => 1_000_000_000,
-    });
-
-    $cmd->run_cluster(
+    };
+    my $cmd_str = join(" ", (
         "Rscript ",
         $c->config->{basepath} . "/R/dataset/rosner_test.R",
         $trait_file_path,
         $stat_file_path
-    );
-    $cmd->alive;
-    $cmd->is_cluster(1);
-    $cmd->wait;
+    ));
+
+    my $job = CXGN::Job->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user,
+        name => $dataset->name()." Rosner's test outliers",
+        results_page => "/dataset/$dataset_id",
+        job_type => 'phenotypic_analysis',
+        cmd => $cmd_str,
+        cxgn_tools_run_config => $cxgn_tools_run_config,
+        finish_logfile => $c->config->{job_finish_log}
+    });
+
+    $job->submit();
+
+    while($job->alive()) {
+        sleep(1);
+    }
+    # run cluster with R
+    # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
+
+    # $job_record->update_status("submitted");
+    # $cmd->run_cluster(
+    #     "Rscript ",
+    #     $c->config->{basepath} . "/R/dataset/rosner_test.R",
+    #     $trait_file_path,
+    #     $stat_file_path,
+    #     $job_record->generate_finish_timestamp_cmd()
+    # );
+    # $cmd->alive;
+    # $cmd->is_cluster(1);
+    # $cmd->wait;
+
+    # $job_record->update_status("finished");
 
     # print STDERR Dumper $stat_file_path;
     my $aoa = csv (in => $stat_file_path);   # as array of hash
@@ -434,22 +465,49 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
 	    schema => $c->dbic_schema("Bio::Chado::Schema"),
 	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
 	    sp_dataset_id=> $dataset_id,
-        include_phenotype_primary_key => $include_phenotype_primary_key,
+        include_phenotype_primary_key => $include_phenotype_primary_key
 	});
 
-    my $tool_compatibility;
+    my $genotyping_protocol = $c->config->{default_genotyping_protocol} =~ s/ /_/gr; 
+    my $dbhost = $c->config->{dbhost};
+    my $dbuser = $c->config->{dbuser};
+    my $dbname = $c->config->{dbname};
+    my $dbpass = $c->config->{dbpass};
+    
+    my $cmd = "mx-run CXGN::Dataset::ToolCompatibility".
+                " --dataset_id $dataset_id".
+                " --genotyping_protocol $genotyping_protocol".
+                " --dbhost $dbhost".
+                " --dbname $dbname".
+                " --user $dbuser".
+                " --password $dbpass";
+
+    my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
     eval {
-        $dataset->update_tool_compatibility($c->config->{default_genotyping_protocol});
-        $tool_compatibility = $dataset->tool_compatibility;
+        my $job = CXGN::Job->new({
+            schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            sp_person_id => $user,
+            name => $dataset->name()." tool compatibility check",
+            results_page => "/dataset/$dataset_id",
+            job_type => 'tool_compatibility',
+            cmd => $cmd,
+            finish_logfile => $c->config->{job_finish_log}
+        });
+
+        $job->submit();
     };
+
     if ($@){
         $c->stash->{rest} = {
             error => "Error calculating tool compatibility:\n$@"
         };
     } else {
          $c->stash->{rest} = {
-            tool_compatibility => JSON::Any->encode($tool_compatibility)
-        };
+            message => "Tool compatibility submitted. Check job logs for progress.\n",
+            success => 1
+         };
     }
 }
 
