@@ -71,34 +71,37 @@ jQuery(document).ready(function () {
 
     jQuery("#run_analysis").on("click", function (e) {
 
+      jQuery("#dataset_trials_analysis_message").empty();
       var analysisType = solGS.analysisSelect.getAnalysisType();
+      var analysisPopId = solGS.analysisSelect.getAnalysisPopId();
+      if (!analysisType) {
+        jQuery("#dataset_trials_analysis_message").html("Please select an analysis type.").show();
+      }
+
+      if (!analysisPopId) {   
+        jQuery("#dataset_trials_analysis_message").html("Please select an analysis population.").show();
+      }
+
       console.log("Running analysis of type: ", analysisType);
-
-
-    //   var runCorrBtnId = e.target.id;
   
       var corrArgs;
       var corrPopId;
+      var corrPlotDivId;
       if (analysisType.match(/pearson_correlation/)) {
         corrArgs = corrArgs || {};
         jQuery("#corr_pop_id").val(solGS.analysisSelect.getAnalysisPopId());
-        // corrArgs.corr_pop_id = solGS.analysisSelect.getAnalysisPopId();
         
         corrArgs = solGS.correlation.getPhenoCorrArgs();
         console.log("Correlation args: ", JSON.stringify(corrArgs));
         corrPopId = corrArgs.corr_pop_id;
+        corrPlotDivId = corrArgs.corr_plot_div;
   
-        // if (!corrPopId) {
-        //   corrArgs = solGS.correlation.getSelectedPopCorrArgs(runCorrBtnId);
-        // }
       }
 
       var canvas = solGS.correlation.canvas;
-      var corrPlotDivId = solGS.correlation.corrPlotDivPrefix;
+
       var corrMsgDiv = solGS.correlation.corrMsgDiv;
   
-    //   runCorrBtnId = `#${runCorrBtnId}`;
-    //   jQuery(runCorrBtnId).hide();
       jQuery(`${canvas} .multi-spinner-container`).show();
       jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
   
@@ -111,20 +114,17 @@ jQuery(document).ready(function () {
   
           jQuery(`${canvas} .multi-spinner-container`).hide();
           jQuery(corrMsgDiv).empty();
-        //   jQuery(runCorrBtnId).show();
         } else {
           jQuery(`${canvas} .multi-spinner-container`).hide();
   
           jQuery(corrMsgDiv).html("There is no correlation output for this dataset.").fadeOut(8400);
   
-        //   jQuery(runCorrBtnId).show();
         }
       });
   
       solGS.correlation.runPhenoCorrelation(corrArgs).fail(function (res) {
         jQuery(`${canvas} .multi-spinner-container`).hide();
         jQuery(corrMsgDiv).html("Error occured running the correlation analysis.").fadeOut(8400);
-        // jQuery(runCorrBtnId).show();
       });
 
 })
