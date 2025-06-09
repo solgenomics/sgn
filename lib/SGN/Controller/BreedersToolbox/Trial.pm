@@ -419,6 +419,33 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{default_plant_material_name} = $default_plant_material_name;
         $c->stash->{template} = '/transformation/transformation_project.mas';
     }
+    elsif ($trial_type_name eq "propagation_project"){
+        my $propagation_project_id = $c->stash->{trial_id};
+        my $program_name = $breeding_program_data->[0]->[1];
+        my $locations = $program_object->get_all_locations_by_breeding_program();
+        my @locations_by_program;
+        foreach my $location_hashref (@$locations) {
+            my $properties = $location_hashref->{'properties'};
+            my $program = $properties->{'Program'};
+            my $name = $properties->{'Name'};
+            if ($program eq $program_name) {
+                push @locations_by_program, $name;
+            }
+        }
+        my $locations_by_program_json = encode_json(\@locations_by_program);
+        $c->stash->{locations_by_program_json} = $locations_by_program_json;
+
+        my $propagation_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_type', 'project_property')->cvterm_id();
+        my $propagation_type_rs = $schema->resultset("Project::Projectprop")->find ({
+            project_id =>  $propagation_project_id,
+            type_id => $propagation_type_cvterm_id
+        });
+        my $propagation_type = $propagation_type_rs->value;
+        $c->stash->{propagation_type} = $propagation_type;
+
+        $c->stash->{template} = '/propagation/propagation_project.mas';
+    }
+
     else {
         my $field_management_factors = $c->config->{management_factor_types};
         my @management_factor_types = split ',',$field_management_factors;

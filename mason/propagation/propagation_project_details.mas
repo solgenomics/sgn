@@ -1,0 +1,132 @@
+<%args>
+$trial_id
+$trial_name
+$breeding_program_name
+$breeding_program_id
+$location_name
+$country_name
+$year
+$trial_description
+$folder_name
+$folder_id
+$identifier_prefix
+$trial_owner
+$propagation_type
+</%args>
+
+
+<div class="row">
+    <div class="col-sm-12">
+        <table class="table table-hover table-bordered" >
+            <tr>
+                <td><b>Propagation Project Name</b></td>
+                <td>
+                    <div id="trial_name">
+% if ($trial_name) {
+%     print "$trial_name";
+% } else {
+%     print "<span class='text-danger'>[No Propagation Project Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Propagation Type</b></td>
+                <td>
+                    <div id="propagation_type">
+% if ($propagation_type) {
+%     print "$propagation_type";
+% } else {
+%     print "<span class='text-danger'>[No Propagation Type]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Breeding Program </b></td>
+                <td>
+                    <span id="breeding_program">
+% if ($breeding_program_name) {
+%     print "$breeding_program_name";
+% }
+% else {
+%     print "<span class='text-danger'>[No Breeding Program]</span>";
+% }
+                    </span>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Location</b></td>
+                <td>
+                    <div id="trial_location">
+% if ($location_name) {
+%     print "$location_name ( $country_name )";
+% } else {
+%     print "<span class='text-danger'>[No Location]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Year</b></td>
+                <td>
+                    <div id="trial_year">
+% if ($year) {
+%    print "$year";
+% } else {
+%     print "<span class='text-danger'>[No Year]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+% if ($trial_description) {
+%     print "<div id='trial_description' style='white-space: pre-wrap;'>$trial_description</div>";
+% } else {
+%     print "<div id='trial_description'><span class='text-danger'>[No Description]</span></div>";
+% }
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Folder</b></td>
+                <td>
+                    <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+                    <br/><br/>
+                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Created by</b></td>
+                <td>
+                    <div id="trial_owner">
+% if ($trial_owner) {
+%     print "$trial_owner";
+% } else {
+%     print "<span class='text-danger'>[N/A]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+</div>
+</br>
+
+
+<script>
+
+jQuery(document).ready(function($) {
+
+
+});
+
+</script>
