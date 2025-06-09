@@ -238,15 +238,22 @@ sub _parse_with_plugin {
             $num_cols = $worksheet->get_cell($row,3)->value();
         }
 
-        my $rownum = 1;
+        my @coord_pairs;
+
+        if ($num_rows && $num_cols) {
+            for my $r (1 .. $num_rows){
+                for my $c (1 .. $num_cols) {
+                    push @coord_pairs, $r.','.$c;
+                }
+            }
+        }
+
         for my $i (1 .. $num_plants_per_subplot) {
             my $plant_name = $subplot_name."_plant_".$i;
-            my $colnum = $i % $num_cols; 
-            if ($colnum == 0) {
-                $colnum = $num_cols;
-                $rownum++;
+            my ($r, $c);
+            if (@coord_pairs) {
+                ($r, $c) = split(',',shift(@coord_pairs));
             }
-
             #skip blank lines
             if (!$subplot_name && !$plant_name) {
                 next;
@@ -258,8 +265,8 @@ sub _parse_with_plugin {
                     subplot_stock_id => $subplot_lookup{$subplot_name},
                     plant_name => $plant_name,
                     plant_index_number => $i,
-                    row_num => $rownum,
-                    col_num => $colnum
+                    row_num => $r,
+                    col_num => $c
                 };
             } else {
                 push @{$parsed_entries{'data'}}, {

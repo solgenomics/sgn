@@ -125,8 +125,6 @@ sub _validate_with_plugin {
             $seen_plot_names{$plot_name}=$row_name;
         }
 
-        if ()
-
         if (!$num_plants_per_plot || $num_plants_per_plot eq '') {
             push @error_messages, "Cell B$row_name: num_plants_per_plot missing";
         } if (!($num_plants_per_plot =~ /^\d+?$/)) {
@@ -241,15 +239,23 @@ sub _parse_with_plugin {
             $num_cols = $worksheet->get_cell($row,3)->value();
         }
 
-        my $rownum = 1;
+        my @coord_pairs;
+
+        if ($num_rows && $num_cols) {
+            for my $r (1 .. $num_rows){
+                for my $c (1 .. $num_cols) {
+                    push @coord_pairs, $r.','.$c;
+                }
+            }
+        }
+
         for my $i (1 .. $num_plants_per_plot) {
             my $plant_name = $plot_name."_plant_".$i;
-            my $colnum = $i % $num_cols; 
-            if ($colnum == 0) {
-                $colnum = $num_cols;
-                $rownum++;
+            my ($r, $c);
+            if (@coord_pairs) {
+                ($r, $c) = split(',',shift(@coord_pairs));
             }
-
+            
             #skip blank lines
             if (!$plot_name && !$plant_name) {
                 next;
@@ -261,8 +267,8 @@ sub _parse_with_plugin {
                     plot_stock_id => $plot_lookup{$plot_name},
                     plant_name => $plant_name,
                     plant_index_number => $i,
-                    row_num => $rownum,
-                    col_num => $colnum
+                    row_num => $r,
+                    col_num => $c
                 };
             } else {
                 push @{$parsed_entries{'data'}}, {
