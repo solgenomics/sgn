@@ -56,7 +56,7 @@ CXGN.List = function () {
 
 // Keep track of the rendered lists page number and sort column between refreshes
 var render_lists_page = 0;  // first page
-var render_lists_order = [[0, "asc"]];  // sort by list name, ascending
+var render_lists_order = [[3, "desc"], [2, "desc"]];  // sort by date modified and created, newest first
 
 
 CXGN.List.prototype = {
@@ -397,8 +397,8 @@ CXGN.List.prototype = {
             if ( (!type || type === lists[i][5]) && (autocreated || !(lists[i][2] || '').startsWith("Autocreated")) ) {
                 html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
                 html += '<td>'+(lists[i][2] ? lists[i][2] : '')+'</td>';
-                html += '<td>'+(lists[i][7] ? new Date(lists[i][7]).toLocaleDateString() : '')+'</td>';
-                html += '<td>'+(lists[i][8] ? new Date(lists[i][8]).toLocaleDateString() : '')+'</td>';
+                html += '<td>'+(lists[i][7] ? new Date(lists[i][7]).toLocaleDateString('en-CA') : '')+'</td>';
+                html += '<td>'+(lists[i][8] ? new Date(lists[i][8]).toLocaleDateString('en-CA') : '')+'</td>';
                 html += '<td>'+(lists[i][3] ? lists[i][3] : '0')+'</td>';
                 html += '<td>'+(lists[i][5] ? lists[i][5] : '&lt;NOT SET&gt;')+'</td>';
                 html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
