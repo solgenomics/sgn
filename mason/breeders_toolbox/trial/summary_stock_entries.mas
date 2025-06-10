@@ -1,5 +1,6 @@
 <%args>
 $trial_id
+$trial_stock_type
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -20,7 +21,13 @@ $trial_id
                 <table class="table table-hover table-bordered display nowrap" id="summary_stock_entry_table">
                     <thead>
                         <tr>
+% if ($trial_stock_type eq 'cross') {
+                            <th>Cross Unique ID</th>
+% } elsif ($trial_stock_type eq 'family_name') {
+                            <th>Family Name</th>
+% } else {
                             <th>Accession</th>
+% }
                             <th>Plot</th>
                             <th>Plant</th>
                             <th>Tissue Sample</th>
