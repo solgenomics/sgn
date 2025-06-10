@@ -123,3 +123,27 @@ jQuery(document).ready(function () {
     }
 
 });
+
+jQuery(document).on("change", "#trial_select", function () {
+    var selectedTrial = jQuery(this).val();
+    console.log("Selected Trial: ", selectedTrial);
+    
+    if (selectedTrial) {
+        
+        jQuery("#analysis_pop_name").val(jQuery(this).find("option:selected").text());
+        console.log("Analysis Pop ID set to: " + selectedTrial);
+        if (!jQuery(this).find("option:selected").text().match(/Dataset:/)) {
+            jQuery("#data_structure").val("trial");
+            console.log("Data structure set to 'trial'");
+            jQuery("#analysis_pop_id").val(selectedTrial);
+        } else {
+            jQuery("#data_structure").val("dataset");
+            jQuery("#analysis_pop_id").val(`dataset_${selectedTrial}`);
+            console.log("Data structure set to 'dataset'");
+        }
+
+        console.log("You have selected trial with ID: " + selectedTrial);
+    } else {
+        console.log("No trial selected.");
+    }
+});
