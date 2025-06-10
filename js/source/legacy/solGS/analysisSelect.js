@@ -74,6 +74,8 @@ jQuery(document).ready(function () {
       jQuery("#dataset_trials_analysis_message").empty();
       var analysisType = solGS.analysisSelect.getAnalysisType();
       var analysisPopId = solGS.analysisSelect.getAnalysisPopId();
+      console.log("Analysis Type: ", analysisType);
+        console.log("Analysis Population ID: ", analysisPopId);
       if (!analysisType) {
         jQuery("#dataset_trials_analysis_message").html("Please select an analysis type.").show();
       }
@@ -90,7 +92,10 @@ jQuery(document).ready(function () {
       if (analysisType.match(/pearson_correlation/)) {
         corrArgs = corrArgs || {};
         jQuery("#corr_pop_id").val(solGS.analysisSelect.getAnalysisPopId());
-        
+        jQuery("#data_type").val("Phenotype");
+        if (jQuery("#corr_pop_id").val().match(/dataset/) === "") {
+          jQuery("#data_structure").val('dataset');
+        }
         corrArgs = solGS.correlation.getPhenoCorrArgs();
         console.log("Correlation args: ", JSON.stringify(corrArgs));
         corrPopId = corrArgs.corr_pop_id;
