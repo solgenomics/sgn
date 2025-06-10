@@ -1491,9 +1491,9 @@ for my $extension ("xls", "xlsx") {
 
     my $first_stock_linkage = $all_entries[0];
     my $accession_name_1 = $first_stock_linkage->[0];
-    my $plot_name_1 = $first_stock_linkage->[2];
-    my $plant_name_1 = $first_stock_linkage->[4];
-    my $tissue_sample_name_1 = $first_stock_linkage->[6];
+    my $plot_name_1 = $first_stock_linkage->[3];
+    my $plant_name_1 = $first_stock_linkage->[5];
+    my $tissue_sample_name_1 = $first_stock_linkage->[7];
     is($accession_name_1, 'test_accession1');
     is($plot_name_1, 'test_trial211');
     is($plant_name_1, 'test_trial211_plant_1');
@@ -1501,9 +1501,9 @@ for my $extension ("xls", "xlsx") {
 
     my $second_stock_linkage = $all_entries[1];
     my $accession_name_2 = $second_stock_linkage->[0];
-    my $plot_name_2 = $second_stock_linkage->[2];
-    my $plant_name_2 = $second_stock_linkage->[4];
-    my $tissue_sample_name_2 = $second_stock_linkage->[6];
+    my $plot_name_2 = $second_stock_linkage->[3];
+    my $plant_name_2 = $second_stock_linkage->[5];
+    my $tissue_sample_name_2 = $second_stock_linkage->[7];
     is($accession_name_2, 'test_accession1');
     is($plot_name_2, 'test_trial211');
     is($plant_name_2, 'test_trial211_plant_1');
@@ -1511,9 +1511,9 @@ for my $extension ("xls", "xlsx") {
 
     my $third_stock_linkage = $all_entries[2];
     my $accession_name_3 = $third_stock_linkage->[0];
-    my $plot_name_3 = $third_stock_linkage->[2];
-    my $plant_name_3 = $third_stock_linkage->[4];
-    my $tissue_sample_name_3 = $third_stock_linkage->[6];
+    my $plot_name_3 = $third_stock_linkage->[3];
+    my $plant_name_3 = $third_stock_linkage->[5];
+    my $tissue_sample_name_3 = $third_stock_linkage->[7];
     is($accession_name_3, 'test_accession1');
     is($plot_name_3, 'test_trial211');
     is($plant_name_3, 'test_trial211_plant_1');
