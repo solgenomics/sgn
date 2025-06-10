@@ -5735,11 +5735,20 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
     my $stock_entries = $trial->get_stock_entry_summary();
-
+    
     my @summary;
     foreach my $entry (@$stock_entries) {
-        my ($accession_name, $accession_id, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$entry;
-        push @summary, [qq{<a href="/stock/$accession_id/view">$accession_name</a>}, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>}];
+        my ($parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$entry;
+        my $parent_stock_link;
+        if ($parent_stock_type eq 'accession') {
+            $parent_stock_link = qq{<a href="/stock/$parent_stock_id/view">$parent_stock_name</a>};
+        } elsif ($parent_stock_type eq 'cross') {
+            $parent_stock_link = qq{<a href="/cross/$parent_stock_id">$parent_stock_name</a>};
+        } elsif ($parent_stock_type eq 'family_name') {
+            $parent_stock_link = qq{<a href="/family/$parent_stock_id">$parent_stock_name</a>};
+        }
+
+        push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>}];
     }
 
 
