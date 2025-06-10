@@ -39,3 +39,6 @@ $data_structure => undef
 </div>
 
 </div>
+
+
+<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>

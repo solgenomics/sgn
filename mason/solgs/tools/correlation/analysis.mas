@@ -100,4 +100,5 @@ if ($url !~ /correlation\/analysis/) {
 </div>
 </&>
 
-<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>
+
+
