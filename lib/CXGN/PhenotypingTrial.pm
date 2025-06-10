@@ -6,6 +6,7 @@ use Moose;
 extends 'CXGN::Project';
 
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 =head2 function set_field_trials_source_field_trials()
 
@@ -196,6 +197,7 @@ sub get_crossing_experiments_from_field_trial {
             push @related_stock_ids, $plant->[0];
         }
     }
+    print STDERR "RELATED STOCK IDS =".Dumper(\@related_stock_ids)."\n";
 
     my @where_clause;
     my $stock_ids_sql = join (",", @related_stock_ids);
@@ -214,7 +216,7 @@ sub get_crossing_experiments_from_field_trial {
         JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id IN (?,?,?,?)
         JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
         JOIN project ON (nd_experiment_project.project_id = project.project_id)
-        $where_clause";
+        $where_clause;";
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($female_plot_of_type_id, $male_plot_of_type_id, $female_plot_of_type_id, $male_plant_of_type_id, $cross_experiment_type_id);
