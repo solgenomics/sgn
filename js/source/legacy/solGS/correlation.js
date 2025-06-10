@@ -25,9 +25,9 @@ solGS.correlation = {
     var datasetId;
 
     if (dataStr.match(/dataset/)) {
-      datasetId = selectId;
+      datasetId = corrPopId;
     } else if (dataStr.match(/list/)) {
-      listId = selectId;
+      listId = corrPopId;
     }
 
     var corrDivs = this.getCorrDivs(corrPopId);
