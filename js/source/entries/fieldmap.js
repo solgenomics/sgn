@@ -678,13 +678,42 @@ export function init() {
                     jQuery("#hm_edit_plot_information").html(
                         "<b>Selected Plot Information: </b>"
                     );
-                    jQuery("#hm_edit_plot_name").html(replace_plot_name);
-                    jQuery("#hm_edit_plot_number").html(replace_plot_number);
-                    var old_plot_id = jQuery("#hm_edit_plot_id").html(replace_plot_id);
-                    var old_plot_accession = jQuery("#hm_edit_plot_accession").html(
+                    jQuery("#hm_plot_name").html(replace_plot_name);
+                    jQuery("#hm_plot_number").html(replace_plot_number);
+                    var old_plot_id = jQuery("#hm_plot_id").html(replace_plot_id);
+                    var old_plot_accession = jQuery("#hm_plot_accession").html(
                         replace_accession
                     );
-                    jQuery("#hm_replace_plot_accessions_dialog").modal("show");
+
+                    jQuery("#hm_plot_details_modal").modal("show");
+
+                    // TODO: implement AJAX function and call it here, creating plot map image
+                    // if coords given, show layout. If not, just list plants prettily
+                    //new jQuery.ajax({
+                        // type: "POST",
+                        // url: //"/ajax/breeders/trial/" + trial_id + "/retrieve_plot_images",
+                        // dataType: //"json",
+                        // data: {
+                        //     // image_ids: JSON.stringify(image_ids),
+                        //     // plot_name: replace_plot_name,
+                        //     // plot_id: replace_plot_id,
+                        // },
+                        // success: function (response) {
+                        //     jQuery("#working_modal").modal("hide");
+                        //     var images = response.image_html;
+                        //     if (response.error) {
+                        //         alert("Error Retrieving Plot Images: " + response.error);
+                        //     } else {
+                        //         jQuery("#show_plot_image_ids").html(images);
+
+                        //         // jQuery('#view_plot_image_dialog').modal("show");
+                        //     }
+                        // },
+                        // error: function () {
+                        //     jQuery("#working_modal").modal("hide");
+                        //     alert("An error occurred retrieving plot images");
+                        // },
+                    //});
 
                     new jQuery.ajax({
                         type: "POST",

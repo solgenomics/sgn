@@ -457,6 +457,60 @@ $has_plant_entries => undef
     </div>
 </div>
 
+<div class="modal fade" id="hm_plot_details_modal" name="hm_plot_details_modal" tabindex="-1" role="dialog" aria-labelledby="HmPlotDetailsModal">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmPlotDetailsModal">Plot Details</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="hm_plot_details_form" name="hm_plot_details_form">
+                      <div id="hm_plot_information">
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Name: </label>
+                        <div class="col-sm-9" id="hm_plot_name">
+
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Number: </label>
+                        <div class="col-sm-9" id="hm_plot_number">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Database ID: </label>
+                        <div class="col-sm-9" id="hm_plot_id">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Accession: </label>
+                        <div class="col-sm-9" id="hm_plot_accession">
+                        </div>
+                      </div>
+
+                      <div id="hm_plot_level_map">
+                      </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary " name="hm_view_plot_image_submit" id="hm_view_plot_image_submit">View Plot Images</button>
+                <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="hm_edit_plot_info" id="hm_edit_plot_info" onclick="jQuery('#hm_replace_plot_accessions_dialog').modal('show')">Edit Plot Info</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="hm_replace_plot_accessions_dialog" name="hm_replace_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="HmReplacePlotAccessionsDialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
@@ -470,33 +524,7 @@ $has_plant_entries => undef
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="hm_replace_plot_accession_form" name="hm_replace_plot_accession_form">
                       <div id="hm_edit_plot_information">
                       </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Name: </label>
-                        <div class="col-sm-9" id="hm_edit_plot_name">
-
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Number: </label>
-                        <div class="col-sm-9" id="hm_edit_plot_number">
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Database ID: </label>
-                        <div class="col-sm-9" id="hm_edit_plot_id">
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Accession: </label>
-                        <div class="col-sm-9" id="hm_edit_plot_accession">
-                        </div>
-                      </div>
-
-                      
+                     
                       <div class="form-group">
                         <label class="col-sm-3 control-label">Enter New Accession: </label>
                         <div class="col-sm-9" >
@@ -516,7 +544,6 @@ $has_plant_entries => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary " name="hm_view_plot_image_submit" id="hm_view_plot_image_submit">View Plot Images</button>
                 <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="hm_replace_plot_accession_submit" id="hm_replace_plot_accession_submit">Replace Plot Accession</button>
             </div>

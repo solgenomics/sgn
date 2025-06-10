@@ -2055,6 +2055,8 @@ sub stock_lookup_POST {
     $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
 
+# TODO: implement a get_child_stocks function
+
 sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/trial_related_stock') Args(0){
     my $self = shift;
     my $c = shift;
