@@ -2270,9 +2270,6 @@ sub delete_field_layout {
     if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
         return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
     }
-    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
-        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
-    }
 
     # Note: metadata entries need to be deleted separately using delete_metadata()
     #
@@ -2410,9 +2407,6 @@ sub delete_metadata {
     }
     if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
         return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
-    }
-    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
-        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
     }
 
     print STDERR "Deleting metadata for trial $trial_id...\n";
@@ -2596,12 +2590,6 @@ sub delete_project_entry {
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
         return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
     }
-#    if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
-#        return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
-#    }
-#    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
-#        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
-#    }
 
     my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {
             $self->bcs_schema->storage->dbh()
