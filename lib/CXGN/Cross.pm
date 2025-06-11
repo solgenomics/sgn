@@ -371,7 +371,7 @@ sub get_cross_info_for_progeny {
     if (scalar(@cross_info)>0){
         return $cross_info[0];
     } else {
-        return undef;
+        return;
     }
 }
 
