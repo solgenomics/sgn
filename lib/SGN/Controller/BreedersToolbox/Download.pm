@@ -1951,7 +1951,6 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
 
 }
 
-
 sub download_population_seedlots_action : Path('/breeders/download_population_seedlots_action') {
     my $self = shift;
     my $c = shift;
@@ -2017,7 +2016,65 @@ sub download_population_seedlots_action : Path('/breeders/download_population_se
 
 }
 
+sub download_summary_stock_entries : Path('/breeders/download_summary_stock_entries') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+    my $file_format = $c->req->param("file_format") || ".xlsx";
+    my $trial_id = $c->req->param("stock_entries_trial_id");
 
+    my $dl_token = $c->req->param("trial_stock_entries_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
+    my $stock_entries = $trial->get_stock_entry_summary();
+    my $trial_stock_type = $trial->get_trial_stock_type();
+
+    my @download_rows = ();
+    foreach my $row (@$stock_entries) {
+        my ($parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$row;
+        push @download_rows, [$parent_stock_name, $plot_name, $plant_name, $tissue_sample_name];
+    }
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "trial_stock_entries_XXXXX", UNLINK=> 0);
+
+    my $file_path = $tempfile . ".xlsx";
+    my $file_name = basename($file_path);
+
+    my $workbook = Excel::Writer::XLSX->new($file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+    my @header = ();
+    if ($trial_stock_type eq 'cross') {
+        @header = ("Cross Unique ID", "Plot Name", "Plant Name", "Tissue Sample");
+    } elsif ($trial_stock_type eq 'family_name') {
+        @header = ("Family Name", "Plot Name", "Plant Name", "Tissue Sample");
+    } else {
+        @header = ("Accession Name", "Plot Name", "Plant Name", "Tissue Sample");
+    }
+    $worksheet->write_row(0, 0, \@header);
+
+    my $row_count = 1;
+    foreach my $row (@download_rows) {
+        $worksheet->write_row($row_count, 0, $row);
+        $row_count++;
+    }
+    $workbook->close();
+
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($file_path);
+
+    $c->res->body($output);
+
+}
 
 #=pod
 1;

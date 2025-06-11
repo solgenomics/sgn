@@ -107,7 +107,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
+#    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
     if (! $args->{description}) {
 	    $args->{description} = "(No description provided)";
@@ -132,11 +132,11 @@ sub BUILD {
     }
 
     if (! $args->{trial_id} && ! $row) {
-        print STDERR "INSERTING A NEW ROW...\n";
+#        print STDERR "INSERTING A NEW ROW...\n";
 
         my $new_row = $args->{bcs_schema}->resultset("Project::Project")->create( { name => $args->{name}, description => $args->{description} });
         my $project_id = $new_row->project_id();
-        print STDERR "new project object has project id $project_id\n";
+#        print STDERR "new project object has project id $project_id\n";
 
         $self->set_trial_id($project_id);
     }
@@ -182,7 +182,7 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout::Phenotyping |
 
 sub _get_layout {
     my $self = shift;
-    print STDERR "RETRIEVING LAYOUT...\n";
+#    print STDERR "RETRIEVING LAYOUT...\n";
     my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id(), experiment_type=>$self->get_cxgn_project_type()->{experiment_type} });
     $self->set_layout($layout);
 }
@@ -256,7 +256,7 @@ getter/setter for the year property. The setter modifies the database.
 sub get_year {
     my $self = shift;
 
-    print STDERR "get_year()...\n";
+#    print STDERR "get_year()...\n";
 
     if ($self->year()) { return $self->year(); }
 
@@ -278,22 +278,22 @@ sub set_year {
     my $year = shift;
 
     if (!$year) {
-	print STDERR "set_year(): No year provided, not setting.\n";
+#	print STDERR "set_year(): No year provided, not setting.\n";
 	return;
     }
 
-    print STDERR "set_year()... (with parameter $year)\n";
+#    print STDERR "set_year()... (with parameter $year)\n";
     my $type_id = $self->get_year_type_id();
 
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id(), type_id => $type_id  });
 
     if ($row) {
-	print STDERR "Updating year to $year...\n";
+#	print STDERR "Updating year to $year...\n";
 	$row->value($year);
 	$row->update();
     }
     else {
-	print STDERR "inserting new year ($year)...\n";
+#	print STDERR "inserting new year ($year)...\n";
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	    {
 		type_id => $type_id,
@@ -339,7 +339,7 @@ sub set_description {
     my $logged_in_user_h = $dbh -> prepare($logged_in_user_q);
     $logged_in_user_h->execute();
     my $logged_in_user_arr = $logged_in_user_h->fetchall_arrayref();
-    print STDERR "logged in user Project.pm: ".Dumper($logged_in_user_arr)."\n";
+#    print STDERR "logged in user Project.pm: ".Dumper($logged_in_user_arr)."\n";
 
 }
 
@@ -459,7 +459,7 @@ sub set_location {
     try {
         $schema->txn_do($coderef);
     } catch {
-        print STDERR "Transaction error updating location: $_\n";
+#        print STDERR "Transaction error updating location: $_\n";
     };
 
 }
@@ -1001,7 +1001,7 @@ sub set_design_type {
 
     my $design_cv_type = $self->bcs_schema->resultset('Cv::Cvterm')->find( { name => 'design' });
     if (!$design_cv_type) {
-	print STDERR "Design CV term not found. Cannot set design type.\n";
+#	print STDERR "Design CV term not found. Cannot set design type.\n";
 	return;
     }
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
@@ -5680,6 +5680,7 @@ sub update_metadata {
         return "An error occurred setting the new trial details of trial " . $self->get_name() . ": $@";
     }
 }
+
 
 1;
 
