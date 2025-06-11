@@ -129,19 +129,19 @@ jQuery(document).on("change", "#trial_select", function () {
     console.log("Selected Trial: ", selectedTrial);
     
     if (selectedTrial) {
-        
-        jQuery("#analysis_pop_name").val(jQuery(this).find("option:selected").text());
-        console.log("Analysis Pop ID set to: " + selectedTrial);
+        var popName = jQuery(this).find("option:selected").text()
+        console.log("Population Name: ", popName);
+        jQuery("#analysis_pop_name").val(popName);
         if (!jQuery(this).find("option:selected").text().match(/Dataset:/)) {
             jQuery("#data_structure").val("trial");
-            console.log("Data structure set to 'trial'");
             jQuery("#analysis_pop_id").val(selectedTrial);
         } else {
             jQuery("#data_structure").val("dataset");
             jQuery("#analysis_pop_id").val(`dataset_${selectedTrial}`);
+            jQuery("#analysis_pop_name").val(jQuery("#dataset_name").val());
             console.log("Data structure set to 'dataset'");
         }
-
+    
         console.log("You have selected trial with ID: " + selectedTrial);
     } else {
         console.log("No trial selected.");
