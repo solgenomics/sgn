@@ -16,11 +16,33 @@ solGS.correlation = {
   corrPopsDiv: "#corr_pops_select_div",
   corrPopsDataDiv: "#corr_pops_data_div",
 
+  getCorrPopName: function () {
+
+    var corrPopName = jQuery("#corr_pop_name").val();
+
+    if (!corrPopName) {
+      corrPopName = jQuery("#corr_selected_pop_name").val();
+    }
+    if (!corrPopName) {
+      corrPopName = jQuery("#training_pop_name").val();
+    }
+    if (!corrPopName) {
+      corrPopName = jQuery("#trial_name").val();
+    }
+    if (!corrPopName) {
+      corrPopName = jQuery("#analysis_pop_name").val();
+    }
+
+    return corrPopName;
+},
+
+
   getPhenoCorrArgs: function () {
     var corrPopId = jQuery("#corr_pop_id").val();
     var dataSetType = jQuery("#data_set_type").val();
     var dataStr = jQuery("#data_structure").val();
-
+    var corrPopName = this.getCorrPopName();
+    
     var listId;
     var datasetId;
 
@@ -34,6 +56,7 @@ solGS.correlation = {
 
     var args = {
       corr_pop_id: corrPopId,
+      corr_pop_name: corrPopName,
       data_set_type: dataSetType,
       data_structure: dataStr,
       dataset_id: datasetId,
@@ -101,7 +124,6 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     corrPopId = selectedPop.corr_pop_id;
 
     var dataType = this.getSelectedDataType(corrPopId);
-    // var corrUrl = this.generateCorrUrl(corrPopId);
 
     corrArgs = selectedPopData.selectedPop;
     corrArgs = JSON.parse(corrArgs);
@@ -109,7 +131,6 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     if (dataType.match(/Phenotype/)){
       corrArgs['correlation_type'] = 'phenotypic';
     }
-    // corrArgs["analysis_page"] = corrUrl;
   }
 
   return corrArgs;
@@ -368,18 +389,12 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     var corrPlotLink =
       "<a href='#'  onclick='event.preventDefault();' id='" + corrDownloadBtn + "'> plot</a>";
 
-    var popName = corrArgs.corre_pop_name;
+    var popName = corrArgs.corr_pop_name;
     if (!popName) {
-      popName = jQuery("#corr_selected_pop_name").val();
-    }
-    if (!popName) {
-      popName = jQuery("#training_pop_name").val();
-    }
-    if (!popName) {
-      popName = jQuery("#trial_name").val();
+      popName = this.getCorrPopName();
     }
 
-    var downloadLinks = `Download ${popName} correlation: ` + corrCoefLink + " | " + corrPlotLink;
+    var downloadLinks = `Download <b>${popName}</b> correlation: ` + corrCoefLink + " | " + corrPlotLink;
     return downloadLinks;
   },
 
@@ -443,6 +458,10 @@ jQuery(document).ready(function () {
         if (!corrPopId) {
             corrArgs = solGS.correlation.getSelectedPopCorrArgs(runCorrBtnId);
          }
+
+        if (!corrArgs.corr_pop_name) {
+            corrArgs["corr_pop_name"] = solGS.correlation.getCorrPopName();
+        }
     
         corrPopId = corrArgs.corr_pop_id;
         var canvas = solGS.correlation.canvas;
@@ -459,6 +478,8 @@ jQuery(document).ready(function () {
         solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
         if (res.data) {
             corrArgs["corr_table_file"] = res.corre_table_file;
+
+            
             var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
 
             solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
