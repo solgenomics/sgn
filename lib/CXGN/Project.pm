@@ -2180,33 +2180,33 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
 
     my $coderef = sub {
 	my $phenotype_id_sql = "";
-	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids})) { 
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids})) {
 	    $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}});
-	    
+
 	    my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
 	    my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
 	    $h2->execute();
-	    
+
 	    print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
 	}
 
-	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) { 
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) {
 	    my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
-	    
+
 	    # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
 	    #
 	    my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
 	    my $check_h = $schema->storage->dbh()->prepare($checkq);
 	    $check_h ->execute();
-	    
+
 	    my @nd_experiment_ids;
 	    while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
 		push @nd_experiment_ids, $nd_experiment_id;
 	    }
-	    
+
 	    if (scalar(@nd_experiment_ids)>0) {
 		$nd_experiment_id_sql = join(",", @nd_experiment_ids);
-		
+
 		my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
 		my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
 		$h3->execute();
@@ -2214,11 +2214,11 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
 		my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
 		my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
 		$h_nd_json->execute();
-		
+
 		my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
 		my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
 		$h4->execute();
-		
+
 		open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
                 foreach (@nd_experiment_ids) {
                     print $fh "$_\n";
@@ -2267,7 +2267,7 @@ sub delete_field_layout {
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
         return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
     }
-    if (scalar(@{$self->get_crossing_trials_from_field_trial}) >0) {
+    if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
         return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
@@ -2408,7 +2408,7 @@ sub delete_metadata {
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
         return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
     }
-    if (scalar(@{$self->get_crossing_trials_from_field_trial}) >0) {
+    if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
         return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
@@ -2596,12 +2596,12 @@ sub delete_project_entry {
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
         return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
     }
-    if (scalar(@{$self->get_crossing_trials_from_field_trial}) >0) {
-        return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
-    }
-    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
-        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
-    }
+#    if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
+#        return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
+#    }
+#    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
+#        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
+#    }
 
     my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {
             $self->bcs_schema->storage->dbh()
@@ -5511,7 +5511,7 @@ sub transformation_id_count {
  Usage:   my @trials = CXGN::Project::get_recently_added_trials()
  Params:  $interval - one of day, week, month, year
  Returns: a list of trials, consisting of listrefs listing
-          trial_name (with link), trial_type, breeding program 
+          trial_name (with link), trial_type, breeding program
           (with link)
 
 =cut
@@ -5523,18 +5523,18 @@ sub get_recently_added_trials {
     my $metadata_schema = shift;
     my $interval = shift;
     my $limit = shift || 10;
-    
+
     if (! grep($interval, qw| day week month year | )) {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
 
     my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
-    
+
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
     $h->execute($limit);
-    
+
     my @recent_trials = ();
     while (my ($trial_id) = $h->fetchrow_array()) {
 	print STDERR "Formatting entry with trial id $trial_id...\n";
@@ -5542,7 +5542,7 @@ sub get_recently_added_trials {
 	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
 	my $trial_type = ref($t);
 	$trial_type =~ s/^CXGN\:\://g;
-	
+
 	my $breeding_program = $t->get_breeding_program();
 	my $breeding_program_id = $t->get_breeding_program_id();
 	my $create_date = $t->get_create_date();
@@ -5575,14 +5575,14 @@ sub get_recently_modified_trials {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
-        
+
     #print STDERR "INTERVAL is $interval\n";
     my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc limit ? ";
-    
+
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
     $h->execute($limit);
-    
+
     my @recent_trials;
     while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
 	print STDERR "Formatting entry with trial id $trial_id...\n";
@@ -5590,7 +5590,7 @@ sub get_recently_modified_trials {
 	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
 	my $trial_type = ref($t);
 	$trial_type =~ s/^CXGN\:\://g;
-	
+
 	my $breeding_program = $t->get_breeding_program();
 	my $breeding_program_id = $t->get_breeding_program_id();
 
@@ -5620,7 +5620,7 @@ sub get_recently_added_accessions {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
-    
+
     my $q = "select stock.stock_id from stock where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
@@ -5637,7 +5637,7 @@ sub get_recently_added_accessions {
     }
 
     return \@stock_table;
-    
+
 }
 
 =head2 function update_metadata()

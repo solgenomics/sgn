@@ -184,7 +184,7 @@ sub get_crossing_experiments_from_field_trial {
     my $schema = $self->bcs_schema;
     my $field_trial_id = $self->get_trial_id();
 
-    my $field_trial = CXGN::Project->new({ bcs_schema => $schema, trial_id => $field_trial_id});
+    my $field_trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $field_trial_id});
     my $plots = $field_trial->get_plots();
     my @related_stock_ids;
     foreach my $plot (@$plots){
