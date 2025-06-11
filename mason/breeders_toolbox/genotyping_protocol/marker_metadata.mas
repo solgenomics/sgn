@@ -2,7 +2,7 @@
     $protocol_id
 </%args>
 
-<& /util/import_javascript.mas, entries => [], classes => [ 'jquery', 'jquery.dataTables' ],  &>
+<& /util/import_javascript.mas, entries => [], classes => [ 'jquery', 'jquery.dataTables','jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
 
 <div id="marker_metadata_loading">
     <p>Loading...</p>
@@ -36,11 +36,25 @@
         if ( response && Object.keys(response).length > 0 ) {
             jQuery("#marker_metadata_upload").hide();
             new jQuery("#marker_metadata_table").DataTable({
+                dom: 'Bfrtip',
+                buttons: [
+                    'pageLength',
+                    {
+                        extend: 'excelHtml5',
+                        title: 'marker_metadata',
+                        exportOptions: { orthogonal: "export" }
+                    },
+                    {
+                        extend: 'csvHtml5',
+                        title: 'marker_metadata',
+                        exportOptions: { orthogonal: "export" }
+                    }
+                ],
                 data: Object.values(response),
                 columns: [
                     { title: "Marker", render: (data, type, row) => { return `<a href='/locus/${row.locus_id}/view'>${row.locus_name}</a>` }},
                     { title: "Description", data: "locus_description" },
-                    { title: "Alleles", render: (data, type, row) => { return row.alleles.map((x) => x.allele_name).join('<br />') } }
+                    { title: "Alleles", render: (data, type, row) => { return row.alleles.map((x) => x.allele_name).join(type === 'export' ? ', ' : '<br />') } }
                 ]
             })
         }

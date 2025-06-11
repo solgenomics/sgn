@@ -331,7 +331,6 @@ sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
     unlink $upload_tempfile;
 
     # Validate the upload file
-    print STDERR "\n\n\n\n===> LOADING MARKER METADATA PLUGIN:\n";
     my $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
         filename => $archived_filename_with_path,
@@ -339,13 +338,9 @@ sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
         nd_protocol_id => $protocol_id,
         marker_metadata_trait_ontology_root => $c->config->{marker_metadata_trait_ontology_root}
     });
-    print STDERR "... loading plugin\n";
     $parser->load_plugin('MarkerMetadata');
-    print STDERR "... parsing file\n";
     my $parsed_data = $parser->parse();
-    print STDERR "... getting parse errors\n";
     my $parse_errors = $parser->get_parse_errors();
-    print STDERR "... done\n";
 
     if (!$parsed_data) {
         my $return_error = '';
