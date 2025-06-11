@@ -15,6 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $corr_pop_id => undef
+$corr_pop_name =>undef
 $list_id => undef
 $dataset_id => undef
 $data_set_type => undef
@@ -32,6 +33,7 @@ $data_structure => undef
 
 <div id="corr_plot">
     <input type="hidden" id="corr_pop_id" value="<% $corr_pop_id %>" />
+    <input type="hidden" id="corr_pop_name" value="<% $corr_pop_name %>" />
     <input type="hidden"  id="dataset_id" value="<% $dataset_id %>" />
     <input type="hidden"  id="list_id" value="<% $list_id %>" />
     <input type="hidden" id="data_structure" value="<% $data_structure %>" />

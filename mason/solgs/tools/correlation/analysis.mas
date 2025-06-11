@@ -28,6 +28,7 @@ $data_structure => undef
 $pop_name => undef
 $pop_type => undef
 $corr_pop_id => undef
+$corr_pop_name => undef
 $data_set_type => undef
 
 
@@ -91,6 +92,7 @@ if ($url !~ /correlation\/analysis/) {
 
 <& plot.mas,
    corr_pop_id => $corr_pop_id,
+   corr_pop_name => $corr_pop_name,
   list_id => $list_id,
   dataset_id => $dataset_id,
   data_structure => $data_structure,
