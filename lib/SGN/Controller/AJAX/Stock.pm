@@ -2055,7 +2055,18 @@ sub stock_lookup_POST {
     $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
 
-# TODO: implement a get_child_stocks function
+sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $plot_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+
+    my $plot = CXGN::Stock->new({schema => $schema, stock_id=>$plot_id});
+
+    my $plot_contents = JSON::Any->encode($plot->get_plot_contents());
+
+    $c->stash->{rest} = {data => $plot_contents};
+}
 
 sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/trial_related_stock') Args(0){
     my $self = shift;

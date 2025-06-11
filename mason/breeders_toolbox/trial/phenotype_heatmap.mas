@@ -496,7 +496,7 @@ $has_plant_entries => undef
                         </div>
                       </div>
 
-                      <div id="hm_plot_level_map">
+                      <div id="hm_plot_level_map" hidden>
                       </div>
 
                     </form>

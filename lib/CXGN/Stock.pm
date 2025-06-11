@@ -1641,7 +1641,7 @@ sub _store_population_relationship {
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
 
-    my @populations = split /\|/, $self->population_name();
+    my @populations = split(/\|/, $self->population_name());
 
     foreach my $population_name (@populations) {
 
@@ -2177,6 +2177,143 @@ sub hard_delete {
     $h->execute($self->stock_id());
 }
 
+=head2 get_plot_contents
+
+Retrieves the contents (subplots, plants, accessions, etc) of a plot in a structured hash with stockprops included.
+Example:
+$plot_data = {
+    id => plot_id,
+    name => plot_name,
+    type => plot,
+    stockprop_name => {stockprop_id => x, value => 1},
+    stockprop_name => {...},
+    contains => {
+        id => {
+            id => subplot_id
+            name => subplot_name,
+            type => subplot,
+            stockprop_name => {stockprop_id => x, value => 1},
+            contains => {
+                id => {
+                    id => plant_id,
+                    name => plant_name,
+                    type => plant,
+                    stockprop_name => {...},
+                    contains => {
+                        {accession data...}
+                    }
+                }
+            }
+        },
+        id => {
+            id => subplot_id_2,
+            ...as above...
+        }
+    }
+}
+
+The data structure follows plot->(subplot->)(plant->)accession. If this stock is not a plot, undef is returned. 
+
+=cut
+
+sub get_plot_contents {
+    my $self = shift;
+
+    my $plot_id = $self->stock_id();
+
+    my $plot_structure = {};
+
+    if ($self->type() ne "plot") {
+        return $plot_structure;
+    }
+
+    $plot_structure->{type} = $self->type();
+    $plot_structure->{name} = $self->name();
+    $plot_structure->{id} = $plot_id;
+
+    my $relationship_q = "SELECT stock.stock_id, stock.name, 
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type, 
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship 
+        JOIN stock ON (stock.stock_id=stock_relationship.object_id) 
+        WHERE stock_relationship.subject_id=?";
+    my $stockprops_q = "SELECT cvterm.name, cvterm_id, value FROM stockprop
+        JOIN cvterm ON (cvterm.cvterm_id=stockprop.type_id)
+        WHERE stockprop.stock_id=?";
+    
+    my $h = $self->schema()->storage()->dbh()->prepare($stockprops_q);
+    $h->execute($plot_id);
+
+    while (my ($stockprop, $stockprop_id, $value) = $h->fetchrow_array()) { #get plot stockprops
+        $plot_structure->{$stockprop} = {
+            id => $stockprop_id,
+            value => $value
+        };
+    }
+
+    $h = $self->schema()->storage()->dbh()->prepare($relationship_q);
+    $h->execute($plot_id);
+
+    my @stocks;
+
+    while (my ($stock_id, $stock_name, $stock_type, $relationship_type) = $h->fetchrow_array()) { #get child stocks
+
+        my $stock_data = {
+            name => $stock_name,
+            id => $stock_id,
+            type => $stock_type
+        };
+
+        push @stocks, $stock_data;
+    }
+
+    foreach my $stock (@stocks) { # get stockprops of child stocks
+        $h = $self->schema()->storage()->dbh()->prepare($stockprops_q);
+        $h->execute($stock->{id});
+
+        while (my ($stockprop, $stockprop_id, $value) = $h->fetchrow_array()) {
+            $stock->{$stockprop} = {
+                id => $stockprop_id,
+                value => $value
+            };
+        }
+    }
+
+    my $accession = grep {$_->{type} eq "accession"} @stocks; # I am assuming only one accession is allowed here...
+
+    unless (grep {$_->{type} eq "subplot"} @stocks || grep {$_->{type} eq "plant"} @stocks) { #if no subplots or plants, just add accession
+        $plot_structure->{contains}->{$accession->{id}} = $accession;
+        return $plot_structure;
+    }
+
+    foreach my $subplot (grep {$_->{type} eq "subplot"} @stocks) { #does not necessarily execute
+
+        $plot_structure->{contains}->{$subplot->{id}} = $subplot;
+        # don't need to run any queries because subplot relationships are not stored properly in db
+        unless (grep {$_->{type} eq "plant"} @stocks) { #if no plants, enter accession
+            $plot_structure->{contains}->{$subplot->{id}}->{contains}->{$accession->{id}} = $accession;
+        }
+    }
+
+    foreach my $plant (grep {$_->{type} eq "plant"} @stocks) { #does not necessarily execute
+        $h = $self->schema()->storage()->dbh()->prepare($relationship_q);
+        $h->execute($plant->{id});
+
+        $plant->{contains}->{$accession->{id}} = $accession;
+
+        while (my ($stock_id, $stock_name, $stock_type, $relationship_type) = $h->fetchrow_array()) {
+            next if ($stock_type eq "accession");
+
+            if ($stock_type eq "subplot") {
+                $plot_structure->{contains}->{$stock_id}->{contains}->{$plant->{id}} = $plant;
+            } else {
+                $plot_structure->{contains}->{$plant->{id}} = $plant; #plots don't show up when subject is a plant of a plot, but subplots do
+            }
+        }
+    }
+
+    return $plot_structure;
+}
 
 ###__PACKAGE__->meta->make_immutable;
 
