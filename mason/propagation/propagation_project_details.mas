@@ -120,6 +120,7 @@ $propagation_type
     </div>
 </div>
 </br>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_propagation_id_link">Add New Propagation ID</button>
 
 
 <script>

@@ -1,0 +1,74 @@
+<%args>
+$timestamp => localtime()
+</%args>
+
+<div class="modal fade" id="add_propagation_id_dialog" name="add_propagation_id_dialog" tabindex="-1" role="dialog" aria-labelledby="addPropagationIdDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="addPropagationIdDialog">Add New Propagation ID</h4>
+            </div>
+            <div class="modal-body" id = "propagation_id_dialog">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="add_new_propagation_id_form" name="add_new_propagation_id_form">
+                        <div class="form-group" id = "get_item_name">
+                            <label class="col-sm-3 control-label">Item Name: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" type="text" id="item_name" name="item_name" placeholder="Item name must be in the database">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Category: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_category">
+                                    <option value="">Please select a category</option>
+                                    <option value="released variety">released variety</option>
+                                    <option value="pathogen assay ">pathogen assay</option>
+                                    <option value="control">control</option>
+                                    <option value="transgenic line">transgenic line</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Additional Info: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_additional_info" placeholder="optional">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Material Source: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_material_source" placeholder="optional">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <div class="col-sm-9" >
+                                <div id="item_breeding_program_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Contact Person Username: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="contact_person_name" placeholder="Please provide contact person username">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="reset" id="close_add_propagation_id_dialog" name="close_propagation_id_dialog" class="btn btn-default" >Close</button>
+                    <button id="submit_propagation_id" type="button" class="btn btn-primary" >Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function(){
+
+
+});
+
+</script>
