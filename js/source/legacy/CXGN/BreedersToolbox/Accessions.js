@@ -519,13 +519,15 @@ jQuery(document).ready(function ($) {
     });
 
     $('#new_accessions_submit').click(function () {
-        var selected_tab = jQuery('#add_new_accessions_tab_select .active').text()
+        const selected_tab = jQuery('#add_new_accessions_tab_select .active').text();
+
         if (selected_tab == 'Using Lists'){
-            accession_list_id = $('#list_div_list_select').val();
-            fullParsedData = undefined;
+            const accession_list_id = $('#list_div_list_select').val();
+            let fullParsedData = undefined;
 	    verify_accession_list(accession_list_id);
+            $('#add_accessions_dialog').modal("hide");
         } else if (selected_tab == 'Uploading a File'){
-	    var uploadFile = jQuery("#new_accessions_upload_file").val();
+	    const uploadFile = jQuery("#new_accessions_upload_file").val();
 	    jQuery('#upload_new_accessions_form').attr("action", "/ajax/accessions/verify_accessions_file");
 	    if (uploadFile === '') {
                 alert("Please select a file");
@@ -533,8 +535,8 @@ jQuery(document).ready(function ($) {
 	    }
 
 	    jQuery("#upload_new_accessions_form").submit();
+	    $('#add_accessions_dialog').modal("hide");
         }
-	$('#add_accessions_dialog').modal("hide");
     });
 
     jQuery('#upload_new_accessions_form').iframePostForm({
@@ -629,7 +631,7 @@ function openWindowWithPost(fuzzyResponse) {
 
 function verify_accession_list(accession_list_id) {
     accession_list = JSON.stringify(list.getList(accession_list_id));
-    doFuzzySearch = jQuery('#fuzzy_check').prop('checked');
+    doFuzzySearch = jQuery('#fuzzy_check').attr('checked');
 
     jQuery.ajax({
         type: 'POST',
