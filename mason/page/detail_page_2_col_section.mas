@@ -272,7 +272,6 @@ $logged_in_name => undef
 % if ($info_section_id eq 'trial_upload_files'){
                                 <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
-
 % if ($info_section_id eq 'trial_weather_data'){
                                 <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
 % } #End trial_weather_data
