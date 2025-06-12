@@ -142,6 +142,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     $c->stash->{phenotype_files} = \@phenotype_files;
     $c->stash->{removed_phenotype_files} = \@removed_phenotype_files;
     $c->stash->{fieldbook_config_qrcode_url} = $qrcode_file_url;
+    $c->stash->{project_name} = $c->config->{project_name};
 
     # get roles
     my @roles = $c->user->roles();
