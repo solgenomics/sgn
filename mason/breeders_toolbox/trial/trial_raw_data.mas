@@ -50,7 +50,7 @@ $trial_id
 </div>
 
 <div class="well well-sm" id="raw_phenotypic_data">
-	<h4 style= "text-align:center">Choose trait, observation level and data range to display</h4>
+	<h4 style= "text-align:center">Choose trait and observation level</h4>
 	<br/>
 
 	<table>
@@ -69,7 +69,7 @@ $trial_id
 					<option value="plot">Plots</option>
 					<option value="plant">Plants</option>
 					<option value="subplot">Subplots</option>
-					<option value"tissue_sample">Tissue_samples</option>
+					<option value="tissue_sample">Tissue samples</option>
 	      		</select>
 			</div>
 	    </td>
