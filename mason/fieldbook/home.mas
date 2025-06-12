@@ -19,9 +19,9 @@ $project_name => ""
 
 
 
-      <&| /page/info_section.mas, title => "BrAPI setup", subtitle => "" &>
+      <&| /page/info_section.mas, title => "BrAPI setup", subtitle => "Scan the QRCode with Fieldbook to configure the app for this database for BrAPI access" &>
 
-Scan the QRCode with Fieldbook to configure the app for this database for BrAPI access<br />
+
 
     <div class="container-fluid" style="text-align:center">
 <table>
