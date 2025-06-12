@@ -6,23 +6,6 @@ $trial_stock_type => undef
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues'] &>
 
 <style>
-.form-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 50px;
-}
-
-.form-group {
-    display: flex;
-    align-items: center;
-}
-
-.form-group label {
-  margin-right: 5px;
-  white-space: nowrap;
-}
-
 .small-graph svg {
     display: flex;
     margin: auto;
@@ -38,42 +21,41 @@ $trial_stock_type => undef
     <center><h4>View plots for repetitive measurement traits</h4>
 
     <form class="form-horizontal" role="form">
-
-        <!-- div class="form-group"  -->
-	<div style="text-align:center; margin-bottom:10px;" >
-		    <label for="select_trait_for_repetitive_data_and_plot">Select Trait:</label>
-            <span id="select_trait_for_repetitive_data_and_plot">[Loading...]</div>
-		</span>
-	<!-- /div -->
-    <div class="form-row">
-        <div class="form-group" style="text-align:center">
-            <label for="repetitive_measurement_start_date">Start Date:</label>
-            <input type="text" id="repetitive_measurement_start_date" title="repetitive_measurement_start_date" />
+	<div style="display: flex; align-items: center; white-space: nowrap; width: 100%; margin: 12px auto;">
+        <div style="display: flex; align-items: center; margin-right: 30px; flex: 1;">
+	    	<label for="select_trait_for_repetitive_data_and_plot"  style="width: 130px; margin-right: 10px; text-align: right; white-space: nowrap;">Select Trait:</label>
+            <select id="select_trait_for_repetitive_data_and_plot" class="form-control" style="flex: 1; min-width: 100px;">
+                <option value="">[Loading...]</option>
+            </select>
+	    </div>
+    </div>
+    <div style="display: flex; align-items: center; white-space: nowrap; width: 100%;margin: 12px auto;">
+         <div style="display: flex; align-items: center; margin-right: 30px;">
+            <label for="repetitive_measurement_start_date" style="width: 130px; margin-right: 10px; text-align: right; white-space: nowrap;">Start Date:</label>
+            <input type="text" id="repetitive_measurement_start_date" title="repetitive_measurement_start_date" class="form-control" style="width: 160px; padding: 4px;" />
         </div>
-        <div class="form-group">
-            <label for="repetitive_measurement_end_date"> End Date:</label>
-            <input type="text" id="repetitive_measurement_end_date" title="repetitive_measurement_end_date" />
+        <div style="display: flex; align-items: center; margin-left: 30px;">
+            <label for="repetitive_measurement_end_date" style="width: 200px; margin-right: 10px; text-align: right; white-space: nowrap;"> End Date:</label>
+            <input type="text" id="repetitive_measurement_end_date" title="repetitive_measurement_end_date" class="form-control" style="width: 160px; padding: 4px;"/>
         </div>
     </div>
-    <div class="form-row">
-        <div style="display:flex; align-items:center; white-space:nowrap; width:70%; margin-center: auto;">
-            <label for="repetitive_slider_range" style="margin-right: 10px;">Choose DateRange slider:</label>
-            <div id="repetitive_slider_range" style="width: 80%; margin: 10px auto;"></div>
-        </div>
+    <div style="display: flex;align-items: center;margin-right: 30px;">
+            <label for="repetitive_slider_range" style="width: 130px; margin-right: 10px; text-align: right; white-space: nowrap;">DateRange Slider:</label>
+            <div id="repetitive_slider_range" style="flex: 1; margin: 10px;"></div>
     </div>
-    <div class="form-row">
-        <div class="form-group">
-            <label for="repetitive_measurement_observation_level">Observation Level: </label>
-            <select class="form-control" id="repetitive_measurement_observation_level">
+    <div style="display: flex; align-items: center; white-space: nowrap;width: 100%; margin: 12px auto;">
+        <div style="display: flex; align-items: center; margin-right: 30px;">
+            <label for="repetitive_measurement_observation_level" style="width: 130px; margin-right: 10px; text-align: right; white-space: nowrap;">Observation Level: </label>
+            <select class="form-control" id="repetitive_measurement_observation_level" style="min-width: 160px; padding: 4px;">
                 <option value="plot">Plots</option>
                 <option value="plant">Plants</option>
                 <option value="subplot">Subplots</option>
                 <option value="tissue_sample">Tissue Samples</option>
             </select>
         </div>
-        <div class="form-group">
-            <label for="repetitive_measurements_level">Repetitive Measurements Level:</label>
-            <select class="form-control" id="repetitive_measurements_level">
+        <div style="display: flex; align-items: center; margin-left: 15px; margin-right: 50px;">
+            <label for="repetitive_measurements_level" style="width: 250px; margin-right: 10px; text-align: right; white-space: nowrap;">Repetitive Measurements Level:</label>
+            <select class="form-control" id="repetitive_measurements_level" style="min-width: 100px; padding: 4px;">
                 <option value="first">First value</option>
                 <option value="last">Last value</option>
                 <option value="average" selected>Average value</option>
@@ -82,12 +64,11 @@ $trial_stock_type => undef
             </select>
         </div>
     </div>
-    <div style="display: flex; align-items: center; justify-content: center; margin-top:20px">
+    <div style="display: flex; align-items: center; justify-content: center; margin-top:20px; margin-bottom: 12px;">
         <button id="repetitive_measurement_select_button" disabled class="btn btn-primary">Submit</button>
     </div>
     <br>
-    <table id="repetitive_measurement_data_table" style="width:100%">
-    </table>
+        <table id="repetitive_measurement_data_table" style="width:100%"></table>
     </form>
 </div>
 
@@ -117,7 +98,7 @@ jQuery(document).ready(function() {
     var trial_id = '<% $trial_id %>';
     let selectedTraitId = '';
 
-    jQuery(document).on('change', '#selectRawDataTrait', function() {
+    jQuery(document).on('change', '#select_trait_for_repetitive_data_and_plot', function() {
         selectedTraitId = jQuery(this).val();
         //console.log("Trait ID updated to:", selectedTraitId);
     });
@@ -255,15 +236,15 @@ jQuery(document).ready(function() {
     }
     
     function repetitive_build_menu(result) {
-        var menu='<select id="selectRawDataTrait">';
+        var $traitSelect = jQuery('#select_trait_for_repetitive_data_and_plot');
+        $traitSelect.empty();
         for (var i =0; i<result.data.length; i++) {
-            menu += '<option value="'+result.data[i].observationVariableDbId+'">'+result.data[i].trait.traitName+'</option>';
+            var menu = `<option value="${result.data[i].observationVariableDbId}">${result.data[i].trait.traitName}</option>`;
+            $traitSelect.append(menu);
         }
-        menu += '</select>';
-        jQuery('#select_trait_for_repetitive_data_and_plot').html(menu);
-        selectedTraitId = jQuery('#selectRawDataTrait option:first').val();
+        selectedTraitId = $traitSelect.find('option:first').val();
 
-	if (selectedTraitId !== undefined) {
+	if (selectedTraitId) {
 	   //alert('Enabling button!');
 	   jQuery('#repetitive_measurement_select_button').prop('disabled', false);
 	}
