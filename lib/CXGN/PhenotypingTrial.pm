@@ -233,15 +233,14 @@ sub get_crossing_experiments_from_field_trial {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $field_trial_id = $self->get_trial_id();
+    my $plots = $self->get_plots();
+    my $plants = $self->get_plants();
 
-    my $field_trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $field_trial_id});
-    my $plots = $field_trial->get_plots();
     my @related_stock_ids;
     foreach my $plot (@$plots){
         push @related_stock_ids, $plot->[0];
     }
 
-    my $plants = $field_trial->get_plants();
     if ($plants) {
         foreach my $plant (@$plants) {
             push @related_stock_ids, $plant->[0];
