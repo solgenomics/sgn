@@ -34,7 +34,7 @@ $project_name => ""
 </td><td width="400">
 	<div>
 	
-	<p>To connect Fieldbook to this database via BrAPI:</p>
+	<p>To connect Fieldbook to this database via BrAPI, from within the Fieldbook app:</p>
       <ol>
         <li>Go to the Fieldbook <strong>Settings</strong></li>
         <li>Open the <strong>BrAPI</strong> settings</li>
