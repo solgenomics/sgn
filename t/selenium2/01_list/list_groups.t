@@ -18,6 +18,11 @@ $d->while_logged_in_as("submitter", sub {
 
     sleep(2);
 
+    # Revert to original sorting: by list name, ascending
+    $d->find_element_ok("(//table[\@id='private_list_data_table']/thead/tr/th)[1]", "xpath", "Sort table by List Name")->click();
+
+    sleep(1);
+
     $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list")->click();
 
     sleep(1);
