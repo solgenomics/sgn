@@ -7,6 +7,7 @@ solGS.analysisSelect = {
     analysisPopname: null,
     analysisType: null,
     dataStructure:null,
+    datasetId: null,
     
 
     
@@ -16,6 +17,16 @@ solGS.analysisSelect = {
             this.analysisPopId = analysisPopId;
         }
         return this.analysisPopId;
+    },
+
+    getDatasetId: function () {
+        var datasetId = jQuery("#dataset_id").val();
+        datasetId = datasetId.replace(/dataset_/, '');
+
+        if (datasetId) {
+            this.datasetId = datasetId;
+        }
+        return this.datasetId;
     },
 
     getAnalysisPopName: function () {
@@ -42,6 +53,19 @@ solGS.analysisSelect = {
         return this.dataStructure;
     },
 
+    getToolCompatibility: function (datasetId) {
+
+        datasetId = datasetId.replace(/dataset_/, '');
+
+        var toolCompatibility = jQuery.ajax({
+            type: "POST",
+            url: '/ajax/dataset/retrieve/' + datasetId + '/tool_compatibility',
+            dataType: "json",
+        });
+
+        return toolCompatibility;
+    },
+
     
 }
 
@@ -49,9 +73,33 @@ solGS.analysisSelect = {
 jQuery(document).on("change", "#analysis_select", function () {
     var selectedAnalysis = jQuery(this).val();
 
-    //TODO: check for compatibility with the selected analysis
+    jQuery("#dataset_trials_analysis_message").empty();
+    jQuery("#run_analysis").prop("disabled", false);
     if (selectedAnalysis) {
         jQuery("#analysis_type").val(selectedAnalysis)
+        var datasetId = solGS.analysisSelect.getDatasetId();
+        console.log("Dataset ID: ", datasetId);
+        if (datasetId) {
+            console.log("Dataset ID: ", solGS.analysisSelect.getDatasetId());
+            solGS.analysisSelect.getToolCompatibility(datasetId).done(function (toolCompatibility) {
+                toolCompatibility = toolCompatibility.tool_compatibility;
+                toolCompatibility = JSON.parse(toolCompatibility);
+
+                if (selectedAnalysis.match(/pearson_correlation/)) {
+                    var correlationCompatible = toolCompatibility.Correlation.compatible;
+
+                    if (correlationCompatible) {
+                        population = solGS.analysisSelect.getDataStructure();
+                        jQuery("#dataset_trials_analysis_message").html(`This analysis is not compatible with the selected ${population}.`).show();
+                        jQuery("#run_analysis").prop("disabled", true);
+                    }
+                }   
+
+            }).fail(function () {
+                jQuery("#dataset_trials_analysis_message").html("Error retrieving tool compatibility.").show();
+            }
+            );
+        }
 
     } else {
         console.log("No analysis selected.");
@@ -75,6 +123,8 @@ jQuery(document).ready(function () {
         jQuery("#dataset_trials_analysis_message").html("Please select an analysis population.").show();
         }
 
+        console.log("Running analysis: ", analysisType, " on population: ", analysisPopId);
+        
         if (analysisType.match(/pearson_correlation/)) {
             var corrArgs;
             var corrPlotDivId;
@@ -118,5 +168,6 @@ jQuery(document).ready(function () {
                 jQuery(corrMsgDiv).html("Error occured running the correlation analysis.").fadeOut(8400);
             });
         }
-    })
+    });
+
 });
