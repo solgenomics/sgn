@@ -32,6 +32,7 @@ use CXGN::Chado::Cvterm;
 use CXGN::Onto;
 use Data::Dumper;
 use JSON;
+use Sort::Naturally;
 
 use namespace::autoclean;
 
@@ -359,12 +360,14 @@ sub children_GET {
         #only report back children of the same cv namespace
       #  if ($child_node->cv_id() != $cvterm->cv_id()) {
       #      next();
-      #  }
 
+      #  }
         my $responsehash = $self->flatten_node($child_node, $relationship_node);
         push @response_list, $responsehash;
     }
-    @response_list = sort { lc $a->{cvterm_name} cmp lc $b->{cvterm_name} } @response_list;
+    #sort naturally by cvterm name
+    @response_list = sort { ncmp(lc $a->{cvterm_name}, lc $b->{cvterm_name}) } @response_list;
+
     $c->stash->{rest} = \@response_list;
 }
 
