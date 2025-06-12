@@ -8,7 +8,8 @@ solGS.analysisSelect = {
     analysisType: null,
     dataStructure:null,
     datasetId: null,
-    
+    implementedAnalyses: ['pearson_correlation'],
+    // compatibilityTools: ['Correlation'],
 
     
     getAnalysisPopId: function () {
@@ -79,28 +80,40 @@ jQuery(document).on("change", "#analysis_select", function () {
         jQuery("#analysis_type").val(selectedAnalysis)
         var datasetId = solGS.analysisSelect.getDatasetId();
         console.log("Dataset ID: ", datasetId);
+
+        implementedAnalyses = solGS.analysisSelect.implementedAnalyses;
+        if (!implementedAnalyses.includes(selectedAnalysis)) {
+            selectedAnalysis = selectedAnalysis.replace(/_/, ' ');
+            jQuery("#dataset_trials_analysis_message").html(
+                `This analysis (${selectedAnalysis}) is yet to be implemented.`)
+                .show();
+            jQuery("#run_analysis").prop("disabled", true);
+        }
+
         if (datasetId) {
             console.log("Dataset ID: ", solGS.analysisSelect.getDatasetId());
             solGS.analysisSelect.getToolCompatibility(datasetId).done(function (toolCompatibility) {
                 toolCompatibility = toolCompatibility.tool_compatibility;
+                console.log("Tool Compatibility: ", toolCompatibility);
                 toolCompatibility = JSON.parse(toolCompatibility);
 
                 if (selectedAnalysis.match(/pearson_correlation/)) {
                     var correlationCompatible = toolCompatibility.Correlation.compatible;
 
-                    if (correlationCompatible) {
+                    if (!correlationCompatible) {
                         population = solGS.analysisSelect.getDataStructure();
-                        jQuery("#dataset_trials_analysis_message").html(`This analysis is not compatible with the selected ${population}.`).show();
+                        jQuery("#dataset_trials_analysis_message").html(`<p>
+                            This analysis is not compatible with the selected ${population}. <br>
+                            Perhaps run 'Check Tool Compatibility', found in the 'Tool Compatibility' <br/>
+                            section above, if it may help.</p>`).show();
                         jQuery("#run_analysis").prop("disabled", true);
                     }
-                }   
-
+                }
+                
             }).fail(function () {
                 jQuery("#dataset_trials_analysis_message").html("Error retrieving tool compatibility.").show();
-            }
-            );
+            });
         }
-
     } else {
         console.log("No analysis selected.");
     }
