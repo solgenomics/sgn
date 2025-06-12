@@ -226,6 +226,11 @@ sizes. Hover for details."></span>
         -->
     </div>
 
+    <& /solgs/tools/correlation/analysis.mas,
+     dataset_id  => $dataset_id,
+     data_structure => 'dataset'
+    &>
+
     <script>
 
     jQuery(document).ready( function() {
