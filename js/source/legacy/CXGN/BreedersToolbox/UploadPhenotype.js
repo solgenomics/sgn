@@ -197,6 +197,7 @@ function displayPhenotypeUploadVerifyResponse(response, upload_type) {
             message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
             message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.";
             message_text += "<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' />";
+	    message_test += "Note: if overwrite is not clicked, not values will be added to the database, even for non repeated traits. ";
             message_text += "<div id='phenotype_upload_remove_values_div' style='display: none'>To remove previously stored values if left blank in your file: <input type='checkbox' id='phenotype_upload_remove_values' name='phenotype_upload_remove_values' /></div>";
             message_text += "<hr><div id='phenotype_upload_details_default'>New values will be uploaded. Any previously stored values will be skipped.</div>";
             message_text += "<div id='phenotype_upload_details_overwrite' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will be skipped.</div>";
