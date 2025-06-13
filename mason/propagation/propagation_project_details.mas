@@ -122,11 +122,31 @@ $propagation_type
 </br>
 <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_propagation_id_link">Add New Propagation ID</button>
 
+<& /propagation/add_propagation_id_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 <script>
 
 jQuery(document).ready(function($) {
+    jQuery('#add_new_propagation_id_link').click(function() {
 
+        jQuery("#propagation_accession_name").autocomplete({
+            source: '/ajax/stock/only_accession_autocomplete',
+            appendTo : propagation_id_dialog
+        });
+
+        jQuery("#propagation_source_name").autocomplete({
+            source: '/ajax/stock/stock_autocomplete',
+            appendTo : propagation_id_dialog
+        });
+
+        jQuery("#rootstock_accession_name").autocomplete({
+            source: '/ajax/stock/only_accession_autocomplete',
+            appendTo : propagation_id_dialog
+        });
+
+        jQuery("#add_propagation_id_dialog").modal("show");
+
+    });
 
 });
 

@@ -1,9 +1,12 @@
 <%args>
 $timestamp => localtime()
+$trial_id
+$trial_name
+
 </%args>
 
 <div class="modal fade" id="add_propagation_id_dialog" name="add_propagation_id_dialog" tabindex="-1" role="dialog" aria-labelledby="addPropagationIdDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="addPropagationIdDialog">Add New Propagation ID</h4>
@@ -11,55 +14,93 @@ $timestamp => localtime()
             <div class="modal-body" id = "propagation_id_dialog">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="add_new_propagation_id_form" name="add_new_propagation_id_form">
-                        <div class="form-group" id = "get_item_name">
-                            <label class="col-sm-3 control-label">Item Name: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" type="text" id="item_name" name="item_name" placeholder="Item name must be in the database">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Propagation Project: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" name="propagation_project" id="propagation_project" disabled value="<% $trial_name %>">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Category: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="item_category">
-                                    <option value="">Please select a category</option>
-                                    <option value="released variety">released variety</option>
-                                    <option value="pathogen assay ">pathogen assay</option>
-                                    <option value="control">control</option>
-                                    <option value="transgenic line">transgenic line</option>
+                            <label class="col-sm-4 control-label">Propagation Identifier: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="text" id="new_propagation_identifier" name="new_propagation_identifier" placeholder="Must be unique in the database">
+                            </div>
+                        </div>
+                        <div class="form-group" id = "get_propagation_accession_name">
+                            <label class="col-sm-4 control-label">Accession Name: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="text" id="propagation_accession_name" name="propagation_accession_name" placeholder="Must be in the database">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Material Type: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="propagation_material_type">
+                                    <option value="">Please select a type</option>
+                                    <option value="Budwood">Budwood</option>
+                                    <option value="Tissue Culture">Tissue Culture</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Additional Info: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="item_additional_info" placeholder="optional">
+                        <div class="form-group" id = "get_propagation_source_name">
+                            <label class="col-sm-4 control-label">Source Name: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="text" id="propagation_source_name" name="propagation_source_name" placeholder="Plot or Plant name, must be in the database">
+                            </div>
+                        </div>
+                        <div class="form-group" id = "get_rootstock_accession_name">
+                            <label class="col-sm-4 control-label">Rootstock Name: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="text" id="rootstock_accession_name" name="rootstock_accession_name" placeholder="Must be in the database">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Material Source: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="item_material_source" placeholder="optional">
+                            <label class="col-sm-4 control-label">Location: </label>
+                            <div class="col-sm-8">
+                                <span id="propagation_location_select_div"></span>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
-                            <div class="col-sm-9" >
-                                <div id="item_breeding_program_div"></div>
+                            <label class="col-sm-4 control-label">Propagation Date: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" id="propagation_date" placeholder="YYYY/MM/DD">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Contact Person Username: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="contact_person_name" placeholder="Please provide contact person username">
+                            <label class="col-sm-4 control-label">Description:</label>
+                            <div class="col-sm-8">
+                                <textarea class="form-control" id="propagation_id_description" name="propagation_id_description" ></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="reset" id="close_add_propagation_id_dialog" name="close_propagation_id_dialog" class="btn btn-default" >Close</button>
-                    <button id="submit_propagation_id" type="button" class="btn btn-primary" >Add</button>
+                    <button id="submit_new_propagation_id" type="button" class="btn btn-primary" >Add</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_propagation_id_saved_dialog_message" name="add_propagation_id_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addPropagationIdSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addPropagationIdSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The propagation identifier was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_propagation_id_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
         </div>
     </div>
 </div>
@@ -67,6 +108,86 @@ $timestamp => localtime()
 
 <script>
 jQuery(document).ready(function(){
+
+    get_select_box("locations", "propagation_location_select_div", {'id': 'propagation_location_select', 'name': 'propagation_location_select'});
+
+    jQuery('#submit_new_propagation_id').click( function() {
+        propagation_project_id = "<%$trial_id%>";
+        const propagation_identifier = jQuery('#new_propagation_identifier').val();
+        const accession_name = jQuery('#propagation_accession_name').val();
+        const material_type = jQuery('#propagation_material_type').val();
+        const source_name = jQuery('#propagation_source_name').val();
+        const rootstock_accession_name = jQuery('#rootstock_accession_name').val();
+        const location = jQuery('#propagation_location_select').val();
+        const date = jQuery('#propagation_date').val();
+        const description = jQuery('#propagation_id_description').val();
+
+        if (propagation_identifier == '') {
+            alert("Please provide a propagation identifier");
+            return;
+        }
+        if (accession_name == '') {
+            alert("Please provide accession name");
+            return;
+        }
+        if (material_type == '') {
+            alert("Please provide material type");
+            return;
+        }
+        if (location == '') {
+            alert("Please provide location");
+            return;
+        }
+        if (date == '') {
+            alert("Please provide date");
+            return;
+        }
+        if (description == '') {
+            alert("Please provide description");
+            return;
+        }
+
+
+        jQuery.ajax({
+            url: '/ajax/propagation/add_propagation_id',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'propagation_project_id' : propagation_project_id,
+                'propagation_identifier': propagation_identifier,
+                'accession_name': accession_name,
+                'material_type': material_type,
+                'source_name': source_name,
+                'rootstock_accession_name': rootstock_accession_name,
+                'location': location,
+                'date': date,
+                'description': description,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#add_propagation_id_dialog').modal('hide');
+                    jQuery('#add_propagation_id_saved_dialog_message').modal("show");
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding item');
+            }
+        });
+    });
+
+
+    jQuery("#close_add_propagation_id_dialog").click(function() {
+        jQuery("#add_propagation_id_dialog").modal('hide');
+        location.reload();
+    });
 
 
 });
