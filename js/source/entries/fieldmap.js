@@ -689,31 +689,23 @@ export function init() {
 
                     // TODO: implement AJAX function and call it here, creating plot map image
                     // if coords given, show layout. If not, just list plants prettily
-                    //new jQuery.ajax({
-                        // type: "POST",
-                        // url: //"/ajax/breeders/trial/" + trial_id + "/retrieve_plot_images",
-                        // dataType: //"json",
-                        // data: {
-                        //     // image_ids: JSON.stringify(image_ids),
-                        //     // plot_name: replace_plot_name,
-                        //     // plot_id: replace_plot_id,
-                        // },
-                        // success: function (response) {
-                        //     jQuery("#working_modal").modal("hide");
-                        //     var images = response.image_html;
-                        //     if (response.error) {
-                        //         alert("Error Retrieving Plot Images: " + response.error);
-                        //     } else {
-                        //         jQuery("#show_plot_image_ids").html(images);
-
-                        //         // jQuery('#view_plot_image_dialog').modal("show");
-                        //     }
-                        // },
-                        // error: function () {
-                        //     jQuery("#working_modal").modal("hide");
-                        //     alert("An error occurred retrieving plot images");
-                        // },
-                    //});
+                    new jQuery.ajax({
+                        url: '/stock/get_plot_contents/'+replace_plot_id,
+                        success: function (response) {
+                            jQuery("#working_modal").modal("hide");
+                            if (response.error) {
+                                alert("Error retrieving plot contents " + response.error);
+                            } else {
+                                console.dir(JSON.parse(response.data));
+                                jQuery('#hm_plot_level_map').show();
+                                jQuery('#hm_plot_level_map').html(JSON.stringify(JSON.parse(response.data), null, '\t'));
+                            }
+                        },
+                        error: function (error) {
+                            jQuery("#working_modal").modal("hide");
+                            alert("Error retrieving plot contents: " + error);
+                        },
+                    });
 
                     new jQuery.ajax({
                         type: "POST",

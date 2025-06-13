@@ -2185,21 +2185,21 @@ $plot_data = {
     id => plot_id,
     name => plot_name,
     type => plot,
-    stockprop_name => {stockprop_id => x, value => 1},
+    stockprop_name => {id => x, value => 1},
     stockprop_name => {...},
-    contains => {
+    has => {
         id => {
             id => subplot_id
             name => subplot_name,
             type => subplot,
-            stockprop_name => {stockprop_id => x, value => 1},
-            contains => {
+            stockprop_name => {id => x, value => 1},
+            has => {
                 id => {
                     id => plant_id,
                     name => plant_name,
                     type => plant,
                     stockprop_name => {...},
-                    contains => {
+                    has => {
                         {accession data...}
                     }
                 }
@@ -2236,10 +2236,19 @@ sub get_plot_contents {
         (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
         FROM stock_relationship 
         JOIN stock ON (stock.stock_id=stock_relationship.object_id) 
-        WHERE stock_relationship.subject_id=?";
+        WHERE stock_relationship.subject_id=?"; #For plots, this returns accessions, subplots, and plants. For subplots, this returns accessions. For plants, this returns parent subplot and accessions. 
     my $stockprops_q = "SELECT cvterm.name, cvterm_id, value FROM stockprop
         JOIN cvterm ON (cvterm.cvterm_id=stockprop.type_id)
-        WHERE stockprop.stock_id=?";
+        WHERE stockprop.stock_id=?"; #gets all stockprops for any stock. 
+
+    my $tissue_sample_q = "SELECT * FROM 
+    (SELECT stock.stock_id, stock.name, 
+    (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type, 
+    (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+    FROM stock_relationship 
+    JOIN stock ON (stock.stock_id=stock_relationship.subject_id) 
+    WHERE stock_relationship.object_id=?) AS tissue_samples_subquery
+    WHERE stock_type='tissue_sample'"; #only useful for plants, where it gives tissue samples. 
     
     my $h = $self->schema()->storage()->dbh()->prepare($stockprops_q);
     $h->execute($plot_id);
@@ -2267,7 +2276,24 @@ sub get_plot_contents {
         push @stocks, $stock_data;
     }
 
-    foreach my $stock (@stocks) { # get stockprops of child stocks
+    foreach my $plant (grep {$_->{type} eq "plant"} @stocks) { #does not necessarily execute, need this for tissue samples
+        $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q);
+        $h->execute($plant->{id});
+
+        while (my ($tissue_sample_id, $tissue_sample_name, $stock_type, $relationship_type) = $h->fetchrow_array()) {
+            my $tissue_sample_data = {
+                name => $tissue_sample_name,
+                id => $tissue_sample_id,
+                type => $stock_type
+            };
+
+            $plant->{has}->{$tissue_sample_id} = 1;
+            
+            push @stocks, $tissue_sample_data;
+        }
+    }
+
+    foreach my $stock (@stocks) { # get stockprops of all child stocks
         $h = $self->schema()->storage()->dbh()->prepare($stockprops_q);
         $h->execute($stock->{id});
 
@@ -2279,36 +2305,53 @@ sub get_plot_contents {
         }
     }
 
-    my $accession = grep {$_->{type} eq "accession"} @stocks; # I am assuming only one accession is allowed here...
+    my @accessions = (grep {$_->{type} eq "accession"} @stocks); # At time of writing, this is only one. But, it may be possible in the future to have multiple accessions
 
-    unless (grep {$_->{type} eq "subplot"} @stocks || grep {$_->{type} eq "plant"} @stocks) { #if no subplots or plants, just add accession
-        $plot_structure->{contains}->{$accession->{id}} = $accession;
+    unless ( (grep {$_->{type} eq "subplot"} @stocks) || (grep {$_->{type} eq "plant"} @stocks) ) { #if no subplots or plants, just add accession
+
+        foreach my $accession (@accessions) {
+            $plot_structure->{has}->{$accession->{id}} = $accession;
+        }
+
         return $plot_structure;
     }
 
     foreach my $subplot (grep {$_->{type} eq "subplot"} @stocks) { #does not necessarily execute
 
-        $plot_structure->{contains}->{$subplot->{id}} = $subplot;
-        # don't need to run any queries because subplot relationships are not stored properly in db
-        unless (grep {$_->{type} eq "plant"} @stocks) { #if no plants, enter accession
-            $plot_structure->{contains}->{$subplot->{id}}->{contains}->{$accession->{id}} = $accession;
+        unless (grep {$_->{type} eq "plant"} @stocks) { #if no plants, enter accession to subplot
+            $h = $self->schema()->storage()->dbh()->prepare($relationship_q); # need to run query to future proof for multiple accessions in future
+            $h->execute($subplot->{id});
+
+            while (my ($accession_id, $accession_name, $stock_type, $relationship_type) = $h->fetchrow_array()) {
+                my $accession = (grep {$_->{id} == $accession_id} @accessions)[0]; #grabs the stockprop data too, since we already have that
+                $subplot->{has}->{$accession_id} = $accession;
+            }
         }
+
+        $plot_structure->{has}->{$subplot->{id}} = $subplot;
     }
 
     foreach my $plant (grep {$_->{type} eq "plant"} @stocks) { #does not necessarily execute
         $h = $self->schema()->storage()->dbh()->prepare($relationship_q);
         $h->execute($plant->{id});
 
-        $plant->{contains}->{$accession->{id}} = $accession;
-
-        while (my ($stock_id, $stock_name, $stock_type, $relationship_type) = $h->fetchrow_array()) {
-            next if ($stock_type eq "accession");
-
-            if ($stock_type eq "subplot") {
-                $plot_structure->{contains}->{$stock_id}->{contains}->{$plant->{id}} = $plant;
-            } else {
-                $plot_structure->{contains}->{$plant->{id}} = $plant; #plots don't show up when subject is a plant of a plot, but subplots do
+        foreach my $tissue_sample (grep {$_->{type} eq "tissue_sample"} @stocks) {
+            if ($plant->{has}->{$tissue_sample->{id}}) {
+                $plant->{has}->{$tissue_sample->{id}} = $tissue_sample;
             }
+        }
+
+        while (my ($stock_id, $stock_name, $stock_type, $relationship_type) = $h->fetchrow_array()) { #gets parent subplot and accessions
+            if ($stock_type eq "accession") {
+                my $accession = (grep {$_->{id} == $stock_id} @accessions)[0];
+                $plant->{has}->{$stock_id} = $accession;
+            } elsif ($stock_type eq "subplot") {
+                $plot_structure->{has}->{$stock_id}->{has}->{$plant->{id}} = $plant;
+            } 
+        }
+
+        unless (grep {$_->{type} eq "subplot"} @stocks) { #if there are no subplots, we assign the plant directly to the plot
+            $plot_structure->{has}->{$plant->{id}} = $plant;
         }
     }
 

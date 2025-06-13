@@ -2061,11 +2061,22 @@ sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
     my $plot_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
 
-    my $plot = CXGN::Stock->new({schema => $schema, stock_id=>$plot_id});
+    my $plot;
+    my $plot_contents;
+    
+    eval {
+        $plot = CXGN::Stock->new({schema => $schema, stock_id=>$plot_id});
 
-    my $plot_contents = JSON::Any->encode($plot->get_plot_contents());
+        $plot_contents = $plot->get_plot_contents();
+        print STDERR Dumper $plot_contents;
+    };
 
-    $c->stash->{rest} = {data => $plot_contents};
+    if ($@) {
+        $c->stash->{rest} = {error => "An error occurred: $@"};
+    }
+
+
+    $c->stash->{rest} = {data => JSON::Any->encode($plot_contents)};
 }
 
 sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/trial_related_stock') Args(0){
