@@ -72,14 +72,18 @@ sub patch {
             'propagation_experiment'
         ],
         'stock_type' => [
-            'propagation'
+            'propagation',
+            'inventory'
         ],
         'stock_relationship' => [
             'propagation_material_of',
             'propagation_source_material_of',
+            'propagation_rootstock_of',
+            'propagation_product_of'
         ],
         'stock_property' => [
             'propagation_metadata',
+            'propagation_material_type'
         ],
     };
 
