@@ -9,7 +9,12 @@ solGS.analysisSelect = {
     dataStructure:null,
     datasetId: null,
     implementedAnalyses: ['pearson_correlation'],
-    // compatibilityTools: ['Correlation'],
+    compatibilityTools: [
+        'Correlation', 
+        'Population Structure', 
+        'Clustering', 
+        'Kinship & Inbreeding'
+    ],
 
     
     getAnalysisPopId: function () {
@@ -67,6 +72,29 @@ solGS.analysisSelect = {
         return toolCompatibility;
     },
 
+    extractToolsCompatibility: function (toolsCompatibility) {
+        toolsCompatibility = toolsCompatibility.tool_compatibility;
+        console.log("extractToolsCompatibility Tool Compatibility: ", toolsCompatibility);
+        
+        toolsCompatibility = JSON.parse(toolsCompatibility);
+        var tools = Object.keys(toolsCompatibility);
+
+        console.log("Extracted Tools: ", tools);
+        var toolsCompatibilityCheck = {};
+        if (tools && tools.length > 0) {
+            for (var i = 0; i < tools.length; i++) {
+                var tool = tools[i];
+                
+                var compatible = toolsCompatibility[tool]['compatible'];
+                toolsCompatibilityCheck[tool] = compatible;            
+            }
+        }
+
+        console.log("Tools Compatibility Check: ", toolsCompatibilityCheck);
+
+        return toolsCompatibilityCheck;
+},
+
     
 }
 
@@ -93,12 +121,11 @@ jQuery(document).on("change", "#analysis_select", function () {
         if (datasetId) {
             console.log("Dataset ID: ", solGS.analysisSelect.getDatasetId());
             solGS.analysisSelect.getToolCompatibility(datasetId).done(function (toolCompatibility) {
-                toolCompatibility = toolCompatibility.tool_compatibility;
-                console.log("Tool Compatibility: ", toolCompatibility);
-                toolCompatibility = JSON.parse(toolCompatibility);
-
+                var toolsCompatibilityCheck = solGS.analysisSelect.extractToolsCompatibility(toolCompatibility);
+                
                 if (selectedAnalysis.match(/pearson_correlation/)) {
-                    var correlationCompatible = toolCompatibility.Correlation.compatible;
+                    var correlationCompatible = toolsCompatibilityCheck['Correlation'];
+                    console.log("Correlation Compatible: ", correlationCompatible);
 
                     if (!correlationCompatible) {
                         population = solGS.analysisSelect.getDataStructure();
