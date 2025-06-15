@@ -24,7 +24,7 @@ jQuery(document).ready(function () {
                 jQuery("#working_modal").modal("hide");
                 var html1 = '';
 % if ($trial_type eq 'field_trial'){
-                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Genotyping Plates(s) From This Field Trial</th></tr></thead><tbody>';
+                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Genotyping Plate(s) From This Field Trial</th></tr></thead><tbody>';
                 for (var i=0; i<response.genotyping_trials_from_field_trial.length; i++){
                     html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.genotyping_trials_from_field_trial[i][0]+'">'+response.genotyping_trials_from_field_trial[i][1]+'</a></td><td><a href="javascript:remove_linkage('+response.genotyping_trials_from_field_trial[i][0]+','+<% $trial_id %>+')">Remove linkage</a></td></tr>';
                 }
@@ -56,7 +56,7 @@ function remove_linkage(plate_id, trial_id) {
               if (r.error) { alert(r.error); }
               else {
                   alert("The genotyping plate link has been removed from the field trial.");
-                    location.reload(); 
+                    location.reload();
               }
            },
            error: function(r) {  alert("An error occurred!") }
