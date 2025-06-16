@@ -2,6 +2,7 @@
 $timestamp => localtime()
 $trial_id
 $trial_name
+$breeding_program_name
 
 </%args>
 
@@ -112,7 +113,6 @@ jQuery(document).ready(function(){
     get_select_box("locations", "propagation_location_select_div", {'id': 'propagation_location_select', 'name': 'propagation_location_select'});
 
     jQuery('#submit_new_propagation_id').click( function() {
-        propagation_project_id = "<%$trial_id%>";
         const propagation_identifier = jQuery('#new_propagation_identifier').val();
         const accession_name = jQuery('#propagation_accession_name').val();
         const material_type = jQuery('#propagation_material_type').val();
@@ -121,6 +121,8 @@ jQuery(document).ready(function(){
         const location = jQuery('#propagation_location_select').val();
         const date = jQuery('#propagation_date').val();
         const description = jQuery('#propagation_id_description').val();
+        const breeding_program_name =  "<%$breeding_program_name%>";
+        const propagation_project_id = "<%$trial_id%>";
 
         if (propagation_identifier == '') {
             alert("Please provide a propagation identifier");
@@ -149,11 +151,12 @@ jQuery(document).ready(function(){
 
 
         jQuery.ajax({
-            url: '/ajax/propagation/add_propagation_id',
+            url: '/ajax/propagation/add_propagation_identifier',
             dataType: "json",
             type: 'POST',
             data : {
-                'propagation_project_id' : propagation_project_id,
+                'propagation_project_id': propagation_project_id,
+                'breeding_program_name': breeding_program_name,
                 'propagation_identifier': propagation_identifier,
                 'accession_name': accession_name,
                 'material_type': material_type,

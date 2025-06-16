@@ -122,7 +122,7 @@ $propagation_type
 </br>
 <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_propagation_id_link">Add New Propagation ID</button>
 
-<& /propagation/add_propagation_id_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /propagation/add_propagation_id_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name &>
 
 <script>
 

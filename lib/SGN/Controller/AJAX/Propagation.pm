@@ -114,6 +114,97 @@ sub add_propagation_project_POST :Args(0){
 }
 
 
+sub add_propagation_identifier : Path('/ajax/propagation/add_propagation_identifier') : ActionClass('REST') {}
+
+sub add_transformation_identifier_POST :Args(0){
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $propagation_identifier = $c->req->param('propagation_identifier');
+    $propagation_identifier =~ s/^\s+|\s+$//g;
+    my $propagation_project_id = $c->req->param('propagation_project_id');
+    my $accession_name = $c->req->param('accession_name');
+    my $material_type = $c->req->param('material_type');
+    my $source_name = $c->req->param('source_name');
+    my $rootstock_accession_name = $c->req->param('rootstock_accession_name');
+    my $location = $c->req->param('location');
+    my $date = $c->req->param('date');
+    my $description = $c->req->param('description');
+    my $program_name = $c->req->param('breeding_program_name');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation ID." };
+        return;
+    }
+
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add propagation identifiers." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession', 'stock_type')->cvterm_id();
+
+    if ($schema->resultset("Stock::Stock")->find({uniquename => $propagation_identifier})){
+        $c->stash->{rest} = {error =>  "Propagation Identifier already exists. Please use another name" };
+        return;
+    }
+
+    if (! $schema->resultset("Stock::Stock")->find({uniquename => $accession_name, type_id => $accession_cvterm_id })){
+        $c->stash->{rest} = {error =>  "Accession name does not exist or does not exist as accession uniquename." };
+        return;
+    }
+
+    if (! $schema->resultset("Stock::Stock")->find({uniquename => $source_name})){
+        $c->stash->{rest} = {error =>  "Source name does not exist in the database." };
+        return;
+    }
+
+    my $propagation_stock_id;
+    eval {
+        my $add_propagation_identifier = CXGN::Propagation::AddPropagationIdentifier->new({
+            chado_schema => $schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            propagation_project_id => $propagation_project_id,
+            propagation_identifier => $propagation_identifier,
+            accession_name => $accession_name,
+            material_type => $material_type,
+            source_name => $source_name,
+            rootstock_accession_name => $rootstock_accession_name,
+            location => $location,
+            owner_id => $user_id,
+            date => $date,
+            description => $description
+        });
+
+        my $add = $add_propagation_identifier->add_propagation_identifier();
+        $propagation_stock_id = $add->{propagation_stock_id};
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { success => 0, error => $@ };
+        print STDERR "An error condition occurred, was not able to create propagation identifier. ($@).\n";
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
+
 
 ###
 1;#
