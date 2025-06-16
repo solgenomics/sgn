@@ -10,8 +10,8 @@
         $commit = `git rev-parse --short HEAD`;
         $updated = `git log -1 --format=%cd`;
     } else {
-        $tag = eval{ $c->get_conf('version') };
-        $updated = eval{ $c->get_conf('version_updated') };
+        $tag = $ENV{VERSION};
+        $updated = $ENV{BUILD_DATE};
     }
 </%init>
 
@@ -37,7 +37,7 @@
                 <span class="git-version-commit"><a href="https://github.com/solgenomics/sgn/commits/<% $commit %>"><% $commit %></a></span>&nbsp;
                 <span class="git-version-tag"><a href="https://github.com/solgenomics/sgn/commits/<% $tag %>"><% $tag %></a></span>
 % } else {
-                <span class="git-version-tag"><% $tag %></span>&nbsp;
+                <span class=""><% $tag %></span>&nbsp;
 % }
                 <br />
                 <span class="git-version-updated"><% $updated %></span>

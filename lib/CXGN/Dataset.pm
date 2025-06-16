@@ -62,6 +62,7 @@ use CXGN::Genotype::Search;
 use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use CXGN::Trial;
+use CXGN::Trait;
 
 =head2 people_schema()
 

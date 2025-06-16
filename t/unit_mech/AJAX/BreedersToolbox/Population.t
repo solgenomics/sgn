@@ -8,6 +8,7 @@ use Test::WWW::Mechanize;
 
 use Data::Dumper;
 use JSON;
+use CXGN::Stock::Seedlot;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
@@ -40,6 +41,26 @@ $response = decode_json $mech->content;
 is($response->{'success'}, "Success! Population test_population_2 created");
 my $new_population2_id = $response->{'population_id'};
 
+#retrieving member_seedlots
+$mech->get_ok("http://localhost:3010/ajax/manage_accessions/population_seedlots/$new_population2_id");
+$response = decode_json $mech->content;
+my %data = %{$response};
+my $result = $data{data};
+my @all_member_seedlots = @$result;
+my $number_of_seedlots = @$result;
+is($number_of_seedlots, 3);
+
+my $first_seedlot = $all_member_seedlots[0];
+my $second_seedlot = $all_member_seedlots[1];
+my $third_seedlot = $all_member_seedlots[2];
+
+is($first_seedlot->{'member_name'}, 'test_accession1');
+is($first_seedlot->{'seedlot_name'}, 'test_accession1_001');
+is($second_seedlot->{'member_name'}, 'test_accession2');
+is($second_seedlot->{'seedlot_name'}, 'test_accession2_001');
+is($third_seedlot->{'member_name'}, 'test_accession3');
+is($third_seedlot->{'seedlot_name'}, 'test_accession3_001');
+
 $mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => '2024_crossing_experiment', 'crossingtrial_program_id' => 134, 'crossingtrial_location' => 'test_location', 'year' => '2024', 'project_description' => 'test description' ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
@@ -66,6 +87,7 @@ $crossing_experiment_rs->delete();
 $mech->post_ok('http://localhost:3010/ajax/population/delete', [ "population_name"=> 'test_population_2', "population_id" => $new_population2_id ]);
 $response = decode_json $mech->content;
 is($response->{'success'}, "Population test_population_2 deleted successfully!");
+
 
 
 done_testing();
