@@ -166,9 +166,18 @@ sub add_transformation_identifier_POST :Args(0){
         return;
     }
 
-    if (! $schema->resultset("Stock::Stock")->find({uniquename => $source_name})){
-        $c->stash->{rest} = {error =>  "Source name does not exist in the database." };
-        return;
+    if ($source_name) {
+        if (! $schema->resultset("Stock::Stock")->find({uniquename => $source_name})){
+            $c->stash->{rest} = {error =>  "Source name does not exist in the database." };
+            return;
+        }
+    }
+
+    if ($rootstock_accession_name) {
+        if (! $schema->resultset("Stock::Stock")->find({uniquename => $rootstock_accession_name, type_id => $accession_cvterm_id })){
+            $c->stash->{rest} = {error =>  "Rootstock accession name does not exist or does not exist as accession uniquename." };
+            return;
+        }
     }
 
     my $propagation_stock_id;
@@ -183,8 +192,8 @@ sub add_transformation_identifier_POST :Args(0){
             material_type => $material_type,
             source_name => $source_name,
             rootstock_accession_name => $rootstock_accession_name,
-            location => $location,
-            owner_id => $user_id,
+            nd_geolocation_id => $location,
+            operator_id => $user_id,
             date => $date,
             description => $description
         });
