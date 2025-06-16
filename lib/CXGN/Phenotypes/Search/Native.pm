@@ -48,6 +48,7 @@ use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
+use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
 
@@ -237,6 +238,8 @@ sub search {
     my %design_layout_hash;
     my $using_layout_hash;
     #For performance reasons the number of joins to stock can be reduced if a trial is given. If trial(s) given, use the cached layout from TrialLayout instead.
+
+    print STDERR "start date here: ".$self->start_date()." and the end date here: ".$self->end_date()."\n";
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
 
@@ -517,7 +520,7 @@ sub search {
     my $datelessq = "";
 
     if ($self->include_dateless_items()) {
-	$datelessq = " phenotype.create_date IS NULL OR ";
+	$datelessq = " phenotype.collect_date IS NULL OR ";
     }
 
     my ($start_date, $end_date);
@@ -525,13 +528,16 @@ sub search {
 	$start_date = $1;
     }
 
-    if ($self->end_date() =~ m/\d{4}\-\d{2}\-\d{2}/ ) {
+    if ($self->end_date() =~ m/(\d{4}\-\d{2}\-\d{2})/) {
 	$end_date = $1;
     }
 
-    if ($start_date && $end_date) {
-	push @where_clause, " ( $datelessq ( phenotype.create_date > $start_date and phenotype.create_date < $end_date ) ) ";
+    #print STDERR "the start date here: $start_date. And the end date here: $end_date\n";
 
+    if ($start_date && $end_date) {
+        #print STDERR "including the date query\n";
+	    push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date <= '$end_date'::date ) ) ";
+        #push @where_clause, " ( $datelessq ( phenotype.collect_date >= $start_date and phenotype.collect_date <= $end_date ) ) ";
     }
 
     if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
