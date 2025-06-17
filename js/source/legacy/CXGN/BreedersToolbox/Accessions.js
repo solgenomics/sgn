@@ -663,10 +663,10 @@ function verify_accession_list(accession_list_id) {
 function review_verification_results(doFuzzySearch, verifyResponse, accession_list_id){
     var i;
     var j;
-    accessionListFound = {};
-    accessionList = [];
-    infoToAdd = [];
-    speciesNames = [];
+    let accessionListFound = {};
+    let accessionList = [];
+    let infoToAdd = [];
+    let speciesNames = [];
     //console.log(verifyResponse);
     //console.log(accession_list_id);
 
@@ -725,7 +725,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
         }
     }
 
-    jQuery('#review_found_matches_hide').click(function(){
+    jQuery('#review_found_matches_hide').off('click').on('click', function(){
 
         if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
