@@ -662,6 +662,7 @@ export function init() {
                     return true;
                 }
                 if (plot.type == "data") {
+
                     var image_ids = plot.plotImageDbIds || [];
                     var replace_accession = plot.germplasmName;
                     var replace_plot_id = plot.observationUnitDbId;
@@ -686,9 +687,8 @@ export function init() {
                     );
 
                     jQuery("#hm_plot_details_modal").modal("show");
+                    jQuery('#hm_plot_structure_container').hide();
 
-                    // TODO: implement AJAX function and call it here, creating plot map image
-                    // if coords given, show layout. If not, just list plants prettily
                     new jQuery.ajax({
                         url: '/stock/get_plot_contents/'+replace_plot_id,
                         success: function (response) {
@@ -696,9 +696,134 @@ export function init() {
                             if (response.error) {
                                 alert("Error retrieving plot contents " + response.error);
                             } else {
-                                console.dir(JSON.parse(response.data));
-                                jQuery('#hm_plot_level_map').show();
-                                jQuery('#hm_plot_level_map').html(JSON.stringify(JSON.parse(response.data), null, '\t'));
+
+                                function createCollapsibleList(obj) {
+                                    let ul = document.createElement("ul");
+
+                                    for (const key in obj) {
+                                        if (obj.hasOwnProperty(key)) {
+                                            let li = document.createElement("li");
+
+                                            if (typeof obj[key] === "object" && obj[key] !== null) {
+                                                const arrow = document.createElement("span");
+                                                arrow.textContent = "\u25B6";
+                                                arrow.classList.add("arrow");
+
+                                                let span = document.createElement("span");
+                                                span.textContent = key;
+                                                span.classList.add("collapsible");
+                                                span.prepend(arrow); 
+
+                                                span.onclick = function () {
+                                                    nestedUl.classList.toggle("hidden");
+                                                    arrow.textContent = nestedUl.classList.contains("hidden") ? "\u25B6" : "\u25BC"; 
+                                                };
+
+                                                li.appendChild(span);
+
+                                                let nestedUl = createCollapsibleList(obj[key]);
+                                                nestedUl.classList.add("hidden");
+                                                li.appendChild(nestedUl);
+                                            } else {
+                                                li.textContent = `${key}: ${obj[key]}`;
+                                            }
+
+                                            ul.appendChild(li);
+                                        }
+                                    }
+                                    return ul;
+                                }
+
+                                function createTableWithSubplots(obj) {
+
+                                }
+
+                                function createTable(obj) {
+                                    let max_row = 1;
+                                    let max_col = 1;
+                                    let coord_dictionary = {};
+                                    for (let plant in obj["has"]) {
+                                        let row = obj["has"][plant]["attributes"]["row_number"]["value"];
+                                        let col = obj["has"][plant]["attributes"]["col_number"]["value"];
+                                        if (row > max_row) {
+                                            max_row = row;
+                                        }
+                                        if (col > max_col) {
+                                            max_col = col;
+                                        }
+                                        coord_dictionary["" + row + "," + col + ""] = plant ; 
+                                    }
+                                    
+                                    // table will have max_row + 1 rows and max_col + 1 cols
+
+                                    let table_elems = ["<table style=\"aspect-ratio:1 / 1; border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
+
+                                    for (let row = max_row; row >= 0; row--){
+                                        table_elems.push("<tr>");
+                                        for (let col = 0; col <= max_col; col++){
+                                            if (row == 0) { // add headers
+                                                if (col == 0) {// bottom left should be empty
+                                                    table_elems.push("<th style=\"border:none;\"></th>");
+                                                } else {
+                                                    table_elems.push("<th style=\"border:none;text-align:center; vertical-align:middle;\">"+col+"</th>");
+                                                }
+                                            } else { // Not last row, not a header row
+                                                if (col == 0) {// row header
+                                                    table_elems.push("<th style=\"border:none;text-align:left; vertical-align:middle;padding-right:5px;\">"+row+"</th>");
+                                                } else {// normal plant
+                                                    table_elems.push("<td id=\"plot_detail_map_r"+row+"_c"+col+"\" style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
+                                                }
+                                            }
+                                        }
+                                        table_elems.push("</tr>");
+                                    }
+
+                                    table_elems.push("</table>");
+
+                                    return(table_elems.join(""));
+                                }
+
+                                let plot_structure = JSON.parse(response.data);
+                                // Check if there are plants with row and column data. If yes, then we do a map display. If not, then we do a list display
+                                let display_layout = false;
+                                let structure;
+                                for (let key in plot_structure["has"]) {
+                                    if (plot_structure["has"][key]["type"] == "subplot") {
+                                        for (let subkey in plot_structure["has"][key]["has"]) {
+                                            if (plot_structure["has"][key]["has"][subkey]["type"] == "plant") {
+                                                structure = "plot:subplot:plant";
+                                                if (plot_structure["has"][key]["has"][subkey]["attributes"]?.["row_number"]["value"] > 0) {
+                                                    display_layout = true;
+                                                }
+                                            }
+                                        }
+                                    } else if (plot_structure["has"][key]["type"] == "plant") {
+                                        structure = "plot:plant";
+                                        if (plot_structure["has"][key]["attributes"]?.["row_number"]["value"] > 0) {
+                                            display_layout = true;
+                                        }
+                                    } else {
+                                        structure = "plot"
+                                    }
+                                }
+
+                                let hm_plot_structure_data_container = document.getElementById("hm_plot_structure_data_container");
+
+                                delete plot_structure["id"];
+                                delete plot_structure["type"];
+                                delete plot_structure["name"];
+
+                                if (display_layout) {
+                                    if (structure == "plot:subplot:plant") {
+                                        hm_plot_structure_data_container.innerHTML = createTableWithSubplots(plot_structure);
+                                    } else if (structure == "plot:plant") {
+                                        hm_plot_structure_data_container.innerHTML = createTable(plot_structure);
+                                        hm_plot_structure_data_container.prepend(createCollapsibleList(plot_structure));
+                                    }
+                                } else {
+                                    hm_plot_structure_data_container.replaceChildren(createCollapsibleList(plot_structure));
+                                }
+                                jQuery('#hm_plot_structure_container').show();
                             }
                         },
                         error: function (error) {

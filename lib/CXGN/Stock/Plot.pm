@@ -99,27 +99,25 @@ $plot_data = {
     id => plot_id,
     name => plot_name,
     type => plot,
-    stockprop_name => {id => x, value => 1},
-    stockprop_name => {...},
+    attributes => {stockprop_name => {id => x, value => 1}, ...},
     has => {
-        id => {
+        subplot_name => {
             id => subplot_id
-            name => subplot_name,
             type => subplot,
-            stockprop_name => {id => x, value => 1},
+            attributes => {stockprop_name => {id => x, value => 1}, ...},
             has => {
-                id => {
+                name => {
                     id => plant_id,
-                    name => plant_name,
                     type => plant,
-                    stockprop_name => {...},
+                    attributes => {stockprop_name => {id => x, value => 1}},
                     has => {
-                        {accession data...}
+                        {accession data...},
+                        {tissue sample data...}
                     }
                 }
             }
         },
-        id => {
+        subplot_name => {
             id => subplot_id_2,
             ...as above...
         }
@@ -132,8 +130,6 @@ The data structure follows plot->(subplot->)(plant->)accession. If this stock is
 
 sub get_plot_contents {
     my $self = shift;
-
-    print STDERR "[GETTING PLOT CONTENTS!!!!!!!!]\n";
 
     my $plot_id = $self->stock_id();
 
@@ -170,7 +166,7 @@ sub get_plot_contents {
     $h->execute($plot_id);
 
     while (my ($stockprop, $stockprop_id, $value) = $h->fetchrow_array()) { #get plot stockprops
-        $plot_structure->{$stockprop} = {
+        $plot_structure->{attributes}->{$stockprop} = {
             id => $stockprop_id,
             value => $value
         };
@@ -203,7 +199,7 @@ sub get_plot_contents {
                 type => $stock_type
             };
 
-            $plant->{has}->{$tissue_sample_id} = 1;
+            $plant->{has}->{$tissue_sample_name} = 1;
             
             push @stocks, $tissue_sample_data;
         }
@@ -214,7 +210,7 @@ sub get_plot_contents {
         $h->execute($stock->{id});
 
         while (my ($stockprop, $stockprop_id, $value) = $h->fetchrow_array()) {
-            $stock->{$stockprop} = {
+            $stock->{attributes}->{$stockprop} = {
                 id => $stockprop_id,
                 value => $value
             };
@@ -226,7 +222,9 @@ sub get_plot_contents {
     unless ( (grep {$_->{type} eq "subplot"} @stocks) || (grep {$_->{type} eq "plant"} @stocks) ) { #if no subplots or plants, just add accession
 
         foreach my $accession (@accessions) {
-            $plot_structure->{has}->{$accession->{id}} = $accession;
+            my $accession_name = $accession->{name};
+            delete $accession->{name};
+            $plot_structure->{has}->{$accession_name} = $accession;
         }
 
         return $plot_structure;
@@ -240,11 +238,15 @@ sub get_plot_contents {
 
             while (my ($accession_id, $accession_name, $stock_type, $relationship_type) = $h->fetchrow_array()) {
                 my $accession = (grep {$_->{id} == $accession_id} @accessions)[0]; #grabs the stockprop data too, since we already have that
-                $subplot->{has}->{$accession_id} = $accession;
+                my $accession_name = $accession->{name};
+                delete $accession->{name};
+                $subplot->{has}->{$accession_name} = $accession;
             }
         }
 
-        $plot_structure->{has}->{$subplot->{id}} = $subplot;
+        my $subplot_name = $subplot->{name};
+        delete $subplot->{name};
+        $plot_structure->{has}->{$subplot_name} = $subplot;
     }
 
     foreach my $plant (grep {$_->{type} eq "plant"} @stocks) { #does not necessarily execute
@@ -252,22 +254,29 @@ sub get_plot_contents {
         $h->execute($plant->{id});
 
         foreach my $tissue_sample (grep {$_->{type} eq "tissue_sample"} @stocks) {
-            if ($plant->{has}->{$tissue_sample->{id}}) {
-                $plant->{has}->{$tissue_sample->{id}} = $tissue_sample;
+            if ($plant->{has}->{$tissue_sample->{name}}) {
+                my $tissue_sample_name = $tissue_sample->{name};
+                delete $tissue_sample->{name};
+                $plant->{has}->{$tissue_sample_name} = $tissue_sample;
             }
         }
 
         while (my ($stock_id, $stock_name, $stock_type, $relationship_type) = $h->fetchrow_array()) { #gets parent subplot and accessions
             if ($stock_type eq "accession") {
                 my $accession = (grep {$_->{id} == $stock_id} @accessions)[0];
-                $plant->{has}->{$stock_id} = $accession;
+                delete $accession->{name};
+                $plant->{has}->{$stock_name} = $accession;
             } elsif ($stock_type eq "subplot") {
-                $plot_structure->{has}->{$stock_id}->{has}->{$plant->{id}} = $plant;
+                my $plant_name = $plant->{name};
+                delete $plant->{name};
+                $plot_structure->{has}->{$stock_name}->{has}->{$plant_name} = $plant;
             } 
         }
 
         unless (grep {$_->{type} eq "subplot"} @stocks) { #if there are no subplots, we assign the plant directly to the plot
-            $plot_structure->{has}->{$plant->{id}} = $plant;
+            my $plant_name = $plant->{name};
+            delete $plant->{name};
+            $plot_structure->{has}->{$plant_name} = $plant;
         }
     }
 

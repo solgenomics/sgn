@@ -103,6 +103,23 @@ $has_plant_entries => undef
           transform: rotate(-180deg);
       }
 
+    ul {
+        list-style-type: none;
+        padding-left: 20px;
+    }
+    .collapsible {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    }
+    .arrow {
+        margin-right: 5px;
+        transition: transform 0.2s ease;
+    }
+    .hidden {
+        display: none;
+    }
+
     
 </style>
 
@@ -496,7 +513,10 @@ $has_plant_entries => undef
                         </div>
                       </div>
 
-                      <div id="hm_plot_level_map" hidden>
+                      <div class="form-group" id="hm_plot_structure_container" hidden>
+                        <label class="col-sm-3 control-label">Plot Structure: </label>
+                        <div class="col-sm-9" id="hm_plot_structure_data_container">
+                        </div>
                       </div>
 
                     </form>
