@@ -13,6 +13,7 @@ use CXGN::List::Validate;
 use CXGN::List;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Propagation::AddPropagationProject;
+use CXGN::Propagation::AddPropagationIdentifier;
 use DateTime;
 use List::MoreUtils qw /any /;
 
@@ -84,7 +85,7 @@ sub add_propagation_project_POST :Args(0){
             propagation_project_name => $project_name,
             propagation_type => $propagation_type,
             nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
-            owner_id => $user_id
+            operator_id => $user_id
         });
 
         $return = $add_propagation_project->save_propagation_project();
@@ -116,12 +117,13 @@ sub add_propagation_project_POST :Args(0){
 
 sub add_propagation_identifier : Path('/ajax/propagation/add_propagation_identifier') : ActionClass('REST') {}
 
-sub add_transformation_identifier_POST :Args(0){
+sub add_propagation_identifier_POST :Args(0){
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $propagation_identifier = $c->req->param('propagation_identifier');
+
     $propagation_identifier =~ s/^\s+|\s+$//g;
     my $propagation_project_id = $c->req->param('propagation_project_id');
     my $accession_name = $c->req->param('accession_name');
@@ -132,6 +134,16 @@ sub add_transformation_identifier_POST :Args(0){
     my $date = $c->req->param('date');
     my $description = $c->req->param('description');
     my $program_name = $c->req->param('breeding_program_name');
+    print STDERR "PROPAGATION IDENTIFIER =".Dumper($propagation_identifier)."\n";
+    print STDERR "PROPAGATION PROJECT ID =".Dumper($propagation_project_id)."\n";
+    print STDERR "ACCESSION NAME =".Dumper($accession_name)."\n";
+    print STDERR "MATERIAL TYPE =".Dumper($material_type)."\n";
+    print STDERR "SOURCE NAME =".Dumper($source_name)."\n";
+    print STDERR "ROOTSTOCK =".Dumper($rootstock_accession_name)."\n";
+    print STDERR "LOCATION =".Dumper($location)."\n";
+    print STDERR "DATE =".Dumper($date)."\n";
+    print STDERR "DESCRIPTION =".Dumper($description)."\n";
+    print STDERR "PROGRAM NAME =".Dumper($program_name)."\n";
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -200,6 +212,7 @@ sub add_transformation_identifier_POST :Args(0){
 
         my $add = $add_propagation_identifier->add_propagation_identifier();
         $propagation_stock_id = $add->{propagation_stock_id};
+        print STDERR "PROPAGATION STOCK ID AJAX =".Dumper($propagation_stock_id)."\n";
     };
 
     if ($@) {

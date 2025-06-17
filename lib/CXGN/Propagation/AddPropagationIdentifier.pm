@@ -5,7 +5,7 @@ CXGN::Propagation::AddPropagationIdentifier - a module for adding propagation id
 =cut
 
 
-package CXGN::::AddPropagationIdentifier;
+package CXGN::Propagation::AddPropagationIdentifier;
 
 use Moose;
 use MooseX::FollowPBP;
@@ -15,6 +15,8 @@ use CXGN::Location::LocationLookup;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use JSON;
+
 
 has 'chado_schema' => (
     isa => 'DBIx::Class::Schema',
@@ -100,12 +102,16 @@ sub add_propagation_identifier {
     my $accession_name = $self->get_accession_name();
     my $material_type = $self->get_material_type();
     my $source_name = $self->get_source_name();
-    my $root_stock_accession_name = $self->get_root_stock_accession_name();
-    my $date = $self->get_date();
+    my $rootstock_accession_name = $self->get_rootstock_accession_name();
     my $nd_geolocation_id = $self->get_nd_geolocation_id();
     my $description = $self->get_description();
     my $propagation_project_id = $self->get_propagation_project_id();
     my $operator_id = $self->get_operator_id();
+    my $date = $self->get_date();
+    my $metadata_hash = {};
+    $metadata_hash->{date} = $date;
+    $metadata_hash->{operator} = $operator_id;
+    my $metadata_json_string = encode_json $metadata_hash;
 
     my %return;
     my $propagation_stock_id;
@@ -201,9 +207,11 @@ sub add_propagation_identifier {
 		});
 
         $propagation_identifier_stock->create_stockprops({$propagation_material_type_cvterm->name() => $material_type});
-
+        $propagation_identifier_stock->create_stockprops({$propagation_metadata_cvterm->name() => $metadata_json_string});
 
         $propagation_stock_id = $propagation_identifier_stock->stock_id();
+        print STDERR "PROPAGATION STOCK ID CXGN =".Dumper($propagation_stock_id)."\n";
+
     };
 
     my $transaction_error;

@@ -1,5 +1,4 @@
 <%args>
-$timestamp => localtime()
 $trial_id
 $trial_name
 $breeding_program_name
@@ -70,13 +69,13 @@ $breeding_program_name
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Description:</label>
                             <div class="col-sm-8">
-                                <textarea class="form-control" id="propagation_id_description" name="propagation_id_description" ></textarea>
+                                <textarea class="form-control" id="propagation_description" name="propagation_description" ></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="reset" id="close_add_propagation_id_dialog" name="close_propagation_id_dialog" class="btn btn-default" >Close</button>
+                    <button type="reset" id="close_add_propagation_id_dialog" name="close_add_propagation_id_dialog" class="btn btn-default" >Close</button>
                     <button id="submit_new_propagation_id" type="button" class="btn btn-primary" >Add</button>
                 </div>
             </form>
@@ -120,7 +119,7 @@ jQuery(document).ready(function(){
         const rootstock_accession_name = jQuery('#rootstock_accession_name').val();
         const location = jQuery('#propagation_location_select').val();
         const date = jQuery('#propagation_date').val();
-        const description = jQuery('#propagation_id_description').val();
+        const description = jQuery('#propagation_description').val();
         const breeding_program_name =  "<%$breeding_program_name%>";
         const propagation_project_id = "<%$trial_id%>";
 
@@ -149,7 +148,6 @@ jQuery(document).ready(function(){
             return;
         }
 
-
         jQuery.ajax({
             url: '/ajax/propagation/add_propagation_identifier',
             dataType: "json",
@@ -175,13 +173,13 @@ jQuery(document).ready(function(){
                     jQuery('#add_propagation_id_dialog').modal('hide');
                     jQuery('#add_propagation_id_saved_dialog_message').modal("show");
                 }
-                if (response.error_string) {
-                    alert(response.error_string);
+                if (response.error) {
+                    alert(response.error);
                 }
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding item');
+                alert('An error occurred adding propagation identifier');
             }
         });
     });
@@ -189,6 +187,11 @@ jQuery(document).ready(function(){
 
     jQuery("#close_add_propagation_id_dialog").click(function() {
         jQuery("#add_propagation_id_dialog").modal('hide');
+    });
+
+
+    jQuery("#dismiss_propagation_id_saved_dialog").click(function() {
+        jQuery("#add_propagation_id_saved_dialog_message").modal('hide');
         location.reload();
     });
 
