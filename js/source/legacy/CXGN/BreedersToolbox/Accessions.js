@@ -663,10 +663,10 @@ function verify_accession_list(accession_list_id) {
 function review_verification_results(doFuzzySearch, verifyResponse, accession_list_id){
     var i;
     var j;
-    let accessionListFound = {};
-    let accessionList = [];
-    let infoToAdd = [];
-    let speciesNames = [];
+    accessionListFound = {};
+    accessionList = [];
+    infoToAdd = [];
+    speciesNames = [];
     //console.log(verifyResponse);
     //console.log(accession_list_id);
 
