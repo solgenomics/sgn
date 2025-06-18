@@ -62,6 +62,7 @@ $trial_id
                     <br>
                     The first row (header) should contain the following:
 
+                    <h2>Uploading Polygons:</h2>
                     <h3>Each plot is represented as a polygon with four corners. You can choose to upload UTM31N and/or WGS84 coordinates.</h3>
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -100,6 +101,28 @@ $trial_id
                     WGS84_top_left_x (WGS84 longitude coordinate of top left corner of plot)
                     <br />
                     WGS84_top_left_y (WGS84 latitude coordinate of top left corner of plot)
+
+                    <h2>Uploading Points:</h2>
+                    <h3>Each plot is represented as a point with one coordinate pair. You can choose to upload UTM31N and/or WGS84 coordinates.</h3>
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>plot_name</td>
+                                <td>WGS84_x</td>
+                                <td>WGS84_y</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <br/>
+                    plot_name (must exist in the database)
+                    <br />
+                    WGS84_x (WGS84 longitude coordinate of the point)
+                    <br />
+                    WGS84_bottom_left_y (WGS84 latitude coordinate of the point)
                 </div>
             </div>
             <div class="modal-footer">

@@ -1737,7 +1737,6 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     my $user_name;
     my $user_role;
     my $session_id = $c->req->param("sgn_session_id");
-    print STDERR "trial_plot_gps upload function entered";
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -1834,8 +1833,6 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         while (my $plot=$plots_rs->next){
             my $coords = $plot_stock_ids_hash{$plot->stock_id};
             my $geo_json;
-            print STDERR "COORD type trialmetadata $coord_type";
-            print STDERR "Coordinates $coords->{WGS84_x}";
 
             if ($coord_type eq 'polygon') {
                 $geo_json = {
@@ -1857,15 +1854,14 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
                     }
                 };    
             } elsif ($coord_type eq 'point') {
-                print STDERR "Creating point geojson";
                 $geo_json = {
                     "type"=> "Feature",
                     "geometry"=> {
                         "type"=> "Point",
                         "coordinates"=> [
-                            [
-                                [$coords->{WGS84_x}, $coords->{WGS84_y}],
-                            ]
+                            
+                            $coords->{WGS84_x}, $coords->{WGS84_y},
+                            
                         ]
                     },
                     "properties"=> {
@@ -1875,7 +1871,6 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
             }
             
             my $geno_json_string = encode_json $geo_json;
-            print STDERR "GEOJSON string: $geno_json_string\n";
             my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
             $previous_plot_gps_rs->delete_all();
             $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
