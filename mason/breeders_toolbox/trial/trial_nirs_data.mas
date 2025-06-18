@@ -4,8 +4,8 @@ $trial_id
 $stockref => undef
 </%args>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/js/source/legacy/d3/graphers/nirsDataLineGraph.js"></script>
+<!-- script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/source/legacy/d3/graphers/nirsDataLineGraph.js"></script  -->
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables', 'd3.graphers.nirsDataLineGraph.js', 'd3.d3v4Min' ] &>
 
