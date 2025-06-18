@@ -1,6 +1,7 @@
 import "../legacy/d3/d3v4Min.js";
 import "../legacy/jquery.js";
 import "../legacy/brapi/BrAPI.js";
+import { map } from "d3";
 
 // Colors to use when labelling multiple trials
 const trial_colors = [
@@ -735,13 +736,53 @@ export function init() {
                                 }
 
                                 function createTableWithSubplots(obj) {
+                                    // the idea will be to create two tables and then call createTable for each subplot. But first we need to figure out if table should be wide or tall
+                                    
+                                    let max_row = 1;
+                                    let max_col = 1;
+                                    var table_form = "tall";
+                                    for (let subplot in obj["has"]) {
+                                        for (let plant in obj["has"][subplot]["has"]) {
+                                            let row = obj["has"][subplot]["has"][plant]["attributes"]["row_number"]["value"];
+                                            let col = obj["has"][subplot]["has"][plant]["attributes"]["col_number"]["value"];
+                                            if (row > max_row) {
+                                                max_row = row;
+                                            }
+                                            if (col > max_col) {
+                                                max_col = col;
+                                            }
+                                        }
+                                    }
 
+                                    if (max_col < max_row) {
+                                        table_form = "wide";
+                                    }
+
+                                    let subplot_map = ["<table style=\"border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
+
+                                    if (table_form == "tall") {
+                                        for (let subplot in obj["has"]) {
+                                            subplot_map.push("<tr><td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">" + subplot + "<br>");
+                                            subplot_map.push(createTable(obj["has"][subplot]));
+                                            subplot_map.push("</td></tr>");
+                                        }
+                                    } else {
+                                        subplot_map.push("<tr>");
+                                        for (let subplot in obj["has"]) {
+                                            subplot_map.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">" + subplot + "<br>");
+                                            subplot_map.push(createTable(obj["has"][subplot]));
+                                            subplot_map.push("</td>");
+                                        }                                        
+                                        subplot_map.push("</tr>");
+                                    }
+
+                                    return(subplot_map_table.join(""));
                                 }
 
                                 function createTable(obj) {
                                     let max_row = 1;
                                     let max_col = 1;
-                                    let coord_dictionary = {};
+                                    let coord_dictionary = [];
                                     for (let plant in obj["has"]) {
                                         let row = obj["has"][plant]["attributes"]["row_number"]["value"];
                                         let col = obj["has"][plant]["attributes"]["col_number"]["value"];
@@ -751,12 +792,12 @@ export function init() {
                                         if (col > max_col) {
                                             max_col = col;
                                         }
-                                        coord_dictionary["" + row + "," + col + ""] = plant ; 
+                                        coord_dictionary[""+row+","+col+""] = plant;
                                     }
                                     
                                     // table will have max_row + 1 rows and max_col + 1 cols
 
-                                    let table_elems = ["<table style=\"aspect-ratio:1 / 1; border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
+                                    let table_elems = ["<table style=\"aspect-ratio:"+(max_col+1)+"/"+(max_row+1)+"; border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
 
                                     for (let row = max_row; row >= 0; row--){
                                         table_elems.push("<tr>");
@@ -771,7 +812,7 @@ export function init() {
                                                 if (col == 0) {// row header
                                                     table_elems.push("<th style=\"border:none;text-align:left; vertical-align:middle;padding-right:5px;\">"+row+"</th>");
                                                 } else {// normal plant
-                                                    table_elems.push("<td id=\"plot_detail_map_r"+row+"_c"+col+"\" style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
+                                                    table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
                                                 }
                                             }
                                         }
@@ -784,6 +825,7 @@ export function init() {
                                 }
 
                                 let plot_structure = JSON.parse(response.data);
+                                console.dir(plot_structure);
                                 // Check if there are plants with row and column data. If yes, then we do a map display. If not, then we do a list display
                                 let display_layout = false;
                                 let structure;
@@ -818,8 +860,8 @@ export function init() {
                                         hm_plot_structure_data_container.innerHTML = createTableWithSubplots(plot_structure);
                                     } else if (structure == "plot:plant") {
                                         hm_plot_structure_data_container.innerHTML = createTable(plot_structure);
-                                        hm_plot_structure_data_container.prepend(createCollapsibleList(plot_structure));
                                     }
+                                    hm_plot_structure_data_container.prepend(createCollapsibleList(plot_structure));
                                 } else {
                                     hm_plot_structure_data_container.replaceChildren(createCollapsibleList(plot_structure));
                                 }

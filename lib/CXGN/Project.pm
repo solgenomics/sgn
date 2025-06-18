@@ -3453,8 +3453,8 @@ sub create_plant_subplot_entities {
     my $inherits_plot_treatments = shift;
     my $plant_owner = shift;
     my $plant_owner_username = shift;
-    my $rows_per_plot = shift;
-    my $cols_per_plot = shift;
+    my $rows_per_subplot = shift;
+    my $cols_per_subplot = shift;
 
     my $create_plant_entities_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -3527,16 +3527,6 @@ sub create_plant_subplot_entities {
 
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
 
-            my @plant_coords = ();
-
-            if ($rows_per_plot && $cols_per_plot) { #if these are defined then we need to record row col data for plants
-                foreach my $row (1..$rows_per_plot) {
-                    foreach my $col (1..$cols_per_plot) {
-                        push @plant_coords, "$row,$col";
-                    }
-                }
-            }
-
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
                 return "The plot $plot is not yet in the database. Cannot create plant entries.";
@@ -3557,6 +3547,16 @@ sub create_plant_subplot_entities {
                 }
 
                 my $parent_subplot = $subplot_row->stock_id();
+
+                my @plant_coords = ();
+
+                if ($rows_per_subplot && $cols_per_subplot) { #if these are defined then we need to record row col data for plants
+                    foreach my $row (1..$rows_per_subplot) {
+                        foreach my $col (1..$cols_per_subplot) {
+                            push @plant_coords, "$row,$col";
+                        }
+                    }
+                }
 
                 foreach my $plant_index_number (1..$plants_per_subplot) {
                     my $plant_name = $subplot."_plant_$plant_index_number";
