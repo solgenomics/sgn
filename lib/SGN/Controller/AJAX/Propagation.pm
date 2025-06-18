@@ -239,11 +239,28 @@ sub get_propagations_in_project :Path('/ajax/propagation/propagations_in_project
     my $result = $propagation_obj->get_propagations_in_project();
 
     my @propagations;
+    my $inventory_id;
     foreach my $r (@$result){
+        my $propagation_link = qq{<a href="/stock/$r->[0]/view">$r->[1]</a>};
+        my $description = $r->[2];
+        my $material_type = $r->[3];
+        my $metadata = $r->[4];
+        my $metadata_hash = decode_json $metadata;
+        my $date = $metadata_hash->{'date'};
+        my $operator_id = $metadata_hash->{'operator'};
+        my $person= CXGN::People::Person->new($dbh, $operator_id);
+        my $full_name = $person->get_first_name()." ".$person->get_last_name();
 
+        my $accession_link = qq{<a href="/stock/$r->[5]/view">$r->[6]</a>};
+        my $source_link = qq{<a href="/stock/$r->[7]/view">$r->[8]</a>};
+        my $rootstock_link = qq{<a href="/stock/$r->[9]/view">$r->[10]</a>};
+
+        my $location_id = $r->[11];
+        my $location_name = $schema->resultset('NaturalDiversity::NdGeolocation')->find( { nd_geolocation_id => $location_id})->description();
+
+        push @propagations, [$propagation_link, $accession_link, $material_type, $source_link, $rootstock_link, $date, $location_name, $description, $full_name, $inventory_id]
 
     }
-
     $c->stash->{rest} = { data => \@propagations };
 
 }

@@ -85,7 +85,7 @@ sub get_propagations_in_project {
     while (my ($nd_geolocation_id,  $propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $rootstock_stock_id, $rootstock_name ) = $h->fetchrow_array()){
         push @propagations, [$propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $rootstock_stock_id, $rootstock_name, $nd_geolocation_id]
     }
-    print STDERR "PROPAGATIONS =".Dumper(\@propagations)."\n";
+
     return \@propagations;
 }
 
