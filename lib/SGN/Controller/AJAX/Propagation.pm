@@ -14,6 +14,7 @@ use CXGN::List;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Propagation::AddPropagationProject;
 use CXGN::Propagation::AddPropagationIdentifier;
+use CXGN::Propagation::Propagation;
 use DateTime;
 use List::MoreUtils qw /any /;
 
@@ -224,6 +225,29 @@ sub add_propagation_identifier_POST :Args(0){
     $c->stash->{rest} = { success => 1 };
 
 }
+
+
+sub get_propagations_in_project :Path('/ajax/propagation/propagations_in_project') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $project_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
+
+    my $result = $propagation_obj->get_propagations_in_project();
+
+    my @propagations;
+    foreach my $r (@$result){
+
+
+    }
+
+    $c->stash->{rest} = { data => \@propagations };
+
+}
+
 
 
 

@@ -154,7 +154,7 @@ sub add_propagation_identifier {
         my $source_rs;
         if ($source_name) {
             my $source_rs = $schema->resultset("Stock::Stock")->find({
-    			uniquename => $accession_name,
+    			uniquename => $source_name,
     		});
         }
 

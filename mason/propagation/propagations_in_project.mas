@@ -18,7 +18,7 @@ $trial_id
                 <th>Location</th>
                 <th>Description</th>
                 <th>Operator</th>
-                <th>Number/Amount</th>
+                <th>Inventory ID</th>
             </tr>
         </thead>
     </table>
@@ -29,6 +29,10 @@ $trial_id
 
 jQuery(document).ready(function(){
     var project_id = "<% $trial_id %>";
+    var propagation_table = jQuery('#propagations_in_project_table').DataTable({
+        'ajax': '/ajax/propagation/propagations_in_project/'+project_id,
+        'autoWidth': false,
+    });
 
 });
 
