@@ -701,7 +701,7 @@ export function init() {
                                 function createCollapsibleList(obj) {
                                     let ul = document.createElement("ul");
 
-                                    for (const key in obj) {
+                                    for (const key of Object.keys(obj).sort()) {
                                         if (obj.hasOwnProperty(key)) {
                                             let li = document.createElement("li");
 
@@ -740,7 +740,6 @@ export function init() {
                                     
                                     let max_row = 1;
                                     let max_col = 1;
-                                    var table_form = "tall";
                                     for (let subplot in obj["has"]) {
                                         for (let plant in obj["has"][subplot]["has"]) {
                                             let row = obj["has"][subplot]["has"][plant]["attributes"]["row_number"]["value"];
@@ -754,29 +753,17 @@ export function init() {
                                         }
                                     }
 
-                                    if (max_col < max_row) {
-                                        table_form = "wide";
-                                    }
-
                                     let subplot_map = ["<table style=\"border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
 
-                                    if (table_form == "tall") {
-                                        for (let subplot in obj["has"]) {
-                                            subplot_map.push("<tr><td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">" + subplot + "<br>");
-                                            subplot_map.push(createTable(obj["has"][subplot]));
-                                            subplot_map.push("</td></tr>");
-                                        }
-                                    } else {
-                                        subplot_map.push("<tr>");
-                                        for (let subplot in obj["has"]) {
-                                            subplot_map.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">" + subplot + "<br>");
-                                            subplot_map.push(createTable(obj["has"][subplot]));
-                                            subplot_map.push("</td>");
-                                        }                                        
-                                        subplot_map.push("</tr>");
+                                    for (let subplot of Object.keys(obj["has"]).sort()) {
+                                        subplot_map.push("<tr><td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">" + subplot + "<br>");
+                                        subplot_map.push(createTable(obj["has"][subplot]));
+                                        subplot_map.push("</td></tr>");
                                     }
+                            
+                                    subplot_map.push("</tr>");
 
-                                    return(subplot_map_table.join(""));
+                                    return(subplot_map.join(""));
                                 }
 
                                 function createTable(obj) {
