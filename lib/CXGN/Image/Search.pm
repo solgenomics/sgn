@@ -187,6 +187,11 @@ has 'stock_name_list' => (
     is => 'rw',
 );
 
+has 'accession_name_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 has 'project_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
@@ -246,6 +251,7 @@ sub search {
     my $stock_type = $self->stock_type;
     my $stock_id_list = $self->stock_id_list;
     my $stock_name_list = $self->stock_name_list;
+    my $accession_name_list = $self->accession_name_list;
     my $stock_names_exact = $self->stock_names_exact;
     my $project_id_list = $self->project_id_list;
     my $project_name_list = $self->project_name_list;
@@ -395,6 +401,11 @@ sub search {
             }
         }
     }
+    if ($accession_name_list && scalar(@$accession_name_list)>0) {
+        my $sql = join(", ", @$accession_name_list);
+        push @where_clause, "accession.uniquename IN (?)";
+    push @question_mark_values, $sql;
+    }
     if ($project_id_list && scalar(@$project_id_list)>0) {
         my $sql = join ("," , @$project_id_list);
         push @where_clause, "project.project_id in (?)";
@@ -449,6 +460,7 @@ sub search {
         to_char (image.create_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD\"T\"HH24:MI:SSOF:00') as create_date,
         to_char (image.modified_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD\"T\"HH24:MI:SSOF:00') as modified_date,
         image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name,
+        accession.stock_id AS accession_id, accession.uniquename AS accession_uniquename,
         COALESCE(
             json_agg(json_build_object('tag_id', tags.tag_id, 'name', tags.name, 'description', tags.description, 'sp_person_id', tags.sp_person_id, 'modified_date', tags.modified_date, 'create_date', tags.create_date, 'obsolete', tags.obsolete))
             FILTER (WHERE tags.tag_id IS NOT NULL), '[]'
@@ -464,6 +476,10 @@ sub search {
         LEFT JOIN metadata.md_tag AS tags ON (image_tag.tag_id=tags.tag_id)
         LEFT JOIN phenome.stock_image AS stock_image ON (image.image_id=stock_image.image_id)
         LEFT JOIN stock ON (stock_image.stock_id=stock.stock_id)
+        LEFT JOIN stock_relationship AS plot_acc_rel
+            ON plot_acc_rel.subject_id = stock.stock_id
+            AND plot_acc_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'plot_of' LIMIT 1)
+        LEFT JOIN stock AS accession ON plot_acc_rel.object_id = accession.stock_id
         LEFT JOIN cvterm AS stock_type ON (stock.type_id=stock_type.cvterm_id)
         LEFT JOIN phenome.project_md_image AS project_image ON(project_image.image_id=image.image_id)
         LEFT JOIN cvterm AS project_image_type ON(project_image.type_id=project_image_type.cvterm_id)
@@ -473,7 +489,7 @@ sub search {
         LEFT JOIN phenotype ON (nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id)
         LEFT JOIN cvterm AS phenotype_variable ON (phenotype.cvalue_id=phenotype_variable.cvterm_id)
         $where_clause
-        GROUP BY(image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username, image.create_date, image.modified_date, image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name)
+        GROUP BY(image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username, image.create_date, image.modified_date, image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name, accession.stock_id)
         ORDER BY image.image_id
         $limit_clause
         $offset_clause;";
@@ -485,7 +501,7 @@ sub search {
 
     my @result;
     my $total_count = 0;
-    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $project_id, $project_name, $project_md_image_id, $project_image_type_name, $tags, $observations, $full_count) = $h->fetchrow_array()) {
+    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $project_id, $project_name, $project_md_image_id, $project_image_type_name, $accession_id, $accession_uniquename, $tags, $observations, $full_count) = $h->fetchrow_array()) {
         push @result, {
             image_id => $image_id,
             image_name => $image_name,
@@ -499,6 +515,8 @@ sub search {
             image_obsolete => $image_obsolete,
             image_md5sum => $image_md5sum,
             stock_id => $stock_id,
+            accession_id => $accession_id,
+            accession_uniquename => $accession_uniquename,
             stock_uniquename => $stock_uniquename,
             stock_type_name => $stock_type_name,
             project_id => $project_id,
