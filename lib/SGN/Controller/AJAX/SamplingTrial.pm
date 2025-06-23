@@ -117,6 +117,8 @@ sub parse_sampling_trial_file_POST : Args(0) {
         $c->stash->{rest} = {error => 'Sampling trial name must be given!'};
         return;
     }
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+
     my $parser;
     my $parsed_data;
     my $upload = $upload_xls;
@@ -194,7 +196,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
     #Parse of Coordinate Template formatted file requires the plate name to be passed, so that a unique sample name can be created by concatenating the plate name to the well position.
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, allowed_tissue_list => $sample_tissue_types_string);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
 

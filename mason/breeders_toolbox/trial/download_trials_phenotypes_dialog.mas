@@ -35,6 +35,21 @@
 
 <&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
 
+        	<div class="form-group">
+	    		<label class="col-sm-3 control-label">For repeated measurements, return the </label>
+	    	 	<div class="col-sm-9">
+	    	   		<select class="form-control" id="download_repetitive_measurements_trials_option">
+			 			<option value="first">First value</option>
+			 			<option value="last">Last value</option>
+			 			<option value="average" selected>Averaged value</option>
+                        <option value="sum">Sum values</option>
+			 			<option value="all_values_single_line">All Values in Single Line</option>
+                        <option value="all_values_multiple_line">All Values in Multiple Line</option>
+	    	   		</select>
+	    	 	</div>
+	   		</div>
+
+
             <div class="form-group">
                 <label class="col-sm-3 control-label">Include Timestamps: </label>
                 <div class="col-sm-9" >
@@ -124,6 +139,13 @@
 
 <script>
 
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('download_trials_phenotype_exclude_outliers').value = "1";
+}
+
+
 jQuery(document).ready(function() {
     var list = new CXGN.List();
 
@@ -144,6 +166,7 @@ jQuery(document).ready(function() {
         var trial_ids = selected.join(",");
         var trial_id_array = trial_ids.split(",");
         var format = jQuery("#download_trials_phenotypes_format").val();
+		var repetitive_measurements = jQuery("#download_repetitive_measurements_trials_option").val();
         var timestamp = jQuery("#download_trials_phenotypes_timestamp_option").val();
         var data_level = jQuery("#download_trials_phenotypes_level_option").val();
         var trait_contains = jQuery("#download_trials_phenotype_trait_contains").val();
@@ -170,7 +193,7 @@ jQuery(document).ready(function() {
         }
 
         if (selected.length !== 0) {
-            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&accession_list="+JSON.stringify(accessions)+"&plot_list="+JSON.stringify(plots)+"&plant_list="+JSON.stringify(plants)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier);
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&accession_list="+JSON.stringify(accessions)+"&plot_list="+JSON.stringify(plots)+"&plant_list="+JSON.stringify(plants)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements);
         }
         else { alert("No leaf nodes selected for download."); }
     });

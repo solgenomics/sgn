@@ -38,6 +38,9 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
 
+    my $default_seedlot_material_type = $c->config->{default_seedlot_material_type};
+
+    $c->stash->{default_seedlot_material_type} = $default_seedlot_material_type;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{crossing_trials} = $projects->get_crossing_trials();
@@ -126,6 +129,9 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
         $status = 'discarded';
     }
 
+    my $default_seedlot_material_type = $c->config->{default_seedlot_material_type};
+    $c->stash->{default_seedlot_material_type} = $default_seedlot_material_type;
+    
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();
     $c->stash->{material_type} = $sl->material_type();

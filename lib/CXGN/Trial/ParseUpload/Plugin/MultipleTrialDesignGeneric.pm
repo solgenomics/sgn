@@ -10,7 +10,7 @@ use CXGN::Calendar;
 use CXGN::Trial;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
-my @OPTIONAL_COLUMNS = qw|plot_name trial_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+my @OPTIONAL_COLUMNS = qw|plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
 # VALID DESIGN TYPES
@@ -19,6 +19,7 @@ my %valid_design_types = (
     "RCBD" => 1,
     "RRC" => 1,
     "DRRC" => 1,
+    "URDD" => 1,
     "ARC" => 1,
     "Alpha" => 1,
     "Lattice" => 1,
@@ -31,6 +32,13 @@ my %valid_design_types = (
     "stripplot" => 1,
     "Westcott" => 1,
     "Analysis" => 1
+);
+
+# VALID STOCK TYPES
+my %valid_stock_types = (
+    "accession" => 1,
+    "cross" => 1,
+    "family_name" => 1
 );
 
 sub _validate_with_plugin {
@@ -56,7 +64,10 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new(
         file => $filename,
         required_columns => \@REQUIRED_COLUMNS,
-        optional_columns => \@OPTIONAL_COLUMNS
+        optional_columns => \@OPTIONAL_COLUMNS,
+        column_aliases => {
+            'accession_name' => [ 'stock_name', 'cross_unique_id', 'family_name' ]
+        }
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{'errors'};
@@ -339,9 +350,17 @@ sub _validate_with_plugin {
         }
     }
 
+    # Trial Stock Type: must be a valid / supported trial stock type
+    foreach (@{$parsed_values->{'trial_stock_type'}}) {
+        if ( !exists $valid_stock_types{$_} ) {
+            push @error_messages, "trial_stock_type <strong>$_</strong> is not supported. Supported trial stock types: " . join(', ', keys(%valid_stock_types)) . ".";
+        }
+    }
+
     # Accession Names: must exist in the database
     my @accessions = @{$parsed_values->{'accession_name'}};
     my $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+    my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
     #find unique synonyms. Sometimes trial uploads use synonym names instead of the unique accession name. We allow this if the synonym is unique and matches one accession in the database
     my @synonyms = @{$accessions_hashref->{'synonyms'}};
@@ -356,12 +375,11 @@ sub _validate_with_plugin {
     }
 
     #now validate again the accession names
-    $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+    $accessions_hashref = $validator->validate($schema,'accessions_or_crosses_or_familynames',\@accessions);
     my @accessions_missing = @{$accessions_hashref->{'missing'}};
-    my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
     if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "Accession(s) <strong>".join(',',@accessions_missing)."</strong> are not in the database as uniquenames or synonyms.";
+        push @error_messages, "Stocks(s) <strong>".join(',',@accessions_missing)."</strong> are not in the database as uniquenames or synonyms of accessions, crosses, or families.";
     }
     if (scalar(@multiple_synonyms) > 0) {
         my @msgs;
@@ -554,6 +572,7 @@ sub _parse_with_plugin {
             $single_design{'year'} = $row->{'year'};
             $single_design{'design_type'} = $row->{'design_type'};
             $single_design{'description'} = $row->{'description'};
+            $single_design{'trial_stock_type'} = $row->{'trial_stock_type'} || 'accession';
             $single_design{'plot_width'} = $row->{'plot_width'};
             $single_design{'plot_length'} = $row->{'plot_length'};
             $single_design{'field_size'} = $row->{'field_size'};

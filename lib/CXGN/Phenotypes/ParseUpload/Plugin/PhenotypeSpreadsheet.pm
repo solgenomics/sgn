@@ -369,7 +369,8 @@ sub parse {
 
                                     if ( defined($trait_value) && defined($timestamp) ) {
                                         if ($trait_value ne '.'){
-                                            $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp];
+                                            # for multiple values or time series, need to store all the values
+                                            push @{$data{$plot_name}->{$trait_name} }, [$trait_value, $timestamp];
                                         }
                                     }
                                 }

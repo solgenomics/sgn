@@ -18,6 +18,7 @@ my %valid_design_types = (
     "RCBD" => 1,
     "RRC" => 1,
     "DRRC" => 1,
+    "URDD" => 1,
     "ARC" => 1,
     "Alpha" => 1,
     "Lattice" => 1,

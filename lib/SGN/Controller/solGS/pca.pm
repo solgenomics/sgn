@@ -38,6 +38,7 @@ sub run_pca_analysis : Path('/run/pca/analysis') Args() {
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     $c->stash->{file_id} = $file_id;
 
+
     my $list_id = $c->stash->{list_id};
     if ($list_id) {
         $c->controller('solGS::List')
@@ -114,18 +115,18 @@ sub prepare_pca_output_response {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    my $ret->{status} = undef;
+    my $res->{status} = undef;
 
     if ($file_id) {
         $self->pca_scores_file($c);
         my $scores_file = $c->stash->{pca_scores_file};
 
-        $self->pca_variances_file($c);
-        my $variances_file = $c->stash->{pca_variances_file};
-
         if ( -s $scores_file ) {
             my $scores =
               $c->controller('solGS::Utils')->read_file_data($scores_file);
+
+            $self->pca_variances_file($c);
+            my $variances_file = $c->stash->{pca_variances_file};
             my $variances =
               $c->controller('solGS::Utils')->read_file_data($variances_file);
 
@@ -153,29 +154,36 @@ sub prepare_pca_output_response {
                 $trials_names = $c->stash->{trials_names};
             }
 
+        
+            my $analysis_name = $c->controller('solGS::AnalysisSave')->check_logged_analysis_name($c);
+
             if ($scores) {
-                $ret->{scores}          = $scores;
-                $ret->{variances}       = $variances;
-                $ret->{scores_file}     = $scores_file;
-                $ret->{variances_file}  = $variances_file;
-                $ret->{loadings_file}   = $loadings_file;
-                $ret->{scree_data_file} = $scree_data_file;
-                $ret->{scree_plot_file} = $scree_plot_file;
-                $ret->{status}          = 'success';
-                $ret->{cached}          = 1;
-                $ret->{pca_pop_id}   = $c->stash->{pca_pop_id};
-                $ret->{file_id}      = $file_id;
-                $ret->{list_id}      = $c->stash->{list_id};
-                $ret->{trials_names} = $trials_names;
-                $ret->{output_link}  = $output_link;
-                $ret->{data_type}    = $c->stash->{data_type};
+                $res = {
+                    "scores"          =>  $scores,
+                    "variances"       => $variances,
+                    "scores_file"     => $scores_file,
+                    "variances_file"  => $variances_file,
+                    "loadings_file"   => $loadings_file,
+                    "scree_data_file" => $scree_data_file,
+                    "scree_plot_file" => $scree_plot_file,
+                    "status"          => 'success',
+                    "cached"          => 1,
+                    "pca_pop_id"      => $c->stash->{pca_pop_id},
+                    "file_id"         => $file_id,
+                    "list_id"         => $c->stash->{list_id},
+                    "trials_names"    => $trials_names,
+                    "output_link"     => $output_link,
+                    "data_type"       => $c->stash->{data_type},
+                    "analysis_name"   => $analysis_name   
+                };
+        
             }
 
-            $c->stash->{pca_output_response} = $ret;
+            $c->stash->{pca_output_response} = $res;
         }
         else {
-            $ret->{status} = $self->error_message($c);
-            $c->stash->{formatted_pca_output} = $ret;
+            $res->{status} = $self->error_message($c);
+            $c->stash->{formatted_pca_output} = $res;
         }
     }
     else {
@@ -441,11 +449,12 @@ sub pca_geno_input_files {
 sub training_selection_geno_files {
     my ( $self, $c ) = @_;
 
-    my $tr_pop  = $c->stash->{training_pop_id};
-    my $sel_pop = $c->stash->{selection_pop_id};
+    my $tr_pop_id  = $c->stash->{training_pop_id};
+    $tr_pop_id =~ s/-\d+//;
+    my $sel_pop_id = $c->stash->{selection_pop_id};
 
     my @files;
-    foreach my $id ( ( $tr_pop, $sel_pop ) ) {
+    foreach my $id ( ( $tr_pop_id, $sel_pop_id ) ) {
         $c->controller('solGS::Files')->genotype_file_name( $c, $id );
         push @files, $c->stash->{genotype_file_name};
     }

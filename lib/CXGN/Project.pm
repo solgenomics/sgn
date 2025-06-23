@@ -107,7 +107,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
+#    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
     if (! $args->{description}) {
 	    $args->{description} = "(No description provided)";
@@ -132,11 +132,11 @@ sub BUILD {
     }
 
     if (! $args->{trial_id} && ! $row) {
-        print STDERR "INSERTING A NEW ROW...\n";
+#        print STDERR "INSERTING A NEW ROW...\n";
 
         my $new_row = $args->{bcs_schema}->resultset("Project::Project")->create( { name => $args->{name}, description => $args->{description} });
         my $project_id = $new_row->project_id();
-        print STDERR "new project object has project id $project_id\n";
+#        print STDERR "new project object has project id $project_id\n";
 
         $self->set_trial_id($project_id);
     }
@@ -182,7 +182,7 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout::Phenotyping |
 
 sub _get_layout {
     my $self = shift;
-    print STDERR "RETRIEVING LAYOUT...\n";
+#    print STDERR "RETRIEVING LAYOUT...\n";
     my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id(), experiment_type=>$self->get_cxgn_project_type()->{experiment_type} });
     $self->set_layout($layout);
 }
@@ -256,7 +256,7 @@ getter/setter for the year property. The setter modifies the database.
 sub get_year {
     my $self = shift;
 
-    print STDERR "get_year()...\n";
+#    print STDERR "get_year()...\n";
 
     if ($self->year()) { return $self->year(); }
 
@@ -278,22 +278,22 @@ sub set_year {
     my $year = shift;
 
     if (!$year) {
-	print STDERR "set_year(): No year provided, not setting.\n";
+#	print STDERR "set_year(): No year provided, not setting.\n";
 	return;
     }
 
-    print STDERR "set_year()... (with parameter $year)\n";
+#    print STDERR "set_year()... (with parameter $year)\n";
     my $type_id = $self->get_year_type_id();
 
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id(), type_id => $type_id  });
 
     if ($row) {
-	print STDERR "Updating year to $year...\n";
+#	print STDERR "Updating year to $year...\n";
 	$row->value($year);
 	$row->update();
     }
     else {
-	print STDERR "inserting new year ($year)...\n";
+#	print STDERR "inserting new year ($year)...\n";
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	    {
 		type_id => $type_id,
@@ -339,7 +339,7 @@ sub set_description {
     my $logged_in_user_h = $dbh -> prepare($logged_in_user_q);
     $logged_in_user_h->execute();
     my $logged_in_user_arr = $logged_in_user_h->fetchall_arrayref();
-    print STDERR "logged in user Project.pm: ".Dumper($logged_in_user_arr)."\n";
+#    print STDERR "logged in user Project.pm: ".Dumper($logged_in_user_arr)."\n";
 
 }
 
@@ -459,7 +459,7 @@ sub set_location {
     try {
         $schema->txn_do($coderef);
     } catch {
-        print STDERR "Transaction error updating location: $_\n";
+#        print STDERR "Transaction error updating location: $_\n";
     };
 
 }
@@ -1001,7 +1001,7 @@ sub set_design_type {
 
     my $design_cv_type = $self->bcs_schema->resultset('Cv::Cvterm')->find( { name => 'design' });
     if (!$design_cv_type) {
-	print STDERR "Design CV term not found. Cannot set design type.\n";
+#	print STDERR "Design CV term not found. Cannot set design type.\n";
 	return;
     }
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
@@ -2180,33 +2180,33 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
 
     my $coderef = sub {
 	my $phenotype_id_sql = "";
-	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids})) { 
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids})) {
 	    $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}});
-	    
+
 	    my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
 	    my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
 	    $h2->execute();
-	    
+
 	    print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
 	}
 
-	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) { 
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) {
 	    my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
-	    
+
 	    # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
 	    #
 	    my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
 	    my $check_h = $schema->storage->dbh()->prepare($checkq);
 	    $check_h ->execute();
-	    
+
 	    my @nd_experiment_ids;
 	    while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
 		push @nd_experiment_ids, $nd_experiment_id;
 	    }
-	    
+
 	    if (scalar(@nd_experiment_ids)>0) {
 		$nd_experiment_id_sql = join(",", @nd_experiment_ids);
-		
+
 		my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
 		my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
 		$h3->execute();
@@ -2214,11 +2214,11 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
 		my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
 		my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
 		$h_nd_json->execute();
-		
+
 		my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
 		my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
 		$h4->execute();
-		
+
 		open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
                 foreach (@nd_experiment_ids) {
                     print $fh "$_\n";
@@ -2798,7 +2798,7 @@ sub obsolete_additional_uploaded_file {
 
 
 
-=head2 function get_phenotypes_for_trait($trait_id)
+=head2 function get_phenotypes_for_trait($trait_id, $stock_type, $start_date, $end_date)
 
  Usage:
  Desc:         returns the measurements for the given trait in this trial as an array of values, e.g. [2.1, 2, 50]
@@ -2815,6 +2815,14 @@ sub get_phenotypes_for_trait {
     my $stock_type = shift;
     my @data;
     my $dbh = $self->bcs_schema->storage()->dbh();
+    my $start_date = shift;
+    my $end_date = shift;
+    my $date_sql = '';
+    my @date_placeholders;
+    if ($start_date && $end_date) {
+        $date_sql = " AND (collect_date > ? and collect_date < ?)";
+        @date_placeholders = ($start_date, $end_date);
+    }
 	#my $schema = $self->bcs_schema();
 
 	my $h;
@@ -2825,11 +2833,11 @@ sub get_phenotypes_for_trait {
 		$join_string = 'JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id)';
 		$where_string = "stock.type_id=$stock_type_id and";
 	}
-	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? ORDER BY phenotype_id ASC;";
+	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? $date_sql ORDER BY phenotype_id ASC;";
 	$h = $dbh->prepare($q);
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
+    $h->execute($self->get_trial_id(), $trait_id, $numeric_regex, @date_placeholders );
     while (my ($value) = $h->fetchrow_array()) {
 	   push @data, $value + 0;
     }
@@ -2966,6 +2974,7 @@ sub get_traits_assayed {
 
     my $q;
     if ($stock_type) {
+        # print STDERR " the stock type here: = $stock_type\n";
         my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
         $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
             FROM cvterm
@@ -5511,7 +5520,7 @@ sub transformation_id_count {
  Usage:   my @trials = CXGN::Project::get_recently_added_trials()
  Params:  $interval - one of day, week, month, year
  Returns: a list of trials, consisting of listrefs listing
-          trial_name (with link), trial_type, breeding program 
+          trial_name (with link), trial_type, breeding program
           (with link)
 
 =cut
@@ -5523,18 +5532,18 @@ sub get_recently_added_trials {
     my $metadata_schema = shift;
     my $interval = shift;
     my $limit = shift || 10;
-    
+
     if (! grep($interval, qw| day week month year | )) {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
 
     my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
-    
+
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
     $h->execute($limit);
-    
+
     my @recent_trials = ();
     while (my ($trial_id) = $h->fetchrow_array()) {
 	print STDERR "Formatting entry with trial id $trial_id...\n";
@@ -5542,7 +5551,7 @@ sub get_recently_added_trials {
 	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
 	my $trial_type = ref($t);
 	$trial_type =~ s/^CXGN\:\://g;
-	
+
 	my $breeding_program = $t->get_breeding_program();
 	my $breeding_program_id = $t->get_breeding_program_id();
 	my $create_date = $t->get_create_date();
@@ -5575,14 +5584,14 @@ sub get_recently_modified_trials {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
-        
+
     #print STDERR "INTERVAL is $interval\n";
     my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc limit ? ";
-    
+
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
     $h->execute($limit);
-    
+
     my @recent_trials;
     while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
 	print STDERR "Formatting entry with trial id $trial_id...\n";
@@ -5590,7 +5599,7 @@ sub get_recently_modified_trials {
 	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
 	my $trial_type = ref($t);
 	$trial_type =~ s/^CXGN\:\://g;
-	
+
 	my $breeding_program = $t->get_breeding_program();
 	my $breeding_program_id = $t->get_breeding_program_id();
 
@@ -5620,7 +5629,7 @@ sub get_recently_added_accessions {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
-    
+
     my $q = "select stock.stock_id from stock where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
@@ -5637,7 +5646,7 @@ sub get_recently_added_accessions {
     }
 
     return \@stock_table;
-    
+
 }
 
 =head2 function update_metadata()
@@ -5692,6 +5701,7 @@ sub update_metadata {
         return "An error occurred setting the new trial details of trial " . $self->get_name() . ": $@";
     }
 }
+
 
 1;
 

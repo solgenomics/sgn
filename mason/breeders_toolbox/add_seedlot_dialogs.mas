@@ -2,6 +2,8 @@
 $timestamp => localtime()
 $accession_uniquename => ''
 $cross_uniquename => ''
+$default_seedlot_material_type => undef
+
 </%args>
 
 <div class="modal fade" id="add_seedlot_dialog" name="add_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_dialog">
@@ -21,12 +23,21 @@ $cross_uniquename => ''
                         <input class="form-control" id="seedlot_name" placeholder="Required">
                     </div>
                 </div>
+%if ($default_seedlot_material_type) {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" >Material Type: </label>
+                    <div class="col-sm-9">
+                        <input class="form-control" name="add_seedlot_default_material_type" id="add_seedlot_default_material_type" disabled value="<% $default_seedlot_material_type %>">
+                    </div>
+                </div>
+% } else {
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Material Type: </label>
                     <div class="col-sm-9" >
                         <div id="seedlot_material_type_div"></div>
                     </div>
                 </div>
+% }
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Seedlot Description: </label>
                     <div class="col-sm-9" >
@@ -202,7 +213,13 @@ jQuery(document).ready(function(){
 
     jQuery('#create_new_seedlot_button').click( function() {
         var name = jQuery('#seedlot_name').val();
-        const material_type = jQuery('#seedlot_material_type').val();
+        let material_type = "";
+        const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
+        if (default_seedlot_material_type) {
+            material_type = default_seedlot_material_type;
+        } else {
+            material_type = jQuery('#seedlot_material_type').val();
+        }
         var seedlot_description = jQuery('#seedlot_description').val();
         var location = jQuery('#seedlot_location').val();
         var box_name = jQuery('#seedlot_box_name').val();

@@ -1394,7 +1394,7 @@ jQuery(document).ready(function () {
 
     solGS.cluster.displayClusterPopsTable(tableId, clusterPopsRows)
  
-    jQuery("#add_new_pops").show();
+    jQuery("#create_new_list_dataset").show();
     
   }
 });

@@ -40,6 +40,8 @@ use Math::Round;
 use URI::Encode qw(uri_encode uri_decode);
 use Array::Utils qw(:all);
 use CXGN::Genotype::GenotypingProject;
+use CXGN::Transformation::Transformation;
+use Sort::Naturally;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -85,14 +87,14 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
 
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id) } )->get_breeding_programs();
 
-    my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
     if ($empty) { unshift @$breeding_programs, [ "", "Please select a program" ]; }
+    my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
 
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
       choices => $breeding_programs,
-#      selected => $default
+      selected => $default
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -231,8 +233,11 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
     my $id = $c->req->param("id") || "treatment_select";
     my $name = $c->req->param("name") || "treatment_select";
     my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 
-    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema,people_schema=>$people_schema, metadata_schema=>$metadata_schema, phenome_schema=>$phenome_schema,trial_id => $trial_id });
     my $data = $trial->get_treatments();
 
     if ($empty) {
@@ -398,13 +403,17 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 
     my @trials;
     if ($include_lists) { push @trials, [ "", "----INDIVIDUAL TRIALS----" ]; }
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
           my $trial_id = $_->[0];
           my $trial_name = $_->[1];
           if ($include_location_year) {
-              my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id });
+              my $trial = CXGN::Trial->new({bcs_schema => $schema,people_schema=>$people_schema,metadata_schema=>$metadata_schema,phenome_schema=>$phenome_schema,trial_id => $trial_id });
               my $location_array = $trial->get_location();
               my $year = $trial->get_year();
               $trial_name .= " (".$location_array->[1]." $year)";
@@ -1267,8 +1276,12 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
         my %unique_traits_ids;
         my %unique_traits_ids_count;
         my %unique_traits_ids_drone_project;
+        my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+        my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+        my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
         foreach (@trial_ids){
-            my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+            my $trial = CXGN::Trial->new({bcs_schema=>$schema, people_schema=>$people_schema, metadata_schema=>$metadata_schema,phenome_schema=>$phenome_schema,trial_id=>$_});
             my $traits_assayed = $trial->get_traits_assayed($data_level, $trait_format, $contains_composable_cv_type);
             foreach (@$traits_assayed) {
                 $unique_traits_ids{$_->[0]} = $_;
@@ -1408,8 +1421,12 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
     my @trial_ids = split ',', $trial_ids;
 
     my @trait_components;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
     foreach (@trial_ids){
-        my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+        my $trial = CXGN::Trial->new({bcs_schema=>$schema, people_schema=>$people_schema, metadata_schema=>$metadata_schema, phenome_schema=>$phenome_schema,trial_id=>$_});
         push @trait_components, @{$trial->get_trait_components_assayed($data_level, $composable_cvterm_format)};
     }
     #print STDERR Dumper \@trait_components;
@@ -1597,7 +1614,8 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         }
     }
 
-    @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
+    @ontology_children = sort { ncmp($a->[1], $b->[1]) } @ontology_children;
+
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
@@ -1606,6 +1624,8 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         name => $select_name,
         id => $select_id,
         multiple => $multiple,
+        size     => 10,
+        class   => "form-control",
         choices => \@ontology_children,
         selected => $selected
     );
@@ -1649,6 +1669,7 @@ sub all_ontology_terms_select : Path('/ajax/html/select/all_ontology_terms') Arg
         name => $select_name,
         id => $select_id,
         multiple => $multiple,
+        size     => 10,
         choices => \@ontology_terms,
     );
     $c->stash->{rest} = { select => $html };
@@ -2437,5 +2458,58 @@ sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0)
     );
     $c->stash->{rest} = { select => $html };
 }
+
+
+sub get_control_transformation_ids_select : Path('/ajax/html/select/control_transformation_ids') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $project_id = $c->req->param('project_id');
+    my $self_transformation_id = $c->req->param('transformation_id');
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $exclude_self = $c->req->param('exclude_self') ? $c->req->param('exclude_self') : '';
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
+    my $active_transformations = $transformation_obj->get_active_transformations_in_project();
+
+    my @transformations;
+    foreach my $active_id (@$active_transformations){
+        my $transformation_id = $active_id->[0];
+        my $transformation_name = $active_id->[1];
+        my $is_a_control = $active_id->[7];
+
+        if ($is_a_control) {
+            if ($exclude_self == 1) {
+                if ($self_transformation_id != $transformation_id ) {
+                    push @transformations, [$transformation_id, $transformation_name];
+                }
+            } else {
+                push @transformations, [$transformation_id, $transformation_name];
+            }
+        }
+    }
+
+    @transformations = sort { $a->[1] cmp $b->[1] } @transformations;
+
+    if ($empty) { unshift @transformations, [ "", "Please select" ]; }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@transformations,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
+
+
+
 
 1;

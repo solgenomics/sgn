@@ -199,8 +199,12 @@ sub parse {
         $plots_seen{$plot_id} = 1;
         $traits_seen{$trait} = 1;
         if (defined($value) && defined($timestamp)) {
-            $data{$plot_id}->{$trait} = [$value, $timestamp, $collector, ''];
+	    print STDERR "KEEPING $trait with value $value for plot $plot_id...\n";
+            push @{$data{$plot_id}->{$trait}}, [$value, $timestamp, $collector, ''];
         }
+	else {
+	    print STDERR "PROBLEM WITH value $value or TIMESTAMP $timestamp\n";
+	}
     }
 
     foreach my $plot (sort keys %plots_seen) {

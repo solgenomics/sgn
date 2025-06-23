@@ -1,0 +1,25 @@
+
+<%args>
+$transcriptomics_files => undef
+$deleted_transcriptomics_files => undef
+$all_transcriptomics_files => undef
+$all_deleted_transcriptomics_files => undef
+$locations => undef
+$sampling_facilities => ()
+$sample_tissue_types => ()
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial', 'jquery.iframe-post-form' ] &>
+
+<& /page/page_title.mas, title=>"Manage Transcriptomic Data" &>
+
+<div>
+
+<%perl>
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' name='upload_high_dim_phenotypes_spreadsheet_link'>Upload Transcriptomic Data</button><button class='btn btn-default' style='margin:3px' name='high_dimensional_phenotype_download_button'>Download Transcriptomic Data</button>";
+</%perl>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Transcriptomics</h4>", info_section_subtitle => 'Upload and download transcriptomic data.', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_transcriptomics_main", transcriptomics_files => $transcriptomics_files, deleted_transcriptomics_files => $deleted_transcriptomics_files, all_transcriptomics_files => $all_transcriptomics_files, all_deleted_transcriptomics_files => $all_deleted_transcriptomics_files, locations => $locations, sampling_facilities => $sampling_facilities, sample_tissue_types => $sample_tissue_types &>
+</div>
+
+<& /analyses/store_new_analysis_values_and_model.mas &>

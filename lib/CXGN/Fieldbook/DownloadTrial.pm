@@ -56,6 +56,7 @@ use CXGN::Stock::Accession;
 use CXGN::Stock;
 use CXGN::Phenotypes::Summary;
 use CXGN::Trial::TrialLayoutDownload;
+use CXGN::Trial;
 
 has 'bcs_schema' => (
     isa => "Bio::Chado::Schema",
@@ -152,6 +153,24 @@ has 'trial_stock_type'=> (
     default => 'accession'
 );
 
+has 'include_plot_order' => (
+    is => 'rw',
+    isa => 'Bool',
+    default => 0
+);
+
+has 'plot_order' => (
+    is => 'rw',
+    isa => 'Str|Undef',
+    default => undef
+);
+
+has 'plot_start' => (
+    is => 'rw',
+    isa => 'Str|Undef',
+    default => undef
+);
+
 sub download {
     my $self = shift;
     my %errors;
@@ -161,6 +180,7 @@ sub download {
     my $trial_id = $self->trial_id();
     my $tempfile = $self->tempfile();
 
+    my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
     # my $wb = Spreadsheet::WriteExcel->new($tempfile);
 
@@ -200,12 +220,32 @@ sub download {
         return $output;
     }
     my @output_array = @{$output->{output}};
+
+    # Get plot order for each of the plots, if requested by the user
+    my %plot_order;
+    if ( $include_plot_order ) {
+        my $results = CXGN::Trial->get_sorted_plots($schema, [$trial_id], $self->plot_order(), $self->plot_start());
+        if ( $results->{plots} ) {
+            foreach (@{$results->{plots}}) {
+                $plot_order{$_->{plot_name}} = $_->{order};
+            }
+        }
+    }
+
+    # Generate the output Excel file
     my $row_num = 0;
+    my $plot_name_col = 0;
     foreach my $l (@output_array){
         my $col_num = 0;
         foreach my $c (@$l){
+            $plot_name_col = $col_num if $row_num == 0 && $c eq 'plot_name';
             $ws->write($row_num, $col_num, $c);
             $col_num++;
+        }
+        if ( $include_plot_order ) {
+            my $pn = $l->[$plot_name_col];
+            my $po = exists $plot_order{$pn} ? $plot_order{$pn} : '';
+            $ws->write($row_num, $col_num, $row_num == 0 ? 'plot_order' : $po);
         }
         $row_num++;
     }

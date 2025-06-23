@@ -38,7 +38,7 @@ my $breeding_program_id = $bp_rs->first->project_id;
 
 my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
 my @new_accessions;
-for (my $i = 1; $i <= 10; $i++) {
+for (my $i = 1; $i <= 15; $i++) {
     push(@new_accessions, "new_accession_" . $i);
 }
 
@@ -143,7 +143,7 @@ is($total_count_1, 5);
 my $kasp_project_response = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_project_id=$genotyping_project_id_1");
 my $kasp_project_message = $kasp_project_response->decoded_content;
 
-my $kasp_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+my $kasp_data = '"MARKER NAME","ACCESSION NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
 "S01_0001","new_accession_1","T,T","1.36",".58"
 "S01_0001","new_accession_2","T,T","1.25",".49"
 "S01_0001","new_accession_3","T,G","1.57","1.38"
@@ -175,7 +175,8 @@ is($kasp_project_message, $kasp_data);
 
 #test upload kasp data using facility names
 #store facility sample Names
-my $plate_file = $f->config->{basepath} . "/t/data/genotype_trial_upload/plate_with_identifier_upload.xls";
+#plate no. 1
+my $plate_file = $f->config->{basepath} . "/t/data/genotype_trial_upload/plate_with_identifier_upload.xlsx";
 my $plate_ua = LWP::UserAgent->new;
 $response = $plate_ua->post(
     'http://localhost:3010/ajax/breeders/parsegenotypetrial',
@@ -183,8 +184,8 @@ $response = $plate_ua->post(
     Content      => [
         genotyping_trial_layout_upload => [
             $plate_file,
-            "plate_with_identifier_upload.xls",
-            Content_Type => 'application/vnd.ms-excel',
+            "plate_with_identifier_upload.xlsx",
+            Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ],
         "sgn_session_id" => $sgn_session_id,
         "genotyping_trial_name" => '2023_plate_1',
@@ -210,7 +211,43 @@ $response = decode_json $mech->content;
 ok($response->{trial_id});
 my $plate_id = $response->{trial_id};
 
+#plate no. 2
+my $plate_file = $f->config->{basepath} . "/t/data/genotype_trial_upload/plate_with_identifier_upload_plate2.xlsx";
+my $plate_ua = LWP::UserAgent->new;
+$response = $plate_ua->post(
+    'http://localhost:3010/ajax/breeders/parsegenotypetrial',
+    Content_Type => 'form-data',
+    Content      => [
+        genotyping_trial_layout_upload => [
+            $plate_file,
+            "plate_with_identifier_upload_plate2.xlsx",
+            Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ],
+        "sgn_session_id" => $sgn_session_id,
+        "genotyping_trial_name" => '2023_plate_2',
+        "upload_include_facility_identifiers" => 1,
+    ]
+);
 
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+
+my $plate_data_2 = {
+    design                     => $message_hash->{design},
+    genotyping_facility_submit => 'no',
+    name                       => '2023_plate_2',
+    genotyping_project_id      => $genotyping_project_id_2,
+    sample_type                => 'tissue_sample',
+    plate_format               => '96'
+};
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id" => $sgn_session_id, plate_data => encode_json($plate_data_2) ]);
+$response = decode_json $mech->content;
+ok($response->{trial_id});
+my $plate2_id = $response->{trial_id};
+
+#uploading plate no.1 genotyping data
 my $facility_file = $f->config->{basepath}."/t/data/genotype_data/kasp_results_with_facility_names_1.csv";
 my $facility_marker_info_file = $f->config->{basepath}."/t/data/genotype_data/kasp_marker_info_with_facility_names.csv";
 
@@ -244,6 +281,32 @@ ok($message_hash->{nd_protocol_id});
 my $kasp_project_id_2 = $message_hash->{project_id};
 my $kasp_protocol_id_2 = $message_hash->{nd_protocol_id};
 
+#upload data for plate no.2 with previously stored protocol
+my $facility_file_2 = $f->config->{basepath}."/t/data/genotype_data/kasp_results_with_facility_names_3.csv";
+
+my $ua4 = LWP::UserAgent->new;
+$response = $ua4->post(
+    'http://localhost:3010/ajax/genotype/upload',
+    Content_Type => 'form-data',
+    Content => [
+        upload_genotype_data_kasp_file_input => [ $facility_file_2, 'kasp_data_upload_using_facility_names' ],
+        upload_genotype_kasp_marker_info_file_input => [ $facility_marker_info_file, 'kasp_marker_info_upload_with_facility_names' ],
+        "sgn_session_id"=>$sgn_session_id,
+        "upload_genotype_project_id"=>$genotyping_project_id_2,
+        "upload_genotype_protocol_id"=>$kasp_protocol_id_2,
+        "upload_genotypes_species_name_input"=>"Manihot esculenta",
+        "upload_genotype_location_select"=>$location_id,
+        "upload_genotype_vcf_observation_type"=>"tissue_sample",
+        "upload_genotype_add_new_accessions"=>0,
+        "upload_genotype_accept_warnings"=>1
+    ]
+);
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+ok($message_hash->{nd_protocol_id});
+
+#retrieving marker info
 $mech->get_ok('http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id='.$kasp_protocol_id_2.'&marker_names=S01_0001');
 $response = decode_json $mech->content;
 is_deeply($response->{'data'}, [['S01_0001','S01','7926132','T','G','AAAAACATTAAAATT[T/G]TAGGCCGGAGCAAG','snpME0001']]);
@@ -254,7 +317,7 @@ my $genotypes_search_2 = CXGN::Genotype::Search->new({
     protocol_id_list=>[$kasp_protocol_id_2],
 });
 my ($total_count_2, $data_2) = $genotypes_search_2->get_genotype_info();
-is($total_count_2, 4);
+is($total_count_2, 8);
 
 #upload with incorrect marker info
 my $facility_file_3 = $f->config->{basepath}."/t/data/genotype_data/kasp_results_with_facility_names_2.csv";
@@ -320,12 +383,210 @@ is($protocol_edited->protocol_name, 'kasp_protocol_1_edited');
 is($protocol_edited->protocol_description, 'test editing description');
 is($protocol_edited->reference_genome_name, 'Mesculenta_511_v8');
 
-## DELETE genotyping protocols, data, plate and projects
-$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_1?sgn_session_id=$sgn_session_id");
+#retrieve genotyping data for plate no.1 with different sample unit levels (sample name, accession name, sample name and accession name)
+my $sample_unit_level = 'genotyping_plate_sample_name';
+my $kasp_genotyping_plate_response = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate_id&sample_unit_level=$sample_unit_level");
+my $kasp_genotyping_plate_message = $kasp_genotyping_plate_response->decoded_content;
+my $plate_genotype_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+"S01_0001","2023_plate_1_A01","T,T","1.36",".58"
+"S01_0001","2023_plate_1_A02","T,T","1.25",".49"
+"S01_0001","2023_plate_1_A03","T,G","1.57","1.38"
+"S01_0001","2023_plate_1_A05","./.",".65",".58"
+"S01_0002","2023_plate_1_A01","A,A","1.43",".59"
+"S01_0002","2023_plate_1_A02","A,G","1.25","1.43"
+"S01_0002","2023_plate_1_A03","A,G","1.22","1.41"
+"S01_0002","2023_plate_1_A05","A,A","1.65",".62"
+"S02_0001","2023_plate_1_A01","T,T","1.75",".75"
+"S02_0001","2023_plate_1_A02","T,T","1.21",".61"
+"S02_0001","2023_plate_1_A03","T,T","1.17",".46"
+"S02_0001","2023_plate_1_A05","T,C","1.26","1.31"
+"S02_0002","2023_plate_1_A01","A,A","1.75",".32"
+"S02_0002","2023_plate_1_A02","A,A","1.38",".59"
+"S02_0002","2023_plate_1_A03","A,C","1.36","1.47"
+"S02_0002","2023_plate_1_A05","A,C","1.32","1.46"
+"S03_0001","2023_plate_1_A01","C,C","1.76",".38"
+"S03_0001","2023_plate_1_A02","C,C","1.47",".24"
+"S03_0001","2023_plate_1_A03","C,T","1.86","1.48"
+"S03_0001","2023_plate_1_A05","C,T","1.11","1.23"
+';
+
+is($kasp_genotyping_plate_message, $plate_genotype_data);
+
+my $sample_unit_level = 'accession';
+my $kasp_genotyping_plate_response_2 = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate_id&sample_unit_level=$sample_unit_level");
+my $kasp_genotyping_plate_message_2 = $kasp_genotyping_plate_response_2->decoded_content;
+my $plate_genotype_data_accession_level = '"MARKER NAME","ACCESSION NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+"S01_0001","new_accession_10","./.",".65",".58"
+"S01_0001","new_accession_6","T,T","1.36",".58"
+"S01_0001","new_accession_7","T,T","1.25",".49"
+"S01_0001","new_accession_8","T,G","1.57","1.38"
+"S01_0002","new_accession_10","A,A","1.65",".62"
+"S01_0002","new_accession_6","A,A","1.43",".59"
+"S01_0002","new_accession_7","A,G","1.25","1.43"
+"S01_0002","new_accession_8","A,G","1.22","1.41"
+"S02_0001","new_accession_10","T,C","1.26","1.31"
+"S02_0001","new_accession_6","T,T","1.75",".75"
+"S02_0001","new_accession_7","T,T","1.21",".61"
+"S02_0001","new_accession_8","T,T","1.17",".46"
+"S02_0002","new_accession_10","A,C","1.32","1.46"
+"S02_0002","new_accession_6","A,A","1.75",".32"
+"S02_0002","new_accession_7","A,A","1.38",".59"
+"S02_0002","new_accession_8","A,C","1.36","1.47"
+"S03_0001","new_accession_10","C,T","1.11","1.23"
+"S03_0001","new_accession_6","C,C","1.76",".38"
+"S03_0001","new_accession_7","C,C","1.47",".24"
+"S03_0001","new_accession_8","C,T","1.86","1.48"
+';
+
+is($kasp_genotyping_plate_message_2, $plate_genotype_data_accession_level);
+
+my $sample_unit_level = 'sample_name_and_accession';
+my $kasp_genotyping_plate_response_3 = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate_id&sample_unit_level=$sample_unit_level");
+my $kasp_genotyping_plate_message_3 = $kasp_genotyping_plate_response_3->decoded_content;
+my $plate_genotype_data_sample_name_and_accession_level = '"MARKER NAME","SAMPLE NAME|ACCESSION NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+"S01_0001","2023_plate_1_A01|new_accession_6","T,T","1.36",".58"
+"S01_0001","2023_plate_1_A02|new_accession_7","T,T","1.25",".49"
+"S01_0001","2023_plate_1_A03|new_accession_8","T,G","1.57","1.38"
+"S01_0001","2023_plate_1_A05|new_accession_10","./.",".65",".58"
+"S01_0002","2023_plate_1_A01|new_accession_6","A,A","1.43",".59"
+"S01_0002","2023_plate_1_A02|new_accession_7","A,G","1.25","1.43"
+"S01_0002","2023_plate_1_A03|new_accession_8","A,G","1.22","1.41"
+"S01_0002","2023_plate_1_A05|new_accession_10","A,A","1.65",".62"
+"S02_0001","2023_plate_1_A01|new_accession_6","T,T","1.75",".75"
+"S02_0001","2023_plate_1_A02|new_accession_7","T,T","1.21",".61"
+"S02_0001","2023_plate_1_A03|new_accession_8","T,T","1.17",".46"
+"S02_0001","2023_plate_1_A05|new_accession_10","T,C","1.26","1.31"
+"S02_0002","2023_plate_1_A01|new_accession_6","A,A","1.75",".32"
+"S02_0002","2023_plate_1_A02|new_accession_7","A,A","1.38",".59"
+"S02_0002","2023_plate_1_A03|new_accession_8","A,C","1.36","1.47"
+"S02_0002","2023_plate_1_A05|new_accession_10","A,C","1.32","1.46"
+"S03_0001","2023_plate_1_A01|new_accession_6","C,C","1.76",".38"
+"S03_0001","2023_plate_1_A02|new_accession_7","C,C","1.47",".24"
+"S03_0001","2023_plate_1_A03|new_accession_8","C,T","1.86","1.48"
+"S03_0001","2023_plate_1_A05|new_accession_10","C,T","1.11","1.23"
+';
+
+is($kasp_genotyping_plate_message_3, $plate_genotype_data_sample_name_and_accession_level);
+
+#retrieve genotype data for plate no.2
+my $sample_unit_level = 'genotyping_plate_sample_name';
+my $kasp_genotyping_plate_response_4 = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_plate_id=$plate2_id&sample_unit_level=$sample_unit_level");
+my $kasp_genotyping_plate_message_4 = $kasp_genotyping_plate_response_4->decoded_content;
+my $plate_2_data = '"MARKER NAME","SAMPLE NAME","SNP CALL (X,Y)","X VALUE","Y VALUE"
+"S01_0001","2023_plate_2_A01","T,T","1.36",".58"
+"S01_0001","2023_plate_2_A02","T,T","1.25",".49"
+"S01_0001","2023_plate_2_A03","T,G","1.57","1.38"
+"S01_0001","2023_plate_2_A04","./.",".65",".58"
+"S01_0002","2023_plate_2_A01","A,A","1.43",".59"
+"S01_0002","2023_plate_2_A02","A,G","1.25","1.43"
+"S01_0002","2023_plate_2_A03","A,G","1.22","1.41"
+"S01_0002","2023_plate_2_A04","A,A","1.65",".62"
+"S02_0001","2023_plate_2_A01","T,T","1.75",".75"
+"S02_0001","2023_plate_2_A02","T,T","1.21",".61"
+"S02_0001","2023_plate_2_A03","T,T","1.17",".46"
+"S02_0001","2023_plate_2_A04","T,C","1.26","1.31"
+"S02_0002","2023_plate_2_A01","A,A","1.75",".32"
+"S02_0002","2023_plate_2_A02","A,A","1.38",".59"
+"S02_0002","2023_plate_2_A03","A,C","1.36","1.47"
+"S02_0002","2023_plate_2_A04","A,C","1.32","1.46"
+"S03_0001","2023_plate_2_A01","C,C","1.76",".38"
+"S03_0001","2023_plate_2_A02","C,C","1.47",".24"
+"S03_0001","2023_plate_2_A03","C,T","1.86","1.48"
+"S03_0001","2023_plate_2_A04","C,T","1.11","1.23"
+';
+
+is($kasp_genotyping_plate_message_4, $plate_2_data);
+
+#delete genotyping data from plate no. 1
+my $before_deleting_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
+my $before_deleting_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
+my $before_deleting_genotype = $schema->resultset("Genetic::Genotype")->search({})->count();
+my $before_deleting_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->search({})->count();
+my $before_deleting_experiment_genotype = $schema->resultset("NaturalDiversity::NdExperimentGenotype")->search({})->count();
+my $before_deleting_experiment_project = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({})->count();
+my $before_deleting_experiment_protocol = $schema->resultset("NaturalDiversity::NdExperimentProtocol")->search({})->count();
+my $before_deleting_protocol = $schema->resultset("NaturalDiversity::NdProtocol")->search({})->count();
+my $before_deleting_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({})->count();
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/plate_genotyping_data_delete?genotyping_plate_id='.$plate_id);
 $response = decode_json $mech->content;
 is_deeply($response, {success=>1});
 
-$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_2?sgn_session_id=$sgn_session_id");
+my $after_deleting_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
+my $after_deleting_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
+my $after_deleting_genotype = $schema->resultset("Genetic::Genotype")->search({})->count();
+my $after_deleting_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->search({})->count();
+my $after_deleting_experiment_genotype = $schema->resultset("NaturalDiversity::NdExperimentGenotype")->search({})->count();
+my $after_deleting_experiment_project = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({})->count();
+my $after_deleting_experiment_protocol = $schema->resultset("NaturalDiversity::NdExperimentProtocol")->search({})->count();
+my $after_deleting_protocol = $schema->resultset("NaturalDiversity::NdProtocol")->search({})->count();
+my $after_deleting_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({})->count();
+
+is($after_deleting_experiment, $before_deleting_experiment-4); #4 samples
+is($after_deleting_experiment_stock, $before_deleting_experiment_stock-4);
+is($after_deleting_genotype, $before_deleting_genotype-4);
+is($after_deleting_genotypeprop, $before_deleting_genotypeprop-12); #3 chromosomes
+is($after_deleting_experiment_genotype, $before_deleting_experiment_genotype-4);
+is($after_deleting_experiment_project, $before_deleting_experiment_project-4);
+is($after_deleting_experiment_protocol, $before_deleting_experiment_protocol-4);
+is($after_deleting_protocol, $before_deleting_protocol); #protocol still has associated genotyping data, cannot delete
+is($after_deleting_protocolprop, $before_deleting_protocolprop); #protocol still has associated genotyping data, cannot delete
+
+#delete genotyping data from plate no. 2
+$mech->get_ok('http://localhost:3010/ajax/breeders/plate_genotyping_data_delete?genotyping_plate_id='.$plate2_id);
+$response = decode_json $mech->content;
+my $empty_protocol_name = $response->{'empty_protocol_name'};
+my $empty_protocol_id = $response->{'empty_protocol_id'};
+
+is($empty_protocol_name,'kasp_protocol_2');
+
+my $after_deleting_experiment_2 = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
+my $after_deleting_experiment_stock_2 = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
+my $after_deleting_genotype_2 = $schema->resultset("Genetic::Genotype")->search({})->count();
+my $after_deleting_genotypeprop_2 = $schema->resultset("Genetic::Genotypeprop")->search({})->count();
+my $after_deleting_experiment_genotype_2 = $schema->resultset("NaturalDiversity::NdExperimentGenotype")->search({})->count();
+my $after_deleting_experiment_project_2 = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({})->count();
+my $after_deleting_experiment_protocol_2 = $schema->resultset("NaturalDiversity::NdExperimentProtocol")->search({})->count();
+my $after_deleting_protocol_2 = $schema->resultset("NaturalDiversity::NdProtocol")->search({})->count();
+my $after_deleting_protocolprop_2 = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({})->count();
+
+is($after_deleting_experiment_2, $before_deleting_experiment-8); #4 samples
+is($after_deleting_experiment_stock_2, $before_deleting_experiment_stock-8);
+is($after_deleting_genotype_2, $before_deleting_genotype-8);
+is($after_deleting_genotypeprop_2, $before_deleting_genotypeprop-24); #3 chromosomes
+is($after_deleting_experiment_genotype_2, $before_deleting_experiment_genotype-8);
+is($after_deleting_experiment_project_2, $before_deleting_experiment_project-8);
+is($after_deleting_experiment_protocol_2, $before_deleting_experiment_protocol-8);
+is($after_deleting_protocol_2, $before_deleting_protocol); # before deleting empty protocol
+is($after_deleting_protocolprop_2, $before_deleting_protocolprop); # before deleting empty protocol
+
+# option to delete empty protocol
+$mech->get_ok('http://localhost:3010/ajax/breeders/empty_protocol_delete?empty_protocol_id='.$empty_protocol_id);
+$response = decode_json $mech->content;
+is($response->{'success'},'1');
+
+my $after_deleting_empty_protocol_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
+my $after_deleting_empty_protocol_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
+my $after_deleting_empty_protocol_genotype = $schema->resultset("Genetic::Genotype")->search({})->count();
+my $after_deleting_empty_protocol_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->search({})->count();
+my $after_deleting_empty_protocol_experiment_genotype = $schema->resultset("NaturalDiversity::NdExperimentGenotype")->search({})->count();
+my $after_deleting_empty_protocol_experiment_project = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({})->count();
+my $after_deleting_empty_protocol_experiment_protocol = $schema->resultset("NaturalDiversity::NdExperimentProtocol")->search({})->count();
+my $after_deleting_empty_protocol = $schema->resultset("NaturalDiversity::NdProtocol")->search({})->count();
+my $after_deleting_empty_protocol_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({})->count();
+
+is($after_deleting_empty_protocol_experiment, $after_deleting_experiment_2); #unchanged
+is($after_deleting_empty_protocol_experiment_stock, $after_deleting_experiment_stock_2); #unchanged
+is($after_deleting_empty_protocol_genotype, $after_deleting_genotype_2); #unchanged
+is($after_deleting_empty_protocol_genotypeprop, $after_deleting_genotypeprop_2); #unchanged
+is($after_deleting_empty_protocol_experiment_genotype, $after_deleting_experiment_genotype_2); #unchanged
+is($after_deleting_empty_protocol_experiment_project, $after_deleting_experiment_project_2); #unchanged
+is($after_deleting_empty_protocol_experiment_protocol, $after_deleting_experiment_protocol_2); #unchanged
+is($after_deleting_empty_protocol, $after_deleting_protocol_2-1);
+is($after_deleting_empty_protocol_protocolprop, $after_deleting_protocolprop_2-7); # 3 chromosome
+
+## DELETE genotyping protocols, data, plate and projects
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_1?sgn_session_id=$sgn_session_id");
 $response = decode_json $mech->content;
 is_deeply($response, {success=>1});
 
@@ -333,6 +594,9 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$plate_id.'/delete/la
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$plate2_id.'/delete/layout');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_project_id_1.'/delete/genotyping_project');
 $response = decode_json $mech->content;
@@ -342,5 +606,10 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_project_i
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
+$f->clean_up_db();
+
+my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
+
+my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'phenotypes', 'concurrent', $f->config->{basepath});
 
 done_testing();

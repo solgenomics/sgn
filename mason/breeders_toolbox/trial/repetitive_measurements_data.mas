@@ -1,0 +1,422 @@
+<%args>
+$trial_id
+$trial_stock_type => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues'] &>
+
+<style>
+.small-graph svg {
+    display: flex;
+    margin: auto;
+}
+
+.small-graph {
+    cursor: pointer;
+}
+
+</style>
+
+<div class="well well-sm table-responsive">
+    <center><h4>View plots for repetitive measurement traits</h4>
+
+    <form class="form-horizontal" role="form">
+	<div style="display: flex; align-items: center; white-space: nowrap; width: 100%; margin: 12px auto;">
+        <div style="display: flex; align-items: center; margin-right: 30px; flex: 1;">
+	    	<label for="select_trait_for_repetitive_data_and_plot"  style="width: 130px; margin-right: 10px; text-align: right; white-space: nowrap;">Select Trait:</label>
+            <select id="select_trait_for_repetitive_data_and_plot" class="form-control" style="flex: 1; min-width: 100px;">
+                <option value="">[Loading...]</option>
+            </select>
+	    </div>
+    </div>
+    <div style="display: flex; align-items: center; white-space: nowrap; width: 100%;margin: 12px auto;">
+         <div style="display: flex; align-items: center; margin-right: 30px;">
+            <label for="repetitive_measurement_start_date" style="width: 130px; margin-right: 10px; text-align: right; white-space: nowrap;">Start Date:</label>
+            <input type="text" id="repetitive_measurement_start_date" title="repetitive_measurement_start_date" class="form-control" style="width: 160px; padding: 4px;" />
+        </div>
+        <div style="display: flex; align-items: center; margin-left: 30px;">
+            <label for="repetitive_measurement_end_date" style="width: 200px; margin-right: 10px; text-align: right; white-space: nowrap;"> End Date:</label>
+            <input type="text" id="repetitive_measurement_end_date" title="repetitive_measurement_end_date" class="form-control" style="width: 160px; padding: 4px;"/>
+        </div>
+    </div>
+    <div style="display: flex;align-items: center;margin-right: 30px;">
+            <label for="repetitive_slider_range" style="width: 130px; margin-right: 10px; text-align: right; white-space: nowrap;">DateRange Slider:</label>
+            <div id="repetitive_slider_range" style="flex: 1; margin: 10px;"></div>
+    </div>
+    <div style="display: flex; align-items: center; white-space: nowrap;width: 100%; margin: 12px auto;">
+        <div style="display: flex; align-items: center; margin-right: 30px;">
+            <label for="repetitive_measurement_observation_level" style="width: 130px; margin-right: 10px; text-align: right; white-space: nowrap;">Observation Level: </label>
+            <select class="form-control" id="repetitive_measurement_observation_level" style="min-width: 160px; padding: 4px;">
+                <option value="plot">Plots</option>
+                <option value="plant">Plants</option>
+                <option value="subplot">Subplots</option>
+                <option value="tissue_sample">Tissue Samples</option>
+            </select>
+        </div>
+        <div style="display: flex; align-items: center; margin-left: 15px; margin-right: 50px;">
+            <label for="repetitive_measurements_level" style="width: 250px; margin-right: 10px; text-align: right; white-space: nowrap;">Repetitive Measurements Level:</label>
+            <select class="form-control" id="repetitive_measurements_level" style="min-width: 100px; padding: 4px;">
+                <option value="first">First value</option>
+                <option value="last">Last value</option>
+                <option value="average" selected>Average value</option>
+                <option value="sum">Sum values</option>
+                <option value="all">All values</option>
+            </select>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: center; margin-top:20px; margin-bottom: 12px;">
+        <button id="repetitive_measurement_select_button" disabled class="btn btn-primary">Submit</button>
+    </div>
+    <br>
+        <table id="repetitive_measurement_data_table" style="width:100%"></table>
+    </form>
+</div>
+
+<div id="large_graph" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Trait Name: <span id="title_trait_name"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <div id="large_graph_container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<script>
+
+jQuery(document).ready(function() {
+    var trial_id = '<% $trial_id %>';
+    let selectedTraitId = '';
+
+    jQuery(document).on('change', '#select_trait_for_repetitive_data_and_plot', function() {
+        selectedTraitId = jQuery(this).val();
+        //console.log("Trait ID updated to:", selectedTraitId);
+    });
+
+    jQuery('#repetitive_measurements_data_onswitch').click(function() {
+        create_menu_for_repetitive_values(trial_id)
+        .then((result) => fetch_repetitive_measurement_traits(result.result.searchResultsDbId))
+        .then((result) => repetitive_build_menu(result.result))
+        .then((final) => {});
+    });
+
+    jQuery('#repetitive_measurement_select_button').click(function(event) {
+        event.preventDefault();
+        jQuery('#working_modal').modal('show');
+
+        if (!selectedTraitId) { 
+            selectedTraitId = jQuery('#selectRawDataTrait option:selected').val();
+        }
+
+        //console.log("check updated trait ID:", selectedTraitId);
+        var repetitive_start_date = jQuery('#repetitive_measurement_start_date').val();
+        var end_date = jQuery('#repetitive_measurement_end_date').val();
+        
+        //add an extra day to make all the range inclusive !!!
+        var repetitive_endDate = new Date(end_date);
+        repetitive_endDate.setDate(repetitive_endDate.getDate() + 1);
+        //Format the new end date to YYYY-MM-DD
+        var repetitive_end_date = repetitive_endDate.toISOString().split('T')[0];
+
+        var repetitive_observation_level = jQuery('#repetitive_measurement_observation_level').find(":selected").val();
+        var repetitive_measurement_level = jQuery('#repetitive_measurements_level').find(":selected").val();
+        //alert("now fetching repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level")
+        get_repetitive_measurement_data(trial_id, selectedTraitId, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
+        .then((result) => fetch_repetitive_measurement_dataTable(result.result.searchResultsDbId))
+        .then((result) => show_repetitive_measurement_values(result.result, repetitive_measurement_level))
+        .then((final) => {
+            jQuery('#working_modal').modal('hide');
+        })
+        .fail(() => {
+            jQuery('#working_modal').modal('hide'); // Hide modal on error
+            alert('An error occurred'); // Show error message
+        });
+    });
+
+    jQuery.ajax({
+        'url': '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
+    }).done(function(data) {
+        var repetitive_startDate = new Date(data.start_date).toISOString().split('T')[0];
+        var repetitive_endDate = new Date(data.end_date).toISOString().split('T')[0];
+        jQuery('#repetitive_measurement_start_date').val(repetitive_startDate);
+        jQuery('#repetitive_measurement_end_date').val(repetitive_endDate);
+
+        jQuery('input[title="repetitive_measurement_start_date"]').on('focus', function () {
+            jQuery(this).daterangepicker({
+            	"singleDatePicker": true,
+            	"showDropdowns": true,
+            	"autoUpdateInput": true,
+            	"startDate": jQuery('#repetitive_measurement_start_date').val(),
+            	"minDate": repetitive_startDate,
+            	"maxDate":repetitive_endDate,
+            	locale: {
+            		format: 'YYYY-MM-DD'
+            	}
+            },function (start) {
+                var new_start_date = new Date(start).getTime();
+                var new_end_date = new Date(jQuery('#repetitive_measurement_end_date').val()).getTime();
+                //alert("the start date is : new_start_date");
+                //alert("the end date is: new_end_date");
+                jQuery('#repetitive_slider_range').slider('values', [new_start_date, new_end_date]);
+            });
+        });
+
+        jQuery('input[title="repetitive_measurement_end_date"]').on('focus', function () {
+            jQuery(this).daterangepicker({
+        	    "singleDatePicker": true,
+                "showDropdowns": true,
+        	    "autoUpdateInput": true,
+                "startDate" : jQuery('#repetitive_measurement_end_date').val(),
+        	    "minDate": repetitive_startDate,
+        	    "maxDate": repetitive_endDate,
+        	    locale: {
+        	    	format: 'YYYY-MM-DD'
+        	    },
+            }, function (end) {
+                var new_start_date = new Date(jQuery('#repetitive_measurement_start_date').val()).getTime();
+                var new_end_date = new Date(end).getTime();
+                //console.log("the start date in the end_date section is : new_start_date");
+                //console.log("the end date  in the  end_date section is: new_end_date");
+                jQuery('#repetitive_slider_range').slider('values', [new_start_date, new_end_date]);
+            });
+        });
+
+        jQuery('#repetitive_slider_range').slider({
+            range: true,
+            min: new Date(repetitive_startDate).getTime(),
+            max: new Date(repetitive_endDate).getTime(),
+            values: [new Date(repetitive_startDate).getTime(), new Date(repetitive_endDate).getTime()],
+            slide: function(event, ui) {
+                //the start and end date of this measurement will be updated based on the slider moved from !!
+                var start = new Date(ui.values[0]).toISOString().split('T')[0];
+                var end = new Date(ui.values[1]).toISOString().split('T')[0];
+                jQuery('#repetitive_measurement_start_date').val(start);
+                jQuery('#repetitive_measurement_end_date').val(end);
+            }
+        });
+    }).fail(function(xhr, status, error) {
+        alert('An error occured in the repetitive measurement!' + xhr.responseText);
+        //console.error("the status:", xhr.status);
+        //console.error("the error:", error);
+    })
+
+    function create_menu_for_repetitive_values(trial_id) {
+        return jQuery.ajax({
+            'url':"/brapi/v2/search/variables",
+            'data': {'studyDbIds': [ trial_id ], 'pageSize': 10000},
+            'method': 'POST'
+        });
+    }
+
+    function fetch_repetitive_measurement_traits(searchResultsDbId) {
+        return jQuery.ajax( {
+	        'url': "/brapi/v2/search/variables/"+searchResultsDbId,
+	        'data': {'pageSize': 10000 },
+            'method' : 'GET',
+	    });
+    }
+
+    function parseDateIgnoreTimeZone(timestampStr){
+        var datePart = timestampStr.slice(0,10); // includes only the first 10 characters YYYY-MM-DD !!!
+        var parts = datePart.split("-"); 
+        var year = +parts[0];
+        var month = +parts[1] - 1;
+        var day = +parts[2];
+        return new Date(year, month, day, 12); //return a UTC date for that day !!!
+    }
+    
+    function repetitive_build_menu(result) {
+        var $traitSelect = jQuery('#select_trait_for_repetitive_data_and_plot');
+        $traitSelect.empty();
+        for (var i =0; i<result.data.length; i++) {
+            var menu = `<option value="${result.data[i].observationVariableDbId}">${result.data[i].trait.traitName}</option>`;
+            $traitSelect.append(menu);
+        }
+        selectedTraitId = $traitSelect.find('option:first').val();
+
+	if (selectedTraitId) {
+	   //alert('Enabling button!');
+	   jQuery('#repetitive_measurement_select_button').prop('disabled', false);
+	}
+	else {
+            //alert('disabling  button!');
+            jQuery('#repetitive_measurement_select_button').prop('disabled', true);
+	     }
+        //console.log("first trait ID selected:", selectedTraitId);
+    }
+
+    function get_repetitive_measurement_data(trial_id, trait_id, start_date, end_date, observation_level) {
+        return jQuery.ajax({
+            'url': "/brapi/v2/search/observations/",
+		    'data': {
+                studyDbIds: [ trial_id ], 
+                observationVariableDbIds: [ trait_id ],
+                observationTimeStampRangeStart: start_date, 
+                observationTimeStampRangeEnd: end_date, 
+                observationLevel: [ observation_level ],
+            },
+		    'method': "POST"
+		});
+    }
+
+    function fetch_repetitive_measurement_dataTable(searchResultsDbId) {
+        return jQuery.ajax({
+            'url': "/brapi/v2/search/observations/"+searchResultsDbId,
+	    	'data': {
+                'pageSize': 10000
+            },
+            'method': "GET"
+		});
+    }
+
+	var observation_units_map = {};
+    function show_repetitive_measurement_values(result, repetitive_measurement_level) {
+        var data = [];
+        observation_units_map = {};
+
+        result.data.forEach(function(item) {
+            var unique_key = item.observationUnitName + '|' + item.germplasmName;
+            if (!observation_units_map[unique_key]) {
+                observation_units_map[unique_key] ={
+                    observationUnitName: item.observationUnitName,
+                    germplasmName: item.germplasmName,
+                    values: []
+                };
+            }
+            var dateOnly = parseDateIgnoreTimeZone(item.observationTimeStamp);
+            observation_units_map[unique_key].values.push({
+				value: parseFloat(item.value),
+				date: dateOnly
+			});
+        });
+		
+		var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
+        var start_date = new Date(jQuery('#repetitive_measurement_start_date').val());
+        var end_date = new Date(jQuery('#repetitive_measurement_end_date').val());
+        //console.log("the trait is: ", trait_name);
+        //console.log("the start date of this trait is: ", start_date);
+        //console.log("the end date of this trait is: ", end_date);
+
+        /*
+		just a note:if user select the 'all values' option in the UI, the output values will be separated by comma ",".
+		However, when user download the phenotype file form the search wizard, the values will appear in different rows !!!
+		*/
+
+        for (var unique_id in observation_units_map) {
+            var group = observation_units_map[unique_id];
+            //sort the repetitive values arrray by collect_date!!
+            group.values.sort((a, b) => a.date - b.date);
+            var values = group.values.map(d => d.value); //store only the value for each object !!
+            var valueToShow = '';
+
+            if (repetitive_measurement_level === 'first') {
+                valueToShow = values[0];
+            } else if(repetitive_measurement_level === 'last') {
+                valueToShow = values[values.length -1];
+            } else if(repetitive_measurement_level === 'average') {
+                var sum = values.reduce((a, b) => a + b, 0) ;
+                var avg = sum / values.length;
+                valueToShow = avg.toFixed(2);
+            } else if(repetitive_measurement_level === 'sum') {
+                var sum_values = values.reduce((a,b) => a + b, 0);
+                valueToShow = sum_values.toFixed(2);
+            } else if(repetitive_measurement_level === 'all') {
+                valueToShow = values.join(', ');
+            }
+
+			var repetitive_line_graph = (repetitive_measurement_level === 'all') ?
+                `<div class="small-graph" data-observation="${unique_id}"></div>`
+                : 'Select "All values" option to view graph';
+
+            data.push([group.observationUnitName, group.germplasmName, valueToShow, repetitive_line_graph]);
+        }
+
+        jQuery('#repetitive_measurement_data_table').DataTable( {
+		   'destroy': true,
+		   'columns': [
+		       { title: 'Observation Unit Name'},
+		       { title: 'Accession Name' },
+               { title: 'Repetitive Values' },
+			   { title: 'Repetitive line graph'}
+		   ],
+		   'data' : data,
+		   'drawCallback':function(settings) {
+				jQuery('.small-graph').each(function() {
+					var container = jQuery(this);
+					var observationUnitKey = container.data('observation');
+					var group = observation_units_map[observationUnitKey];
+					var small_graph_data = group.values;
+
+					draw_small_graph(container, small_graph_data);
+				});
+		   	}
+		});
+    }
+
+	/*
+	add an function to draw a small_graph for repetitive_value for unique obs_unit_name
+	here, we ddraw a small graph just to see the trend based on the values from unique Obs_unit_name and unique accession !!
+	*/
+
+	function draw_small_graph(container, data) {
+		var small_graph_dim = {
+			"width": 60,
+			"height": 20,
+			"margin": { "top": 5, "right": 5, "bottom": 5, "left":5}  
+		};
+
+		//we are hiding the axis, legends and all other details for the samll_graph !!!
+		var options = {
+			showXAxis: false, 
+			showYAxis: false, 
+			showDots: false, 
+			showTitle: false
+		};
+
+		//draw a line graph based on the repetitive_values for each obs_unit_name 
+		lineGraphRepetitiveValues.drawLineGraph(data, container.get(0), small_graph_dim, '', '', options);
+
+		//add a click event to small_graph to view the graph in the larger appearance
+		container.on('click', function() {
+			var observationUnitKey = container.data('observation');
+			var group = observation_units_map[observationUnitKey];
+			var graph_data = group.values;
+            var label_observation_unit_name = group.observationUnitName;
+			var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
+
+			open_large_graph(graph_data, trait_name, label_observation_unit_name);
+		});
+	}
+
+	//here, the larger graph function, it has all the graph info - titles, axis labels and will open in the new window !!
+	function open_large_graph(data, trait_name, label_observation_unit_name) {
+		//use trait_name for the title of the graph 
+        //console.log("all values in the data object:", data);
+		jQuery('#title_trait_name').text(trait_name);
+		//clear any previous content
+		jQuery('#large_graph_container').html('');
+		jQuery('#large_graph').modal('show');
+
+		//add options to show in the larger graph 
+		var options = {
+			showXAxis:true, 
+			showYAxis:true, 
+			showTitle:true,
+			showDots: true
+		};
+		
+		//draw the line by connecting all the values for the larger graph
+		lineGraphRepetitiveValues.drawLineGraph(data, "#large_graph_container", null, trait_name, label_observation_unit_name, options); 
+	}
+});
+</script>

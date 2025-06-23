@@ -45,28 +45,41 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => 1, file_name => $temppath, quotes => 0);
-    $ds->retrieve_phenotypes();
-    my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
+    my $ds_json = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
+    $ds_json->retrieve_traits();
+    my $ds_traits = $ds_json->traits();
 
-    # my @traits_select = ();
-    my $traits = $pf->traits();
+    
+    # Print extracted traits
+    if ($ds_traits && @$ds_traits) {
+       
+        my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => 1, file_name => $temppath, quotes => 0);
+        $ds->retrieve_phenotypes();
+        my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
 
-    my $trait_options = "trait_options";
-    my $trait_html ="";
+        # my @traits_select = ();
+        my $traits = $pf->traits();
 
-    foreach my $trait (@$traits) {
-       if ($trait =~ m/.+\d{7}/){
-        $trait_html .= '<input type="checkbox" class= "trait_box" name="'.$trait_options.'" value="'.$trait.'">'.$trait.'</input> </br>';
-       }
+        my $trait_options = "trait_options";
+        my $trait_html ="";
+
+        foreach my $trait (@$traits) {
+           if ($trait =~ m/.+\d{7}/){
+            $trait_html .= '<input type="checkbox" class= "trait_box" name="'.$trait_options.'" value="'.$trait.'">'.$trait.'</input> </br>';
+           }
+        }
+
+
+        $c->stash->{rest} = {
+            selected_variable => $trait_html,
+            tempfile => $tempfile."_phenotype.txt",
+        };
+
+    } else {
+        $c->stash->{rest} = {
+            error => "No traits found in the dataset. Please select a dataset with trial(s) and trait(s).",
+        };
     }
-
-
-    $c->stash->{rest} = {
-        selected_variable => $trait_html,
-        tempfile => $tempfile."_phenotype.txt",
-    };
-
 }
 
 sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
@@ -236,6 +249,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     
     # Now proceed to decode JSON
     my $outliers_data = decode_json($outliers_string);
+    my $main_trait = $c->req->param('trait');
 
     my %trait_ids;
     my %study_names;
@@ -248,30 +262,27 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my %unique_traits = map { $_ => 1 } @$othertraits;
     my @unique_othertraits = keys %unique_traits;
 
-    # @unique_othertraits = map { s/\|.*//r } @unique_othertraits;
-    # print STDERR Dumper \@unique_othertraits;
-
     foreach my $entry (@$outliers_data) { 
         $trait = $entry->{trait};  # Directly use the trait from the entry
         my $study_name = $entry->{studyName};
         $study_names{$study_name} = 1 if defined $study_name;
     }
-    
-    my @alltraits = ($trait, @unique_othertraits);
+
+    my @alltraits = ($main_trait, @unique_othertraits);
     foreach my $sel_trait (@alltraits) {
         $trait_ids{$sel_trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $sel_trait)->cvterm_id;
     }
-    
 
-    $trait =~ s/\|.*//;
-    my $trait_operator = $trait."|".$operator;
+        
+    $main_trait =~ s/\|.*//;
+    my $trait_operator = $main_trait."|".$operator;
 
     # Convert unique study names to a comma-separated list in SQL format
     my @unique_study_names = keys %study_names;
     return $c->response->body('No unique study names found.') unless @unique_study_names;
 
     my $study_names_sql = join(", ", map { $schema->storage->dbh->quote($_) } @unique_study_names);  # Quote each name
-    
+
     # Add validated traits to projectprop
     my $trial_sql = qq{
         INSERT INTO projectprop (project_id, type_id, value, rank)
@@ -290,60 +301,68 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
 
     my $experiment_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    # Extract plot names from the outliers data
-    my @plot_names = map { $_->{plotName} } @$outliers_data;
+    # Execute the first query unconditionally
+    eval {
+        my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
+        $sth_trial->execute();
+    };
+
+    my @plot_names  = map { $_->{plotName} } @$outliers_data;
     my @plot_values = map { $_->{value} } @$outliers_data;
 
     my %seen;
     @plot_names = grep { !$seen{$_}++ } @plot_names;
 
-    my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
-    my $trait_ids_sql = join(", ", @unique_trait_ids);
-
+    print("here are plots:\n");
+    print Dumper \@plot_names;
     
-    if (@plot_names && %trait_ids) {
-        # print STDERR Dumper \@plot_names;
-        # Convert plot names and traits into comma-separated lists for SQL
-        my $plot_names_sql = join(", ", map { $schema->storage->dbh()->quote($_) } @plot_names);
+    # Proceed only if there are outliers
+    if (@plot_names) {
+        # Extract plot names from the outliers data
+        
 
-        # Build the SQL query
-        my $outlier_data_sql = "
-            INSERT INTO phenotypeprop (phenotype_id, type_id, value)
-            SELECT phenotype.phenotype_id, 
-                   (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier'), 
-                   phenotype.value 
-            FROM phenotype
-            JOIN nd_experiment_phenotype ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id 
-            JOIN nd_experiment_stock ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id 
-            WHERE nd_experiment_stock.stock_id IN (
-                SELECT stock.stock_id FROM stock WHERE uniquename IN ($plot_names_sql)
-            )
-            AND nd_experiment_stock.type_id = $experiment_type
-            AND phenotype.observable_id IN ($trait_ids_sql)
-            AND NOT EXISTS (
-                SELECT 1 FROM phenotypeprop 
-                WHERE phenotypeprop.phenotype_id = phenotype.phenotype_id
-                AND phenotypeprop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
-            );";
+        my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
+        my $trait_ids_sql    = join(", ", @unique_trait_ids);
 
-        if($curator == 1){
-            # Execute the SQL query
-            eval {
-                my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
-                $sth_trial->execute();
+        # Proceed with query only if @plot_names and %trait_ids are valid
+        if (@plot_names && %trait_ids) {
+            my $plot_names_sql = join(", ", map { $schema->storage->dbh()->quote($_) } @plot_names);
 
-                my $sth_outliers = $schema->storage->dbh->prepare($outlier_data_sql);
-                $sth_outliers->execute();
-                
-                $c->stash->{rest} = $response_data;
-            };
-        } else {
-            $c->stash->{rest} = $response_data;
-            
+            # SQL Query to insert outliers
+            my $outlier_data_sql = "
+                INSERT INTO phenotypeprop (phenotype_id, type_id, value)
+                SELECT phenotype.phenotype_id, 
+                       cvterm_outlier.cvterm_id, 
+                       phenotype.value
+                FROM phenotype
+                JOIN nd_experiment_phenotype 
+                    ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id 
+                JOIN nd_experiment_stock 
+                    ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id 
+                JOIN stock 
+                    ON stock.stock_id = nd_experiment_stock.stock_id 
+                LEFT JOIN phenotypeprop existing_prop
+                    ON existing_prop.phenotype_id = phenotype.phenotype_id
+                    AND existing_prop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
+                CROSS JOIN (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier') AS cvterm_outlier
+                WHERE stock.uniquename IN ($plot_names_sql)
+                AND nd_experiment_stock.type_id = $experiment_type
+                AND phenotype.observable_id IN ($trait_ids_sql)
+                AND existing_prop.phenotype_id IS NULL;";  
+
+
+            # If curator flag is set, execute the second query
+            if ($curator == 1) {
+                eval {
+                    my $sth_outliers = $schema->storage->dbh->prepare($outlier_data_sql);
+                    $sth_outliers->execute();
+                };
+            }
         }
-    } else {
-        $c->response->body('No plot names or traits found.');
     }
+
+    $c->stash->{rest} = $response_data;
+
 
     
     ## celaning tempfiles
