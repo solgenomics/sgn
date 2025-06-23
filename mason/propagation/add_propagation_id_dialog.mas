@@ -62,13 +62,13 @@ $breeding_program_name
                         <div class="form-group" id = "get_propagation_source_name">
                             <label class="col-sm-4 control-label">Source Name: </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="propagation_source_name" name="propagation_source_name" placeholder="Source name, must be in the database">
+                                <input class="form-control" type="text" id="propagation_source_name" name="propagation_source_name" placeholder="Source name must be in the database">
                             </div>
                         </div>
                         <div class="form-group" id = "get_rootstock_accession_name">
                             <label class="col-sm-4 control-label">Rootstock Name: </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="rootstock_accession_name" name="rootstock_accession_name" placeholder="Must be in the database">
+                                <input class="form-control" type="text" id="rootstock_accession_name" name="rootstock_accession_name" placeholder="Accession name must be in the database">
                             </div>
                         </div>
                         <div class="form-group">
@@ -126,7 +126,7 @@ $breeding_program_name
 <script>
 jQuery(document).ready(function(){
 
-    get_select_box("locations", "propagation_location_select_div", {'id': 'propagation_location_select', 'name': 'propagation_location_select'});
+    get_select_box("locations", "propagation_location_select_div", {'id': 'propagation_location_select', 'name': 'propagation_location_select', 'empty' : 1 });
 
     jQuery('#submit_new_propagation_id').click( function() {
         const propagation_identifier = jQuery('#new_propagation_identifier').val();
