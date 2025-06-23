@@ -522,42 +522,6 @@ $has_plant_entries => undef
                         </div>
                       </div>
 
-<<<<<<< HEAD
-                      <div class="form-group" id="hm_plot_structure_container" hidden>
-                        <label class="col-sm-3 control-label">Plot Structure: </label>
-                        <div class="col-sm-9" id="hm_plot_structure_data_container">
-                        </div>
-                      </div>
-
-                    </form>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary " name="hm_view_plot_image_submit" id="hm_view_plot_image_submit">View Plot Images</button>
-                <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="hm_edit_plot_info" id="hm_edit_plot_info" onclick="jQuery('#hm_replace_plot_accessions_dialog').modal('show')">Edit Plot Info</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="hm_replace_plot_accessions_dialog" name="hm_replace_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="HmReplacePlotAccessionsDialog">
-    <div class="modal-dialog " role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="HmReplacePlotAccessionsDialog">Replace Plot Accession</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="hm_replace_plot_accession_form" name="hm_replace_plot_accession_form">
-                      <div id="hm_edit_plot_information">
-                      </div>
-                     
-=======
-
->>>>>>> master
                       <div class="form-group">
                         <label class="col-sm-3 control-label">Enter New Accession: </label>
                         <div class="col-sm-9" >
