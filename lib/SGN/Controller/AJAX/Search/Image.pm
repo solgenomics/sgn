@@ -50,9 +50,11 @@ sub image_search_POST : Args(0) {
     }
 
     my @related_accession_list;
-    if (exists($params->{image_accession_uniquename}) && $params->{image_stock_uniquename}) {
-        if (ref($params->{image_accession_uniquename}) eq 'ARRAY') {
-            push @related_accession_list, $params->{image_accession_uniquename};
+    if (exists($params->{image_related_accession}) && $params->{image_related_accession}) {
+        if (ref($params->{image_related_accession}) eq 'ARRAY') {
+            push @related_accession_list, $params->{image_related_accession};
+        } else {
+            @related_accession_list = split /,/, $params->{image_related_accession};
         }
     }
 
@@ -90,6 +92,7 @@ sub image_search_POST : Args(0) {
         original_filename_list=>\@descriptors,
         description_list=>\@descriptors,
         stock_name_list=>\@stock_name_list,
+        accession_name_list => \@related_accession_list,
         project_name_list=>\@project_name_list,
         tag_list=>\@tags,
         limit=>$limit,
