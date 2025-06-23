@@ -50,11 +50,13 @@ $trial_stock_type => undef
 
         <div id="subplot_entries_section">
 
-% if (!$has_subplot_entries) {
+% if (!$has_subplot_entries && !$has_plant_entries) {
             <button class="btn btn-default" id="create_subplot_entries_button">Add subplot entries</button>
             <button class="btn btn-default" id="upload_subplot_entries_button">Upload subplot entries using subplot_name</button>
             <button class="btn btn-default" id="upload_subplot_entries_with_index_number_button">Upload subplot entries using subplot index number</button>
             <button class="btn btn-default" id="trial_upload_subplots_with_num_subplots_button">Upload subplot entries using number of subplots per plot</button>
+% } elsif ($has_plant_entries) {
+            <p>Subplots cannot be added to trials that already contain plant entries.</p>
 % } else {
             <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
 % }
