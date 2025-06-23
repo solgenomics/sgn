@@ -7,6 +7,7 @@ use URI::FromHash 'uri';
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 use CXGN::Onto;
 use Data::Dumper;
+use Sort::Naturally;
 
 use Moose;
 
@@ -68,6 +69,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
                name => $name,
                id => $id,
                choices => \@root_nodes,
+               class   => "form-control",
                size => '10',
                default => 'Pick an Ontology'
             );
@@ -82,7 +84,6 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
             } else {
                 @components = $onto->get_terms($cv_id);
             }
-
             my $id = $name."_select";
             my $name = $name."_select";
             my $default = 0;

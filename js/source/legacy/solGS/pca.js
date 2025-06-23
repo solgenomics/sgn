@@ -271,7 +271,7 @@ solGS.pca = {
     var compatibilityMessage = '';
     if (dataStr.match(/dataset/)) {
         popName = `<a href="/dataset/${popId}">${popName}</a>`;
-        var toolCompatibility = pcaPop.toolCompatibility;
+        var toolCompatibility = pcaPop.tool_compatibility;
         compatibilityMessage = this.toolCompatibilityMessage(toolCompatibility, dataStr);
 
     }

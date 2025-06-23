@@ -1,7 +1,7 @@
 import "../legacy/d3/d3v4Min.js";
 import "../legacy/jquery.js";
 import "../legacy/brapi/BrAPI.js";
-import { map } from "d3";
+import { html, randomExponential } from "d3";
 
 // Colors to use when labelling multiple trials
 const trial_colors = [
@@ -28,6 +28,13 @@ const trial_colors_text = [
     "#000000",
     "#ffffff",
 ];
+
+var colors = [
+    "white",
+    "darkred",
+];
+
+var colorScale;
 
 export function init() {
     class FieldMap {
@@ -64,6 +71,10 @@ export function init() {
 
         get_linked_trials() {
             return this.linked_trials;
+        }
+
+        get_pheno_colors () {
+            return colors;
         }
 
         format_brapi_post_object() {
@@ -901,17 +912,8 @@ export function init() {
         FieldMap() {
             this.addEventListeners();
             var cc = this.clickcancel();
-            const colors = [
-                "#ffffd9",
-                "#edf8b1",
-                "#c7e9b4",
-                "#7fcdbb",
-                "#41b6c4",
-                "#1d91c0",
-                "#225ea8",
-                "#253494",
-                "#081d58",
-            ];
+            // this is where colors was originally
+
             var trait_name = this.heatmap_selection;
             var heatmap_object = this.heatmap_object;
             var plot_click = !this.heatmap_selected
@@ -922,11 +924,47 @@ export function init() {
 
             if (this.heatmap_selected) {
                 let plots_with_selected_trait = heatmap_object[trait_name] || {};
+                var has_negatives = 0;
+                var has_positives = 0;
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
-                    trait_vals.push(obs_unit.val);
+                    trait_vals.push(Number(obs_unit.val));
+                    if (obs_unit.val < 0) {
+                        has_negatives = 1;
+                    }
+                    if (obs_unit.val > 0) {
+                        has_positives = 1;
+                    }
                 }
 
-                var colorScale = d3.scaleQuantile().domain(trait_vals).range(colors);
+                var domain;
+                var power = 1;
+
+                function pearsonSkewness(arr) {
+                    arr.sort((a, b) => a - b);
+                    const median = arr[Math.floor(arr.length / 2)];
+                    const mean = arr.reduce((sum, val) => sum + val, 0) / arr.length;
+                    const stdDev = Math.sqrt(arr.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / arr.length);
+                
+                    return (3 * (mean - median)) / stdDev;
+                }
+
+                var skew = pearsonSkewness(trait_vals);
+                console.log("Skew: " + skew);
+                if (skew > 0.5) {
+                    power = 0.5
+                }
+                
+                if (has_negatives == 1 && has_positives == 0) {
+                    colors = ['darkblue', 'white'];
+                    domain = [Math.min(...trait_vals), 0];
+                } else if (has_negatives == 0 && has_positives == 1) {
+                    colors = ['white', 'darkred'];
+                    domain = [0, Math.max(...trait_vals)];
+                } else {
+                    colors = ['darkblue', 'white', 'darkred'];
+                    domain = [Math.min(...trait_vals), 0, Math.max(...trait_vals)];
+                }
+                colorScale = d3.scalePow().exponent(power).domain(domain).range(colors).interpolate(d3.interpolateRgb);
             }
 
             var is_plot_overlapping = function (plot) {
@@ -975,11 +1013,12 @@ export function init() {
                 } else {
                     var cs = heatmap_object.hasOwnProperty(trait_name) && heatmap_object[trait_name].hasOwnProperty(plot.observationUnitDbId)
                         ? colorScale(heatmap_object[trait_name][plot.observationUnitDbId].val)
-                        : "white";
+                        : "darkgrey";
                     color = cs ? cs : "lightgrey";
                 }
                 return color;
             };
+
             var get_stroke_color = function (plot) {
                 var stroke_color;
                 if (plot.observationUnitPosition.observationLevel) {

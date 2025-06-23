@@ -420,7 +420,6 @@ sub store {
         }
         my @trait_ids = values %trait_id_map;
 
-
         my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
         my $categories = {
             object => [],
@@ -588,15 +587,15 @@ sub store {
         }
         elsif ($analysis_result_values_type eq 'analysis_result_new_stocks') {
     
-            my %analysis_result_values_fix_plot_names;
-            my $design = $a->design();
-            foreach (values %$design) {
-                $analysis_result_values_fix_plot_names{$_->{stock_name}} = $_->{plot_name};
+            my $analysis_result_values_fix_plot_names;
+            my $design = $a->design()->{design};
+            foreach (values %{$design}) {
+                $analysis_result_values_fix_plot_names->{$_->{stock_name}} = $_->{plot_name};
             }
 
-            while (my ($stock_name, $trait_pheno) = each %$analysis_result_values) {
-                while (my($trait_name, $val) = each %$trait_pheno) {
-                    $analysis_result_values_save->{$analysis_result_values_fix_plot_names{$stock_name}}->{$composed_trait_map{$trait_name}} = $val;
+            while (my ($stock_name, $trait_pheno) = each %{$analysis_result_values}) {
+                while (my ($trait_name, $val) = each %{$trait_pheno}) {
+                    $analysis_result_values_save->{$analysis_result_values_fix_plot_names->{$stock_name}}->{$composed_trait_map{$trait_name}} = $val;
                 }
             }
         }

@@ -40,6 +40,8 @@ use Math::Round;
 use URI::Encode qw(uri_encode uri_decode);
 use Array::Utils qw(:all);
 use CXGN::Genotype::GenotypingProject;
+use CXGN::Transformation::Transformation;
+use Sort::Naturally;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -1612,7 +1614,8 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         }
     }
 
-    @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
+    @ontology_children = sort { ncmp($a->[1], $b->[1]) } @ontology_children;
+
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
@@ -1621,6 +1624,8 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         name => $select_name,
         id => $select_id,
         multiple => $multiple,
+        size     => 10,
+        class   => "form-control",
         choices => \@ontology_children,
         selected => $selected
     );
@@ -1664,6 +1669,7 @@ sub all_ontology_terms_select : Path('/ajax/html/select/all_ontology_terms') Arg
         name => $select_name,
         id => $select_id,
         multiple => $multiple,
+        size     => 10,
         choices => \@ontology_terms,
     );
     $c->stash->{rest} = { select => $html };
@@ -2452,5 +2458,58 @@ sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0)
     );
     $c->stash->{rest} = { select => $html };
 }
+
+
+sub get_control_transformation_ids_select : Path('/ajax/html/select/control_transformation_ids') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $project_id = $c->req->param('project_id');
+    my $self_transformation_id = $c->req->param('transformation_id');
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $exclude_self = $c->req->param('exclude_self') ? $c->req->param('exclude_self') : '';
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
+    my $active_transformations = $transformation_obj->get_active_transformations_in_project();
+
+    my @transformations;
+    foreach my $active_id (@$active_transformations){
+        my $transformation_id = $active_id->[0];
+        my $transformation_name = $active_id->[1];
+        my $is_a_control = $active_id->[7];
+
+        if ($is_a_control) {
+            if ($exclude_self == 1) {
+                if ($self_transformation_id != $transformation_id ) {
+                    push @transformations, [$transformation_id, $transformation_name];
+                }
+            } else {
+                push @transformations, [$transformation_id, $transformation_name];
+            }
+        }
+    }
+
+    @transformations = sort { $a->[1] cmp $b->[1] } @transformations;
+
+    if ($empty) { unshift @transformations, [ "", "Please select" ]; }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@transformations,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
+
+
+
 
 1;

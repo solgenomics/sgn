@@ -334,6 +334,9 @@ $field_headers => ()
 % if ($info_section_id eq 'vector_obsoleted_accessions_section'){
                                 <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End vector_related_accessions_section
+% if ($info_section_id eq 'related_transformation_info_section'){
+                                <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
+% } #End vector_related_accessions_section
 
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>
@@ -393,6 +396,10 @@ $field_headers => ()
 % if ($info_section_id eq 'population_members_section'){
                                 <& /stock/population_members.mas, stock_id=>$stock_id &>
 % } #End population_members_section
+% if ($info_section_id eq 'population_seedlot_info_section'){
+                                <& /stock/population_seedlots.mas, stock_id=>$stock_id &>
+% } #End population_seedlot_info_section
+
 % if ($info_section_id eq 'manage_tissue_samples_field_trials'){
                                 <& /breeders_toolbox/tissue_samples/field_trials_with_tissue_samples.mas &>
 % } #End manage_tissue_samples_field_trials

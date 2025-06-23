@@ -178,7 +178,7 @@ sub calculate_design {
     }
 }
 
-sub isint{
+sub isint {
   my $val = shift;
   return ($val =~ m/^\d+$/);
 }

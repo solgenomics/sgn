@@ -43,6 +43,8 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     my $random_factors = $params->{random_factors};
     my $dependent_variables = $params->{dependent_variables};
 
+    my $engine = $params->{engine};
+    
     my $mm = CXGN::MixedModels->new();
     if ($dependent_variables) {
 	$mm->dependent_variables($dependent_variables);
@@ -148,7 +150,9 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 	dependent_variable => $trait_html,
 
 	factors => \@factor_select,
+
 	tempfile => $tempfile."_phenotype.txt",
+
      };
 
     if (!@factor_select) {
@@ -193,7 +197,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     
     print STDERR "sub run: FIXED FACTORS: ".Dumper($fixed_factors)." RANDOM FACTORS: ".Dumper($random_factors)."\n";
     my $engine = $params->{engine};
-    
+
     print STDERR "ENGINE = $engine\n";
     
     my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
@@ -202,7 +206,14 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
     $mm->engine($engine);
-    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models" );
+    my $job_record_config = {
+        user => $c->user->get_object()->get_sp_person_id(), 
+        schema => $c->dbic_schema("Bio::Chado::Schema"), 
+        people_schema => $c->dbic_schema("CXGN::People::Schema"), 
+        finish_logfile => $c->config->{job_finish_log},
+        name => "$dependent_variables mixed model computation"
+    };
+    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models", $job_record_config);
     
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
@@ -257,8 +268,8 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	$method = "random";
 	($blups_data, $blups_html, $accession_names, $traits) = $self->result_file_to_hash($c, $blupfile);
     }
-
     elsif (-e $bluefile) {
+
 	$method= "fixed";
 	($blues_data, $blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $bluefile);
     }
@@ -334,6 +345,7 @@ sub result_file_to_hash {
 	    
 	}
         $html .= "</tr>"
+
     }
     $html .= "</table>";
 
@@ -383,9 +395,12 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
-
 sub make_R_trait_name {
     my $trait = shift;
+    if ($trait =~ /^\d/) {
+	$trait = "X".$trait;
+    }
+    $trait =~ s/\&/\_/g;
     $trait =~ s/\s/\_/g;
     $trait =~ s/\//\_/g;
     $trait =~ tr/ /./;
