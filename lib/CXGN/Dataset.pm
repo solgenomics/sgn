@@ -1220,6 +1220,28 @@ sub retrieve_tool_compatibility {
     }
 }
 
+=head2 retrieve_compatible_tool_list
+
+Returns a listref containing the tools this dataset is putatively compatible with (without warnings). Returns undef if no compatible tools found. 
+
+=cut
+
+sub retrieve_compatible_tool_list {
+    my $self = shift;
+
+    my @compatible_tools = ();
+
+    my $tool_compatibility = $self->tool_compatibility();
+
+    if (!$tool_compatibility) {
+        return @compatible_tools;
+    }
+
+    @compatible_tools = grep { ($tool_compatibility->{$_}->{compatible} && !$tool_compatibility->{$_}->{warn}) } keys(%{$tool_compatibility});
+
+    return \@compatible_tools;
+}
+
 =head2 calculate_tool_compatibility
 
 Creates a hashref of analysis tools that this dataset can be used with. For example, a dataset with genotype data but no trait phenotypes cannot be used with GWAS.
