@@ -118,7 +118,6 @@ sub add_propagation_identifier {
     $metadata_hash->{sub_location} = $sub_location;
     $metadata_hash->{material_source_type} = $material_source_type;
     my $metadata_json_string = encode_json $metadata_hash;
-    print STDERR "CXGN SOURCE NAME =".Dumper($source_name)."\n";
     my %return;
     my $propagation_stock_id;
     my $accession_stock_id;
@@ -138,69 +137,60 @@ sub add_propagation_identifier {
 
         my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
-		my $accession_rs = $schema->resultset("Stock::Stock")->find({
-			uniquename => $accession_name,
-			type_id => $accession_cvterm_id,
-		});
+        my $accession_rs = $schema->resultset("Stock::Stock")->find({
+            uniquename => $accession_name,
+            type_id => $accession_cvterm_id,
+        });
 
-		if ($accession_rs) {
+        if ($accession_rs) {
             $accession_stock_id = $accession_rs->stock_id();
-		}
-
-        my $source_rs;
-        if ($source_name) {
-            my $source_rs = $schema->resultset("Stock::Stock")->find({
-    			uniquename => $source_name,
-    		});
         }
 
-		if ($source_rs) {
+        if ($source_name) {
+            my $source_rs = $schema->resultset("Stock::Stock")->find({uniquename => $source_name});
             $source_stock_id = $source_rs->stock_id();
-		}
-        print STDERR "SOURCE STOCK ID =".Dumper($source_stock_id)."\n";
+        }
 
-		my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
-			nd_geolocation_id => $nd_geolocation_id,
-			type_id => $propagation_experiment_cvterm_id,
-		});
-		my $nd_experiment_id = $experiment->nd_experiment_id();
+        my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+            nd_geolocation_id => $nd_geolocation_id,
+            type_id => $propagation_experiment_cvterm_id,
+        });
+        my $nd_experiment_id = $experiment->nd_experiment_id();
 
-		my $propagation_identifier_stock = $schema->resultset("Stock::Stock")->find_or_create({
-			name => $propagation_identifier,
-			uniquename => $propagation_identifier,
-			type_id => $propagation_cvterm_id,
+        my $propagation_identifier_stock = $schema->resultset("Stock::Stock")->find_or_create({
+            name => $propagation_identifier,
+            uniquename => $propagation_identifier,
+            type_id => $propagation_cvterm_id,
             description => $description
-		});
+        });
 
-		$propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
-			type_id => $propagation_material_of_cvterm_id,
-			object_id => $propagation_identifier_stock->stock_id(),
-			subject_id => $accession_stock_id,
-		});
+        $propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
+            type_id => $propagation_material_of_cvterm_id,
+            object_id => $propagation_identifier_stock->stock_id(),
+            subject_id => $accession_stock_id,
+        });
 
         if ($source_stock_id) {
             $propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
-    			type_id => $propagation_source_material_of_cvterm_id,
-    			object_id => $propagation_identifier_stock->stock_id(),
-    			subject_id => $source_stock_id,
-    		});
+                type_id => $propagation_source_material_of_cvterm_id,
+                object_id => $propagation_identifier_stock->stock_id(),
+                subject_id => $source_stock_id,
+            });
         }
 
-		$experiment->find_or_create_related('nd_experiment_stocks', {
-		    stock_id => $propagation_identifier_stock->stock_id(),
-		    type_id  => $propagation_experiment_cvterm_id,
-		});
+        $experiment->find_or_create_related('nd_experiment_stocks', {
+            stock_id => $propagation_identifier_stock->stock_id(),
+            type_id  => $propagation_experiment_cvterm_id,
+        });
 
-		$experiment->find_or_create_related('nd_experiment_projects', {
-			project_id => $propagation_project_id,
-		});
+        $experiment->find_or_create_related('nd_experiment_projects', {
+            project_id => $propagation_project_id,
+        });
 
         $propagation_identifier_stock->create_stockprops({$propagation_material_type_cvterm->name() => $material_type});
         $propagation_identifier_stock->create_stockprops({$propagation_metadata_cvterm->name() => $metadata_json_string});
 
         $propagation_stock_id = $propagation_identifier_stock->stock_id();
-        print STDERR "PROPAGATION STOCK ID CXGN =".Dumper($propagation_stock_id)."\n";
-
     };
 
     my $transaction_error;
