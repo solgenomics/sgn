@@ -135,17 +135,6 @@ sub add_propagation_identifier_POST :Args(0){
     my $description = $c->req->param('description');
     my $operator_name = $c->req->param('operator_name');
     my $program_name = $c->req->param('breeding_program_name');
-    print STDERR "PROPAGATION IDENTIFIER =".Dumper($propagation_identifier)."\n";
-    print STDERR "PROPAGATION PROJECT ID =".Dumper($propagation_project_id)."\n";
-    print STDERR "ACCESSION NAME =".Dumper($accession_name)."\n";
-    print STDERR "MATERIAL TYPE =".Dumper($material_type)."\n";
-    print STDERR "SOURCE NAME =".Dumper($source_name)."\n";
-    print STDERR "SUB-LOCATION =".Dumper($sub_location)."\n";
-    print STDERR "DATE =".Dumper($date)."\n";
-    print STDERR "OPERATOR =".Dumper($operator_name)."\n";
-    print STDERR "DESCRIPTION =".Dumper($description)."\n";
-
-    print STDERR "PROGRAM NAME =".Dumper($program_name)."\n";
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
