@@ -65,20 +65,14 @@ $breeding_program_name
                                 <input class="form-control" type="text" id="propagation_source_name" name="propagation_source_name" placeholder="Source name must be in the database">
                             </div>
                         </div>
-                        <div class="form-group" id = "get_rootstock_accession_name">
-                            <label class="col-sm-4 control-label">Rootstock Name: </label>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Sub-Location: </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="rootstock_accession_name" name="rootstock_accession_name" placeholder="Accession name must be in the database">
+                                <input class="form-control" type="text" id="propagation_sub_location" name="propagation_sub_location" placeholder="Optional">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Location: </label>
-                            <div class="col-sm-8">
-                                <span id="propagation_location_select_div"></span>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Propagation Date: </label>
+                            <label class="col-sm-4 control-label">Date: </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" id="propagation_date" placeholder="YYYY/MM/DD">
                             </div>
@@ -87,6 +81,12 @@ $breeding_program_name
                             <label class="col-sm-4 control-label">Description:</label>
                             <div class="col-sm-8">
                                 <textarea class="form-control" id="propagation_description" name="propagation_description" ></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Operator: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="text" id="propagation_operator" name="propagation_operator" placeholder="">
                             </div>
                         </div>
                     </div>
@@ -126,17 +126,16 @@ $breeding_program_name
 <script>
 jQuery(document).ready(function(){
 
-    get_select_box("locations", "propagation_location_select_div", {'id': 'propagation_location_select', 'name': 'propagation_location_select', 'empty' : 1 });
-
     jQuery('#submit_new_propagation_id').click( function() {
         const propagation_identifier = jQuery('#new_propagation_identifier').val();
         const accession_name = jQuery('#propagation_accession_name').val();
         const material_type = jQuery('#propagation_material_type').val();
+        const material_source_type = jQuery('#propagation_material_source_type').val();
         const source_name = jQuery('#propagation_source_name').val();
-        const rootstock_accession_name = jQuery('#rootstock_accession_name').val();
-        const location = jQuery('#propagation_location_select').val();
+        const sub_location = jQuery('#propagation_sub_location').val();
         const date = jQuery('#propagation_date').val();
         const description = jQuery('#propagation_description').val();
+        const operator_name = jQuery('#propagation_operator').val();
         const breeding_program_name =  "<%$breeding_program_name%>";
         const propagation_project_id = "<%$trial_id%>";
 
@@ -152,16 +151,16 @@ jQuery(document).ready(function(){
             alert("Please provide material type");
             return;
         }
-        if (location == '') {
-            alert("Please provide location");
-            return;
-        }
         if (date == '') {
             alert("Please provide date");
             return;
         }
         if (description == '') {
             alert("Please provide description");
+            return;
+        }
+        if (operator_name == '') {
+            alert("Please provide operator name");
             return;
         }
 
@@ -175,11 +174,12 @@ jQuery(document).ready(function(){
                 'propagation_identifier': propagation_identifier,
                 'accession_name': accession_name,
                 'material_type': material_type,
+                'material_source_type': material_source_type,
                 'source_name': source_name,
-                'rootstock_accession_name': rootstock_accession_name,
-                'location': location,
+                'sub_location': sub_location,
                 'date': date,
                 'description': description,
+                'operator_name': operator_name
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

@@ -11,7 +11,6 @@ use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
-use CXGN::Location::LocationLookup;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -54,25 +53,19 @@ has 'material_type' => (
     required => 1,
 );
 
+has 'material_source_type' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
 has 'source_name' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
 
-has 'rootstock_accession_name' => (
+has 'sub_location' => (
     isa => 'Maybe[Str]',
     is => 'rw',
-);
-
-has 'operator_id' => (
-    isa => 'Int',
-    is => 'rw',
-);
-
-has 'nd_geolocation_id' => (
-    isa => 'Int|Undef',
-    is => 'rw',
-    required => 1,
 );
 
 has 'date' => (
@@ -87,10 +80,20 @@ has 'description' => (
     required => 1,
 );
 
+has 'operator_name' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
 has 'propagation_project_id' => (
     isa =>'Int',
     is => 'rw',
     required => 1,
+);
+
+has 'owner_id' => (
+    isa => 'Int',
+    is => 'rw',
 );
 
 
@@ -101,32 +104,37 @@ sub add_propagation_identifier {
     my $propagation_identifier = $self->get_propagation_identifier();
     my $accession_name = $self->get_accession_name();
     my $material_type = $self->get_material_type();
+    my $material_source_type = $self->get_material_source_type();
     my $source_name = $self->get_source_name();
-    my $rootstock_accession_name = $self->get_rootstock_accession_name();
-    my $nd_geolocation_id = $self->get_nd_geolocation_id();
+    my $sub_location = $self->get_sub_location();
     my $description = $self->get_description();
     my $propagation_project_id = $self->get_propagation_project_id();
-    my $operator_id = $self->get_operator_id();
+    my $operator_name = $self->get_operator_name();
+    my $owner_id = $self->get_owner_id();
     my $date = $self->get_date();
     my $metadata_hash = {};
     $metadata_hash->{date} = $date;
-    $metadata_hash->{operator} = $operator_id;
+    $metadata_hash->{operator} = $operator_name;
+    $metadata_hash->{sub_location} = $sub_location;
+    $metadata_hash->{material_source_type} = $material_source_type;
     my $metadata_json_string = encode_json $metadata_hash;
-
+    print STDERR "CXGN SOURCE NAME =".Dumper($source_name)."\n";
     my %return;
     my $propagation_stock_id;
     my $accession_stock_id;
     my $source_stock_id;
-    my $rootstock_accession_stock_id;
     my $coderef = sub {
         my $propagation_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation', 'stock_type')->cvterm_id();
         my $propagation_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_experiment', 'experiment_type')->cvterm_id();
         my $propagation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_project', 'project_type')->cvterm_id();
         my $propagation_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_material_of', 'stock_relationship')->cvterm_id();
         my $propagation_source_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_source_material_of', 'stock_relationship')->cvterm_id();
-        my $propagation_rootstock_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_rootstock_of', 'stock_relationship')->cvterm_id();
         my $propagation_material_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_material_type', 'stock_property');
         my $propagation_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_metadata', 'stock_property');
+
+        my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
+        my $geolocation_rs = $schema->resultset("Project::Projectprop")->find({project_id => $propagation_project_id, type_id => $project_location_cvterm_id});
+        my $nd_geolocation_id = $geolocation_rs->value();
 
         my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
@@ -139,18 +147,6 @@ sub add_propagation_identifier {
             $accession_stock_id = $accession_rs->stock_id();
 		}
 
-        my $rootstock_accession_rs;
-        if ($rootstock_accession_name) {
-            $rootstock_accession_rs = $schema->resultset("Stock::Stock")->find({
-                uniquename => $rootstock_accession_name,
-                type_id => $accession_cvterm_id,
-            });
-        }
-
-        if ($rootstock_accession_rs) {
-            $rootstock_accession_stock_id = $rootstock_accession_rs->stock_id();
-        }
-
         my $source_rs;
         if ($source_name) {
             my $source_rs = $schema->resultset("Stock::Stock")->find({
@@ -161,6 +157,7 @@ sub add_propagation_identifier {
 		if ($source_rs) {
             $source_stock_id = $source_rs->stock_id();
 		}
+        print STDERR "SOURCE STOCK ID =".Dumper($source_stock_id)."\n";
 
 		my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
 			nd_geolocation_id => $nd_geolocation_id,
@@ -186,14 +183,6 @@ sub add_propagation_identifier {
     			type_id => $propagation_source_material_of_cvterm_id,
     			object_id => $propagation_identifier_stock->stock_id(),
     			subject_id => $source_stock_id,
-    		});
-        }
-
-        if ($rootstock_accession_stock_id) {
-            $propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
-    			type_id => $propagation_rootstock_of_cvterm_id,
-    			object_id => $propagation_identifier_stock->stock_id(),
-    			subject_id => $rootstock_accession_stock_id,
     		});
         }
 
@@ -227,7 +216,7 @@ sub add_propagation_identifier {
     } else {
         $phenome_schema->resultset("StockOwner")->find_or_create({
             stock_id => $propagation_stock_id,
-            sp_person_id =>  $operator_id,
+            sp_person_id =>  $owner_id,
         });
 
         return { success=>1, propagation_stock_id=>$propagation_stock_id };

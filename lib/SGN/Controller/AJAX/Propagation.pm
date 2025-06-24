@@ -124,26 +124,27 @@ sub add_propagation_identifier_POST :Args(0){
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $propagation_identifier = $c->req->param('propagation_identifier');
-
     $propagation_identifier =~ s/^\s+|\s+$//g;
     my $propagation_project_id = $c->req->param('propagation_project_id');
     my $accession_name = $c->req->param('accession_name');
     my $material_type = $c->req->param('material_type');
+    my $material_source_type = $c->req->param('material_source_type');
     my $source_name = $c->req->param('source_name');
-    my $rootstock_accession_name = $c->req->param('rootstock_accession_name');
-    my $location = $c->req->param('location');
+    my $sub_location = $c->req->param('sub_location');
     my $date = $c->req->param('date');
     my $description = $c->req->param('description');
+    my $operator_name = $c->req->param('operator_name');
     my $program_name = $c->req->param('breeding_program_name');
     print STDERR "PROPAGATION IDENTIFIER =".Dumper($propagation_identifier)."\n";
     print STDERR "PROPAGATION PROJECT ID =".Dumper($propagation_project_id)."\n";
     print STDERR "ACCESSION NAME =".Dumper($accession_name)."\n";
     print STDERR "MATERIAL TYPE =".Dumper($material_type)."\n";
     print STDERR "SOURCE NAME =".Dumper($source_name)."\n";
-    print STDERR "ROOTSTOCK =".Dumper($rootstock_accession_name)."\n";
-    print STDERR "LOCATION =".Dumper($location)."\n";
+    print STDERR "SUB-LOCATION =".Dumper($sub_location)."\n";
     print STDERR "DATE =".Dumper($date)."\n";
+    print STDERR "OPERATOR =".Dumper($operator_name)."\n";
     print STDERR "DESCRIPTION =".Dumper($description)."\n";
+
     print STDERR "PROGRAM NAME =".Dumper($program_name)."\n";
 
     if (!$c->user()) {
@@ -186,12 +187,6 @@ sub add_propagation_identifier_POST :Args(0){
         }
     }
 
-    if ($rootstock_accession_name) {
-        if (! $schema->resultset("Stock::Stock")->find({uniquename => $rootstock_accession_name, type_id => $accession_cvterm_id })){
-            $c->stash->{rest} = {error =>  "Rootstock accession name does not exist or does not exist as accession uniquename." };
-            return;
-        }
-    }
 
     my $propagation_stock_id;
     eval {
@@ -203,12 +198,13 @@ sub add_propagation_identifier_POST :Args(0){
             propagation_identifier => $propagation_identifier,
             accession_name => $accession_name,
             material_type => $material_type,
+            material_source_type => $material_source_type,
             source_name => $source_name,
-            rootstock_accession_name => $rootstock_accession_name,
-            nd_geolocation_id => $location,
-            operator_id => $user_id,
+            sub_location => $sub_location,
             date => $date,
-            description => $description
+            description => $description,
+            operator_name => $operator_name,
+            owner_id => $user_id,
         });
 
         my $add = $add_propagation_identifier->add_propagation_identifier();
@@ -237,9 +233,8 @@ sub get_propagations_in_project :Path('/ajax/propagation/propagations_in_project
     my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
 
     my $result = $propagation_obj->get_propagations_in_project();
-
+    print STDERR "RESULT =".Dumper($result)."\n";
     my @propagations;
-    my $inventory_id;
     foreach my $r (@$result){
         my $propagation_link = qq{<a href="/stock/$r->[0]/view">$r->[1]</a>};
         my $description = $r->[2];
@@ -247,18 +242,14 @@ sub get_propagations_in_project :Path('/ajax/propagation/propagations_in_project
         my $metadata = $r->[4];
         my $metadata_hash = decode_json $metadata;
         my $date = $metadata_hash->{'date'};
-        my $operator_id = $metadata_hash->{'operator'};
-        my $person= CXGN::People::Person->new($dbh, $operator_id);
-        my $full_name = $person->get_first_name()." ".$person->get_last_name();
+        my $operator_name = $metadata_hash->{'operator'};
+        my $sub_location = $metadata_hash->{'sub_location'};
+        my $material_source_type = $metadata_hash->{'material_source_type'};
 
         my $accession_link = qq{<a href="/stock/$r->[5]/view">$r->[6]</a>};
         my $source_link = qq{<a href="/stock/$r->[7]/view">$r->[8]</a>};
-        my $rootstock_link = qq{<a href="/stock/$r->[9]/view">$r->[10]</a>};
 
-        my $location_id = $r->[11];
-        my $location_name = $schema->resultset('NaturalDiversity::NdGeolocation')->find( { nd_geolocation_id => $location_id})->description();
-
-        push @propagations, [$propagation_link, $accession_link, $material_type, $source_link, $rootstock_link, $date, $location_name, $description, $full_name, $inventory_id]
+        push @propagations, [$propagation_link, $accession_link, $material_type, $material_source_type, $source_link, $date, $sub_location, $description, $operator_name]
 
     }
     $c->stash->{rest} = { data => \@propagations };

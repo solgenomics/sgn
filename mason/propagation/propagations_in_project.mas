@@ -12,13 +12,12 @@ $trial_id
                 <th>Propagation ID</th>
                 <th>Accession</th>
                 <th>Material Type</th>
-                <th>Material Source</th>
-                <th>Rootstock</th>
+                <th>Material Source Type</th>
+                <th>Material Source</th>                
                 <th>Date</th>
-                <th>Location</th>
+                <th>Sub-Location</th>
                 <th>Description</th>
                 <th>Operator</th>
-                <th>Inventory ID</th>
             </tr>
         </thead>
     </table>
