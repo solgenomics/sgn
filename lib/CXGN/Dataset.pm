@@ -1287,6 +1287,9 @@ sub calculate_tool_compatibility {
         'Correlation' => {
             'compatible' => 0
         },
+        'NIRS' => {
+            'compatible' => 0
+        },
         'Data Summary' => {
             'markers per genotyping protocol' => [],
             'number of phenotyped accessions per trait' => [],
@@ -1299,6 +1302,23 @@ sub calculate_tool_compatibility {
 
     my $trials = $self->retrieve_trials(); # faster and easier than pulling it out of the phenotypes_ref
         # listref of listrefs, first index is trialID, second is trial name
+
+    my @trial_ids = map {$_->[0]} @{$trials};
+    my $nirs_query = "SELECT DISTINCT nd_protocol.nd_protocol_id FROM project 
+    JOIN nd_experiment_project ON nd_experiment_project.project_id=project.project_id 
+    JOIN nd_experiment_protocol ON nd_experiment_protocol.nd_experiment_id=nd_experiment_project.nd_experiment_id 
+    JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id=nd_protocol.nd_protocol_id 
+    WHERE project.project_id in (SELECT unnest(string_to_array(?, ',')::int[]));
+    ";
+    my $h = $self->schema->storage()->dbh()->prepare($nirs_query);
+    $h->execute(join(", ",@trial_ids));
+    my @nirs_protocol_ids;
+    while (my $nirs_protocol_id = $h->fetchrow_array) {
+        push @nirs_protocol_ids, $nirs_protocol_id;
+    }
+    if (@nirs_protocol_ids) {
+        $tool_compatibility->{'NIRS'}->{'compatible'} = 1; #having any nirs protocol ids at all from this query should only really happen if there was a nirs experiment linked to the trial. 
+    }
     my $all_traits = $self->retrieve_traits();
     my $traits = [];
     foreach my $trait (@{$all_traits}) { #filter for quantitative traits
@@ -1354,7 +1374,7 @@ sub calculate_tool_compatibility {
         JOIN genotypeprop USING(genotype_id) 
         JOIN nd_experiment_protocol ON(nd_experiment_genotype.nd_experiment_id=nd_experiment_protocol.nd_experiment_id)
             WHERE stock_id IN (SELECT unnest(string_to_array(?, ',')::int[])) AND nd_protocol_id=?;";
-        my $h = $self->schema->storage()->dbh()->prepare($genotype_query);
+        $h = $self->schema->storage()->dbh()->prepare($genotype_query);
         $h->execute(join(", ",@accession_ids), $method->[0]);
 
         $genotype_counts->{$method->[0]}->{"num_accessions"} = $h->fetchrow_array;
