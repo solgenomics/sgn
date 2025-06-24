@@ -225,7 +225,7 @@ sub get_propagations_in_project :Path('/ajax/propagation/propagations_in_project
     print STDERR "RESULT =".Dumper($result)."\n";
     my @propagations;
     foreach my $r (@$result){
-        my $propagation_link = qq{<a href="/stock/$r->[0]/view">$r->[1]</a>};
+        my $propagation_link = qq{<a href="/propagation/$r->[0]">$r->[1]</a>};
         my $description = $r->[2];
         my $material_type = $r->[3];
         my $metadata = $r->[4];

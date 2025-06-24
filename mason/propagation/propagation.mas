@@ -1,0 +1,54 @@
+<%args>
+
+$propagation_id
+$propagation_name
+$description
+$material_type
+$material_source_type
+$accession_link
+$source_link
+$date
+$sub_location
+$operator_name
+$project_link
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables"] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<& /page/page_title.mas, title => "Details for propagation ID '$propagation_name'" &>
+
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <table class="table table-bordered table-hover">
+                        <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
+                        <tr><td><b>Material</b></td><td><%$accession_link%></td></tr>
+                        <tr><td><b>Material Type</b></td><td><%$material_type%></td></tr>
+                        <tr><td><b>Material Source Type</b></td><td><%$material_source_type%></td></tr>
+                        <tr><td><b>Material Source Name</b></td><td><%$source_link%></td></tr>
+                        <tr><td><b>Date</b></td><td><%$date%></td></tr>
+                        <tr><td><b>Sub-Location</b></td><td><%$sub_location%></td></tr>
+                        <tr><td><b>Description</b></td><td><%$description%></td></tr>
+                        <tr><td><b>Operator</b></td><td><%$operator_name%></td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<script>
+
+jQuery(document).ready(function(){
+
+
+
+});
+
+</script>
