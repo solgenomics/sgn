@@ -35,7 +35,7 @@ has 'phenome_schema' => (
     required => 1,
 );
 
-has 'propagation_identifier' => (
+has 'propagation_group_identifier' => (
     isa =>'Str',
     is => 'rw',
     required => 1,
@@ -97,11 +97,11 @@ has 'owner_id' => (
 );
 
 
-sub add_propagation_identifier {
+sub add_propagation_group_identifier {
     my $self = shift;
     my $schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
-    my $propagation_identifier = $self->get_propagation_identifier();
+    my $propagation_group_identifier = $self->get_propagation_group_identifier();
     my $accession_name = $self->get_accession_name();
     my $material_type = $self->get_material_type();
     my $material_source_type = $self->get_material_source_type();
@@ -119,11 +119,11 @@ sub add_propagation_identifier {
     $metadata_hash->{material_source_type} = $material_source_type;
     my $metadata_json_string = encode_json $metadata_hash;
     my %return;
-    my $propagation_stock_id;
+    my $propagation_group_stock_id;
     my $accession_stock_id;
     my $source_stock_id;
     my $coderef = sub {
-        my $propagation_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation', 'stock_type')->cvterm_id();
+        my $propagation_group_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_group', 'stock_type')->cvterm_id();
         my $propagation_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_experiment', 'experiment_type')->cvterm_id();
         my $propagation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_project', 'project_type')->cvterm_id();
         my $propagation_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_material_of', 'stock_relationship')->cvterm_id();
@@ -157,29 +157,29 @@ sub add_propagation_identifier {
         });
         my $nd_experiment_id = $experiment->nd_experiment_id();
 
-        my $propagation_identifier_stock = $schema->resultset("Stock::Stock")->find_or_create({
-            name => $propagation_identifier,
-            uniquename => $propagation_identifier,
-            type_id => $propagation_cvterm_id,
+        my $propagation_group_identifier_stock = $schema->resultset("Stock::Stock")->find_or_create({
+            name => $propagation_group_identifier,
+            uniquename => $propagation_group_identifier,
+            type_id => $propagation_group_cvterm_id,
             description => $description
         });
 
-        $propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
+        $propagation_group_identifier_stock->find_or_create_related('stock_relationship_objects', {
             type_id => $propagation_material_of_cvterm_id,
-            object_id => $propagation_identifier_stock->stock_id(),
+            object_id => $propagation_group_identifier_stock->stock_id(),
             subject_id => $accession_stock_id,
         });
 
         if ($source_stock_id) {
-            $propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
+            $propagation_group_identifier_stock->find_or_create_related('stock_relationship_objects', {
                 type_id => $propagation_source_material_of_cvterm_id,
-                object_id => $propagation_identifier_stock->stock_id(),
+                object_id => $propagation_group_identifier_stock->stock_id(),
                 subject_id => $source_stock_id,
             });
         }
 
         $experiment->find_or_create_related('nd_experiment_stocks', {
-            stock_id => $propagation_identifier_stock->stock_id(),
+            stock_id => $propagation_group_identifier_stock->stock_id(),
             type_id  => $propagation_experiment_cvterm_id,
         });
 
@@ -187,10 +187,10 @@ sub add_propagation_identifier {
             project_id => $propagation_project_id,
         });
 
-        $propagation_identifier_stock->create_stockprops({$propagation_material_type_cvterm->name() => $material_type});
-        $propagation_identifier_stock->create_stockprops({$propagation_metadata_cvterm->name() => $metadata_json_string});
+        $propagation_group_identifier_stock->create_stockprops({$propagation_material_type_cvterm->name() => $material_type});
+        $propagation_group_identifier_stock->create_stockprops({$propagation_metadata_cvterm->name() => $metadata_json_string});
 
-        $propagation_stock_id = $propagation_identifier_stock->stock_id();
+        $propagation_group_stock_id = $propagation_group_identifier_stock->stock_id();
     };
 
     my $transaction_error;
@@ -205,11 +205,11 @@ sub add_propagation_identifier {
         return { error=>$transaction_error };
     } else {
         $phenome_schema->resultset("StockOwner")->find_or_create({
-            stock_id => $propagation_stock_id,
+            stock_id => $propagation_group_stock_id,
             sp_person_id =>  $owner_id,
         });
 
-        return { success=>1, propagation_stock_id=>$propagation_stock_id };
+        return { success=>1, propagation_group_stock_id=>$propagation_group_stock_id };
     }
 
 }

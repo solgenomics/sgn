@@ -6,14 +6,14 @@ $trial_id
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <div style="overflow:scroll">
-    <table class="table table-hover table-bordered" id="propagations_in_project_table">
+    <table class="table table-hover table-bordered" id="propagation_groups_in_project_table">
         <thead>
             <tr>
-                <th>Propagation ID</th>
+                <th>Propagation Group ID</th>
                 <th>Accession</th>
                 <th>Material Type</th>
                 <th>Material Source Type</th>
-                <th>Material Source</th>                
+                <th>Material Source</th>
                 <th>Date</th>
                 <th>Sub-Location</th>
                 <th>Description</th>
@@ -28,8 +28,8 @@ $trial_id
 
 jQuery(document).ready(function(){
     var project_id = "<% $trial_id %>";
-    var propagation_table = jQuery('#propagations_in_project_table').DataTable({
-        'ajax': '/ajax/propagation/propagations_in_project/'+project_id,
+    var propagation_group_table = jQuery('#propagation_groups_in_project_table').DataTable({
+        'ajax': '/ajax/propagation/propagation_groups_in_project/'+project_id,
         'autoWidth': false,
     });
 

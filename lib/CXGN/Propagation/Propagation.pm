@@ -36,19 +36,19 @@ has 'project_id' => (
     is => 'rw',
 );
 
-has 'propagation_stock_id' => (
+has 'propagation_group_stock_id' => (
     isa => "Int",
     is => 'rw',
 );
 
 
 
-sub get_propagations_in_project {
+sub get_propagation_groups_in_project {
     my $self = shift;
     my $schema = $self->schema();
     my $project_id = $self->project_id();
 
-    my $propagation_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation', 'stock_type')->cvterm_id();
+    my $propagation_group_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_group', 'stock_type')->cvterm_id();
     my $propagation_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_experiment', 'experiment_type')->cvterm_id();
     my $propagation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_project', 'project_type')->cvterm_id();
     my $propagation_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_material_of', 'stock_relationship')->cvterm_id();
@@ -75,23 +75,23 @@ sub get_propagations_in_project {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($propagation_cvterm_id, $propagation_material_type_cvterm_id, $propagation_metadata_cvterm_id, $propagation_material_of_cvterm_id, $accession_cvterm_id, $propagation_source_material_of_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id, $project_id);
+    $h->execute($propagation_group_cvterm_id, $propagation_material_type_cvterm_id, $propagation_metadata_cvterm_id, $propagation_material_of_cvterm_id, $accession_cvterm_id, $propagation_source_material_of_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id, $project_id);
 
-    my @propagations = ();
+    my @propagation_groups = ();
     while (my ($propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name) = $h->fetchrow_array()){
-        push @propagations, [$propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name]
+        push @propagation_groups, [$propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name]
     }
 
-    return \@propagations;
+    return \@propagation_groups;
 }
 
 
-sub get_propagation_info {
+sub get_propagation_group_info {
     my $self = shift;
     my $schema = $self->schema();
-    my $propagation_stock_id = $self->propagation_stock_id();
+    my $propagation_group_stock_id = $self->propagation_group_stock_id();
 
-    my $propagation_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation', 'stock_type')->cvterm_id();
+    my $propagation_group_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_group', 'stock_type')->cvterm_id();
     my $propagation_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_experiment', 'experiment_type')->cvterm_id();
     my $propagation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_project', 'project_type')->cvterm_id();
     my $propagation_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_material_of', 'stock_relationship')->cvterm_id();
@@ -119,14 +119,14 @@ sub get_propagation_info {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($propagation_material_type_cvterm_id, $propagation_metadata_cvterm_id, $propagation_material_of_cvterm_id, $accession_cvterm_id, $propagation_experiment_cvterm_id, $propagation_source_material_of_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id, $propagation_stock_id);
+    $h->execute($propagation_material_type_cvterm_id, $propagation_metadata_cvterm_id, $propagation_material_of_cvterm_id, $accession_cvterm_id, $propagation_experiment_cvterm_id, $propagation_source_material_of_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id, $propagation_group_stock_id);
 
-    my @propagation_info = ();
-    while (my ($propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $project_id, $project_name) = $h->fetchrow_array()){
-        push @propagation_info, [$propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $project_id, $project_name]
+    my @propagation_group_info = ();
+    while (my ($propagation_group_stock_id, $propagation_group_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $project_id, $project_name) = $h->fetchrow_array()){
+        push @propagation_group_info, [$propagation_group_stock_id, $propagation_group_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $project_id, $project_name]
     }
-    print STDERR "PROPAGATION INFO =".Dumper(\@propagation_info)."\n";
-    return \@propagation_info;
+    print STDERR "PROPAGATION INFO =".Dumper(\@propagation_group_info)."\n";
+    return \@propagation_group_info;
 
 }
 

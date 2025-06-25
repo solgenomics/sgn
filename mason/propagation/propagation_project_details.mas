@@ -131,20 +131,20 @@ jQuery(document).ready(function($) {
 
         jQuery("#propagation_accession_name").autocomplete({
             source: '/ajax/stock/only_accession_autocomplete',
-            appendTo : propagation_id_dialog
+            appendTo : propagation_group_id_dialog
         });
 
         jQuery("#propagation_source_name").autocomplete({
             source: '/ajax/stock/stock_autocomplete',
-            appendTo : propagation_id_dialog
+            appendTo : propagation_group_id_dialog
         });
 
         jQuery("#rootstock_accession_name").autocomplete({
             source: '/ajax/stock/only_accession_autocomplete',
-            appendTo : propagation_id_dialog
+            appendTo : propagation_group_id_dialog
         });
 
-        jQuery("#add_propagation_id_dialog").modal("show");
+        jQuery("#add_propagation_group_id_dialog").modal("show");
 
     });
 

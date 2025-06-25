@@ -11,7 +11,7 @@ use JSON;
 BEGIN { extends 'Catalyst::Controller'; }
 
 
-sub transformation_page : Path('/propagation') Args(1) {
+sub propagation_group_page : Path('/propagation_group') Args(1) {
     my $self = shift;
     my $c = shift;
     my $id = shift;
@@ -28,22 +28,22 @@ sub transformation_page : Path('/propagation') Args(1) {
         $user_role = "curator";
     }
 
-    my $propagation_stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation', 'stock_type')->cvterm_id();
+    my $propagation_group_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_group', 'stock_type')->cvterm_id();
 
-    my $propagation = $schema->resultset("Stock::Stock")->find( { stock_id => $id, type_id => $propagation_stock_type_id } );
+    my $propagation_group = $schema->resultset("Stock::Stock")->find( { stock_id => $id, type_id => $propagation_group_type_id } );
 
-    my $propagation_id;
-    my $propagation_name;
-	if (!$propagation) {
+    my $propagation_group_id;
+    my $propagation_group_name;
+	if (!$propagation_group) {
     	$c->stash->{template} = '/generic_message.mas';
-    	$c->stash->{message} = 'The requested propagation ID does not exist.';
+    	$c->stash->{message} = 'The requested propagation group ID does not exist.';
     	return;
     } else {
-        $propagation_id = $propagation->stock_id();
-        $propagation_name = $propagation->uniquename();
+        $propagation_group_id = $propagation_group->stock_id();
+        $propagation_group_name = $propagation_group->uniquename();
     }
-    my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_stock_id=>$propagation_id});
-    my $info = $propagation_obj->get_propagation_info();
+    my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_group_stock_id=>$propagation_group_id});
+    my $info = $propagation_obj->get_propagation_group_info();
     print STDERR "INFO 2 =".Dumper($info)."\n";
 
     my $description = $info->[0]->[2];
@@ -65,8 +65,8 @@ sub transformation_page : Path('/propagation') Args(1) {
     my $source_link = qq{<a href="/stock/$source_stock_id/view">$source_name</a>};
     my $project_link = qq{<a href="/breeders/trial/$project_id">$project_name</a>};
 
-    $c->stash->{propagation_id} = $propagation_id;
-    $c->stash->{propagation_name} = $propagation_name;
+    $c->stash->{propagation_group_id} = $propagation_group_id;
+    $c->stash->{propagation_group_name} = $propagation_group_name;
     $c->stash->{description} = $description;
     $c->stash->{accession_link} = $accession_link;
     $c->stash->{source_link} = $source_link;

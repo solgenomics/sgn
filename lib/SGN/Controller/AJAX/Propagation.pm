@@ -116,15 +116,15 @@ sub add_propagation_project_POST :Args(0){
 }
 
 
-sub add_propagation_identifier : Path('/ajax/propagation/add_propagation_identifier') : ActionClass('REST') {}
+sub add_propagation_group_identifier : Path('/ajax/propagation/add_propagation_group_identifier') : ActionClass('REST') {}
 
-sub add_propagation_identifier_POST :Args(0){
+sub add_propagation_group_identifier_POST :Args(0){
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $propagation_identifier = $c->req->param('propagation_identifier');
-    $propagation_identifier =~ s/^\s+|\s+$//g;
+    my $propagation_group_identifier = $c->req->param('propagation_group_identifier');
+    $propagation_group_identifier =~ s/^\s+|\s+$//g;
     my $propagation_project_id = $c->req->param('propagation_project_id');
     my $accession_name = $c->req->param('accession_name');
     my $material_type = $c->req->param('material_type');
@@ -159,7 +159,7 @@ sub add_propagation_identifier_POST :Args(0){
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession', 'stock_type')->cvterm_id();
 
-    if ($schema->resultset("Stock::Stock")->find({uniquename => $propagation_identifier})){
+    if ($schema->resultset("Stock::Stock")->find({uniquename => $propagation_group_identifier})){
         $c->stash->{rest} = {error =>  "Propagation Identifier already exists. Please use another name" };
         return;
     }
@@ -177,14 +177,14 @@ sub add_propagation_identifier_POST :Args(0){
     }
 
 
-    my $propagation_stock_id;
+    my $propagation_group_stock_id;
     eval {
-        my $add_propagation_identifier = CXGN::Propagation::AddPropagationIdentifier->new({
+        my $add_propagation_group_identifier = CXGN::Propagation::AddPropagationIdentifier->new({
             chado_schema => $schema,
             phenome_schema => $phenome_schema,
             dbh => $dbh,
             propagation_project_id => $propagation_project_id,
-            propagation_identifier => $propagation_identifier,
+            propagation_group_identifier => $propagation_group_identifier,
             accession_name => $accession_name,
             material_type => $material_type,
             material_source_type => $material_source_type,
@@ -196,14 +196,14 @@ sub add_propagation_identifier_POST :Args(0){
             owner_id => $user_id,
         });
 
-        my $add = $add_propagation_identifier->add_propagation_identifier();
-        $propagation_stock_id = $add->{propagation_stock_id};
-        print STDERR "PROPAGATION STOCK ID AJAX =".Dumper($propagation_stock_id)."\n";
+        my $add = $add_propagation_group_identifier->add_propagation_group_identifier();
+        $propagation_group_stock_id = $add->{propagation_group_stock_id};
+        print STDERR "PROPAGATION GROUP STOCK ID AJAX =".Dumper($propagation_group_stock_id)."\n";
     };
 
     if ($@) {
         $c->stash->{rest} = { success => 0, error => $@ };
-        print STDERR "An error condition occurred, was not able to create propagation identifier. ($@).\n";
+        print STDERR "An error condition occurred, was not able to create propagation group identifier. ($@).\n";
         return;
     }
 
@@ -212,7 +212,7 @@ sub add_propagation_identifier_POST :Args(0){
 }
 
 
-sub get_propagations_in_project :Path('/ajax/propagation/propagations_in_project') :Args(1) {
+sub get_propagation_groups_in_project :Path('/ajax/propagation/propagation_groups_in_project') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $project_id = shift;
@@ -221,11 +221,11 @@ sub get_propagations_in_project :Path('/ajax/propagation/propagations_in_project
 
     my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
 
-    my $result = $propagation_obj->get_propagations_in_project();
+    my $result = $propagation_obj->get_propagation_groups_in_project();
     print STDERR "RESULT =".Dumper($result)."\n";
     my @propagations;
     foreach my $r (@$result){
-        my $propagation_link = qq{<a href="/propagation/$r->[0]">$r->[1]</a>};
+        my $propagation_group_link = qq{<a href="/propagation_group/$r->[0]">$r->[1]</a>};
         my $description = $r->[2];
         my $material_type = $r->[3];
         my $metadata = $r->[4];
@@ -238,7 +238,7 @@ sub get_propagations_in_project :Path('/ajax/propagation/propagations_in_project
         my $accession_link = qq{<a href="/stock/$r->[5]/view">$r->[6]</a>};
         my $source_link = qq{<a href="/stock/$r->[7]/view">$r->[8]</a>};
 
-        push @propagations, [$propagation_link, $accession_link, $material_type, $material_source_type, $source_link, $date, $sub_location, $description, $operator_name]
+        push @propagations, [$propagation_group_link, $accession_link, $material_type, $material_source_type, $source_link, $date, $sub_location, $description, $operator_name]
 
     }
     $c->stash->{rest} = { data => \@propagations };
