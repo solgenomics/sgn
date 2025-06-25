@@ -2303,6 +2303,34 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     }
 }
 
+sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $treatment_id = $c->req->param('treatment_id');
+
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => 'You do not have the privileges to remove a treatment from this trial.'};
+        return;
+    }
+    my $trial = $c->stash->{trial};
+    my $trial_id = $c->stash->{trial_id};
+
+    my $result;
+    eval {
+        $result = $trial->remove_management_factor($treatment_id);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred while removing the treatment: $@" };
+        return;
+    }
+    if ($result->{error}) {
+        $c->stash->{rest} = { error => $result->{error} };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1, message => "Treatment removed from trial." };
+}
+
 sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     my $self = shift;
     my $c = shift;
