@@ -620,7 +620,7 @@ sub check_measurement {
         $trait_value = $value_array;
     }
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
-    if ( defined($trait_value) && $trait_name ne "notes" ) {
+    if ( $trait_name ne "notes" ) {
         #print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
         my $trait_cvterm = $self->trait_objs->{$trait_name};
         my $trait_cvterm_id = $trait_cvterm->cvterm_id();
@@ -792,7 +792,7 @@ sub check_measurement {
 
         #check if the plot_name, trait_name, timestamp combination already exists in same file.
         if (exists($self->check_file_stock_trait_duplicates->{$trait_cvterm_id, $stock_id, $timestamp})) {
-            $warning_message .= "<small>$plot_name has a duplicate value ($trait_value) for trait $trait_name in your file</small><hr>";
+            $warning_message .= "<small>$plot_name has a duplicate value for trait $trait_name in your file</small><hr>";
         }
         $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id, $timestamp} = 1;
     }
