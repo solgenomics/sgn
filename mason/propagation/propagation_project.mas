@@ -38,7 +38,7 @@ $propagation_type
 <& /page/page_title.mas, title=>"Details for ".$trial_name &>
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Propagation Project Details</h4>", info_section_subtitle => 'View and edit basic information about the project.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_propagation_project_details" style="margin:3px">Edit Project Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "propagation_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, country_name => $country_name, year => $year, trial_description => $trial_description, folder_name => $folder_name, folder_id => $folder_id, trial_owner => $trial_owner, propagation_type => $propagation_type &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Propagation IDs</h4>", info_section_subtitle => 'View information about propagation details in this project.', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "propagation_ids_in_project_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Propagation Group IDs</h4>", info_section_subtitle => 'View information about propagation details in this project.', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "propagation_group_ids_in_project_section" &>
 
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">

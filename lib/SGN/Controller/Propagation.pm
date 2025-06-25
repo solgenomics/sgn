@@ -77,7 +77,7 @@ sub propagation_group_page : Path('/propagation_group') Args(1) {
     $c->stash->{sub_location} = $sub_location;
     $c->stash->{project_link} = $project_link;
 
-    $c->stash->{template} = '/propagation/propagation.mas';
+    $c->stash->{template} = '/propagation/propagation_group.mas';
 
 }
 
