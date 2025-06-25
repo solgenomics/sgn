@@ -217,6 +217,36 @@ sub get_stock_entry_summary {
     return \@stock_entry_summary;
 }
 
+=head2 remove_management_factor
+
+ Usage:        my $trial_object->remove_management_factor($treatment_id);
+ Desc:         removes the selected field management factor from this trial
+ Ret:
+ Args:         $treatment_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub remove_management_factor {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $treatment_id =shift;
+
+    my $trial_id = $self->get_trial_id();
+
+    my $treatment_rs = $schema->resultset('Project::Project')->find({ project_id => $treatment_id });
+    if (!$treatment_rs) {
+        return { error => "Treatment not found" };
+    }
+
+    eval {
+        $treatment_rs->delete();
+    };
+
+    return { success => 1 };
+}
+
 
 
 1;
