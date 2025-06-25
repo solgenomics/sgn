@@ -71,7 +71,7 @@ jQuery(document).ready(function(){
     jQuery('#submit_new_propagation_id').click( function() {
         const propagation_identifier = jQuery('#new_propagation_identifier').val();
         const rootstock_name = jQuery('#propagation_rootstock_name').val();
-        const propagation_group_id = "<%$propagation_group_id%>";
+        const propagation_group_stock_id = "<%$propagation_group_id%>";
 
         if (propagation_identifier == '') {
             alert("Please provide a propagation identifier");
@@ -85,6 +85,7 @@ jQuery(document).ready(function(){
             data : {
                 'propagation_identifier': propagation_identifier,
                 'rootstock_name': rootstock_name,
+                'propagation_group_stock_id': propagation_group_stock_id
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

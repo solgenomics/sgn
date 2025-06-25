@@ -142,7 +142,7 @@ sub add_propagation_group_identifier_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a transformation ID." };
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a propagation group ID." };
         return;
     }
 
@@ -151,7 +151,7 @@ sub add_propagation_group_identifier_POST :Args(0){
     map { $has_roles{$_} = 1; } @user_roles;
 
     if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add propagation identifiers." };
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add propagation group identifiers." };
         return;
     }
 
@@ -160,7 +160,7 @@ sub add_propagation_group_identifier_POST :Args(0){
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession', 'stock_type')->cvterm_id();
 
     if ($schema->resultset("Stock::Stock")->find({uniquename => $propagation_group_identifier})){
-        $c->stash->{rest} = {error =>  "Propagation Identifier already exists. Please use another name" };
+        $c->stash->{rest} = {error =>  "Propagation Group Identifier already exists. Please use another name" };
         return;
     }
 
@@ -175,7 +175,6 @@ sub add_propagation_group_identifier_POST :Args(0){
             return;
         }
     }
-
 
     my $propagation_group_stock_id;
     eval {
@@ -204,6 +203,70 @@ sub add_propagation_group_identifier_POST :Args(0){
     if ($@) {
         $c->stash->{rest} = { success => 0, error => $@ };
         print STDERR "An error condition occurred, was not able to create propagation group identifier. ($@).\n";
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
+sub add_propagation_identifier : Path('/ajax/propagation/add_propagation_identifier') : ActionClass('REST') {}
+
+sub add_propagation_identifier_POST :Args(0){
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $propagation_identifier = $c->req->param('propagation_identifier');
+    $propagation_identifier =~ s/^\s+|\s+$//g;
+    my $propagation_group_stock_id = $c->req->param('propagation_group_stock_id');
+    my $rootstock_name = $c->req->param('rootstock_name');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a propagation ID." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession', 'stock_type')->cvterm_id();
+
+    if ($schema->resultset("Stock::Stock")->find({uniquename => $propagation_identifier})){
+        $c->stash->{rest} = {error =>  "Propagation Identifier already exists. Please use another name" };
+        return;
+    }
+
+    if (! $schema->resultset("Stock::Stock")->find({uniquename => $rootstock_name, type_id => $accession_cvterm_id })){
+        $c->stash->{rest} = {error =>  "Rootstock name does not exist or does not exist as accession uniquename." };
+        return;
+    }
+
+    my $propagation_stock_id;
+    eval {
+        my $add_propagation_identifier = CXGN::Propagation::AddPropagationIdentifier->new({
+            chado_schema => $schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            propagation_identifier => $propagation_identifier,
+            propagation_group_stock_id => $propagation_group_stock_id,
+            rootstock_name => $rootstock_name,
+            owner_id => $user_id,
+        });
+
+        my $add = $add_propagation_identifier->add_propagation_identifier();
+        $propagation_stock_id = $add->{propagation_stock_id};
+        print STDERR "PROPAGATION STOCK ID AJAX =".Dumper($propagation_stock_id)."\n";
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { success => 0, error => $@ };
+        print STDERR "An error condition occurred, was not able to create propagation identifier. ($@).\n";
         return;
     }
 
