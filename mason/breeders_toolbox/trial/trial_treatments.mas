@@ -272,8 +272,6 @@ jQuery(document).ready(function () {
                 alert("Error saving treatment.");
             }
         });
-    
-
     });
 });
 
