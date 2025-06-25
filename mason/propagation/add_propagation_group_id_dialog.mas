@@ -196,7 +196,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding propagation identifier');
+                alert('An error occurred adding propagation group identifier');
             }
         });
     });

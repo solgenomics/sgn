@@ -41,12 +41,27 @@ $project_link
             </div>
         </div>
     </div>
+
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_propagation_id_link">Add New Propagation ID</button>
 </&>
+
+<& /propagation/add_propagation_id_dialog.mas, propagation_group_id => $propagation_group_id, propagation_group_name => $propagation_group_name&>
+
 
 <script>
 
 jQuery(document).ready(function(){
 
+jQuery('#add_new_propagation_id_link').click(function() {
+
+    jQuery("#propagation_rootstock_name").autocomplete({
+        source: '/ajax/stock/only_accession_autocomplete',
+        appendTo : propagation_id_dialog
+    });
+
+    jQuery("#add_propagation_id_dialog").modal("show");
+
+});
 
 
 });
