@@ -710,15 +710,18 @@ export function init() {
                             } else {
 
                                 function createCollapsibleList(obj) {
-                                    let ul = document.createElement("ul");
+                                    let ul = document.createElement("ul");;
+
+                                    const right_arrow = "&#x25B6;";
+                                    const down_arrow = "&#x25BC;";
 
                                     for (const key of Object.keys(obj).sort()) {
                                         if (obj.hasOwnProperty(key)) {
                                             let li = document.createElement("li");
 
                                             if (typeof obj[key] === "object" && obj[key] !== null) {
-                                                const arrow = document.createElement("span");
-                                                arrow.textContent = "\u25B6";
+                                                let arrow = document.createElement("span");
+                                                arrow.innerHTML = right_arrow;
                                                 arrow.classList.add("arrow");
 
                                                 let span = document.createElement("span");
@@ -728,7 +731,7 @@ export function init() {
 
                                                 span.onclick = function () {
                                                     nestedUl.classList.toggle("hidden");
-                                                    arrow.textContent = nestedUl.classList.contains("hidden") ? "\u25B6" : "\u25BC"; 
+                                                    arrow.innerHTML = nestedUl.classList.contains("hidden") ? right_arrow : down_arrow; 
                                                 };
 
                                                 li.appendChild(span);
