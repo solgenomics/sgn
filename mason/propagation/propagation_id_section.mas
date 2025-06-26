@@ -3,7 +3,7 @@ $propagation_group_stock_id
 </%args>
 
 
-<&| /page/info_section.mas, title => 'Propagation IDs this group', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Active Propagation IDs', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -28,8 +28,9 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'columns': [
             { title: "Propagation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.propagation_stock_id+"/view'>"+row.propagation_name+"</a>"; } },
+            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_stock_id+"/view'>"+row.accession_name+"</a>"; } },
             { title: "Rootstock", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.rootstock_stock_id+"/view'>"+row.rootstock_name+"</a>"; } },
-
+            { title: "Status", "data": "propagation_status" },
         ],
 
     });

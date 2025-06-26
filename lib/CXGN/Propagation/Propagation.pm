@@ -41,8 +41,6 @@ has 'propagation_group_stock_id' => (
     is => 'rw',
 );
 
-
-
 sub get_propagation_groups_in_project {
     my $self = shift;
     my $schema = $self->schema();
@@ -59,7 +57,6 @@ sub get_propagation_groups_in_project {
     my $plot_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
-
 
     my $q = "SELECT propagation.stock_id, propagation.uniquename, propagation.description, material_type.value, metadata.value, accession.stock_id, accession.uniquename, source.stock_id, source.uniquename
         FROM nd_experiment_project
@@ -140,22 +137,27 @@ sub get_propagation_ids_in_group {
     my $propagation_rootstock_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_rootstock_of', 'stock_relationship')->cvterm_id();
     my $propagation_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_member_of', 'stock_relationship')->cvterm_id();
     my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $propagation_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_material_of', 'stock_relationship')->cvterm_id();
+    my $propagation_status_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_status', 'stock_property')->cvterm_id();
 
-    my $q = "SELECT propagation.stock_id, propagation.uniquename, rootstock.stock_id, rootstock.uniquename
+    my $q = "SELECT propagation.stock_id, propagation.uniquename, material.stock_id, material.uniquename, rootstock.stock_id, rootstock.uniquename, stockprop.value
         FROM stock
         JOIN stock_relationship AS propagation_relationship ON (propagation_relationship.object_id = stock.stock_id) AND propagation_relationship.type_id = ?
         JOIN stock AS propagation ON (propagation_relationship.subject_id = propagation.stock_id) AND propagation.type_id = ?
+        JOIN stock_relationship AS material_relationship ON (material_relationship.object_id = propagation.stock_id) AND material_relationship.type_id = ?
+        JOIN stock AS material ON (material.stock_id = material_relationship.subject_id) AND material.type_id = ?
+        JOIN stockprop ON (stockprop.stock_id = propagation.stock_id) AND stockprop.type_id = ?
         LEFT JOIN stock_relationship AS rootstock_relationship ON (rootstock_relationship.object_id = propagation.stock_id) AND rootstock_relationship.type_id = ?
         LEFT JOIN stock AS rootstock ON (rootstock_relationship.subject_id = rootstock.stock_id) AND rootstock.type_id = ?
         WHERE stock.stock_id = ? ;";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($propagation_member_of_cvterm_id, $propagation_cvterm_id, $propagation_rootstock_of_cvterm_id, $accession_cvterm_id, $propagation_group_stock_id);
+    $h->execute($propagation_member_of_cvterm_id, $propagation_cvterm_id, $propagation_material_of_cvterm_id, $accession_cvterm_id, $propagation_status_cvterm_id, $propagation_rootstock_of_cvterm_id, $accession_cvterm_id, $propagation_group_stock_id);
 
     my @propagation_ids = ();
-    while (my ($propagation_stock_id, $propagation_name, $rootstock_stock_id, $rootstock_name) = $h->fetchrow_array()){
-        push @propagation_ids, [$propagation_stock_id, $propagation_name, $rootstock_stock_id, $rootstock_name]
+    while (my ($propagation_stock_id, $propagation_name, $material_stock_id, $material_name, $rootstock_stock_id, $rootstock_name, $status) = $h->fetchrow_array()){
+        push @propagation_ids, [$propagation_stock_id, $propagation_name, $material_stock_id, $material_name, $rootstock_stock_id, $rootstock_name, $status]
     }
 
     return \@propagation_ids;

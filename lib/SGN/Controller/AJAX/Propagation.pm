@@ -322,12 +322,15 @@ sub get_population_ids_in_group :Path('/ajax/propagation/propagation_ids_in_grou
     my $result = $propagation_obj->get_propagation_ids_in_group();
     my @propagations;
     foreach my $r (@$result){
-        my ($propagation_stock_id, $propagation_name, $rootstock_stock_id, $rootstock_name) =@$r;
+        my ($propagation_stock_id, $propagation_name, $accession_stock_id, $accession_name, $rootstock_stock_id, $rootstock_name, $status) =@$r;
         push @propagations, {
             propagation_stock_id => $propagation_stock_id,
             propagation_name => $propagation_name,
+            accession_stock_id => $accession_stock_id,
+            accession_name => $accession_name,
             rootstock_stock_id => $rootstock_stock_id,
             rootstock_name => $rootstock_name,
+            propagation_status => $status,
         };
     }
 
