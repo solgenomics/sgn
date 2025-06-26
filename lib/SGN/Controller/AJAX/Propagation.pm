@@ -13,6 +13,7 @@ use CXGN::List::Validate;
 use CXGN::List;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Propagation::AddPropagationProject;
+use CXGN::Propagation::AddPropagationGroup;
 use CXGN::Propagation::AddPropagationIdentifier;
 use CXGN::Propagation::Propagation;
 use DateTime;
@@ -177,7 +178,7 @@ sub add_propagation_group_identifier_POST :Args(0){
 
     my $propagation_group_stock_id;
     eval {
-        my $add_propagation_group_identifier = CXGN::Propagation::AddPropagationIdentifier->new({
+        my $add_propagation_group_identifier = CXGN::Propagation::AddPropagationGroup->new({
             chado_schema => $schema,
             phenome_schema => $phenome_schema,
             dbh => $dbh,
@@ -220,6 +221,7 @@ sub add_propagation_identifier_POST :Args(0){
     $propagation_identifier =~ s/^\s+|\s+$//g;
     my $propagation_group_stock_id = $c->req->param('propagation_group_stock_id');
     my $rootstock_name = $c->req->param('rootstock_name');
+    my $accession_stock_id = $c->req->param('accession_stock_id');
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -253,14 +255,16 @@ sub add_propagation_identifier_POST :Args(0){
             dbh => $dbh,
             propagation_identifier => $propagation_identifier,
             propagation_group_stock_id => $propagation_group_stock_id,
+            accession_stock_id => $accession_stock_id,
             rootstock_name => $rootstock_name,
+            propagation_status => 'In Progress',
             owner_id => $user_id,
         });
 
         my $add = $add_propagation_identifier->add_propagation_identifier();
         $propagation_stock_id = $add->{propagation_stock_id};
     };
-
+    print STDERR "PROPAGATION STOCK ID =".Dumper($propagation_stock_id)."\n";
     if ($@) {
         $c->stash->{rest} = { success => 0, error => $@ };
         print STDERR "An error condition occurred, was not able to create propagation identifier. ($@).\n";

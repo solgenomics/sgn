@@ -11,6 +11,7 @@ $date
 $sub_location
 $operator_name
 $project_link
+$accession_stock_id
 
 </%args>
 
@@ -47,7 +48,7 @@ $project_link
 
 <& /propagation/propagation_id_section.mas, propagation_group_stock_id => $propagation_group_id &>
 
-<& /propagation/add_propagation_id_dialog.mas, propagation_group_id => $propagation_group_id, propagation_group_name => $propagation_group_name&>
+<& /propagation/add_propagation_id_dialog.mas, propagation_group_id => $propagation_group_id, propagation_group_name => $propagation_group_name, accession_stock_id => $accession_stock_id&>
 
 
 <script>

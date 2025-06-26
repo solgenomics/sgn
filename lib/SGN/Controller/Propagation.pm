@@ -68,6 +68,7 @@ sub propagation_group_page : Path('/propagation_group') Args(1) {
     $c->stash->{propagation_group_id} = $propagation_group_id;
     $c->stash->{propagation_group_name} = $propagation_group_name;
     $c->stash->{description} = $description;
+    $c->stash->{accession_stock_id} = $accession_stock_id;    
     $c->stash->{accession_link} = $accession_link;
     $c->stash->{source_link} = $source_link;
     $c->stash->{material_type} = $material_type;
