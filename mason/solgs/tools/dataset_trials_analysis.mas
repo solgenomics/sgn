@@ -1,0 +1,67 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/dataset_trials_analsyis.mas - a template to select a trial from dataset of trials and run analysis
+
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$dataset_id => undef
+$dataset_name => undef
+$data_structure => undef
+$title => undef
+
+</%args>
+
+<%perl>
+
+
+if (!$data_structure) {
+   if ($dataset_id) {
+      $data_structure = 'dataset';
+   } 
+   
+}
+
+my $url = $c->req->path;
+my $collapsed = 0;
+my $collapsible = 0;
+
+</%perl>
+
+<& /solgs/tools/base.mas &>
+
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => 0,
+  title       =>'Analysis Tools'
+&>
+
+<div id="dataset_trials_analysis" style="display: flex; align-items: center; justify-content-left: space-between;">
+    <& /solgs/tools/trials_select.mas,
+        dataset_id => $dataset_id,
+        dataset_name => $dataset_name,
+        data_structure => 'dataset',    
+    &>
+    
+    <& /solgs/tools/analysis_select.mas &>
+    
+    <input id="run_analysis" class="btn btn-success" type="button" value="Run Analysis" style="margin-top:20px" />
+</div>
+
+<div id="dataset_trials_analysis_message" class="message"> </div>
+
+<div id="correlation_analysis_output" class="display:none">
+    <& /solgs/tools/correlation/plot.mas &>
+</div>
+
+</&>
