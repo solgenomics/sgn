@@ -104,7 +104,6 @@ sub add_propagation_project_POST :Args(0){
     } else {
         $propagation_project_id = $return->{project_id};
     }
-    print STDERR "PROJECT ID =".Dumper($propagation_project_id)."\n";
 
     if ($@) {
         $c->stash->{rest} = {error => $@};
@@ -197,7 +196,6 @@ sub add_propagation_group_identifier_POST :Args(0){
 
         my $add = $add_propagation_group_identifier->add_propagation_group_identifier();
         $propagation_group_stock_id = $add->{propagation_group_stock_id};
-        print STDERR "PROPAGATION GROUP STOCK ID AJAX =".Dumper($propagation_group_stock_id)."\n";
     };
 
     if ($@) {
@@ -261,7 +259,6 @@ sub add_propagation_identifier_POST :Args(0){
 
         my $add = $add_propagation_identifier->add_propagation_identifier();
         $propagation_stock_id = $add->{propagation_stock_id};
-        print STDERR "PROPAGATION STOCK ID AJAX =".Dumper($propagation_stock_id)."\n";
     };
 
     if ($@) {
@@ -308,6 +305,31 @@ sub get_propagation_groups_in_project :Path('/ajax/propagation/propagation_group
 
 }
 
+
+sub get_population_ids_in_group :Path('/ajax/propagation/propagation_ids_in_group') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $propagation_group_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_group_stock_id=>$propagation_group_stock_id});
+
+    my $result = $propagation_obj->get_propagation_ids_in_group();
+    my @propagations;
+    foreach my $r (@$result){
+        my ($propagation_stock_id, $propagation_name, $rootstock_stock_id, $rootstock_name) =@$r;
+        push @propagations, {
+            propagation_stock_id => $propagation_stock_id,
+            propagation_name => $propagation_name,
+            rootstock_stock_id => $rootstock_stock_id,
+            rootstock_name => $rootstock_name,
+        };
+    }
+
+    $c->stash->{rest} = { data => \@propagations };
+
+}
 
 
 

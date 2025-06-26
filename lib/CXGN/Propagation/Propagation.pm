@@ -125,11 +125,41 @@ sub get_propagation_group_info {
     while (my ($propagation_group_stock_id, $propagation_group_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $project_id, $project_name) = $h->fetchrow_array()){
         push @propagation_group_info, [$propagation_group_stock_id, $propagation_group_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $project_id, $project_name]
     }
-    print STDERR "PROPAGATION INFO =".Dumper(\@propagation_group_info)."\n";
+
     return \@propagation_group_info;
 
 }
 
+
+sub get_propagation_ids_in_group {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $propagation_group_stock_id = $self->propagation_group_stock_id();
+
+    my $propagation_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation', 'stock_type')->cvterm_id();
+    my $propagation_rootstock_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_rootstock_of', 'stock_relationship')->cvterm_id();
+    my $propagation_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_member_of', 'stock_relationship')->cvterm_id();
+    my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+    my $q = "SELECT propagation.stock_id, propagation.uniquename, rootstock.stock_id, rootstock.uniquename
+        FROM stock
+        JOIN stock_relationship AS propagation_relationship ON (propagation_relationship.object_id = stock.stock_id) AND propagation_relationship.type_id = ?
+        JOIN stock AS propagation ON (propagation_relationship.subject_id = propagation.stock_id) AND propagation.type_id = ?
+        LEFT JOIN stock_relationship AS rootstock_relationship ON (rootstock_relationship.object_id = propagation.stock_id) AND rootstock_relationship.type_id = ?
+        LEFT JOIN stock AS rootstock ON (rootstock_relationship.subject_id = rootstock.stock_id) AND rootstock.type_id = ?
+        WHERE stock.stock_id = ? ;";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($propagation_member_of_cvterm_id, $propagation_cvterm_id, $propagation_rootstock_of_cvterm_id, $accession_cvterm_id, $propagation_group_stock_id);
+
+    my @propagation_ids = ();
+    while (my ($propagation_stock_id, $propagation_name, $rootstock_stock_id, $rootstock_name) = $h->fetchrow_array()){
+        push @propagation_ids, [$propagation_stock_id, $propagation_name, $rootstock_stock_id, $rootstock_name]
+    }
+
+    return \@propagation_ids;
+}
 
 
 ###

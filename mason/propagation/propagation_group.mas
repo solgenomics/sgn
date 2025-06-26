@@ -45,6 +45,8 @@ $project_link
     <button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_propagation_id_link">Add New Propagation ID</button>
 </&>
 
+<& /propagation/propagation_id_section.mas, propagation_group_stock_id => $propagation_group_id &>
+
 <& /propagation/add_propagation_id_dialog.mas, propagation_group_id => $propagation_group_id, propagation_group_name => $propagation_group_name&>
 
 
