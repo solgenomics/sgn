@@ -2308,7 +2308,7 @@ sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(
     my $c = shift;
     my $treatment_id = $c->req->param('treatment_id');
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+    if (!($c->user()->check_roles('curator'))) {
         $c->stash->{rest} = { error => 'You do not have the privileges to remove a treatment from this trial.'};
         return;
     }

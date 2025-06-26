@@ -217,10 +217,10 @@ sub get_stock_entry_summary {
     return \@stock_entry_summary;
 }
 
-=head2 remove_management_factor
+=head2 remove_treatment
 
- Usage:        my $trial_object->remove_management_factor($treatment_id);
- Desc:         removes the selected field management factor from this trial
+ Usage:        my $trial_object->remove_treatment($treatment_id);
+ Desc:         removes the selected treatment from this trial
  Ret:
  Args:         $treatment_id
  Side Effects:
