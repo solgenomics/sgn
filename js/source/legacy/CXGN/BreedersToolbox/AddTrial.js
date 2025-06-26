@@ -42,6 +42,9 @@ jQuery(document).ready(function ($) {
     var unrep_list_seedlot_hash = {};
     var rep_list_seedlot_hash = {};
     var plants_per_plot;
+    var include_plant_coordinates;
+    var num_rows;
+    var num_cols;
     var inherits_plot_treatments;
 
     jQuery('#create_trial_validate_form_button').click(function(){
@@ -59,8 +62,23 @@ jQuery(document).ready(function ($) {
         var stock_type = $("#select_stock_type").val();
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
-	var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
+	    var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
         plants_per_plot = $("#add_plant_entries").val();
+        num_rows = jQuery('#trial_create_rows_per_plot').val();
+        num_cols = jQuery('#trial_create_cols_per_plot').val();
+        if (jQuery('#trial_create_rows_and_columns_to_plants').is(':checked')) { 
+
+            include_plant_coordinates = 1;
+
+            if (num_rows == "" || num_cols == "" || num_rows * num_cols == 0) {
+                alert("You need to specify the number of rows and columns to give plant coordinates within plots.");
+                return;
+            }
+            if (num_rows * num_cols < plants_per_plot) {
+                alert("Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.");
+                return;
+            }
+        }
         inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
 
         if (trial_name === '') {
@@ -2165,6 +2183,9 @@ jQuery(document).ready(function ($) {
                 data: {
                   'plants_per_plot' : plants_per_plot,
                   'inherits_plot_treatments' : inherits_plot_treatments,
+                  'include_plant_coordinates' : include_plant_coordinates,
+                  'rows_per_plot' : num_rows,
+                  'cols_per_plot' : num_cols
                 },
                 success: function(response) {
                     //console.log(response);
