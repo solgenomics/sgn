@@ -288,9 +288,15 @@ $propagation_type => undef
                                 <&| /page/info_section.mas, title => 'Field Trial to Genotyping Plate Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                                 </&>
+                                <&| /page/info_section.mas, title => 'Field Trial to Crossing Experiment Linkage', id => 'crossing_experiment_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                    <& /breeders_toolbox/trial/crossing_experiment_from_field_trial_linkage.mas, trial_id => $trial_id &>
+                                </&>
+
+                                <!--
                                 <&| /page/info_section.mas, title => 'Field Trial to Crossing Experiment Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                                 </&>
+                                -->
 %} #End trial_linkage_section
 % if ($info_section_id eq 'trial_deletion_section'){
                                 <&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
@@ -514,6 +520,10 @@ $propagation_type => undef
 % if ($info_section_id eq 'crossing_trial_from_field_trial_section'){
                                 <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
 % } #End crossing_trial_from_field_trial_section
+
+% if ($info_section_id eq 'crossing_experiment_and_trial_linkage_section'){
+                                <& /breeders_toolbox/cross/crossing_experiment_and_trial_linkage.mas, trial_id => $trial_id  &>
+% } #End crossing_experiment_and_trial_linkage_section
 
 % if ($info_section_id eq 'marker_set_summary_section'){
                                 <& /breeders_toolbox/markers/marker_set_summary.mas &>
