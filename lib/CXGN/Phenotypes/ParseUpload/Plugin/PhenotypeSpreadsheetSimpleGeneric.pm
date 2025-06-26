@@ -112,7 +112,7 @@ sub parse {
         for my $trait_name (@$trait_columns) {
             my $value_string = defined($row->{$trait_name}) ? $row->{$trait_name} : '';
             my $timestamp = '';
-            my $trait_value = undef;
+            my $trait_value = '';
             if ($timestamp_included){
                 ($trait_value, $timestamp) = split /,/, $value_string;
             } else {
@@ -124,7 +124,7 @@ sub parse {
 
             if ( defined($trait_value) && defined($timestamp) ) {
                 if ($trait_value ne '.') {
-                    $data{$observationunit_name}->{$trait_name} = [$trait_value, $timestamp];
+                    push @{$data{$observationunit_name}->{$trait_name}}, [$trait_value, $timestamp];
                 }
             }
         }

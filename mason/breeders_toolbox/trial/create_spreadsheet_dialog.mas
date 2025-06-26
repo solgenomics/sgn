@@ -19,12 +19,13 @@ $trial_stock_type => undef
             <form class="form-horizontal" role="form" method="post" >
 
                 <div class="form-group">
+		     
                     <label class="col-sm-3 control-label">Trial: </label>
-                    <div class="col-sm-9" >
-                        <div id="select_trial_for_create_spreadsheet">
+                    <div class="col-sm-9">
+                        <div id="select_trial_for_create_spreadsheet" >
 % if ($trial_id) {
-                            <input type="text" class="form-control" value="<% $trial_name %>" text="<% $trial_name %>" disabled/>
-                            <input type="hidden" id="html_select_trial_for_create_spreadsheet" name="html_select_trial_for_create_spreadsheet" value="<% $trial_id %>" />
+                            <input type="text" id="input_for_trial_name_disabled" class="form-control" style="width:400px" value="<% $trial_name %>" text="<% $trial_name %>" disabled />
+                            <input type="hidden" id="html_select_trial_for_create_spreadsheet" name="html_select_trial_for_create_spreadsheet" value="<% $trial_id %>" >
 % } else {
                         [Loading...]
 % }
@@ -34,7 +35,7 @@ $trial_stock_type => undef
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Trait List: </label>
                     <div class="col-sm-9" >
-                        <div id ="trait_list_spreadsheet">
+                        <div id="trait_list_spreadsheet">
                         </div>
                     </div>
                 </div>
