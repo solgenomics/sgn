@@ -2317,7 +2317,7 @@ sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(
 
     my $result;
     eval {
-        $result = $trial->remove_management_factor($treatment_id);
+        $result = $trial->remove_treatment($treatment_id);
     };
     if ($@) {
         $c->stash->{rest} = { error => "An error occurred while removing the treatment: $@" };

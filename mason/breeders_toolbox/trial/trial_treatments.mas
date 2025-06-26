@@ -34,7 +34,7 @@ jQuery(document).ready(function () {
 
                 jQuery('.remove-treatment-btn').click(function(){
                     var treatment_id = jQuery(this).data('treatment-id');
-                    if (confirm("Are you sure you want to remove this field management factor from the trial?")) {
+                    if (confirm("Are you sure you want to remove this treatment from the trial?")) {
                         jQuery.ajax({
                             url:'/ajax/breeders/trial/'+<% $trial_id %>+'/remove_treatment/',
                             type: 'POST',

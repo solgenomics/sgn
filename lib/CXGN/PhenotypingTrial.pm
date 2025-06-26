@@ -228,7 +228,7 @@ sub get_stock_entry_summary {
 
 =cut
 
-sub remove_management_factor {
+sub remove_treatment {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $treatment_id =shift;
