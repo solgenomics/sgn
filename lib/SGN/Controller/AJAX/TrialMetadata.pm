@@ -3800,6 +3800,54 @@ sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_
     $c->stash->{rest} = {success => 1, crossing_trials_from_field_trial => $crossing_trials_from_field_trial, field_trials_source_of_crossing_trial => $field_trials_source_of_crossing_trial};
 }
 
+sub field_trial_sources_of_parents : Chained('trial') PathPart('field_trial_sources_of_parents') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trial_sources_of_crossing_experiment();
+    my @source_trials;
+    if ($field_trials_source_of_crossing_trial) {
+        foreach my $trial (@$field_trials_source_of_crossing_trial) {
+            push @source_trials, [qq{<a href="/breeders/trial/$trial->[0]">$trial->[1]</a>}];
+        }
+    }
+    $c->stash->{rest} = { data => \@source_trials };
+}
+
+sub field_trials_for_evaluating_crosses : Chained('trial') PathPart('field_trials_for_evaluating_crosses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $field_trials_for_evaluating_crosses = $c->stash->{trial}->get_field_trials_for_evaluating_crosses();
+    my @field_trials;
+    if ($field_trials_for_evaluating_crosses) {
+        foreach my $trial (@$field_trials_for_evaluating_crosses) {
+            push @field_trials, [qq{<a href="/breeders/trial/$trial->[0]">$trial->[1]</a>}];
+        }
+    }
+    $c->stash->{rest} = { data => \@field_trials };
+}
+
+sub crossing_experiments_from_field_trial : Chained('trial') PathPart('crossing_experiments_from_field_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $crossing_experiments_from_field_trial = $c->stash->{trial}->get_crossing_experiments_from_field_trial();
+    my @crossing_experiments;
+    if ($crossing_experiments_from_field_trial) {
+        foreach my $crossing_experiment (@$crossing_experiments_from_field_trial) {
+            push @crossing_experiments, [qq{<a href="/breeders/trial/$crossing_experiment->[0]">$crossing_experiment->[1]</a>}];
+        }
+    }
+    $c->stash->{rest} = { data => \@crossing_experiments };
+}
+
 sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(0) {
     my $self = shift;
     my $c = shift;
