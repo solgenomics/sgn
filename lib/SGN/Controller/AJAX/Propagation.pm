@@ -16,6 +16,7 @@ use CXGN::Propagation::AddPropagationProject;
 use CXGN::Propagation::AddPropagationGroup;
 use CXGN::Propagation::AddPropagationIdentifier;
 use CXGN::Propagation::Propagation;
+use CXGN::Propagation::Status;
 use DateTime;
 use List::MoreUtils qw /any /;
 
@@ -338,6 +339,57 @@ sub get_population_ids_in_group :Path('/ajax/propagation/propagation_ids_in_grou
 
 }
 
+
+sub update_propagation_status : Path('/ajax/propagation/update_status') : ActionClass('REST'){ }
+
+sub update_propagation_status_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh;
+
+    my $propagation_stock_id = $c->req->param('propagation_stock_id');
+    my $status_type = $c->req->param('propagation_status');
+    my $update_notes = $c->req->param('propagation_status_notes');
+    my $time = DateTime->now();
+    my $update_date = $time->ymd();
+    my $user_id;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to update the status!'};
+        $c->detach();
+    }
+
+    if ($c->user) {
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    print STDERR "STOCK ID =".Dumper($propagation_stock_id)."\n";
+    print STDERR "STATUS TYPE =".Dumper($status_type)."\n";
+    print STDERR "STATUS NOTES =".Dumper($update_notes)."\n";
+    print STDERR "PERSON =".Dumper($user_id)."\n";
+
+
+    my $status = CXGN::Propagation::Status->new({
+        bcs_schema => $schema,
+        parent_id => $propagation_stock_id,
+    });
+
+    $status->status_type($status_type);
+    $status->update_person($user_id);
+    $status->update_date($update_date);
+    $status->update_notes($update_notes);
+
+    $status->store();
+
+    if (!$status->store()){
+        $c->stash->{rest} = {error_string => "Error saving propagation status",};
+        return;
+    }
+
+    $c->stash->{rest} = {success => "1",};
+
+}
 
 
 
