@@ -12,7 +12,7 @@ $trial_id
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_treatments_onswitch').one("click", function() {
+    jQuery('#trial_treatments_onswitch').on("click", function() {
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/treatments',
@@ -40,6 +40,10 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#trial_detail_page_add_treatment').click(function(){
+        jQuery('#trial_design_add_treatments').modal('show');
+    });
+
+    jQuery('#trial_detail_page_add_treatment_v2').click(function(){
         jQuery('#trial_design_add_treatments').modal('show');
     });
 

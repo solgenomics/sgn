@@ -197,6 +197,9 @@ $field_headers => ()
 % if ($info_section_id eq 'trial_design_section'){
                                 <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type &>
 % } #End trial_design_section
+% if ($info_section_id eq 'trial_treatments_section'){
+                                <& /breeders_toolbox/trial/trial_treatments.mas, trial_id => $trial_id &>
+% } #End trial_treatments_section
 % if ($info_section_id eq 'trial_detail_traits_assayed'){
 
 % if ($has_expression_atlas) {

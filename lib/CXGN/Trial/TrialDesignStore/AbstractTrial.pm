@@ -1099,7 +1099,7 @@ sub store {
 
                 #Create a project for each treatment_name
                 my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
-                my $treatment_project = $chado_schema->resultset('Project::Project')->create({
+                my $treatment_project = $chado_schema->resultset('Project::Project')->find_or_create({
                     name => $project_treatment_name,
                     description => $management_factor_description,
                     projectprops => \@treatment_project_props,
