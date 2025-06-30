@@ -311,7 +311,7 @@ sub get_propagation_groups_in_project :Path('/ajax/propagation/propagation_group
 }
 
 
-sub get_population_ids_in_group :Path('/ajax/propagation/propagation_ids_in_group') :Args(1) {
+sub get_active_population_ids_in_group :Path('/ajax/propagation/active_propagation_ids_in_group') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $propagation_group_stock_id = shift;
@@ -324,6 +324,12 @@ sub get_population_ids_in_group :Path('/ajax/propagation/propagation_ids_in_grou
     my @propagations;
     foreach my $r (@$result){
         my ($propagation_stock_id, $propagation_name, $accession_stock_id, $accession_name, $rootstock_stock_id, $rootstock_name, $status) =@$r;
+        my $status_info = decode_json $status;
+        my $status_type = $status_info->{status_type};
+        my $update_date = $status_info->{update_date};
+        my $update_person_id = $status_info->{update_person};
+        my $update_notes = $status_info->{update_notes};
+
         push @propagations, {
             propagation_stock_id => $propagation_stock_id,
             propagation_name => $propagation_name,
@@ -331,7 +337,7 @@ sub get_population_ids_in_group :Path('/ajax/propagation/propagation_ids_in_grou
             accession_name => $accession_name,
             rootstock_stock_id => $rootstock_stock_id,
             rootstock_name => $rootstock_name,
-            propagation_status => $status,
+            propagation_status => $status_type,
         };
     }
 
@@ -369,10 +375,17 @@ sub update_propagation_status_POST : Args(0) {
     print STDERR "STATUS NOTES =".Dumper($update_notes)."\n";
     print STDERR "PERSON =".Dumper($user_id)."\n";
 
+    my $propagation_status_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_status', 'stock_property')->cvterm_id();
+    my $previous_status = $schema->resultset("Stock::Stockprop")->find( {stock_id => $propagation_stock_id, type_id => $propagation_status_cvterm_id });
+    my $previous_stockprop_id;
+    if($previous_status) {
+        $previous_stockprop_id = $previous_status->stockprop_id();
+    }
 
     my $status = CXGN::Propagation::Status->new({
         bcs_schema => $schema,
         parent_id => $propagation_stock_id,
+        prop_id => $previous_stockprop_id
     });
 
     $status->status_type($status_type);
