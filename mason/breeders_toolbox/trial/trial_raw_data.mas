@@ -5,15 +5,104 @@ $trial_id
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &>
 
-<h3>Select Trait</h3>
+<style>
+.form-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
 
-<div id="trait_selector_for_raw_data">[Loading...]</div><br />
-<button id="raw_data_trait_select_button">Choose trait</button>
-<br />
-<br />
+.form-group label {
+  margin-right: 10px;
+  white-space: nowrap;
+}
 
-<table id="raw_trait_data_table">
-</table>
+.form-group input,
+.form-group select {
+  flex-grow: 1;
+}
+</style>
+
+<div class="well well-sm" id="phenotypes_recorded_observation_level">
+	<center><h4>Traits recorded across observation levels</h4></center></hr>
+	<div id="phenotypes_measured_per_observation_level">
+		<div class="row">
+			<div class="col-sm-8">
+				<form class="form-horizontal">
+				<table id="phenotypes_measured_per_observation_level" style= "text-align:left; width:100%;">
+					<thead>
+						<tr>
+							<th>Observation Level </th>
+							<th>Number of Traits Measured</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td>Plot</td><td id="phenotypes_per_plot"></td></tr>
+						<tr><td>Plant</td><td id="phenotypes_per_plant"></td></tr>
+						<tr><td>Sub plot</td><td id="phenotypes_per_subplot"></td></tr>
+						<tr><td>Tissue sample</td><td id="phenotypes_per_tissue_sample"></td></tr>
+					</tbody>
+				</table>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="well well-sm" id="raw_phenotypic_data">
+	<h4 style= "text-align:center">Choose trait and observation level</h4>
+	<br/>
+
+	<table>
+	<tr>
+	    <td>
+			<div class="form-group">
+				<label for="trait_selector_for_raw_data"> Trait:</label>
+	    	  <div id="trait_selector_for_raw_data">[Loading...]</div>
+			</div>
+	    </td>
+	    <td width="30"></td>
+	    <td>
+			<div class="form-group">
+				<label for="raw_data_observation_level">Observation Level:</label>
+				<select id="raw_data_observation_level">
+					<option value="plot">Plots</option>
+					<option value="plant">Plants</option>
+					<option value="subplot">Subplots</option>
+					<option value="tissue_sample">Tissue samples</option>
+	      		</select>
+			</div>
+	    </td>
+	</tr>
+	<tr>
+	<!--
+	    <td>
+			<div class="form-group">
+				<label for="raw_data_start_date">Start Date:</label>
+				<input type="text" id="raw_data_start_date" title="raw_data_start_date"/>
+			</div>
+		</td>
+		<td width="30"></td>
+	    <td>
+			<div class="form-group">
+				<label for="raw_data_end_date"> End Date:</label>
+				<input type="text" id="raw_data_end_date" title="raw_data_end_date"/>
+			</div>
+	    </td>
+	-->
+	</tr>
+	<tr>
+	    <td colspan="4", style="text-align: center;">
+	      <button id="raw_data_trait_select_button" class="btn btn-primary">Submit</button>
+	    </td>
+	</tr>
+	</table>
+
+	<br />
+
+	<table id="raw_trait_data_table">
+	</table>
+</div>
 
 <script>
 
@@ -22,99 +111,209 @@ $trial_id
         jQuery('#trial_raw_data_onswitch').click( function() {
 
 	    create_trait_menu_for_trial(<% $trial_id %>)
-	    .then( (result) => fetch_traits(result.result.searchResultsDbId))
-	    .then( (result) => build_menu(result.result))
-	    .then( (final) =>  {
+	    	.then( (result) => fetch_traits(result.result.searchResultsDbId))
+	    	.then( (result) => build_menu(result.result))
+	    	.then( (final) =>  {
 		});
 	});
 
 
 	jQuery('#raw_data_trait_select_button').click( function() {
-	   var trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
-           get_trait_data(<% $trial_id %>, trait_id)
-	   .then( (result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))
-	   .then( (result) => displayRawObservations(result.result) )
-	   .then( (final) => {
-	   });
-        });
-       
+	   	var trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
+        var observation_level = jQuery('#raw_data_observation_level').find(":selected").val();
+		jQuery('#working_modal').modal('show');
+		//var start_date = jQuery('#raw_data_start_date').val();
+		//var end_date = jQuery('#raw_data_end_date').val();
 
+		//console.log("check the selected trait ID:", trait_id);
+    	//console.log("check observation level:", observation_level);
+    	//console.log("see the start date:", start_date);
+    	//console.log("see the end date:", end_date);
+
+		//alert("now fetching trait_id "+trait_id+" observation_level "+observation_level+");
+
+		get_trait_data(<% $trial_id %>, trait_id, observation_level)
+	   		.then( (result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))
+	   		.then( (result) => displayRawObservations(result.result) )
+	   		.then( (final) => {
+				jQuery('#working_modal').modal('hide');
+	   	})
+        .fail(() => {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred while processing the request.');
+        });;
     });
+	/*
+    	jQuery('input[title="raw_data_start_date"]').daterangepicker(
+		{
+		    "singleDatePicker": true,
+		    "showDropdowns": true,
+		    "autoUpdateInput": true,
+		    "startDate": "1960-01-01",
+		    "yearSelect" : true,
+		    "minDate": "1960-01-01",
+		    "maxDate": "2030-12-31",
+		    locale: { 
+				format: 'YYYY-MM-DD'
+		    }
+		});
+
+		jQuery('input[title="raw_data_end_date"]').daterangepicker({
+		    "singleDatePicker": true,
+		    "autoUpdateInput": true,
+		    "minDate": "1960-01-01",
+		    "maxDate" : "2030-12-31",
+		    "yearSelect" : true,
+		    locale: {
+				format: 'YYYY-MM-DD'
+		    },
+		    "showDropdowns": true,
+		});
+	*/
     
+	update_phenotype_measures_table(<% $trial_id %>);
+    function update_phenotype_measures_table(trial_id) {
+     	var observation_levels = ['plot', 'plant', 'subplot', 'tissue_sample'];
+    	for (let observation_level of observation_levels) {
+    	    get_observation_variable_count(trial_id, observation_level)
+    	    .then(function(count) {
+				//alert('see the phenotype count for in ' + observation_level + ': '+ count);
+    	        jQuery('#phenotypes_per_' + observation_level).html(count);
+    	    });
+    	}
+	}
+
+	function get_observation_variable_count(trial_id, observation_level) {
+    	return jQuery.ajax({
+    	    url: "/brapi/v2/search/observations",
+    	    method: "POST",
+    	    data: { studyDbIds: [trial_id], observationLevel: [observation_level] }
+    	})
+    	.then(function(result) {
+			//console.log('Search Results DbId:', result.result.searchResultsDbId);
+    	    var searchResultsDbId = result.result.searchResultsDbId;
+    	    return fetch_observations(searchResultsDbId);
+    	})
+    	.then(function(observations) {
+    	    var variableIds = observations.map(function(obs) { return obs.observationVariableDbId; });
+    	    var unique_obs_VariableIds = Array.from(new Set(variableIds));
+    	    return unique_obs_VariableIds.length;
+    	});
+	}
+
+	function fetch_observations(searchResultsDbId) {
+    	var observations = [];
+    	function fetchPage(page) {
+    	    return jQuery.ajax({
+    	        url: "/brapi/v2/search/observations/" + searchResultsDbId,
+    	        method: "GET",
+    	        data: { page: page, pageSize: 10000 }
+    	    })
+    	    .then(function(result) {
+    	        observations = observations.concat(result.result.data);
+    	        var currentPage = result.metadata.pagination.currentPage;
+    	        var totalPages = result.metadata.pagination.totalPages;
+    	        if (currentPage < totalPages - 1) {
+    	            return fetchPage(currentPage + 1);
+    	        } else {
+					//console.log('All pages fetched. Total observations:', observations.length);
+    	            return observations;
+    	        }
+    	    });
+    	}
+    	return fetchPage(0);
+	}
 
     function create_trait_menu_for_trial(trial_id) {
-
         return jQuery.ajax( {
             'url': "/brapi/v2/search/variables",
-	    'data': { 'studyDbIds': [ trial_id ], 'pageSize': 10000 },
-	    'method' : 'POST',
-	});
-     }
+	    	'data': { 'studyDbIds': [ trial_id ], 'pageSize': 10000 },
+	    	'method' : 'POST',
+		});
+    }
 
-     function fetch_traits(searchResultsDbId) {
-
-	return jQuery.ajax( {
-	       'url': "/brapi/v2/search/variables/"+searchResultsDbId,
-	       'method': "GET",
-	       'data': { pageSize: 10000 }
-	       });
-       
-	       
-
-    }   
+    function fetch_traits(searchResultsDbId) {
+		return jQuery.ajax( {
+		    'url': "/brapi/v2/search/variables/"+searchResultsDbId,
+		    'method': "GET",
+		    'data': { pageSize: 10000 }
+		});
+    }
 
     function build_menu(result) {
+		var menu = '<select id="selectRawDataTrait">';
+		for (var i=0; i<result.data.length; i++) {
+		    menu += '<option value="'+result.data[i].observationVariableDbId+'">'+result.data[i].trait.traitName+'</option>';
+		}
+		menu += '</select>';   
 
-	var menu = '<select id="selectRawDataTrait">';
-	for (var i=0; i<result.data.length; i++) {
-	    menu += '<option value="'+result.data[i].observationVariableDbId+'">'+result.data[i].trait.traitName+'</option>';
-	}
-	menu += '</select>';   
-
-	jQuery('#trait_selector_for_raw_data').html(menu);
-     }
+		jQuery('#trait_selector_for_raw_data').html(menu);
+    }
 	    
-
-    function get_trait_data(trial_id, trait_id) {
-
-       return jQuery.ajax( {
-       	      url: "/brapi/v2/search/observations/",
-	      data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ] },
-	      method: "POST"
-       });
-
+	function get_trait_data(trial_id, trait_id, observation_level) {
+		//console.log("the trial_id:" trial_id);
+		//console.log("the trait_id:" trait_id);
+		//console.log("the observation level:" observation_level);
+		return jQuery.ajax( {
+    	   	url: "/brapi/v2/search/observations/",
+		    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ], observationLevel: [ observation_level ]},
+		    method: "POST"
+		});
     }
 
     function fetch_raw_observation_data_table(searchResultsDbId) {
-
-       return jQuery.ajax( {
-       	      url: "/brapi/v2/search/observations/"+searchResultsDbId,
-	      data: { pageSize: 10000 },
-	      method: "GET"
-	      });     
+       	return jQuery.ajax( {
+       		url: "/brapi/v2/search/observations/"+searchResultsDbId,
+	    	data: { pageSize: 10000 },
+	    	method: "GET"
+	    });     
     }
 
 
     function displayRawObservations(result) {
+  		var data = [];
 
-	var data = new Array();
-	for (var i=0; i<result.data.length; i++) {
-	    data.push( [ result.data[i].observationDbId, result.data[i].observationUnitName, result.data[i].observationVariableName, result.data[i].value, result.data[i].collector ]);
-	}
+    	for (var i = 0; i < result.data.length; i++) {
+    	    var observationDate = result.data[i].observationTimeStamp;
+    	    var formattedDate = "";
 
-	jQuery('#raw_trait_data_table').DataTable( {
-	   'destroy': true,
-	   'columns': [
-	     { title: 'observation id'},
-	     { title: 'observation unit' },
-	     { title: 'observation variable' },
-	     { title: 'value' },
-	     { title: 'collector' }
-	     ],
-	   'data' : data
-	 });
-	     
+    	    // Check if the timestamp exists
+    	    if (observationDate) {
+    	        try {
+    	            // format the date (YYYY-MM-DD)
+    	            formattedDate = new Date(observationDate).toISOString().split('T')[0];
+    	        } catch (e) {
+    	            formattedDate = "";
+    	        }
+    	    }
+
+    	    //combine the value and timestamp in the single column with comma sep !! 
+    	    var value_with_timestamp = result.data[i].value + (formattedDate ? ", " + formattedDate : "");
+
+		    data.push( [ 
+				result.data[i].observationDbId, 
+				result.data[i].observationUnitName, 
+				result.data[i].observationVariableName, 
+				value_with_timestamp, 
+				formattedDate, // this column is just used to sort all the columns based on the date in ascending order !!
+				result.data[i].collector 
+			]);
+		}
+
+		jQuery('#raw_trait_data_table').DataTable( {
+		   'destroy': true,
+		   'columns': [
+		    { title: 'observation id'},
+		    { title: 'observation unit' },
+		    { title: 'observation variable' },
+		    { title: 'value, timestamp' },
+			{ title: 'Sort Date', visible: false },//this column will be hidden !!!
+		    { title: 'collector' }
+		    ],
+		   'data' : data,
+		   'order': [[4, 'asc']] 
+		});
     }
-
+});
 
 </script>
