@@ -20,21 +20,7 @@ source(paramfile)
 
 library(blocksdesign)
 library(agricolae)
-
-
-
-rows_in_field <- 36
-rows_per_block <- 6 #kb
-super_rows <- rows_in_field/rows_per_block #gk
-cols_in_field <- 18
-cols_per_block <- 6 #sb
-super_cols <- cols_in_field/cols_per_block #gs
-
-n_block <- super_rows * super_cols
-
-n_checks <- 4 #vc = pb
-n_treatments <- 576
-
+library(dplyr)
 
 # Augmented Row-Column Design - R version from Piepho & Williams (2016)
 # vc = Number of check varieties
@@ -54,6 +40,15 @@ n_treatments <- 576
 # 
 # pb = Number of check plots per block
 # Each block (intersection of a row group and a column group) will have pb checks.
+
+super_rows <- rows_in_field/rows_per_block #gk
+super_cols <- cols_in_field/cols_per_block #gs
+
+n_block <- super_rows * super_cols
+
+n_checks <- length(controls) #vc = pb
+n_treatments <- length(treatments)
+
 
 # Step 1: Generate initial layout files
 generate_layout_files <- function(g_k, g_s, k_b, s_b, p_b) {
@@ -145,7 +140,7 @@ assign_unreplicated <- function(df, n_entries) {
 }
 
 # Step 6: Simulate and return dataframe layout with placeholders for checks and block assignments
-simulate_augmented_design_df <- function(vc, gk, gs, kb, sb, pb) {
+augmented_design_df <- function(vc, gk, gs, kb, sb, pb) {
   total_rows <- gk * kb
   total_cols <- gs * sb
   total_blocks <- gk * gs
@@ -210,22 +205,21 @@ simulate_augmented_design_df <- function(vc, gk, gs, kb, sb, pb) {
 
 
 
-# Example usage
-df <- simulate_augmented_design_df(vc =n_checks,gk = super_rows, gs = super_cols, kb = rows_per_block, sb = cols_per_block, pb = n_checks )
+# Generating Design
+df <- augmented_design_df(vc =n_checks,gk = super_rows, gs = super_cols, kb = rows_per_block, sb = cols_per_block, pb = n_checks )
 
-library(dplyr)
+
 df2 <- df[df$trt == "C", ] %>% select(block, row, col) %>% arrange(block, col, row)
 
-check_names <- LETTERS[1:n_checks]
-checks_vec <- factor(rep(check_names, n_block))
+
+checks_vec <- factor(rep(controls, n_block))
 
 
 df2$block <- as.factor(df2$block)
 df2$row <- as.factor(df2$row)
 df2$col <- as.factor(df2$col)
 
-library(blocksdesign)
-Z <- design(check_names, df2)$Design
+Z <- design(checks_vec, df2)$Design
 
 Z$block <- as.numeric(Z$block)
 Z$row <- as.numeric(Z$row)
@@ -233,7 +227,6 @@ Z$col <- as.numeric(Z$col)
 Z$treatments <- as.character(Z$treatments)
 
 df2$treatments <- Z$treatments
-
 
 for(i in 1:nrow(df2)){
   row_i <- df2$row[i]
@@ -243,12 +236,13 @@ for(i in 1:nrow(df2)){
   df[df$row == row_i & df$col == col_i, "trt"] <- check_i
 }
 
-pre_design <- df[!df$trt %in% check_names, ]
+pre_design <- df[!df$trt %in% controls, ]
 
+## treatments are placed in completed randomized design
 pre_design$trt <- agricolae::design.crd(trt = pre_design$trt, r = 1)$book$`pre_design$trt`
 
 
-design <- rbind(pre_design, df[df$trt %in% check_names,]) %>% arrange(row, col, block)
+design <- rbind(pre_design, df[df$trt %in% controls,]) %>% arrange(row, col, block)
 design$plot <- c(1:nrow(design))
 
 ## Fixing rep number for checks
