@@ -69,20 +69,19 @@ $trial_stock_type => undef
 
         <div id="plant_entries_section">
 
-% if (!$has_plant_entries) {
+% if (!$has_plant_entries && !$has_subplot_entries) {
            <p><strong>Add Plants to Plots:</strong></p>
            <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
            <button class="btn btn-default" id="upload_plant_entries_button">Upload plant entries using plant_name</button>
            <button class="btn btn-default" id="upload_plant_entries_with_index_number_button">Upload plant entries using plant index number</button>
            <button class="btn btn-default" id="trial_upload_plants_with_num_plants_button">Upload plant entries using number of plants per plot</button>
-% if ($has_subplot_entries ) {
+% } elsif ($has_subplot_entries ) {
            <br /><br />
            <p><strong>Add Plants to Subplots:</strong></p>
            <button class="btn btn-default" id="create_plant_entries_subplots_button">Add plant entries</button>
            <button class="btn btn-default" id="upload_plant_entries_subplots_button">Upload plant entries using plant_name</button>
            <button class="btn btn-default" id="upload_plant_entries_with_index_number_subplots_button">Upload plant entries using plant index number</button>
            <button class="btn btn-default" id="trial_upload_plants_with_num_plants_subplots_button">Upload plant entries using number of plants per subplot</button>
-% }
 % } else {
             <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
 % }
