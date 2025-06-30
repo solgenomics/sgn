@@ -437,7 +437,6 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
         include_phenotype_primary_key => $include_phenotype_primary_key,
 	});
 
-
     my $dimension_data;
     my $function_name = 'retrieve_'.$dimension;
     if ($dataset->can($function_name)) {
