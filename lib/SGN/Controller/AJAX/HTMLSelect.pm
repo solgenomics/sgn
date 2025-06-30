@@ -41,6 +41,7 @@ use URI::Encode qw(uri_encode uri_decode);
 use Array::Utils qw(:all);
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Transformation::Transformation;
+use Sort::Naturally;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -895,16 +896,34 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $checkbox_name = $c->req->param('checkbox_name');
     my $protocol_type = $c->req->param('high_dimensional_phenotype_protocol_type');
+    my $trial_id = $c->req->param('trial_id');
 
     my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $protocol_type, 'protocol_type')->cvterm_id();
     my $protocolprop_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
-    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
+    my $h;
+    my $spectra_query;
+    if ($trial_id) {
+        $spectra_query = "SELECT DISTINCT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
+            FROM nd_protocol
+            JOIN nd_experiment_protocol ON nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id
+            JOIN nd_experiment ON nd_experiment_protocol.nd_experiment_id = nd_experiment.nd_experiment_id
+            JOIN nd_experiment_project ON nd_experiment.nd_experiment_id = nd_experiment_project.nd_experiment_id
+            JOIN nd_protocolprop ON nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id
+            WHERE nd_experiment_project.project_id = ?
+            AND nd_protocol.type_id=$protocol_type_cvterm_id AND nd_protocolprop.type_id=$protocolprop_type_cvterm_id;";
+
+        $h = $schema->storage->dbh()->prepare($spectra_query);
+        $h->execute($trial_id);
+        
+    } else {
+        my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
         FROM nd_protocol
         JOIN nd_protocolprop USING(nd_protocol_id)
         WHERE nd_protocol.type_id=$protocol_type_cvterm_id AND nd_protocolprop.type_id=$protocolprop_type_cvterm_id;";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
+        $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+    }
 
     my $html = '<table class="table table-bordered table-hover" id="html-select-highdimprotocol-table"><thead><tr><th>Select</th><th>Protocol Name</th><th>Description</th><th>Create Date</th><th>Properties</th></tr></thead><tbody>';
 
@@ -1613,7 +1632,8 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         }
     }
 
-    @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
+    @ontology_children = sort { ncmp($a->[1], $b->[1]) } @ontology_children;
+
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
@@ -1622,6 +1642,8 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         name => $select_name,
         id => $select_id,
         multiple => $multiple,
+        size     => 10,
+        class   => "form-control",
         choices => \@ontology_children,
         selected => $selected
     );
@@ -1665,6 +1687,7 @@ sub all_ontology_terms_select : Path('/ajax/html/select/all_ontology_terms') Arg
         name => $select_name,
         id => $select_id,
         multiple => $multiple,
+        size     => 10,
         choices => \@ontology_terms,
     );
     $c->stash->{rest} = { select => $html };

@@ -6,6 +6,7 @@ use Moose;
 extends 'CXGN::Project';
 
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 =head2 function set_field_trials_source_field_trials()
 
@@ -160,10 +161,120 @@ sub get_trial_stock_type {
     my $stock_type_rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $self->get_trial_id() })->search_related('projectprops', { 'projectprops.type_id' => $type_id } );
 
     if ($stock_type_rs->count() == 0) {
-        return undef;
+        return;
     } else {
         return $stock_type_rs->first()->value();
     }
+}
+
+=head2 get_stock_entry_summary
+
+ Usage:        my $stock_entry_summary = $t->get_stock_entry_summary();
+ Desc:         retrieves the accessions, plots, subplots, plants and tissue samples based on their relationships in this trial.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_stock_entry_summary {
+	my $self = shift;
+    my $trial_id = $self->get_trial_id();
+    my $schema = $self->bcs_schema;
+    my @stock_entry_summary;
+
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT distinct(tissue_sample.uniquename) AS tissue_sample_name, tissue_sample.stock_id, parent_stock.uniquename, parent_stock.stock_id, cvterm.name, plot.uniquename, plot.stock_id, plant.uniquename, plant.stock_id
+    FROM nd_experiment_project
+    JOIN nd_experiment_stock ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+    JOIN stock AS plot ON (plot.stock_id = nd_experiment_stock.stock_id) AND plot.type_id = ?
+    JOIN stock_relationship AS plot_parent_relationship ON (plot_parent_relationship.subject_id = plot.stock_id) AND plot_parent_relationship.type_id = ?
+    JOIN stock AS parent_stock ON (plot_parent_relationship.object_id = parent_stock.stock_id) AND parent_stock.type_id IN (?,?,?)
+    JOIN cvterm ON (cvterm.cvterm_id = parent_stock.type_id)
+    LEFT JOIN stock_relationship AS plot_plant ON (plot_plant.subject_id = plot.stock_id) AND plot_plant.type_id = ?
+    LEFT JOIN stock AS plant ON (plant.stock_id = plot_plant.object_id) AND plant.type_id = ?
+    LEFT JOIN stock_relationship AS plant_tissue_sample ON (plant_tissue_sample.object_id = plant.stock_id) AND plant_tissue_sample.type_id = ?
+    LEFT JOIN stock AS tissue_sample ON (tissue_sample.stock_id = plant_tissue_sample.subject_id) AND tissue_sample.type_id = ?
+    WHERE nd_experiment_project.project_id = ? ORDER BY parent_stock.uniquename, plot.uniquename, plant.uniquename, tissue_sample.uniquename ASC ;";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+
+    $h->execute($plot_type_id, $plot_of_type_id, $accession_type_id, $cross_type_id, $family_name_type_id, $plant_of_type_id, $plant_type_id, $tissue_sample_of_type_id, $tissue_sample_type_id, $trial_id);
+    while (my ($tissue_sample_name, $tissue_sample_id, $parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id) = $h->fetchrow_array()) {
+        push @stock_entry_summary, [$parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id];
+    }
+
+    return \@stock_entry_summary;
+}
+
+
+=head2 function get_crossing_experiments_from_field_trial()
+
+ Usage:
+ Desc:         return associated crossing experiments from field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_crossing_experiments_from_field_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $field_trial_id = $self->get_trial_id();
+    my $plots = $self->get_plots();
+    my $plants = $self->get_plants();
+
+    my @related_stock_ids;
+    foreach my $plot (@$plots){
+        push @related_stock_ids, $plot->[0];
+    }
+
+    if ($plants) {
+        foreach my $plant (@$plants) {
+            push @related_stock_ids, $plant->[0];
+        }
+    }
+
+    my @where_clause;
+    my $stock_ids_sql = join (",", @related_stock_ids);
+    push @where_clause, "stock_relationship.subject_id IN ($stock_ids_sql)";
+    my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
+
+    my $female_plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
+    my $male_plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
+    my $female_plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plant_of", "stock_relationship")->cvterm_id();
+    my $male_plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
+    my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', "experiment_type")->cvterm_id();
+
+
+    my $q = "SELECT DISTINCT project.project_id, project.name
+        FROM stock_relationship
+        JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id IN (?,?,?,?)
+        JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
+        JOIN project ON (nd_experiment_project.project_id = project.project_id)
+        $where_clause;";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_plot_of_type_id, $male_plot_of_type_id, $female_plot_of_type_id, $male_plant_of_type_id, $cross_experiment_type_id);
+
+    my @crossing_experiments = ();
+    while(my($experiment_id, $experiment_name) = $h->fetchrow_array()){
+        push @crossing_experiments, [$experiment_id, $experiment_name];
+    }
+
+    return  \@crossing_experiments;
 }
 
 
