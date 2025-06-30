@@ -46,12 +46,6 @@ has 'rootstock_name' => (
     is => 'rw',
 );
 
-has 'propagation_status' => (
-    isa =>'Str',
-    is => 'rw',
-    required => 1,
-);
-
 has 'owner_id' => (
     isa => 'Int',
     is => 'rw',
@@ -79,7 +73,6 @@ sub add_propagation_identifier {
     my $propagation_group_stock_id = $self->get_propagation_group_stock_id();
     my $accession_stock_id = $self->get_accession_stock_id();
     my $rootstock_name = $self->get_rootstock_name();
-    my $propagation_status = $self->get_propagation_status();
     my $owner_id = $self->get_owner_id();
     my %return;
     my $propagation_stock_id;
@@ -89,7 +82,6 @@ sub add_propagation_identifier {
         my $propagation_rootstock_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_rootstock_of', 'stock_relationship')->cvterm_id();
         my $propagation_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_member_of', 'stock_relationship')->cvterm_id();
         my $propagation_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_material_of', 'stock_relationship')->cvterm_id();
-        my $propagation_status_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_status', 'stock_property');
 
         my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
@@ -127,8 +119,6 @@ sub add_propagation_identifier {
             object_id => $propagation_stock_id,
             subject_id => $accession_stock_id,
         });
-
-        $propagation_identifier_stock->create_stockprops({$propagation_status_cvterm->name() => $propagation_status});
 
     };
 

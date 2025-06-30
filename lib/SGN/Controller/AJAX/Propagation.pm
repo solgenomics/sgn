@@ -18,6 +18,8 @@ use CXGN::Propagation::AddPropagationIdentifier;
 use CXGN::Propagation::Propagation;
 use CXGN::Propagation::Status;
 use DateTime;
+use JSON;
+use JSON::Any;
 use List::MoreUtils qw /any /;
 
 
@@ -223,6 +225,8 @@ sub add_propagation_identifier_POST :Args(0){
     my $propagation_group_stock_id = $c->req->param('propagation_group_stock_id');
     my $rootstock_name = $c->req->param('rootstock_name');
     my $accession_stock_id = $c->req->param('accession_stock_id');
+    my $time = DateTime->now();
+    my $update_date = $time->ymd();
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -258,7 +262,6 @@ sub add_propagation_identifier_POST :Args(0){
             propagation_group_stock_id => $propagation_group_stock_id,
             accession_stock_id => $accession_stock_id,
             rootstock_name => $rootstock_name,
-            propagation_status => 'In Progress',
             owner_id => $user_id,
         });
 
@@ -270,6 +273,22 @@ sub add_propagation_identifier_POST :Args(0){
         $c->stash->{rest} = { success => 0, error => $@ };
         print STDERR "An error condition occurred, was not able to create propagation identifier. ($@).\n";
         return;
+    } else {
+        my $status = CXGN::Propagation::Status->new({
+            bcs_schema => $schema,
+            parent_id => $propagation_stock_id,
+        });
+
+        $status->status_type('In Progress');
+        $status->update_person($user_id);
+        $status->update_date($update_date);
+
+        $status->store();
+
+        if (!$status->store()){
+            $c->stash->{rest} = {error => "Error saving new propagation identifier",};
+            return;
+        }
     }
 
     $c->stash->{rest} = { success => 1 };
@@ -311,7 +330,7 @@ sub get_propagation_groups_in_project :Path('/ajax/propagation/propagation_group
 }
 
 
-sub get_active_population_ids_in_group :Path('/ajax/propagation/active_propagation_ids_in_group') :Args(1) {
+sub get_active_propagation_ids_in_group :Path('/ajax/propagation/active_propagation_ids_in_group') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $propagation_group_stock_id = shift;
@@ -326,19 +345,70 @@ sub get_active_population_ids_in_group :Path('/ajax/propagation/active_propagati
         my ($propagation_stock_id, $propagation_name, $accession_stock_id, $accession_name, $rootstock_stock_id, $rootstock_name, $status) =@$r;
         my $status_info = decode_json $status;
         my $status_type = $status_info->{status_type};
-        my $update_date = $status_info->{update_date};
-        my $update_person_id = $status_info->{update_person};
-        my $update_notes = $status_info->{update_notes};
+        my $updated_date = $status_info->{update_date};
+        my $updated_by = $status_info->{update_person};
 
-        push @propagations, {
-            propagation_stock_id => $propagation_stock_id,
-            propagation_name => $propagation_name,
-            accession_stock_id => $accession_stock_id,
-            accession_name => $accession_name,
-            rootstock_stock_id => $rootstock_stock_id,
-            rootstock_name => $rootstock_name,
-            propagation_status => $status_type,
-        };
+        my $person_name= CXGN::People::Person->new($dbh, $updated_by);
+        my $full_name = $person_name->get_first_name()." ".$person_name->get_last_name();
+
+        if ($status_type eq 'In Progress') {
+            push @propagations, {
+                propagation_stock_id => $propagation_stock_id,
+                propagation_name => $propagation_name,
+                accession_stock_id => $accession_stock_id,
+                accession_name => $accession_name,
+                rootstock_stock_id => $rootstock_stock_id,
+                rootstock_name => $rootstock_name,
+                propagation_status => $status_type,
+                updated_date => $updated_date,
+                updated_by => $full_name,
+            };
+        }
+    }
+
+    $c->stash->{rest} = { data => \@propagations };
+
+}
+
+
+sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_propagation_ids_in_group') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $propagation_group_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_group_stock_id=>$propagation_group_stock_id});
+
+    my $result = $propagation_obj->get_propagation_ids_in_group();
+    my @propagations;
+    foreach my $r (@$result){
+        my ($propagation_stock_id, $propagation_name, $accession_stock_id, $accession_name, $rootstock_stock_id, $rootstock_name, $status) =@$r;
+        print STDERR "STATUS 2 =".Dumper($status)."\n";
+
+        my $status_info = decode_json $status;
+        my $status_type = $status_info->{status_type};
+        my $updated_date = $status_info->{update_date};
+        my $updated_by = $status_info->{update_person};
+        my $notes = $status_info->{update_notes};
+
+        my $person_name= CXGN::People::Person->new($dbh, $updated_by);
+        my $full_name = $person_name->get_first_name()." ".$person_name->get_last_name();
+
+        if ($status_type ne 'In Progress') {
+            push @propagations, {
+                propagation_stock_id => $propagation_stock_id,
+                propagation_name => $propagation_name,
+                accession_stock_id => $accession_stock_id,
+                accession_name => $accession_name,
+                rootstock_stock_id => $rootstock_stock_id,
+                rootstock_name => $rootstock_name,
+                propagation_status => $status_type,
+                updated_date => $updated_date,
+                updated_by => $full_name,
+                notes => $notes
+            };
+        }
     }
 
     $c->stash->{rest} = { data => \@propagations };

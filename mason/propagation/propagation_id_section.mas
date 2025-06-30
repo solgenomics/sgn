@@ -73,6 +73,8 @@ jQuery(document).ready(function(){
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_stock_id+"/view'>"+row.accession_name+"</a>"; } },
             { title: "Rootstock", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.rootstock_stock_id+"/view'>"+row.rootstock_name+"</a>"; } },
             { title: "Status", "data": "propagation_status" },
+            { title: "Updated Date", "data": "updated_date" },
+            { title: "Updated by", "data": "updated_by" },
             { title: "Update Status", "data": "null", "render": function ( data, type, row ) { return "<a onclick='updatePropagationStatus("+row.propagation_stock_id+",\""+row.propagation_name+"\")'>Update</a>"; } },
 
         ],

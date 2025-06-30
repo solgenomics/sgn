@@ -1,0 +1,44 @@
+<%args>
+$propagation_group_stock_id
+</%args>
+
+
+<&| /page/info_section.mas, title => 'Inactive Propagation IDs', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="inactive_propagation_ids_table">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    const propagation_group_stock_id = "<%$propagation_group_stock_id%>";
+    const inactive_propagation_ids_table = jQuery('#inactive_propagation_ids_table').DataTable({
+        'ajax': '/ajax/propagation/inactive_propagation_ids_in_group/'+propagation_group_stock_id,
+        'autoWidth': false,
+        'columns': [
+            { title: "Propagation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.propagation_stock_id+"/view'>"+row.propagation_name+"</a>"; } },
+            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_stock_id+"/view'>"+row.accession_name+"</a>"; } },
+            { title: "Rootstock", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.rootstock_stock_id+"/view'>"+row.rootstock_name+"</a>"; } },
+            { title: "Status", "data": "propagation_status" },
+            { title: "Updated Date", "data": "updated_date" },
+            { title: "Updated by", "data": "updated_by" },
+            { title: "Notes", "data": "notes" },
+
+        ],
+
+    });
+
+
+});
+
+
+</script>
