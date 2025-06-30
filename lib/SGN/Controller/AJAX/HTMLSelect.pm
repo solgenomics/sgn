@@ -141,6 +141,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $folder_for_genotyping_projects = 1 ? $c->req->param("folder_for_genotyping_projects") eq 'true' : 0;
     my $folder_for_tracking_activities = 1 ? $c->req->param("folder_for_tracking_activities") eq 'true' : 0;
     my $folder_for_transformations = 1 ? $c->req->param("folder_for_transformations") eq 'true' : 0;
+    my $folder_for_propagations = 1 ? $c->req->param("folder_for_propagations") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -157,6 +158,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
         folder_for_genotyping_projects => $folder_for_genotyping_projects,
         folder_for_tracking_activities => $folder_for_tracking_activities,
         folder_for_transformations => $folder_for_transformations,
+        folder_for_propagations => $folder_for_propagations,
     });
 
     if (scalar(@folders)>0){
@@ -265,6 +267,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_genotyping_projects = $c->req->param("get_genotyping_projects");
     my $get_tracking_activities_projects = $c->req->param("get_tracking_activities_projects");
     my $get_transformation_projects = $c->req->param("get_transformation_projects");
+    my $get_propagation_projects = $c->req->param("get_propagation_projects");
     my $include_analyses = $c->req->param("include_analyses");
     my $excluded_plates_in_project_id = $c->req->param("excluded_plates_in_project_id");
 
@@ -296,7 +299,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
 
     my @projects;
     foreach my $project (@$projects) {
-        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects, $tracking_activities_projects) = $p->get_trials_by_breeding_program($project->[0]);
+        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects, $tracking_activities_projects, $propagation_projects) = $p->get_trials_by_breeding_program($project->[0]);
         if ($get_field_trials){
             if ($field_trials && scalar(@$field_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$field_trials;
@@ -346,6 +349,12 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
         if ($get_transformation_projects){
             if ($transformation_projects && scalar(@$transformation_projects)>0){
                 my @g_projects = sort { $a->[1] cmp $b->[1] } @$transformation_projects;
+                push @projects, @g_projects;
+            }
+        }
+        if ($get_propagation_projects){
+            if ($propagation_projects && scalar(@$propagation_projects)>0){
+                my @g_projects = sort { $a->[1] cmp $b->[1] } @$propagation_projects;
                 push @projects, @g_projects;
             }
         }
@@ -915,7 +924,7 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
 
         $h = $schema->storage->dbh()->prepare($spectra_query);
         $h->execute($trial_id);
-        
+
     } else {
         my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
         FROM nd_protocol

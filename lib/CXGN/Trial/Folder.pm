@@ -313,7 +313,7 @@ sub list {
 	}
 
 	my %projectprop_params;
-	if (!$folder_for_trials && !$folder_for_crosses && !$folder_for_genotyping_trials && !$folder_for_genotyping_projects && !$folder_for_tracking_activities && !$folder_for_transformations){
+	if (!$folder_for_trials && !$folder_for_crosses && !$folder_for_genotyping_trials && !$folder_for_genotyping_projects && !$folder_for_tracking_activities && !$folder_for_transformations && !$folder_for_propagations){
 		$projectprop_params{'projectprops.type_id'} = $folder_cvterm_id;
 	} elsif ($folder_for_trials){
 		my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_trials', 'project_property')->cvterm_id();
