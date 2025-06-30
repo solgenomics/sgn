@@ -27,6 +27,32 @@ $trial_name => undef
                 <input name="add_plants_per_plot_inherit_treatments" id="add_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
               </div>
 	        </div>
+            <div class="form-group">
+      	      <label class="col-sm-3 control-label">Assign row and column data to plants within plots?</label>
+      	      <div class="col-sm-9" >
+                <input name="add_rows_and_columns_to_plants" id="add_rows_and_columns_to_plants" type="checkbox"/>
+                <div id="plant_row_column_format_dialog" style="display:none">
+                    <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a zigzag pattern. Row and column numbers start at 1 within each plot.</i></p>
+                    <table style="width:60%">
+                        <tr>
+                            <td>
+                                <label>Number of rows per plot</label>
+                            </td>
+                            <td>
+                                <input name="rows_per_plot" id="rows_per_plot" type="number"/>
+                            </td>
+                        </tr><tr>
+                            <td>
+                                <label>Number of columns per plot</label>
+                            </td>
+                            <td>
+                                <input name="cols_per_plot" id="cols_per_plot" type="number"/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+              </div>
+	        </div>
 	       </form><br/>
          
         </div>
@@ -117,9 +143,18 @@ $trial_name => undef
 
                     <b>Required fields:</b>
                     <br/>
-                    plot_name (must exist in the database already)
+                    - plot_name (must exist in the database already)
                     <br />
-                    plant_name (must be globally unique. usually this is a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+                    - plant_name (must be globally unique. usually this is a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+
+                    <br>
+                    <b>Optional fields:</b>
+                    <br>
+                    - row_num
+                    <br>
+                    - col_num
+                    <br>
+                    Rows and columns are at the plot level if each plot contains multiple plants. If including this data, both fields must be present. 
                 </div>
             </div>
             <div class="modal-footer">
@@ -208,9 +243,17 @@ $trial_name => undef
 
                     <b>Required fields:</b>
                     <br/>
-                    plot_name (must exist in the database already)
+                    - plot_name (must exist in the database already)
                     <br />
-                    plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number, such as MyTrial_plot101_plant1.)
+                    - plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number, such as MyTrial_plot101_plant1.)
+                    <br>
+                    <b>Optional fields:</b>
+                    <br>
+                    - row_num
+                    <br>
+                    - col_num
+                    <br>
+                    Rows and columns are at the plot level if each plot contains multiple plants. If including this data, both fields must be present. 
                 </div>
             </div>
             <div class="modal-footer">
@@ -298,9 +341,17 @@ $trial_name => undef
 
                     <b>Required fields:</b>
                     <br/>
-                    plot_name (must exist in the database already)
+                    - plot_name (must exist in the database already)
                     <br />
-                    num_plants_per_plot (must be a number. the number of plants in the plot. the saved plant name will be a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+                    - num_plants_per_plot (must be a number. the number of plants in the plot. the saved plant name will be a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+                    <br>
+                    <b>Optional fields:</b>
+                    <br>
+                    - num_rows
+                    <br>
+                    - num_cols
+                    <br>
+                    The number of spaces given by the rows and columns should be greater than or equal to the num_plants_per_plot. Plants will be assigned rows and columns in zigzag pattern, starting from (1,1). 
                 </div>
             </div>
             <div class="modal-footer">
@@ -357,6 +408,15 @@ jQuery(document).ready(function() {
 
     jQuery('#upload_plants_with_num_plants_save_button').click( function () {
         upload_plants_with_num_plants_to_trial();
+    });
+
+    jQuery('#add_rows_and_columns_to_plants').click( function () {
+        if (jQuery('#add_rows_and_columns_to_plants').is(':checked')){
+            jQuery('#plant_row_column_format_dialog').show();
+        } else {
+            jQuery('#plant_row_column_format_dialog').hide();
+        }
+        
     });
 
     function upload_plants_to_trial() {
@@ -473,6 +533,25 @@ function add_plants_to_trial() {
         is_checked = 1;
     }
 
+    var num_rows = jQuery('#rows_per_plot').val();
+    var num_cols = jQuery('#cols_per_plot').val();
+    var plants_per_plot = jQuery('#add_plants_per_plot_num').val();
+    var include_plant_coordinates = 0;
+    
+    if (jQuery('#add_rows_and_columns_to_plants').is(':checked')) { 
+
+        include_plant_coordinates = 1;
+
+        if (num_rows == "" || num_cols == "" || num_rows * num_cols == 0) {
+            alert("You need to specify the number of rows and columns to give plant coordinates within plots.");
+            return;
+        }
+        if (num_rows * num_cols < plants_per_plot) {
+            alert("Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.");
+            return;
+        }
+    }
+
     jQuery.ajax( {
       url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_plant_entries/',
       type: 'POST',
@@ -480,8 +559,11 @@ function add_plants_to_trial() {
           enable_working_modal();
       },
       data: {
-        'plants_per_plot' : jQuery('#add_plants_per_plot_num').val(),
-        'inherits_plot_treatments' : is_checked
+        'plants_per_plot' : plants_per_plot,
+        'inherits_plot_treatments' : is_checked,
+        'include_plant_coordinates' : include_plant_coordinates,
+        'rows_per_plot' : num_rows,
+        'cols_per_plot' : num_cols
       },
       success: function(response) {
         disable_working_modal();
