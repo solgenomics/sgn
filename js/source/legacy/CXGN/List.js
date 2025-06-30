@@ -56,7 +56,7 @@ CXGN.List = function () {
 
 // Keep track of the rendered lists page number and sort column between refreshes
 var render_lists_page = 0;  // first page
-var render_lists_order = [[0, "asc"]];  // sort by list name, ascending
+var render_lists_order = [[3, "desc"], [2, "desc"]];  // sort by date modified and created, newest first
 
 
 CXGN.List.prototype = {
@@ -397,8 +397,8 @@ CXGN.List.prototype = {
             if ( (!type || type === lists[i][5]) && (autocreated || !(lists[i][2] || '').startsWith("Autocreated")) ) {
                 html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
                 html += '<td>'+(lists[i][2] ? lists[i][2] : '')+'</td>';
-                html += '<td>'+(lists[i][7] ? new Date(lists[i][7]).toLocaleDateString() : '')+'</td>';
-                html += '<td>'+(lists[i][8] ? new Date(lists[i][8]).toLocaleDateString() : '')+'</td>';
+                html += '<td>'+(lists[i][7] ? new Date(lists[i][7]).toLocaleDateString('en-CA') : '')+'</td>';
+                html += '<td>'+(lists[i][8] ? new Date(lists[i][8]).toLocaleDateString('en-CA') : '')+'</td>';
                 html += '<td>'+(lists[i][3] ? lists[i][3] : '0')+'</td>';
                 html += '<td>'+(lists[i][5] ? lists[i][5] : '&lt;NOT SET&gt;')+'</td>';
                 html += '<td><a onclick="javascript:validateList(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
@@ -578,8 +578,8 @@ CXGN.List.prototype = {
         html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
         html += '<tr><td>Description:<br/><input type="button" class="btn btn-primary btn-xs" id="updateListDescButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateListDescField" size="10" value="'+list_description+'" /></td></tr>';
-        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+','+undefined+',\''+type_select_id+'\')" title="Validate list. Checks if elements exist with the selected type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
-        html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea></td></tr></table>';
+        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" title="Validate list. Checks if elements exist with the selected type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+        html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea><p style="font-size:80%;text-align:right">After adding new items, you may want to consider re-validating your list.</p></td></tr></table>';
 
         html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div></div></div>';
         html += '<div class="well well-sm"><table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
@@ -676,6 +676,16 @@ CXGN.List.prototype = {
             lo.updateDescription(list_id, new_desc);
         });
 
+        jQuery('#list_item_dialog_validate').click( function() {
+            if (jQuery('#dialog_add_list_item').val()) {
+                if (confirm("There is content in the 'Add New Items' field that has not yet been added to the list. Do you want to proceed with validation?")) {
+                    validateList(list_id,undefined,type_select_id);
+                }
+            } else {
+                validateList(list_id,undefined,type_select_id);
+            }
+        });
+        
         jQuery('div[name="list_item_toggle_edit"]').click(function() {
             var list_item_id = jQuery(this).data('listitemid');
             var list_item_name = jQuery(this).data('listitemname');
