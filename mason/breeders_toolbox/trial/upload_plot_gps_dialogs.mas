@@ -103,7 +103,7 @@ $trial_id
                     WGS84_top_left_y (WGS84 latitude coordinate of top left corner of plot)
 
                     <h2>Uploading Points:</h2>
-                    <h3>Each plot is represented as a point with one coordinate pair. You can choose to upload UTM31N and/or WGS84 coordinates.</h3>
+                    <h3>Each plot is represented as a point with one coordinate pair. You can upload WGS84 coordinates.</h3>
 
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -122,7 +122,7 @@ $trial_id
                     <br />
                     WGS84_x (WGS84 longitude coordinate of the point)
                     <br />
-                    WGS84_bottom_left_y (WGS84 latitude coordinate of the point)
+                    WGS84_y (WGS84 latitude coordinate of the point)
                 </div>
             </div>
             <div class="modal-footer">
