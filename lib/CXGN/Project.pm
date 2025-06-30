@@ -107,7 +107,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
+#    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
     if (! $args->{description}) {
 	    $args->{description} = "(No description provided)";
@@ -132,11 +132,11 @@ sub BUILD {
     }
 
     if (! $args->{trial_id} && ! $row) {
-        print STDERR "INSERTING A NEW ROW...\n";
+#        print STDERR "INSERTING A NEW ROW...\n";
 
         my $new_row = $args->{bcs_schema}->resultset("Project::Project")->create( { name => $args->{name}, description => $args->{description} });
         my $project_id = $new_row->project_id();
-        print STDERR "new project object has project id $project_id\n";
+#        print STDERR "new project object has project id $project_id\n";
 
         $self->set_trial_id($project_id);
     }
@@ -182,7 +182,7 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout::Phenotyping |
 
 sub _get_layout {
     my $self = shift;
-    print STDERR "RETRIEVING LAYOUT...\n";
+#    print STDERR "RETRIEVING LAYOUT...\n";
     my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id(), experiment_type=>$self->get_cxgn_project_type()->{experiment_type} });
     $self->set_layout($layout);
 }
@@ -256,7 +256,7 @@ getter/setter for the year property. The setter modifies the database.
 sub get_year {
     my $self = shift;
 
-    print STDERR "get_year()...\n";
+#    print STDERR "get_year()...\n";
 
     if ($self->year()) { return $self->year(); }
 
@@ -278,22 +278,22 @@ sub set_year {
     my $year = shift;
 
     if (!$year) {
-	print STDERR "set_year(): No year provided, not setting.\n";
+#	print STDERR "set_year(): No year provided, not setting.\n";
 	return;
     }
 
-    print STDERR "set_year()... (with parameter $year)\n";
+#    print STDERR "set_year()... (with parameter $year)\n";
     my $type_id = $self->get_year_type_id();
 
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id(), type_id => $type_id  });
 
     if ($row) {
-	print STDERR "Updating year to $year...\n";
+#	print STDERR "Updating year to $year...\n";
 	$row->value($year);
 	$row->update();
     }
     else {
-	print STDERR "inserting new year ($year)...\n";
+#	print STDERR "inserting new year ($year)...\n";
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	    {
 		type_id => $type_id,
@@ -339,7 +339,7 @@ sub set_description {
     my $logged_in_user_h = $dbh -> prepare($logged_in_user_q);
     $logged_in_user_h->execute();
     my $logged_in_user_arr = $logged_in_user_h->fetchall_arrayref();
-    print STDERR "logged in user Project.pm: ".Dumper($logged_in_user_arr)."\n";
+#    print STDERR "logged in user Project.pm: ".Dumper($logged_in_user_arr)."\n";
 
 }
 
@@ -459,7 +459,7 @@ sub set_location {
     try {
         $schema->txn_do($coderef);
     } catch {
-        print STDERR "Transaction error updating location: $_\n";
+#        print STDERR "Transaction error updating location: $_\n";
     };
 
 }
@@ -1001,7 +1001,7 @@ sub set_design_type {
 
     my $design_cv_type = $self->bcs_schema->resultset('Cv::Cvterm')->find( { name => 'design' });
     if (!$design_cv_type) {
-	print STDERR "Design CV term not found. Cannot set design type.\n";
+#	print STDERR "Design CV term not found. Cannot set design type.\n";
 	return;
     }
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
@@ -2180,33 +2180,33 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
 
     my $coderef = sub {
 	my $phenotype_id_sql = "";
-	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids})) { 
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids})) {
 	    $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}});
-	    
+
 	    my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
 	    my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
 	    $h2->execute();
-	    
+
 	    print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
 	}
 
-	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) { 
+	if (ref($phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids})) {
 	    my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
-	    
+
 	    # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
 	    #
 	    my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
 	    my $check_h = $schema->storage->dbh()->prepare($checkq);
 	    $check_h ->execute();
-	    
+
 	    my @nd_experiment_ids;
 	    while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
 		push @nd_experiment_ids, $nd_experiment_id;
 	    }
-	    
+
 	    if (scalar(@nd_experiment_ids)>0) {
 		$nd_experiment_id_sql = join(",", @nd_experiment_ids);
-		
+
 		my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
 		my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
 		$h3->execute();
@@ -2214,11 +2214,11 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
 		my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
 		my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
 		$h_nd_json->execute();
-		
+
 		my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
 		my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
 		$h4->execute();
-		
+
 		open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
                 foreach (@nd_experiment_ids) {
                     print $fh "$_\n";
@@ -2260,6 +2260,7 @@ sub delete_field_layout {
     my $self = shift;
 
     my $trial_id = $self->get_trial_id();
+    my $cxgn_project_type = $self->get_cxgn_project_type()->{cxgn_project_type};
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
         return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
@@ -2267,11 +2268,11 @@ sub delete_field_layout {
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
         return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
     }
-    if (scalar(@{$self->get_crossing_trials_from_field_trial}) >0) {
-        return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
-    }
-    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
-        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
+
+    if ($cxgn_project_type ne 'analysis_project') {
+        if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
+            return 'This field trial has been linked to crossing experiments already, and cannot be easily deleted.';
+        }
     }
 
     # Note: metadata entries need to be deleted separately using delete_metadata()
@@ -2401,6 +2402,7 @@ sub delete_metadata {
     if (!$metadata_schema || !$phenome_schema) { die "Need metadata schema parameter\n"; }
 
     my $trial_id = $self->get_trial_id();
+    my $cxgn_project_type = $self->get_cxgn_project_type()->{cxgn_project_type};
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
         return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
@@ -2408,11 +2410,11 @@ sub delete_metadata {
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
         return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
     }
-    if (scalar(@{$self->get_crossing_trials_from_field_trial}) >0) {
-        return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
-    }
-    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
-        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
+
+    if ($cxgn_project_type ne 'analysis_project') {
+        if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
+            return 'This field trial has been linked to crossing experiments already, and cannot be easily deleted.';
+        }
     }
 
     print STDERR "Deleting metadata for trial $trial_id...\n";
@@ -2595,12 +2597,6 @@ sub delete_project_entry {
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
         return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
-    }
-    if (scalar(@{$self->get_crossing_trials_from_field_trial}) >0) {
-        return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
-    }
-    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
-        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
     }
 
     my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {
@@ -3192,6 +3188,8 @@ sub create_plant_entities {
     my $inherits_plot_treatments = shift;
     my $plant_owner = shift;
     my $plant_owner_username = shift;
+    my $rows_per_plot = shift;
+    my $cols_per_plot = shift;
 
     my $create_plant_entities_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -3209,9 +3207,12 @@ sub create_plant_entities {
         my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
         my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+        my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
+        my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
+        # my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
         #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
         my $treatments;
@@ -3249,6 +3250,15 @@ sub create_plant_entities {
         foreach my $plot (keys %$design) {
             #print STDERR " ... creating plants for plot $plot...\n";
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
+            my @plant_coords = ();
+
+            if ($rows_per_plot && $cols_per_plot) { #if these are defined then we need to record row col data for plants
+                foreach my $row (1..$rows_per_plot) {
+                    foreach my $col (1..$cols_per_plot) {
+                        push @plant_coords, "$row,$col";
+                    }
+                }
+            }
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
@@ -3262,10 +3272,17 @@ sub create_plant_entities {
             foreach my $plant_index_number (1..$plants_per_plot) {
                 my $plant_name = $parent_plot_name."_plant_$plant_index_number";
                 #print STDERR "... ... creating plant $plant_name...\n";
+                my $row_num;
+                my $col_num;
+
+                if (@plant_coords) {
+                    my $coord_pair = shift(@plant_coords);
+                    ($row_num, $col_num) = split(",", $coord_pair);
+                }
 
                 $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name,
                 $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm,
-                $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
+                $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
                 $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username);
             }
         }
@@ -3321,6 +3338,8 @@ sub save_plant_entries {
         my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
         my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+        my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
+        my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
@@ -3382,7 +3401,16 @@ sub save_plant_entries {
                 my $given_plant_index_number = $plant_index_numbers->[$increment];
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
+                my ($row_num, $col_num);
+                if ($val->{plant_coords}) {
+                    my $coord_pair = shift(@{$val->{plant_coords}});
+                    ($row_num, $col_num) = split(",", $coord_pair);
+                }
+
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
+                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
+                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, 
+                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
                 $plant_index_number++;
                 $increment++;
             }
@@ -3421,6 +3449,8 @@ sub create_plant_subplot_entities {
     my $inherits_plot_treatments = shift;
     my $plant_owner = shift;
     my $plant_owner_username = shift;
+    my $rows_per_subplot = shift;
+    my $cols_per_subplot = shift;
 
     my $create_plant_entities_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -3440,6 +3470,8 @@ sub create_plant_subplot_entities {
         my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
         my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+        my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
+        my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
@@ -3490,6 +3522,7 @@ sub create_plant_subplot_entities {
             print STDERR " ... creating plants for plot $plot...\n";
 
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
+
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
                 return "The plot $plot is not yet in the database. Cannot create plant entries.";
@@ -3511,13 +3544,31 @@ sub create_plant_subplot_entities {
 
                 my $parent_subplot = $subplot_row->stock_id();
 
+                my @plant_coords = ();
+
+                if ($rows_per_subplot && $cols_per_subplot) { #if these are defined then we need to record row col data for plants
+                    foreach my $row (1..$rows_per_subplot) {
+                        foreach my $col (1..$cols_per_subplot) {
+                            push @plant_coords, "$row,$col";
+                        }
+                    }
+                }
+
                 foreach my $plant_index_number (1..$plants_per_subplot) {
                     my $plant_name = $subplot."_plant_$plant_index_number";
-                    print STDERR "... ... ... creating plant $plant_name...\n";
+                    # print STDERR "... ... ... creating plant $plant_name...\n";
+
+                    my $row_num;
+                    my $col_num;
+
+                    if (@plant_coords) {
+                        my $coord_pair = shift(@plant_coords);
+                        ($row_num, $col_num) = split(",", $coord_pair);
+                    }
 
                     $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name,
                     $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm,
-                    $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
+                    $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
                     $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
                     $parent_subplot, $plant_subplot_relationship_cvterm);
                 }
@@ -3581,6 +3632,8 @@ sub save_plant_subplot_entries {
         my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
         my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+        my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
+        my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
@@ -3664,7 +3717,17 @@ sub save_plant_subplot_entries {
                 my $given_plant_index_number = $plant_index_numbers->[$increment];
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
+                my ($row_num, $col_num);
+                if ($val->{plant_coords}) {
+                    my $coord_pair = shift(@{$val->{plant_coords}});
+                    ($row_num, $col_num) = split(",", $coord_pair);
+                }
+
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
+                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
+                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, 
+                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, 
+                \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
                 $subplot_stock_id, $plant_subplot_relationship_cvterm);
                 $plant_index_number++;
                 $increment++;
@@ -3702,6 +3765,10 @@ sub _save_plant_entry {
     my $block_cvterm = shift;
     my $plot_number_cvterm = shift;
     my $replicate_cvterm = shift;
+    my $row_num_cvterm = shift;
+    my $row_num = shift;
+    my $col_num_cvterm = shift;
+    my $col_num = shift;
     my $plant_relationship_cvterm = shift;
     my $field_layout_experiment = shift;
     my $field_layout_cvterm = shift;
@@ -3760,6 +3827,20 @@ sub _save_plant_entry {
             subject_id => $plant->stock_id(),
             object_id => $parent_subplot,
             type_id => $plant_subplot_relationship_cvterm
+        });
+    }
+
+    #the plant may or may not have row and column data
+    if ($row_num && $col_num) {
+        $chado_schema->resultset("Stock::Stockprop")->create( {
+            stock_id => $plant->stock_id(),
+            type_id => $row_num_cvterm,
+            value => $row_num,
+        });
+        $chado_schema->resultset("Stock::Stockprop")->create( {
+            stock_id => $plant->stock_id(),
+            type_id => $col_num_cvterm,
+            value => $col_num,
         });
     }
 
@@ -5511,7 +5592,7 @@ sub transformation_id_count {
  Usage:   my @trials = CXGN::Project::get_recently_added_trials()
  Params:  $interval - one of day, week, month, year
  Returns: a list of trials, consisting of listrefs listing
-          trial_name (with link), trial_type, breeding program 
+          trial_name (with link), trial_type, breeding program
           (with link)
 
 =cut
@@ -5523,18 +5604,18 @@ sub get_recently_added_trials {
     my $metadata_schema = shift;
     my $interval = shift;
     my $limit = shift || 10;
-    
+
     if (! grep($interval, qw| day week month year | )) {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
 
     my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
-    
+
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
     $h->execute($limit);
-    
+
     my @recent_trials = ();
     while (my ($trial_id) = $h->fetchrow_array()) {
 	print STDERR "Formatting entry with trial id $trial_id...\n";
@@ -5542,7 +5623,7 @@ sub get_recently_added_trials {
 	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
 	my $trial_type = ref($t);
 	$trial_type =~ s/^CXGN\:\://g;
-	
+
 	my $breeding_program = $t->get_breeding_program();
 	my $breeding_program_id = $t->get_breeding_program_id();
 	my $create_date = $t->get_create_date();
@@ -5575,14 +5656,14 @@ sub get_recently_modified_trials {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
-        
+
     #print STDERR "INTERVAL is $interval\n";
     my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc limit ? ";
-    
+
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
     $h->execute($limit);
-    
+
     my @recent_trials;
     while (my ($trial_id, $create_date) = $h->fetchrow_array()) {
 	print STDERR "Formatting entry with trial id $trial_id...\n";
@@ -5590,7 +5671,7 @@ sub get_recently_modified_trials {
 	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
 	my $trial_type = ref($t);
 	$trial_type =~ s/^CXGN\:\://g;
-	
+
 	my $breeding_program = $t->get_breeding_program();
 	my $breeding_program_id = $t->get_breeding_program_id();
 
@@ -5620,7 +5701,7 @@ sub get_recently_added_accessions {
 	print STDERR "Interval $interval not recognized, aborting query\n";
 	return;
     }
-    
+
     my $q = "select stock.stock_id from stock where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
@@ -5637,7 +5718,7 @@ sub get_recently_added_accessions {
     }
 
     return \@stock_table;
-    
+
 }
 
 =head2 function update_metadata()
@@ -5692,6 +5773,7 @@ sub update_metadata {
         return "An error occurred setting the new trial details of trial " . $self->get_name() . ": $@";
     }
 }
+
 
 1;
 

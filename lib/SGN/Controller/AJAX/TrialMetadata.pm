@@ -31,10 +31,12 @@ use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Genotype::DownloadFactory;
 use POSIX qw | !qsort !bsearch |;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
 use CXGN::BreedersToolbox::SoilData;
 use CXGN::Genotype::GenotypingProject;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -326,7 +328,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
 
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
     my $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
-    
+
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
         search_type => "Native",
@@ -415,18 +417,18 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
     }
-    
+
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-    
+
     my $trial_stock_type_id;
-    
+
     if ($trial_stock_type eq 'family_name') {
         $trial_stock_type_id = $family_name_type_id;
     } elsif ($trial_stock_type eq 'cross') {
         $trial_stock_type_id = $cross_type_id;
-    } 
+    }
     else {
         $trial_stock_type_id = $accession_type_id;
         if ($display eq 'analysis_instance') {
@@ -434,9 +436,9 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             if ($analysis_stock_type eq 'analysis_result') {
                 my $analysis_result_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_result', 'stock_type')->cvterm_id();
                 $trial_stock_type_id = $analysis_result_type_id;
-            } 
-        }    
-    }    
+            }
+        }
+    }
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -463,7 +465,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
         $order_by_additional;");
-    
+
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
@@ -828,6 +830,9 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         my $parsed_entries = $parsed_data->{data};
         foreach (@$parsed_entries){
             $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
@@ -937,6 +942,9 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         my $parsed_entries = $parsed_data->{data};
         foreach (@$parsed_entries){
             $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
@@ -1157,6 +1165,9 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
             $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
         $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
@@ -1267,6 +1278,9 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
             $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
         $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id);
@@ -1487,6 +1501,9 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
             $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
         $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
@@ -1597,6 +1614,9 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
             $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
         $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id);
@@ -2787,6 +2807,9 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     my $plant_owner_username = $c->user->get_object->get_username;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $include_plant_coordinates = $c->req->param('include_plant_coordinates');
+    my $num_rows = $c->req->param('rows_per_plot');
+    my $num_cols = $c->req->param('cols_per_plot');
     my $plants_with_treatments;
     if($inherits_plot_treatments eq '1'){
         $plants_with_treatments = 1;
@@ -2805,7 +2828,25 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments, $user_id)) {
+    my @plant_entity_params = ($plants_per_plot, $plants_with_treatments, $user_id, $plant_owner_username);
+
+    if ($include_plant_coordinates) {
+
+        if (!$num_rows || !$num_cols || $num_rows * $num_cols == 0) {
+            $c->stash->{rest} = { error => "To include plant coordinate data, rows and columns must be specified." };
+            return;
+        }
+
+        if ($num_rows * $num_cols < $plants_per_plot) {
+            $c->stash->{rest} = { error => "You cannot have more plants than available spaces. Decrease plants per plot or increase rows or columns." };
+            return;
+        }
+
+        push @plant_entity_params, $num_rows;
+        push @plant_entity_params, $num_cols;
+    }
+
+    if ($t->create_plant_entities(@plant_entity_params)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
@@ -2827,6 +2868,9 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     my $plant_owner_username = $c->user->get_object->get_username;
     my $plants_per_subplot = $c->req->param("plants_per_subplot") || 8;
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $include_plant_coordinates = $c->req->param('include_plant_coordinates');
+    my $num_rows = $c->req->param('rows_per_plot');
+    my $num_cols = $c->req->param('cols_per_plot');
     my $plants_with_treatments;
     if($inherits_plot_treatments eq '1'){
         $plants_with_treatments = 1;
@@ -2845,7 +2889,25 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_subplot_entities($plants_per_subplot, $plants_with_treatments, $user_id)) {
+    my @subplot_plant_entity_params = ($plants_per_subplot, $plants_with_treatments, $user_id, $plant_owner_username);
+
+    if ($include_plant_coordinates) {
+
+        if (!$num_rows || !$num_cols || $num_rows * $num_cols == 0) {
+            $c->stash->{rest} = { error => "To include plant coordinate data, rows and columns must be specified." };
+            return;
+        }
+
+        if ($num_rows * $num_cols < $plants_per_subplot) {
+            $c->stash->{rest} = { error => "You cannot have more plants than available spaces. Decrease plants per subplot or increase rows or columns." };
+            return;
+        }
+
+        push @subplot_plant_entity_params, $num_rows;
+        push @subplot_plant_entity_params, $num_cols;
+    }
+
+    if ($t->create_plant_subplot_entities(@subplot_plant_entity_params)) {
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -3796,6 +3858,54 @@ sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_
     my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trials_source_of_crossing_trial();
 
     $c->stash->{rest} = {success => 1, crossing_trials_from_field_trial => $crossing_trials_from_field_trial, field_trials_source_of_crossing_trial => $field_trials_source_of_crossing_trial};
+}
+
+sub field_trial_sources_of_parents : Chained('trial') PathPart('field_trial_sources_of_parents') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trial_sources_of_crossing_experiment();
+    my @source_trials;
+    if ($field_trials_source_of_crossing_trial) {
+        foreach my $trial (@$field_trials_source_of_crossing_trial) {
+            push @source_trials, [qq{<a href="/breeders/trial/$trial->[0]">$trial->[1]</a>}];
+        }
+    }
+    $c->stash->{rest} = { data => \@source_trials };
+}
+
+sub field_trials_for_evaluating_crosses : Chained('trial') PathPart('field_trials_for_evaluating_crosses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $field_trials_for_evaluating_crosses = $c->stash->{trial}->get_field_trials_for_evaluating_crosses();
+    my @field_trials;
+    if ($field_trials_for_evaluating_crosses) {
+        foreach my $trial (@$field_trials_for_evaluating_crosses) {
+            push @field_trials, [qq{<a href="/breeders/trial/$trial->[0]">$trial->[1]</a>}];
+        }
+    }
+    $c->stash->{rest} = { data => \@field_trials };
+}
+
+sub crossing_experiments_from_field_trial : Chained('trial') PathPart('crossing_experiments_from_field_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $crossing_experiments_from_field_trial = $c->stash->{trial}->get_crossing_experiments_from_field_trial();
+    my @crossing_experiments;
+    if ($crossing_experiments_from_field_trial) {
+        foreach my $crossing_experiment (@$crossing_experiments_from_field_trial) {
+            push @crossing_experiments, [qq{<a href="/breeders/trial/$crossing_experiment->[0]">$crossing_experiment->[1]</a>}];
+        }
+    }
+    $c->stash->{rest} = { data => \@crossing_experiments };
 }
 
 sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(0) {
@@ -4937,14 +5047,14 @@ sub upload_entry_number_template_POST : Args(0) {
 sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     my $trial_id = $c->req->param("trial_id");
 
     if (! $trial_id) {
 	$c->stash->{rest} = { error_string => 'A trial id must be provided to delete the entry numbers.' };
 	return;
     }
-    
+
     if (!$c->user()) {
         $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
         return;
@@ -4954,15 +5064,15 @@ sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args
 	$c->stash->{rest} = {error_string => "Your account must have the curator role to delete entry numbers" };
 	return;
     }
-    
+
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
     my $project_entry_number_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_entry_number_map', 'project_property')->cvterm_id();
 
-    
+
     my $row = $schema->resultset("Project::Projectprop")->find( { type_id => $project_entry_number_map_cvterm_id, project_id => $trial_id });
 
-    eval { 
+    eval {
 	$row->delete();
     };
 
@@ -5698,7 +5808,7 @@ sub get_analysis_instance_stock_type {
     my $trial_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $project = $schema->resultset('Project::Project')->find({
-        project_id => $trial_id, 
+        project_id => $trial_id,
     });
 
     my $trial_layout_json_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
@@ -5723,5 +5833,36 @@ sub get_analysis_instance_stock_type {
     }
 
 }
+
+
+sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary') Args(0) {
+
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
+    my $stock_entries = $trial->get_stock_entry_summary();
+    
+    my @summary;
+    foreach my $entry (@$stock_entries) {
+        my ($parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$entry;
+        my $parent_stock_link;
+        if ($parent_stock_type eq 'accession') {
+            $parent_stock_link = qq{<a href="/stock/$parent_stock_id/view">$parent_stock_name</a>};
+        } elsif ($parent_stock_type eq 'cross') {
+            $parent_stock_link = qq{<a href="/cross/$parent_stock_id">$parent_stock_name</a>};
+        } elsif ($parent_stock_type eq 'family_name') {
+            $parent_stock_link = qq{<a href="/family/$parent_stock_id">$parent_stock_name</a>};
+        }
+
+        push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>}];
+    }
+
+
+    $c->stash->{rest} = { data => \@summary };
+}
+
 
 1;

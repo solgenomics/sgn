@@ -725,7 +725,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
         }
     }
 
-    jQuery('#review_found_matches_hide').click(function(){
+    jQuery('#review_found_matches_hide').off('click').on('click', function(){
 
         if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');

@@ -54,6 +54,14 @@ image file extension. Defaults to 'jpg'
 
 trial mode . Nothing will be stored.
 
+=item -P
+
+password (for unit tests)
+
+=item -y
+
+confirm automatically (for unit tests)
+
 =back
 
 Errors and messages are output on STDERR.
@@ -84,32 +92,41 @@ use Getopt::Std;
 use CXGN::Tools::File::Spreadsheet;
 use File::Glob qw | bsd_glob |;
 
-our ($opt_H, $opt_D, $opt_t, $opt_i, $opt_u, $opt_r, $opt_d, $opt_e, $opt_m, $opt_b);
-getopts('H:D:u:i:e:f:tdr:m:b:');
+our ($opt_H, $opt_D, $opt_t, $opt_i, $opt_u, $opt_r, $opt_d, $opt_e, $opt_m, $opt_b, $opt_P, $opt_y);
+getopts('H:D:u:i:e:f:tdr:m:b:P:y');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
+my $dbpass = $opt_P;
 my $dirname = $opt_i;
 my $sp_person=$opt_u;
 my $db_image_dir = $opt_b;
 my $chado_table = $opt_r;
 my $ext = $opt_e || 'jpg';
 
+print STDERR "LOAD IMAGES STARTING... $dbhost $dbname $dbpass $dirname\n";
+
 if (!$dbhost && !$dbname) { 
-    print "dbhost = $dbhost , dbname = $dbname\n";
-    print "opt_t = $opt_t, opt_u = $opt_u, opt_r = $chado_table, opt_i = $dirname\n";
+    print STDERR "dbhost = $dbhost , dbname = $dbname\n";
+    print STDERR "opt_t = $opt_t, opt_u = $opt_u, opt_r = $chado_table, opt_i = $dirname\n";
     usage();
 }
 
-if (!$dirname) { print "dirname = $dirname\n" ; usage(); }
+if (!$dirname) { print STDERR "dirname = $dirname\n" ; usage(); }
 
-my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
-				      dbname=>$dbname,
-				    } );
+my $dbh;
 
-my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public;'] }
-    );
+if ($opt_P) {
+    print STDERR "PASSWORD SUPPLIED... CONNECTING...\n";
+    $dbh = CXGN::DB::Connection->new( { dbhost=> $dbhost, dbname=> $dbname, dbpass => $opt_P, dbuser => "postgres" });
+}
+else {
+    print STDERR "INTERACTIVE PASSWORD...\n";
+    $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost, dbname=>$dbname } );
+}
 
+
+my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } ,  { on_connect_do => ['SET search_path TO  public;'] } );
 
 print STDERR "Generate metadata_id... ";
 my $metadata_schema = CXGN::Metadata::Schema->connect("dbi:Pg:database=$dbname;host=".$dbh->dbhost(), "postgres", $dbh->dbpass(), {on_connect_do => "SET search_path TO 'metadata', 'public'", });
@@ -119,12 +136,14 @@ my %name2id = ();
 
 
 #my $ch = SGN::Context->new();
-print "PLEASE VERIFY:\n";
-print "Using dbhost: $dbhost. DB name: $dbname. \n";
-print "Path to image is: $db_image_dir\n";
-print "CONTINUE? ";
-my $a = (<STDIN>);
-if ($a !~ /[yY]/) { exit(); }
+if (! $opt_y) { 
+    print "PLEASE VERIFY:\n";
+    print "Using dbhost: $dbhost. DB name: $dbname. \n";
+    print "Path to image is: $db_image_dir\n";
+    print "CONTINUE? ";
+    my $a = (<STDIN>);
+    if ($a !~ /[yY]/) { exit(); }
+}
 
 my %image_hash = ();  # used to retrieve images that are already loaded
 my %connections = (); # keep track of object -- image connections that have already been made.
@@ -183,12 +202,37 @@ my $map_file = $opt_m; #
 my %name_map;
 
 if ($opt_m) {
+    eval { 
     my $s = CXGN::Tools::File::Spreadsheet->new($map_file); #
     my @rows = $s->row_labels(); #
+    my $image_id;
     foreach my $file_name (@rows) { #
     	my $stock_name = $s->value_at($file_name, 'name'); #
 	$name_map{$file_name} = $stock_name;
+	if (my $image_id = store_image($dbh, $db_image_dir, \%image_hash, \%name2id, $chado_table, $stock_name, $opt_i."/".$file_name, "", $sp_person_id, $new_image_count)) {
+	    $new_image_count++;
+	    
+	    my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $stock_name } );
+	    if (!$stock_row) {
+		print STDERR "STOCK $stock_name NOT FOUND! PLEASE CHECK THIS ENTRY! IMAGE STORED WITHOUT LINKING.\n";
+	    }
+	    else { 
+		print STDERR "FOUND STOCK $stock_name... associating...\n";
+		link_image($image_id, $stock_row->stock_id, $metadata_id);
+	    }
+	}
     }
+    };
+    if ($@) {
+	print STDERR "ERROR OCCURRED WHILE SAVING NEW INFORMATION. $@\n";
+	$dbh->rollback();
+    }
+    else {
+	$dbh->commit();
+    }
+
+    print STDERR "DONE WITH MAPPING FILE $opt_m\n";
+    exit(0);
 }
 
 print STDERR "Starting to process ".scalar(@files)." images...\n";
@@ -268,37 +312,41 @@ foreach my $file (@files) {
 			$new_image_count++;
 		    }
 		    else { 
-			my $image = CXGN::Image->new(dbh=>$dbh, image_dir=>$db_image_dir);   
-			$image_hash{$filename}=$image;
+			# my $image = CXGN::Image->new(dbh=>$dbh, image_dir=>$db_image_dir);   
+			# $image_hash{$filename}=$image;
 
-			my $error;
-			($image_id, $error) = $image->process_image("$filename", $chado_table , $name2id{lc($object)}, 1);
+			# my $error;
+			# ($image_id, $error) = $image->process_image("$filename", $chado_table , $name2id{lc($object)}, 1);
 
-			print STDERR "IMAGE ID $image_id, ERROR: $error\n";
+			# print STDERR "IMAGE ID $image_id, ERROR: $error\n";
 
-			if ($error eq "ok") { 
+			# if ($error eq "ok") { 
+			#     $image->set_description("$description");
+			#     $image->set_name(basename($filename , ".$ext"));
+			#     $image->set_sp_person_id($sp_person_id);
+			#     $image->set_obsolete("f");
+			#     $image_id = $image->store();
+			#     #link the image with the BCS object 
+			#     $new_image_count++;
+			#     my $image_subpath = $image->image_subpath();
+			#     print STDERR "FINAL IMAGE PATH = $db_image_dir/$image_subpath\n";
+			#}
 
-			
-			    $image->set_description("$description");
-			    $image->set_name(basename($filename , ".$ext"));
-			    $image->set_sp_person_id($sp_person_id);
-			    $image->set_obsolete("f");
-			    $image_id = $image->store();
-			    #link the image with the BCS object 
+			if ($image_id = store_image($dbh, $db_image_dir, \%image_hash, \%name2id, $chado_table, $object, $filename, $description, $sp_person_id, $new_image_count)) {
 			    $new_image_count++;
-			    my $image_subpath = $image->image_subpath();
-			    print STDERR "FINAL IMAGE PATH = $db_image_dir/$image_subpath\n";
 			}
 		    }
 		}
+		if ($image_id) { link_image($image_id, $name2id{lc($object)}, $metadata_id); }
 	    }
 
+
 	    
-	    print STDERR "Connecting image $filename and id $image_id with stock ".$stock->stock_id()."\n";
-            #store the image_id - stock_id link
-	    my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?)";
-            my $sth  = $dbh->prepare($q);
-            $sth->execute($stock->stock_id, $image_id, $metadata_id);
+	    # print STDERR "Connecting image $filename and id $image_id with stock ".$stock->stock_id()."\n";
+            # #store the image_id - stock_id link
+	    # my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?)";
+            # my $sth  = $dbh->prepare($q);
+            # $sth->execute($stock->stock_id, $image_id, $metadata_id);
 	}
     };
     if ($@) {
@@ -310,8 +358,56 @@ foreach my $file (@files) {
     }
 }
 
+sub store_image {
+    my $dbh = shift;
+    my $db_image_dir = shift;
+    my $image_hash = shift;
+    my $name2id = shift;
+    my $chado_table = shift;
+    my $object = shift;
+    my $filename = shift;
+    my $description = shift;
+    my $sp_person_id = shift;
 
+    my $new_image_count;
+    
+    my $image = CXGN::Image->new(dbh=>$dbh, image_dir=>$db_image_dir);   
+    $image_hash->{$filename}=$image;
+    
+    my ($image_id, $error) = $image->process_image("$filename", $chado_table , $name2id->{lc($object)}, 1);
+    
+    print STDERR "IMAGE ID $image_id, ERROR: $error\n";
 
+    if ($error =~ /duplicate/i) {
+	return 0;
+    }
+    
+    if ($error eq "ok") {
+	print STDERR "Storing image... \n";
+	$image->set_description("$description");
+	$image->set_name(basename($filename , ".$ext"));
+	$image->set_sp_person_id($sp_person_id);
+	$image->set_obsolete("f");
+	$image_id = $image->store();
+	#link the image with the BCS object 
+	$new_image_count++;
+	my $image_subpath = $image->image_subpath();
+	print STDERR "FINAL IMAGE PATH for IMAGE ".$image->get_image_id()." = $db_image_dir/$image_subpath\n";
+    }
+
+    return $image_id;
+}
+
+sub link_image {
+    my $image_id = shift;
+    my $stock_id = shift;
+    my $metadata_id = shift;
+    print STDERR "Connecting image with id $image_id with stock ".$stock_id."\n";
+    #store the image_id - stock_id link
+    my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?)";
+    my $sth  = $dbh->prepare($q);
+    $sth->execute($stock_id, $image_id, $metadata_id);
+}
 
 #close(ERR);
 close(F);

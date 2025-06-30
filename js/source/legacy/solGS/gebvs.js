@@ -97,15 +97,27 @@ solGS.gebvs = {
       "GEBVs" +
       "</a>";
 
-      // var gebvsFileId = res.gebvs_file_id.replace(/-/g, "_")
       var gebvsHistoPlotDivId = this.histoPlotId.replace(/#/, '');
-      var histoDownloadBtn = "download_" + gebvsHistoPlotDivId; //+ gebvsFileId;
-      var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'> Histogram</a>";
-
-      //  var downloadLinks =  jQuery("#gebvs_output").prepend(`Download:  ${gebvsFileLink} | ${histoPlotLink} | `);
+      var histoDownloadBtn = "download_" + gebvsHistoPlotDivId;
+      var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'> Histogram (GEBVs)</a>";
     
       var downloadLinks = `Download:  ${gebvsFileLink} | ${histoPlotLink}`;
       return downloadLinks;
+
+  },
+
+  createGeneticValuesDownloadLinks: function (res) {
+    var geneticValuesFileName = res.genetic_values_file.split("/").pop();
+    var geneticValuesFileLink =
+      '<a href="' +
+      res.genetic_values_file +
+      '" download=' +
+      geneticValuesFileName +
+      '">' +
+      "Genetic values" +
+      "</a>";
+    
+      return geneticValuesFileLink;
 
   },
 
@@ -114,29 +126,30 @@ solGS.gebvs = {
 /////
 
 jQuery(document).ready(function () {
+    solGS.checkPageType().done(function (res) {
+        if (res.page_type.match(/training_model|selection_prediction/)) {
+            solGS.gebvs.getGebvsFiles().done(function (res) {
+                var gebvsDownloadLinks = solGS.gebvs.createGebvsDownloadLinks(res);
+                var geneticValuesDownloadLinks = solGS.gebvs.createGeneticValuesDownloadLinks(res);
+                var downloadLinks = `${gebvsDownloadLinks} | ${geneticValuesDownloadLinks}`;
+                console.log(`Calling getGebvsData`)
 
-  solGS.checkPageType().done(function (res) {
-    if (res.page_type.match(/training_model|selection_prediction/)) {
-      
-        solGS.gebvs.getGebvsFiles().done(function (res) {
-        var gebvsDownloadLinks = solGS.gebvs.createGebvsDownloadLinks(res);
+                solGS.gebvs.getGebvsData().done(function (res) {
+                    console.log(`getGebvsData res: ${JSON.stringify(res)}`)
+                    solGS.gebvs.plotGebvs(res.gebvs_data, downloadLinks);
+                });
+            });
 
-        solGS.gebvs.getGebvsData().done(function (res) {
-        solGS.gebvs.plotGebvs(res.gebvs_data, gebvsDownloadLinks);
-        });
-      });
+            solGS.gebvs.getGebvsFiles().fail(function (res) {
+                var errorMsg = "Error occured getting training gebvs files.";
+                jQuery("#gebvs_output_message").html(errorMsg);
+            });
+        }
+    });
 
-      solGS.gebvs.getGebvsFiles().fail(function (res) {
-        var errorMsg = "Error occured getting training gebvs files.";
-        jQuery("#gebvs_output_message").html(errorMsg);
-      });
-    }
-  });
-
-  jQuery("#gebvs_histo_canvas").on('click' , 'a', function(e) {
-		var buttonId = e.target.id;
-		var histoPlotId = buttonId.replace(/download_/, '');
-		saveSvgAsPng(document.getElementById("#" + histoPlotId),  histoPlotId + ".png", {scale:1});	
-	});
-
+    jQuery("#gebvs_histo_canvas").on('click' , 'a', function(e) {
+            var buttonId = e.target.id;
+            var histoPlotId = buttonId.replace(/download_/, '');
+            saveSvgAsPng(document.getElementById("#" + histoPlotId),  histoPlotId + ".png", {scale:1});	
+    });
 });

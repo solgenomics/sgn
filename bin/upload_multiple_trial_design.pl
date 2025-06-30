@@ -145,6 +145,7 @@ my $coderef = sub {
             trial_location => $trial_design->{'location'},
             trial_name => $trial_name,
             design_type => $trial_design->{'design_type'},
+            trial_stock_type => $trial_design->{'trial_stock_type'},
             design => $trial_design->{'design_details'},
             program => $trial_design->{'breeding_program'},
             upload_trial_file => $infile,
