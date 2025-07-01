@@ -8,6 +8,8 @@ functions for necrosis image analysis https://github.com/solomonnsumba/Necrosis-
 
 =head1 AUTHOR
 
+Bryan Ellerbrock <bje24@cornell.edu>
+
 =cut
 
 package SGN::Controller::AJAX::ImageAnalysis;
@@ -180,7 +182,7 @@ sub image_analysis_submit_POST : Args(0) {
                 }
                 print STDERR Dumper $message_hashref;
                 $res{'value'} = $message_hashref->{trait_value};
-                $res{'analysis_info'} = $message_hashref->{info};
+                $res{'analysis_info'} = $message_hashref->{info} || {};
                 $res{'trait'} = $trait;
                 $res{'trait_id'} = $trait_details->[0]->{trait_id};
             }
