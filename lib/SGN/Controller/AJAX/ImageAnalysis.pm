@@ -44,6 +44,7 @@ use Parallel::ForkManager;
 use CXGN::Image::Search;
 use CXGN::Trait::Search;
 use File::Slurp;
+use File::Basename;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -307,11 +308,14 @@ sub image_analysis_group_POST : Args(0) {
 
         if ($trait && $value) {
             print STDERR "Working on $trait for $uniquename. Saving the details \n";
+
+	    my $analyzed_link = dirname($results_ref->{'result'}->{'image_link'})."/small.jpg";
+	    
             push @{$grouped_results{$uniquename}{$trait}}, {
                         stock_id => $results_ref->{'stock_id'},
                         collector => $results_ref->{'image_username'},
                         original_link => $results_ref->{'result'}->{'original_image'},
-                        analyzed_link => $results_ref->{'result'}->{'image_link'},
+                        analyzed_link => $analyzed_link,
                         image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
                         trait_id => $results_ref->{'result'}->{'trait_id'},
                         value => $value + 0
