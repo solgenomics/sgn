@@ -246,11 +246,8 @@ if (is.null(filtered_training_geno_data)) {
     geno_data <- data.frame(geno_data)
 
     geno_data <- column_to_rownames(geno_data, "V1")
-    message("geno data:\n", geno_data[1:3, 1:5])
     #genoDataFilter::filterGenoData
     geno_data <- genoDataFilter::convertToNumeric(geno_data)
-
-    message("geno data after converting to numeric:\n", geno_data[1:3, 1:5])
 
     training_log <- append(training_log,
         paste0(
@@ -430,8 +427,18 @@ if (length(selection_pop_geno_file) != 0) {
                                 na.strings = c("NA", "", "--", "-"))
 
     selection_pop_data <- data.frame(selection_pop_data)
-    selection_pop_data <- unique(selection_pop_data, by = "V1") 
+    message("clones count selection_pop_data before removing duplicates:\n",
+            length(rownames(selection_pop_data)))
+    selection_pop_data <- selection_pop_data[!duplicated(selection_pop_data$V1), ]
+    message("clones count selection_pop_data  after removing duplicates:\n",
+            length(rownames(selection_pop_data)))
+    selection_pop_data <- selection_pop_data[!is.na(selection_pop_data$V1), ]
+    message("clones count selection_pop_data  after removing NA:\n",
+            length(rownames(selection_pop_data)))
+
     selection_pop_data <- column_to_rownames(selection_pop_data, "V1")
+
+    
     selection_pop_data <- genoDataFilter::convertToNumeric(selection_pop_data)
 
     selection_prediction_log <- append(
