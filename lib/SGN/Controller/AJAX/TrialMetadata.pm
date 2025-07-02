@@ -2645,17 +2645,22 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
         uniquename => $new_accession
     });
     $accession_rs = $accession_rs->next();
-    my $accession_id = $accession_rs->stock_id;
+    my $new_accession_id = $accession_rs->stock_id;
+    my $old_accession_rs = $schema->resultset("Stock::Stock")->search({
+        uniquename => $old_accession
+    });
+    $old_accession_rs = $old_accession_rs->next();
+    my $old_accession_id = $old_accession_rs->stock_id;
 
     print "Calling Replace Function...............\n";
-    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $accession_id, $plot_of_type_id);
+    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $new_accession_id, $plot_of_type_id);
     if ($replace_return_error) {
         $c->stash->{rest} = { error => $replace_return_error };
         return;
     }
 
     if ($new_plot_name) {
-        my $replace_plot_name_return_error = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $new_plot_name);
+        my $replace_plot_name_return_error = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $old_plot_name, $new_plot_name);
         if ($replace_plot_name_return_error) {
             $c->stash->{rest} = { error => $replace_plot_name_return_error };
             return;
