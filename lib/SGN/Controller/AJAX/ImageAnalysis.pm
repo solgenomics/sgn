@@ -8,6 +8,8 @@ functions for necrosis image analysis https://github.com/solomonnsumba/Necrosis-
 
 =head1 AUTHOR
 
+Bryan Ellerbrock <bje24@cornell.edu>
+
 =cut
 
 package SGN::Controller::AJAX::ImageAnalysis;
@@ -42,6 +44,7 @@ use Parallel::ForkManager;
 use CXGN::Image::Search;
 use CXGN::Trait::Search;
 use File::Slurp;
+use File::Basename;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -180,7 +183,7 @@ sub image_analysis_submit_POST : Args(0) {
                 }
                 print STDERR Dumper $message_hashref;
                 $res{'value'} = $message_hashref->{trait_value};
-                $res{'analysis_info'} = $message_hashref->{info};
+                $res{'analysis_info'} = $message_hashref->{info} || {};
                 $res{'trait'} = $trait;
                 $res{'trait_id'} = $trait_details->[0]->{trait_id};
             }
@@ -305,11 +308,14 @@ sub image_analysis_group_POST : Args(0) {
 
         if ($trait && $value) {
             print STDERR "Working on $trait for $uniquename. Saving the details \n";
+
+	    my $analyzed_link = dirname($results_ref->{'result'}->{'image_link'})."/small.jpg";
+	    
             push @{$grouped_results{$uniquename}{$trait}}, {
                         stock_id => $results_ref->{'stock_id'},
                         collector => $results_ref->{'image_username'},
                         original_link => $results_ref->{'result'}->{'original_image'},
-                        analyzed_link => $results_ref->{'result'}->{'image_link'},
+                        analyzed_link => $analyzed_link,
                         image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
                         trait_id => $results_ref->{'result'}->{'trait_id'},
                         value => $value + 0
