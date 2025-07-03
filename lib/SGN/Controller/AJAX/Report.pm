@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use JSON;
 use File::Slurp;
+use Path::Tiny;
 use File::Path qw(make_path);
 use File::Spec;
 use Data::Dumper;
@@ -137,30 +138,40 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
         my $json_filename   = "${script}_${script_date}.json";
         my $excel_filename  = "${script}_${script_date}.xlsx";
         
-        my $script_cmd = "script -q /dev/null -c \"perl ${basepath}${reports_dir}${script}.pl -U $dbuser -H $dbhost -P $dbpass -D $dbname -o '$out_directory' -f '$json_filename' -s '$start_date' -e '$end_date'\"";
+        my $script_cmd = "perl ${basepath}${reports_dir}${script}.pl -U $dbuser -H $dbhost -P $dbpass -D $dbname -o '$out_directory' -f '$json_filename' -s '$start_date' -e '$end_date'";
+        
+       
 
         print("Starting command $script_cmd \n");
+        print("Diretorio json $out_directory \n");
+        print("Arquivo json $json_filename \n");
+        print("Arquivo excel $excel_filename \n");
 
-        my $report_job = CXGN::Job->new({
-            schema => $schema,
-            people_schema => $people_schema,
-            sp_person_id => $sp_person_id,
-            name => $excel_filename." report generation",
-            cmd => $script_cmd,
-            job_type => 'report',
-            finish_logfile => $c->config->{job_finish_log}
-        });
-        # my $run_script = CXGN::Tools::Run->new();
-        # $report_record->update_status("submitted");
-        # my $result_hash = $run_script->run($script_cmd.$report_record->generate_finish_timestamp_cmd());
-        $report_job->submit();
+        # my $report_job = CXGN::Job->new({
+        #     schema => $schema,
+        #     people_schema => $people_schema,
+        #     sp_person_id => $sp_person_id,
+        #     name => $json_filename." report generation",
+        #     cmd => $script_cmd,
+        #     job_type => 'report',
+        #     finish_logfile => $c->config->{job_finish_log}
+        # });
+
+        # # Start or enqueue the job
+        # $report_job->submit();
+        
+        print "Waiting for JSON file to be generated...\n";
+        system($script_cmd);
+        if ($? != 0) {
+            die "Report script failed with exit code " . ($? >> 8);
+        }
 
         my $json_file = File::Spec->catfile($out_directory, $json_filename);
         print("Reading output from file: $json_file \n");
 
         my $json_text = '';
         if (-e $json_file) {
-            $json_text = read_file($json_file);
+            $json_text = path($json_file)->slurp_utf8;
         } else {
             warn "JSON file $json_file does not exist.";
         }
