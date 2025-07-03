@@ -22,7 +22,7 @@ $trial_name => undef
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+      	      <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
       	      <div class="col-sm-9" >
                 <input name="add_plants_per_subplot_inherit_treatments" id="add_plants_per_subplot_inherit_treatments" type="checkbox" checked disabled/>
               </div>
@@ -54,7 +54,7 @@ $trial_name => undef
               </div>
 	        </div>
 	       </form><br/>
-         
+
         </div>
       </div>
       <div class="modal-footer">
@@ -97,7 +97,7 @@ $trial_name => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Inherits Management Factor(s) From Plots: </label>
+                            <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_per_subplot_inherit_treatments" id="upload_plants_per_subplot_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
@@ -153,7 +153,7 @@ $trial_name => undef
                     <br>
                     - col_num
                     <br>
-                    Rows and columns are at the subplot level if each subplot contains multiple plants. If including this data, both fields must be present. 
+                    Rows and columns are at the subplot level if each subplot contains multiple plants. If including this data, both fields must be present.
                 </div>
             </div>
             <div class="modal-footer">
@@ -196,7 +196,7 @@ $trial_name => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Inherits Management Factor(s) From Plots: </label>
+                            <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_subplot_with_index_number_inherit_treatments" id="upload_plants_subplot_with_index_number_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
@@ -252,7 +252,7 @@ $trial_name => undef
                     <br>
                     - col_num
                     <br>
-                    Rows and columns are at the subplot level if each subplot contains multiple plants. If including this data, both fields must be present. 
+                    Rows and columns are at the subplot level if each subplot contains multiple plants. If including this data, both fields must be present.
                 </div>
             </div>
             <div class="modal-footer">
@@ -294,7 +294,7 @@ $trial_name => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Inherits Management Factor(s) From Plots: </label>
+                            <label class="col-sm-4 control-label">Inherits Treatment(s) From Plots: </label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_subplot_with_num_plants_inherit_treatments" id="upload_plants_subplot_with_num_plants_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
@@ -350,7 +350,7 @@ $trial_name => undef
                     <br>
                     - num_cols
                     <br>
-                    The number of spaces given by the rows and columns should be greater than or equal to the num_plants_per_subplot. Plants will be assigned rows and columns in zigzag pattern, starting from (1,1). 
+                    The number of spaces given by the rows and columns should be greater than or equal to the num_plants_per_subplot. Plants will be assigned rows and columns in zigzag pattern, starting from (1,1).
                 </div>
             </div>
             <div class="modal-footer">
@@ -420,7 +420,7 @@ jQuery(document).ready(function() {
         } else {
             jQuery('#subplot_plant_row_column_format_dialog').hide();
         }
-        
+
     });
 
 
@@ -436,8 +436,8 @@ jQuery(document).ready(function() {
         var num_cols = jQuery('#cols_per_subplot').val();
         var plants_per_subplot = jQuery('#add_plants_per_subplot_num').val();
         var include_plant_coordinates = 0;
-        
-        if (jQuery('#add_rows_and_columns_to_subplot_plants').is(':checked')) { 
+
+        if (jQuery('#add_rows_and_columns_to_subplot_plants').is(':checked')) {
 
             include_plant_coordinates = 1;
 

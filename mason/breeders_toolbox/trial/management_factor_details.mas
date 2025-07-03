@@ -9,7 +9,7 @@ $management_factor_type => undef
 
 <table class="table table-hover table-bordered" >
     <tr>
-    <td><b>Field Management Factor Name</b></td>
+    <td><b>Field Treatment Name</b></td>
     <td>
         <div id="management_factor_name">
 % if ($trial_name) {
@@ -21,7 +21,7 @@ $management_factor_type => undef
     </td>
     </tr>
     <tr>
-    <td><b>Field Management Factor Description</b></td>
+    <td><b>Field Treatment Description</b></td>
     <td>
         <div id="management_factor_description">
 % if ($trial_description) {
@@ -33,7 +33,7 @@ $management_factor_type => undef
     </td>
     </tr>
     <tr>
-    <td><b>Field Management Factor Type</b></td>
+    <td><b>Field Treatment Type</b></td>
     <td>
         <div id="management_factor_type">
 % if ($management_factor_type) {
@@ -45,7 +45,7 @@ $management_factor_type => undef
     </td>
     </tr>
     <tr>
-    <td><b>Field Management Factor Year</b></td>
+    <td><b>Field Treatment Year</b></td>
     <td>
         <div id="management_factor_year">
 % if ($year) {
@@ -58,7 +58,7 @@ $management_factor_type => undef
     </tr>
     </tr>
     <tr>
-    <td><b>Field Management Factor Date</b></td>
+    <td><b>Field Treatment Date</b></td>
     <td>
         <div id="management_factor_date">
 % if ($management_factor_date) {

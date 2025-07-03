@@ -192,7 +192,7 @@ sub get_trials_by_breeding_program {
     my %project_name;
     my %project_description;
     my %projects_that_are_genotyping_trials;
-    my %projects_that_are_treatment_trials; #Field Management Factors
+    my %projects_that_are_treatment_trials;
     my %projects_that_are_genotyping_data_projects;
     my %projects_that_are_drone_run_projects;
     my %projects_that_are_drone_run_band_projects;
@@ -544,7 +544,7 @@ sub store_breeding_program {
         try {
 	    my $dbh = $self->schema()->storage()->dbh();
 	    my $people_schema = CXGN::People::Schema->connect( sub { $dbh->clone() } );
-	    
+
             my $role = CXGN::People::Roles->new({ people_schema => $people_schema});
             my $error = $role->add_sp_role($name);
             if ($error){
