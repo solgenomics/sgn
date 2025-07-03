@@ -2563,7 +2563,7 @@ sub _delete_management_factors_experiments {
         });
         my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>$management_factor_type_id, 'project.project_id'=>$m->get_trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
         if ($nde_rs->count != 1){
-            die "Management factor ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!"
+            die "Treatment ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!"
         }
         while( my $r = $nde_rs->next){
             $r->delete();
@@ -3407,9 +3407,9 @@ sub save_plant_entries {
                     ($row_num, $col_num) = split(",", $coord_pair);
                 }
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
-                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
-                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, 
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism,
+                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm,
+                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm,
                 $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
                 $plant_index_number++;
                 $increment++;
@@ -3723,10 +3723,10 @@ sub save_plant_subplot_entries {
                     ($row_num, $col_num) = split(",", $coord_pair);
                 }
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
-                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
-                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, 
-                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, 
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism,
+                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm,
+                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm,
+                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm,
                 \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
                 $subplot_stock_id, $plant_subplot_relationship_cvterm);
                 $plant_index_number++;

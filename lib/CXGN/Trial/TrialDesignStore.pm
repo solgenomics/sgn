@@ -57,7 +57,7 @@ Used from CXGN::Trial::TrialCreate for saving newly designed genotyping plate OR
 
 =back
 
-This is used for storing new treatment (field management factor) trials.
+This is used for storing new treatment trials.
 
 =over 4
 
