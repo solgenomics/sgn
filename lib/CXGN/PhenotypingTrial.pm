@@ -217,6 +217,36 @@ sub get_stock_entry_summary {
     return \@stock_entry_summary;
 }
 
+=head2 remove_treatment
+
+ Usage:        my $trial_object->remove_treatment($treatment_id);
+ Desc:         removes the selected treatment from this trial
+ Ret:
+ Args:         $treatment_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub remove_treatment {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $treatment_id =shift;
+
+    my $trial_id = $self->get_trial_id();
+
+    my $treatment_rs = $schema->resultset('Project::Project')->find({ project_id => $treatment_id });
+    if (!$treatment_rs) {
+        return { error => "Treatment not found" };
+    }
+
+    eval {
+        $treatment_rs->delete();
+    };
+
+    return { success => 1 };
+}
+
 
 =head2 function get_crossing_experiments_from_field_trial()
 
