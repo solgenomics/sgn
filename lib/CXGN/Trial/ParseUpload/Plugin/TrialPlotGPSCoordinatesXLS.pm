@@ -11,7 +11,7 @@ use Scalar::Util qw(looks_like_number);
 
 sub _validate_with_plugin {
     my $self = shift;
-    my $args = shift // {};
+    my $args = shift || {};
     my $coord_type = $args->{coord_type} || 'Polygon';
     #print STDERR "COORD TYPE: $coord_type\n";
 
