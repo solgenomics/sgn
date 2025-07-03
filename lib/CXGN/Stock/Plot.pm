@@ -50,10 +50,10 @@ The accession contained within this plot
 
 =cut
 
-has 'accession' => (
-    isa => 'Maybe[HashRef]',
+has 'accessions' => (
+    isa => 'Maybe[ArrayRef]',
     is => 'rw',
-    predicate => 'has_accession'
+    predicate => 'has_accessions'
 );
 
 sub BUILD {
@@ -70,23 +70,23 @@ sub BUILD {
     my $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
 
-    my $accession = {};
+    my @accessions = ();
     my @subplots = ();
     my @plants = ();    
 
     while (my ($stock_id, $stock_name, $stock_type, $relationship_type) = $h->fetchrow_array()) {
         if ($stock_type eq "plant") {
-            push @plants, {id => $stock_id, name => $stock_name};
+            push @plants, {id => $stock_id, name => $stock_name, type => $stock_type};
         }
         if ($stock_type eq "subplot") {
-            push @subplots, {id => $stock_id, name => $stock_name};
+            push @subplots, {id => $stock_id, name => $stock_name, type => $stock_type};
         }
         if ($stock_type eq "accession") {
-            $accession = {id => $stock_id, name => $stock_name};
+            push @accessions, {id => $stock_id, name => $stock_name, type => $stock_type};
         }
     }
 
-    $self->accession($accession);
+    $self->accessions(\@accessions);
     $self->subplots(\@subplots);
     $self->plants(\@plants);
 }
@@ -175,20 +175,9 @@ sub get_plot_contents {
     $h = $self->schema()->storage()->dbh()->prepare($relationship_q);
     $h->execute($plot_id);
 
-    my @stocks;
+    my @stocks = (@{$self->plants()}, @{$self->accessions()}, @{$self->subplots()});
 
-    while (my ($stock_id, $stock_name, $stock_type, $relationship_type) = $h->fetchrow_array()) { #get child stocks
-
-        my $stock_data = {
-            name => $stock_name,
-            id => $stock_id,
-            type => $stock_type
-        };
-
-        push @stocks, $stock_data;
-    }
-
-    foreach my $plant (grep {$_->{type} eq "plant"} @stocks) { #does not necessarily execute, need this for tissue samples
+    foreach my $plant (@{$self->plants()}) { #does not necessarily execute, need this for tissue samples
         $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q);
         $h->execute($plant->{id});
 
@@ -217,9 +206,13 @@ sub get_plot_contents {
         }
     }
 
-    my @accessions = (grep {$_->{type} eq "accession"} @stocks); # At time of writing, this is only one. But, it may be possible in the future to have multiple accessions
+    # we get these like this because we grabbed stockprops.
+    my @accessions = grep {$_->{type} eq "accession"} @stocks;
+    my @subplots = grep {$_->{type} eq "subplot"} @stocks;
+    my @plants = grep {$_->{type} eq "plant"} @stocks;
+    my @tissue_samples = grep {$_->{type} eq "tissue_sample"} @stocks;
 
-    unless ( (grep {$_->{type} eq "subplot"} @stocks) || (grep {$_->{type} eq "plant"} @stocks) ) { #if no subplots or plants, just add accession
+    unless ( (@subplots) || (@plants) ) { #if no subplots or plants, just add accession
 
         foreach my $accession (@accessions) {
             my $accession_name = $accession->{name};
@@ -230,9 +223,9 @@ sub get_plot_contents {
         return $plot_structure;
     }
 
-    foreach my $subplot (grep {$_->{type} eq "subplot"} @stocks) { #does not necessarily execute
+    foreach my $subplot (@{$self->subplots()}) { #does not necessarily execute
 
-        unless (grep {$_->{type} eq "plant"} @stocks) { #if no plants, enter accession to subplot
+        unless (@plants) { #if no plants, enter accession to subplot
             $h = $self->schema()->storage()->dbh()->prepare($relationship_q); # need to run query to future proof for multiple accessions in future
             $h->execute($subplot->{id});
 
@@ -249,11 +242,11 @@ sub get_plot_contents {
         $plot_structure->{has}->{$subplot_name} = $subplot;
     }
 
-    foreach my $plant (grep {$_->{type} eq "plant"} @stocks) { #does not necessarily execute
+    foreach my $plant (@plants) { #does not necessarily execute
         $h = $self->schema()->storage()->dbh()->prepare($relationship_q);
         $h->execute($plant->{id});
 
-        foreach my $tissue_sample (grep {$_->{type} eq "tissue_sample"} @stocks) {
+        foreach my $tissue_sample (@tissue_samples) {
             if ($plant->{has}->{$tissue_sample->{name}}) {
                 my $tissue_sample_name = $tissue_sample->{name};
                 delete $tissue_sample->{name};
@@ -273,7 +266,7 @@ sub get_plot_contents {
             } 
         }
 
-        unless (grep {$_->{type} eq "subplot"} @stocks) { #if there are no subplots, we assign the plant directly to the plot
+        unless (@subplots) { #if there are no subplots, we assign the plant directly to the plot
             my $plant_name = $plant->{name};
             delete $plant->{name};
             $plot_structure->{has}->{$plant_name} = $plant;
@@ -281,6 +274,45 @@ sub get_plot_contents {
     }
 
     return $plot_structure;
+}
+
+=head2 get_tissue_samples
+
+Returns a listref of tissue samples associated with this plot
+
+=cut
+
+sub get_tissue_samples {
+    my $self = shift;
+    my $schema = shift;
+
+    my @tissue_samples;
+
+    my $tissue_sample_q = "SELECT * FROM 
+    (SELECT stock.stock_id, stock.name, 
+    (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type, 
+    (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+    FROM stock_relationship 
+    JOIN stock ON (stock.stock_id=stock_relationship.subject_id) 
+    WHERE stock_relationship.object_id=?) AS tissue_samples_subquery
+    WHERE stock_type='tissue_sample'";
+
+    foreach my $plant (@{$self->plants()}) {
+        my $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q);
+        $h->execute($plant->{id});
+
+        while (my ($tissue_sample_id, $tissue_sample_name, $stock_type, $relationship_type) = $h->fetchrow_array()) {
+            my $tissue_sample_data = {
+                name => $tissue_sample_name,
+                id => $tissue_sample_id,
+                type => $stock_type
+            };
+
+            push @tissue_samples, $tissue_sample_data;
+        }
+    }
+
+    return \@tissue_samples;
 }
 
 1;
