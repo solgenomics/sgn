@@ -140,12 +140,6 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
         
         my $script_cmd = "perl ${basepath}${reports_dir}${script}.pl -U $dbuser -H $dbhost -P $dbpass -D $dbname -o '$out_directory' -f '$json_filename' -s '$start_date' -e '$end_date'";
         
-       
-
-        print("Starting command $script_cmd \n");
-        print("Diretorio json $out_directory \n");
-        print("Arquivo json $json_filename \n");
-        print("Arquivo excel $excel_filename \n");
 
         # my $report_job = CXGN::Job->new({
         #     schema => $schema,
@@ -165,7 +159,12 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
         if ($? != 0) {
             die "Report script failed with exit code " . ($? >> 8);
         }
-
+        
+        print("Starting command $script_cmd \n");
+        print("Path to json $out_directory \n");
+        print("json file $json_filename \n");
+        print("excel file $excel_filename \n");
+        
         my $json_file = File::Spec->catfile($out_directory, $json_filename);
         print("Reading output from file: $json_file \n");
 
