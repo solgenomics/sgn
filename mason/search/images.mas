@@ -41,9 +41,9 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-6 control-label">Related accession: </label>
+                <label class="col-sm-6 control-label">Related stock: </label>
                 <div class="col-sm-6" >
-                    <input class="form-control" type="text" id="image_related_accession" name="image_related_accession" placeholder="e.g. Accession1" />
+                    <input class="form-control" type="text" id="image_related_stock" name="image_related_stock" placeholder="e.g. Accession/Plot/TissueSample" />
                 </div>
             </div>
             <div class="form-group">
@@ -94,6 +94,14 @@ jQuery(document).ready(function () {
         source: '/ajax/people/autocomplete'
     });
 
+    jQuery("#image_stock_uniquename").autocomplete({
+        source: '/ajax/stock/stock_autocomplete'
+    });
+
+    jQuery("#image_related_stock").autocomplete({
+        source: '/ajax/stock/stock_autocomplete'
+    });
+
     jQuery('#image_search_submit').click( function() {
         _load_image_search_results();
     });
@@ -127,7 +135,7 @@ function _load_image_search_results() {
               d.image_person = jQuery('#image_submitter').val();
               d.image_tag = jQuery('#image_tag').val();
               d.image_stock_uniquename = jQuery('#image_stock_uniquename').val();
-              d.image_related_accession = jQuery('#image_related_accession').val();
+              d.image_related_stock = jQuery('#image_related_stock').val();
               d.image_project_name = jQuery('#image_project_name').val();
             }
         }
