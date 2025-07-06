@@ -57,6 +57,8 @@ sub _validate_with_plugin {
     #get column headers
     my $subplot_name_head;
     my $plant_index_number_head;
+    my $row_num_head;
+    my $col_num_head;
 
     if ($worksheet->get_cell(0,0)) {
         $subplot_name_head  = $worksheet->get_cell(0,0)->value();
@@ -72,13 +74,29 @@ sub _validate_with_plugin {
     if (!$plant_index_number_head || $plant_index_number_head ne 'plant_index_number') {
         push @error_messages, "Cell B1: plant_index_number is missing from the header";
     }
+    if ($worksheet->get_cell(0,2)) {
+        $row_num_head  = $worksheet->get_cell(0,2)->value();
+        $row_num_head =~ s/^\s+|\s+$//g;
+    }
+    if ($worksheet->get_cell(0,3)) {
+        $col_num_head  = $worksheet->get_cell(0,3)->value();
+        $col_num_head =~ s/^\s+|\s+$//g;
+    }
+    if (($row_num_head && $row_num_head ne "num_rows")||($col_num_head && $col_num_head ne "num_cols")) {
+        push @error_messages, "If including row and column data, cells C1 and D1 must be num_rows and num_cols respectively.";
+    }
 
     my %seen_subplot_names;
     my %seen_plant_names;
+    my %seen_plant_coords;
+    my $coords_given = 0;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $subplot_name;
         my $plant_index_number;
+        my $row_num;
+        my $col_num;
+        my $coord_pair;
 
         if ($worksheet->get_cell($row,0)) {
             $subplot_name = $worksheet->get_cell($row,0)->value();
@@ -86,6 +104,21 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,1)) {
             $plant_index_number = $worksheet->get_cell($row,1)->value();
+        }
+
+        if ($worksheet->get_cell($row,2) && $worksheet->get_cell($row,3)) {
+            $row_num = $worksheet->get_cell($row,2)->value();
+            $row_num =~ s/^\s+|\s+$//g;
+            $col_num = $worksheet->get_cell($row,3)->value();
+            $col_num =~ s/^\s+|\s+$//g;
+            $coords_given = 1;
+            $coord_pair = join(',', ($row_num, $col_num));
+            if (exists($seen_plant_coords{$subplot_name}{$coord_pair})) {
+                push @error_messages, "Multiple plants were assigned to the same coordinates ($coord_pair) in the same subplot ($subplot_name).";
+            } 
+            $seen_plant_coords{$plot_name}{$coord_pair} = 1;
+        } elsif ($coords_given) {
+            push @error_messages, "Coordinates were given for some plant entries, but not for $plant_name in $subplot_name.";
         }
 
         if (!$subplot_name || $subplot_name eq '' ) {
@@ -200,6 +233,8 @@ sub _parse_with_plugin {
     for my $row ( 1 .. $row_max ) {
         my $subplot_name;
         my $plant_index_number;
+        my $row_num;
+        my $col_num;
 
         if ($worksheet->get_cell($row,0)) {
             $subplot_name = $worksheet->get_cell($row,0)->value();
@@ -210,17 +245,35 @@ sub _parse_with_plugin {
         }
         my $plant_name = $subplot_name."_plant_".$plant_index_number;
 
+        if ($worksheet->get_cell($row,2) && $worksheet->get_cell($row,3)) {
+            $row_num = $worksheet->get_cell($row,2)->value();
+            $row_num =~ s/^\s+|\s+$//g;
+            $col_num = $worksheet->get_cell($row,3)->value();
+            $col_num =~ s/^\s+|\s+$//g;
+        }
+
         #skip blank lines
         if (!$subplot_name && !$plant_name) {
             next;
         }
 
-        push @{$parsed_entries{'data'}}, {
-            subplot_name => $subplot_name,
-            subplot_stock_id => $subplot_lookup{$subplot_name},
-            plant_name => $plant_name,
-            plant_index_number => $plant_index_number
-        };
+        if ($row_num && $col_num) {
+            push @{$parsed_entries{'data'}}, {
+                subplot_name => $subplot_name,
+                subplot_stock_id => $subplot_lookup{$subplot_name},
+                plant_name => $plant_name,
+                plant_index_number => $plant_index_number,
+                row_num => $row_num,
+                col_num => $col_num
+            };
+        } else {
+            push @{$parsed_entries{'data'}}, {
+                subplot_name => $subplot_name,
+                subplot_stock_id => $subplot_lookup{$subplot_name},
+                plant_name => $plant_name,
+                plant_index_number => $plant_index_number
+            };
+        }
     }
 
     $self->_set_parsed_data(\%parsed_entries);

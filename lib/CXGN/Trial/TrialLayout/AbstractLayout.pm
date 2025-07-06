@@ -84,6 +84,7 @@ has 'plot_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_plot_names
 has 'replicate_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_replicate_numbers', reader => 'get_replicate_numbers', writer => '_set_replicate_numbers');
 
 has 'accession_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_accession_names', reader => 'get_accession_names', writer => '_set_accession_names');
+has 'analysis_result_stock_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_analysis_result_stock_names', reader => 'get_analysis_result_stock_names', writer => '_set_analysis_result_stock_names');
 
 has 'control_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_control_names', reader => 'get_control_names', writer => '_set_control_names');
 
@@ -114,42 +115,36 @@ sub cvterm_id {
 sub convert_source_stock_types_to_ids {
     my $self = shift;
 
-    print STDERR "Converting source stock types to ids... \n";
-
     my @source_cvterm_ids;
-    foreach my $source_stock (@{$self->get_source_stock_types()}) {
-        # print STDERR "Converting $source_stock to ... ";
-        my $source_stock_cvterm_id = $self->cvterm_id($source_stock);
-        # print STDERR "$source_stock_cvterm_id . \n";
-        push @source_cvterm_ids, $source_stock_cvterm_id;
+    my @source_stocks = @{$self->get_source_stock_types()};
+
+    foreach my $source_stock (@source_stocks) {
+        push @source_cvterm_ids, $self->cvterm_id($source_stock);
     }
+
     $self->set_source_stock_type_ids(\@source_cvterm_ids);
 
     my @source_primary_cvterm_ids;
-    foreach my $source_stock (@{$self->get_source_primary_stock_types()}) {
-        # print STDERR "Converting $source_stock to ... ";
-        my $source_stock_cvterm_id = $self->cvterm_id($source_stock);
-        # print STDERR "$source_stock_cvterm_id . \n";
-        push @source_primary_cvterm_ids, $source_stock_cvterm_id;
+    my @primary_source_stocks = @{$self->get_source_primary_stock_types()};
+
+    foreach my $source_stock (@primary_source_stocks) {
+        push @source_primary_cvterm_ids, $self->cvterm_id($source_stock);
     }
+
     $self->set_source_primary_stock_type_ids(\@source_primary_cvterm_ids);
 
     my @target_cvterm_ids;
     foreach my $target_stock (@{$self->get_target_stock_types()}) {
-        # print STDERR "Converting $target_stock to ... ";
-        my $target_stock_cvterm_id = $self->cvterm_id($target_stock);
-        # print STDERR "$target_stock_cvterm_id . \n";
-        push @target_cvterm_ids, $target_stock_cvterm_id;
+        push @target_cvterm_ids, $self->cvterm_id($target_stock);
     }
+
     $self->set_target_stock_type_ids(\@target_cvterm_ids);
 
     my @rel_type_cvterm_ids;
     foreach my $rel_type (@{$self->get_relationship_types()}) {
-        # print STDERR "Converting $rel_type to ... ";
-        my $rel_type_cvterm_id = $self->cvterm_id($rel_type);
-        # print STDERR "$rel_type_cvterm_id . \n";
-        push @rel_type_cvterm_ids, $rel_type_cvterm_id;
+        push @rel_type_cvterm_ids, $self->cvterm_id($rel_type);
     }
+
     $self->set_relationship_type_ids(\@rel_type_cvterm_ids);
 }
 
@@ -159,43 +154,56 @@ sub _lookup_trial_id {
     print STDERR "CXGN::Trial::TrialLayout AbstractLayout _lookup_trial_id() ".localtime."\n";
     $self->get_schema->storage->dbh->do('SET search_path TO public,sgn');
 
-  #print STDERR "Check 2.1: ".localtime()."\n";
-  $self->_set_project_from_id();
-  if (!$self->has_project()) {
-      print STDERR "Trial id not found\n";
-    return;
-  }
+    #print STDERR "Check 2.1: ".localtime()."\n";
+    $self->_set_project_from_id();
+    if (!$self->has_project()) {
+        print STDERR "Trial id not found\n";
+        return;
+    }
 
     if (!$self->_get_trial_year_from_project()) {
         print STDERR "Trial has no associated trial year... quitting!\n";
-      #return;
-  } else {
-        $self->_set_trial_year($self->_get_trial_year_from_project());
+    #return;
+    } else {
+            $self->_set_trial_year($self->_get_trial_year_from_project());
     }
 
-  $self->_set_trial_name($self->get_project->name());
-  $self->_set_trial_description($self->get_project->description());
+    $self->_set_trial_name($self->get_project->name());
+    $self->_set_trial_description($self->get_project->description());
 
-  if (!$self->_get_design_type_from_project()) {
-      print STDERR "Trial has no design type... not creating layout object.\n";
-      return;
-  }
+    if (!$self->_get_design_type_from_project()) {
+        print STDERR "Trial has no design type... not creating layout object.\n";
+        return;
+    }
 
     $self->_set_design_type($self->_get_design_type_from_project());
+    $self->_set_design($self->_get_design_from_trial());
+    # print STDERR "DESIGN: ".Dumper($design)."\n";
 
-    my $design = $self->_set_design($self->_get_design_from_trial());
+    $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
+    # moved to subclass  $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
+    $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
+    $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
+    $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
+    $self->_set_accession_names($self->_get_unique_accession_names_from_trial() || []);        
+    $self->_set_control_names($self->_get_unique_control_accession_names_from_trial() || []);
+    $self->set_analysis_result_stock_names();
+    
+    print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
+}
 
-###  print STDERR "_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
+sub set_analysis_result_stock_names {
+    my $self = shift;
+    my %design = %{$self->get_design()};
+    my $design_key = (keys %design)[0];
+    my $sample_entry = $design{$design_key};
+    if ($sample_entry->{'analysis_result_stock_id'}) {
+        print STDERR "SETTING ANALYSIS RESULT STOCK NAMES\n";
+        $self->_set_analysis_result_stock_names($self->_get_unique_analysis_result_stock_names_from_trial() || []);
+        $self->_set_accession_names([]);        
+        $self->_set_control_names([]);
+    } 
 
-  $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
-# moved to subclass  $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
-  $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
-  $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
-  $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
-  $self->_set_accession_names($self->_get_unique_accession_names_from_trial || [] );
-  $self->_set_control_names($self->_get_unique_control_accession_names_from_trial || [] );
-  #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
-  print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
 }
 
 sub _retrieve_trial_location {
@@ -233,19 +241,44 @@ sub _get_unique_accession_names_from_trial {
     my %unique_acc;
     no warnings 'numeric'; #for genotyping plate so that wells don't give warning
 
-    #print STDERR "DESIGN (AbstractTrial): ".Dumper(\%design);
-
+    # print STDERR "DESIGN (AbstractTrial): ".Dumper(\%design);
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
-        $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
+        $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"};
     }
+
     foreach (sort keys %unique_acc){
         push @acc_names, {accession_name=>$_, stock_id=>$unique_acc{$_}};
     }
+
     if (!scalar(@acc_names) >= 1){
         return;
     }
+
     return \@acc_names;
+}
+
+sub _get_unique_analysis_result_stock_names_from_trial {
+    my $self = shift;
+    my %design = %{$self->get_design()};
+    my @analysis_result_stock_names;
+    my %unique_analysis_result_stock_names;
+    no warnings 'numeric'; #for genotyping plate so that wells don't give warning
+
+    foreach my $key (sort { $a <=> $b} keys %design) {
+        my %design_info = %{$design{$key}};    
+        $unique_analysis_result_stock_names{$design_info{"analysis_result_stock_name"}} = $design_info{"analysis_result_stock_id"}
+    }
+
+    foreach (sort keys %unique_analysis_result_stock_names){
+        push @analysis_result_stock_names, {analysis_result_stock_name=>$_, stock_id=>$unique_analysis_result_stock_names{$_}};
+    }
+
+    if (!scalar(@analysis_result_stock_names) >= 1){
+        return;
+    }
+
+    return \@analysis_result_stock_names;
 }
 
 sub _get_unique_control_accession_names_from_trial {
@@ -254,6 +287,7 @@ sub _get_unique_control_accession_names_from_trial {
     my @control_names;
     my %unique_controls;
     no warnings 'numeric'; #for genotyping plate so that wells don't give warning
+
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         my $is_a_control = $design_info{"is_a_control"};
@@ -261,12 +295,15 @@ sub _get_unique_control_accession_names_from_trial {
             $unique_controls{$design_info{"accession_name"}} = $design_info{"accession_id"}
         }
     }
+
     foreach (sort keys %unique_controls){
         push @control_names, {accession_name=>$_, stock_id=>$unique_controls{$_}};
     }
+
     if (!scalar(@control_names) >= 1){
         return;
     }
+
     return \@control_names;
 }
 
@@ -306,8 +343,12 @@ sub _get_design_from_trial {
     my $trial_layout_json = $project->projectprops->find({ 'type_id' => $self->cvterm_id('trial_layout_json') });
     my $trial_has_plants = $project->projectprops->find({ 'type_id' => $self->cvterm_id('project_has_plant_entries') });
 
-    my $design = decode_json $trial_layout_json->value if ($trial_layout_json);
+    my $design;
 
+    if ($trial_layout_json) {
+        $design = decode_json $trial_layout_json->value;
+    }
+    # print STDERR "\n_get_design_from_trial design: ".Dumper($design)."\n";
     if (keys(%$design)) {
         # print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
 	    # print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
@@ -329,7 +370,7 @@ sub _get_design_from_trial {
 	} else {
 	print STDERR "Regenerating cache...\n";
         my $design = $self->generate_and_cache_layout();
-	#print STDERR "Generated DESIGN (and cached) : ".Dumper($design);
+	    # print STDERR "_get_design_from_trial Generated DESIGN (and cached) : ".Dumper($design);
 	return $design;
     }
 }
@@ -444,6 +485,7 @@ sub retrieve_plot_info {
 
     #print  STDERR "SORUCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
     #print STDERR "REL TYEPS = ".Dumper($self->get_relationship_types());
+    my $source_primary_stock_type_ids = $self->get_source_primary_stock_type_ids();
 
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
 	{ 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_primary_stock_type_ids() } },
@@ -494,14 +536,17 @@ sub retrieve_plot_info {
     # 	$design_info{"genus"} = $genus;
     # }
     my $accession = $accession_rs->first->object;
+    
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('plant_of')})->search_related('object', {'object.type_id' => $self->cvterm_id('plant') }, {order_by=>"object.stock_id"});
 
     my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('subplot_of')})->search_related('object', {'object.type_id' => $self->cvterm_id('subplot')}, {order_by=>"object.stock_id"});
     my $tissues = $plot->search_related('stock_relationship_objects', { 'me.type_id' => $self->cvterm_id('tissue_sample_of') })->search_related('subject', {'subject.type_id' => $self->cvterm_id('tissue_sample')}, {order_by=>"subject.stock_id"});
     my $seedlot_transaction = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('seed transaction'), 'object.type_id' => $self->cvterm_id('seedlot') }, {'join'=>'object', order_by=>"object.stock_id"});
+    
     if ($seedlot_transaction->count > 0 && $seedlot_transaction->count != 1){
-	die "There is more than one seedlot linked here!\n";
+	    die "There is more than one seedlot linked here!\n";
 	}
+
 
     my $accession_name = $accession->uniquename;
     my $accession_id = $accession->stock_id;
@@ -577,14 +622,30 @@ sub retrieve_plot_info {
 	    $unique_controls{$accession_name}=$accession_id;
     }
     else {
-	$unique_accessions{$accession_name}=$accession_id;
+	    $unique_accessions{$accession_name}=$accession_id;
     }
-    if ($accession_name) {
-        $design_info{"accession_name"}=$accession_name;
+
+    my $type = $accession->type;
+    # print STDERR "ABSTRACTLayout stock TYPE: ".$type->name."\n";
+    # print STDERR "ABSTRACTLayout stock name: ".$accession_name."\n";
+    if ($type->name eq 'analysis_result'){
+        if ($accession_name) {
+            $design_info{"analysis_result_stock_name"} = $accession_name;
+        }
+
+        if ($accession_id) {
+            $design_info{"analysis_result_stock_id"} = $accession_id;
+        }
+    } else {
+        if ($accession_name) {
+            $design_info{"accession_name"} = $accession_name;
+        }
+
+        if ($accession_id) {
+            $design_info{"accession_id"} = $accession_id;
+        }
     }
-    if ($accession_id) {
-	$design_info{"accession_id"}=$accession_id;
-    }
+
     if ($self->get_verify_layout){
 	if (!$accession_name || !$accession_id || !$plot_name || !$plot_id){
 	    push @{$verify_errors{errors}->{layout_errors}}, "Plot: $plot_name does not have an accession!";
@@ -846,8 +907,7 @@ sub _get_plots {
 
     # get source stock types
     my $source_cvterm_ids = $self->get_source_stock_type_ids();
-
-     print STDERR "EXP TYPE =".$self->get_experiment_type()."\n";
+    print STDERR "EXP TYPE =".$self->get_experiment_type()."\n";
 
      # if ($self->get_experiment_type eq 'field_layout'){
      # 	$unit_type_id = $plot_cvterm_id;
@@ -862,8 +922,8 @@ sub _get_plots {
     @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => {-in => $self->get_target_stock_type_ids()  } });
 
     #debug...
-    print STDERR "PLOT LIST: \n";
-    print STDERR  join( "\n", map { $_->name() } @plots)."\n";
+    # print STDERR "PLOT LIST: \n";
+    # print STDERR  join( "\n", map { $_->name() } @plots)."\n";
 
     return \@plots;
 }

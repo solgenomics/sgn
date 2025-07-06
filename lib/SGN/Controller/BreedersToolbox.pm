@@ -415,6 +415,10 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     my $sampling_facilities = $c->config->{sampling_facilities};
     my @sampling_facilities = split ',',$sampling_facilities;
 
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+    my @sample_tissue_types = split ',',$sample_tissue_types_string;
+
+    $c->stash->{sample_tissue_types} = \@sample_tissue_types;
     $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{nirs_files} = $data->{files};
     $c->stash->{deleted_nirs_files} = $data->{deleted_files};
@@ -422,6 +426,37 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     $c->stash->{all_deleted_nirs_files} = $all_data->{deleted_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_nirs.mas';
+
+}
+
+sub manage_transcriptomics :Path("/breeders/transcriptomics") Args(0) {
+    my $self =shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    my @file_types = ( 'transcriptomics spreadsheet' );
+    my $all_data = $self->get_file_data($c, \@file_types, 1);
+    my $data = $self->get_file_data($c, \@file_types, 0);
+
+    my $sampling_facilities = $c->config->{sampling_facilities};
+    my @sampling_facilities = split ',',$sampling_facilities;
+
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+    my @sample_tissue_types = split ',',$sample_tissue_types_string;
+    print STDERR Dumper(@sample_tissue_types);
+
+    $c->stash->{sample_tissue_types} = \@sample_tissue_types;
+    $c->stash->{sampling_facilities} = \@sampling_facilities;
+    $c->stash->{transcriptomics_files} = $data->{files};
+    $c->stash->{deleted_transcriptomics_files} = $data->{deleted_files};
+    $c->stash->{all_transcriptomics_files} = $all_data->{files};
+    $c->stash->{all_deleted_transcriptomics_files} = $all_data->{deleted_files};
+
+    $c->stash->{template} = '/breeders_toolbox/manage_transcriptomics.mas';
 
 }
 
@@ -1109,6 +1144,11 @@ sub manage_transformations : Path("/breeders/transformations") Args(0) {
     my @breeding_programs = @$breeding_programs;
     my @roles = $c->user->roles();
 
+    my $is_curator;
+    if (grep { /curator/ } @roles) {
+        $is_curator = 1;
+    }
+
     foreach my $role (@roles) {
         for (my $i=0; $i < scalar @breeding_programs; $i++) {
             if ($role eq $breeding_programs[$i][1]){
@@ -1126,6 +1166,8 @@ sub manage_transformations : Path("/breeders/transformations") Args(0) {
     $c->stash->{programs} = \@breeding_programs;
 
     $c->stash->{roles} = $c->user()->roles();
+
+    $c->stash->{is_curator} = $is_curator;
 
     $c->stash->{template} = '/transformation/manage_transformation.mas';
 

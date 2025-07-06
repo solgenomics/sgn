@@ -1,7 +1,9 @@
 
 <%args>
-
+%services
 </%args>
+
+% use JSON::Any;
 
 <& /util/import_javascript.mas,
   classes => ['jquery.dataTables-buttons-min',
@@ -128,12 +130,17 @@ tr.shown td.details-control {
                     <label class="col-sm-6 control-label">Image Analysis Service: </label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="image_analysis_service_select" name="image_analysis_service_select">
-                            <option value="">Select An Analysis Service</option>
-                            <option value="necrosis">Necrosis(Makerere AIR Lab)</option>
+                            <option value="">Select An Analysis Service:</option>
+
+% foreach my $s (keys %services) {
+ 		            <option value="<% $s %>"><% $services{$s}->{description} %></option>
+% }
+
+                            <!-- option value="necrosis">Necrosis(Makerere AIR Lab)</option>
                             <option value="largest_contour_percent">Necrosis Largest Contour Mask Percent</option>
                             <option value="count_contours">Count Contours</option>
                             <option value="count_sift">SIFT Feature Count</option>
-                            <option value="whitefly_count">Whitefly Count (Makerere AIR Lab)</option>
+                            <option value="whitefly_count">Whitefly Count (Makerere AIR Lab)</option  -->
                         </select>
                     </div>
                 </div>
@@ -287,11 +294,12 @@ jQuery(document).ready(function(){
 
     jQuery('#image_analysis_service_select').change(function() {
         var service = jQuery('#image_analysis_service_select').val();
+	var service_defs = JSON.parse('<% JSON::encode_json(\%services) %>');
         jQuery('#image_analysis_trait_select').html('<option value="">Select A Trait</option>');
         if (service) {
             jQuery('#working_modal').modal('show');
             // add crop and service specific trait options
-            var all_traits = service_traits[service];
+            var all_traits = service_defs[service].service_traits;
             var trait_names = Object.keys(all_traits);
             var options =  [];
 
@@ -300,15 +308,16 @@ jQuery(document).ready(function(){
                 method: 'GET',
                 success: function(response) {
                     // console.log("Retrieved crop names and they are: "+response.result.data);
-                    var supportedcrops = response.result.data;
-                    supportedcrops.forEach(function(crop) {
+//                    var supportedcrops = response.result.data;
+//                    supportedcrops.forEach(function(crop) {
+//		        alert("CROP = "+crop);
                         trait_names.forEach(function(name) {
-                            if (all_traits[name] == crop) {
+//                            if (all_traits[name] == crop) {
                                 // console.log("Id is "+id);
                                 options.push('<option value="'+ name +'">'+ name +'</option>');
-                            }
-                        });
-                    });
+//                            }
+//                        });
+			});
                     jQuery('#image_analysis_trait_select').append(options);
                     jQuery('#image_analysis_trait_group').show();
                     jQuery('#working_modal').modal('hide');
@@ -556,6 +565,7 @@ function _load_image_search_results() {
         'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url':  '/ajax/search/images',
+            'method': 'POST',
             'data': function(d) {
               d.html_select_box = "image_analysis_select";
               d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();

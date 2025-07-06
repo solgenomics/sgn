@@ -523,28 +523,36 @@ has 'obsolete_note' => (
 sub BUILD {
     my $self = shift;
 
-    #print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
     my $stock;
-    if ($self->stock_id){
-        $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
-        $self->stock($stock);
-        $self->stock_id($stock->stock_id);
-	$self->create_date($stock->create_date);
-    }
-    elsif ($self->uniquename) {
-	$stock = $self->schema()->resultset("Stock::Stock")->find( { uniquename => $self->uniquename() });
-	if (!$stock) {
-	    print STDERR "Can't find stock ".$self->uniquename.". Generating empty object.\n";
-	}
-	else {
-	    $self->stock($stock);
-	    $self->create_date($stock->create_date());
-	    $self->stock_id($stock->stock_id);
-	}
-    }
+    my $schema = $self->schema;
+    my $stock_id = $self->stock_id;
+    my $uniquename = $self->uniquename;
 
+    # Attempt to retrieve the stock object from DB
+    try {
+        if ($stock_id) {
+            $stock = $schema->resultset("Stock::Stock")->find({ stock_id => $stock_id });
+        }
+        elsif ($uniquename) {
+            $stock = $schema->resultset("Stock::Stock")->find({ uniquename => $uniquename });
+            unless ($stock) {
+                print STDERR "Can't find stock with uniquename '$uniquename'. Generating empty object.\n";
+            }
+        }
+    } catch {
+        warn "Error fetching stock from database: $_";
+        return;
+    };
 
-    if (defined $stock && !$self->is_saving) {
+    # Exit early if stock is not found
+    return unless $stock;
+
+    # Cache the stock object
+    $self->stock($stock);
+    $self->stock_id($stock->stock_id);
+    $self->create_date($stock->create_date);
+
+    unless ($self->is_saving) {
         $self->organism_id($stock->organism_id);
 #	my $organism = $self->schema()->resultset("Organism::Organism")->find( { organism_id => $stock->organism_id() });
 #	$self->organism($organism);
@@ -558,9 +566,7 @@ sub BUILD {
         $self->_retrieve_populations();
     }
 
-
-    if ($self->stock_id()) {
-
+    if ($stock_id) {
 	my @objects;
 	my $object_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_objects();
 	foreach my $object ($object_rs->all()) {
@@ -576,7 +582,6 @@ sub BUILD {
 
 	$self->subjects(\@subjects);
     }
-
 
     return $self;
 }
@@ -652,7 +657,6 @@ sub store {
     }
 
     ###Check first if the name  exists in te database
-    my $exists;
     if ($self->check_name_exists){
 	print STDERR "Checking stock uniquename \n";
         $exists= $self->exists_in_database();
@@ -702,7 +706,7 @@ sub store {
         if ($self->description){ $row->description($self->description()) };
         if ($self->type_id){ $row->type_id($self->type_id()) };
         if ($self->organism_id){ $row->organism_id($self->organism_id()) };
-        if ($self->is_obsolete){ $row->is_obsolete($self->is_obsolete()) };
+        if (defined($self->is_obsolete)){ $row->is_obsolete($self->is_obsolete()) };
         $row->update();
         if ($self->organization_name){
             $self->_update_stockprop('organization', $self->organization_name());
@@ -1641,7 +1645,7 @@ sub _store_population_relationship {
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
 
-    my @populations = split /\|/, $self->population_name();
+    my @populations = split(/\|/, $self->population_name());
 
     foreach my $population_name (@populations) {
 
@@ -2176,7 +2180,6 @@ sub hard_delete {
     $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
 }
-
 
 ###__PACKAGE__->meta->make_immutable;
 

@@ -127,7 +127,17 @@ has 'breeding_program_id' => (is => 'rw', isa => 'Int');
 
 =cut
 
-has 'accession_names' => (is => 'rw', isa => 'Maybe[ArrayRef]', lazy => 1, builder => '_load_accession_names');
+has 'accession_names' => (is => 'rw', isa => 'Maybe[ArrayRef]|Undef', lazy => 1, builder => '_load_accession_names');
+
+=head2 analysis_result_stock_names()
+
+=cut
+
+has 'analysis_result_stock_names' => (
+    is => 'rw', 
+    isa => 'Maybe[ArrayRef]|Undef',
+    lazy => 1, 
+    builder => '_load_analysis_result_stock_names');
 
 =head2 design()
 
@@ -398,7 +408,13 @@ sub create_and_store_analysis_design {
         my $td = CXGN::Trial::TrialDesign->new();
 
         $td->set_trial_name($self->name());
-        $td->set_stock_list($self->accession_names());
+        if ($self->analysis_result_stock_names()) {
+            $td->set_stock_list($self->analysis_result_stock_names());
+        }
+        else {
+            $td->set_stock_list($self->accession_names());
+        }   
+        # $td->set_stock_list($self->accession_names());
         $td->set_design_type("Analysis");
 
         if ($td->calculate_design()) {
@@ -487,8 +503,7 @@ sub store_analysis_values {
     my $dbuser = shift;
     my $dbpass = shift;
     my $tempfile_path = shift;
-
-    print STDERR "Storing analysis values...\n";
+    my $is_analysis_result_stock_type = shift;
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
@@ -529,7 +544,7 @@ sub store_analysis_values {
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
     if ($stored_phenotype_error) {
-	die "An error occurred storing the phenotypes: $stored_phenotype_error\n";
+	    die "An error occurred storing the phenotypes: $stored_phenotype_error\n";
     }
 
 }
@@ -547,11 +562,13 @@ sub get_phenotype_matrix {
     my $self = shift;
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=>$self->bcs_schema(),
-        search_type => "MaterializedViewTable",
+        # search_type => "MaterializedViewTable",
+        search_type => "Native",
         data_level => "analysis_instance",
         experiment_type => "analysis_experiment",
         trial_list=> [ $self->get_trial_id() ],
     );
+
     my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
 }
@@ -563,10 +580,17 @@ sub _load_accession_names {
     #print STDERR "Design = ".Dumper($design);
 
     my @accessions = $design->get_accession_names();
-    print STDERR "ACCESSIONS: ". Dumper(\@accessions);
+    # print STDERR "_load_accession_names ACCESSIONS: ". Dumper(\@accessions);
     # get the accessions from the design (not the dataset!)
     #
     return $self->design()->get_accession_names();
+}
+
+sub _load_analysis_result_stock_names {
+    my $self = shift;
+
+    my $design = $self->design();
+    return $self->design()->get_analysis_result_stock_names();
 }
 
 sub _load_traits {
@@ -575,10 +599,9 @@ sub _load_traits {
     my $phenotypes = $self->get_phenotype_matrix();
 
     my $header = $phenotypes->[0];
-
     my $traits = [ @$header[39..scalar(@$header)-1] ];
 
-    print STDERR "_load_traits: TRAITS: ".Dumper($traits);
+    # print STDERR "_load_traits: TRAITS: ".Dumper($traits);
     #$self->traits($traits);
     return $traits;
 }

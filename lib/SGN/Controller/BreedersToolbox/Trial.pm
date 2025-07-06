@@ -79,8 +79,8 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     my $trial_type = $h->fetchrow_array();
     if ($trial_type eq "analysis_experiment"){
         $c->response->redirect($c->uri_for("/analyses/$trial_id"));
-    } 
-    
+    }
+
     $c->stash->{trial} = $trial;
 }
 
@@ -230,6 +230,23 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             my $genotyping_project_name = $genotyping_project->name();
             my $genotyping_project_link = '<a href="/breeders/trial/'.$genotyping_project_id.'">'.$genotyping_project_name.'</a>';
             $c->stash->{genotyping_project_link} = $genotyping_project_link;
+
+            my $project_info = CXGN::Genotype::GenotypingProject->new({
+                bcs_schema => $schema,
+                project_id => $genotyping_project_id
+            });
+
+            my $associated_protocol  = $project_info->get_associated_protocol();
+
+            if (defined $associated_protocol && scalar(@$associated_protocol)>0) {
+                my $protocol_id = $associated_protocol->[0]->[0];
+                my $protocol_info = CXGN::Genotype::Protocol->new({
+                    bcs_schema => $schema,
+                    nd_protocol_id => $protocol_id
+                });
+                my $assay_type = $protocol_info->{assay_type};
+                $c->stash->{assay_type} = $assay_type;
+            }
         }
 
         if ($trial->get_genotyping_plate_format){
@@ -518,7 +535,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         return;
     }
 
-    my $format = $c->req->param("format") || "xls";
+    my $format = $c->req->param("format") || "xlsx";
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
@@ -575,7 +592,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $plugin = "";
-    if ( ($format eq "xls") && ($what eq "layout")) {
+    if ( ($format eq "xlsx") && ($what eq "layout")) {
         $plugin = "TrialLayoutExcel";
     }
     if (($format eq "csv") && ($what eq "layout")) {

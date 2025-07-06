@@ -16,7 +16,7 @@ use CGI;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use File::Slurp qw | read_file |;
-use File::Temp 'tempfile';
+use File::Temp qw(tempfile tempdir);
 use File::Basename;
 use File::Copy;
 use URI::FromHash 'uri';
@@ -41,6 +41,15 @@ use CXGN::Genotype::GWAS;
 use CXGN::Accession;
 use CXGN::Stock::Seedlot::Maintenance;
 use CXGN::Dataset;
+use CXGN::Stock;
+use CXGN::Project;
+use IO::Compress::Gzip qw(gzip $GzipError);
+use Catalyst::Utils;
+use SGN::Image;
+use Archive::Tar;
+use CXGN::Stock::ObsoletedStocks;
+use CXGN::People::Person;
+use CXGN::BreedersToolbox::Accessions;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -52,6 +61,15 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 	    return;
     }
 
+    my $is_curator;
+    if ($c->user()) {
+        my @roles = $c->user->roles();
+        if (grep { /curator/ } @roles) {
+            $is_curator = 1;
+        }
+    }
+
+    $c->stash->{is_curator} = $is_curator;
     $c->stash->{seedlot_maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
 
     $c->stash->{can_read_pedigrees} = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "pedigrees");
@@ -194,7 +212,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 sub _parse_list_from_json {
     my $list_json = shift;
 #    print STDERR "LIST JSON: ". Dumper $list_json;
-    my $json = new JSON;
+    my $json = JSON->new;
     if ($list_json) {
        # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
         my $decoded_list = decode_json($list_json);
@@ -361,10 +379,14 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     }
     my @trial_list_int;
     my $trial_name = "";
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
     foreach (@trial_list) {
         if ($_ =~ m/^\d+$/) {
             push @trial_list_int, $_;
-	    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $_ });
+	    my $trial = CXGN::Trial->new( { bcs_schema => $schema, people_schema=>$people_schema, metadata_schema=>$metadata_schema,phenome_schema=>$phenome_schema,trial_id => $_ });
 	    $trial_name = $trial->get_name();
 	    $trial_name =~ s/ /\_/g;
         } else {
@@ -642,7 +664,9 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         if ($format eq ".csv") {
 
             #build csv with column names
-            open(CSV, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
+            ## no critic (RequireBriefOpen)
+            open(my $csv_fh, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
+            {
                 my @header = @{$data[0]};
                 my $num_col = scalar(@header);
                 for (my $line =0; $line< @data; $line++) {
@@ -650,18 +674,19 @@ sub download_action : Path('/breeders/download_action') Args(0) {
                     my $step = 1;
                     for(my $i=0; $i<$num_col; $i++) {
                         if (defined($columns[$i])) {
-                            print CSV "\"$columns[$i]\"";
+                            print $csv_fh "\"$columns[$i]\"";
                         } else {
-                            print CSV "\"\"";
+                            print $csv_fh "\"\"";
                         }
                         if ($step < $num_col) {
-                            print CSV ",";
+                            print $csv_fh ",";
                         }
                         $step++;
                     }
-                    print CSV "\n";
+                    print $csv_fh "\n";
                 }
-            close CSV;
+            }
+            close $csv_fh;
 
         } else {
             my $ss = Excel::Writer::XLSX->new($tempfile);
@@ -777,7 +802,8 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         my $file_name = basename($file_path);
 
         # Write to csv file
-        open(CSV, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
+        ## no critic (RequireBriefOpen)
+        open(my $csv_fh, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
         my @header =  @{$rows->[0]};
         my $num_col = scalar(@header);
 
@@ -786,18 +812,18 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
             my $step = 1;
             for ( my $i = 0; $i < $num_col; $i++ ) {
                 if ($columns->[$i]) {
-                    print CSV "\"$columns->[$i]\"";
+                    print $csv_fh "\"$columns->[$i]\"";
                 } else {
-                    print CSV "\"\"";
+                    print $csv_fh "\"\"";
                 }
                 if ($step < $num_col) {
-                    print CSV ",";
+                    print $csv_fh ",";
                 }
                 $step++;
             }
-            print CSV "\n";
+            print $csv_fh "\n";
         }
-        close CSV;
+        close $csv_fh;
 
         # Return the csv file
         $c->res->content_type('text/csv');
@@ -836,7 +862,7 @@ sub build_accession_properties_info {
     # Setup Stock Props
     my @stock_props = ("organization", "stock_synonym", "PUI");
     foreach my $esp (@$editable_stock_props) {
-        if ( !grep(/^$esp$/, @stock_props) ) {
+        if (!scalar grep { $_ eq $esp } @stock_props) {
             push(@stock_props, $esp)
         }
     }
@@ -946,6 +972,8 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $dl_cookie = "download".$dl_token;
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
+
+    ## no critic (RequireBriefOpen)
     open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
     my $filename;
 
@@ -1119,6 +1147,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
+
     my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
     my $associated_protocol;
 
@@ -1207,6 +1238,11 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         push @genotyping_project_list, $genotyping_project_id;
     }
 
+    my @genotyping_plate_list;
+    if (defined $genotyping_plate_id) {
+        push @genotyping_plate_list, $genotyping_plate_id;
+    }
+
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
@@ -1226,6 +1262,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock,
             #markerprofile_id_list=>$markerprofile_id_list,
             genotype_data_project_list=>\@genotyping_project_list,
+            genotyping_plate_list=>\@genotyping_plate_list,
+            sample_unit_level=>$sample_unit_level,
             #limit=>$limit,
             #offset=>$offset
         }
@@ -1462,7 +1500,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
 
-
+    ## no critic (RequireBriefOpen)
     open my $TEMP, '> :encoding(UTF-8)', $tempfile or die "Cannot open output_test00.txt: $!";
 
 
@@ -1517,6 +1555,9 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
             print $TEMP "\n";
 
 	}
+
+    close $TEMP;
+
     }
 
 
@@ -1546,8 +1587,8 @@ sub trial_download_log {
     my $now = DateTime->now();
 
     if (! $c->user) {
-      return;
       print STDERR "Can't find user id, skipping download logging\n";
+      return;
     }
     if ($c->config->{trial_download_logfile}) {
       my $logfile = $c->config->{trial_download_logfile};
@@ -1761,6 +1802,8 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $protocol_id = $c->req->param("protocol_id");
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
 
     my @protocol_list;
     if (defined $protocol_id) {
@@ -1772,6 +1815,10 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
         push @genotyping_project_list, $genotyping_project_id;
     }
 
+    my @genotyping_plate_list;
+    if (defined $genotyping_plate_id) {
+        push @genotyping_plate_list, $genotyping_plate_id;
+    }
 
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = $protocol_id . "_" . "KASP_data" . "XXXX";
@@ -1789,7 +1836,9 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
             people_schema=>$people_schema,
             protocol_id_list=>\@protocol_list,
             genotype_data_project_list=>\@genotyping_project_list,
+            genotyping_plate_list=>\@genotyping_plate_list,
             filename => $tempfile,
+            sample_unit_level=>$sample_unit_level,
         }
     );
 
@@ -1807,7 +1856,255 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
 
 }
 
+sub download_images : Path('/breeders/download_images') : ActionClass('REST') { }
 
+sub download_images_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $trial_id = $c->req->param('trial_id');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $trial = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
+        }
+    );
+
+    my $plots = $trial->get_plots();
+    my @image_ids;
+
+    foreach my $plot (@$plots) {
+        my ($plot_id, $plot_name) = @$plot;
+
+        my $stock = CXGN::Stock->new({ schema => $schema, stock_id => $plot_id });
+        my @plot_image_ids = $stock->get_image_ids();
+
+        foreach my $id (@plot_image_ids) {
+            my ($image_id, $stock_type) = @$id;
+            push @image_ids, $image_id;
+        }
+    }
+
+    my $tempdir = tempdir(CLEANUP => 1);
+    my $temp_images_dir = "$tempdir/images";
+    mkdir $temp_images_dir or die "Failed to create temp images directory: $!";
+
+    foreach my $image_id (@image_ids) {
+        my $image = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+        my $original_filename = $image->get_original_filename;
+        my $image_path = $image->get_filename('original');
+
+        my $file_extension = ($image_path =~ /\.([^.]+)$/) ? $1 : '';
+        if ($file_extension) {
+            $original_filename .= ".$file_extension";
+        }
+
+        copy($image_path, $temp_images_dir . '/' . $original_filename) or die "Failed to copy $image_path to $temp_images_dir: $!";
+
+    }
+
+    my $tar = Archive::Tar->new;
+    $tar->add_files(glob("$temp_images_dir/*"));
+    my $tar_filename = "trial_${trial_id}_images.tar.gz";
+    my $tar_file = "$tempdir/$tar_filename";
+
+    $tar->write($tar_file, COMPRESS_GZIP);
+
+    $c->response->header('Content-Type' => 'application/gzip');
+    $c->response->header('Content-Disposition' => "attachment; filename=$tar_filename");
+    $c->serve_static_file($tar_file);
+
+    return;
+}
+
+
+sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metadata_action') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+    my $file_format = $c->req->param("file_format") || ".xlsx";
+    my $obsoleted_stock_list_id = $c->req->param("obsoleted_stock_list_list_select");
+
+    my $obsoleted_stocks = SGN::Controller::AJAX::List->retrieve_list($c, $obsoleted_stock_list_id);
+    my @obsoleted_stock_names = map { $_->[1] } @$obsoleted_stocks;
+
+    my $transform = CXGN::List::Transform->new();
+    my $stock_transform = $transform->can_transform("stocks", "stock_ids");
+    my $stock_id_hash = $transform->transform($schema, $stock_transform, \@obsoleted_stock_names);
+    my @obsoleted_stock_ids = @{$stock_id_hash->{transform}};
+
+    my $dl_token = $c->req->param("download_obsolete_metadata_token'") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $obsoleted_stocks_obj = CXGN::Stock::ObsoletedStocks->new(bcs_schema => $schema, obsoleted_stock_ids => \@obsoleted_stock_ids);
+    my $obsolete_metadata = $obsoleted_stocks_obj->get_obsolete_metadata();
+
+    my @download_rows = ();
+    foreach my $obsolete_info (@$obsolete_metadata) {
+        my ($stock_id, $stock_name, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
+        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
+        my $full_name = $person->get_first_name()." ".$person->get_last_name();
+        if ($obsolete_date =~ /Obsolete/) {
+            push @download_rows, [$stock_name, $stock_type, $obsolete_note, $obsolete_date,$full_name];
+        }
+    }
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "obsoleted_stocks_download_XXXXX", UNLINK=> 0);
+
+    my $file_path = $tempfile . ".xlsx";
+    my $file_name = basename($file_path);
+
+    my $workbook = Excel::Writer::XLSX->new($file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+    my @header = ("Stock Name", "Stock Type", "Obsolete Note", "Obsolete Date", "Obsoleted by");
+    $worksheet->write_row(0, 0, \@header);
+
+    my $row_count = 1;
+    foreach my $row (@download_rows) {
+        $worksheet->write_row($row_count, 0, $row);
+        $row_count++;
+    }
+    $workbook->close();
+
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($file_path);
+
+    $c->res->body($output);
+
+}
+
+sub download_population_seedlots_action : Path('/breeders/download_population_seedlots_action') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+    my $population_stock_id = $c->req->param("population_stock_id");
+
+    my $dl_token = $c->req->param("population_seedlots_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $member_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property')->cvterm_id();
+    my $member_type;
+    my $member_type_row = $schema->resultset("Stock::Stockprop")->find({ stock_id => $population_stock_id, type_id => $member_type_cvterm_id });
+    if($member_type_row) {
+        $member_type = $member_type_row->value();
+    } else {
+        $member_type = 'accessions';
+    }
+
+    my $result;
+    my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
+    if (($member_type eq 'plots') || ($member_type eq 'plants')) {
+        $result = $ac->get_population_source_seedlots($population_stock_id);
+    } else {
+        $result = $ac->get_population_seedlots($population_stock_id);
+    }
+
+    my @download_rows = ();
+    foreach my $r (@$result) {
+        my ($member_id, $member_name, $member_type, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location) =@$r;
+        push @download_rows, [$member_name, $member_type, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location];
+    }
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "population_seedlots_download_XXXXX", UNLINK=> 0);
+
+    my $file_path = $tempfile . ".xlsx";
+    my $file_name = basename($file_path);
+
+    my $workbook = Excel::Writer::XLSX->new($file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+    my @header = ("Member Name", "Member Type", "Seedlot Name", "Current Count", "Current Weight(g)", "Box Name", "Location");
+    $worksheet->write_row(0, 0, \@header);
+
+    my $row_count = 1;
+    foreach my $row (@download_rows) {
+        $worksheet->write_row($row_count, 0, $row);
+        $row_count++;
+    }
+    $workbook->close();
+
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($file_path);
+
+    $c->res->body($output);
+
+}
+
+sub download_summary_stock_entries : Path('/breeders/download_summary_stock_entries') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+    my $file_format = $c->req->param("file_format") || ".xlsx";
+    my $trial_id = $c->req->param("stock_entries_trial_id");
+
+    my $dl_token = $c->req->param("trial_stock_entries_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
+    my $stock_entries = $trial->get_stock_entry_summary();
+    my $trial_stock_type = $trial->get_trial_stock_type();
+
+    my @download_rows = ();
+    foreach my $row (@$stock_entries) {
+        my ($parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$row;
+        push @download_rows, [$parent_stock_name, $plot_name, $plant_name, $tissue_sample_name];
+    }
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "trial_stock_entries_XXXXX", UNLINK=> 0);
+
+    my $file_path = $tempfile . ".xlsx";
+    my $file_name = basename($file_path);
+
+    my $workbook = Excel::Writer::XLSX->new($file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+    my @header = ();
+    if ($trial_stock_type eq 'cross') {
+        @header = ("Cross Unique ID", "Plot Name", "Plant Name", "Tissue Sample");
+    } elsif ($trial_stock_type eq 'family_name') {
+        @header = ("Family Name", "Plot Name", "Plant Name", "Tissue Sample");
+    } else {
+        @header = ("Accession Name", "Plot Name", "Plant Name", "Tissue Sample");
+    }
+    $worksheet->write_row(0, 0, \@header);
+
+    my $row_count = 1;
+    foreach my $row (@download_rows) {
+        $worksheet->write_row($row_count, 0, $row);
+        $row_count++;
+    }
+    $workbook->close();
+
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($file_path);
+
+    $c->res->body($output);
+
+}
 
 #=pod
 1;

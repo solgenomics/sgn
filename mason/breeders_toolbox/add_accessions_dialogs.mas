@@ -13,7 +13,7 @@ $editable_stock_props_definitions
     }
 </%perl>
 
-<div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
+<div class="modal fade" id="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -47,11 +47,11 @@ $editable_stock_props_definitions
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
                             <div class="col-sm-8">
-%# if ( $user_role eq 'curator' ) {
+% if ( $user_role eq 'curator' ) {
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
-%# } else {
-%#                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
-%# }
+% } else {
+                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
+% }
                                 <br/>
                                 <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. </small>
                             </div>

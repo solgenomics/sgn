@@ -208,7 +208,7 @@ sub do_exact_search {
 sub verify_accessions_file : Path('/ajax/accessions/verify_accessions_file') : ActionClass('REST') { }
 sub verify_accessions_file_POST : Args(0) {
     my ($self, $c) = @_;
-    
+
     my $user_id;
     my $user_name;
     my $user_role;
@@ -329,7 +329,7 @@ sub verify_accessions_file_POST : Args(0) {
         $return{error_string} = $parsed_data->{error_string};
     }
 
-        
+
     $c->stash->{rest} = \%return;
 }
 
@@ -397,7 +397,7 @@ sub add_accession_list_POST : Args(0) {
         $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
         return;
     }
-    
+
     my $user_name = $c->user()->get_object()->get_username();
 
     #if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
@@ -656,6 +656,53 @@ sub population_members_GET : Args(1) {
     $c->stash->{rest} = { data => $members };
 }
 
+sub population_seedlots : Path('/ajax/manage_accessions/population_seedlots') : ActionClass('REST') { }
+
+sub population_seedlots_GET : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+
+    my $member_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property')->cvterm_id();
+    my $member_type;
+    my $member_type_row = $schema->resultset("Stock::Stockprop")->find({ stock_id => $stock_id, type_id => $member_type_cvterm_id });
+    if($member_type_row) {
+        $member_type = $member_type_row->value();
+    } else {
+        $member_type = 'accessions';
+    }
+
+    my $result;
+    my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
+    if (($member_type eq 'plots') || ($member_type eq 'plants')) {
+        $result = $ac->get_population_source_seedlots($stock_id);        
+    } else {
+        $result = $ac->get_population_seedlots($stock_id);
+    }
+
+    my @population_seedlots = ();
+    foreach my $r (@$result){
+        my ($member_id, $member_name, $member_type, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location) =@$r;
+        push @population_seedlots, {
+            member_id => $member_id,
+            member_name => $member_name,
+            member_type => $member_type,
+            seedlot_id => $seedlot_id,
+            seedlot_name => $seedlot_name,
+            current_count => $current_count,
+            current_weight_gram => $current_weight_gram,
+            box_name => $box_name,
+            location => $location
+        };
+    }
+
+    $c->stash->{rest} = { data => \@population_seedlots };
+}
+
+
 sub _parse_list_from_json {
     my $c = shift;
     my $list_json = shift;
@@ -667,7 +714,7 @@ sub _parse_list_from_json {
       print STDERR "JSON NOW: $list_json\n";
       my $decoded_list = $json->decode($list_json);# _json(encode("UTF-8", $list_json));
      #my $decoded_list = decode_json($list_json);
-      
+
       my @array_of_list_items = ();
       if (ref($decoded_list) eq "ARRAY" ) {
 	  @array_of_list_items = @{$decoded_list};

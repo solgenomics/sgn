@@ -25,6 +25,7 @@ use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
 use CXGN::Stock;
+use CXGN::Stock::Plot;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
@@ -2185,6 +2186,30 @@ sub stock_lookup_POST {
     $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
 
+sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $plot_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+
+    my $plot;
+    my $plot_contents;
+    
+    eval {
+        $plot = CXGN::Stock::Plot->new({schema => $schema, stock_id=>$plot_id});
+
+        $plot_contents = $plot->get_plot_contents();
+    };
+
+    if ($@) {
+        print STDERR "Error: $@\n";
+        $c->stash->{rest} = {error => "An error occurred: $@"};
+    }
+
+
+    $c->stash->{rest} = {data => JSON::Any->encode($plot_contents)};
+}
+
 sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/trial_related_stock') Args(0){
     my $self = shift;
     my $c = shift;
@@ -2504,7 +2529,7 @@ sub stock_obsolete_GET {
                 is_saving=>1,
                 sp_person_id => $c->user()->get_object()->get_sp_person_id(),
                 user_name => $c->user()->get_object()->get_username(),
-                modification_note => "Obsolete at ".localtime,
+                modification_note => $is_obsolete ? "Obsolete at ".localtime : "Un-Obsolete at ".localtime,
                 is_obsolete => $is_obsolete,
                 obsolete_note => $obsolete_note,
             });

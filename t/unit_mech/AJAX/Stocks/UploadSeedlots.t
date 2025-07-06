@@ -49,6 +49,7 @@ $response = $ua->post(
             "upload_seedlot_breeding_program_id"=>$breeding_program_id,
             "upload_seedlot_location"=>'test_location',
             "upload_seedlot_organization_name"=>"testorg1",
+            "upload_seedlot_material_type"=>"seed",
             "sgn_session_id"=>$sgn_session_id
         ]
     );
@@ -71,6 +72,7 @@ $response = $ua->post(
             "upload_seedlot_breeding_program_id"=>$breeding_program_id,
             "upload_seedlot_location"=>'test_location',
             "upload_seedlot_organization_name"=>"testorg1",
+            "upload_seedlot_material_type"=>"seed",
             "sgn_session_id"=>$sgn_session_id
         ]
     );
@@ -90,6 +92,7 @@ $response = $ua->post(
             "upload_seedlot_breeding_program_id"=>$breeding_program_id,
             "upload_seedlot_location"=>'test_location',
             "upload_seedlot_organization_name"=>"testorg1",
+            "upload_seedlot_material_type"=>"seed",
             "sgn_session_id"=>$sgn_session_id
         ]
     );
@@ -140,6 +143,7 @@ my $third_row = $seedlots[2];
 is($first_row->{'seedlot_name'}, 'seedlot_test1');
 is($first_row->{'content_name'}, 'test_accession1');
 is($first_row->{'content_type'}, 'accession');
+is($first_row->{'material_type'}, 'seed');
 is($first_row->{'current_count'}, '10');
 is($first_row->{'box_name'}, 'box1');
 is($first_row->{'quality'}, 'mold');
@@ -147,6 +151,7 @@ is($first_row->{'quality'}, 'mold');
 is($third_row->{'seedlot_name'}, 'seedlot_test_from_cross_1');
 is($third_row->{'content_name'}, 'cross_test1');
 is($third_row->{'content_type'}, 'cross');
+is($third_row->{'material_type'}, 'seed');
 is($third_row->{'current_count'}, '5');
 is($third_row->{'box_name'}, 'b1');
 is($third_row->{'quality'}, '');

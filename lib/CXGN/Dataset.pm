@@ -62,6 +62,7 @@ use CXGN::Genotype::Search;
 use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use CXGN::Trial;
+use CXGN::Trait;
 
 =head2 people_schema()
 
@@ -597,7 +598,7 @@ sub get_dataset_data {
     $dataref->{category_order} = $self->category_order();
     $dataref->{outliers} = $self->outliers() if $self->outliers;
     $dataref->{outlier_cutoffs} = $self->outlier_cutoffs() if $self->outliers;
-    $dataref->{tool_compatibility} = $self->tool_compatibility() if $self->tool_compatibility;
+    $dataref->{tool_compatibility} = ($self->tool_compatibility) ? $self->tool_compatibility() : undef;
     return $dataref;
 }
 
@@ -1219,6 +1220,28 @@ sub retrieve_tool_compatibility {
     }
 }
 
+=head2 retrieve_compatible_tool_list
+
+Returns a listref containing the tools this dataset is putatively compatible with (without warnings). Returns undef if no compatible tools found. 
+
+=cut
+
+sub retrieve_compatible_tool_list {
+    my $self = shift;
+
+    my @compatible_tools = ();
+
+    my $tool_compatibility = $self->tool_compatibility();
+
+    if (!$tool_compatibility) {
+        return @compatible_tools;
+    }
+
+    @compatible_tools = grep { ($tool_compatibility->{$_}->{compatible} && !$tool_compatibility->{$_}->{warn}) } keys(%{$tool_compatibility});
+
+    return \@compatible_tools;
+}
+
 =head2 calculate_tool_compatibility
 
 Creates a hashref of analysis tools that this dataset can be used with. For example, a dataset with genotype data but no trait phenotypes cannot be used with GWAS.
@@ -1264,6 +1287,9 @@ sub calculate_tool_compatibility {
         'Correlation' => {
             'compatible' => 0
         },
+        'NIRS' => {
+            'compatible' => 0
+        },
         'Data Summary' => {
             'markers per genotyping protocol' => [],
             'number of phenotyped accessions per trait' => [],
@@ -1276,6 +1302,23 @@ sub calculate_tool_compatibility {
 
     my $trials = $self->retrieve_trials(); # faster and easier than pulling it out of the phenotypes_ref
         # listref of listrefs, first index is trialID, second is trial name
+
+    my @trial_ids = map {$_->[0]} @{$trials};
+    my $nirs_query = "SELECT DISTINCT nd_protocol.nd_protocol_id FROM project 
+    JOIN nd_experiment_project ON nd_experiment_project.project_id=project.project_id 
+    JOIN nd_experiment_protocol ON nd_experiment_protocol.nd_experiment_id=nd_experiment_project.nd_experiment_id 
+    JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id=nd_protocol.nd_protocol_id 
+    WHERE project.project_id in (SELECT unnest(string_to_array(?, ',')::int[]));
+    ";
+    my $h = $self->schema->storage()->dbh()->prepare($nirs_query);
+    $h->execute(join(", ",@trial_ids));
+    my @nirs_protocol_ids;
+    while (my $nirs_protocol_id = $h->fetchrow_array) {
+        push @nirs_protocol_ids, $nirs_protocol_id;
+    }
+    if (@nirs_protocol_ids) {
+        $tool_compatibility->{'NIRS'}->{'compatible'} = 1; #having any nirs protocol ids at all from this query should only really happen if there was a nirs experiment linked to the trial. 
+    }
     my $all_traits = $self->retrieve_traits();
     my $traits = [];
     foreach my $trait (@{$all_traits}) { #filter for quantitative traits
@@ -1331,7 +1374,7 @@ sub calculate_tool_compatibility {
         JOIN genotypeprop USING(genotype_id) 
         JOIN nd_experiment_protocol ON(nd_experiment_genotype.nd_experiment_id=nd_experiment_protocol.nd_experiment_id)
             WHERE stock_id IN (SELECT unnest(string_to_array(?, ',')::int[])) AND nd_protocol_id=?;";
-        my $h = $self->schema->storage()->dbh()->prepare($genotype_query);
+        $h = $self->schema->storage()->dbh()->prepare($genotype_query);
         $h->execute(join(", ",@accession_ids), $method->[0]);
 
         $genotype_counts->{$method->[0]}->{"num_accessions"} = $h->fetchrow_array;
@@ -1436,7 +1479,7 @@ sub calculate_tool_compatibility {
             $tool_compatibility->{'Correlation'}->{'compatible'} = 1;
             push @{$tool_compatibility->{'Correlation'}->{'traits'}}, $trait->[1];
 
-            if ($num_accessions_phenotyped_for_this_trait > 1 && scalar(@{$trials}) > 1){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
+            if ($num_accessions_phenotyped_for_this_trait > 1 && scalar(@{$trials}) > 1 && $num_shared_accessions > 2){ #the presence of trial designs implies the presence of trials and differences in "environment" or treatment group. We also need to check that multiple accessions were measured for this trait
                 if ($num_accessions_phenotyped_for_this_trait < 30) {
                     $tool_compatibility->{'Heritability'}->{'warn'}->{"There may not be enough accessions (n=$num_accessions_phenotyped_for_this_trait) phenotyped for ".$trait->[1]." to get strong results."} = "";
                 }
