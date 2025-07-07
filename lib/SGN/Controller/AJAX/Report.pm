@@ -141,22 +141,22 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
         my $script_cmd = "perl ${basepath}${reports_dir}${script}.pl -U $dbuser -H $dbhost -P $dbpass -D $dbname -o '$out_directory' -f '$json_filename' -s '$start_date' -e '$end_date'";
         
 
-        # my $report_job = CXGN::Job->new({
-        #     schema => $schema,
-        #     people_schema => $people_schema,
-        #     sp_person_id => $sp_person_id,
-        #     name => $json_filename." report generation",
-        #     cmd => $script_cmd,
-        #     job_type => 'report',
-        #     finish_logfile => $c->config->{job_finish_log}
-        # });
+        my $report_job_record = CXGN::Job->new({
+            schema => $schema,
+            people_schema => $people_schema,
+            sp_person_id => $sp_person_id,
+            name => $json_filename." report generation",
+            cmd => $script_cmd,
+            job_type => 'report',
+            finish_logfile => $c->config->{job_finish_log}
+        });
 
         # # Start or enqueue the job
-        # $report_job->submit();
-        
         print "Waiting for JSON file to be generated...\n";
         system($script_cmd);
+        $report_job_record->update_status("submitted");
         if ($? != 0) {
+            $report_job_record->update_status("failed");
             die "Report script failed with exit code " . ($? >> 8);
         }
         
@@ -166,6 +166,7 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
         print("excel file $excel_filename \n");
         
         my $json_file = File::Spec->catfile($out_directory, $json_filename);
+        $report_job_record->update_status("finished");
         print("Reading output from file: $json_file \n");
 
         my $json_text = '';
