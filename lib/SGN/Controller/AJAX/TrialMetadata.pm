@@ -3057,7 +3057,7 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
     if ($trial_name ne $treatment_name) {
         my $trial_rs = $schema->resultset('Project::Project')->search({name => $treatment_name});
         if ($trial_rs->count() > 0) {
-            $c->stash->{rest} = { error => 'Please use a different management factor name! That name is already in use.' };
+            $c->stash->{rest} = { error => 'Please use a different treatment name! That name is already in use.' };
             return;
         }
     }
@@ -5844,7 +5844,7 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
     my $stock_entries = $trial->get_stock_entry_summary();
-    
+
     my @summary;
     foreach my $entry (@$stock_entries) {
         my ($parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$entry;

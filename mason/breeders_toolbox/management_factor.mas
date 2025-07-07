@@ -49,7 +49,7 @@ $management_factor_type => undef
 
 <br/>
 
-<& /page/page_title.mas, title=>"Field Treatment: ".$trial_name &>
+<& /page/page_title.mas, title=>"Treatment: ".$trial_name &>
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Treatment Details</h4>", info_section_subtitle => 'View and edit basic information about the treatment.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "management_factor_details", buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_treatment_edit_details_button">Edit Details</button>', trial_name => $trial_name, trial_description => $trial_description, year => $year, management_factor_type=>$management_factor_type, management_factor_date=>$management_factor_date &>
 

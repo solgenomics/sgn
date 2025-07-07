@@ -1650,7 +1650,7 @@ sub set_management_factor_date {
         $row->value($management_factor_event);
         $row->update();
     } else {
-        print STDERR "date format did not pass check while preparing to set management factor date: $management_factor_date \n";
+        print STDERR "date format did not pass check while preparing to set treatment date: $management_factor_date \n";
     }
 }
 
