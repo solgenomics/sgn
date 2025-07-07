@@ -226,6 +226,15 @@ sizes. Hover for details."></span>
         -->
     </div>
 
+
+
+    <& /solgs/tools/dataset_trials_analysis.mas,
+        dataset_id => $dataset_id,
+        dataset_name => $dataset_name,
+        data_structure => 'dataset',    
+    &>
+    
+
     <script>
 
     jQuery(document).ready( function() {
