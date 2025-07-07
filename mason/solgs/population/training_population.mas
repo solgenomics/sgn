@@ -37,7 +37,7 @@ $training_pop_id = $pop_id;
 <br />
 
 <& /page/page_title.mas,
-   title => "Select one or more traits from training population \"$training_pop_name\" to build a GS model and predict GEBVs for."
+   title => "$training_pop_name"
 &>
 
 <&| /page/info_section.mas,

@@ -1,0 +1,36 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/analysis_select.mas - a template to select an analysis to run on selected trial
+
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+<div id='analysis_select_div' class="col-xs-12 col-sm-6 col-md-4" style="margin-top: 18px;">
+    <select id="analysis_select" class="form-control">
+        <option value="" disabled selected>Select an analysis</option>
+        <option value="pearson_correlation">Pearson Phenotype Correlation</option>        
+    </select>
+</div>
+
+<input type="hidden" id="analysis_pop_id" value="" />
+<input type="hidden" id="analysis_pop_name" value="" />
+<input type="hidden" id="analysis_type" value="" />
+<input type="hidden" id="data_structure" value="" />
+
+<& /util/import_javascript.mas, classes => ["solGS.analysisSelect"] &>

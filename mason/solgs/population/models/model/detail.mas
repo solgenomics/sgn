@@ -38,7 +38,7 @@ $analysis_type => ''
 
 
 <& /page/page_title.mas,
-   title => "Genomic selection model for $trait_name ($trait_abbr) in $training_pop_name"
+   title => "Model $trait_name ($trait_abbr)"
 &>
 
 <&| /page/info_section.mas,
@@ -51,7 +51,7 @@ $analysis_type => ''
     training_pop_id   => $training_pop_id,
    	training_pop_name => $training_pop_name,
     training_pop_desc => $training_pop_desc,
-	  training_pop_url    => $training_pop_url,
+	training_pop_url    => $training_pop_url,
     trial_detail_page => $trial_detail_page,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
