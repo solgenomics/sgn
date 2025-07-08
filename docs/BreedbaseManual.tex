@@ -85,7 +85,7 @@
 
 \title{User Manual of Breedbase}
 \author{Breedbase team}
-\date{2025-02-25}
+\date{2025-07-08}
 
 \begin{document}
 \maketitle
@@ -1284,15 +1284,15 @@ At the bottom there is a brief summary of the trial followed by two buttons.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/trial_create_form_6_bottom} \end{center}
 
-\hypertarget{step-7.-add-field-management-factors-to-your-design-optional}{%
-\subsubsection*{Step 7. Add Field Management Factors to your design (Optional)}\label{step-7.-add-field-management-factors-to-your-design-optional}}
+\hypertarget{step-7.-add-treatments-to-your-design-optional}{%
+\subsubsection*{Step 7. Add Treatments to your design (Optional)}\label{step-7.-add-treatments-to-your-design-optional}}
 
 
-You can add Field Management Factors by clicking ``Add Field Management Factor(s) to Design''. Clicking this opens a dialog to name your factor. You can name this to account for fertilizer or watering regime or inoculation or anything else. This is optional and can be added from the trial detail page afterwards.
+You can add Treatments by clicking ``Add Treatment(s) to Design''. Clicking this opens a dialog to name your treatment. You can name this to account for fertilizer or watering regime or inoculation or anything else. This is optional and can be added from the trial detail page afterwards.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/add_management_factor_name_dialog} \end{center}
 
-Click ``Continue'' and a dialog will appear where you can specify plots for which the factor was applied. There is a select all button also.
+Click ``Continue'' and a dialog will appear where you can specify plots for which the treatment was applied. There is a select all button also.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/add_management_factor_dialog} \end{center}
 
@@ -1317,7 +1317,7 @@ When you click ``Upload Existing Trial(s)'' you will see the following workflow.
 \subsubsection*{Step 1:}\label{step-1}}
 
 
-The first step is to understand what the format of the trial upload is. It is important to understand that the field layout represents plots in the experiment. Each plot has a globally unique plot\_name, a sequential plot\_number that is unique in the trial (but not globally unique. e.g.~101, 102, 103 for three separate plots), an accession\_name representing what genotype is planted in that plot, and a block\_number representing design replication. Each plot can be thought of as having a row\_number and a column\_number representing the relative position of the plot in a grid (e.g.~the top left plot is row 1 column 1 following by row 1 column 2). Each plot can be planted with an amount of seed from a seedlot, where the seedlot\_name represents the specific seed packet that was used, and num\_seed\_per\_plot and weight\_gram\_seed\_per\_plot represent amount that were transferred from the seedlot\_name to the plot\_name. Treatments (management factors) can be applied onto plots using additional column names in your file, where a 1 represents if the factor was applied to the plot and an empty cell means it was not applied.
+The first step is to understand what the format of the trial upload is. It is important to understand that the field layout represents plots in the experiment. Each plot has a globally unique plot\_name, a sequential plot\_number that is unique in the trial (but not globally unique. e.g.~101, 102, 103 for three separate plots), an accession\_name representing what genotype is planted in that plot, and a block\_number representing design replication. Each plot can be thought of as having a row\_number and a column\_number representing the relative position of the plot in a grid (e.g.~the top left plot is row 1 column 1 following by row 1 column 2). Each plot can be planted with an amount of seed from a seedlot, where the seedlot\_name represents the specific seed packet that was used, and num\_seed\_per\_plot and weight\_gram\_seed\_per\_plot represent amount that were transferred from the seedlot\_name to the plot\_name. Treatments can be applied onto plots using additional column names in your file, where a 1 represents if the treatment was applied to the plot and an empty cell means it was not applied.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/manage_trials_upload_trial_1} \end{center}
 
@@ -1399,14 +1399,14 @@ Minimal Example:
   In case of errors in the uploaded file such as missing or invalid data, a window will appear listing the specific errors in the file that must be corrected before a successful upload.
 \end{itemize}
 
-\hypertarget{uploading-a-trial-with-field-management-factors}{%
-\paragraph*{Uploading a trial with Field Management Factors}\label{uploading-a-trial-with-field-management-factors}}
-\addcontentsline{toc}{paragraph}{Uploading a trial with Field Management Factors}
+\hypertarget{uploading-a-trial-with-treatments}{%
+\paragraph*{Uploading a trial with Treatments}\label{uploading-a-trial-with-treatments}}
+\addcontentsline{toc}{paragraph}{Uploading a trial with Treatments}
 
 \begin{itemize}
 \tightlist
 \item
-  You can upload a trial with field management factor(s) by adding additional column(s). The column header will be the factor e.g.~fertilizer, watering regime, inoculation, etc. and the values in these columns will be either 1 or empty, indicating that the factor was applied to the plot or not.
+  You can upload a trial with treatment(s) by adding additional column(s). The column header will be the treatment e.g.~fertilizer, watering regime, inoculation, etc. and the values in these columns will be either 1 or empty, indicating that the treatment was applied to the plot or not.
 \end{itemize}
 
 \hypertarget{step-2}{%
