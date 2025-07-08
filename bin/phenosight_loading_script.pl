@@ -29,12 +29,17 @@ use Getopt::Long;
 use Try::Tiny;
 use File::Basename;
 
+use DateTime;
 use Data::Dumper;
 use CXGN::File::Parse;
 use CXGN::BreedingProgram ; # the BP object
+use CXGN::Metadata::Schema;
+use CXGN::Metadata::Metadbdata;
+use CXGN::Phenome::Schema;
 use SGN::Model::Cvterm; # maybe need this for the projectprop.type_id breeding_program
 use URI::FromHash 'uri';
 use JSON;
+
 
 use DateTime;
 use Pod::Usage;
@@ -84,7 +89,20 @@ else {
     });
 }
 my $chado_schema = Bio::Chado::Schema->connect(sub { $dbh },  { on_connect_do => ['SET search_path TO  public, sgn, metadata, phenome;'] });
+my $metadata_schema = CXGN::Metadata::Schema->connect("dbi:Pg:database=$dbname;host=$dbhost", "postgres", $dbpass, {on_connect_do => "SET search_path TO 'metadata', 'public'", });
+my $phenome_schema = CXGN::Phenome::Schema->connect("dbi:Pg:database=$dbname;host=$dbhost", "postgres", $dbpass, {on_connect_do => "SET search_path TO 'phenome', 'public'", });
+
 print STDOUT "Database connection ok!\n";
+# my $metadata_schema = CXGN::Metadata::Schema->connect(
+#     "dbi:Pg:database=$dbname;host=$opt_H", # DSN Line
+#     $opt_U,                    # Username
+#     $opt_P           # Password
+# );
+# my $phenome_schema = CXGN::Phenome::Schema->connect(
+#     "dbi:Pg:database=$opt_D;host=$opt_H", # DSN Line
+#     $opt_U,                    # Username
+#     $opt_P           # Password
+# );
 
 # Lists of encountered errors and warnings
 my @errors;
@@ -196,15 +214,15 @@ my $coderef = sub {
                 $PS2_present = 1;
                 my $trial_saved = 0;
                 ## Check Exp_folder name to see if present as trial in DB
-                foreach (@trial_names) {
-                    if ($exp_name eq $_) {
-                        print STDERR "$exp_name matches $_, check next one;\n";
-                        $trial_saved = 1;
-                        last;
-                    } else {
-                        print STDERR "$exp_name does not match $_, move to the next;\n";
-                    }
-                }
+#                foreach (@trial_names) {
+#                    if ($exp_name eq $_) {
+#                        print STDERR "$exp_name matches $_, check next one;\n";
+#                        $trial_saved = 1;
+#                        last;
+#                    } else {
+#                        print STDERR "$exp_name does not match $_, move to the next;\n";
+#                    }
+#                }
                 ### Move on to save the trial if not present:
                 if ($trial_saved == 0) {
                     print STDERR "No trial match for $exp_name; proceed to parse and load\n";
@@ -214,8 +232,8 @@ my $coderef = sub {
 
                     # Parser has errors, print error messages and quit
                     if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
-                        print STDERR Dumper(@$parsed_errors) . "\n";
-                        print STDERR "Failed to read metadata file." . "\n";
+#                        print STDERR Dumper(@$parsed_errors) . "\n";
+#                        print STDERR "Failed to read metadata file." . "\n";
                         foreach (@$parsed_errors) {
                             push @errors, $_;
                         }
@@ -238,7 +256,7 @@ my $coderef = sub {
                     my $values = $parsed->{values};
 #                    print STDERR Dumper($columns) . "\n";
 #                    print STDERR Dumper($data) . "\n"; # These are the rows w/data
-                    print STDERR Dumper($values) . "\n";
+#                    print STDERR Dumper($values) . "\n";
                     #my %values = %{$values};
 
                     # Question: who should be the owner/sp_person ID?
@@ -249,14 +267,13 @@ my $coderef = sub {
                     # Set up the trial design (hash of plot hashes)
 
                     my $plot_ids = $values->{'PhenoTray.ID'};
-                    # my @plot_ids;
-                    # my $curr_plot_id;
-                    #foreach my $row (@$parsed_data) {
-                    #    $curr_plot_id = $row->{'PhenoTray.ID'};
-                    #    push(@plot_ids, $curr_plot_id);
-#
- #                   }
+                    my @plot_uniquenames;
+                    foreach my $plot_number (@$plot_ids) {
+                        my $current_plot_name = _create_plot_name($exp_name, $plot_number);
+                        push @plot_uniquenames, $current_plot_name;
+                    }
                     print STDERR "@$plot_ids are the plots;\n";
+                    print STDERR "@plot_uniquenames are the plots;\n";
 
                     
 
@@ -298,10 +315,9 @@ my $coderef = sub {
                         $design_details{$key}->{stock_name} = $accession_name;
                         $design_details{$key}->{plot_number} = $plot_number;
                         $design_details{$key}->{block_number} = $block_number;
-
                     }
-                    print STDERR "The design details:\n";
-                    print STDERR Dumper(%design_details) . "\n";
+#                    print STDERR "The design details:\n";
+#                    print STDERR Dumper(%design_details) . "\n";
                     my $design_details = \%design_details;
 
 #                    if (%phenosight_metadata_hash) {
@@ -318,8 +334,8 @@ my $coderef = sub {
                         operator => $username,
                         owner_id => $sp_person_id
                     );
-                    print STDERR "The trial info hash:\n";
-                    print STDERR Dumper(%trial_info_hash) . "\n";
+#                    print STDERR "The trial info hash:\n";
+#                    print STDERR Dumper(%trial_info_hash) . "\n";
 #                    }
 
 
@@ -346,8 +362,14 @@ my $coderef = sub {
                     # # if ($trial_design->{'transplanting_date'}){
                     # #     $trial_info_hash{transplanting_date} = $trial_design->{'transplanting_date'};
                     # # }
+
+
+
 #                    my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 #                    my $current_save = $trial_create->save_trial();
+
+
+
                     # try {
                     #     $trial_create->save_trial();
                     # } catch {
@@ -387,8 +409,61 @@ my $coderef = sub {
                     system("zip $new_zip_file $exp_dir/processed.imgs/*.JPG");
                     print STDERR Dumper($new_zip_file) . "\n";
 
-                    print STDERR "The parsed contents:" . "\n";
-                    print STDERR Dumper($parsed) . "\n";
+                    #print STDERR "The parsed contents:" . "\n";
+                    #print STDERR Dumper($data) . "\n";
+
+                    # N.B. from Magda, there should only be one phi.npq - the symbol version will not be present in future versions; also still need to add 'qI' trait - not here as not in obo/db yet
+                    my @traits = ('qE','F0\'','phi.no','qL','NDVI','qN','npq(t)','NPQ','Fq\'/Fm\'','Fv/Fm','qP','AriIdx','phi.npq','ChlIdx');
+                    my @full_traits = ('qE|PHS:0000008','F0\'|PHS:0000004','phi.no|PHS:0000009','qL|PHS:0000007','NDVI|PHS:0000015','qN|PHS:0000006','npq(t)|PHS:0000012','NPQ|PHS:0000003','Fq\'/Fm\'|PHS:0000002','Fv/Fm|PHS:0000001','qP|PHS:0000005','AriIdx|PHS:0000014','phi.npq|PHS:0000010','ChlIdx|PHS:0000013');
+                    my %multiple_measures_hash;
+                    for my $row (@$data) {
+                        my $row_id = $row->{'PhenoTray.ID'};
+                        my $plot_number = $row->{'PhenoTray.ID'};
+                        my $plot_name = _create_plot_name($exp_name, $plot_number);
+                        my $key = $plot_name;
+                        foreach my $trait (@traits) {
+                            my $current_value = $row->{$trait};
+                            # Need YYYY-MM-DD HH:MM:SS-0000
+                            my $current_year = substr($row->{'Date'}, 0, 4);
+                            my $current_month = $row->{'month'};
+                            my $current_day = $row->{'day'};
+                            my $current_time = $row->{'Time'};
+                            my $current_timestamp = $current_year . '-' . $current_month . '-' . $current_day . ' ' . $current_time . ':00-0000';
+                            #print STDERR "The trait:" . "\n"; 
+                            #print STDERR Dumper($trait) . "\n";                            
+                            #print STDERR "The value:" . "\n"; 
+                            #print STDERR Dumper($current_value) . "\n";
+                            #print STDERR "The time:" . "\n"; 
+                            #print STDERR Dumper($current_timestamp) . "\n";
+                            # Matching full trait:
+                            my $pattern = "^" .quotemeta( $trait );
+                            my @current_trait_match = grep {/$pattern/} @full_traits;
+                            my $current_trait = $current_trait_match[0];
+#                            print STDERR "Matching trait:" . "\n";                            
+#                            print STDERR Dumper($current_trait) . "\n";
+#                            print STDERR "PS trait:" . "\n";
+#                            print STDERR Dumper($trait) . "\n";
+                            my $value_array = [$current_value, $current_timestamp];
+                            push @{$multiple_measures_hash{$key}->{$current_trait}}, $value_array; 
+
+                        }
+                        #print STDERR "Array of single trait in $exp_name:" . "\n"; 
+                        #print STDERR Dumper($multiple_measures_hash{$key}->{'qN'});
+                        #print STDERR "Print structure for a given plot in $exp_name:" . "\n"; 
+                        #print STDERR Dumper($multiple_measures_hash{$key});
+
+                    }
+                    #print STDERR "Print entire hash for $exp_name:" . "\n"; 
+                    #print STDERR Dumper(%multiple_measures_hash);
+                    my $time = DateTime->now();
+                    my $timestamp = $time->ymd()."_".$time->hms();
+                    my %phenotype_metadata;
+                    $phenotype_metadata{'archived_file'} = 'none';
+                    $phenotype_metadata{'archived_file_type'} = 'phenosight_data';
+                    $phenotype_metadata{'operator'} = $username;
+                    $phenotype_metadata{'date'} = $timestamp;
+
+
 
                     ##### Once trial is uploaded, need to upload phenotypes
                     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
@@ -397,31 +472,38 @@ my $coderef = sub {
                         dbname=>$dbname,
                         dbuser=>$dbuser,
                         dbpass=>$dbpass,
-                        #temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+                        temp_file_nd_experiment_id=>"/tmp/delete_nd_experiment_ids.txt",
                         bcs_schema=>$chado_schema,
-                        #metadata_schema=>$f->metadata_schema,
-                        #phenome_schema=>$f->phenome_schema,
+                        metadata_schema=>$metadata_schema,
+                        phenome_schema=>$phenome_schema,
                         user_id=>$sp_person_id,
-                        # # need to develop plots list from phenosight data file
-                        #stock_list=>\@plots,
-                    #     # # need to develop trait list from headers in the phenosight data file
-                        #trait_list=>\@traits,
-                        #values_hash=>\%parsed_data,
+                    #     # # need to develop plots list from phenosight data file
+                        # Do these need to be uniquenames actually?
+                        stock_list=>$plot_ids,
+                    # #     # # need to develop trait list from headers in the phenosight data file
+                        trait_list=>\@full_traits,
+                        values_hash=>\%multiple_measures_hash,
                         has_timestamps=>1,
                         overwrite_values=>0,
-                        ## Develop metadata hash from Experiments.xlsx file? + need the image file names?
-                        #metadata_hash=>\%phenotype_metadata,
-                        image_zipfile_path=>$new_zip_file,
-                        #composable_validation_check_name=>$f->config->{composable_validation_check_name}
+                    #     ## Develop metadata hash from Experiments.xlsx file? + need the image file names?
+                        metadata_hash=>\%phenotype_metadata,
+                    #     image_zipfile_path=>$new_zip_file,
+                    #     #composable_validation_check_name=>$f->config->{composable_validation_check_name}
                     );
-                    # my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-                    # if ($verified_error) {
-                    #     die $verified_error."\n";
-                    # }
-                    # my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
-                    # if ($stored_phenotype_error) {
-                    #     die $stored_phenotype_error."\n";
-                    # }
+                    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+                    if ($verified_error) {
+                        die $verified_error."\n";
+                    }
+                    print STDERR "Print verification for $exp_name:" . "\n"; 
+                    print STDERR Dumper($verified_warning, $verified_error);
+
+#                    my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+#                    if ($stored_phenotype_error) {
+#                        die $stored_phenotype_error."\n";
+#                    }
+
+#                    print STDERR "Print storage message for $exp_name:" . "\n"; 
+#                    print STDERR Dumper($stored_phenotype_error, $stored_phenotype_success);
 
 
 
