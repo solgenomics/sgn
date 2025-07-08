@@ -2221,6 +2221,44 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
+    my $trial = CXGN::Trial->new({ 
+        bcs_schema => $schema,
+        people_schema=>$people_schema, 
+        metadata_schema=>$metadata_schema, 
+        phenome_schema=>$phenome_schema,
+        trial_id => $trial_id 
+    });
+
+    my @plots = @{$trial->get_plots()};
+
+    my $plot_data = {};
+
+    my $stockprops_q = "SELECT stockprop.stock_id, cvterm.name, cvterm_id, value FROM stockprop
+        JOIN cvterm ON (cvterm.cvterm_id=stockprop.type_id)
+        WHERE stockprop.stock_id in (SELECT unnest(string_to_array(?, ',')::int[]));"; 
+
+    my $h = $schema()->storage()->dbh()->prepare($stockprops_q);
+    $h->execute(join(",", @plots));
+
+    while (my ($plot_id, $stockprop, $stockprop_id, $stockprop_value) = $h->fetchrow_array()) {
+        $plot_data->{$plot_id}->{$stockprop} = $stockprop_value;
+    }
+
+    #gather headers and stuff
+
+}
+
 sub get_plot_polygon_templates_partial : Path('/ajax/html/select/plot_polygon_templates_partial') Args(0) {
     my $self = shift;
     my $c = shift;
