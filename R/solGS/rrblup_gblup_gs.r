@@ -6,22 +6,22 @@
 # Isaak Y Tecle (iyt2@cornell.edu)
 
 options(echo = FALSE)
-
+# options(warn = -1)
 suppressWarnings(suppressPackageStartupMessages({
-  library(methods)
-  library(rrBLUP)
-  library(plyr)
-  library(stringr)
-  library(randomForest)
-  library(parallel)
-  library(genoDataFilter)
-  library(phenoAnalysis)
-  library(caret)
-  library(dplyr)
-  library(tibble)
-  library(rlang)
-  library(jsonlite)
-  library(data.table)
+    library(methods)
+    library(rrBLUP)
+    library(plyr)
+    library(stringr)
+    library(randomForest)
+    library(parallel)
+    library(genoDataFilter)
+    library(phenoAnalysis)
+    library(caret)
+    library(dplyr)
+    library(tibble)
+    library(rlang)
+    library(jsonlite)
+    library(data.table)
 }))
 
 library(genoDataFilter)
@@ -29,15 +29,15 @@ library(Matrix)
 
 all_args <- commandArgs()
 input_files <- tryCatch({
-  scan(grep("input_files", all_args, value = TRUE), what = "character")
+    scan(grep("input_files", all_args, value = TRUE), what = "character")
 }, error = function(e) {
-  stop("Input files are missing or do not exist.")
+    stop("Input files are missing or do not exist.")
 })
 
 output_files <- tryCatch({
-  scan(grep("output_files", all_args, value = TRUE), what = "character")
+    scan(grep("output_files", all_args, value = TRUE), what = "character")
 }, error = function(e) {
-  stop("Output files are missing or do not exist.")
+    stop("Output files are missing or do not exist.")
 })
 
 # output_files <- scan(grep("output_files", allArgs, value = TRUE),
@@ -49,13 +49,13 @@ model_info_file  <- grep("model_info", input_files, value = TRUE)
 message("model_info_file: ", model_info_file)
 
 model_info  <- read.table(
-  model_info_file,
-  header = TRUE,
-  sep = "\t",
-  as.is = c("Value")
+    model_info_file,
+    header = TRUE,
+    sep = "\t",
+    as.is = c("Value")
 )
 
-model_info  <- column_to_rownames(model_info, var = "Name")
+model_info  <- column_to_rownames(model_info, var="Name")
 trait_id    <- model_info["trait_id", 1]
 trait_abbr  <- model_info["trait_abbr", 1]
 model_id   <- model_info["model_id", 1]
@@ -73,10 +73,10 @@ dataset_info_file <- grep("dataset_info", input_files, value = TRUE)
 dataset_info     <- c()
 
 if (length(dataset_info_file) != 0) {
-  dataset_info <- scan(dataset_info_file, what = "character")
-  dataset_info <- paste(dataset_info, collapse = " ")
+    dataset_info <- scan(dataset_info_file, what = "character")
+    dataset_info <- paste(dataset_info, collapse = " ")
 } else {
-  dataset_info <- c("single_population")
+    dataset_info <- c("single_population")
 }
 
 #validationTrait <- paste("validation", trait, sep = "_")
@@ -128,7 +128,7 @@ combined_selection_gebvs_genetic_values_file <- grep(
 
 trait_raw_pheno_file <- grep(
     "trait_raw_phenodata",
-    output_files,
+    output_files, 
     value = TRUE
 )
 
@@ -265,7 +265,7 @@ if (is.null(filtered_training_geno_data)) {
         indFilter = pheno_filter_threshold,
         logReturn = TRUE
     )
-
+    
     geno_data <- geno_filter_output$data
     geno_filtering_log <- geno_filter_output$log
     geno_data <- roundAlleleDosage(geno_data)
@@ -286,7 +286,7 @@ training_log <- append(training_log, geno_filtering_log)
 
 geno_data <- geno_data[order(row.names(geno_data)), ]
 
-if (length(formatted_pheno_file) != 0 &&
+if (length(formatted_pheno_file) != 0 && 
         file.info(formatted_pheno_file)$size != 0) {
     formatted_pheno_data <- data.frame(
         fread(formatted_pheno_file,
@@ -346,7 +346,7 @@ if (dataset_info == "combined_populations") {
     }
 } else {
     if (!is.null(formatted_pheno_data)) {
-        pheno_trait_data <- subset(formatted_pheno_data,
+        pheno_trait_data <- subset(formatted_pheno_data, 
                                    select = c("V1", trait_abbr))
 
         pheno_trait_data <- as.data.frame(pheno_trait_data)
@@ -438,7 +438,7 @@ if (length(selection_pop_geno_file) != 0) {
 
     selection_pop_data <- column_to_rownames(selection_pop_data, "V1")
 
-
+    
     selection_pop_data <- genoDataFilter::convertToNumeric(selection_pop_data)
 
     selection_prediction_log <- append(
@@ -776,7 +776,7 @@ if (length(selection_pop_data) == 0) {
         PEV    = TRUE
     )
 
-    modeling_log <- paste0(modeling_log,
+    modeling_log <- paste0(modeling_log, 
         "\nThe model training is based on rrBLUP R package, version ",
         packageVersion("rrBLUP"),
         ". GEBVs are predicted using the kin.blup function",
@@ -786,11 +786,11 @@ if (length(selection_pop_data) == 0) {
     training_pop_genetic_values <- data.frame(
         round(training_model_result$pred, 2)
     )
-
+    
     colnames(training_pop_genetic_values) <- trait_genetic_values_header
     training_pop_genetic_values <- training_pop_genetic_values %>%
         arrange(across(trait_genetic_values_header, desc))
-
+    
     training_pop_genetic_values <- rownames_to_column(
         training_pop_genetic_values,
         var = "genotypes"
@@ -984,7 +984,7 @@ if (length(selection_pop_data) == 0) {
                                                               var = "genotypes")
 
                 validation_selection_geno_data <- rownames_to_column(
-                                                    validation_selection_geno_data,
+                                                    validation_selection_geno_data, 
                                                     var = "genotypes"
                 )
 
@@ -1088,7 +1088,7 @@ if (length(selection_pop_data) != 0) {
                    selection_pop_genotypes)
 
     # sortVar <- parse_expr(trait_abbr)
-
+    
     selection_pop_pev <- selection_prediction_result$PEV
     selection_pop_stderr  <- sqrt(selection_pop_pev)
     selection_pop_stderr  <- data.frame(round(selection_pop_stderr, 2))
@@ -1110,11 +1110,11 @@ if (length(selection_pop_data) != 0) {
     selection_pop_gebvs <- selection_pop_gebvs %>%
         arrange(across(all_of(trait_abbr), desc))
 
-
+    
     if (!is.null(selection_pop_genetic_values) &&
         !is.null(selection_pop_gebvs)) {
         combined_selection_gebvs_genetic_values <- inner_join(selection_pop_gebvs,
-        selection_pop_genetic_values,
+        selection_pop_genetic_values, 
         by = 'genotypes')
     }
 
@@ -1127,7 +1127,7 @@ if (length(selection_pop_data) != 0) {
         selection_pop_genetic_values,
         var = "genotypes"
     )
-
+    
     selection_pop_gebvs <- column_to_rownames(
         selection_pop_gebvs,
         var = "genotypes"
@@ -1297,7 +1297,7 @@ if (!is.null(filtered_training_geno_data) &&
 
     cat(geno_filtering_log,
         fill = TRUE,
-        file = geno_filtering_log_file,
+        file = geno_filtering_log_file, 
         append = FALSE
     )
 }
