@@ -20,19 +20,19 @@ knitr::include_graphics('assets/images/image279.png')
 
 ## Trial Detail Page
 
-Trial detail page displays important information about individual trial including breeding program, location, year, description of the trial, design, and any files associated with that trial.
+The trial detail page displays important information about individual trials including breeding program, location, year, description of the trial, design, and any files associated with that trial.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/trial_detail_page_start.png')
 ```
 
-The "Navigator" section on the trial detail page allows easy access to all aspects of your trial. This section contains subsections for printing labels for your plots or plants, recording phenotypes, viewing your trial layout or design, viewing phenotypes for this trial, or conducting analyses.
+Below the trial details you will find various menus for accessing and modifying trial data. There are sections for printing labels for your plots or plants, recording phenotypes, viewing your trial layout or design, viewing phenotypes for this trial, or conducting analyses.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/trial_detail_page_navigator.png')
+knitr::include_graphics(c('assets/images/trial_detail_page_navigator_1.png', 'assets/images/trial_detail_page_navigator_2.png', 'assets/images/trial_detail_page_navigator_3.png'))
 ```
 
-The "transplanting date" field feature will only be shown if it has a value. To add a transplanting date after creating a trial, change the show_transplanting_date parameter from 0 to 1 in the SGN config file. As a result, you will be able to add a date under the transplanting date field by clicking the "Edit Trial Details" on the trial detail page.
+The "transplanting date" field feature will only be displayed if it has a value. To add a transplanting date after creating a trial, change the show_transplanting_date parameter from 0 to 1 in the SGN config file. As a result, you will be able to add a date under the transplanting date field by clicking the "Edit Trial Details" on the trial detail page.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/add_transplanting_date.png')
@@ -40,23 +40,23 @@ knitr::include_graphics('assets/images/add_transplanting_date.png')
 
 ## Adding Trials
 
-Only users with the account status of "submitter" may create trials. To learn how to change your account status from "user" to "submitter" visit the \@ref(managing-your-account) page.
+Only users with the account status of "submitter" may create trials. To learn how to change your account status from "user" to "submitter" visit section \@ref(managing-your-account).
 
 ### Prerequisites
 
--   To add a trial, all of your accessions should already exist in the database before you begin to design a trial. If you have accessions that are not in the database, see the instructions for adding accessions .
+-   To add a trial, all of your accessions should already exist in the database before you begin to design a trial. If you have accessions that are not in the database, see the instructions in [*Managing Accessions*](#managing-accessions). 
 
--   Breeding program and location for your trial should also exist in the database. If you need to add breeding program and/or location to the database, see instructions for adding breeding program and location in the “Managing Breeding Programs” and “Managing locations” respectively.
+-   The breeding program and location for your trial should also exist in the database. If you need to add breeding program and/or location to the database, see the instructions in [*Managing Breeding Programs*](#managing-breeding-programs) and [*Managing Locations*](#managing-locations) respectively.
 
-On the “Manage Trials” page, there are three alternative methods for you to add new trials: by using “Add Trial” form, “Upload Trial” form, or “Add Multi-location Trial” form.
+On the “Manage Trials” page, there are two methods to create trials: by selecting "Upload Existing Trial(s)" to create a trial or trials from a spreadsheet; or by selecting "Design New Trial" and entering the trial data by hand.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/trial_create_manage_trials.png')
 ```
 
-### Adding a trial by using “Add Trial” form
+### Adding a trial by using “Design New Trial” form
 
-#### Step 1. Begin the "Design new trial" workflow {-}
+#### Step 1. Begin the "Design New Trial" workflow {-}
 
 Click on “Design New Trial” to begin.
 
@@ -64,15 +64,15 @@ Click on “Design New Trial” to begin.
 knitr::include_graphics('assets/images/trial_create_open_form.png')
 ```
 
-The first step in this workflow is an introduction that looks like:
+The first step in this workflow is an introduction that looks like this:
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/trial_create_form_1.png')
 ```
 
-Here it gives information about what is required for a trial, including that to create a new trial, you need to create a list of the accessions that you would like to use in the trial. Lists can be viewed, created, and modified with the "**lists**" tool at the upper right of the screen. For more information on lists, click [*here*](#working-with-lists).
+Here it gives information about what is required for a trial, including that to create a new trial, you need to create a list of the accessions that you would like to use in the trial. Lists can be viewed, created, and modified with the "lists" tool at the upper right of the screen. For more information on lists, click [here](#working-with-lists).
 
-#### Step 2. Enter "Trial Information" {-}
+#### Step 2. Enter Trial Information {-}
 
 On this screen you need to enter basic information about the trial, such as breeding program and location(s). You must also select a design type, such as Complete Block Design. The design is important because it influences how your genotypes are distributed and randomized over the trial. You must first click validate before proceeding to the next step.
 
@@ -80,83 +80,91 @@ On this screen you need to enter basic information about the trial, such as bree
 knitr::include_graphics('assets/images/trial_create_form_2.png')
 ```
 
-#### Step 3. Enter "Design Information" {-}
+#### Step 3. Enter Design Information {-}
 
-On this screen you need to specify a list of accessions to use in the experiment. This list must be a valid list of accessions. You must also specify all required design information, such as number of blocks in this case.
+On this screen you need to specify a list of accessions to use in the experiment. This list must be a valid list of accessions. You must also specify all required design information, such as number of replicates. In this case, the number of blocks must be given.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/trial_create_form_3.png')
 ```
 
-#### Step 4. Enter "Field Map Information" (Optional) {-}
+#### Step 4. Enter Trial Linkage Information (Optional) {-}
 
-On this screen you can specify how the row and column numbers will be generated for the plots in the trial. The row and column number represent a relative position of the plot in the field. If you are not exactly sure of how you will plant the plots in the field or you have an irregular (non-rectangular) layout, you can skip this step for now. This information can be added on the Trial Detail Page once the trial is saved in the database in order to reflect exactly how the plots were planted in the field.
+This next sections allows you to associate this new trial with other field trials, crossing experiments, or genotyping plates already present in the database. This is optional, and can be completed at a later date from the trial detail page.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/trial_create_form_4.png')
 ```
 
-#### Step 5. Custom Plot Naming (Optional) {-}
+#### Step 5. Enter Field Map Information (Optional) {-}
 
-On this screen it is possible to change the format in which plot names will be generated for your trial. It is recommended to skip this step and just use the format generated by the database by default.
+On this screen you can specify how the row and column numbers will be generated for the plots in the trial. The row and column number represent a relative position of the plot in the field. If you are not exactly sure of how you will plant the plots in the field or you have an irregular (non-rectangular) layout, you can skip this step for now. This information can be added on the Trial Detail Page once the trial is saved in the database in order to reflect exactly how the plots were planted in the field.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/trial_create_form_5.png')
 ```
 
-#### Step 6. Review Designed Trial {-}
+#### Step 6. Custom Plot Naming (Optional) {-}
+
+On this screen it is possible to change the format in which plot names will be generated for your trial. It is recommended to skip this step and just use the format generated by the database by default.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_create_form_6.png')
+```
+
+#### Step 7. Review Designed Trial {-}
 
 On this screen you can review the trial that the database has generated.
 
 You will see a graphical representation of the trial. The numbers on the squares represent the plot_number of each plot and on mouse hover you can see further information about the plot.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/trial_create_form_6_top.png')
+knitr::include_graphics('assets/images/trial_create_form_7_top.png')
 ```
 
 You will also see a table representation of all the plots and their information. If you want to redo the randomization, you can click the "Redo Randomization" button.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/trial_create_form_6_middle.png')
+knitr::include_graphics('assets/images/trial_create_form_7_middle.png')
 ```
 
 At the bottom there is a brief summary of the trial followed by two buttons.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/trial_create_form_6_bottom.png')
+knitr::include_graphics('assets/images/trial_create_form_7_bottom.png')
 ```
 
-#### Step 7. Add Field Management Factors to your design (Optional) {-}
+#### Step 8. Add Field Management Factors to your design (Optional) {-}
 
-You can add Field Management Factors by clicking "Add Field Management Factor(s) to Design". Clicking this opens a dialog to name your factor. You can name this to account for fertilizer or watering regime or inoculation or anything else. This is optional and can be added from the trial detail page afterwards.
+You can add Field Management Factors by clicking "Add Field Management Factor(s) to Design". Clicking this opens a dialog to specify your factor. You can name this to account for fertilizer, watering regime, inoculation, or anything else. The types of management factors available is customizable in the SGN configuration file. This is optional and can be added from the trial detail page afterwards.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/add_management_factor_name_dialog.png')
 ```
 
-Click "Continue" and a dialog will appear where you can specify plots for which the factor was applied. There is a select all button also.
+Click "Continue" and a dialog will appear where you can specify plots or plants (if you added plants during trial creation) for which the factor was applied. There is a select all button as well.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/add_management_factor_dialog.png')
 ```
 
-#### Step 8. Saving new trial in the database {-}
+#### Step 9. Saving new trial in the database {-}
 
 Once you are done reviewing the trial you can click "Confirm" to save the generated trial into the database. Once the trial has saved you will see the final completion screen:
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/trial_create_form_7.png')
+knitr::include_graphics('assets/images/trial_create_form_8.png')
 ```
 
 ### Adding a trial from an uploaded file
 
-If you already have trial design layout in a spreadsheet, you can add your trial into the database by using “Upload Trial” form. To access “Upload Trial” form, click on “Upload Existing Trial(s)” button on the “Manage Trials” page.
+If you already have trial design layout in a spreadsheet, you can add your trial into the database by using the “Upload Existing Trial(s)” button on the *Manage Trials* page.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_trials.png')
+knitr::include_graphics('assets/images/trial_create_manage_trials.png')
 ```
 
-When you click "Upload Existing Trial(s)" you will see the following workflow. Notice that there are 5 numbered sections to the workflow.
+Enter the information in the workflow to upload a trial from a spreadsheet.
 
 #### Step 1: {-}
 
