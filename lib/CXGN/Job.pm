@@ -316,7 +316,7 @@ sub check_status {
     my $backend_id = $self->backend_id();
     my $logfile = $self->finish_logfile();
 
-    if ($self->status() eq "canceled") {
+    if ($self->status() eq "canceled" || $self->status() eq "failed") {
         return $self->status();
     }
 
@@ -472,14 +472,16 @@ sub cancel {
     }
 }
 
-=head2 submit()
+=head2 submit("sync")
 
-Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a new db row. Returns sp_job_id
+Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a new db row. Returns sp_job_id. 
+Optional parameter runs it syncronously rather than on the cluster.
 
 =cut
 
 sub submit {
     my $self = shift;
+    my $run_sync = shift;
 
     if ($self->has_sp_job_id()) {
         die "This job has already been submitted!\n";
@@ -517,8 +519,16 @@ sub submit {
 
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
         print STDERR "Submitting job: \n$cmd\n";
-        $job->run_cluster($cmd.$finish_timestamp_cmd);
-        
+        $job->is_cluster(1);
+        if ($run_sync eq "sync") {
+            $job->run($cmd.$finish_timestamp_cmd);
+        } else {
+            $job->run_cluster($cmd.$finish_timestamp_cmd);
+        }
+
+        $self->cxgn_tools_run_config->{err} = $job->err_file();
+        $self->cxgn_tools_run_config->{out} = $job->out_file();
+
         $backend_id = $job->cluster_job_id();
         $status = 'submitted';
     };
@@ -656,17 +666,17 @@ Returns a hashref of the default config options for cxgn tools run. Used when no
 sub get_default_cxgn_tools_run_config {
     my $self = shift;
 
-    my $cxgn_tools_run_config;
-    my $user_id = $self->sp_person_id();
-    my $name = $self->name() =~ s/ /_/gr;
-    $name =~ s/[\\*?[\]{}|;><&$"'`]//g;
-    if (!$name) {
-        $name = "job_".DateTime->now(time_zone => 'local')->strftime('%Y_%m_%d_%H_%M_%S');
-    }
+    # my $cxgn_tools_run_config;
+    # my $user_id = $self->sp_person_id();
+    # my $name = $self->name() =~ s/ /_/gr;
+    # $name =~ s/[\\*?[\]{}|;><&$"'`]//g;
+    # if (!$name) {
+    #     $name = "job_".DateTime->now(time_zone => 'local')->strftime('%Y_%m_%d_%H_%M_%S');
+    # }
     # my $temp_base = "/home/production/volume/tmp/user_$user_id/$name";
     # my $err_file = "$temp_base/job.err";
     # my $out_file = "$temp_base/job.out";
-    $cxgn_tools_run_config = {
+    my $cxgn_tools_run_config = {
         #'err_file' => $err_file,
         'submit_host' => 'localhost',
         #'out_file' => $out_file,
