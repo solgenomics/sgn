@@ -1,3 +1,4 @@
+
 package SGN::Controller::AJAX::Report;
 
 use Moose;
@@ -99,16 +100,43 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
                        . "-o '$out_directory' -f '$file_basename' "
                        . "-s '$start_date' -e '$end_date'";
 
-        print "Running command: $script_cmd\n";
+        my $report_job_record = CXGN::Job->new({
+            schema => $schema,
+            people_schema => $people_schema,
+            sp_person_id => $sp_person_id,
+            name => $file_basename." report generation",
+            cmd => $script_cmd,
+            job_type => 'report',
+            finish_logfile => $c->config->{job_finish_log}
+        });
+    
+        # Start or enqueue the job
+        print("Starting command $script_cmd \n");
+        print("Files directory $out_directory \n");
         system($script_cmd);
-        if ($? != 0) {
+        $report_job_record->update_status("submitted");
+
+        my $script_output = `$script_cmd 2>&1`;
+        my $exit_code = $? >> 8;
+
+        if ( $exit_code != 0 ) {
+
+            my $error_msg =
+                "Report script '$script' failed with exit code $exit_code.\n" .
+                "\n--- Script output ---\n$script_output";
+
+            # Notify every requested e‑mail address
+            send_error_email_to_emails( $emails, $file_basename, $error_msg );
+
+            $report_job_record->update_status("failed");
             die "Report script failed with exit code " . ($? >> 8);
         }
 
-        # Grab all files starting with that basename
+        # Now safe to open the files
         opendir(my $dh, $out_directory) or die "Cannot open directory $out_directory: $!";
         my @matching_files = grep { /^$file_basename/ && -f "$out_directory/$_" } readdir($dh);
         closedir($dh);
+
 
         foreach my $f (@matching_files) {
             print "Adding file to zip list: $f\n";
@@ -180,4 +208,31 @@ sub send_report_zip_to_emails {
     }
 }
 
+sub send_error_email_to_emails {
+    my ( $emails_ref, $script_label, $error_msg ) = @_;
+    return unless $emails_ref && ref($emails_ref) eq 'ARRAY';
+
+    foreach my $email (@$emails_ref) {
+        next unless $email;
+
+        my $subject = "Breedbase Report FAILED: $script_label";
+        my $body    =
+            "Dear user,
+
+            Unfortunately, the requested report ($script_label) did not finish successfully.
+
+            Error details:
+            $error_msg
+
+            Please review the parameters and try again, or contact the Breedbase team if the problem persists.
+
+            Best regards,
+            The Breedbase Team";
+
+        CXGN::Contact::send_email( $subject, $body, $email, 'noreply@breedbase.org' );
+        print STDERR "Sent failure notice to: $email\n";
+    }
+}
+
 1;
+
