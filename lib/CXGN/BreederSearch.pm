@@ -127,7 +127,7 @@ sub metadata_query {
 	    }
 	}
 
-	if (@$limit_to_breeding_programs) {
+	if (ref($limit_to_breeding_programs) eq 'ARRAY') { 
 	    my $limit_bp_query = $self->build_subquery( join(",", map{ "'$_'" } @$limit_to_breeding_programs), 0, $target_table, $target, "breeding_programs", $select, $group);
 
 	    push @queries, $limit_bp_query;
