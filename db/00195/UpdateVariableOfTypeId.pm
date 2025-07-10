@@ -72,6 +72,15 @@ sub patch {
         my $count = $cvterm_relationship_rs->count;
         $cvterm_relationship_rs->update( { type_id => $variable_of_id } );
         print STDOUT "Updated $count rows in cvterm_relationship table to new VARIABLE_OF type_id = $variable_of_id\n";
+
+        my $old_cvterms_rs = $schema->resultset("Cv::Cvterm")->search(
+            {
+                name => 'VARIABLE_OF',
+                is_relationshiptype => 1,
+                cv_id => { '!=' => $variable_of_id },
+            }
+        );
+        $old_cvterms_rs->delete(); 
         return 1;
     };
     try {
