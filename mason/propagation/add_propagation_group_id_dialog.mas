@@ -37,10 +37,10 @@ $breeding_program_name
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_material_type">
                                     <option value="">Please select a type</option>
-                                    <option value="Plant">Plant</option>
-                                    <option value="Seed">Seed</option>
-                                    <option value="Budwood">Budwood</option>
-                                    <option value="Tissue Culture">Tissue Culture</option>
+                                    <option value="plant">Plant</option>
+                                    <option value="seed">Seed</option>
+                                    <option value="budwood">Budwood</option>
+                                    <option value="tissue_culture">Tissue Culture</option>
                                 </select>
                             </div>
                         </div>
