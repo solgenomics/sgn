@@ -65,11 +65,11 @@ sub patch {
         foreach my $term (@terms) {
             my $new_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
                 name => $term,
+                is_relationshiptype => 1,
                 cv => 'relationship',
                 dbxref => $term,
                 db => 'OBO_REL'
             });
-            $new_cvterm->update({ is_relationshiptype => 1 });
         }
         return 1;
     };
