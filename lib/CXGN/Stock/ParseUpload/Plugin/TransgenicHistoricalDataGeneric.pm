@@ -104,15 +104,14 @@ sub _parse_with_plugin {
     my $transgenic_data = {};
 
     foreach my $row (@$parsed_data) {
-        my $control;
+        my $type;
         if ($row->{'is_a_control'}) {
-            $control = 'is_a_control';
+            $type = 'control';
         } else {
-            $control = 'transformant';
+            $type = 'transformant';
         }
-        $transgenic_data->{'batch_number'}->{$row->{'batch_number'}}->{'control'}->{$control}->{$row->{'accession_name'}}->{'vector_construct'} = $row->{'vector_construct'};
-        $transgenic_data->{'batch_number'}->{$row->{'batch_number'}}->{'control'}->{$control}->{$row->{'accession_name'}}->{'plant_material'} = $row->{'plant_material'};
-        $transgenic_data->{'batch_number'}->{$row->{'batch_number'}}->{'control'}->{$control}->{$row->{'accession_name'}}->{'notes'} = $row->{'notes'};
+
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'plant_material'}}->{$row->{'vector_construct'}}->{$type}->{$row->{'accession_name'}}++;
     }
 
     $self->_set_parsed_data($transgenic_data);
