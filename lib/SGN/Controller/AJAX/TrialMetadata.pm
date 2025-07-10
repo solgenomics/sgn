@@ -2321,6 +2321,34 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     }
 }
 
+sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $treatment_id = $c->req->param('treatment_id');
+
+    if (!($c->user()->check_roles('curator'))) {
+        $c->stash->{rest} = { error => 'You do not have the privileges to remove a treatment from this trial.'};
+        return;
+    }
+    my $trial = $c->stash->{trial};
+    my $trial_id = $c->stash->{trial_id};
+
+    my $result;
+    eval {
+        $result = $trial->remove_treatment($treatment_id);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred while removing the treatment: $@" };
+        return;
+    }
+    if ($result->{error}) {
+        $c->stash->{rest} = { error => $result->{error} };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1, message => "Treatment removed from trial." };
+}
+
 sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2645,17 +2673,22 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
         uniquename => $new_accession
     });
     $accession_rs = $accession_rs->next();
-    my $accession_id = $accession_rs->stock_id;
+    my $new_accession_id = $accession_rs->stock_id;
+    my $old_accession_rs = $schema->resultset("Stock::Stock")->search({
+        uniquename => $old_accession
+    });
+    $old_accession_rs = $old_accession_rs->next();
+    my $old_accession_id = $old_accession_rs->stock_id;
 
     print "Calling Replace Function...............\n";
-    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $accession_id, $plot_of_type_id);
+    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $new_accession_id, $plot_of_type_id);
     if ($replace_return_error) {
         $c->stash->{rest} = { error => $replace_return_error };
         return;
     }
 
     if ($new_plot_name) {
-        my $replace_plot_name_return_error = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $new_plot_name);
+        my $replace_plot_name_return_error = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $old_plot_name, $new_plot_name);
         if ($replace_plot_name_return_error) {
             $c->stash->{rest} = { error => $replace_plot_name_return_error };
             return;
