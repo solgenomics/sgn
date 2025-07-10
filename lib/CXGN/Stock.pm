@@ -592,7 +592,7 @@ sub _retrieve_stock_owner {
     my $owner_rs = $self->phenome_schema->resultset("StockOwner")->search({
         stock_id => $self->stock_id,
     });
-    my @owners;
+    my @owners = ();
     while (my $r = $owner_rs->next){
         push @owners, $r->sp_person_id;
     }
@@ -753,7 +753,7 @@ sub exists_in_database {
     # loading new stock - $stock_id is undef
     #
     if (defined($s) && !$stock ) {
-        return "Uniquename already exists in database with stock_id: ".$s->stock_id;
+        return $s->stock_id;
     }
 
     # updating an existing stock
@@ -1040,7 +1040,42 @@ sub associate_owner {
     return $id;
 }
 
-=head2 associate_owner()
+=head2 remove_owner() 
+
+  Usage: $self->remove_owner($owner_sp_person_id)
+  Desc: removes entry in phenome.stock_owner
+  Ret:  an error message if unsuccessful, false otherwise
+  Args: $the owner id of this stock
+
+=cut
+
+sub remove_owner {
+    my $self = shift;
+    my $owner_id = shift;
+
+    my $q = "delete from phenome.stock_owner where stock_id=? and owner_id=?";
+
+    if (! $self->stock_id()) {
+	print STDERR "Cannot remove owner from stock that has no stock_id\n";
+	return;
+    }
+    
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+
+    eval { 
+	$h->execute($self->stock_id, $owner_id);
+    };
+
+    if ($@) {
+	return $@;
+    }
+    else {
+	return 0;
+    }
+}
+
+
+=head2 associate_uploaded_file()
 
  Usage: $self->associate_uploaded_file($owner_sp_person_id, $archived_filename_with_path, $md5checksum, $stock_id )
  Desc:  Associate files with metadata and stock
@@ -2148,7 +2183,7 @@ COUNTS
 	return;
 }
 
-=head2 delete
+=head2 hard_delete()
 
  Usage:
  Desc:
@@ -2162,26 +2197,27 @@ COUNTS
 sub hard_delete {
     my $self = shift;
 
+    # the linking tables should have cascading deletes now
     # delete sgn.stock_owner entry
     #
-    my $q = "DELETE FROM phenome.stock_owner WHERE stock_id=?";
-    my $h = $self->schema()->storage()->dbh()->prepare($q);
-    $h->execute($self->stock_id());
+   # my $q = "DELETE FROM phenome.stock_owner WHERE stock_id=?";
+    #my $h = $self->schema()->storage()->dbh()->prepare($q);
+    #$h->execute($self->stock_id());
 
     # delete sgn.stock_image entry
     #
-    $q = "DELETE FROM phenome.stock_image WHERE stock_id=?";
-    $h = $self->schema()->storage()->dbh()->prepare($q);
-    $h->execute($self->stock_id());
+    #$q = "DELETE FROM phenome.stock_image WHERE stock_id=?";
+    #$h = $self->schema()->storage()->dbh()->prepare($q);
+    #$h->execute($self->stock_id());
 
     # delete stock entry
     #
-    $q = "DELETE FROM stock WHERE stock_id=?";
-    $h = $self->schema()->storage()->dbh()->prepare($q);
+    my $q = "DELETE FROM stock WHERE stock_id=?";
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
 }
 
-###__PACKAGE__->meta->make_immutable;
+__PACKAGE__->meta->make_immutable;
 
 ##########
 1;########
