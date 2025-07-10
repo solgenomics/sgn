@@ -54,7 +54,7 @@ has 'material_type' => (
 );
 
 has 'material_source_type' => (
-    isa => 'Str',
+    isa => 'Maybe[Str]',
     is => 'rw',
 );
 
@@ -77,6 +77,7 @@ has 'date' => (
 has 'description' => (
     isa => 'Str',
     is => 'rw',
+    required => 1,
 );
 
 has 'operator_name' => (
@@ -94,6 +95,7 @@ has 'propagation_project_id' => (
 has 'owner_id' => (
     isa => 'Int',
     is => 'rw',
+    required => 1,
 );
 
 

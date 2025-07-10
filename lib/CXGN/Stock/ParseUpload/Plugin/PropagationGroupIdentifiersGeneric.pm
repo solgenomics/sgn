@@ -89,12 +89,12 @@ sub _validate_with_plugin {
     my %duplicated_propagation_group_identifiers;
     foreach my $row (@$parsed_data) {
         my $row_num = $row->{_row};
-        my $propagation_group_identifer = $row->{'propagation_group_identifier'};
+        my $propagation_group_identifier = $row->{'propagation_group_identifier'};
 
-        if ($duplicated_propagation_group_identifers{$propagation_group_identifer}) {
+        if ($duplicated_propagation_group_identifiers{$propagation_group_identifier}) {
             push @error_messages, "Cell A$row_num: duplicate propagation group identifier: $propagation_group_identifier. Propagation Group Identifier must be unique.";
         } else {
-            $duplicated_propagation_group_identifers{$propagation_group_identifier}++;
+            $duplicated_propagation_group_identifiers{$propagation_group_identifier}++;
         }
     }
 

@@ -32,7 +32,7 @@ $trial_name
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_propagation_group_ids_submit" id="upload_propagation_group_ids_form_ids_submit">Upload</button>
+                <button type="button" class="btn btn-primary" name="upload_propagation_group_ids_submit" id="upload_propagation_group_ids_submit">Upload</button>
             </div>
         </div>
     </div>
