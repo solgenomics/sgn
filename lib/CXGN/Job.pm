@@ -472,10 +472,9 @@ sub cancel {
     }
 }
 
-=head2 submit("sync")
+=head2 submit()
 
 Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a new db row. Returns sp_job_id. 
-Optional parameter runs it syncronously rather than on the cluster.
 
 =cut
 
@@ -520,11 +519,7 @@ sub submit {
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
         print STDERR "Submitting job: \n$cmd\n";
         $job->is_cluster(1);
-        if ($run_sync eq "sync") {
-            $job->run($cmd.$finish_timestamp_cmd);
-        } else {
-            $job->run_cluster($cmd.$finish_timestamp_cmd);
-        }
+        $job->run_cluster("(".$cmd.$finish_timestamp_cmd.")");
 
         $self->cxgn_tools_run_config->{err} = $job->err_file();
         $self->cxgn_tools_run_config->{out} = $job->out_file();

@@ -1250,7 +1250,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         #my $err = $runner->err();
         #my $out = $runner->out();
 
-        $job->submit("sync");
+        $job->submit();
 
         while($job->alive()) {
             sleep(1);
