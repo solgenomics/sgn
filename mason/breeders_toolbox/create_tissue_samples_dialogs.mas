@@ -81,7 +81,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                        <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
                                         <div class="col-sm-9" >
                                             <input name="create_tissue_samples_plants_per_plot_inherit_treatments" id="create_tissue_samples_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
                                         </div>
@@ -109,7 +109,7 @@
 
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                    <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
                                     <div class="col-sm-9" >
                                         <input name="create_tissue_samples_per_plant_inherit_treatments" id="create_tissue_samples_per_plant_inherit_treatments" type="checkbox"/>
                                     </div>
@@ -260,7 +260,7 @@ jQuery(document).ready(function(){
         var tissue_names = [];
         jQuery('input[name="create_tissue_samples_tissue_name"]').each(function() {
             tissue_names.push(this.value);
-       
+
         });
 
         jQuery.ajax({
