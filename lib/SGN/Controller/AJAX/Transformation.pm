@@ -1253,7 +1253,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     }
 
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
-    my $program_ref = $program_object->get_breeding_programs_by_trial($transformation_project_id);
+    my $program_ref = $program_object->get_breeding_programs_by_trial($transgenic_data_project_id);
 
     my $program_array = @$program_ref[0];
     my $breeding_program_name = @$program_array[1];
@@ -1311,7 +1311,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
     if ($parsed_data){
         eval {
-            foreach my $row (keys %$parsed_data) {
+            foreach my $batch_number (keys %$parsed_data) {
 
 
 

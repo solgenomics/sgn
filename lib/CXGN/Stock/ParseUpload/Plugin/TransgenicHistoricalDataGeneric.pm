@@ -104,10 +104,15 @@ sub _parse_with_plugin {
     my $transgenic_data = {};
 
     foreach my $row (@$parsed_data) {
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'accession_name'}}->{'vector_construct'} = $row->{'vector_construct'};
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'accession_name'}}->{'plant_material'} = $row->{'plant_material'};
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'accession_name'}}->{'is_a_control'} = $row->{'is_a_control'};
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'accession_name'}}->{'notes'} = $row->{'notes'};
+        my $control;
+        if ($row->{'is_a_control'}) {
+            $control = 'is_a_control';
+        } else {
+            $control = 'transformant';
+        }
+        $transgenic_data->{'batch_number'}->{$row->{'batch_number'}}->{'control'}->{$control}->{$row->{'accession_name'}}->{'vector_construct'} = $row->{'vector_construct'};
+        $transgenic_data->{'batch_number'}->{$row->{'batch_number'}}->{'control'}->{$control}->{$row->{'accession_name'}}->{'plant_material'} = $row->{'plant_material'};
+        $transgenic_data->{'batch_number'}->{$row->{'batch_number'}}->{'control'}->{$control}->{$row->{'accession_name'}}->{'notes'} = $row->{'notes'};
     }
 
     $self->_set_parsed_data($transgenic_data);
