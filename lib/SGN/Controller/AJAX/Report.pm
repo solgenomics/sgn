@@ -118,6 +118,7 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
             closedir($dh);
 
             if ($exit_code != 0) {
+                $report_job_record->update_status("failed");
                 foreach my $to (split /,/, $emails) {
                     CXGN::Contact::send_email(
                         "Report FAILED: $file_basename",
@@ -129,7 +130,9 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
                 }
                 exit(1);
             }
-
+            
+            $report_job_record->update_status("finished");
+            
             my $zip_filename = "$file_basename.zip";
             my $zip_path = "$out_directory/$zip_filename";
             my $zip = Archive::Zip->new();
