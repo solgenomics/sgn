@@ -1,10 +1,9 @@
-
 package SGN::Controller::AJAX::Report;
 
 use Moose;
 use strict;
 use warnings;
-use JSON; # This stays for API response only
+use JSON; # For API response only
 use File::Slurp;
 use Path::Tiny;
 use File::Path qw(make_path);
@@ -15,20 +14,19 @@ use CXGN::Job;
 use Excel::Writer::XLSX;
 use POSIX qw(strftime);
 use Archive::Zip qw(:ERROR_CODES :CONSTANTS);
+use CXGN::Contact;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
-    default    => 'application/json',
-    stash_key  => 'rest',
-    map        => { 'application/json' => 'JSON' }
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON' }
 );
-
 
 # Convert UI date to SQL timestamp
 sub convert_ui_date_to_sql_timestamp {
     my ($ui_date, $is_start) = @_;
-
     return unless $ui_date;
 
     if ($ui_date =~ m{^(\d{2})/(\d{2})/(\d{4})$}) {
@@ -36,19 +34,15 @@ sub convert_ui_date_to_sql_timestamp {
         return "$yyyy-$mm-$dd";
     }
 
-    return;  # Invalid format
+    return; # Invalid format
 }
 
 sub generatereport_POST :Path('generatereport') :Args(0) {
     my ($self, $c) = @_;
 
-    # Check user role
+    # Check role
     my @user_roles = $c->user ? $c->user->roles : ();
     my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
-    my $sp_person_id = $c->user ? $c->user->get_object->get_sp_person_id : undef;
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
-
     unless ($curator) {
         $c->stash->{rest} = {
             success => JSON::false,
@@ -57,11 +51,12 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
         $c->detach;
     }
 
-    # Decode JSON data
-    my $data = decode_json($c->req->param('reportData'));
-    $c->log->debug("Received report generation data: " . Dumper($data));
+    my $sp_person_id = $c->user ? $c->user->get_object->get_sp_person_id : undef;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
-    # Extract parameters
+    my $data = decode_json($c->req->param('reportData'));
+
     my $dbname          = $c->config->{dbname};
     my $dbhost          = $c->config->{dbhost};
     my $dbuser          = $c->config->{dbuser};
@@ -71,168 +66,105 @@ sub generatereport_POST :Path('generatereport') :Args(0) {
     my $out_directory   = "$tempfiles_path/reports/";
     my $reports_dir     = '/bin/Reports/';
 
-    my $start_raw      = $data->{start_date}    // '';
-    my $end_raw        = $data->{end_date}      // '';
+    my $start_raw = $data->{start_date} // '';
+    my $end_raw   = $data->{end_date}   // '';
 
-    # Convert dates
     my $start_date = convert_ui_date_to_sql_timestamp($start_raw, 1);
     my $end_date   = convert_ui_date_to_sql_timestamp($end_raw, 0);
 
-    my $emails          = $data->{emails}        // [];
-    my $report_scripts  = $data->{report_scripts} // [];
+    my $emails = join(",", @{ $data->{emails} // [] });
+    my $report_scripts = $data->{report_scripts} // [];
 
-    # Create output directory
     make_path($out_directory);
-
-    my $zip_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);
-
-    my @all_files_to_zip;
 
     foreach my $script (@$report_scripts) {
         my $script_date = strftime("%Y-%m-%d_%H-%M-%S", localtime);
-
-        # Use a consistent base name for all files
         my $file_basename = "${script}_${script_date}";
 
-        # Build the script command
         my $script_cmd = "perl ${basepath}${reports_dir}${script}.pl "
-                       . "-U $dbuser -H $dbhost -P $dbpass -D $dbname "
-                       . "-o '$out_directory' -f '$file_basename' "
-                       . "-s '$start_date' -e '$end_date'";
+            . "-U $dbuser -H $dbhost -P $dbpass -D $dbname "
+            . "-o '$out_directory' -f '$file_basename' "
+            . "-s '$start_date' -e '$end_date'";
 
-        my $report_job_record = CXGN::Job->new({
-            schema => $schema,
-            people_schema => $people_schema,
-            sp_person_id => $sp_person_id,
-            name => $file_basename." report generation",
-            cmd => $script_cmd,
-            job_type => 'report',
-            finish_logfile => $c->config->{job_finish_log}
-        });
-    
-        # Start or enqueue the job
-        print("Starting command $script_cmd \n");
-        print("Files directory $out_directory \n");
-        system($script_cmd);
-        $report_job_record->update_status("submitted");
-
-        my $script_output = `$script_cmd 2>&1`;
-        my $exit_code = $? >> 8;
-
-        if ( $exit_code != 0 ) {
-
-            my $error_msg =
-                "Report script '$script' failed with exit code $exit_code.\n" .
-                "\n--- Script output ---\n$script_output";
-
-            # Notify every requested e‑mail address
-            send_error_email_to_emails( $emails, $file_basename, $error_msg );
-
-            $report_job_record->update_status("failed");
-            die "Report script failed with exit code " . ($? >> 8);
+        my $pid = fork();
+        if (!defined $pid) {
+            die "Cannot fork: $!";
         }
+        elsif ($pid == 0) {
+            # Child process
+            print STDERR "Child PID $$ started for report: $file_basename\n";
 
-        # Now safe to open the files
-        opendir(my $dh, $out_directory) or die "Cannot open directory $out_directory: $!";
-        my @matching_files = grep { /^$file_basename/ && -f "$out_directory/$_" } readdir($dh);
-        closedir($dh);
+            my $report_job_record = CXGN::Job->new({
+                schema => $schema,
+                people_schema => $people_schema,
+                sp_person_id => $sp_person_id,
+                name => $file_basename." report generation",
+                cmd => $script_cmd,
+                job_type => 'report',
+                finish_logfile => $c->config->{job_finish_log}
+            });
 
+            # Start or enqueue the job
+            print("Starting command $script_cmd \n");
+            print("Files directory $out_directory \n");
+            
+            system($script_cmd);
+            $report_job_record->update_status("submitted");
+            
+            my $exit_code = $? >> 8;
 
-        foreach my $f (@matching_files) {
-            print "Adding file to zip list: $f\n";
+            opendir(my $dh, $out_directory) or die "Cannot open dir $out_directory: $!";
+            my @files = grep { /^$file_basename/ && -f "$out_directory/$_" } readdir($dh);
+            closedir($dh);
+
+            if ($exit_code != 0) {
+                foreach my $to (split /,/, $emails) {
+                    CXGN::Contact::send_email(
+                        "Report FAILED: $file_basename",
+                        "Dear user,\n\nThe report failed.\nExit code: $exit_code\n\n",
+                        $to,
+                        'noreply@breedbase.org'
+                    );
+                    print STDERR "Sent failure notice to: $to\n";
+                }
+                exit(1);
+            }
+
+            my $zip_filename = "$file_basename.zip";
+            my $zip_path = "$out_directory/$zip_filename";
+            my $zip = Archive::Zip->new();
+            $zip->addFile("$out_directory/$_", $_) for @files;
+            unless ($zip->writeToFileNamed($zip_path) == AZ_OK) {
+                foreach my $to (split /,/, $emails) {
+                    CXGN::Contact::send_email(
+                        "Report FAILED: $file_basename",
+                        "Dear user,\n\nThe report was generated but creating the ZIP archive failed.\n",
+                        $to,
+                        'noreply@breedbase.org'
+                    );
+                    print STDERR "Sent failure notice to: $to\n";
+                }
+                exit(1);
+            }
+
+            foreach my $to (split /,/, $emails) {
+                my $subject = "Report ready: $file_basename";
+                my $body    = "Dear user,\n\nAttached is your generated report.\n\nBest regards,\nThe Breedbase Team";
+
+                CXGN::Contact::send_email($subject, $body, $to, 'noreply@breedbase.org', $zip_path);
+                print STDERR "Sent report ZIP to: $to\n";
+            }
+
+            exit(0);
         }
-
-        push @all_files_to_zip, @matching_files;
+        # Parent continues
     }
 
-    # Build zip filename
-    my $zip_filename = "report_${zip_date}.zip";
-    my $zip_path = $out_directory . $zip_filename;
-
-    # Zip all matching files
-    zip_files($out_directory, \@all_files_to_zip, $zip_path);
-
-    print "All files zipped into: $zip_path\n";
-
-    # Send email
-    send_report_zip_to_emails($emails, $zip_path, $zip_filename);
-
+    # Respond immediately
     $c->stash->{rest} = {
         success => JSON::true,
-        message => "Your request was successfully processed. Please check selected emails for the results.",
+        message => "Your report(s) are being generated and will be emailed when ready. Feel free to navigate to other pages!",
     };
 }
 
-
-
-sub zip_files {
-    my ($dir, $filenames, $zip_output_path) = @_;
-
-    my $zip = Archive::Zip->new();
-
-    foreach my $file (@$filenames) {
-        my $full_path = File::Spec->catfile($dir, $file);
-        unless (-e $full_path) {
-            warn "File not found, skipping: $full_path";
-            next;
-        }
-        my $member = $zip->addFile($full_path, $file);
-        unless ($member) {
-            warn "Could not add $file to zip";
-        }
-    }
-
-    unless ($zip->writeToFileNamed($zip_output_path) == AZ_OK) {
-        die "Failed to write zip archive to $zip_output_path";
-    }
-
-    print STDERR "ZIP archive created: $zip_output_path\n";
-    return $zip_output_path;
-}
-
-
-sub send_report_zip_to_emails {
-    my ($emails_ref, $zip_file_path, $report_name) = @_;
-
-    return unless $zip_file_path && -e $zip_file_path;
-    return unless $emails_ref && ref($emails_ref) eq 'ARRAY';
-
-    foreach my $email (@$emails_ref) {
-        next unless $email;
-
-        my $subject = "Breedbase Report: $report_name";
-        my $body    = "Dear user,\n\nAttached is your generated report ZIP file: $report_name\n\nBest regards,\nThe Breedbase Team";
-
-        CXGN::Contact::send_email($subject, $body, $email, 'noreply@breedbase.org', $zip_file_path);
-        print STDERR "Sent report ZIP to: $email\n";
-    }
-}
-
-sub send_error_email_to_emails {
-    my ( $emails_ref, $script_label, $error_msg ) = @_;
-    return unless $emails_ref && ref($emails_ref) eq 'ARRAY';
-
-    foreach my $email (@$emails_ref) {
-        next unless $email;
-
-        my $subject = "Breedbase Report FAILED: $script_label";
-        my $body    =
-            "Dear user,
-
-            Unfortunately, the requested report ($script_label) did not finish successfully.
-
-            Error details:
-            $error_msg
-
-            Please review the parameters and try again, or contact the Breedbase team if the problem persists.
-
-            Best regards,
-            The Breedbase Team";
-
-        CXGN::Contact::send_email( $subject, $body, $email, 'noreply@breedbase.org' );
-        print STDERR "Sent failure notice to: $email\n";
-    }
-}
-
 1;
-
