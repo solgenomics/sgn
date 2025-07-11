@@ -17,14 +17,14 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'accession_name', 'vector_construct', 'plant_material', 'batch_number'],
-        optional_columns => [ 'notes', 'is_a_control' ],
+        required_columns => [ 'accession_name', 'vector_construct', 'batch_number'],
+        optional_columns => [ 'is_a_control', 'promoter_gene_combination' ],
         column_aliases => {
             'accession_name' => ['accession name'],
             'vector_construct' => ['vector construct'],
-            'plant_material' => ['plant material'],
             'batch_number' => ['batch number'],
             'is_a_control' => ['is a control'],
+            'promoter_gene_combination' => ['promoter gene combination']
         }
     );
     my $parsed = $parser->parse();
@@ -51,7 +51,6 @@ sub _validate_with_plugin {
 
     my $seen_new_accession_names = $parsed_values->{'accession_name'};
     my $seen_vector_constructs = $parsed_values->{'vector_construct'};
-    my $seen_plant_materials = $parsed_values->{'plant_material'};
 
     my $vector_construct_validator = CXGN::List::Validate->new();
     my @vector_constructs_missing = @{$vector_construct_validator->validate($schema,'vector_constructs', $seen_vector_constructs)->{'missing'}};
@@ -59,18 +58,11 @@ sub _validate_with_plugin {
         push @error_messages, "The following vector constructs are not in the database, or are not in the database as uniquenames: ".join(',',@vector_constructs_missing);
     }
 
-    my $plant_material_validator = CXGN::List::Validate->new();
-    my @plant_materials_missing = @{$plant_material_validator->validate($schema,'accessions', $seen_plant_materials)->{'missing'}};
-    if (scalar(@plant_materials_missing) > 0) {
-        push @error_messages, "The following plant materials (accessions) are not in the database, or are not in the database as uniquenames: ".join(',',@plant_materials_missing);
-    }
-
-
     my $rs = $schema->resultset("Stock::Stock")->search({
         'uniquename' => { -in => $seen_new_accession_names }
     });
     while (my $r=$rs->next){
-        push @error_messages, "New accession name already exists in database: ".$r->uniquename;
+        push @error_messages, "Accession name already exists in database: ".$r->uniquename;
     }
 
     my %duplicated_new_accession_names;
@@ -111,7 +103,7 @@ sub _parse_with_plugin {
             $type = 'transformant';
         }
 
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'plant_material'}}->{$row->{'vector_construct'}}->{$type}->{$row->{'accession_name'}}++;
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$row->{'accession_name'}}++;
     }
 
     $self->_set_parsed_data($transgenic_data);

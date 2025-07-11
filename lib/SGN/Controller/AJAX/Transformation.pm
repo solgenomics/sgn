@@ -1205,6 +1205,8 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $transgenic_data_project_id = $c->req->param('transgenic_data_project_id');
+    my $transgenic_data_project_name = $c->req->param('transgenic_data_project_name');
+    my $default_plant_material_name = $c->req->param('default_plant_material_name');
     my $upload = $c->req->upload('transgenic_historical_data_file');
     my $parser;
     my $parsed_data;
@@ -1309,22 +1311,65 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         $c->detach();
     }
 
+    my @all_batch_info = ();
     if ($parsed_data){
         eval {
             foreach my $batch_number (keys %$parsed_data) {
+                my $batch_info = $parsed_data->{$batch_number};
+                foreach my $vector_construct (keys %$batch_info) {
+                    my $vector_construct_info = $batch_info->{$vector_construct};
+                    my @check_type = keys %$vector_construct_info;
+                    my $type = $check_type[0];
+                    my $is_a_control;
+                    my $notes;
+                    if ($type eq 'control') {
+                        $is_a_control = 1;
+                    }
+                    my $transformant_info = $vector_construct_info->{$type};
+                    my @transformants = (keys %$transformant_info);
+                    my @name_array = ($breeding_program_name, $transgenic_data_project_name, $vector_construct, 'batch', $batch_number);
+                    my $transformation_identifier = join('_', @name_array);
 
+                    my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
+                        chado_schema => $schema,
+                        phenome_schema => $phenome_schema,
+                        dbh => $dbh,
+                        transformation_project_id => $transgenic_data_project_id,
+                        transformation_identifier => $transformation_identifier,
+                        plant_material => $default_plant_material_name,
+                        vector_construct => $vector_construct,
+                        owner_id => $user_id,
+                        is_a_control => $is_a_control
+                    });
 
+                    my $add = $add_transformation->add_transformation_identifier();
+                    my $transformation_stock_id = $add->{transformation_id};
+                    print STDERR "TRANSFORMATION STOCK ID =".Dumper($transformation_stock_id)."\n";
 
+                    if ($transformation_stock_id) {
+                        my $add_transformants = CXGN::Transformation::AddTransformant->new({
+                            schema => $schema,
+                            phenome_schema => $phenome_schema,
+                            dbh => $dbh,
+                            transformation_stock_id => $transformation_stock_id,
+                            transformant_names => \@transformants,
+                            owner_id => $user_id,
+                        });
 
+                        $add_transformants->add_transformant();
+                    }
+                }
 
             }
-        };
 
-        if ($@) {
-            $c->stash->{rest} = { success => 0, error => $@ };
-            print STDERR "An error condition occurred, was not able to store transgenic historical data. ($@).\n";
-            return;
         }
+
+    }
+
+    if ($@) {
+        $c->stash->{rest} = { success => 0, error => $@ };
+        print STDERR "An error condition occurred, was not able to store transgenic historical data. ($@).\n";
+        return;
     }
 
 

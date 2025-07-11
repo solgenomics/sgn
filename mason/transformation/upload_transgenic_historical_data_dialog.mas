@@ -1,6 +1,8 @@
 <%args>
 $trial_id
 $trial_name
+$default_plant_material_id => undef
+$default_plant_material_name => undef
 </%args>
 
 <div class="modal fade" id="upload_transgenic_historical_data_dialog" name="upload_transgenic_historical_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransgenicHistoricalDataDialog">
@@ -25,6 +27,8 @@ $trial_name
                             <div class="col-sm-9" >
                                 <input type="file" name="transgenic_historical_data_file" id="transgenic_historical_data_file" encoding="multipart/form-data" />
                                 <input name="transgenic_data_project_id" id="transgenic_data_project_id" type="hidden" value="<% $trial_id %>">
+                                <input name="transgenic_data_project_name" id="transgenic_data_project_name" type="hidden" value="<% $trial_name %>">
+                                <input name="default_plant_material_name" id="default_plant_material_name" type="hidden" value="<% $default_plant_material_name %>">
                             </div>
                         </div>
                     </form>
@@ -101,10 +105,9 @@ $trial_name
                             <tr>
                                 <td>accession_name</td>
                                 <td>vector_construct</td>
-                                <td>plant_material</td>
-                                <td>batch_number</td>
-                                <td>notes</td>
                                 <td>is_a_control</td>
+                                <td>batch_number</td>
+                                <td>promoter_gene_combination</td>
                             </tr>
                         </tbody>
                     </table>
@@ -113,14 +116,13 @@ $trial_name
                     <ul>
                         <li>accession_name (must NOT exist in the database)</li>
                         <li>vector_construct (must exist in the database)</li>
-                        <li>plant_material (accession must exist in the database)</li>
                         <li>batch_number (for grouping transgenic plants derived from the same batch)</li>
                     </ul>
 
                     <b>Optional fields:</b>
                     <ul>
-                        <li>notes (additional information about the new transgenic line)</li>
                         <li>is_a_control (if you would like to set any new accession as a control, please indicate "1" for the "is_a_control" column.)</li>
+                        <li>promoter_gene_combination (additional information for each vector construct)</li>
                     </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Transgenic Historical Data", optional_column => 1 &>
