@@ -174,10 +174,10 @@ The first step is to understand what the format of the trial upload is. It is im
 knitr::include_graphics('assets/images/manage_trials_upload_trial_1.png')
 ```
 
-This information and more can be found by clicking "Information about file format", which shows the following:
+The following page will allow you to pick a file for upload, including uploading multiple trials at once. On this page you can also inspect the file requirements for both single trial and multi-trial uploads.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_trials_upload_trial_template.png')
+knitr::include_graphics(c('assets/images/manage_trials_upload_trial_2.png','assets/images/manage_trial_upload_trial_template.png'))
 ```
 
 
@@ -185,18 +185,22 @@ knitr::include_graphics('assets/images/manage_trials_upload_trial_template.png')
 
 -   All accession names in the file must exist in the database. See adding accessions for more information.
 
--   The uploaded file should be XLS or XLSX file format (NOT CSV).
+-   The uploaded file can be excel (.XLXS or .XLS), comma-separated values (.CSV), tab-separated values (.TSV) or semicolon-separated values (.SSV).
 
--   The first row (header) must contain the column names: plot_name accession_name plot_number block_number is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot
+-   The first row (header) must contain the column names: plot_name accession_name plot_number block_number is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number
+
+-   Only accession_name, plot_number, and block_number are required.
 
 Minimal Example:
 
-| **plot\_name** | **accession\_name** | **plot\_number** | **block\_number** | **is\_a\_control** | **rep\_number** | **range\_number** | **row\_number** | **col\_number** | **seedlot\_name** | **num\_seed\_per\_plot** | **weight\_gram\_seed\_per\_plot** |
-|----------------|---------------------|------------------|-------------------|--------------------|-----------------|-------------------|-----------------|-----------------|-------------------|--------------------------|-----------------------------------|
-| 2018plot1      | my_accession1       | 101              | 1                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |
-| 2018plot2      | my_accession2       | 201              | 2                 |                    |                 |                   |                 |                 |                   |                          |                                   |
-| 2018plot3      | my_accession2       | 102              | 1                 |                    |                 |                   |                 |                 |                   |                          |                                   |
-| 2018plot4      | my_accession1       | 202              | 2                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |
+| **plot\_name** | **accession\_name** | **plot\_number** | **block\_number** | **is\_a\_control** | **rep\_number** | **range\_number** | **row\_number** | **col\_number** | **seedlot\_name** | **num\_seed\_per\_plot** | **weight\_gram\_seed\_per\_plot** | **entry\_number** |
+|----------------|---------------------|------------------|-------------------|--------------------|-----------------|-------------------|-----------------|-----------------|-------------------|--------------------------|-----------------------------------|------------------|
+| 2018plot1      | my_accession1       | 101              | 1                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot2      | my_accession2       | 201              | 2                 |                    |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot3      | my_accession2       | 102              | 1                 |                    |                 |                   |                 |                 |                   |                          |                                   |                  |
+| 2018plot4      | my_accession1       | 202              | 2                 | 1                  |                 |                   |                 |                 |                   |                          |                                   |                  |
+
+When uploading multiple trials, the requirements are the same, but with additional headers to differentiate trials in the same file: trial_name breeding_program location year transplanting_date design_type description trial_type trial_stock_type plot_width plot_length field_size planting_date harvest_date. Additionally, when uploading multiple trials, you may choose to get an email when the upload is complete (see section \@ref(email-alert-for-multiple-trial-design-upload) )
 
 ##### File validation {-}
 
@@ -204,44 +208,46 @@ Minimal Example:
 
 ##### Uploading a trial with Field Management Factors {-}
 
--   You can upload a trial with field management factor(s) by adding additional column(s). The column header will be the factor e.g. fertilizer, watering regime, inoculation, etc. and the values in these columns will be either 1 or empty, indicating that the factor was applied to the plot or not.
+-   You can upload a trial with treatments by adding additional column(s). The column header will be the treatment e.g. fertilizer, watering regime, inoculation, etc. and the values in these columns will be either 1 or empty, indicating that the treatment was applied to the plot or not.
 
 #### Step 2: {-}
 
 Once you feel that your experiment field layout is in the right format, click on to the Next Step. You will see the following form which must be filled in completely:
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_trials_upload_trial_2.png')
+knitr::include_graphics('assets/images/manage_trials_upload_trial_3.png')
 ```
 
 The trial name must be globally unique in the database. Please try to follow standard naming conventions for your group.
 
-First you need to validate the form, and then you can click "Upload Trial".
-
 #### Step 3: {-}
 
-In the case where you have uploaded an experiment using accession_names that are not already present in the database, you will be taken to this screen. If the accession_names in your file are all already in the database, this step will be skipped.
-The reason it is necessary for your accessions to be in the database before you can add a trial using them is that a single accession can be used among many trials and therefore must exist as a separate entity in the database; because of this it is also very important to be careful about adding wrongly duplicated accession_names into the database. From this screen it is possible to make a new list with the missing accession_names and then click "Add Accessions to the database" to immediately resolve the issue. Once all your accessions are in the database, click to move to the Next Step.
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_trials_upload_trial_3.png')
-```
-
-#### Step 4: {-}
-
-In the case where you have uploaded an experiment using seedlot_names that are not already present in the database, you will be taken to this screen. If the seedlots in your file are all already in teh database, this step will be skipped.
-The reason it is necessary for your seedlots to be in the database before you can add a trial using them is that a ginel seedlot can be used among many trials and therefore must exist as a separate entity in the database. From this screen it is possible to add the missing seedlots; you can either upload an XLS or XLSX file to add many at once or you can add them one by one. Once all your seedlots are in the database, click to move to the Next Step.
+Go to the next page where you can link this trial to other projects. Validate the form, and then you can click "Upload Trial".
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/manage_trials_upload_trial_4.png')
 ```
 
+#### Step 4: {-}
+
+In the case where you have uploaded an experiment using accession_names that are not already present in the database, you will be taken to this screen. If the accession_names in your file are all already in the database, this step will be skipped.
+The reason it is necessary for your accessions to be in the database before you can add a trial using them is that a single accession can be used among many trials and therefore must exist as a separate entity in the database; because of this it is also very important to be careful about adding wrongly duplicated accession_names into the database. From this screen it is possible to make a new list with the missing accession_names and then click "Add Accessions to the database" to immediately resolve the issue. Once all your accessions are in the database, click to move to the Next Step.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/manage_trials_upload_trial_5.png')
+```
+
 #### Step 5: {-}
+
+In the case where you have uploaded an experiment using seedlot_names that are not already present in the database, you will be taken to the next screen. If the seedlots in your file are all already in the database, this step will be skipped.
+The reason it is necessary for your seedlots to be in the database before you can add a trial using them is that a single seedlot can be used among many trials and therefore must exist as a separate entity in the database. Once all your seedlots are in the database, click to move to the next step.
+
+#### Step 6: {-}
 
 If there are any other errors with your file, such as if the plot_names are not globally unique in the database or your plot_numbers are not unique in your trial or row_number is not an integer or any other error, you will see the errors listed in the red box. It is up to you to correct these errors in your file. Simply open up the file you selected earlier in Excel and correct the issues and then save the file. Then you can click "Submit Trial" and it will resubmit it for you. You can continue to edit your file here and submit as many times as you need until it is accepted.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_trials_upload_trial_5.png')
+knitr::include_graphics('assets/images/manage_trials_upload_trial_7.png')
 ```
 
 #### Completion screen {-}
@@ -249,7 +255,7 @@ knitr::include_graphics('assets/images/manage_trials_upload_trial_5.png')
 Whether you were lucky enough to submit your trial successfully on Step 2 or if you tried many times on Step 5, once your trial has been saved in the database you will see the following screen:
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_trials_upload_trial_6.png')
+knitr::include_graphics('assets/images/manage_trials_upload_trial_8s.png')
 ```
 
 
@@ -262,7 +268,7 @@ This will create a separate trial for each selected location, but they will shar
 By default each trial design will have a fresh randomization, but if desired you may check the "Use same randomization for all locations" option.
 
 
-### Email alert for multiple trial design upload
+### Email alert for multiple trial design upload {-}
 
 When uploading multiple trials from a file, you have the option to receive email notifications by clicking the "Email Alert" checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results.
 
@@ -280,6 +286,8 @@ In the "Field Layout Tools and Phenotype Heatmap" section of a Trial Detail page
 knitr::include_graphics('assets/images/fieldmap_trial_layout.png')
 ```
 
+#### Viewing plot layout for multiple trials
+
 If there is more than one trial grown in the same physical field, the trial layouts of all of the trials can be shown together if the trials share these properties:
 
 <ul>
@@ -295,10 +303,6 @@ When these conditions are met and you check the "Select Trials in Same Field" ch
 knitr::include_graphics('assets/images/fieldmap_multi_trial_layout.png')
 ```
 
-#### Viewing plot layout for multiple trials
-
-
-
 #### Tracking plot images on fieldMap {-}
 
 Plot images can be seen on fieldMap if a plot is associated to any image.
@@ -307,13 +311,13 @@ Plot images can be seen on fieldMap if a plot is associated to any image.
 knitr::include_graphics('assets/images/fieldmap_plot_image.png')
 ```
 
-To view plot image(s), click on a plot, a dialog will appear.
+To view plot image(s), click on a plot, a dialog will appear. In this dialog you will see a detailed overview of the plot, including what stock(s) are contained within it and their layout in the plot, if applicable. At the bottom of the dialog, you will see options to change the plot name or accession as well as view plot images. 
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/fieldmap_view_plot_image.png')
 ```
 
-On the appeared dialog, click on View plot images. To see more images if a plot has more that 2 images, click on See more images... Medium size of an image can be viewed by clicking on an image.
+On the resulting dialog, click on "View Plot Images." To see more images if a plot has more that 2 images, click on See more images... Medium size of an image can be viewed by clicking on an image.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/fieldmap_display_plot_image.png')
@@ -322,7 +326,7 @@ knitr::include_graphics('assets/images/fieldmap_display_plot_image.png')
 
 #### Viewing assayed trait heatmap {-}
 
-Phenotype heatmap can be viewed by selecting a specific assayed trait from the selectbox drop-down. Mousing over the plots, highlights the plot in green and also displays the plot's field information including the selected trait's phenotype value.
+The phenotype heatmap can be viewed by selecting a specific assayed trait from the selectbox drop-down. Mousing over the plots highlights the plot in green and also displays the plot's field information including the selected trait's phenotype value.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/heatmap_assayed_trait_view.png')
@@ -334,6 +338,14 @@ Clicking on a plot on the heatmap would display a dialog that has a button for s
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/trial_detail_page_suppress_phenotype.png')
+```
+
+#### Correcting spatial autocorrelation
+
+For trials with spatial layout information and stored phenotypes, you can check and correct for spatial autocorrelation by clicking the "Calculate Spatial Correction" button above the field map. Doing so will open the spatial corrections dialog. For an in-depth review, visit the chapter on [*data analysis tools*](#data-analysis-tools). 
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/heatmap_spatial_correction_button.png')
 ```
 
 ### Adding additional information in the “Trial Detail” page
