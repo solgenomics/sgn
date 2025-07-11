@@ -1294,7 +1294,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
     $parser->load_plugin('TransgenicHistoricalDataGeneric');
     $parsed_data = $parser->parse();
-    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
+#    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
     if (!$parsed_data){
         my $return_error = '';
         my $parse_errors;
@@ -1315,6 +1315,8 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     if ($parsed_data){
         eval {
             foreach my $batch_number (keys %$parsed_data) {
+                my $control_transformation_id;
+                my @transformation_ids = ();
                 my $batch_info = $parsed_data->{$batch_number};
                 foreach my $vector_construct (keys %$batch_info) {
                     my $vector_construct_info = $batch_info->{$vector_construct};
@@ -1344,7 +1346,6 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
                     my $add = $add_transformation->add_transformation_identifier();
                     my $transformation_stock_id = $add->{transformation_id};
-                    print STDERR "TRANSFORMATION STOCK ID =".Dumper($transformation_stock_id)."\n";
 
                     if ($transformation_stock_id) {
                         my $add_transformants = CXGN::Transformation::AddTransformant->new({
@@ -1358,12 +1359,29 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
                         $add_transformants->add_transformant();
                     }
+
+                    if ($transformation_stock_id) {
+                        if ($is_a_control) {
+                            $control_transformation_id = $transformation_stock_id;
+                        } else {
+                            push @transformation_ids, $transformation_stock_id;
+                        }
+                    }
+
                 }
 
+                if ($control_transformation_id && (scalar @transformation_ids > 0)) {
+                    foreach my $id (@transformation_ids) {
+                        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_transformation_id});
+                        my $error = $transformation_obj->set_transformation_control();
+                        if ($error) {
+                    	    $c->stash->{rest} = { error => "An error occurred attempting to set transformation control. ($@)" };
+                    	    return;
+                        }
+                    }
+                }
             }
-
         }
-
     }
 
     if ($@) {
