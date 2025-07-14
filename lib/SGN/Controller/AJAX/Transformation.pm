@@ -1299,7 +1299,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->stash->{rest} = {error => "Could not get parsing errors"};
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -1307,7 +1307,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error};
+        $c->stash->{rest} = {error => $return_error};
         $c->detach();
     }
 
@@ -1345,7 +1345,16 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     });
 
                     my $add = $add_transformation->add_transformation_identifier();
+
+                    if ($add->{error}) {
+                        $c->stash->{rest} = {error => $add->{error}};
+                    }
+
                     my $transformation_stock_id = $add->{transformation_id};
+                    if (!$transformation_stock_id) {
+                        $c->stash->{rest} = { error => "Error: Cannot generate transformation identifier!"};
+                        return;
+                    }
 
                     if ($transformation_stock_id) {
                         my $add_transformants = CXGN::Transformation::AddTransformant->new({
@@ -1357,7 +1366,12 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                             owner_id => $user_id,
                         });
 
-                        $add_transformants->add_transformant();
+                        my $response = $add_transformants->add_transformant();
+
+                        if ($response->{error}){
+                            $c->stash->{rest} = {error => $response->{error}};
+                            return;
+                        }
                     }
 
                     if ($transformation_stock_id) {
