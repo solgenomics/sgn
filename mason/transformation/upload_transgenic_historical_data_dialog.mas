@@ -115,7 +115,7 @@ $default_plant_material_name => undef
                     <ul>
                         <li>accession_name (must NOT exist in the database)</li>
                         <li>vector_construct (must exist in the database)</li>
-                        <li>batch_number (transgenic plants containing the same vector construct in the same batch will be grouped in an auto-generated transformation ID and will be automatically linked to control plants included in the same batch. )</li>
+                        <li>batch_number (transgenic plants containing the same vector construct in the same batch will be grouped in an auto-generated transformation ID and will be automatically linked to control plants included in the same batch. <b> IMPORTANT: please include all accessions from the same batch number in one file.</b> )</li>
                     </ul>
 
                     <b>Optional fields:</b>
