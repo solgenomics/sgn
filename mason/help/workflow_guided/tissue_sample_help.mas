@@ -110,7 +110,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                        <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
                                         <div class="col-sm-9" >
                                             <input name="tissue_sample_help_plants_per_plot_inherit_treatments" id="tissue_sample_help_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
                                         </div>
@@ -150,7 +150,7 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                        <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
                                         <div class="col-sm-9" >
                                             <input name="tissue_sample_help_per_plant_inherit_treatments" id="tissue_sample_help_per_plant_inherit_treatments" type="checkbox" checked disabled/>
                                         </div>

@@ -1650,7 +1650,7 @@ sub set_management_factor_date {
         $row->value($management_factor_event);
         $row->update();
     } else {
-        print STDERR "date format did not pass check while preparing to set management factor date: $management_factor_date \n";
+        print STDERR "date format did not pass check while preparing to set treatment date: $management_factor_date \n";
     }
 }
 
@@ -2563,7 +2563,7 @@ sub _delete_management_factors_experiments {
         });
         my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>$management_factor_type_id, 'project.project_id'=>$m->get_trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
         if ($nde_rs->count != 1){
-            die "Management factor ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!"
+            die "Treatment ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!"
         }
         while( my $r = $nde_rs->next){
             $r->delete();
