@@ -1314,99 +1314,92 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
     my @all_batch_info = ();
     if ($parsed_data){
-        eval {
-            foreach my $batch_number (keys %$parsed_data) {
-                my $control_transformation_id;
-                my @transformation_ids = ();
-                my $batch_info = $parsed_data->{$batch_number};
-                foreach my $vector_construct (keys %$batch_info) {
-                    my $vector_construct_info = $batch_info->{$vector_construct};
-                    my @check_type = keys %$vector_construct_info;
-                    my $type = $check_type[0];
-                    my $is_a_control;
-                    my $notes;
-                    if ($type eq 'control') {
-                        $is_a_control = 1;
-                    }
-                    my $transformant_info = $vector_construct_info->{$type};
-                    my @transformants = (keys %$transformant_info);
-                    my @name_array = ($breeding_program_name, $transgenic_data_project_name, $vector_construct, 'batch', $batch_number);
-                    my $transformation_identifier = join('_', @name_array);
+        foreach my $batch_number (keys %$parsed_data) {
+            my $control_transformation_id;
+            my @transformation_ids = ();
+            my $batch_info = $parsed_data->{$batch_number};
+            foreach my $vector_construct (keys %$batch_info) {
+                my $vector_construct_info = $batch_info->{$vector_construct};
+                my @check_type = keys %$vector_construct_info;
+                my $type = $check_type[0];
+                my $is_a_control;
+                my $notes;
+                if ($type eq 'control') {
+                    $is_a_control = 1;
+                }
+                my $transformant_info = $vector_construct_info->{$type};
+                my @transformants = (keys %$transformant_info);
+                my @name_array = ($breeding_program_name, $transgenic_data_project_name, $vector_construct, 'batch', $batch_number);
+                my $transformation_identifier = join('_', @name_array);
 
-                    my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
-                        chado_schema => $schema,
-                        phenome_schema => $phenome_schema,
-                        dbh => $dbh,
-                        transformation_project_id => $transgenic_data_project_id,
-                        transformation_identifier => $transformation_identifier,
-                        plant_material => $default_plant_material_name,
-                        vector_construct => $vector_construct,
-                        owner_id => $user_id,
-                        is_a_control => $is_a_control
-                    });
+                my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
+                    chado_schema => $schema,
+                    phenome_schema => $phenome_schema,
+                    dbh => $dbh,
+                    transformation_project_id => $transgenic_data_project_id,
+                    transformation_identifier => $transformation_identifier,
+                    plant_material => $default_plant_material_name,
+                    vector_construct => $vector_construct,
+                    owner_id => $user_id,
+                    is_a_control => $is_a_control
+                });
 
-                    my $add = $add_transformation->add_transformation_identifier();
+                my $add = $add_transformation->add_transformation_identifier();
 
-                    if ($add->{error}) {
-                        $c->stash->{rest} = {error => $add->{error}};
-                    }
-
-                    my $transformation_stock_id = $add->{transformation_id};
-                    if (!$transformation_stock_id) {
-                        $c->stash->{rest} = { error => "Error: Cannot generate transformation identifier!"};
-                        return;
-                    }
-
-                    if ($transformation_stock_id) {
-                        my $add_transformants = CXGN::Transformation::AddTransformant->new({
-                            schema => $schema,
-                            phenome_schema => $phenome_schema,
-                            dbh => $dbh,
-                            transformation_stock_id => $transformation_stock_id,
-                            transformant_names => \@transformants,
-                            owner_id => $user_id,
-                        });
-
-                        my $response = $add_transformants->add_transformant();
-
-                        if ($response->{error}){
-                            $c->stash->{rest} = {error => $response->{error}};
-                            return;
-                        }
-                    }
-
-                    if ($transformation_stock_id) {
-                        if ($is_a_control) {
-                            $control_transformation_id = $transformation_stock_id;
-                        } else {
-                            push @transformation_ids, $transformation_stock_id;
-                        }
-                    }
-
+                if ($add->{error}) {
+                    $c->stash->{rest} = {error => $add->{error}};
+                    return;
                 }
 
-                if ($control_transformation_id && (scalar @transformation_ids > 0)) {
-                    foreach my $id (@transformation_ids) {
-                        my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_transformation_id});
-                        my $error = $transformation_obj->set_transformation_control();
-                        if ($error) {
-                    	    $c->stash->{rest} = { error => "An error occurred attempting to set transformation control. ($@)" };
-                    	    return;
-                        }
+                my $transformation_stock_id = $add->{transformation_id};
+                if (!$transformation_stock_id) {
+                    $c->stash->{rest} = { error => "Error: Cannot generate transformation identifier!"};
+                    return;
+                }
+
+                if ($transformation_stock_id) {
+                    my $add_transformants = CXGN::Transformation::AddTransformant->new({
+                        schema => $schema,
+                        phenome_schema => $phenome_schema,
+                        dbh => $dbh,
+                        transformation_stock_id => $transformation_stock_id,
+                        transformant_names => \@transformants,
+                        owner_id => $user_id,
+                    });
+
+                    my $response = $add_transformants->add_transformant();
+
+                    if ($response->{error}){
+                        $c->stash->{rest} = {error => $response->{error}};
+                        return;
+                    }
+                }
+
+                if ($transformation_stock_id) {
+                    if ($is_a_control) {
+                        $control_transformation_id = $transformation_stock_id;
+                    } else {
+                        push @transformation_ids, $transformation_stock_id;
+                    }
+                }
+
+            }
+
+            if ($control_transformation_id && (scalar @transformation_ids > 0)) {
+                foreach my $id (@transformation_ids) {
+                    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_transformation_id});
+                    my $error = $transformation_obj->set_transformation_control();
+                    if ($error) {
+                        $c->stash->{rest} = { error => "An error occurred attempting to set transformation control. ($@)" };
+                        return;
                     }
                 }
             }
         }
     }
 
-    if ($@) {
-        $c->stash->{rest} = { success => 0, error => $@ };
-        print STDERR "An error condition occurred, was not able to store transgenic historical data. ($@).\n";
-        return;
-    }
-
-
     $c->stash->{rest} = {success => "1",};
+
 }
 
 
