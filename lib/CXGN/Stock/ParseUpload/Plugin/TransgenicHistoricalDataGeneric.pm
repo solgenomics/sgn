@@ -18,13 +18,12 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'accession_name', 'vector_construct', 'batch_number'],
-        optional_columns => [ 'is_a_control', 'promoter_gene_combination' ],
+        optional_columns => [ 'is_a_control' ],
         column_aliases => {
             'accession_name' => ['accession name'],
             'vector_construct' => ['vector construct'],
             'batch_number' => ['batch number'],
             'is_a_control' => ['is a control'],
-            'promoter_gene_combination' => ['promoter gene combination']
         }
     );
     my $parsed = $parser->parse();

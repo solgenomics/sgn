@@ -107,7 +107,6 @@ $default_plant_material_name => undef
                                 <td>vector_construct</td>
                                 <td>is_a_control</td>
                                 <td>batch_number</td>
-                                <td>promoter_gene_combination</td>
                             </tr>
                         </tbody>
                     </table>
@@ -121,8 +120,7 @@ $default_plant_material_name => undef
 
                     <b>Optional fields:</b>
                     <ul>
-                        <li>is_a_control (if you would like to set any new accession as a control, please indicate "1" for the "is_a_control" column.)</li>
-                        <li>promoter_gene_combination (additional information for each vector construct)</li>
+                        <li>is_a_control (if you would like to set any new accession as a control for any batch, please indicate "1" for the "is_a_control" column.)</li>
                     </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Transgenic Historical Data", optional_column => 1 &>
@@ -149,13 +147,18 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_transgenic_historical_data_submit").click(function(){
         var uploadFile = jQuery("#transgenic_historical_data_file").val();
-
-        jQuery('#upload_transgenic_historical_data_form').attr("action", "/ajax/transformation/upload_transgenic_historical_data");
-
         if (uploadFile === ''){
             alert("Please select a file");
             return;
         }
+
+        var defaultPlantMaterial = jQuery("#default_plant_material_name").val();
+        if (defaultPlantMaterial === ''){
+            alert("Please set a default plant material for this project");
+            return;
+        }
+
+        jQuery('#upload_transgenic_historical_data_form').attr("action", "/ajax/transformation/upload_transgenic_historical_data");
 
         jQuery("#upload_transgenic_historical_data_form").submit();
         jQuery("#upload_transgenic_historical_data_dialog").modal("hide");
@@ -179,7 +182,7 @@ jQuery(document).ready(function(){
                 return;
             }
             if (response.success) {
-                jQuery('#dismiss_transgenic_data_saved_dialog_message').modal("show");
+                jQuery('#transgenic_data_saved_dialog_message').modal("show");
             }
         }
     });
