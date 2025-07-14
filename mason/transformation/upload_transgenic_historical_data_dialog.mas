@@ -171,14 +171,10 @@ jQuery(document).ready(function(){
         },
         complete: function(response) {
             jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
-                jQuery("#upload_transgenic_data_error_display tbody").html('');
-                jQuery("#upload_transgenic_data_error_display tbody").append(response.error_string);
-                jQuery("#upload_transgenic_data_error_display").modal("show");
-                return;
-            }
             if (response.error) {
-                alert(response.error);
+                jQuery("#upload_transgenic_data_error_display tbody").html('');
+                jQuery("#upload_transgenic_data_error_display tbody").append(response.error);
+                jQuery("#upload_transgenic_data_error_display").modal("show");
                 return;
             }
             if (response.success) {

@@ -1123,7 +1123,7 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     }
 
     my @transformant_experiment_info;
-    push @transformant_experiment_info, [$plant_link, $vector_link, $transformation_link, $project_link];
+    push @transformant_experiment_info, [$vector_link, $plant_link, $transformation_link, $project_link];
 
     $c->stash->{rest} = { data => \@transformant_experiment_info };
 
