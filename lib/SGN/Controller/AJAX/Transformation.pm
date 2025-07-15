@@ -1321,6 +1321,11 @@ sub upload_transgenic_historical_data_POST : Args(0) {
             foreach my $vector_construct (keys %$batch_info) {
                 my $vector_construct_info = $batch_info->{$vector_construct};
                 my @check_type = keys %$vector_construct_info;
+                if (scalar(@check_type) > 1) {
+                    $c->stash->{rest} = { error => "Error! Vector construct: $vector_construct in batch: $batch_number is assigned as both a control and a construct. Please check is_a_control column."};
+                    return;
+                }
+
                 my $type = $check_type[0];
                 my $is_a_control;
                 my $notes;
@@ -1345,15 +1350,15 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 });
 
                 my $add = $add_transformation->add_transformation_identifier();
-
-                if ($add->{error}) {
-                    $c->stash->{rest} = {error => $add->{error}};
+                my $add_transformation_id_error = $add->{error};
+                if ($add_transformation_id_error) {
+                    $c->stash->{rest} = { error => "Error! Cannot generate transformation identifier for vector construct: $vector_construct in batch: $batch_number. $add_transformation_id_error."};
                     return;
                 }
 
                 my $transformation_stock_id = $add->{transformation_id};
                 if (!$transformation_stock_id) {
-                    $c->stash->{rest} = { error => "Error: Cannot generate transformation identifier!"};
+                    $c->stash->{rest} = { error => "Error! Cannot generate transformation identifier for vector construct: $vector_construct in batch: $batch_number."};
                     return;
                 }
 
@@ -1368,9 +1373,9 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     });
 
                     my $response = $add_transformants->add_transformant();
-
-                    if ($response->{error}){
-                        $c->stash->{rest} = {error => $response->{error}};
+                    my $add_transformant_error = $response->{error};
+                    if ($add_transformant_error){
+                        $c->stash->{rest} = {error => "Error adding new accessions for vector contruct: $vector_construct in batch $batch_number."};
                         return;
                     }
                 }
@@ -1390,7 +1395,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$id, transformation_control_stock_id=>$control_transformation_id});
                     my $error = $transformation_obj->set_transformation_control();
                     if ($error) {
-                        $c->stash->{rest} = { error => "An error occurred attempting to set transformation control. ($@)" };
+                        $c->stash->{rest} = { error => "An error occurred attempting to set transformation control for batch: $batch_number. ($@)" };
                         return;
                     }
                 }

@@ -138,6 +138,12 @@ $default_plant_material_name => undef
 jQuery(document).ready(function(){
 
     jQuery('#upload_transgenic_historical_data_link').click(function() {
+        const defaultPlantMaterial = "<% $default_plant_material_name %>";
+        if (defaultPlantMaterial === ''){
+            alert("Please set a default plant material for this project before uploading your data.");
+            return;
+        }
+
         jQuery("#upload_transgenic_historical_data_dialog").modal("show");
     });
 
@@ -149,12 +155,6 @@ jQuery(document).ready(function(){
         var uploadFile = jQuery("#transgenic_historical_data_file").val();
         if (uploadFile === ''){
             alert("Please select a file");
-            return;
-        }
-
-        var defaultPlantMaterial = jQuery("#default_plant_material_name").val();
-        if (defaultPlantMaterial === ''){
-            alert("Please set a default plant material for this project");
             return;
         }
 
