@@ -334,7 +334,7 @@ has 'method' => (
 				bcs_schema => $self->bcs_schema,
 				cvterm_id => $self->cvterm_id
 			});
-		} else { return undef;}
+		} else { return;}
 	}
 );
 
@@ -349,7 +349,7 @@ has 'scale' => (
 				bcs_schema => $self->bcs_schema,
 				cvterm_id => $self->cvterm_id
 			});
-		} else {return undef;}
+		} else {return;}
 	}
 );
 
