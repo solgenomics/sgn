@@ -257,7 +257,8 @@ $trial_stock_type => undef
             <script>
             jQuery(document).ready(function() {
                 jQuery('#label_designer_link').click(function() {
-                    location.href = '/tools/label_designer';
+                    var trialId = "<% $trial_id %>";
+                    location.href = '/tools/label_designer?source_type=field_trials&source_id=' + encodeURIComponent(trialId);
                 });    
             });
             </script>
