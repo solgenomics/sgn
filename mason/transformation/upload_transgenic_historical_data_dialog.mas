@@ -1,6 +1,7 @@
 <%args>
 $trial_id
 $trial_name
+$breeding_program_name
 $default_plant_material_id => undef
 $default_plant_material_name => undef
 </%args>
@@ -29,6 +30,7 @@ $default_plant_material_name => undef
                                 <input name="transgenic_data_project_id" id="transgenic_data_project_id" type="hidden" value="<% $trial_id %>">
                                 <input name="transgenic_data_project_name" id="transgenic_data_project_name" type="hidden" value="<% $trial_name %>">
                                 <input name="default_plant_material_name" id="default_plant_material_name" type="hidden" value="<% $default_plant_material_name %>">
+                                <input name="project_breeding_program_name" id="project_breeding_program_name" type="hidden" value="<% $breeding_program_name %>">
                             </div>
                         </div>
                     </form>

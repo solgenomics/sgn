@@ -87,6 +87,7 @@ $response = $ua->post(
         "transgenic_data_project_id" => $project_id,
         "transgenic_data_project_name" => 'bti_transformation_1',
         "default_plant_material_name" => 'UG120001',
+        "project_breeding_program_name" => 'test',
         "sgn_session_id" => $sgn_session_id,
     ]
 );
