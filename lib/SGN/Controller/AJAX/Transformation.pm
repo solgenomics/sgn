@@ -1229,6 +1229,11 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     my $session_id = $c->req->param("sgn_session_id");
     my @error_messages;
 
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+    my $program_ref = $program_object->get_breeding_programs_by_trial($transgenic_data_project_id);
+    my $program_array = @$program_ref[0];
+    my $breeding_program_name = @$program_array[1];
+
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
@@ -1240,6 +1245,11 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+
+        if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+            $c->stash->{rest} = {error=>'Only a submitter or a curator can upload transgenic historical data'};
+            $c->detach();
+        }
     } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload transgenic historical data!'};
@@ -1248,27 +1258,17 @@ sub upload_transgenic_historical_data_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+
+        my @user_roles = $c->user->roles();
+        my %has_roles = ();
+        map { $has_roles{$_} = 1; } @user_roles;
+
+        if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+          $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to upload transgenic historical data." };
+          return;
+        }
+
     }
-
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload transgenic historical data'};
-        $c->detach();
-    }
-
-    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
-    my $program_ref = $program_object->get_breeding_programs_by_trial($transgenic_data_project_id);
-
-    my $program_array = @$program_ref[0];
-    my $breeding_program_name = @$program_array[1];
-    my @user_roles = $c->user->roles();
-    my %has_roles = ();
-    map { $has_roles{$_} = 1; } @user_roles;
-
-    if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-      $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to upload transgenic historical data." };
-      return;
-    }
-
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -1314,11 +1314,11 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
     my @all_batch_info = ();
     if ($parsed_data){
-        foreach my $batch_number (keys %$parsed_data) {
+        foreach my $batch_number (sort keys %$parsed_data) {
             my $control_transformation_id;
             my @transformation_ids = ();
             my $batch_info = $parsed_data->{$batch_number};
-            foreach my $vector_construct (keys %$batch_info) {
+            foreach my $vector_construct (sort keys %$batch_info) {
                 my $vector_construct_info = $batch_info->{$vector_construct};
                 my @check_type = keys %$vector_construct_info;
                 if (scalar(@check_type) > 1) {
