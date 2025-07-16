@@ -5,9 +5,12 @@ delete_stocks.pl - delete stocks from a cxgn database
 
 =head1 DESCRIPTION
 
-perl delete_stocks.pl -H [host] -D [dbname] -t (for testing) file
+perl delete_stocks.pl -H [host] -D [dbname] [-s accession ] -t (for testing) file
 
 where the file contains a list of uniquenames specifying the stocks to be deleted, one per line.
+
+The parameter -s specifies the type of stock (accession, plot, family_name, etc) to be deleted.
+The default is "accession".
 
 If the -t flag is provided, the changes will be rolled back in the database.
 
@@ -25,8 +28,11 @@ use DBI;
 use Bio::Chado::Schema;
 use CXGN::Phenome::Schema;
 
-our ($opt_H, $opt_D, $opt_t);
-getopts('H:D:t');
+our ($opt_H, $opt_D, $opt_t, $opt_s);
+
+getopts('H:D:s:t');
+
+my $stock_type = $opt_s || "accession";
 
 my $file = shift;
 
@@ -48,6 +54,9 @@ my $deleted_stock_count = 0;
 my $stock_owner_count = 0;
 my $missing_stocks = 0;
 
+my $cv_id = $bcs_schema->resultset("Cv::Cv")->find( { name => 'stock_type' } )->cv_id();
+my $stock_type_cvterm_id = $bcs_schema->resultset("Cv::Cvterm")->find( { name => $stock_type, cv_id=> $cv_id })->cvterm_id();
+
 open(my $F, "<", $file) || die " Can't open file $file\n";
 
 while (<$F>) { 
@@ -63,10 +72,10 @@ while (<$F>) {
 
     print STDERR "Processing $stock\n";
 
-    my $stock_row = $bcs_schema->resultset("Stock::Stock")->find( { uniquename => $stock });
+    my $stock_row = $bcs_schema->resultset("Stock::Stock")->find( { uniquename => $stock, type_id => $stock_type_cvterm_id });
     
     if (!$stock_row) { 
-	print STDERR "Could not find stock $stock. Skipping...\n";
+	print STDERR "Could not find stock $stock of type $stock_type. Skipping...\n";
 	$missing_stocks++;
 	next;
     }

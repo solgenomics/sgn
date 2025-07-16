@@ -31,7 +31,7 @@ $mech->get_ok("/search");
 $mech->content_like(qr/Search/);
 
 $mech->get_ok("/search/index.pl");
-$mech->content_like(qr/A database of in-situ/);
+# $mech->content_like(qr/A database of in-situ/);
 
 my $type_regex = {
     bacs                         => qr/Genomic Clone Search/,

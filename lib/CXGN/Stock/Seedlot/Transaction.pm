@@ -51,9 +51,15 @@ has 'description' => ( isa => 'Maybe[Str]',
         is => 'rw',
     );
 
-sub BUILD { 
-    my $self = shift;
+has 'seedlot_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
 
+
+sub BUILD {
+    my $self = shift;
+    my $seedlot_id = $self->seedlot_id();
     if ($self->transaction_id()) {
         my $row = $self->schema()->resultset("Stock::StockRelationship")->find( { stock_relationship_id => $self->transaction_id() }, { join => ['subject', 'object'], '+select' => ['subject.uniquename', 'subject.type_id', 'object.uniquename', 'object.type_id'], '+as' => ['subject_uniquename', 'subject_type_id', 'object_uniquename', 'object_type_id'] } );
 
@@ -69,11 +75,21 @@ sub BUILD {
         $self->timestamp($data->{timestamp});
         $self->operator($data->{operator});
         $self->description($data->{description});
+
+        if ($row->subject_id == $row->object_id) {
+            $self->factor($data->{factor});
+        } else {
+	        if ($row->subject_id == $seedlot_id){
+                $self->factor(1);
+            } elsif ($row->object_id == $seedlot_id){
+                $self->factor(-1);
+            }
+        }
     }
 }
 
 # class method
-sub get_transactions_by_seedlot_id { 
+sub get_transactions_by_seedlot_id {
     my $class = shift;
     my $schema = shift;
     my $seedlot_id = shift;
@@ -81,7 +97,7 @@ sub get_transactions_by_seedlot_id {
     print STDERR "Get transactions by seedlot...$seedlot_id\n";
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seed transaction", "stock_relationship")->cvterm_id();
     my $rs = $schema->resultset("Stock::StockRelationship")->search(
-        { '-or' => 
+        { '-or' =>
             [
                 subject_id => $seedlot_id,
                 object_id => $seedlot_id
@@ -133,7 +149,7 @@ sub get_transactions_by_seedlot_id {
     return \@transactions;
 }
 
-sub get_transactions { 
+sub get_transactions {
     my $class = shift;
     my $schema = shift;
     my $seedlot_id = shift;
@@ -163,14 +179,14 @@ sub get_transactions {
             }
         }
     }
-        
+
     if (@ids){
         $filter{"-or"} = [
                 subject_id => { -in => \@ids },
                 object_id => { -in => \@ids },
             ];
     }
-    
+
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seed transaction", "stock_relationship")->cvterm_id();
     $filter{'me.type_id'} =  { '-in' => $type_id };
 
@@ -215,12 +231,11 @@ sub get_transactions {
     return \@transactions, $total_count;
 }
 
-sub store { 
-    my $self = shift;    
+sub store {
+    my $self = shift;
     my $transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seed transaction", "stock_relationship")->cvterm_id();
-
-    my $amount = defined($self->amount()) ? $self->amount() : 'NA';
-    my $weight = defined($self->weight_gram()) ? $self->weight_gram() : 'NA';
+    my $amount = defined($self->amount()) && length($self->amount()) ? $self->amount() : 'NA';
+    my $weight = defined($self->weight_gram()) && length($self->weight_gram()) ? $self->weight_gram() : 'NA';
     my $value = {
         amount => $amount,
         weight_gram => $weight,
@@ -245,7 +260,7 @@ sub store {
             }, {order_by => { -desc => 'rank'} });
 
         my $new_rank = 0;
-        if ($row_rs->first) { 
+        if ($row_rs->first) {
             $new_rank = $row_rs->first->rank()+1;
         }
         #print STDERR Dumper $new_rank;
@@ -261,7 +276,7 @@ sub store {
         return $row->stock_relationship_id();
     }
 
-    else { 
+    else {
         my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
         $row->update({
             value => $json_value
@@ -290,12 +305,11 @@ sub update_transaction_object_id {
     return $row->stock_relationship_id();
 }
 
-sub delete {
-    
-
+sub delete_transaction {
+    my $self = shift;
+    my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
+    $row->delete();
+    return $row->stock_relationship_id();
 }
 
 1;
-
-
-

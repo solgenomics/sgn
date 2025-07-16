@@ -1,5 +1,6 @@
 <%args>
 $protocol_id
+$marker_info_headers
 </%args>
 
 <div class="well well-sm">
@@ -11,37 +12,32 @@ $protocol_id
             </div>
         </div>
     </div>
-    <center>
-    <button class="btn btn-primary btn-sm" id="marker_table_search_submit">Search</button>
-    </center>
+    <div style="text-align: center">
+        <button class="btn btn-primary btn-sm" id="marker_table_search_submit">Search</button>
+    </div>
 </div>
-
-<table id="protocol_markers_table" class="table table-hover table-bordered">
-    <thead>
-        <tr>
-            <th>Marker Name</th>
-            <th>Chromosome</th>
-            <th>Position</th>
-            <th>Alternate</th>
-            <th>Reference</th>
-            <th>Quality</th>
-            <th>Filter</th>
-            <th>Info</th>
-            <th>Format</th>
-        </tr>
-    </thead>
-    </tbody>
-</table>
+<div style="overflow:scroll">
+    <table id="protocol_markers_table" class="table table-hover table-bordered">
+        <thead>
+             <tr>
+% foreach my $column_header(@$marker_info_headers){
+                <th><%$column_header%></th>
+%}
+            </tr>
+        </thead>
+    </table>
+</div>
 
 <script>
 
 jQuery(document).ready(function(){
-    
+
     var genotyping_protocol_table = jQuery('#protocol_markers_table').DataTable({
         'searching' : false,
         'ordering'  : false,
         'processing': true,
         'serverSide': true,
+        'autoWidth' : false,
         'lengthMenu': [10,20,50,100,1000],
         'ajax': { 'url': '/ajax/genotyping_protocol/markers_search',
                   'data': function(d) {
@@ -61,6 +57,11 @@ jQuery(document).ready(function(){
             jQuery('#marker_table_search_submit').click();
         }
     });
+
+    jQuery('#download_protocol_marker_info').click(function(){
+        window.location.replace("/breeders/download_protocol_marker_info/?protocol_id=<% $protocol_id %>");
+    });
+
 });
 
 </script>

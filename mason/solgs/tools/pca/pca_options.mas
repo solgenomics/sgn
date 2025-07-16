@@ -32,10 +32,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
   <div class=" form-group col-sm-2">
     <input class="btn btn-success"
 	   type="submit"
-	   value="Run"
+	   value="Run PCA"
 	   id="run_pca"/>
-  </div>
 
+  </div>
 </div>
 </div>
 

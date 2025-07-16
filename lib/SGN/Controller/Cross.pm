@@ -219,10 +219,10 @@ sub _verify_cross {
   if (! $schema->resultset("Stock::Stock")->find({name=>$maternal_parent,})){
     $error_ref->{$line_number} .= "Line number $line_number, Maternal parent $maternal_parent does not exist in database\n <br>";
     }
-  if ($cross_type ne "biparental" && $cross_type ne "self" && $cross_type ne "open" && $cross_type ne "bulk" && $cross_type ne "bulk_self" && $cross_type ne "bulk_open" && $cross_type ne "doubled_haploid") {
+  if ($cross_type ne "biparental" && $cross_type ne "self" && $cross_type ne "open" && $cross_type ne "bulk" && $cross_type ne "bulk_self" && $cross_type ne "bulk_open" && $cross_type ne "doubled_haploid" && $cross_type ne "dihaploid_induction") {
     $error_ref->{$line_number} .= "Line number $line_number, Cross type $cross_type is not valid\n <br>";
   }
-  if ($cross_type eq "self" || $cross_type eq "bulk_self" || $cross_type eq "doubled_haploid") {
+  if ($cross_type eq "self" || $cross_type eq "bulk_self" || $cross_type eq "doubled_haploid" || $cross_type eq "dihaploid_induction") {
     if ($maternal_parent ne $paternal_parent) {
       $error_ref->{$line_number} .= "Line number $line_number, maternal and paternal parents must match for cross type $cross_type\n <br>";
     }

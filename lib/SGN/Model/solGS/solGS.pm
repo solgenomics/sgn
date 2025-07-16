@@ -387,6 +387,23 @@ sub get_trial_accessions {
 
 }
 
+sub get_trial_id_by_accession {
+    my ($self, $accession_id) = @_;
+    
+    my $q = "SELECT trial_id FROM accessionsXtrials WHERE accession_id = ?";
+
+    my $sth = $self->schema->storage->dbh->prepare($q);
+    $sth->execute($accession_id);
+
+    my @trials_ids;
+    while (my $trial_id = $sth->fetchrow_array()) {
+        push @trials_ids, $trial_id;
+    }
+
+    return \@trials_ids;
+
+}
+
 
 sub has_phenotype {
     my ( $self, $pr_id ) = @_;
@@ -833,8 +850,9 @@ sub structure_genotype_data {
 sub genotypes_list_genotype_data {
     my ( $self, $genotypes_ids, $protocol_id ) = @_;
 
+    my $protocol_detail;
     if ( !$protocol_id ) {
-        my $protocol_detail = $self->protocol_detail() if !$protocol_id;
+        $protocol_detail = $self->protocol_detail() if !$protocol_id;
         $protocol_id = $protocol_detail->{protocol_id};
     }
 
@@ -2067,10 +2085,10 @@ sub get_genotypes_from_dataset {
     my ( $self, $dataset_id ) = @_;
 
     my $data = $self->get_dataset_data($dataset_id);
+    my @accessions_ids;
 
-    my $genotypes_ids;
     if ( $data->{categories}->{accessions}->[0] ) {
-        $genotypes_ids = $data->{categories}->{accessions};
+        @accessions_ids = @{$data->{categories}->{accessions}};
     }
     else {
         my $dataset = CXGN::Dataset->new(
@@ -2081,13 +2099,17 @@ sub get_genotypes_from_dataset {
             }
         );
 
-        $genotypes_ids = $dataset->retrieve_accessions();
-        my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
-        $genotypes_ids = \@genotypes_ids;
-
+        my $accessions = $dataset->retrieve_accessions();
+        if ($accessions->[0]) {
+            for (my $i=0; $i < scalar(@$accessions); $i++) {
+                push @accessions_ids, $accessions->[$i][0];
+            }
+        }
     }
+    
+    @accessions_ids = uniq(@accessions_ids) if @accessions_ids;
 
-    return $genotypes_ids;
+    return \@accessions_ids;
 }
 
 sub get_dataset_data {

@@ -142,7 +142,12 @@ sub get_login_status {
 
 sub get_login_info {
     my $self = shift;
-    return $self->{login_info};
+    if ($self->has_session()) { 
+	return $self->{login_info};
+    }
+    else {
+	return {};
+    }
 }
 
 =head2 verify_session
@@ -353,6 +358,7 @@ sub login_user {
                     $login_info->{duplicate_cookie_string} = 1;
                 }
                 else {
+
                     $sth = $self->get_sql("login");
                     $sth->execute( $new_cookie_string, $person_id );
                     CXGN::Cookie::set_cookie( $LOGIN_COOKIE_NAME,

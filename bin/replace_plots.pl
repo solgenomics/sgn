@@ -21,7 +21,7 @@ This script replaces accessions in field layouts in bulk.
 
 The infile provided has three columns:
 
-1) the stock_id of the plot that needs to be changed. 
+1) the plot name that needs to be changed. 
 2) the stock uniquename as it is in the database that is currently associated
 3) the new stock uniquename (needs to be in the database).
 4) optional: a new plot name
@@ -51,6 +51,7 @@ use Spreadsheet::ParseXLSX;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
+use SGN::Model::Cvterm;
 
 our ($opt_H, $opt_D, $opt_i, $opt_t);
 
@@ -94,13 +95,16 @@ my $coderef = sub {
     for my $row ( 0 .. $row_max ) {
 
 	my $plot_name = $worksheet->get_cell($row, 0)->value();
-	my $plot_id = $worksheet->get_cell($row, 1)->value();
-    	my $db_uniquename = $worksheet->get_cell($row,2)->value();
-    	my $new_uniquename = $worksheet->get_cell($row,3)->value();
+	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plot_id = $schema->resultset('Stock::Stock')->find({uniquename=>$plot_name, type_id=>$plot_cvterm_id})->stock_id();
+
+	# my $plot_id = $worksheet->get_cell($row, 1)->value();
+    	my $db_uniquename = $worksheet->get_cell($row,1)->value();
+    	my $new_uniquename = $worksheet->get_cell($row,2)->value();
 
 	my $new_plotname = "";
 	eval { 
-	    $new_plotname = $worksheet->get_cell($row, 4)->value();
+	    $new_plotname = $worksheet->get_cell($row, 3)->value();
 	};
 	
 	if ($@) {

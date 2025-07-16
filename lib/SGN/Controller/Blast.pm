@@ -29,7 +29,8 @@ sub index :Path('/tools/blast/') :Args(0) {
   my $db_id = $c->req->param('db_id');
 
   my $seq = $c->req->param('seq');
-  my $schema = $c->dbic_schema("SGN::Schema");
+  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+  my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
   
   my $blast_db_icons = $c->config->{blast_db_icons};
   my $group_rs = $schema->resultset("BlastDbGroup")->search( undef, { order_by=>'ordinal' });
@@ -44,7 +45,7 @@ sub index :Path('/tools/blast/') :Args(0) {
   # $preselected_database = 224;
   
   if ($db_id) { 
-    my $rs = $schema->resultset("BlastDb")->search( { blast_db_id => $db_id }, { join => 'blast_db_blast_db_group' });
+    my $rs = $schema->resultset("BlastDb")->search( { 'me.blast_db_id' => $db_id }, { join => 'blast_db_blast_db_groups' });
     
     if ($rs == 0) {
       $c->throw( is_error => 0, message => "The blast database with id $db_id could not be found.");
@@ -117,7 +118,8 @@ sub dbinfo : Path('/tools/blast/dbinfo') Args(0) {
 
     my $data = [];
 
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
 
     # 
     my $cache = $c->config->{basepath}."/".$c->tempfiles_subdir("blast")."/dbinfo_cache";
@@ -131,7 +133,8 @@ sub dbinfo : Path('/tools/blast/dbinfo') Args(0) {
 	    my @groups = ();
 	   
 	    while (my $db_row = $db_rs->next()) { 
-		my $db = CXGN::Blast->new( sgn_schema => $c->dbic_schema("SGN::Schema"), blast_db_id => $db_row->blast_db_id(), dbpath => $c->config->{blast_db_path}); 
+        my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+		my $db = CXGN::Blast->new( sgn_schema => $c->dbic_schema("SGN::Schema", undef, $sp_person_id), blast_db_id => $db_row->blast_db_id(), dbpath => $c->config->{blast_db_path}); 
 		if ($db->files_are_complete()) { 
 		    
 		    push @groups, { 
@@ -158,7 +161,8 @@ sub dbinfo : Path('/tools/blast/dbinfo') Args(0) {
 	my @other_groups = ();
 	if ($ungrouped_rs) {
 	    while (my $db_row = $ungrouped_rs->next()) { 
-		my $db = CXGN::Blast->new( sgn_schema => $c->dbic_schema("SGN::Schema"), blast_db_id => $db_row->blast_db_id(), dbpath => $c->config->{blast_db_path}); 
+        my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+		my $db = CXGN::Blast->new( sgn_schema => $c->dbic_schema("SGN::Schema", undef, $sp_person_id), blast_db_id => $db_row->blast_db_id(), dbpath => $c->config->{blast_db_path}); 
 		if ($db->files_are_complete()) { 
 		    push @other_groups, { 
 			title              => $db->title(),
@@ -196,7 +200,8 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
     $c->stash->{template} = '/blast/show_seq/input.mas' unless $blast_db_id && defined $id;
  
     # look up our blastdb
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
 #    my $bdbo = $schema->resultset("BlastDb")->find($blast_db_id)
 #    	or $c->throw( is_error => 0,
 #		      message => "The blast database with id $blast_db_id could not be found (please set the blast_db_id parameter).");

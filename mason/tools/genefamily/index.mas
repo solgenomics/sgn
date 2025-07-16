@@ -3,18 +3,14 @@
 
 </%doc>
 
-<& /page/page_title.mas, title=>"Tomato Genefamily Annotation Resources" &>
+<& /page/page_title.mas, title=>"Genefamily Annotation" &>
 
-<p>This is a temporary interface to make the gene families from the tomato genome sequencing project available to gene family curators.</p>
-<p>You can search in different gene family builds, both for a specific family, and for a gene family member. You can then view the fasta, alignments, and trees, if available.</p>
-<p>More functionality will be added later.</p>
-<p>To continue, you need to log in with a special username and password that was provided to you.</p>
-
+<p>Here you can search in different gene family builds, both for a specific family, and for a gene family member. You can then view the fasta, alignments, and trees, if available.</p>
 
 <!-- div class="boxbgcolor2">
 Submit a new gene family<br /><br />
 </div -->
 <br />
 <div class="boxbgcolor2">
-<a href="search.pl">Search gene families</a><br /><br />
+<a href="/tools/genefamily/search">Search gene families</a><br /><br />
 </div>

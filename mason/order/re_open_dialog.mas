@@ -1,0 +1,119 @@
+<%args>
+$order_id
+$order_to
+</%args>
+
+
+<div class="modal fade" id="requester_re_open_order_dialog" name="requester_re_open_order_dialog" tabindex="-1" role="dialog" aria-labelledby="requesterReOpenOrderDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="requesterReOpenOrderDialog">Re-Open Order</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="requester_re_open_order_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="requester_re_open_order_submit" type="button" class="btn btn-primary" >Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="re_open_saved_dialog" name="re_open_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="reOpenSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="reOpenSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The order has been re-opened.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_re_open_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready( function() {
+    var order_id = "<% $order_id %>";
+    var order_to = "<% $order_to %>";
+
+    jQuery('#requester_re_open_link').click(function(){
+        requesterReOpen(order_id, order_to)
+    });
+
+    jQuery('#requester_re_open_order_submit').click( function() {
+        var order_id = jQuery('#requester_re_open_order_id').val();
+        var re_open_status = jQuery('#requester_re_open_status').val();
+        var requester_re_open_comments = jQuery('#requester_re_open_comments').val();
+        if (!requester_re_open_comments) {
+            alert ("Please add comments for re-opening the order");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/order/update',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'order_id' : order_id,
+                'new_status': re_open_status,
+                'contact_person_comments': requester_re_open_comments
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#re_open_saved_dialog').modal('show');
+                    jQuery('#requester_re_open_order_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred re-opening the order');
+            }
+        });
+    });
+
+    jQuery("#dismiss_re_open_saved_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+
+function requesterReOpen(order_id, order_to){
+    var re_open = "re-opened"
+    var html = '';
+    html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Order Number: </label><div class="col-sm-9" ><input class="form-control" id="requester_re_open_order_id" name="requester_re_open_order_id" value="'+order_id+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Vendor: </label><div class="col-sm-9" ><input class="form-control" id="re_open_order_to" name="re_open_order_to" value="'+order_to+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><input class="form-control" id="requester_re_open_status" name="requester_re_open_status" value="'+re_open+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="requester_re_open_comments" placeholder="Required"></div></div></form>'
+
+    jQuery('#requester_re_open_order_div').html(html);
+    jQuery('#requester_re_open_order_dialog').modal('show');
+
+}
+
+</script>

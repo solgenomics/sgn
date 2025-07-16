@@ -60,6 +60,10 @@
 
                 <div id="upload_phenotype_spreadsheet_verify_status"></div>
                 </div>
+
+                <div id="upload_phenotype_spreadsheet_info" style="display: none">
+                    <& /help/file_upload_type.mas, type => "Simple Phenotype Spreadsheets" &>
+                </div>
             </form><br/>
 
         </div>
@@ -105,7 +109,7 @@
 
             <h4>Simple and Detailed Spreadsheet Format:</h4>
             <ul>
-                <li>The "Simple" format requires only a column called 'observationunit_name' followed by your trait columns.</li>
+                <li>The "Simple" format requires only a column called 'observationunit_name' followed by your trait columns.  Other acceptable headers for the first column include: 'plot_name', 'subplot_name', 'plant_name', 'observationUnitName', 'plotName', 'sublotName', 'plantName'</li>
                 <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
                 <li>The "NIRS" format is built on top of the simple format - a column called 'observationunit_name' followed by trait columns derived from the NIR spectra, followed by columns of NIR spectra data themselves. Trait column names must come form the trait ontology but NIR spectra column names should simply be copied from whateve standard output file the NIR device produces.</li>
             </ul>

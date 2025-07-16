@@ -321,9 +321,9 @@ eval {
 
 	print STDERR "MARKER_ID = $marker_id\n";
 
-	if (!$stock_id) { 
-	    print STDERR "The marker $marker_name exists, but is not on this map...\n"; next();
-	}
+	# if (!$stock_id) { 
+	#     print STDERR "The marker $marker_name exists, but is not on this map...\n"; next();
+	# }
 
 	if (!$marker_id) { 
 	    warn "marker $marker_name is not in the database!!!!\n";

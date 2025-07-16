@@ -41,68 +41,60 @@ if (!$data_structure) {
    }
 }
 
+my $title = 'Kinship and Inbreeding Analysis'; 
+my $collapsed = 0;
+my $collapsible = 0;
+my $section_title;
+
 my $url = $c->req->path;
 
-
-my $title;
-my $collapsed = 0;
-if ($url =~ /kinship\/analysis/) {
-$title = 'Select a list of accessions or trials or a dataset and run kinship';
-} else {
-$title = 'Kinship and inbreeding coefficients';
-$collapsed = 1;
+if ($url !~ /kinship\/analysis/) {
+  $section_title = 'Kinship and inbreeding analysis';
+  $collapsible = 1;
+  $collapsed = 1 if $url =~ /breeders\/trial/;
 }
 
 </%perl>
 
+<& /solgs/tools/base.mas &>
 
 % if ($url =~ /kinship\/analysis/) {
-
-<& /page/page_title.mas,
-   title => 'Kinship and Inbreeding Analysis',
-   collapsed => $collapsed
-  &>
-
+  <& /page/page_title.mas,
+    title => $title
+    &>
 %}
 
 <&| /page/info_section.mas,
-  collapsible => 1,
+  collapsible => $collapsible,
   collapsed   => $collapsed,
-  title       => $title
+  title       => $section_title
 &>
-
 
 <div id='kinship_div'>
-
 % if ($url =~ /kinship\/analysis|breeders\/trial\//) {
-
-  <& /solgs/genotyping_protocol/index.mas &>
-
+    <& /solgs/genotyping_protocol/index.mas &>
 %}
-
 
 % if ($url =~ /kinship\/analysis/) {
-
-<& select_menu.mas &>
-
+    <& /solgs/tools/login.mas,
+    tool_url => '/kinship/analysis/',
+    analysis_type => 'kinship' 
+    &>
 %}
-
-
 
 % if ($url =~ /solgs\/|breeders\/trial\//) {
-
-    <input id="run_kinship" class="button" type="button" value="Run kinship" />
-
-
+    <input id="run_kinship" class="btn btn-success" type="button" value="Run kinship" />
 %}
 
-<& plot.mas,
-     pop_id => $pop_id,
-    list_id => $list_id,
-    dataset_id => $dataset_id,
-    data_structure => $data_structure,
-&>
+  <& plot.mas,
+      pop_id => $pop_id,
+      list_id => $list_id,
+      dataset_id => $dataset_id,
+      data_structure => $data_structure,
+  &>
 
 </div>
 
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.kinship", "solGS.heatMap"] &>

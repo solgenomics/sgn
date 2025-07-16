@@ -1,0 +1,46 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/correlation/plot.mas - correlation analysis plot template
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$corr_pop_id => undef
+$corr_pop_name =>undef
+$list_id => undef
+$dataset_id => undef
+$data_set_type => undef
+$data_structure => undef
+
+</%args>
+
+<%perl>
+
+</%perl>
+
+<div id="corr_canvas">
+<div id="corr_message" class="message"> </div>
+<& /solgs/spinner/spinner.mas &>
+
+<div id="corr_plot">
+    <input type="hidden" id="corr_pop_id" value="<% $corr_pop_id %>" />
+    <input type="hidden" id="corr_pop_name" value="<% $corr_pop_name %>" />
+    <input type="hidden"  id="dataset_id" value="<% $dataset_id %>" />
+    <input type="hidden"  id="list_id" value="<% $list_id %>" />
+    <input type="hidden" id="data_structure" value="<% $data_structure %>" />
+    <input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
+</div>
+
+</div>
+
+
+<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>

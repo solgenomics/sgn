@@ -59,8 +59,9 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
 
     my $item_id = shift;
 #    print STDERR "CATALOG STOCK ID =".Dumper($item_id)."\n";
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $stock_catalog_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'stock_catalog_json', 'stock_property')->cvterm_id();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $stock_catalog_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), 'stock_catalog_json', 'stock_property')->cvterm_id();
 
     my $stock_catalog_info = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $stock_catalog_type_id});
 
@@ -91,8 +92,12 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $material_source = $item_details[5];
     my $additional_info = $item_details[6];
     my $program_id = $item_details[7];
-    my $contact_person_id = $item_details[8];
-    my $images = $item_details[9];
+    my $availability = $item_details[8];
+    if (!$availability) {
+        $availability = 'available';
+    }
+    my $contact_person_id = $item_details[9];
+    my $images = $item_details[10];
     my $image_id = $images->[0];
     my $image_obj = SGN::Image->new($dbh, $image_id);
     my $medium_image  = $image_obj->get_image_url("medium");
@@ -115,6 +120,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     $c->stash->{additional_info} = $additional_info;
     $c->stash->{program_id} = $program_id;
     $c->stash->{breeding_program} = $program_name;
+    $c->stash->{availability} = $availability;
     $c->stash->{contact_person_username} = $contact_person_username;
     $c->stash->{item_prop_id} = $item_prop_id;
     $c->stash->{image} = qq|<a href="$medium_image" class="stock_image_group" rel="gallery-figures"><img src="$medium_image"/></a> |,

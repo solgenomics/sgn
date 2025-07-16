@@ -7,6 +7,10 @@ $item_list
 $order_to
 $order_status
 $comments
+$order_properties => undef
+$order_values => undef
+$ordering_type => undef
+$check_vendor_role =>undef
 
 </%args>
 
@@ -28,10 +32,43 @@ $comments
                         <tr><td><b>Items</b></td><td><% $item_list %></td></tr>
                         <tr><td><b>Sent Order to</b></td><td><% $order_to %></td></tr>
                         <tr><td><b>Status</b><td><% $order_status %></td></tr>
-                        <tr><td><b>Comments from Vendor</b></td><td><% $comments %></td></tr>
+                        <tr><td><b>Comments</b></td><td><% $comments %></td></tr>
                     </table>
                 </div>
             </div>
+            <td><a href="/order/stocks/view"><p>Go to Manage Order Page</p></a></td>
         </div>
     </div>
+% if ($ordering_type eq 'single_step' && $order_status ne 'completed') {
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link">Re-Order</button>
+%}
+% if ($ordering_type eq 'single_step' && $order_status eq 'completed') {
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link">Re-Order</button><button class="btn btn-sm btn-primary" style="margin:3px" id="requester_re_open_link">Re-Open</button>
+%}
+%if ($ordering_type ne 'single_step' && $order_status eq 'completed') {
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="re_open_link">Re-Open</button>
+%}
+
 </&>
+
+% if ($check_vendor_role == 1) {
+    <&| /page/info_section.mas, title => 'Tracking Order Progress', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <!--
+                    <button id="download_item_file_button" class="btn btn-primary">Download Item File</button>
+                    <button id="download_ontology_file_button" class="btn btn-primary">Download Data Collection Ontologies</button>
+                    -->
+                    <button id="generate_item_barcode_button" class="btn btn-primary">Generate Item Barcode</button>
+                </div>
+            </div>
+        </div>
+    </&>
+% }
+
+<& /order/re_order_dialog.mas, order_properties => $order_properties, order_values => $order_values&>
+<& /order/re_open_dialog.mas, order_id => $order_id, order_to => $order_to &>
+<& /order/create_item_file_dialog.mas, order_id => $order_id &>
+<& /order/create_ontology_file_dialog.mas &>
+<& /order/generate_identifier_barcode_dialog.mas, identifier => "", order_id=> "$order_id" &>

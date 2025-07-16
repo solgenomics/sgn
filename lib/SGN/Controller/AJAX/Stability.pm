@@ -12,6 +12,7 @@ use File::Copy;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
@@ -31,15 +32,14 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $traits = $ds->retrieve_traits();
     
     $c->tempfiles_subdir("stability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"stability_files/trait_XXXXX");
-    $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
@@ -62,6 +62,14 @@ sub get_method: Path('/ajax/Stability/get_method') : {
     print "The vairable method_id is $method_id \n";
 }
 
+my $imput_id;
+sub get_imput: Path('/ajax/Stability/get_imput') : {
+    my $self = shift;
+    my $c = shift;
+    $imput_id = $c->req->param('imput_id');
+    print STDERR Dumper($imput_id);
+    print "Will the data be imputed? $imput_id \n";
+}
 
 sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     my $self = shift;
@@ -110,13 +118,15 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
+
 sub generate_results: Path('/ajax/stability/generate_results') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
+    my $imput_id = $c->req->param('imput_id');
     my $method = $c->req->param('method_id');
     my $trait_id = $c->req->param('trait_id');
-    
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
     print STDERR "DATASET_ID: $dataset_id\n";
     print STDERR "TRAIT ID: $trait_id\n";
     print STDERR "Method: ".Dumper($method);
@@ -125,20 +135,20 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
     mkdir $stability_tmp_output if ! -d $stability_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
-      "stability_download_XXXXX",
+      "stability_XXXXX",
       DIR=> $stability_tmp_output,
     );
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
     
-
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     #my $temppath = $stability_tmp_output . "/" . $tempfile;
     my $temppath =  $tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, exclude_phenotype_outlier => $exclude_outliers,file_name => $temppath, quotes => 0);
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
@@ -148,14 +158,15 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 
-    my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
-    my $figure1file = $tempfile . "_" . "figure1.png";
-    my $figure2file = $tempfile . "_" . "figure2.png";
+    my $jsonFile = $tempfile . "_" . "json";
+    my $graphFile = $tempfile . "_" . "graph.json";
+    my $messageFile = $tempfile . "_" . "message.txt";
+    my $jsonSummary = $tempfile . "_" . "summary.json";
 
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 
-    my $cmd = CXGN::Tools::Run->new({
+    my $cxgn_tools_run_config = {
             backend => $c->config->{backend},
             submit_host=>$c->config->{cluster_host},
             temp_base => $c->config->{cluster_shared_tempdir} . "/stability_files",
@@ -163,50 +174,93 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             do_cleanup => 0,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
-        });
+    };
+    my $cmd_str = join(" ",(
+        "Rscript ",
+        $c->config->{basepath} . "/R/stability/ammi_script.R",
+        $pheno_filepath,
+        $trait_id,
+        $imput_id,
+        $method,
+        $jsonFile,
+        $graphFile,
+        $messageFile,
+        $jsonSummary
+    ));
+    my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
-    $cmd->run_cluster(
-            "Rscript ",
-            $c->config->{basepath} . "/R/stability/ammi_script.R",
-            $pheno_filepath,
-            $trait_id,
-            $figure1file,
-            $figure2file,
-            $AMMIFile,
-            $method
-    );
+    my $job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user,
+        name => $ds->name()." stability analysis",
+        job_type => 'stability_analysis',
+        cmd => $cmd_str,
+        cxgn_tools_run_config => $cxgn_tools_run_config,
+        finish_logfile => $c->config->{job_finish_log}
+    });
 
-    while ($cmd->alive) { 
-	sleep(1);
+    $job->submit();
+
+    # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
+    # $job_record->update_status("submitted");
+
+    # $cmd->run_cluster(
+    #         "Rscript ",
+    #         $c->config->{basepath} . "/R/stability/ammi_script.R",
+    #         $pheno_filepath,
+    #         $trait_id,
+    #         $imput_id,
+    #         $method,
+    #         $jsonFile,
+    #         $graphFile,
+    #         $messageFile,
+    #         $jsonSummary,
+    #         $job_record->generate_finish_timestamp_cmd()
+    # );
+
+    # while ($cmd->alive) { 
+	# sleep(1);
+    # }
+
+    while ($job->alive()) {
+        sleep(1);
     }
 
-    my $error;
-
-    if (! -e $AMMIFile) { 
-	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
-    }
+    my $finished = $job->read_finish_timestamp();
+	if (!$finished) {
+		$job->update_status("failed");
+	} else {
+		$job->update_status("finished");
+	}
 
     my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
 
-    copy($AMMIFile, $figure_path);
-    copy($figure1file, $figure_path);
-    copy($figure2file, $figure_path);
+    copy($messageFile, $figure_path);
+    copy($jsonFile, $figure_path);
+    copy($graphFile, $figure_path);
+    copy($jsonSummary, $figure_path);
 
-    my $AMMIFilebasename = basename($AMMIFile);
-    my $AMMIFile_response = "/documents/tempfiles/stability_files/" . $AMMIFilebasename;
+
+    my $messageFileBasename = basename($messageFile);
+    my $messageFile_response = "/documents/tempfiles/stability_files/" . $messageFileBasename;
+
+    my $graphFileBasename = basename($graphFile);
+    my $graphFile_response = "/documents/tempfiles/stability_files/" . $graphFileBasename;
+
+    my $jsonFileBasename = basename($jsonFile);
+    my $jsonFile_response = "/documents/tempfiles/stability_files/" . $jsonFileBasename;
+
+    my $jsonSummaryBasename = basename($jsonSummary);
+    my $jsonSummary_response = "/documents/tempfiles/stability_files/" . $jsonSummaryBasename;
     
-    my $figure1basename = basename($figure1file);
-    my $figure1_response = "/documents/tempfiles/stability_files/" . $figure1basename;
-    
-    my $figure2basename = basename($figure2file);
-    my $figure2_response = "/documents/tempfiles/stability_files/" . $figure2basename;
-        
+
     $c->stash->{rest} = {
-        AMMITable => $AMMIFile_response,
-        figure1 => $figure1_response,
-        figure2 => $figure2_response,
+        myMessage => $messageFile_response,
+        myGraph => $graphFile_response,
+        JSONfile => $jsonFile_response,
+        JSONsummary => $jsonSummary_response,
         dummy_response => $dataset_id
-        # dummy_response2 => $trait_id,
     };
 }
 

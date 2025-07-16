@@ -10,8 +10,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <div id="list_dialog_div">
-	  </div>
+          <div id="list_dialog_div"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -31,8 +30,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <div id="public_list_dialog_div">
-	  </div>
+          <div id="public_list_dialog_div"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -51,8 +49,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <div id="list_item_dialog_div">
-	  </div>
+          <div id="list_item_dialog_div"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -64,166 +61,154 @@
 
 
 <div class="modal fade" id="validate_accession_error_display" name="validate_accession_error_display" tabindex="-1" role="dialog" aria-labelledby="listValidationErrorDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="listValidationErrorDialog">List Validation Report: Failed</h4>
-            </div>
-            <div class="modal-body">
-              <div class="container-fluid">
-		<div id='validate_stock_missing_accessions_html' style='display:none'></div>
-	      </div>
-	      <div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div>
-              <div class="well">
-		
-                <h3>Elements not found:</h3>
-
-		<div id="elements_not_found_stats"></div>
-
-		<table id="missing_accessions_table" style="margin:0pt">
-		</table><br />
-					
-                <div id="validate_stock_add_missing_accessions">
-                </div>
-
-		<div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3>
-		  <div id='validate_stock_add_missing_accessions_for_list_div'></div>
-		  <div id='stocks_with_wrong_case'></div>
-		</div>
-		
-		<div id="validate_stock_missing_accessions"></div>
-		
-		<div id="adjust_case_div">
-		  <h3>Mismatched case</h3>
-		  <table id="wrong_case_table" style="margin:0pt">
-		  </table>
-		  <br />
-		  
-		</div>
-		
-		<div id="wrong_case_message_div"></div>
-		<br />
-		
-		<button class="btn btn-default" id="adjust_case_action_button" disabled>Adjust Case</button>
-		<br /><br />
-		<div>
-		  Click the Adjust Case button to align the case in the list with what is in the database.
-		</div>
-		
-		<h3>Multiple mismatched case</h3>
-		<div id="multiple_case_match_message_div">
-		  <br />
-		  Items listed here have mulitple case mismatches and must be fixed manually. If accessions need to be merged, contact the database directly.
-		</div>
-		
-		<table id="multiple_wrong_case_table" style="margin:0pt">
-		</table>
-		
-		<div id="multiple_case_match_div"><br /><br /></div>
-		
-		<h3>List elements matching a synonym</h3>
-		<div id="synonym_matches_div">
-		  
-		  <table id="element_matches_synonym"  style="margin:0pt">
-		  </table>
-		  <br />
-		  <button class="btn btn-default" id="replace_synonyms_with_uniquenames_button">Replace synonyms with corresponding DB name</button>
-		  
-		</div>
-		
-		<div id="synonym_message"></div>
-		<br />
-		
-		<h3>Multiple synonym matches</h3>
-		<div id="multiple_synonym_matches_div">
-		  <table id="element_matches_multiple_synonyms_table" style="margin:0pt">
-		  </table>
-		  
-		  Multiple synonym matches have to be resolved manually. Contact database administrators if necessary.
-		</div>
-              </div>
-            </div>
-	</div>
-	
-        <div class="modal-footer">
-          <button id="close_missing_accessions_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="listValidationErrorDialog">List Validation Report: Failed</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div id='validate_stock_missing_accessions_html' style='display:none'></div>
         </div>
+        <div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div>
+        <div class="well">
+          <h3>Elements not found:</h3>
+          <div id="elements_not_found_stats"></div>
+          <table id="missing_accessions_table" style="margin:0pt"></table>
+          <br />
+          <div id="validate_stock_add_missing_accessions"></div>
+
+          <div class='well well-sm'>
+            <h3>Optional: Add Missing Accessions to A List</h3>
+            <div id='validate_stock_add_missing_accessions_for_list_div'></div>
+            <div id='stocks_with_wrong_case'></div>
+          </div>
+
+          <div id="validate_stock_missing_accessions"></div>
+
+          <div id="adjust_case_div">
+            <h3>Mismatched case</h3>
+            <table id="wrong_case_table" style="margin:0pt"></table>
+            <br />
+          </div>
+
+          <div id="wrong_case_message_div"></div>
+          <br />
+
+          <button class="btn btn-default" id="adjust_case_action_button" disabled>Adjust Case</button>
+          <br /><br />
+          <div>
+            Click the Adjust Case button to align the case in the list with what is in the database.
+          </div>
+
+          <h3>Multiple mismatched case</h3>
+          <div id="multiple_case_match_message_div">
+            <br />
+            Items listed here have mulitple case mismatches and must be fixed manually. If accessions need to be merged, contact the database directly.
+          </div>
+
+          <table id="multiple_wrong_case_table" style="margin:0pt"></table>
+
+          <div id="multiple_case_match_div"><br /><br /></div>
+
+          <h3>List elements matching a synonym</h3>
+          <div id="synonym_matches_div">
+
+            <table id="element_matches_synonym"  style="margin:0pt"></table>
+            <br />
+            <button class="btn btn-default" id="replace_synonyms_with_uniquenames_button">Replace synonyms with corresponding DB name</button>
+
+          </div>
+
+          <div id="synonym_message"></div>
+          <br />
+
+          <h3>Multiple synonym matches</h3>
+          <div id="multiple_synonym_matches_div">
+            <table id="element_matches_multiple_synonyms_table" style="margin:0pt"></table>
+            Multiple synonym matches have to be resolved manually. Contact database administrators if necessary.
+          </div>
+        </div>
+      </div>
     </div>
+
+    <div class="modal-footer">
+      <button id="close_missing_accessions_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+  </div>
 </div>
 
 
 <div class="modal fade" id="fuzzy_search_result_display" name="fuzzy_search_result_display" tabindex="-1" role="dialog" aria-labelledby="fuzzySearchResultDialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="fuzzySearchResultDialog">Fuzzy Search Results</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <div id="fuzzy_search_result_display_html">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="download_fuzzy_search_result" type="button" class="btn btn-primary" onclick="javascript:downloadFuzzyResponse()" >Download</button>
-                <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="fuzzySearchResultDialog">Fuzzy Search Results</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div id="fuzzy_search_result_display_html"></div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button id="download_fuzzy_search_result" type="button" class="btn btn-primary" onclick="javascript:downloadFuzzyResponse()" >Download</button>
+        <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
     </div>
+  </div>
 </div>
 
 <div class="modal fade" id="synonym_search_result_display" name="synonym_search_result_display" tabindex="-1" role="dialog" aria-labelledby="synonymSearchResultDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="synonymSearchResultDialog">Synonym Search Results</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <div id="synonym_search_result_display_html">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-              <form id="new-list-from-unames" class="form-inline" style="float:left">
-                <label>Create a New List from Unique Names:</label>
-                <input name="name" type="text" class="form-control" placeholder="List Name...">
-                <button class="btn btn-primary" type="submit">Save</button>
-              </form>
-              <form class="form-inline" style="float:right">
-                <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-              </form>
-            </div>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="synonymSearchResultDialog">Synonym Search Results</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div id="synonym_search_result_display_html"></div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <form id="new-list-from-unames" class="form-inline" style="float:left">
+          <label>Create a New List from Unique Names:</label>
+          <input name="name" type="text" class="form-control" placeholder="List Name...">
+          <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+        <form class="form-inline" style="float:right">
+          <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 
 <div class="modal fade" id="availible_seedlots_modal" name="availible_seedlots_modal" tabindex="-1" role="dialog" aria-labelledby="availible_seedlots_modal">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4>Available Seedlots</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <& /tools/available_seedlots.mas &>
-                </div>
-            </div>
-            <div class="modal-footer">
-              <form id="new-list-from-seedlots" class="form-inline" style="float:left">
-                <label>Create a New List from Selected Seedlots:</label>
-                <input name="name" type="text" class="form-control" placeholder="List Name...">
-                <button class="btn btn-primary" type="submit">Save</button>
-              </form>
-              <form class="form-inline" style="float:right">
-                <a href="/breeders/seedlots/" class="btn btn-primary">Manage Seedlots</a>
-                <button id="close_availible_seedlots_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-              </form>
-            </div>
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4>Available Seedlots</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <& /tools/available_seedlots.mas &>
         </div>
+      </div>
+      <div class="modal-footer">
+        <form id="new-list-from-seedlots" class="form-inline" style="float:left">
+          <label>Create a New List from Selected Seedlots:</label>
+          <input name="name" type="text" class="form-control" placeholder="List Name...">
+          <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+        <form class="form-inline" style="float:right">
+          <a href="/breeders/seedlots/" class="btn btn-primary">Manage Seedlots</a>
+          <button id="close_availible_seedlots_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>

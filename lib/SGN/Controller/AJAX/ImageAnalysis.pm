@@ -8,6 +8,8 @@ functions for necrosis image analysis https://github.com/solomonnsumba/Necrosis-
 
 =head1 AUTHOR
 
+Bryan Ellerbrock <bje24@cornell.edu>
+
 =cut
 
 package SGN::Controller::AJAX::ImageAnalysis;
@@ -42,6 +44,7 @@ use Parallel::ForkManager;
 use CXGN::Image::Search;
 use CXGN::Trait::Search;
 use File::Slurp;
+use File::Basename;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -96,40 +99,44 @@ sub image_analysis_submit_POST : Args(0) {
     }
     print STDERR Dumper \@image_urls;
 
-    my %service_details = (
-        'necrosis' => {
-            server_endpoint => "http://unet.mcrops.org/api/",
-            image_type_name => "image_analysis_necrosis_solomon_nsumba",
-        },
-        'whitefly_count' => {
-            server_endpoint => "http://18.216.149.204/home/api2/",
-            image_type_name => "image_analysis_white_fly_count_solomon_nsumba",
-        },
-        'count_contours' => {
-            image_type_name => "image_analysis_contours",
-            trait_name => "count_contours",
-            script => 'GetContours.py',
-            input_image => 'image_path',
-            outfile_image => 'outfile_path',
-            results_outfile => 'results_outfile_path',
-        },
-        'largest_contour_percent' => {
-            image_type_name => 'image_analysis_largest_contour',
-            trait_name => 'percent_largest_contour',
-            script => 'GetLargestContour.py',
-            input_image => 'image_path',
-            outfile_image => 'outfile_path',
-            results_outfile => 'results_outfile_path',
-        },
-        'count_sift' => {
-            image_type_name => "image_analysis_sift",
-            trait_name => "count_sift",
-            script => 'ImageProcess/CalculatePhenotypeSift.py',
-            input_image => 'image_paths',
-            outfile_image => 'outfile_paths',
-            results_outfile => 'results_outfile_path',
-        }
-    );
+    my $service_details_json = $c->config->{image_analysis_services} || '{}';
+
+    my %service_details = %{decode_json($service_details_json)};
+    
+    # my %service_details = (
+    #     'necrosis' => {
+    #         server_endpoint => "http://unet.mcrops.org/api/",
+    #         image_type_name => "image_analysis_necrosis_solomon_nsumba",
+    #     },
+    #     'whitefly_count' => {
+    #         server_endpoint => "http://18.216.149.204/home/api2/",
+    #         image_type_name => "image_analysis_white_fly_count_solomon_nsumba",
+    #     },
+    #     'count_contours' => {
+    #         image_type_name => "image_analysis_contours",
+    #         trait_name => "count_contours",
+    #         script => 'GetContours.py',
+    #         input_image => 'image_path',
+    #         outfile_image => 'outfile_path',
+    #         results_outfile => 'results_outfile_path',
+    #     },
+    #     'largest_contour_percent' => {
+    #         image_type_name => 'image_analysis_largest_contour',
+    #         trait_name => 'percent_largest_contour',
+    #         script => 'GetLargestContour.py',
+    #         input_image => 'image_path',
+    #         outfile_image => 'outfile_path',
+    #         results_outfile => 'results_outfile_path',
+    #     },
+    #     'count_sift' => {
+    #         image_type_name => "image_analysis_sift",
+    #         trait_name => "count_sift",
+    #         script => 'ImageProcess/CalculatePhenotypeSift.py',
+    #         input_image => 'image_paths',
+    #         outfile_image => 'outfile_paths',
+    #         results_outfile => 'results_outfile_path',
+    #     }
+    # );
 
     my $image_type_name = $service_details{$service}->{'image_type_name'};
 
@@ -176,6 +183,7 @@ sub image_analysis_submit_POST : Args(0) {
                 }
                 print STDERR Dumper $message_hashref;
                 $res{'value'} = $message_hashref->{trait_value};
+                $res{'analysis_info'} = $message_hashref->{info} || {};
                 $res{'trait'} = $trait;
                 $res{'trait_id'} = $trait_details->[0]->{trait_id};
             }
@@ -300,11 +308,14 @@ sub image_analysis_group_POST : Args(0) {
 
         if ($trait && $value) {
             print STDERR "Working on $trait for $uniquename. Saving the details \n";
+
+	    my $analyzed_link = dirname($results_ref->{'result'}->{'image_link'})."/small.jpg";
+	    
             push @{$grouped_results{$uniquename}{$trait}}, {
                         stock_id => $results_ref->{'stock_id'},
                         collector => $results_ref->{'image_username'},
                         original_link => $results_ref->{'result'}->{'original_image'},
-                        analyzed_link => $results_ref->{'result'}->{'image_link'},
+                        analyzed_link => $analyzed_link,
                         image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
                         trait_id => $results_ref->{'result'}->{'trait_id'},
                         value => $value + 0

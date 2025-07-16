@@ -31,6 +31,9 @@ sub search {
     my $synonyms_arrayref = $params->{synonym} || ($params->{synonyms} || ());
     my $subtaxa = $params->{germplasmSubTaxa}->[0];
     my $match_method = $params->{matchMethod}->[0] || 'exact';
+    my $acquisitionDate = ref $params->{acquisitionDate} eq 'ARRAY' ? $params->{acquisitionDate}->[0] : $params->{acquisitionDate};
+    my $minAcquisitionDate = ref $params->{minAcquisitionDate} eq 'ARRAY' ? $params->{minAcquisitionDate}->[0] : $params->{minAcquisitionDate};
+    my $maxAcquisitionDate = ref $params->{maxAcquisitionDate} eq 'ARRAY' ? $params->{maxAcquisitionDate}->[0] : $params->{maxAcquisitionDate};
 
     if ($match_method ne 'exact' && $match_method ne 'wildcard') {
         push @$status, { 'error' => "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters." };
@@ -89,7 +92,10 @@ sub search {
         stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
         limit=>$limit,
         offset=>$offset,
-        display_pedigree=>1
+        display_pedigree=>1,
+        acquisition_date=>$acquisitionDate,
+        min_acquisition_date=>$minAcquisitionDate,
+        max_acquisition_date=>$maxAcquisitionDate
     });
     my ($result, $total_count) = $stock_search->search();
 
@@ -116,7 +122,7 @@ sub search {
             commonCropName=>$_->{common_name},
             instituteCode=>$_->{'institute code'},
             instituteName=>$_->{'institute name'},
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} + 0,
+            biologicalStatusOfAccessionCode=> $_->{'biological status of accession code'} ? ($_->{'biological status of accession code'} + 0) : 0,
             countryOfOriginCode=>$_->{'country of origin'},
             typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},
@@ -126,7 +132,7 @@ sub search {
             subtaxa=>$_->{subtaxa},
             subtaxaAuthority=>$_->{subtaxaAuthority},
             donors=>$_->{donors},
-            acquisitionDate=>$_->{'acquisition date'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? $_->{'create_date'} : $_->{'acquisition date'},
             breedingMethodDbId=>undef,
             documentationURL=>undef,
             germplasmGenus=>$_->{genus},
@@ -188,7 +194,7 @@ sub germplasm_detail {
         commonCropName=>$result->[0]->{common_name},
         instituteCode=>$result->[0]->{'institute code'},
         instituteName=>$result->[0]->{'institute name'},
-        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} + 0,
+        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} ? ($result->[0]->{'biological status of accession code'} + 0) : 0,
         countryOfOriginCode=>$result->[0]->{'country of origin'},
         typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
         genus=>$result->[0]->{genus},
@@ -198,7 +204,7 @@ sub germplasm_detail {
         subtaxa=>$result->[0]->{subtaxa},
         subtaxaAuthority=>$result->[0]->{subtaxaAuthority},
         donors=>$result->[0]->{donors},
-        acquisitionDate=>$result->[0]->{'acquisition date'},
+        acquisitionDate=>$result->[0]->{'acquisition date'} eq '' ? $result->[0]->{'create_date'} : $result->[0]->{'acquisition date'}
     );
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
@@ -432,10 +438,10 @@ sub germplasm_markerprofiles {
     my $status = $self->status;
     my @marker_profiles;
 
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+    my $vcf_snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
 
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-        {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$stock_id},
+        {'genotypeprops.type_id' => $vcf_snp_genotyping_cvterm_id, 'stock.stock_id'=>$stock_id},
         {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
         select=> ['genotypeprops.genotypeprop_id'],
         as=> ['genotypeprop_id'],

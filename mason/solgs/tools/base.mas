@@ -1,0 +1,19 @@
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS","solGS.List", "d3.d3v4Min", "d3.d3ArrayMin",
+"save-svg-as-png.saveSvgAsPng"] &>
+
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css', '/static/css/d3-tip.css'] &>
+
+<script type="text/javascript"> 
+    (function(){
+    d3 = d3v4;
+    }());
+    </script>
+
+<style>
+    .axis path, .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+</style>

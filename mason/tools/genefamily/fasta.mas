@@ -1,0 +1,12 @@
+
+<%args>
+
+$build
+$family
+$fasta
+
+</%args>
+
+<pre>
+<% $fasta %>
+</pre>

@@ -62,6 +62,8 @@ sub search {
             observation_unit_names_list=>$observation_unit_names_list,
             limit=>$limit,
             offset=>$offset,
+            # # Order by plot_number, account for non-numeric plot numbers
+            # order_by=>'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::int',
             # phenotype_min_value=>$phenotype_min_value,
             # phenotype_max_value=>$phenotype_max_value,
             # exclude_phenotype_outlier=>$exclude_phenotype_outlier

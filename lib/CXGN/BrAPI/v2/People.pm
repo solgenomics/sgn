@@ -61,7 +61,8 @@ sub search {
 	    push @{$query{'phone_number'} }, { 'ilike' => '%'. $_  .'%' };
 	}
 
- 	my $rs2 = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->search( { %query, disabled=>undef, censor => 0 }, { order_by => { -asc =>'sp_person_id'} } );
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+ 	my $rs2 = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id)->resultset("SpPerson")->search( { %query, disabled=>undef, censor => 0 }, { order_by => { -asc =>'sp_person_id'} } );
 
 
     while (my $p = $rs2->next()) { 
@@ -110,7 +111,8 @@ sub detail {
 
 	$query{'sp_person_id'} = { ' =' => $list_id  };
 
- 	my $rs2 = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->search( { %query, disabled=>undef, censor => 0 }, { page => $page, rows => $page_size, order_by => 'last_name' } );
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+ 	my $rs2 = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id)->resultset("SpPerson")->search( { %query, disabled=>undef, censor => 0 }, { page => $page, rows => $page_size, order_by => 'last_name' } );
 	
 
     while (my $p = $rs2->next()) { 

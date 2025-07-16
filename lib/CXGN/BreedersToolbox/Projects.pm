@@ -5,28 +5,36 @@ use Moose;
 use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
+use CXGN::People::Schema;
 use CXGN::People::Roles;
 use JSON;
 use Encode;
+use CXGN::BrAPI::v2::ExternalReferences;
+use Try::Tiny;
 
 has 'schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		);
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    );
 
 has 'id' => (
-	isa => 'Maybe[Int]',
-	is => 'rw',
+    isa => 'Maybe[Int]',
+    is => 'rw',
 );
 
 has 'name' => (
     isa => 'Str',
-	is => 'rw',
+    is => 'rw',
 );
 
 has 'description' => (
     isa => 'Maybe[Str]',
-	is => 'rw',
+    is => 'rw',
+);
+
+has 'external_references' => (
+    isa => 'ArrayRef[HashRef[Str]]',
+    is  => 'ro',
 );
 
 
@@ -52,7 +60,21 @@ sub get_breeding_programs {
 
     my @projects;
     while (my $row = $rs->next()) {
-	push @projects, [ $row->project_id, $row->name, $row->description ];
+
+        my @project_array = ($row->project_id);
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->schema,
+            table_name => 'project',
+            table_id_key => 'project_id',
+            id => \@project_array
+        });
+        my $external_references = $references->search();
+        my @external_references_array;
+        foreach my $values (values %{$external_references}) {
+            push @external_references_array, $values;
+        }
+
+	    push @projects, [ $row->project_id, $row->name, $row->description, @external_references_array ];
     }
 
     return \@projects;
@@ -107,19 +129,29 @@ sub get_breeding_program_by_name {
 sub _get_all_trials_by_breeding_program {
     my $self = shift;
     my $breeding_project_id = shift;
+    my $start_date = shift || '1900-01-01';
+    my $end_date = shift || '2100-12-31';
+    my $include_dateless_trials = shift || 1;
+
     my $dbh = $self->schema->storage->dbh();
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
     my $trials = [];
     my $h;
+
+    my $datelessq;
+    if ($include_dateless_trials) {
+	$datelessq = " trial.create_date IS NULL OR ";
+    }
+
     if ($breeding_project_id) {
 	# need to convert to dbix class.... good luck!
 	#my $q = "SELECT trial.project_id, trial.name, trial.description FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id=? AND (projectprop.type_id IS NULL OR projectprop.type_id != ?))";
-	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id = ?)";
+	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE ( $datelessq (trial.create_date > ? and trial.create_date < ?) ) and project.project_id = ?";
 
 	$h = $dbh->prepare($q);
 	#$h->execute($breeding_project_id, $cross_cvterm_id);
-	$h->execute($breeding_project_id);
+	$h->execute($start_date, $end_date, $breeding_project_id);
 
     }
     else {
@@ -145,23 +177,29 @@ sub get_trials_by_breeding_program {
     my $drone_run_band_projects;
     my $analyses_projects;
     my $sampling_trial_projects;
+    my $tracking_activity_projects;
+    my $transformation_projects;
 
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
     my $analysis_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'analysis_metadata_json', 'project_property')->cvterm_id();
+    my $tracking_project_cvterm_id = $self->get_tracking_project_cvterm_id();
+    my $transformation_project_cvterm_id = $self->get_transformation_project_cvterm_id();
 
     my %projects_that_are_crosses;
     my %project_year;
     my %project_name;
     my %project_description;
     my %projects_that_are_genotyping_trials;
-    my %projects_that_are_treatment_trials; #Field Management Factors
+    my %projects_that_are_treatment_trials;
     my %projects_that_are_genotyping_data_projects;
     my %projects_that_are_drone_run_projects;
     my %projects_that_are_drone_run_band_projects;
     my %projects_that_are_analyses;
     my %projects_that_are_sampling_trials;
+    my %projects_that_are_tracking_projects;
+    my %projects_that_are_transformation_projects;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
         #print STDERR "PROP: $prop, $propvalue \n";
@@ -183,6 +221,10 @@ sub get_trials_by_breeding_program {
             if ($prop == $analysis_metadata_cvterm_id) {
                 $projects_that_are_analyses{$id} = 1;
             }
+            if ($prop == $tracking_project_cvterm_id) {
+                $projects_that_are_tracking_projects{$id} = 1;
+            }
+
             if ($propvalue) {
                 if ($propvalue eq "genotyping_plate") {
                     $projects_that_are_genotyping_trials{$id} = 1;
@@ -202,6 +244,9 @@ sub get_trials_by_breeding_program {
                 if ($propvalue eq "drone_run_band") {
                     $projects_that_are_drone_run_band_projects{$id} = 1;
                 }
+                if ($propvalue eq "transformation_project") {
+                    $projects_that_are_transformation_projects{$id} = 1;
+                }
             }
         }
     }
@@ -209,7 +254,7 @@ sub get_trials_by_breeding_program {
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
 
     foreach my $id_key (@sorted_by_year_keys) {
-        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key} && !$projects_that_are_analyses{$id_key} && !$projects_that_are_sampling_trials{$id_key}) {
+        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key} && !$projects_that_are_analyses{$id_key} && !$projects_that_are_sampling_trials{$id_key} && !$projects_that_are_tracking_projects{$id_key} && !$projects_that_are_transformation_projects{$id_key}) {
             push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         } elsif ($projects_that_are_crosses{$id_key}) {
             push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
@@ -227,10 +272,14 @@ sub get_trials_by_breeding_program {
             push @$analyses_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         } elsif ($projects_that_are_sampling_trials{$id_key}) {
             push @$sampling_trial_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_tracking_projects{$id_key}) {
+            push @$tracking_activity_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_transformation_projects{$id_key}) {
+            push @$transformation_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         }
     }
 
-    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects);
+    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects, $tracking_activity_projects);
 }
 
 sub get_genotyping_trials_by_breeding_program {
@@ -384,9 +433,9 @@ sub get_location_geojson_data {
 	}
 	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $noaa_station_id) = @location_data;
 
-        my $lat = $latitude ? $latitude + 0 : undef;
-        my $long = $longitude ? $longitude + 0 : undef;
-        my $alt = $altitude ? $altitude + 0 : undef;
+        my $lat = length $latitude ? $latitude + 0 : undef;
+        my $long = length $longitude ? $longitude + 0 : undef;
+        my $alt = length $altitude ? $altitude + 0 : undef;
         push(@locations, {
             type => "Feature",
             properties => {
@@ -475,6 +524,7 @@ sub store_breeding_program {
     my $id = $self->id();
     my $name = $self->name();
     my $description = $self->description();
+    my $external_references = $self->external_references();
 
     my $type_id = $self->get_breeding_program_cvterm_id();
 
@@ -484,13 +534,18 @@ sub store_breeding_program {
 
     my $existing_name_rs = $schema->resultset("Project::Project")->search({ name => $name });
     if (!$id && $existing_name_rs->count() > 0) {
-        return { error => "A breeding program with name '$name' already exists." };
+        return { error => "A breeding program with name '$name' already exists.",
+            nameExists => 1
+        };
     }
 
     # Add new program if no id supplied
     if (!$id) {
         try {
-            my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+	    my $dbh = $self->schema()->storage()->dbh();
+	    my $people_schema = CXGN::People::Schema->connect( sub { $dbh->clone() } );
+
+            my $role = CXGN::People::Roles->new({ people_schema => $people_schema});
             my $error = $role->add_sp_role($name);
             if ($error){
                 die $error;
@@ -512,6 +567,23 @@ sub store_breeding_program {
 
                 });
             $prop_row->insert();
+
+            # save external references if specified
+            if ($external_references) {
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema          => $self->schema,
+                    external_references => $external_references,
+                    table_name          => 'project',
+                    table_id_key         => 'project_id',
+                    id             => $id
+                });
+
+                $references->store();
+
+                if ($references->{'error'}) {
+                    return { error => $references->{'error'} };
+                }
+            }
         }
         catch {
             $error =  $_;
@@ -531,7 +603,9 @@ sub store_breeding_program {
             my $old_program = $schema->resultset("Project::Project")->search({ project_id => $id });
             my $old_name = $old_program->first->name();
 
-            my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+	    my $dbh = $self->schema()->storage()->dbh();
+	    my $people_schema = CXGN::People::Schema->connect( sub { $dbh->clone } );
+            my $role = CXGN::People::Roles->new({ people_schema => $people_schema });
             my $error = $role->update_sp_role($name,$old_name);
             if ($error){
                 die $error;
@@ -546,6 +620,23 @@ sub store_breeding_program {
 
             $row->insert();
             $id = $row->project_id();
+
+            # save external references if specified
+            if ($external_references) {
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema          => $self->schema,
+                    external_references => $external_references,
+                    table_name          => 'project',
+                    table_id_key         => 'project_id',
+                    id             => $id
+                });
+
+                $references->store();
+
+                if ($references->{'error'}) {
+                    return { error => $references->{'error'} };
+                }
+            }
 
         }
         catch {
@@ -673,6 +764,13 @@ sub get_crossing_trial_cvterm_id {
   return $crossing_trial_cvterm_id->cvterm_id();
 }
 
+sub get_transformation_project_cvterm_id {
+    my $self = shift;
+
+    my $transformation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'transformation_project',  'project_type');
+    return $transformation_project_cvterm_id->cvterm_id();
+}
+
 sub _get_design_trial_cvterm_id {
     my $self = shift;
      my $cvterm = $self->schema->resultset("Cv::Cvterm")
@@ -687,6 +785,13 @@ sub get_project_year_cvterm_id {
     my $self = shift;
     my $year_cvterm_row = $self->schema->resultset('Cv::Cvterm')->find( { name => 'project year' });
     return $year_cvterm_row->cvterm_id();
+}
+
+sub get_tracking_project_cvterm_id {
+    my $self = shift;
+
+    my $tracking_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'activity_record',  'project_type');
+    return $tracking_project_cvterm_id->cvterm_id();
 }
 
 sub get_gt_protocols {
@@ -710,6 +815,14 @@ sub get_related_treatments {
     my $trial_ids = shift;
     my $relevant_obsunits = shift;
 
+    if ( (ref($trial_ids) eq "ARRAY") && (scalar(@$trial_ids) == 0)) {
+	return {
+	    treatment_names => [],
+	    treatment_details => {},
+	};
+
+
+    }
     my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
 
     my $q = "SELECT treatment.name, nds.stock_id
@@ -741,6 +854,28 @@ sub get_related_treatments {
         treatment_names => \@treatment_names,
         treatment_details => \%treatment_details
     };
+
+}
+
+
+sub get_autogenerated_name_metadata_by_breeding_program {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $breeding_program_id = shift;
+
+    my $autogenerated_name_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'autogenerated_name_metadata', 'project_property');
+    my $program = $schema->resultset('Project::Project')->find({ project_id => $breeding_program_id});
+
+    my $name_metadata_hashes;
+    my $name_metadata_projectprop_rs = $program->projectprops({type_id => $autogenerated_name_metadata_cvterm->cvterm_id});
+    if ($name_metadata_projectprop_rs->count == 1){
+        my $name_metadata_string = $name_metadata_projectprop_rs->first->value();
+        $name_metadata_hashes = decode_json $name_metadata_string;
+    } else {
+        return {error => "Error retrieving autogenerated name metadata!\n"};
+    }
+
+    return {name_metadata => $name_metadata_hashes};
 
 }
 

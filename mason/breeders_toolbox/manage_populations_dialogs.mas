@@ -1,11 +1,14 @@
 <%args>
 </%args>
 
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Accessions'] &>
+
+
 <div class="modal fade" id="manage_populations_add_population_dialog" name="manage_populations_add_population_dialog" tabindex="-1" role="dialog" aria-labelledby="addPopulationDialog" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" name="create_population_dismiss_button" id="create_population_dismiss_button_1" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addPopulationDialog">Create A Population</h4>
             </div>
             <div class="modal-body">
@@ -19,36 +22,62 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Choose a List of Accessions to Add: </label>
-                            <div class="col-sm-8" id="create_population_list_div" name="create_population_list_div">
+                            <label class="col-sm-4 control-label">Member Type: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="member_type">
+                                    <option value="">Select a member type</option>
+                                    <option value="accessions">accessions</option>
+                                    <option value="plots">plots</option>
+                                    <option value="plants">plants</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="population_accession_list" style="display:none">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Choose a List of Accessions to Add: </label>
+                                <div class="col-sm-8" id="create_population_accession_list_div" name="create_population_accession_list_div">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="population_plot_list" style="display:none">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Choose a List of Plots to Add: </label>
+                                <div class="col-sm-8" id="create_population_plot_list_div" name="create_population_plot_list_div">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="population_plant_list" style="display:none">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Choose a List of Plants to Add: </label>
+                                <div class="col-sm-8" id="create_population_plant_list_div" name="create_population_plant_list_div">
+                                </div>
                             </div>
                         </div>
                     </form>
-
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" name="create_population_dismiss_button" id="create_population_dismiss_button_2" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="create_population_submit" id="create_population_submit">Submit</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="manage_populations_add_accessions_dialog" name="manage_populations_add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsToPopulationsDialog" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="manage_populations_add_members_dialog" name="manage_populations_add_members_dialog" tabindex="-1" role="dialog" aria-labelledby="addMembersToPopulationsDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAccessionsToPopulationsDialog">Add Accessions to Population <div id="add_accession_population_name"></div></h4>
+                <h4 class="modal-title" id="addMembersToPopulationsDialog">Add Members to Population <div id="add_member_population_name"></div></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" name="add_accession_to_population_form" id="add_accession_to_population_form">
+                    <form class="form-horizontal" role="form" name="add_member_to_population_form" id="add_member_to_population_form">
                         <div class="form-group">
-                            <label class="col-sm-6 control-label">Choose a List of Accessions to Add: </label>
-                            <div class="col-sm-6" id="add_accession_to_population_list_div" name="list_div">
+                            <label class="col-sm-6 control-label">Choose a List of Members to Add: </label>
+                            <div class="col-sm-6" id="add_member_to_population_list_div" name="list_div">
                             </div>
                         </div>
                     </form>
@@ -57,7 +86,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="add_accessions_to_population_submit" id="add_accessions_to_population_submit">Submit</button>
+                <button type="button" class="btn btn-primary" name="add_members_to_population_submit" id="add_members_to_population_submit">Submit</button>
             </div>
         </div>
     </div>
@@ -88,3 +117,67 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="create_population_saved_dialog_message" name="create_population_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="createPopulationSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createPopulationSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_create_population_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery("#member_type").change(function() {
+
+        if(jQuery(this).val() == ''){
+            jQuery('#population_accession_list').hide();
+            jQuery('#population_plot_list').hide();
+            jQuery('#population_plant_list').hide();
+        } else if(jQuery(this).val() == 'accessions'){
+            document.getElementById("create_population_accession_list_div").innerHTML = list.listSelect("create_population_accession_list_div", [ 'accessions' ], 'select a list', undefined, undefined);
+            jQuery('#population_accession_list').show();
+            jQuery('#population_plot_list').hide();
+            jQuery('#population_plant_list').hide();
+        } else if (jQuery(this).val() == 'plots'){
+            document.getElementById("create_population_plot_list_div").innerHTML = list.listSelect("create_population_plot_list_div", [ 'plots' ], 'select a list', undefined, undefined);
+            jQuery('#population_accession_list').hide();
+            jQuery('#population_plot_list').show();
+            jQuery('#population_plant_list').hide();
+        } else if (jQuery(this).val() == 'plants'){
+            document.getElementById("create_population_plant_list_div").innerHTML = list.listSelect("create_population_plant_list_div", [ 'plants' ], 'select a list', undefined, undefined);
+            jQuery('#population_accession_list').hide();
+            jQuery('#population_plot_list').hide();
+            jQuery('#population_plant_list').show();
+        }
+
+    });
+
+    jQuery("[name='create_population_dismiss_button']").click(function() {
+        jQuery('#manage_populations_add_population_dialog').modal('hide');
+        jQuery('#create_population_name').val('');
+        jQuery('#member_type').val('');
+        jQuery('#population_accession_list').hide();
+        jQuery('#population_plot_list').hide();
+        jQuery('#population_plant_list').hide();
+    });
+
+
+});
+
+</script>

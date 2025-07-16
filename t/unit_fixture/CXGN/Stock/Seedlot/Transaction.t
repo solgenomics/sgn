@@ -51,7 +51,7 @@ $source_seedlot->organization_name('bti');
 $source_seedlot->population_name('test seedlot pop');
 $source_seedlot->breeding_program_id($seedlot_breeding_program_id);
 my $return = $source_seedlot->store();
-print STDERR Dumper $return;
+#print STDERR Dumper $return;
 my $source_seedlot_id = $return->{seedlot_id};
 
 print STDERR "Creating transaction 1...\n";
@@ -113,7 +113,7 @@ $trans2->timestamp(localtime);
 $trans2->description('Moving 7 seed from seedlot 2 to seedlot 1');
 $trans2->operator('janedoe');
 
-$trans2->store();
+my $trans_id_2 =$trans2->store();
 
 print STDERR "Creating transaction 3...\n";
 my $trans3 = CXGN::Stock::Seedlot::Transaction->new(
@@ -126,7 +126,7 @@ $trans3->description('Moving 3 seed from seedlot 1 to seedlot 2');
 $trans3->operator('janedoe');
 $trans3->amount(3);
 
-$trans3->store();
+my $trans_id_3 = $trans3->store();
 
 #checking seedlots after transaction
 my $source_seedlot_after_trans3 = CXGN::Stock::Seedlot->new(
@@ -148,7 +148,7 @@ foreach my $t (@{$source_seedlot_after_trans3->transactions()}) {
     ok($t->transaction_id, "check transcation ids");
     push @transactions, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
 }
-print STDERR Dumper \@transactions;
+#print STDERR Dumper \@transactions;
 is_deeply(\@transactions, [
           [
             'test seedlot',
@@ -192,7 +192,7 @@ foreach my $t (@{$dest_seedlot_after_trans3->transactions()}) {
     ok($t->transaction_id, "check transcation ids");
     push @transactions2, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
 }
-print STDERR Dumper \@transactions2;
+#print STDERR Dumper \@transactions2;
 is_deeply(\@transactions2, [
           [
             'test seedlot',
@@ -217,4 +217,115 @@ is_deeply(\@transactions2, [
           ]
         ], 'check transactions of dest_seedlot');
 
+#test editing transaction 3 from test seedlot page
+my $edit_trans3 = CXGN::Stock::Seedlot::Transaction->new(
+    schema => $f->bcs_schema(),
+    transaction_id => $trans_id_3,
+    seedlot_id => $dest_seedlot_id
+);
+$edit_trans3->to_stock([$source_seedlot_id, $source_seedlot->uniquename, $seedlot_type_id]);
+$edit_trans3->from_stock([$dest_seedlot_id, $dest_seedlot->uniquename, $seedlot_type_id]);
+$edit_trans3->timestamp(localtime);
+$edit_trans3->description('Moving 5 seed from seedlot 1 to seedlot 2');
+$edit_trans3->operator('janedoe');
+$edit_trans3->amount(5);
+
+my $edit_trans_id = $edit_trans3->store();
+is($edit_trans_id, $trans_id_3);
+
+my $test_seedlot_after_editing = CXGN::Stock::Seedlot->new(
+    schema => $schema,
+    seedlot_id => $dest_seedlot_id
+);
+
+is($test_seedlot_after_editing->current_count, 7);
+
+#Deleting transaction 3
+print STDERR "Deleting transaction 3...\n";
+my $saved_trans3 = CXGN::Stock::Seedlot::Transaction->new(schema=>$schema, transaction_id => $trans_id_3);
+$saved_trans3->delete_transaction();
+
+#Checking seedlots after transaction deletion
+#Checking source seedlot after transaction deletion
+print STDERR "Checking source seedlot after deletion...\n";
+my $source_seedlot_after_trans3_delete = CXGN::Stock::Seedlot->new(
+    schema => $schema,
+    seedlot_id => $source_seedlot_id
+    );
+is($source_seedlot_after_trans3_delete->current_count, -12, "check current count is correct");
+is($source_seedlot_after_trans3_delete->uniquename, $source_seedlot->uniquename, "check uniquename is saved");
+is($source_seedlot_after_trans3_delete->location_code, $source_seedlot->location_code, "check location is saved");
+is($source_seedlot_after_trans3_delete->organization_name, $source_seedlot->organization_name, "check organization is saved");
+is($source_seedlot_after_trans3_delete->population_name, $source_seedlot->population_name, "check population is saved");
+is_deeply($source_seedlot_after_trans3_delete->accession, [$test_accession_stock_id1, 'test_accession1'], "check accession is saved");
+is($source_seedlot_after_trans3_delete->breeding_program_name, $seedlot_breeding_program_name);
+is($source_seedlot_after_trans3_delete->breeding_program_id, $source_seedlot->breeding_program_id);
+
+my @transactions3;
+foreach my $t (@{$source_seedlot_after_trans3_delete->transactions()}) {
+    ok($t->timestamp, "check timestamps saved");
+    ok($t->transaction_id, "check transaction ids");
+    push @transactions3, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
+}
+print STDERR "Source seedlot transactions...\n";
+print STDERR Dumper \@transactions3;
+is_deeply(\@transactions3, [
+    [
+        'test seedlot 2',
+        'test seedlot',
+        -7,
+        'janedoe',
+        'Moving 7 seed from seedlot 2 to seedlot 1'
+    ],
+    [
+        'test seedlot 2',
+        'test seedlot',
+        -5,
+        'janedoe',
+        'Moving 5 seed from seedlot 2 to seedlot 1'
+    ]
+], "check source seedlot transactions after transaction 3 deletion");
+
+#Checking destination seedlot after transaction deletion
+print STDERR "Checking destination seedlot after deletion...\n";
+my $dest_seedlot_after_trans3_delete = CXGN::Stock::Seedlot->new(
+    schema => $schema,
+    seedlot_id => $dest_seedlot_id
+    );
+is($dest_seedlot_after_trans3_delete->current_count, 12, "check current count is correct");
+is($dest_seedlot_after_trans3_delete->uniquename, $dest_seedlot->uniquename, "check uniquename is saved");
+is($dest_seedlot_after_trans3_delete->location_code, $dest_seedlot->location_code, "check location is saved");
+is($dest_seedlot_after_trans3_delete->organization_name, $dest_seedlot->organization_name, "check organization is saved");
+is($dest_seedlot_after_trans3_delete->population_name, $dest_seedlot->population_name, "check population is saved");
+is_deeply($dest_seedlot_after_trans3_delete->accession, [$test_accession_stock_id1, 'test_accession1'], "check accession is saved");
+is($dest_seedlot_after_trans3_delete->breeding_program_name, $seedlot_breeding_program_name);
+is($dest_seedlot_after_trans3_delete->breeding_program_id, $dest_seedlot->breeding_program_id);
+
+my @transactions4;
+foreach my $t (@{$dest_seedlot_after_trans3_delete->transactions()}) {
+    ok($t->timestamp, "check timestamps saved");
+    ok($t->transaction_id, "check transaction ids");
+    push @transactions4, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
+}
+print STDERR "Destination seedlot transactions...\n";
+print STDERR Dumper \@transactions4;
+is_deeply(\@transactions4, [
+    [
+        'test seedlot 2',
+        'test seedlot',
+        7,
+        'janedoe',
+        'Moving 7 seed from seedlot 2 to seedlot 1'
+    ],
+    [
+        'test seedlot 2',
+        'test seedlot',
+        5,
+        'janedoe',
+        'Moving 5 seed from seedlot 2 to seedlot 1'
+    ]
+], 'check transactions of dest_seedlot after transaction 3 deletion');
+
+#clean up data and done testing
+$f->clean_up_db();
 done_testing();

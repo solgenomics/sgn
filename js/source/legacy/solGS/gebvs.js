@@ -8,45 +8,56 @@
 var solGS = solGS || function solGS() {};
 
 solGS.gebvs = {
+
+  histoCanvasId: "#gebvs_histo_canvas",
+  histoPlotId: "#gebvs_histo_plot",
+
   getGebvsParams: function () {
-    var popId = jQuery("#model_id").val();
     var traitId = jQuery("#trait_id").val();
     var comboPopsId = jQuery("#combo_pops_id").val();
     var selectionPopId = jQuery("#selection_pop_id").val();
     var protocolId = jQuery("#genotyping_protocol_id").val();
+    var trainingPopId = jQuery("#training_pop_id").val();
+    var datasetType = jQuery("#data_set_type").val();
 
     var params = {
-      training_pop_id: popId,
+      training_pop_id: trainingPopId,
       combo_pops_id: comboPopsId,
       selection_pop_id: selectionPopId,
       genotyping_protocol_id: protocolId,
       trait_id: traitId,
+      data_set_type: datasetType
     };
 
     return params;
   },
 
   getGebvsData: function () {
-    var action = "/solgs/trait/gebvs/data";
-    var params = this.getGebvsParams();
+    
+    var gebvsArgs = this.getGebvsParams();
+    gebvsArgs = JSON.stringify(gebvsArgs);
 
     var gebvsData = jQuery.ajax({
       async: false,
-      url: action,
+      type: "POST",
+      url: "/solgs/trait/gebvs/data",
       dataType: "json",
-      data: params,
+      data: {'arguments': gebvsArgs},
     });
 
     return gebvsData;
   },
 
-  plotGebvs: function (gebvsData) {
+  plotGebvs: function (gebvsData, downloadLinks) {
+
     var histoArgs = {
-      canvas: "#gebvs_histo_canvas",
-      plot_id: "#gebvs_histo_plot",
+      canvas: this.histoCanvasId,
+      plot_id: this.histoPlotId,
       x_label: "GEBVs",
       y_label: "Counts",
-      namedValues: gebvsData,
+      named_values: gebvsData,
+      download_links: downloadLinks,
+
     };
 
     solGS.histogram.plotHistogram(histoArgs);
@@ -83,10 +94,31 @@ solGS.gebvs = {
       '" download=' +
       gebvsFileName +
       '">' +
-      "Download GEBVs" +
+      "GEBVs" +
       "</a>";
 
-    jQuery("#gebvs_output").prepend(gebvsFileLink + " | ");
+      var gebvsHistoPlotDivId = this.histoPlotId.replace(/#/, '');
+      var histoDownloadBtn = "download_" + gebvsHistoPlotDivId;
+      var histoPlotLink = "<a href='#'  onclick='event.preventDefault();' id='" + histoDownloadBtn + "'> Histogram (GEBVs)</a>";
+    
+      var downloadLinks = `Download:  ${gebvsFileLink} | ${histoPlotLink}`;
+      return downloadLinks;
+
+  },
+
+  createGeneticValuesDownloadLinks: function (res) {
+    var geneticValuesFileName = res.genetic_values_file.split("/").pop();
+    var geneticValuesFileLink =
+      '<a href="' +
+      res.genetic_values_file +
+      '" download=' +
+      geneticValuesFileName +
+      '">' +
+      "Genetic values" +
+      "</a>";
+    
+      return geneticValuesFileLink;
+
   },
 
   /////
@@ -94,20 +126,30 @@ solGS.gebvs = {
 /////
 
 jQuery(document).ready(function () {
-  solGS.gebvs.getGebvsData().done(function (res) {
-    solGS.gebvs.plotGebvs(res.gebvs_data);
-  });
+    solGS.checkPageType().done(function (res) {
+        if (res.page_type.match(/training_model|selection_prediction/)) {
+            solGS.gebvs.getGebvsFiles().done(function (res) {
+                var gebvsDownloadLinks = solGS.gebvs.createGebvsDownloadLinks(res);
+                var geneticValuesDownloadLinks = solGS.gebvs.createGeneticValuesDownloadLinks(res);
+                var downloadLinks = `${gebvsDownloadLinks} | ${geneticValuesDownloadLinks}`;
+                console.log(`Calling getGebvsData`)
 
-  solGS.checkPageType().done(function (res) {
-    if (res.page_type.match(/training_model|selection_prediction/)) {
-      solGS.gebvs.getGebvsFiles().done(function (res) {
-        solGS.gebvs.createGebvsDownloadLinks(res);
-      });
+                solGS.gebvs.getGebvsData().done(function (res) {
+                    console.log(`getGebvsData res: ${JSON.stringify(res)}`)
+                    solGS.gebvs.plotGebvs(res.gebvs_data, downloadLinks);
+                });
+            });
 
-      solGS.gebvs.getGebvsFiles().fail(function (res) {
-        var errorMsg = "Error occured getting training gebvs files.";
-        jQuery("#gebvs_output_message").html(errorMsg);
-      });
-    }
-  });
+            solGS.gebvs.getGebvsFiles().fail(function (res) {
+                var errorMsg = "Error occured getting training gebvs files.";
+                jQuery("#gebvs_output_message").html(errorMsg);
+            });
+        }
+    });
+
+    jQuery("#gebvs_histo_canvas").on('click' , 'a', function(e) {
+            var buttonId = e.target.id;
+            var histoPlotId = buttonId.replace(/download_/, '');
+            saveSvgAsPng(document.getElementById("#" + histoPlotId),  histoPlotId + ".png", {scale:1});	
+    });
 });

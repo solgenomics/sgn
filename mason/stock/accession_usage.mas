@@ -32,6 +32,7 @@
   </tr>
 </thead>
 </table>
+<a href="/search/download_parents_and_numbers_of_progenies?parent_type=female_parent" class="btn btn-sm btn-default">Download</a>
 
 </&>
 
@@ -45,10 +46,11 @@
   </tr>
 </thead>
 </table>
+<a href="/search/download_parents_and_numbers_of_progenies?parent_type=male_parent" class="btn btn-sm btn-default">Download</a>
 
 </&>
 
-<&| /page/info_section.mas, title => 'Accession Phenotype Performace', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Accession Phenotype Performance', collapsible=>1, collapsed=>0 &>
 
 <div class="well">
     <div class="panel panel-default">

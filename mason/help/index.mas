@@ -1,91 +1,25 @@
+<& /page/page_title.mas, title=>"Breedbase Help" &>
 
-
-<& /page/page_title.mas, title=>"SGN help" &>
-
-<p>
-The Sol Genomics Network (SGN) is a database and website dedicated to the genomic information of the nightshade family, which includes species such as tomato, potato, pepper, petunia and eggplant. 
-</p>
-<h4>Citing SGN</h4>
-
-If SGN is useful in your research, please cite SGN in your publications using the following reference:
-<br /><br />
-<div class="boxbgcolor2">
-Fernandez-Pozo N, Menda N, Edwards JD, Saha S, Tecle IY, Strickler SR, Bombarely A, Fisher-York T, Pujar A, Foerster H, Yan A, Mueller LA. <b>The Sol Genomics Network (SGN)—from genotype to phenotype to breeding.</b> (2015) Nucleic Acids Res. Volume 43 (Database issue):D1036-41. <a href="http://www.ncbi.nlm.nih.gov/pubmed/25428362?dopt=Abstract">PubMed</a>.
-<br /><br />
+<div>Breedbase is a comprehensive breeding management and analysis software. It can be used to design field layouts, collect <a href="https://phenoapps.org">phenotypic and other information using Phenoapps software</a>, support the collection of genotyping samples in a field, store large amounts of high density genotypic information, and provide Genomic Selection related analyses and predictions. Breedbase supports the <a href="https://brapi.org">BrAPI standard</a>.
+</div>
+<br />
+<div class="panel panel-default">
+<div class="panel-body">
+<ul>
+<li>The complete Breedbase help is available from the <a href="https://solgenomics.github.io/sgn/" target="_new">Breedbase and SGN manual</a>.</li>
+<li>Video Tutorials are available on <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A" target="_new">YouTube</a>.</li> 
+<li>A guide for <a href="https://github.com/solgenomics/sgn/wiki/" target="_new">developers is also available</a>.</li>
+</ul>
+</div>
 </div>
 
-<br>See more <a href="/help/publications">SGN publications</a>
-</p>
-
-<a name="individual"></a>
-<h4>Help files for specific SGN components:</h4>
-<ul>
-<li><a href="/help/toolbar">Toolbar</a></li>
-<li><a href="/help/quick_search">Quick search</a></li>
-
-<li><a href="/help/gene_search_help">Gene search</a></li>
-<li><a href="/help/phenotype_search_help">Phenotype search</a></li>
-<li><a href="/qtl/search/help/">QTL search</a></li>
-<li><a href="/help/gbrowse.pl">GBrowse annotation viewer</a></li>
-<li><a href="/help/cview">Comparative viewer</a></li>
-<li><a href="/help/marker_search_help">Marker search</a></li>
-<ul>
-  <li><a href="/help/cos_markers">COS</a> and <a href="/help/cosii_markers">COSII markers</a></li>
-  <li><a href="/help/microsats">SSRs markers</a></li>
-</ul>
-</li>
-<li><a href="/help/clone_policy">Clone Request Policy</a></li>
-<li><a href="/help/downloading">Rsync downloading options</a></li>
-<li><a href="/help/faq">Frequently asked questions</a></li>
-
-</ul>
-
-<h4>General Help Topics</h4>
-<h5>Software requirements</h5>
-
-<p>The SGN website is designed to work with most common browsers. No additional software is required. The SGN webpages use the <a href="http://www.w3.org/TR/xhtml1/">XHTML 1.0</a> and <a href="http://www.w3.org/Style/CSS/">Cascading Style Sheets (CSS)</a> standards from the <a href="http://www.w3.org">W3</a> consortium. Certain documents can be downloaded in the <a href="http://en.wikipedia.org/wiki/Portable_Document_Format">PDF format</a>. 
-</p>
-<p>
-We test the pages in Firefox 2.0, Safari 2.0 and Microsoft Explorer 7. Please note that Netscape 4.x browsers are explicitly not supported due to a lack of style sheet support. We recommend the latest version of Firefox, which is available free of charge for all common platforms from the Mozilla project (<a href="http://www.mozilla.org">http://www.mozilla.org</a>). Please let us know if you experience problems with other browsers.
-</p>
-
-<h5>Browser settings</h5>
-Please refer to your browser\'s manual or help pages to enable the following settings:
-<ul>
-<li>JavaScript has to be activated for the drop down menus to work properly.</li>
-<li>Cookies have to be enabled for the log in functions to work.</li>
-</ul>
-
-<h5>SGN update cycle</h5>
-<p>The SGN codebase and database are updated weekly, every Wednesday morning. During the updates, for a short period of time, some links may not work properly. Please notify us if these conditions persist.
-</p>
-
-<h5>Getting more information</h5>
-<ul>
-<li>subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce">announcement list</a> to keep up to date with the latest developments.</li>
-<li>email to <a href="mailto:sgn-feedback@sgn.cornell.edu">sgn-feedback@sgn.cornell.edu</a> for questions, comments and suggestions </li>
-</ul>
-
-
-<a name="submit"></a>
-<h5>Submitting information to SGN:</h5>
-
-
-SGN has community annotation tools are available for locus, allele, insitu experiments and images. <br />
-The related information can be added, updated and deleted by registered SGN users that have specially designated submitter accounts. 
-In addition, for certain database records, only a designated editor may change the information. <br />
-Submitters are always accredited on each information page related to theur work (image, experiment, locus, phenotype, etc.) and are the sole owners of the data.<br />
-<a href="mailto:sgn-feedback@sgn.cornell.edu">Contact us</a> if you would like to use the community annotation tools and become a submitter or editor.
-<ul>
-<li>How do I contribute information on my <a href="/phenome/">favorite gene?</a></li>
-<li><a href="/cview/help/map_submission">Submit your phenotyped population</a> and we will add it to our <a href="/search/direct_search.pl?search=phenotypes">phenotype database</a></li>
-
-<li>To submit fluorescence in-situ hybridization (FISH) data, please follow the <a href="/help/fish_submission">these guidelines</a>.</li>
-<li>To submit genetic map data, please see the <a href="/content/map_submissions.pl">map and marker submission guidelines</a>.</li>
-<li>To submit genotypic and phenotypic data from a QTL study, please see the <a href="/qtl/guide.pl">QTL data submission guidelines</a>.</li>
-
-<li>If you would like to add sequence, marker or other information to this database, or have any comments or suggestions, please send email to <a href="mailto:sgn-feedback@sgn.cornell.edu">sgn-feedback@sgn.cornell.edu</a>.</li>
-</ul>
+<div class="panel panel-default">
+<div class="panel-body">
+     To cite Breedbase, use the following publication:<br />
 <br />
-</P>
+<b>Breedbase: a digital ecosystem for modern plant breeding</b>
+Nicolas Morales, Alex C Ogbonna, Bryan J Ellerbrock, Guillaume J Bauchet, Titima Tantikanjana, Isaak Y Tecle, Adrian F Powell, David Lyon, Naama Menda, Christiano C Simoes, Surya Saha, Prashant Hosmani, Mirella Flores, Naftali Panitz, Ryan S Preble, Afolabi Agbona, Ismail Rabbi, Peter Kulakow, Prasad Peteti, Robert Kawuki, Williams Esuma, Micheal Kanaabi, Doreen M Chelangat, Ezenwanyi Uba, Adeyemi Olojede, Joseph Onyeka, Trushar Shah, Margaret Karanja, Chiedozie Egesi, Hale Tufan, Agre Paterne, Asrat Asfaw, Jean-Luc Jannink, Marnin Wolfe, Clay L Birkett, David J Waring, Jenna M Hershberger, Michael A Gore, Kelly R Robbins, Trevor Rife, Chaney Courtney, Jesse Poland, Elizabeth Arnaud, Marie-Angélique Laporte, Heneriko Kulembeka, Kasele Salum, Emmanuel Mrema, Allan Brown, Stanley Bayo, Brigitte Uwimana, Violet Akech, Craig Yencho, Bert de Boeck, Hugo Campos, Rony Swennen, Jeremy D Edwards, Lukas A Mueller.
+    PMID: 35385099 PMCID: PMC9258556 DOI: <a href="https://doi.org/10.1093/g3journal/jkac078">10.1093/g3journal/jkac078</a>.
+</div>
+</div>
 

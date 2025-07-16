@@ -7,6 +7,11 @@ use Spreadsheet::ParseXLSX;
 use JSON;
 use Data::Dumper;
 
+#
+# DEPRECATED
+# This plugin has been replaced by the LocationsGeneric plugin
+#
+
 sub name {
     return "location excel";
 }
@@ -128,33 +133,33 @@ sub parse {
             push @errors, "Row $row_num, column F: Type $type is is not a valid location type.\n";
         }
 
-        # check is defined, is number between 90 and -90
+        # check has length, is number between 90 and -90
         if ($worksheet->get_cell($row,6)) {
           $latitude = $worksheet->get_cell($row,6)->value();
         }
-        if (!$latitude) { # check is defined, is number between 90 and -90
+        if (! length $latitude) { # check is defined, is number between 90 and -90
             push @errors, "Row $row_num, column G: Latitude is undefined.\n";
         }
         elsif( ($latitude !~ /^-?[0-9.]+$/) || ($latitude < -90) || ($latitude > 90) ) {
             push @errors, "Row $row_num, column G: Latitude $latitude is not a number between 90 and -90.\n";
         }
 
-        # check is defined, is number between 180 and -180
+        # check has length, is number between 180 and -180
         if ($worksheet->get_cell($row,7)) {
           $longitude = $worksheet->get_cell($row,7)->value();
         }
-        if (!$longitude) {
+        if (! length $longitude) {
             push @errors, "Row $row_num, column H: Longitude is undefined.\n";
         }
         elsif( ($longitude !~ /^-?[0-9.]+$/) || ($longitude < -180) || ($longitude > 180) ) {
             push @errors, "Row $row_num, column H: Latitude $latitude is not a number between 180 and -180.\n";
         }
 
-        # check is defined, is number between -418 and 8,848
+        # check has length, is number between -418 and 8,848
         if ($worksheet->get_cell($row,8)) {
           $altitude = $worksheet->get_cell($row,8)->value();
         }
-        if (!$altitude) {
+        if (! length $altitude) {
             push @errors, "Row $row_num, column I: Altitude is undefined.\n";
         }
         elsif( ($altitude !~ /^-?[0-9.]+$/) || ($altitude < -418) || ($altitude > 8848) ) {
@@ -164,9 +169,9 @@ sub parse {
         if ($worksheet->get_cell($row,9)) {
             $noaa_station_id = $worksheet->get_cell($row,9)->value();
         }
-        if (!$noaa_station_id) {
-            push @errors, "Row $row_num, column J: NOAA Station ID is undefined.\n";
-        }
+        # if (!$noaa_station_id) {
+        #     push @errors, "Row $row_num, column J: NOAA Station ID is undefined.\n";
+        # }
 
         print STDERR "Row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude, $noaa_station_id\n";
         push @rows, [$name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude,$noaa_station_id];

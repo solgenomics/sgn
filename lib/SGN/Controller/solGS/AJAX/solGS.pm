@@ -62,6 +62,8 @@ sub solgs_population_search_autocomplete_GET :Args() {
         
         if ($page_type =~ /training_model/) 
         {
+            #filter out trials of analysis_type (with stored analyzed results) from search
+            #result of trials relevant to selection prediction. 
             if (!$is_computation)
             {
                 push @response_list, $row->name;
@@ -69,6 +71,8 @@ sub solgs_population_search_autocomplete_GET :Args() {
         }  
     else
 	{  
+        #filter out trials of analysis_type (with stored analyzed results) and with out phenotype data from search
+        #result of trials relevant to training populations. 
         my $has_phenotype = $c->controller('solGS::Search')->model($c)->has_phenotype($pop_id);            
         if ($has_phenotype && !$is_computation)
         {

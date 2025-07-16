@@ -1534,7 +1534,7 @@ function search(entity,params,behavior){
     });
     return param_map.join(search_ids).search_GET(entity,function(joined){
         var get_params = {};
-        get_params.searchResultDbId = joined[1].searchResultDbId;
+        get_params.searchResultsDbId = joined[1].searchResultsDbId || joined[1].searchResultDbId;
         if(joined[0].page!=undefined) get_params.page = joined[0].page;
         if(joined[0].pageRange!=undefined) get_params.pageRange = joined[0].pageRange;
         if(joined[0].pageSize!=undefined) get_params.pageSize = joined[0].pageSize;
@@ -1567,7 +1567,7 @@ function search_POST(entity,params){
 function search_GET(entity,params,behavior){
     var call = {
         'defaultMethod': 'get',
-        'urlTemplate': '/search/'+entity+'/{searchResultDbId}',
+        'urlTemplate': '/search/'+entity+'/{searchResultsDbId}',
         'params': params,
         'behaviorOptions': ['fork','map'],
         'behavior': behavior,

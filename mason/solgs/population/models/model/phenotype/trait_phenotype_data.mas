@@ -19,7 +19,8 @@ $model_pheno_raw_descriptive_stat =>''
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.phenoHistogram"] &>
+<& /solgs/tools/base.mas &>
+<& /util/import_javascript.mas, classes => ["solGS.phenoHistogram", "solGS.histogram"] &>
 
 <div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
   <ul>
@@ -43,7 +44,4 @@ $model_pheno_raw_descriptive_stat =>''
       &>
 
   </div>
-
-
-
 </div>

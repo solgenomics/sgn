@@ -89,7 +89,7 @@ sub _validate_with_plugin {
             if ($worksheet->get_cell($row,$column)) {
                 my $ssr_data = $worksheet->get_cell($row,$column)->value();
                 $ssr_data =~ s/^\s+|\s+$//g;
-                if (($ssr_data ne '0') && ($ssr_data ne '1')) {
+                if (($ssr_data ne '0') && ($ssr_data ne '1') && ($ssr_data ne '?')) {
                     push @error_messages, "Row:$row_name Column:$column_name data missing or incorrect data type";
                 }
             }

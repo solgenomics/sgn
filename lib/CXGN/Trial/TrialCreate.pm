@@ -25,6 +25,7 @@ Will do the following:
         design => $design_hash,
         program => $breeding_program->name(),
         trial_year => $year,
+        planting_date => $planting_date,
         trial_description => $project_description,
         trial_location => $location->name(),
         trial_name => $trial_name,
@@ -51,6 +52,7 @@ Will do the following:
 		owner_id => $c->user()->get_object()->get_sp_person_id(),
         operator => $c->user()->get_object()->get_username(),
         trial_year => $year,
+        planting_date => $planting_date,
         trial_location => $location->name(),
         program => $breeding_program->name(),
         trial_description => $description,
@@ -160,6 +162,7 @@ has 'field_size' => (isa => 'Num', is => 'rw', predicate => 'has_field_size', re
 has 'plot_width' => (isa => 'Num', is => 'rw', predicate => 'has_plot_width', required => 0);
 has 'plot_length' => (isa => 'Num', is => 'rw', predicate => 'has_plot_length', required => 0);
 has 'planting_date' => (isa => 'Str', is => 'rw', predicate => 'has_planting_date', required => 0);
+has 'transplanting_date' => (isa => 'Str', is => 'rw', predicate => 'has_transplanting_date', required => 0);
 has 'harvest_date' => (isa => 'Str', is => 'rw', predicate => 'has_harvest_date', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
 has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0, default => 'accession');
@@ -278,6 +281,7 @@ sub save_trial {
 	}
 
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
+    my $project_planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_planting_date', 'project_property');
     my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
     my $field_size_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_size', 'project_property');
     my $plot_width_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_width', 'project_property');
@@ -389,11 +393,14 @@ sub save_trial {
     if ($self->get_trial_type){
         $t->set_project_type($self->get_trial_type);
     }
-    if ($self->get_planting_date){
-        $t->set_planting_date($self->get_planting_date);
+    if ($self->get_planting_date()){ # here is local getter
+        $t->set_planting_date($self->get_planting_date); # here is Project.pm unusual setter with writing to db instead of object
     }
-    if ($self->get_harvest_date){
-        $t->set_harvest_date($self->get_harvest_date);
+    if ($self->get_harvest_date()){ # here is local getter
+        $t->set_harvest_date($self->get_harvest_date); # here is Project.pm unusual setter with writing to db instead of object
+    }
+    if ($self->get_transplanting_date()){ # here is local getter
+        $t->set_transplanting_date($self->get_transplanting_date); # here is Project.pm unusual setter with writing to db instead of object
     }
 
     #link to the project

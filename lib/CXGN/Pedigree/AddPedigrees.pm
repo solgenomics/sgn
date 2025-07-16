@@ -217,20 +217,24 @@ sub validate_pedigrees {
             push @{$return{error}}, "Female parent not found for $progeny_name.";
         }
 
-        if ($cross_type ne 'biparental' && $cross_type ne 'self' && $cross_type ne 'open' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected'){
-            push @{$return{error}}, "cross_type must be either biparental, self, open, backcross, sib, reselected or polycross for progeny $progeny_name.";
+        if ( ($cross_type ne 'biparental') && ($cross_type ne 'self') && ($cross_type ne 'open') && ($cross_type ne 'sib') && ($cross_type ne 'polycross') && ($cross_type ne 'backcross') && ($cross_type ne 'reselected') && ($cross_type ne 'doubled_haploid') && ($cross_type ne 'dihaploid_induction') ){
+            push @{$return{error}}, "cross_type must be either biparental, self, open, backcross, sib, reselected, dihaploid_induction, doubled_haploid or polycross for progeny $progeny_name.";
         }
-        if ($cross_type eq 'biparental' || $cross_type eq 'self' || $cross_type eq 'sib' || $cross_type eq 'polycross' || $cross_type eq 'backcross' || $cross_type eq 'reselected') {
+        if ($cross_type eq 'biparental' || $cross_type eq 'self' || $cross_type eq 'sib' || $cross_type eq 'polycross' || $cross_type eq 'backcross' || $cross_type eq 'reselected' || $cross_type eq 'dihaploid_induction' || $cross_type eq 'doubled_haploid' ) {
             if (!$pedigree->get_male_parent){
                 push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
             }
-            my $male_parent_name = $pedigree->get_male_parent()->get_name();
-            if (!$male_parent_name) {
-                push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
-            }
-            my $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
-            if (!$male_parent) {
-                push @{$return{error}}, "Male parent not found for $progeny_name.";
+            else {
+                my $male_parent_name = $pedigree->get_male_parent()->get_name();
+                if (!$male_parent_name) {
+                    push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
+                }
+                else {
+                    my $male_parent = $accessions_crosses_populations_hash{$male_parent_name};
+                    if (!$male_parent) {
+                        push @{$return{error}}, "Male parent not found for $progeny_name.";
+                    }
+                }
             }
         }
         if ($cross_type eq 'open'){
@@ -302,6 +306,50 @@ sub _get_available_stocks {
     }
     return (\%accessions_crosses_hash, \%accessions_crosses_populations_hash);
 }
+
+sub generate_pedigrees {
+    my $self = shift;
+    my $pedigree_data = shift;
+    my $schema = $self->get_schema();
+
+    my @generated_pedigrees;
+    foreach my $pedigree (@$pedigree_data) {
+        my $female_parent;
+        my $male_parent;
+        my $progeny = $pedigree->{'progeny name'};
+        my $female = $pedigree->{'female parent accession'};
+        my $male = $pedigree->{'male parent accession'};
+        my $cross_type = $pedigree->{'type'};
+
+        if ($cross_type ne "open") {
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+        } elsif($cross_type eq "open") {
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = undef;
+            if ($male){
+                $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+            }
+        }
+
+        my $opts = {
+            cross_type => $cross_type,
+            female_parent => $female_parent,
+            name => $progeny
+        };
+
+        if ($male_parent) {
+            $opts->{male_parent} = $male_parent;
+        }
+
+        my $p = Bio::GeneticRelationships::Pedigree->new($opts);
+        push @generated_pedigrees, $p;
+    }
+
+    return \@generated_pedigrees;
+
+}
+
 
 #######
 1;

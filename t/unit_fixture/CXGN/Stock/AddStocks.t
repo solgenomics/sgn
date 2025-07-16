@@ -18,6 +18,8 @@ my $schema = $f->bcs_schema();
 my $phenome_schema = $f->phenome_schema();
 my $dbh = $f->dbh();
 
+$f->get_db_stats();
+
 BEGIN {use_ok('CXGN::Stock::AddStocks');}
 BEGIN {require_ok('Moose');}
 
@@ -141,5 +143,7 @@ my $population_member = $schema->resultset("Stock::Stock")
 	   }, {join => {'stock_relationship_subjects' => 'object'}});
 
 is($population_member->uniquename(), $stocks_in_population[0], "Find members of population"); 
+
+$f->clean_up_db();
 
 done_testing();

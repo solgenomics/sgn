@@ -1,6 +1,5 @@
 package solGS::JobSubmission;
 
-
 use Moose;
 use namespace::autoclean;
 
@@ -12,198 +11,181 @@ use solGS::queryJobs;
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
 
-
 has "prerequisite_jobs" => (
-    is       => 'ro',
-    isa      =>  'Str',
-    );
+    is  => 'ro',
+    isa => 'Str',
+);
 
 has "dependent_jobs" => (
     is       => 'ro',
-    isa      =>  'Str',
-    required  => 1,
-    );
+    isa      => 'Str',
+    required => 1,
+);
 
 has "analysis_report_job" => (
-    is       => 'ro',
-    isa      => 'Str',
-    );
+    is  => 'ro',
+    isa => 'Str',
+);
 
 has "config_file" => (
-    is       => 'ro',
-    isa      => 'Str',
-    );
-
+    is  => 'ro',
+    isa => 'Str',
+);
 
 
 sub run {
     my $self = shift;
+    my $secs = 30; #60 * 4;
 
-    my $pre_jobs = $self->run_prerequisite_jobs;
-    my $dep_jobs = $self->run_dependent_jobs($pre_jobs);
-    $self->send_analysis_report($dep_jobs);
+    my $pre_jobs = $self->run_prerequisite_jobs();
+    sleep($secs);
+    print STDERR
+"\nCompleted prerequisite jobs. After waiting $secs sec...Now running the set of dependent jobs...\n";
+
+    my $dep_jobs = $self->run_dependent_jobs();
+    sleep($secs);
+    print STDERR
+"\nCompleted dependent jobs. After waiting $secs sec...Now checking results and emailing the results...\n";
+
+    $self->send_analysis_report();
+    print STDERR "\nGot done checking results and emailing the results...\n";
 
 }
-
 
 sub run_prerequisite_jobs {
     my $self = shift;
 
-    my @jobs;
-    my $jobs = $self->prerequisite_jobs;
-    if ($jobs !~ /none/)
-    {
-    	$jobs = retrieve($jobs);
-        my $type = reftype $jobs;
+    my $remaining_jobs;
+    my $pre_jobs = $self->prerequisite_jobs;
+    if ( $pre_jobs !~ /none/ ) {
+        $pre_jobs = retrieve($pre_jobs);
+        my $type = reftype $pre_jobs;
 
-    	if (reftype $jobs eq 'HASH')
-    	{
-    	    my @priority_jobs;
-    	    foreach my $rank (sort keys %$jobs)
-    	    {
-        		my $js = $jobs->{$rank};
-        		foreach my $jb (@$js)
-        		{
-        		    my $sj = $self->submit_job($jb);
-        		    push @priority_jobs, $sj;
-        		}
-    	    }
+        if ( reftype $pre_jobs eq 'HASH' ) {
 
-    	    foreach my $priority_job (@priority_jobs)
-    	    {
-    		while (1)
-    		{
-    		    last if !$priority_job->alive();
-    		    sleep 30 if $priority_job->alive();
-    		}
-    	    }
-    	}
-    	else
-    	{
-    	    if (reftype $jobs eq 'SCALAR' )
-    	    {
-    		    $jobs = [$jobs];
-    	    }
+            my $submitted_priority_jobs;
+            foreach my $rank ( sort keys %$pre_jobs ) {
+                my $js = $pre_jobs->{$rank};
 
-            if ($jobs->[0])
-            {
-        	    foreach my $job (@$jobs)
-        	    {
-        		my $job = $self->submit_job($job);
-        		push @jobs, $job;
-        	    }
+                $submitted_priority_jobs = $self->submit_jobs($js);
             }
-    	}
-    }
+            $remaining_jobs = $self->wait_till_jobs_end($submitted_priority_jobs);
+        }
+        else {
+            if ( reftype($pre_jobs) eq 'SCALAR' ) {
+                $pre_jobs = [$pre_jobs];
+            }
 
-    return \@jobs;
+            my $submitted_jobs = $self->submit_jobs($pre_jobs);
 
-}
-
-
-sub run_dependent_jobs {
-    my $self = shift;
-    my $pre_jobs = shift;
-
-    if ($pre_jobs->[0]) {
-        foreach my $pre_job (@$pre_jobs)
-        {
-        	while (1)
-        	{
-        	    last if !$pre_job->alive();
-        	    sleep 30 if $pre_job->alive();
-        	}
+            $remaining_jobs = $self->wait_till_jobs_end($submitted_jobs);
+	    if (defined $remaining_jobs) {
+                print STDERR "\nremaining jobs: $remaining_jobs\n";
+	    }
         }
     }
 
-    my @jobs;
-    my $jobs_file = $self->dependent_jobs;
-    my $jobs = retrieve($jobs_file);
-
-    if (reftype $jobs ne 'ARRAY')
-    {
-	    $jobs = [$jobs];
-    }
-
-    foreach my $job (@$jobs)
-    {
-	   my $job = $self->submit_job($job);
-	   push @jobs, $job;
-    }
-
-    return \@jobs;
+    return $remaining_jobs;
 
 }
 
+sub wait_till_jobs_end {
+    my ( $self, $jobs, $sleep_time ) = @_;
 
+    $sleep_time = 30 if !$sleep_time;
+    while (@$jobs) {
+        for ( my $i = 0 ; $i < scalar(@$jobs) ; $i++ ) {
+            splice( @$jobs, $i, 1 ) if !$jobs->[$i]->alive();
+        }
+
+        sleep $sleep_time;
+
+    }
+
+    my $remaining_jobs = $jobs ? $jobs->[0] : 0;
+    return $remaining_jobs;
+}
+
+sub submit_jobs {
+    my ( $self, $jobs ) = @_;
+
+    my @submitted_jobs;
+
+    if ( $jobs->[0] ) {
+        foreach my $job (@$jobs) {
+            my $submitted_job = $self->submit_job($job);
+            push @submitted_jobs, $submitted_job;
+        }
+    }
+
+    return \@submitted_jobs;
+}
+
+sub run_dependent_jobs {
+    my $self = shift;
+
+    my $jobs_file = $self->dependent_jobs;
+    my $dep_jobs  = retrieve($jobs_file);
+
+    if ( reftype($dep_jobs) ne 'ARRAY' ) {
+        $dep_jobs = [$dep_jobs];
+    }
+
+    my $submitted_jobs = $self->submit_jobs($dep_jobs);
+
+    my $remaining_jobs = $self->wait_till_jobs_end($submitted_jobs);
+    if (defined $remaining_jobs) {
+        print STDERR "\nremaining jobs: $remaining_jobs\n";
+    }
+    return $remaining_jobs;
+
+}
 
 sub send_analysis_report {
     my $self = shift;
-    my $dep_jobs = shift;
 
-    my @jobs;
-    foreach my $dep_job (@$dep_jobs)
-    {
-	while (1)
-	{
-	    last if !$dep_job->alive();
-	    sleep 30 if $dep_job->alive();
-	}
-    }
-
-    my $report_file    = $self->analysis_report_job;
-    unless ($report_file =~ /none/)
-    {
-	my $report_job = retrieve($report_file);
-	my $job = $self->submit_job($report_job);
-	return $job;
+    my $report_file = $self->analysis_report_job;
+    unless ( $report_file =~ /none/ ) {
+        my $report_job = retrieve($report_file);
+        my $job        = $self->submit_job($report_job);
+        return $job;
     }
 
 }
 
-
 sub submit_job {
-     my ($self, $args) = @_;
+    my ( $self, $args ) = @_;
 
-     my $job;
-     ###my $config = $self->config_file;
-     ###$config = retrieve($config);
+    my $job;
+    ###my $config = $self->config_file;
+    ###$config = retrieve($config);
 
-     print STDERR "submitting job... $args->{cmd}\n";
+    print STDERR "submitting job... $args->{cmd}\n";
 
-    eval
-     {
-     	$job = CXGN::Tools::Run->new($args->{config});
-     	$job->do_not_cleanup(1);
+    eval {
+        $job = CXGN::Tools::Run->new( $args->{config} );
+        $job->do_not_cleanup(1);
 
-	$job->is_cluster(1);
-	$job->run_cluster($args->{cmd});
+        $job->is_cluster(1);
+        $job->run_cluster( $args->{cmd} );
 
+        if ( !$args->{background_job} ) {
+            print STDERR "\n WAITING job to finish\n";
+            $job->wait();
+            print STDERR "\n job COMPLETED\n";
+        }
+    };
 
-	if (!$args->{background_job})
-	{
-	    print STDERR "\n WAITING job to finish\n";
-	    $job->wait();
-	    print STDERR "\n job COMPLETED\n";
-	}
-     };
+    if ($@) {
+        print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
+    }
 
-     if ($@)
-     {
-     	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
-     }
+    return $job;
 
-     return $job;
-
- }
-
-
+}
 
 __PACKAGE__->meta->make_immutable;
 
-
-
-
 ####
-1; #
+1;    #
 ####

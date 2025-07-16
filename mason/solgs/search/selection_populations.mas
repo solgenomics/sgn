@@ -1,6 +1,7 @@
 <%doc>
 
-displays list of prediction populations and their GS output.
+displays selection populations one can apply the model on.  If predicted output exists for a
+selection population, a link to the output is displayed.
 
 </%doc>
 
@@ -32,7 +33,6 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.Dataset", "jquery.dataTables", "solGS.selectionPopulations",  "solGS.ajaxAutocomplete"] &>
-
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <&| /page/info_section.mas,
@@ -41,42 +41,38 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     title       => $title,
 &>
 
-  <div  class="form-inline">
+  <div  id="selection_pops_div">
+    <div id="search_div" class="form-inline">
     <input  type="text"
 	    class="form-control"
-	    placeholder="search for a selection population"
-	    size="30" id="population_search_entry"/>
+	    placeholder="search for a trial"
+	    size="30" id="trial_search_box"/>
 
     <button type="submit"
 	    class="btn btn-success"
 	    id="search_selection_pop">
       <span class="glyphicon glyphicon-search"></span>
     </button>
-<div style="color:red" id="form-feedback-search-trials"> </div>
-  <!-- <button id="search_all_selection_pops" style="position:absolute;right:20px;display:none;" class="btn btn-success" type="submit">  -->
-  <!--     <span value="Search for all relevant selection populations">Search for all relevant selection populations</span>  -->
-  <!--   </button> -->
+    <div  id="form-feedback-search-trials" style="color:red"> </div>
   </div>
 
-
   <div id="selection_pops_message"  class="message"></div>
-
-  <div id="selection_populations" style="display:none;">
-    <table class="table" id="selection_pops_list" style="text-align:left;">
+  <& /solgs/spinner/spinner.mas &>
+  
+  <div id="selection_pops_result" style="padding: 20px 0px 20px 0px;display:none;">
+    <table class="table" id="selection_pops_table" style="text-align:left;">
       <thead>
 	<tr>
 	  <th>Selection population</th>
 	  <th>Description</th>
 	  <th>Year</th>
-      <th>More details</th>
+	  <th>More details</th>
 	  <th>View GEBVs</th>
 	</tr>
       </thead>
   </table>
   </div>
 
-  <br />
-
   <& /solgs/search/list_type_selection_population.mas &>
-
+</div>
 </&>

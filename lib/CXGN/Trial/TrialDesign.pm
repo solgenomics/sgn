@@ -132,7 +132,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "RRC" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "RRC" || $_ eq "DRRC" || $_ eq "URDD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -178,7 +178,7 @@ sub calculate_design {
     }
 }
 
-sub isint{
+sub isint {
   my $val = shift;
   return ($val =~ m/^\d+$/);
 }

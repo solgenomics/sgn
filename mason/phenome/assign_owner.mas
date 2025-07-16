@@ -72,8 +72,17 @@ Naama Menda <nm249@cornell.edu>
                var error = response.error;
                if (error) { alert(error) ; }
        	       display_owners( "<% $owners_div %>" );
+
            }
        } );
+  }
+
+  function display_owners(owners_div) {
+    jQuery.ajax( { url: "/<% $object_type %>/<% $object_id %>/owners" , dataType: "json",
+      success: function(response) {
+         jQuery("#"+owners_div).html(response.html);
+      }
+    } );
   }
 
 </script>
@@ -82,7 +91,7 @@ Naama Menda <nm249@cornell.edu>
 % if ($show_form) {
 
  <&| /page/optional_show.mas, title => "Assign owner" &>
- 
+
 <div id="associate_owner_form">
   Notice: 'user' account will be updated to 'submitter'
   <div id="person_search" >

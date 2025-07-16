@@ -73,6 +73,7 @@ for my $extension ("xls", "xlsx") {
         has_timestamps             => 0,
         overwrite_values           => 0,
         metadata_hash              => \%phenotype_metadata,
+        composable_validation_check_name => $f->config->{composable_validation_check_name}
     );
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     ok(!$verified_error);
@@ -127,7 +128,7 @@ for my $extension ("xls", "xlsx") {
     print STDERR Dumper $message_hash;
     ok($message_hash->{figure});
     is(scalar(@{$message_hash->{success}}), 8);
-    is($message_hash->{success}->[6], 'All values in your file have been successfully processed!<br><br>30 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br><br>');
+    is($message_hash->{success}->[6], 'All values in your file have been successfully processed!<br><br>30 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br>0 previously stored values removed<br><br>');
     my $nirs_protocol_id = $message_hash->{nd_protocol_id};
 
     my $dry_matter_trait_id = $f->bcs_schema()->resultset("Cv::Cvterm")->find({ name => 'dry matter content percentage' })->cvterm_id();

@@ -60,6 +60,7 @@ jQuery(document).ready( function() {
                 }
             }},
             { title: "Content Type", "data": "content_type" },
+            { title: "Material Type", "data": "material_type" },
             { title: "Description", "data": "description" },
             { title: "Box Name", "data": "box_name" },
             { title: "Current Count", "data": "current_count" },

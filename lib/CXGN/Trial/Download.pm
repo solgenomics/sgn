@@ -231,6 +231,9 @@ has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadat
 has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0);
 has 'field_crossing_data_order' => (isa => 'ArrayRef[Str]|Undef', is => 'rw', required => 0);
 has 'prop_id' => (isa => 'Int | Undef', is => 'rw', required => 0);
+has 'people_schema' => ( isa => 'Ref', is => 'rw');
+has 'dbh' => (is  => 'rw');
+
 
 sub BUILD {
     my $self = shift;

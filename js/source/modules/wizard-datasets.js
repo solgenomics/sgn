@@ -118,18 +118,39 @@ export function WizardDatasets(main_id,wizard){
       fetch(document.location.origin+'/ajax/dataset/save'+params,{
         method:'post',
         credentials: 'include'
-      }).then(()=>{
+      }).then(response => {
+        if (!response.ok){
+          alert("Network error!");
+        }
+        return response.json();
+      }).then(data => {
+          console.log("New dataset... got id:"+data.id);
+          var id = data.id;
           var details = '';
           cols.forEach(c=>{
             details+= `\n    ${c.items.filter(d=>d.selected).length} ${c.type}`;
-          })
-        alert(`Dataset ${name} created with\: ${details}`);
+          });
+        alert(`Dataset ${name} created with\: ${details}. \nCompatibility check will run in background.`);
+        $.ajax({
+          url: '/ajax/dataset/calc_tool_compatibility/'+id,
+          success: function(res) {
+            if (res.error) {
+              alert("Error storing tool compatibility: "+res.error);
+            } 
+          },
+          error: function(res) {
+            alert("Error storing tool compatibility: " + res);
+          }
+        });
         load_datasets();
         d3.select(this).attr("disabled",null);
         if ( DSP_ENABLED ) {
           returnToSource();
         }
-      })
+      }).catch(error => {
+        alert("Error storing dataset or checking tool compatibility: "+error);
+        console.error(error);
+      });
     }
   });
 

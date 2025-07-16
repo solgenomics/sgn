@@ -20,7 +20,7 @@ has 'filename' => (
     required => 1,
 );
 
-has 'filename_intertek_marker_info' => (
+has 'filename_marker_info' => (
     is => 'ro',
     isa => 'Str|Undef',
 );

@@ -47,16 +47,16 @@ solGS.submitJob = {
   },
 
   checkCachedResult: function (page, args) {
-     var trainingTraitsIds = solGS.getTrainingTraitsIds();
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
-     if (trainingTraitsIds) {
+    if (trainingTraitsIds) {
       if (!args) {
         args = { training_traits_ids: trainingTraitsIds };
       } else {
         args["training_traits_ids"] = trainingTraitsIds;
       }
     }
-    
+
     args = this.getArgsFromUrl(page, args);
     args = JSON.stringify(args);
 
@@ -109,8 +109,8 @@ solGS.submitJob = {
 
   askUser: function (page, args) {
     var title =
-      "<p>This analysis may take a long time. " +
-      "Do you want to submit the analysis and get an email when it completes?</p>";
+      "<p>Since the job takes long time, you can only submit and wait for an email with a link to the results. " +
+      "Do you want to submit it and get an email when it completes?</p>";
 
     var jobSubmit = '<div id= "job_submission">' + title + "</div>";
 
@@ -118,9 +118,9 @@ solGS.submitJob = {
 
     jQuery("#job_submission").dialog({
       height: 200,
-      width: 400,
+      width: 600,
       modal: true,
-      title: "Analysis job submission",
+      title: "Job submission",
       buttons: {
         OK: {
           text: "Yes",
@@ -143,7 +143,7 @@ solGS.submitJob = {
         //     },
         // },
         Cancel: {
-          text: "Cancel",
+          text: "No",
           class: "btn btn-info",
           id: "cancel_queue_info",
           click: function () {
@@ -327,10 +327,10 @@ solGS.submitJob = {
     jQuery("<div />", { id: "email-form" })
       .html(form)
       .dialog({
-        height: "auto",
-        width: "auto",
+        height: 400,
+        width: 400,
         modal: true,
-        title: "Please fill in some info about your analysis.",
+        title: "Info about the analysis",
         buttons: {
           Submit: {
             click: function (e) {
@@ -364,6 +364,9 @@ solGS.submitJob = {
     args["analysis_name"] = analysisName;
     args["analysis_page"] = page;
 
+    var hostname = `${location.protocol}//${location.hostname}`;
+    args['hostname'] = hostname;
+
     args = JSON.stringify(args);
 
     var analysisProfile = {
@@ -382,11 +385,8 @@ solGS.submitJob = {
     var analysisName = jQuery("#analysis_name").val();
 
     if (!analysisName) {
-      jQuery("#form-feedback-analysis-name").text(
-        "Analysis name is blank. Please give a name."
-      );
+      jQuery("#form-feedback-analysis-name").text("Analysis name is blank. Please give a name.");
     } else {
-
       var checkName = solGS.submitJob.checkAnalysisName(analysisName);
 
       checkName.done(function (res) {
@@ -406,7 +406,7 @@ solGS.submitJob = {
           }
         }
       });
-  }
+    }
 
     checkName.fail(function (res) {
       var message =
@@ -706,7 +706,7 @@ jQuery(document).ready(function () {
           page = "/solgs/trait/" + traitIds[0] + "/population/" + popId + "/gp/" + protocolId;
         }
       } else {
-        analysisType = "multiple models";
+        analysisType = "multiple_models";
 
         if (referer.match(/solgs\/populations\/combined\//)) {
           page = "/solgs/models/combined/trials/" + popId;
@@ -784,10 +784,12 @@ solGS.getTraitDetails = function (traitId) {
 
 solGS.getTrainingTraitsIds = function () {
   var trainingTraitsIds = jQuery("#training_traits_ids").val();
+  var trainingTraitsCode = jQuery("#training_traits_code").val();
   var traitId = jQuery("#trait_id").val();
 
   if (trainingTraitsIds) {
     trainingTraitsIds = trainingTraitsIds.split(",");
+
   } else if (traitId) {
     trainingTraitsIds = [traitId];
   }
@@ -798,20 +800,36 @@ solGS.getTrainingTraitsIds = function () {
 solGS.getModelArgs = function () {
   var args = this.getTrainingPopArgs();
   var trainingTraitsIds = this.getTrainingTraitsIds();
+
   if (trainingTraitsIds) {
+    args["training_traits_code"] = jQuery("#training_traits_code").val();
     args["training_traits_ids"] = trainingTraitsIds;
+  }
+
+  if (trainingTraitsIds.length == 1) {
+    args["trait_id"] = trainingTraitsIds[0];
   }
 
   return args;
 };
 
+solGS.selectMenuModelArgs = function() {
+    var modelArgs = this.getModelArgs();
+
+    return {
+      id: modelArgs.training_pop_id,
+      name: modelArgs.training_pop_name,
+      pop_type: "training",
+    };
+};
+
 solGS.getSelectionPopArgs = function () {
   var args = this.getModelArgs();
-  var selPopGenoProtocolId = jQuery('#selection_pop_genotyping_protocol_id').val();
-  var selPopId =  jQuery('#selection_pop_id').val();
+  var selPopGenoProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+  var selPopId = jQuery("#selection_pop_id").val();
 
-  if (!selPopGenoProtocolId ) {
-    selPopGenoProtocolId = jQuery('#genotyping_protocol_id').val();
+  if (!selPopGenoProtocolId) {
+    selPopGenoProtocolId = jQuery("#genotyping_protocol_id").val();
   }
   if (selPopGenoProtocolId) {
     args["selection_pop_genotyping_protocol_id"] = selPopGenoProtocolId;
@@ -824,8 +842,10 @@ solGS.getSelectionPopArgs = function () {
 solGS.getTrainingPopArgs = function () {
   var args = {
     training_pop_id: jQuery("#training_pop_id").val(),
+    training_pop_name: jQuery("#training_pop_name").val(),
     genotyping_protocol_id: jQuery("#genotyping_protocol_id").val(),
-    data_set_type: jQuery("#data_set_type").val()
+    data_set_type: jQuery("#data_set_type").val(),
+    analysis_type: jQuery("#analysis_type").val(),
   };
 
   return args;
@@ -875,11 +895,7 @@ solGS.getPopulationDetails = function () {
 solGS.showMessage = function (divId, msg) {
   divId = divId.match(/#/) ? divId : "#" + divId;
 
-  jQuery(divId)
-    .html(msg)
-    .show()
-    .delay(4000)
-    .fadeOut('slow');
+  jQuery(divId).html(msg).show().delay(4000).fadeOut("slow");
 };
 
 solGS.checkPageType = function () {
@@ -892,6 +908,14 @@ solGS.checkPageType = function () {
 
   return pageType;
 };
+
+
+solGS.blockSolgsSearchInterface = function () {
+
+	jQuery("#solgs_search_interfaces").hide();
+
+};
+
 
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function (a, b) {

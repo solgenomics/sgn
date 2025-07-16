@@ -22,7 +22,7 @@
                             <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
                             <li>A seedlot inventory consists of giving a location and current weight(g) to your seedlots. The seedlot name is the unique identifier for each seedlot and so should be encoded in a barcode on each seedlot packet.</li>
                             <li>You can use the "Inventory" Android Application to scan seedlot barcodes and record weight. If you prefer you can create your own CSV file and upload that, if you do not want to use the Inventory Application. For info about the format of the file to upload, go to the next tab.</li>
-                            <li><b>For more info about the "Seed Inventory" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory/">Inventory</a>.</b></li>
+                            <!-- li><b>For more info about the "Seed Inventory" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory/">Inventory</a>.</b></li --><!-- Note: inventory app is being revamped, until then link to Google app store doesn't work, re-instate as soon as new version is up -->
                             <li>It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
                             </ul>
 

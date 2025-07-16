@@ -53,7 +53,7 @@ sub seasons {
         push @data, {
             seasonDbId=>qq|$projectprop_id|,
             season=>$season,
-            year=>$year
+            year=>int($year)
         };
     }
     my %result = (data=>\@data);
@@ -80,12 +80,14 @@ sub study_types {
 sub search {
     my $self = shift;
     my $search_params = shift;
-	my $c = shift;
+    my $c = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema;
     my $supported_crop = $c->config->{"supportedCrop"};
+    my $data_out;
+    my $total_count;
 
     my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
  	my @program_names = $search_params->{programNames} ? @{$search_params->{programNames}} : ();
@@ -101,8 +103,14 @@ sub search {
 	my @year_list = $search_params->{seasonDbIds} ? @{$search_params->{seasonDbIds}} : ();
 	my @obs_variable_ids = $search_params->{observationVariableDbIds} ? @{$search_params->{observationVariableDbIds}} : ();
 	my @study_puis = $search_params->{studyPUI} ? @{$search_params->{studyPUIs}} : ();
-	my @externalReferenceID = $search_params->{externalReferenceID} ? @{$search_params->{externalReferenceIDs}} : ();
-	my @externalReferenceSource = $search_params->{externalReferenceSource} ? @{$search_params->{externalReferenceSources}} : ();
+	my @externalReferenceIds = $search_params->{externalReferenceIds} ? @{$search_params->{externalReferenceIds}} : ();
+
+	# externalReferenceIDs is DEPRECATED,but still supported in BrAPI (if possible, use externalReferenceIds instead).
+	if(!scalar(@externalReferenceIds)){
+		@externalReferenceIds = $search_params->{externalReferenceIDs} ? @{$search_params->{externalReferenceIDs}} : ();
+	}
+
+	my @externalReferenceSource = $search_params->{externalReferenceSources} ? @{$search_params->{externalReferenceSources}} : ();
     my @crop = $search_params->{commonCropNames} ? @{$search_params->{commonCropNames}} : ();
     my $active = $search_params->{active} || undef;
     my $sortBy = $search_params->{sortBy} || undef;
@@ -111,15 +119,15 @@ sub search {
     if (scalar(@crop)>0 && !grep { lc($_) eq lc($supported_crop) } @crop ){
     	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('commonCropName not found!'));
     }
+
     if ($active && lc($active) ne 'true'){
     	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Not found!'));
     }
+	if (scalar(@study_puis)>0  ){
+		push @$status, { 'error' => 'The studyPUI search parameters are not implemented.' };
+	}
 
-    if (scalar(@study_puis)>0 || scalar(@externalReferenceID)>0  || scalar(@externalReferenceSource)>0 ){
-        push @$status, { 'error' => 'The following search parameters are not implemented: studyPUI, externalReferenceID, externalReferenceSource' };
-    }
-
-    my ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,\@study_dbids,\@location_names,\@location_ids,\@study_type_list,\@study_names,\@program_names,\@program_dbids,\@folder_dbids,\@folder_names,\@obs_variable_ids,\@germplasm_dbids,\@germplasm_names, \@year_list,$sortBy,$sortOrder);
+    ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,\@study_dbids,\@location_names,\@location_ids,\@study_type_list,\@study_names,\@program_names,\@program_dbids,\@folder_dbids,\@folder_names,\@obs_variable_ids,\@germplasm_dbids,\@germplasm_names,\@year_list,\@externalReferenceIds,\@externalReferenceSource,$sortBy,$sortOrder);
 
     my %result = (data=>$data_out);
     my @data_files;
@@ -174,13 +182,14 @@ sub store {
 	    my $trial_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
 	    my $trial_year = $params->{seasons} ? $params->{seasons}->[0] : undef;
 		my $trial_location_id = $params->{locationDbId} ? $params->{locationDbId} : undef;
-	    my $trial_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
+	    my $trial_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, splitplot, or stripplot;
 	    my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
 	    my $study_type = $params->{studyType} ? $params->{studyType} : undef;
 	    my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
 	    my $plot_width = $params->{additionalInfo}->{plot_width} ? $params->{additionalInfo}->{plot_width} : undef;
 	    my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
 		my $raw_additional_info = $params->{additionalInfo} || undef;
+		my $external_references = $params->{externalReferences} || [];
 		my %specific_keys = map { $_ => 1 } ("field_size", "plot_width", "plot_length");
 		my %additional_info;
 		if (defined $raw_additional_info) {
@@ -192,9 +201,9 @@ sub store {
 		}
 
 		# Check that a supported study design type was passed
-		my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","greenhouse","Westcott","Analysis");
+		my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","stripplot","greenhouse","Westcott","Analysis");
 		if (!exists($supported_methods{$trial_design_method})) {
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $trial_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','greenhouse','Westcott','Analysis'.", 400);
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $trial_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','stripplot', 'greenhouse','Westcott','Analysis'.", 400);
 		}
 
 		# Check the trial exists
@@ -296,10 +305,10 @@ sub store {
 	        }
 	        return $save->{project_id};
 	    };
-
-	    #save data
+		my $trial_id;
+		#save data
 	    eval {
-	        my $trial_id = $schema->txn_do($coderef);
+	        $trial_id = $schema->txn_do($coderef);
 	        if (ref \$trial_id eq 'SCALAR'){
 		    	push @study_dbids, $trial_id;
 
@@ -317,14 +326,33 @@ sub store {
 			warn $@;
 			return CXGN::BrAPI::JSONResponse->return_error($self->status, 'There was an error saving the study', 500);
 		};
+		# save external references if specified
+		if ($external_references) {
+			my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+				bcs_schema          => $schema,
+				external_references => $external_references,
+				table_name          => 'project',
+				table_id_key       	=> 'project_id',
+				id             		=> $trial_id,
+			});
+
+			$references->store();
+
+			if ($references->{'error'}) {
+				return { error => $references->{'error'} };
+			}
+		}
 	}
 
 	my $data_out;
 	my $total_count=0;
+	# This is servicing a POST request, make sure pagination returns all created objects.
+	$page_size = scalar(@study_dbids);
+	$page = 0;
 	if (scalar(@study_dbids)>0){
-		my $dbh = $c->dbc->dbh();
-		my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-		my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+		# my $dbh = $c->dbc->dbh();
+		# my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+		# my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
 		my $supported_crop = $c->config->{"supportedCrop"};
 
@@ -344,6 +372,7 @@ sub update {
 	my $params = shift;
 	my $user_id =shift;
 	my $c = shift;
+	my $data_out;
 
 	if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to update studies!'));
@@ -379,7 +408,7 @@ sub update {
 	my $study_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
 	my $study_year = $params->{seasons} ? $params->{seasons}->[0] : undef;
 	my $study_location = $params->{locationDbId} ? $params->{locationDbId} : undef;
-	my $study_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
+	my $study_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, splitplot, or stripplot;
 	my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
 	my $study_t = $params->{studyType} ? $params->{studyType} : undef;
 	my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
@@ -399,9 +428,9 @@ sub update {
 	my $harvest_date = $params->{endDate} ? $params->{endDate} : undef;
 
 	# Check that a supported study design type was passed
-	my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","greenhouse","Westcott","Analysis");
+	my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","stripplot","greenhouse","Westcott","Analysis");
 	if (!exists($supported_methods{$study_design_method})) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $study_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','greenhouse','Westcott','Analysis'.", 400);
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $study_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','stripplot','greenhouse','Westcott','Analysis'.", 400);
 	}
 
 	# Check the brapi trial exists
@@ -497,7 +526,7 @@ sub update {
 
 	my $supported_crop = $c->config->{"supportedCrop"};
 
-	my ($data_out,$total_count) = _search($self,$self->bcs_schema(),$page_size,$page,$supported_crop,[$trial_id]);
+	($data_out,$total_count) = _search($self,$self->bcs_schema(),$page_size,$page,$supported_crop,[$trial_id]);
 
 	my $result = @$data_out[0];
 	my @data_files;
@@ -526,14 +555,42 @@ sub _search {
 	my $germplasm_dbids = shift;
 	my $germplasm_names = shift;
 	my $year_list = shift;
+	my $externalReferenceIds = shift;
+	my $externalReferenceSources = shift;
 	my $sort_by = shift;
 	my $sort_order = shift;
+
+	if($sort_order){
+		if(lc $sort_order eq "asc"){
+			$sort_order = ' ASC'
+		} elsif (lc $sort_order eq "desc"){
+			$sort_order = ' DESC';
+		} else{
+			$sort_order = undef;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortOrder valid values are: asc or desc", 400);
+		}
+	}
+
+	if($sort_by){
+		my %sort_by_items = (
+			"locationDbId" => " location.value ",
+			"studyDbId" => " study.project_id ",
+			"studyName" => " study.name",
+			"trialDbId" => " folder.project_id ",
+			"trialName" => " folder.name "
+		);
+		if ($sort_by_items{$sort_by}){
+			$sort_by = " ORDER BY " . $sort_by_items{$sort_by} ;
+		} else {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "sortBy valid values are only: locationDbId, studyDbId, studyName, trialDbId or trialName at the moment.", 400);
+		}
+	}
 
 	# my $c = shift;
 	my $page_obj = CXGN::Page->new();
     my $main_production_site_url = $page_obj->get_hostname();
 
-	my $trial_search = CXGN::Trial::Search->new({
+		my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$schema,
         location_list=>$location_names,
         location_id_list=>$location_ids,
@@ -550,11 +607,13 @@ sub _search {
         accession_list => $germplasm_dbids,
         accession_name_list => $germplasm_names,
         year_list => $year_list,
+			externalReferenceSources => $externalReferenceSources,
+			externalReferenceIds => $externalReferenceIds,
         limit => $page_size,
         offset => $page_size*$page,
         sort_by => $sort_by,
         order_by => $sort_order,
-        field_trials_only => 1
+        field_trials_only => 1,
     });
     my ($data, $total_count) = $trial_search->search();
     #print STDERR Dumper $data;
@@ -586,21 +645,21 @@ sub _search {
 			if($harvest_date eq "") { $harvest_date = undef;}
 		}
 
-		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
+		my ($brapi_contacts, @data_links, $data_agreement, %experimental_design, $folder_id, $folder_name);
+
+		# my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
 		# my $contacts = $t->get_trial_contacts();
-		my $brapi_contacts;
 		# foreach (@$contacts){
 		# 	push @$brapi_contacts, {
 		# 		contactDbId => $_->{sp_person_id},
 		# 		name => $_->{salutation}." ".$_->{first_name}." ".$_->{last_name},
-  #               instituteName => $_->{organization},
+  		#       instituteName => $_->{organization},
 		# 		email => $_->{email},
 		# 		type => $_->{user_type},
 		# 		orcid => ''
 		# 	};
 		# }
 		# my $additional_files = $t->get_additional_uploaded_files();
-        my @data_links;
         # foreach (@$additional_files){
         #     push @data_links, {
         #         scientificType => 'Additional File',
@@ -627,19 +686,42 @@ sub _search {
         #         version => undef
         #     };
         # }
-        my $data_agreement = ''; # = $t->get_data_agreement() ? $t->get_data_agreement() : '';
-        my $experimental_design = {};
+        # $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
 
-        if ($t->get_design_type()){
-	        	$experimental_design = { 
-	        		PUI => $t->get_design_type(),
-	        		description => $t->get_design_type() };
+        # if ($t->get_design_type()){
+	    #     	$experimental_design = { 
+	    #     		PUI => $t->get_design_type(),
+	    #     		description => $t->get_design_type() };
+	    # }
+		# $folder_id = $t->get_folder()->id();
+		# $folder_name = $t->get_folder()->name();
+
+		if ($_->{design}){
+			$experimental_design{'PUI'} = $_->{design};
+			$experimental_design{'description'} = $_->{design};
 	    }
 
-		my $folder_id = $t->get_folder()->id();
-		my $folder_name = $t->get_folder()->name();
+		if ($_->{folder_id}){
+			$folder_id = $_->{folder_id};
+			$folder_name = $_->{folder_name};
+		} else {
+			$folder_id = $_->{breeding_program_id};
+			$folder_name = $_->{breeding_program_name};
+		}
+
 		my $trial_type = $_->{trial_type} ne 'misc_trial' ? $_->{trial_type} : $_->{trial_type_value};
-        my %data_obj = (
+
+		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+			bcs_schema => $schema,
+			table_name => 'project',
+			table_id_key => 'project_id',
+			id => qq|$_->{trial_id}|,
+		});
+		my $external_references = $references->search();
+		my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
+
+ 
+		my %data_obj = (
 			active                      => JSON::true,
 			additionalInfo              => $additional_info,
 			commonCropName              => $supported_crop,
@@ -649,8 +731,8 @@ sub _search {
 			documentationURL            => "",
 			endDate                     => $harvest_date ? $harvest_date : undef,
 			environmentParameters       => undef,
-			experimentalDesign          => $experimental_design,
-			externalReferences          => undef,
+			experimentalDesign          => \%experimental_design,
+			externalReferences          => @formatted_external_references,
 			growthFacility              => undef,
 			lastUpdate                  => undef,
 			license                     => $data_agreement,

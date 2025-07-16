@@ -1,0 +1,64 @@
+<%args>
+
+</%args>
+
+<div class="modal fade" id="manage_catalog_usage_info_dialog" name="manage_catalog_usage_info_dialog" tabindex="-1" role="dialog" aria-labelledby="manageCatalogUsageInfoDialog">
+    <div class="modal-dialog modal-lg " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="manageCatalogUsageInfoDialog">How to Add and Manage Catalog</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p> Only users with vendor role can see Manage Catalog section. This section is hidden for other users</p>
+                    <hr class ="solid">
+                    <h4>
+                        How to Add Catalog Items:
+                    </h4>
+                    <p>You can choose one of the three methods for adding catalog item(s) based on the number of items and details.
+                    <li><b>Add Single Item</b>: If you would like to add only one item to the catalog, you can use "Add Single Item" dialog</li>
+                    <li><b>Add Multiple Items using List</b>: For adding many items with the same stock type and the same catalog info, using "Add Multiple Items Using List" dialog is the most convenient method.</li>
+                    <li><b>Upload Multiple Items</b>: For adding many items with different stock types and each item may have different catalog info, you can use "Upload Multiple Items" dialog.</li>
+                    <br>
+                    <hr class ="solid">
+                    <h4>
+                        Important Notes:
+                    </h4>
+                    <li>Item Name: This version of catalog allows only accesssion, seedlot, population, vector_construct stock type. If you would like to add more stock types, please contact us.</li>
+                    <li>Category: This field can be customized. Currently there are four categories for catalog items (released variety, pathogen assay, control, transgenic line), please contact us if you would like to add more categories.</li>
+                    <li>Contact Person Username: Each catalog item is associated with a vendor (please use username). When a user requests this item. The vendor is notified by email. Ordering details can be viewd on the Manage Orders page
+                    <li>When you add new items, 'Item Type', 'Material Type', 'Species' and 'Variety' fields will be filled automatically based on item stock type and associated info stored in the database.</li>
+                    <br>
+                    <hr class ="solid">
+                    <h4>
+                        Availability of Catalog Items:
+                    </h4>
+                    <p>Each item in the catalog has 'available' status by default. Vendors can change the status to 'unavailable' by using editing catalog info dialog on each Catalog Item Details page. Once the item becomes unavailable, the request/shopping cart link is hidden and users are not able to order the item. </p>
+                    <br>
+                </div>
+                <div class="modal-footer">
+                    <button id="close_target_numbers_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+hr.solid { border-top: 3px solid #bbb; }
+
+</style>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#manage_catalog_usage_info_button').click(function(){
+        jQuery('#manage_catalog_usage_info_dialog').modal("show");
+    });
+
+});
+
+</script>

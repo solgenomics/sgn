@@ -9,6 +9,7 @@ $category
 $additional_info
 $material_source
 $breeding_program
+$availability => undef
 $program_id
 $contact_person_username
 $item_prop_id
@@ -36,10 +37,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_type">Item Type: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_type" value="<%$item_type%>">
-                                        <option value="single item">single item</option>
-                                        <option value="set of items">set of items</option>
-                                    </select>
+                                    <input class="form-control col-sm-8" id="edit_item_type" type="text" value="<%$item_type%>" disabled/>
                                 </div>
                             </div>
                         </div>
@@ -63,11 +61,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_material_type">Material Type: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_material_type" value="<%$material_type%>">
-                                        <option value="plant">plant</option>
-                                        <option value="seed">seed</option>
-                                        <option value="construct">construct</option>
-                                    </select>
+                                    <input class="form-control col-sm-8" id="edit_material_type" type="text" value="<%$material_type%>" disabled/>
                                 </div>
                             </div>
                         </div>
@@ -109,6 +103,18 @@ $item_prop_id
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_availability">Availability: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_availability" value="<%$availability%>">
+                                        <option value="available">available</option>
+                                        <option value="unavailable">unavailable</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!--
+                        <div class="form-group">
                             <label class="col-sm-3 control-label" for="edit_contact_person">Contact Person Username: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
@@ -116,6 +122,7 @@ $item_prop_id
                                 </div>
                             </div>
                         </div>
+                        -->
                     </form>
                 </div>
             </div>
@@ -173,6 +180,8 @@ jQuery(document).ready( function() {
         var default_material_type = document.getElementById("edit_material_type").getAttribute("value");
         jQuery('#edit_material_type option[value="'+default_material_type+'"]').prop("selected", true);
 
+        var default_availability = document.getElementById("edit_availability").getAttribute("value");
+        jQuery('#edit_availability option[value="'+default_availability+'"]').prop("selected", true);
 
     });
 
@@ -186,6 +195,7 @@ jQuery(document).ready( function() {
         var additional_info = jQuery('#edit_item_additional_info').val();
         var material_source = jQuery('#edit_item_material_source').val();
         var breeding_program = jQuery('#edit_item_breeding_program').val();
+        var availability = jQuery('#edit_availability').val();
         var contact_person = jQuery('#edit_contact_person').val();
         jQuery.ajax({
             url: '/ajax/catalog/add_item',
@@ -202,7 +212,8 @@ jQuery(document).ready( function() {
                 'material_source': material_source,
                 'breeding_program_id': breeding_program,
                 'contact_person': contact_person,
-                'item_prop_id': item_prop_id
+                'item_prop_id': item_prop_id,
+                'availability': availability
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');

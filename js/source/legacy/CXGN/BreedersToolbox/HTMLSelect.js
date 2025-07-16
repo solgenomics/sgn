@@ -1,5 +1,5 @@
 
-function get_select_box(type, div_id, options) {
+function get_select_box(type, div_id, options = {}) {
 
     //alert(JSON.stringify(options));
     jQuery.ajax( {
@@ -25,6 +25,10 @@ function get_select_box(type, div_id, options) {
             // console.log("this is a workflow trigger. Response.select is: \n");
             // console.log(JSON.stringify(response.select));
             var select = jQuery("#"+options.id).attr('onChange', 'Workflow.complete(this);');
+        }
+        if (options.full_dropdown) {
+            var select_collection = document.getElementById(options.id).options;
+            document.getElementById(options.id).setAttribute("size", select_collection.length);
         }
 	},
 	error: function(response) {

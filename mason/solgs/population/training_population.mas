@@ -16,6 +16,7 @@ $protocol_url => ''
 $acronym => ''
 $genotyping_protocol_id
 $data_set_type => ''
+$analysis_type => ''
 
 </%args>
 
@@ -29,14 +30,14 @@ $training_pop_id = $pop_id;
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ['solGS.solGS', 'solGS.genotypingProtocol'] &>
+<& /util/import_javascript.mas, classes => ['solGS.solGS', 'solGS.genotypingProtocol', 'save-svg-as-png.saveSvgAsPng'] &>
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <br />
 <br />
 
 <& /page/page_title.mas,
-   title => "Select one or more traits from training population \"$training_pop_name\" to build a GS model and predict GEBVs for."
+   title => "$training_pop_name"
 &>
 
 <&| /page/info_section.mas,
@@ -67,7 +68,7 @@ $training_pop_id = $pop_id;
 <&| /page/info_section.mas,
       collapsible => 1,
       collapsed   => 0,
-      title       => "Train model"
+      title       => "Model training"
 &>
 
 <& /solgs/population/traits_list.mas,
@@ -81,8 +82,8 @@ $training_pop_id = $pop_id;
 </&>
 
 
-  <& /solgs/tools/correlation/correlation.mas,
-     corre_pop_id  => $training_pop_id,
+  <& /solgs/tools/correlation/analysis.mas,
+     corr_pop_id  => $training_pop_id,
      data_set_type => $data_set_type
   &>
 
@@ -135,5 +136,6 @@ $training_pop_id = $pop_id;
      combo_pops_id => $combo_pops_id,
      genotyping_protocol_id => $genotyping_protocol_id,
      data_set_type => $data_set_type,
+     analysis_type => $analysis_type,
 
    &>

@@ -30,7 +30,7 @@ sub search {
     my $stock_ids_arrayref = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
     my $phenotype_ids_arrayref = $params->{observationDbId} || ($params->{observationDbIds} || ());
     my $descriptors_arrayref = $params->{descriptiveOntologyTerm} || ($params->{descriptiveOntologyTerms} || ());
-    my $reference_ids_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
+    my $reference_ids_arrayref = $params->{externalReferenceId} || ($params->{externalReferenceIds} || ());
     my $reference_sources_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
     my $imagefile_names_arrayref = $params->{imageFileNames} || ($params->{imageFileNames} || ());
     my $imagefile_size_max = $params->{imageFileSizeMax}->[0] || undef;
@@ -88,6 +88,9 @@ sub search {
     my ($result, $total_count) = $image_search->search();
 
     my @data;
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+    my $counter = 0;
 
     foreach (@$result) {
         my $mimetype = _get_mimetype($_->{'image_file_ext'});
@@ -131,39 +134,36 @@ sub search {
         }
         my @sorted_tags;
         foreach my $tag_id (sort keys %unique_tags) {
-            push @sorted_tags, $unique_tags{$tag_id};
+            push @sorted_tags, $unique_tags{$tag_id}{name};
         }
 
-        push @data, {
-            additionalInfo => {
-                observationLevel => $_->{'stock_type_name'},
-                observationUnitName => $_->{'stock_uniquename'},
-                tags => \@sorted_tags,
-            },
-            copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
-            description => $_->{'image_description'},
-            descriptiveOntologyTerms => \@cvterm_names,
-            externalReferences => [],
-            imageDbId => qq|$_->{'image_id'}|,
-            imageFileName => $_->{'image_original_filename'},
-            imageFileSize => $size,
-            imageHeight => $height,
-            imageWidth => $width,
-            imageName => $_->{'image_name'},
-            imageTimeStamp => $_->{'image_modified_date'},
-            imageURL => $url,
-            mimeType => _get_mimetype($_->{'image_file_ext'}),
-            observationUnitDbId => qq|$_->{'stock_id'}|,
-            # location and linked phenotypes are not yet available for images in the db
-            imageLocation => {
-                geometry => {
-                    coordinates => [],
-                    type=> '',
+        if ($counter >= $start_index && $counter <= $end_index) {
+            push @data, {
+                additionalInfo           => {
+                    observationLevel    => $_->{'stock_type_name'},
+                    observationUnitName => $_->{'stock_uniquename'},
+                    tags                => \@sorted_tags,
                 },
-                type => '',
-            },
-            observationDbIds => [@observationDbIds],
-        };
+                copyright                => $_->{'image_username'} . " " . substr($_->{'image_modified_date'}, 0, 4),
+                description              => $_->{'image_description'},
+                descriptiveOntologyTerms => \@cvterm_names,
+                externalReferences       => [],
+                imageDbId                => qq|$_->{'image_id'}|,
+                imageFileName            => $_->{'image_original_filename'},
+                imageFileSize            => $size,
+                imageHeight              => $height,
+                imageWidth               => $width,
+                imageName                => $_->{'image_name'},
+                imageTimeStamp           => $_->{'image_modified_date'},
+                imageURL                 => $url,
+                mimeType                 => _get_mimetype($_->{'image_file_ext'}),
+                observationUnitDbId      => qq|$_->{'stock_id'}|,
+                # location and linked phenotypes are not yet available for images in the db
+                imageLocation            => undef,
+                observationDbIds         => [ @observationDbIds ],
+            };
+        }
+        $counter++;
     }
 
     my %result = (data => \@data);
@@ -218,11 +218,20 @@ sub detail {
             push @observationDbIds, $observationDbId
         }
 
+        my %unique_tags;
+        foreach (@{$_->{'tags_array'}}) {
+            $unique_tags{$_->{tag_id}} = $_;
+        }
+        my @sorted_tags;
+        foreach my $tag_id (sort keys %unique_tags) {
+            push @sorted_tags, $unique_tags{$tag_id}{name};
+        }
+
         %result = (
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                tags =>  $_->{'tags_array'},
+                tags =>  \@sorted_tags,
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
@@ -239,13 +248,7 @@ sub detail {
             mimeType => _get_mimetype($_->{'image_file_ext'}),
             observationUnitDbId => qq|$_->{'stock_id'}|,
             # location and linked phenotypes are not yet available for images in the db
-            imageLocation => {
-                geometry => {
-                    coordinates => [],
-                    type=> '',
-                },
-                type => '',
-            },
+            imageLocation => undef,
             observationDbIds => [@observationDbIds],
         );
     }
@@ -397,6 +400,27 @@ sub image_metadata_store {
             }
         }
 
+        if ($additionalInfo_hashref) {
+            my $tag_list = $additionalInfo_hashref->{tags};
+            if($tag_list && scalar(@$tag_list) > 0){
+                foreach(@$tag_list){
+                    my $image_tag_id = CXGN::Tag::exists_tag_named($self->bcs_schema()->storage->dbh, $_);
+
+                    if (!$image_tag_id) {
+                        my $image_tag = CXGN::Tag->new($self->bcs_schema()->storage->dbh);
+                        $image_tag->set_name($_);
+                        $image_tag->set_description('Image: '.$_);
+                        $image_tag->set_sp_person_id($user_id);
+                        $image_tag_id = $image_tag->store();
+                    }
+                    my $image_tag = CXGN::Tag->new($self->bcs_schema()->storage->dbh, $image_tag_id);
+
+
+                    $image->add_tag($image_tag);
+                }
+            }
+        }
+
         push @image_ids, $image_id;
     }
 
@@ -437,11 +461,20 @@ sub image_metadata_store {
             push @observationDbIds, $observationDbId
         }
 
+        my %unique_tags;
+        foreach (@{$_->{'tags_array'}}) {
+            $unique_tags{$_->{tag_id}} = $_;
+        }
+        my @sorted_tags;
+        foreach my $tag_id (sort keys %unique_tags) {
+            push @sorted_tags, $unique_tags{$tag_id}{name};
+        }
+
         push @data, {
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                tags =>  $_->{'tags_array'},
+                tags =>  \@sorted_tags,
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
@@ -458,22 +491,22 @@ sub image_metadata_store {
             mimeType => _get_mimetype($_->{'image_file_ext'}),
             observationUnitDbId => qq|$_->{'stock_id'}|,
             # location and linked phenotypes are not yet available for images in the db
-            imageLocation => {
-                geometry => {
-                    coordinates => [],
-                    type=> '',
-                },
-                type => '',
-            },
+            imageLocation => undef,
             observationDbIds => [@observationDbIds],
         };
 
         $counter++;
     }
 
-    my %result = (data => \@data);
+    my $result;
+    if ($image_id) {
+        $result = $data[0];
+    } else {
+        $result = {data => \@data};
+    }
+
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), 'Image metadata stored');
+    return CXGN::BrAPI::JSONResponse->return_success( $result, $pagination, undef, $self->status(), 'Image metadata stored');
 }
 
 sub image_data_store {
@@ -547,13 +580,32 @@ sub image_data_store {
             push @observationDbIds, $observationDbId
         }
 
+        my %unique_tags;
+        foreach (@{$_->{'tags_array'}}) {
+            $unique_tags{$_->{tag_id}} = $_;
+        }
+        my @sorted_tags;
+        foreach my $tag_id (sort keys %unique_tags) {
+            push @sorted_tags, $unique_tags{$tag_id}{name};
+        }
+
+        my @cvterms = $sgn_image->get_cvterms();
+        # Process cvterms
+        my @cvterm_names;
+        foreach (@cvterms) {
+            push(@cvterm_names, $_->name);
+        }
+
      %result = (
          additionalInfo => {
              observationLevel => $_->{'stock_type_name'},
              observationUnitName => $_->{'stock_uniquename'},
+             tags =>  \@sorted_tags,
          },
          copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
          description => $_->{'image_description'},
+         descriptiveOntologyTerms => \@cvterm_names,
+         externalReferences => [],
          imageDbId => $_->{'image_id'},
          imageFileName => $_->{'image_original_filename'},
          imageFileSize => $size,
@@ -565,13 +617,7 @@ sub image_data_store {
          mimeType => _get_mimetype($_->{'image_file_ext'}),
          observationUnitDbId => $_->{'stock_id'},
          # location and linked phenotypes are not yet available for images in the db
-         imageLocation => {
-             geometry => {
-                 coordinates => [],
-                 type=> '',
-             },
-             type => '',
-         },
+         imageLocation => undef,
          observationDbIds => [@observationDbIds],
      );
     }

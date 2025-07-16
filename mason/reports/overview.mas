@@ -1,0 +1,22 @@
+
+
+<%args>
+
+</%args>
+
+<& /page/page_title.mas, title => 'Database Overview Report' &>
+
+<table id="overview_report_table">
+  <tr>
+    <thead>
+      Data Type
+    </thead>
+    <thead>
+      Total Count
+    </thead>
+    <thead>
+  </tr>
+</table>
+
+
+      

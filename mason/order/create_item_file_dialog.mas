@@ -1,0 +1,117 @@
+<%args>
+
+$order_id => undef
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="modal fade" id="download_item_file_dialog" name="download_item_file_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadItemFileDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="downloadItemFileDialog">Create Ordering Item File</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="item_tracking_ids_div"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="/ajax/order/download_order_item_file?order_id=<% $order_id %>" class="btn btn-default">Download</a>
+                <button id="close_create_item_file_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+.table_1 table {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.table_1 thead th {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.table_1 td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+</style>
+
+<script>
+
+jQuery(document).ready( function() {
+
+    var order_id = "<% $order_id %>";
+
+    jQuery("#download_active_item_file_button").click( function() {
+        jQuery.ajax({
+            url:'/ajax/order/active_order_tracking_ids',
+
+            success: function(response){
+                console.log(response);
+                var html = '';
+                html += '<div class="well well-sm"><table class="table table_1 table-hover table-condensed">';
+                html += '<thead><tr><th>order_tracking_name</th><th>order_tracking_id</th><th>item_name</th><th>order_number</th><th>item_number</th><th>required_quantity</th><th>required_stage</th></tr></thead><tbody>';
+
+                for(var i=0; i<response.tracking_info.length; i++){
+                    html += '<tr><td>'+response.tracking_info[i][0]+'</td>';
+                    html += '<td>'+response.tracking_info[i][1]+'</td>';
+                    html += '<td>'+response.tracking_info[i][2]+'</td>';
+                    html += '<td>'+response.tracking_info[i][3]+'</td>';
+                    html += '<td>'+response.tracking_info[i][4]+'</td>';
+                    html += '<td>'+response.tracking_info[i][5]+'</td>';
+                    html += '<td>'+response.tracking_info[i][6]+'</td></tr>';
+                }
+                html = html + '</tbody></table></div>';
+
+                jQuery('#item_tracking_ids_div').html(html);
+                jQuery('#download_item_file_dialog').modal('show');
+            }
+
+        });
+    });
+
+    jQuery("#download_item_file_button").click( function() {
+        jQuery.ajax({
+            url:'/ajax/order/order_tracking_ids',
+            data: {'order_id': order_id },
+            success: function(response){
+                console.log(response);
+                var html = '';
+                html += '<div class="well well-sm"><table class="table table_1 table-hover table-condensed">';
+                html += '<thead><tr><th>order_tracking_name</th><th>order_tracking_id</th><th>item_name</th><th>order_number</th><th>item_number</th><th>required_quantity</th><th>required_stage</th></tr></thead><tbody>';
+
+                for(var i=0; i<response.tracking_info.length; i++){
+                    html += '<tr><td>'+response.tracking_info[i][0]+'</td>';
+                    html += '<td>'+response.tracking_info[i][1]+'</td>';
+                    html += '<td>'+response.tracking_info[i][2]+'</td>';
+                    html += '<td>'+response.tracking_info[i][3]+'</td>';
+                    html += '<td>'+response.tracking_info[i][4]+'</td>';
+                    html += '<td>'+response.tracking_info[i][5]+'</td>';
+                    html += '<td>'+response.tracking_info[i][6]+'</td></tr>';
+                }
+                html = html + '</tbody></table></div>';
+
+                jQuery('#item_tracking_ids_div').html(html);
+                jQuery('#download_item_file_dialog').modal('show');
+            }
+
+        });
+    });
+
+
+
+});
+
+
+
+</script>

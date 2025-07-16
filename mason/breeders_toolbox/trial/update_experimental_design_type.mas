@@ -33,6 +33,10 @@ $design_name
 %        $method = 'RCBD';
 %    } elsif ($type eq 'Resolvable Row-Column'){
 %        $method = 'RRC';
+%    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
+%        $method = 'DRRC';
+%    } elsif ($type eq 'Un-Replicated Diagonal Design'){
+%        $method = 'URDD';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
@@ -41,6 +45,8 @@ $design_name
 %        $method = 'greenhouse';
 %    } elsif ($type eq 'Split Plot'){
 %        $method = 'splitplot';
+%    } elsif ($type eq 'Strip Plot'){
+%        $method = 'stripplot';
 %    } elsif ($type eq 'Partially Replicated'){
 %        $method = 'p-rep';
 %    } else {

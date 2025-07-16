@@ -4,13 +4,16 @@
 </%doc>
 
 <%args>
-$dataset
+$build => "dummy_build_test"
 $genefamily_id => undef
 $member_id => undef
 $action => undef
 </%args>
 
 <& /page/page_title.mas, title=>'Gene family search' &>
+
+
+<h4>Browse Genefamilies</h4>
 
 <%perl>
 
@@ -21,188 +24,57 @@ my  $DIR = $c->get_conf('genefamily_dir'); # '/home/mueller/dutch_tomato_assembl
 if (!$action) { $action = "input"; }
 if ($genefamily_id eq '') { $genefamily_id=0; }
 
-if ($action eq 'detail') {
-    my $gf = SGN::Genefamily->new(
-        name      => "ORTHOMCL$genefamily_id",
-        dataset   => $dataset,
-        files_dir => $DIR,
-       );
 
-    my $seq_data ="";
-    my $fasta_data = "";
-    my $tree_data = "";
-    my $annot_data = "";
-    my $exp_data = "";
+my @builds = SGN::Genefamily->get_available_builds($DIR);
 
-    my $align_link_disabled = "";
-    my $fasta_link_disabled = "";
-    my $tree_link_disabled = "";
-    my $exp_link_disabled = "";
-
-    my $errors = "";
-    my $big_errors = 0;
-    eval {
-      $seq_data = $gf->get_alignment();
-    };
-    if ($@) {
-      $errors .= "Alignment data not available. ";
-      $big_errors++;
-      $align_link_disabled="disabled";
-    }
-    eval {
-      $fasta_data = $gf->get_fasta();
-
-    };
-    if ($@) {
-      $errors .= "Sequence data not available. ";
-      $big_errors++;
-      $fasta_link_disabled = "disabled";
-    }
-    eval {
-      $tree_data = $gf->get_tree();
-    };
-    if ($@) {
-      $errors .= "Tree data not available. ";
-      $tree_link_disabled = "disabled"
-    }
-    eval {
-      $annot_data = $gf->get_annotation();
-    };
-    if ($@) {
-      $errors .= "Annotation data not available. ";
-      $annot_data = "(No annotation data available)";
-    }
-    eval {
-      $errors .= "Expression data not available. ";
-      $exp_data = $gf->get_expression();
-    };
-    if ($@) {
-      $exp_link_disabled = "disabled";
-    }
-
-    if ($big_errors > 0) { 
-      $errors = "This family does not seem to exist!\n";
-    }
-
-</%perl>
-
-<h1>Family detail for family <% $genefamily_id %></h1>
-<table><tr><td>Family: <b><% $genefamily_id %></b></td><td><% $annot_data %></td></tr>
-  <tr><td colspan="2">Note: <% $errors %></td></tr>
-</table>
-<table><tr>
-    <hr>
-    <td>View</td>
-    <td>
-      <form name="alignment_viewer_form" method="POST" action="/tools/align_viewer/index.pl">
-	<input type="hidden" name="seq_data" value="<% $seq_data %>" />
-	<input type="submit" value="Alignment" <% $align_link_disabled %> />
-	<input type="hidden" name="format" value="fasta" />
-      </form>
-    </td>
-
-    <td>
-      <form name="tree_browser_form" method="post" action="/tools/tree_browser/index.pl">
-	<input type="hidden" name="" value="<% $tree_data %>" />
-	<input type="submit" value="Tree" <% $tree_link_disabled %> />
-      </form>
-    </td>
-
-
-
-    </tr>
-</table>
-<hr>
-<table><tr><td>
-Sequences in fasta:</td><td>
-<form name="tree_browser_unaligned" method="post" action="/tools/align_viewer/index.pl">
-  <input type="hidden" name="seq_data" value="<% $fasta_data %>" />
-  <input type="hidden" name="format" value="fasta_unaligned" />
-  <input type="submit" value="Align" />
-</form>
-
-<td></tr>
-<td colspan="2">
-      <pre><% $fasta_data %></pre>
-</td></tr></table>
-
-<%perl>
-}
-
-if ($action eq 'search' && $member_id) {
-    die 'must provide dataset' unless $dataset;
-    my $member_file = catfile($DIR,$dataset,'genefamily_defs.txt');
-    open (my $F, "<", $member_file) || die "can't open family file $member_file";
-    my $family_nr = 0;
-    my $found = 0;
-    while(<$F>) {
-	
-	if ($_=~/\b$member_id\b/i) {
-	    $found=1;
-	    last();
-	}
-	$family_nr++;
-    }
-
-
-    if ($found) {
-</%perl>
-
-        <form name="genefamily_display_form">
-        In dataset <b><% $dataset %></b>, sequence <% $member_id %> is in family <% $family_nr %>.
-        <input type="hidden" name="genefamily_id" value="<% $family_nr %>" />
-	<input type="hidden" name="dataset" value="<% $dataset %>" />
-	  <input type="hidden" name="action" value="detail" />
-	  <input type="submit" name="view_family" value="view family <% $family_nr %>" />
-        </form>
-
-%   }
-%   else {
-        <% $member_id %> was not found in any family.
-%	return;
-%   }
-%}
-
-<%perl>
-my @datasets = SGN::Genefamily->get_available_datasets($DIR);
-
-my $select = '<select name="dataset">';
+my $select = '<select id="build" name="build">';
 my $selected = "";
-foreach my $d (@datasets) {
-  if ($d eq $dataset) { $selected="selected=\"selected\" "; }
+foreach my $d (@builds) {
+  if ($d eq $build) { $selected="selected=\"selected\" "; }
   else { $selected= ""; }
   $select .= qq | <option value="$d" $selected>$d</option> |;
 }
 $select .= "</select>";
 
-if ($action eq 'input')  {
+print $select."<br /><br />";
 
 </%perl>
 
-	  <table>
-	    <tr><td colspan="2">If you know the ID of your gene family, enter it below.</td></tr>
-	    <tr><td>Genefamily id</td><td>
-		<form name="genefamily_detail_form">
-		  <input name="genefamily_id" size="10" />(a number)
-		  <input type="hidden" name="action" value="detail" />
-		  <% $select %>
-		  <input type="submit" value="Details" />
-		</form>
-	    </td></tr>
-	    <tr><td colspan="2"><b>-OR-</b></td></tr>
-	    <tr><td colspan="2">if you know a member ID, search for the corresponding family:</td></tr>
-	    <tr><td>Member id</td><td>
-	      <form name="member_search_form">
-		<input name="member_id" size="10" /> (e.g. At1g01060)
-		<input type="hidden" name="action" value="search" />
-		<% $select %>
-		<input type="submit" />
-	      </form>
-</td>
-</tr>
-</table>
 
-% }
+<table id="genefamily_datatable">
+<thead>
+  <th>Genefamily ID</th><th>Sequences</th><th>Alignments</th><th>Trees</th><th>Member Count</th><th>Members</th></thead>
+  </thead>
+  <tbody>
+  </tbody>
+  </table>
+
+
+<script>
+
+jQuery(document).ready( function() {
+
+    var build = jQuery('#build option:selected').val();
+    //alert('using build '+build);	      
+    jQuery('#genefamily_datatable').dataTable( {
+	ajax: '/ajax/tools/genefamily/table?build='+build,
+	destroy: true,
+	"aoColumnDefs": [
+            { "bSearchable" : true,
+	      "bVisible"   : false,
+	      "aTargets"   : [ 5 ]
+	    }]
+    });
+});
+
+</script>
+
+
+
+
+
+
+
 
 <%init>
 use File::Spec::Functions;

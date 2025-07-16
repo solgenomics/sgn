@@ -43,30 +43,30 @@ if (!$data_structure) {
 my $url = $c->req->path;
 
 
-my $title;
+my $title; 
 my $collapsed = 0;
-if ($url =~ /pca\/analysis/) {
-$title = 'Select a list of accessions or trials or a dataset and run PCA';
-} else {
-$title = 'Population structure (PCA)';
-$collapsed = 1;
+my $collapsible = 0;
+
+if ($url !~ /pca\/analysis/) {
+  $title = 'Principal component analysis (PCA)';
+  $collapsible = 1;
+  $collapsed = 1 if $url =~ /breeders\/trial/;
 }
 
 </%perl>
 
-
-
+<& /solgs/tools/base.mas &>
 
 % if ($url =~ /pca\/analysis/) {
 
 <& /page/page_title.mas,
-   title => "Principal Component Analysis (PCA)"
+   title => 'Principal Component Analysis (PCA)'
   &>
 
 %}
 
 <&| /page/info_section.mas,
-  collapsible => 1,
+  collapsible => $collapsible,
   collapsed   => $collapsed,
   title       => $title
 &>
@@ -77,19 +77,18 @@ $collapsed = 1;
   <& /solgs/genotyping_protocol/index.mas &>
 
 %}
-<!-- <input id="run_pca" class="button" type="button" value="Run PCA" /> -->
-<!-- /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\// -->
+
 % if ($url !~ /pca\/analysis/ ) {
-<& pca_options.mas &>
-
+  <& pca_options.mas &>
 %} else {
-
-   <& select_menu.mas &>
-
+    <& /solgs/tools/login.mas,
+    tool_url => '/pca/analysis/' ,
+    analysis_type => 'pca' 
+    &>
 %}
 
   <& plot.mas,
-     pop_id => $pop_id,
+    pop_id => $pop_id,
     list_id => $list_id,
     dataset_id => $dataset_id,
     data_structure => $data_structure,
@@ -98,3 +97,5 @@ $collapsed = 1;
 
 </div>
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.pca", "solGS.analysisSave", "solGS.pcaSave"] &>

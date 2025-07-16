@@ -611,7 +611,8 @@ sub search_qtl_traits {
     my $rs;
     if ($trait)
     {
-        my $schema    = $c->dbic_schema("Bio::Chado::Schema");
+        my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+        my $schema    = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
         my $cv_id     = $schema->resultset("Cv::Cv")->search(
             {name => 'solanaceae_phenotype'}
             )->single->cv_id;

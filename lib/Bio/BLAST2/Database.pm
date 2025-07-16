@@ -17,6 +17,7 @@ use IPC::Cmd qw/ can_run /;
 
 use Carp;
 use Memoize;
+use Data::Dumper;
 
 use File::Basename;
 use File::Copy;
@@ -74,8 +75,8 @@ sub open {
         # open succeeds if all the files are there
         return $self if $self->files_are_complete;
 
-        #carp "cannot open for reading, not a complete set of files:\n",
-        #    map "  - $_\n", $self->list_files;
+        carp "cannot open for reading, not a complete set of files:\n",
+           map "  - $_\n", $self->list_files;
         return;
     }
 }
@@ -217,11 +218,11 @@ sub format_from_file {
       }
   }
 
-  #now run formatdb, formatting into files with a -blast-db-new
+  #now run makeblastdb, formatting into files with a -blast-db-new
   #appended to the filebase, so the old databases are still available
   #while the format is running
   my $ffbn = $self->full_file_basename;
-  my $new_ffbn = "$ffbn-blast-db-new";
+  my $new_ffbn = $ffbn; #keep original name so blastdbcmd does not fail      #"$ffbn-blast-db-new";
   my (undef,$ffbn_subdir,undef) = fileparse($ffbn);
   #make sure the destination directories exist.  Create them if not.
   -d $ffbn_subdir or $self->create_dirs && mkpath([$ffbn_subdir])
@@ -232,41 +233,50 @@ sub format_from_file {
   }
   -w $ffbn_subdir or croak "Directory '$ffbn_subdir' is not writable\n";
 
-  systemx( 'formatdb',
-           -i => $seqfile,
-           -n => $new_ffbn,
-           ($title ? (-t => $title) : ()),
-           -l => devnull(),
-           -o => $args{indexed_seqs}      ? 'T' : 'F',
-           -p => $self->type eq 'protein' ? 'T' : 'F',
-         );
+  print STDERR "*** in = $seqfile\n out = $new_ffbn\n title = $title\n dbtype = " . $self->type . "\n indexed seqs = " . $args{indexed_seqs} . "\n\n" ;
+  my $dbtype =  ($self->type eq 'protein') ? 'prot' : 'nucl';
+
+  #makeblastdb -in database.fasta -dbtype [prot|nucl] -parse_seqids
+  eval {
+    systemx( 'makeblastdb',
+            -in => $seqfile,
+            -out => $ffbn,
+            ($title ? (-title => $title) : ()),
+            -dbtype => $dbtype,
+            -parse_seqids,
+            );
+  };
+  if ($@) {
+          print "Something went wrong with makeblastdb- $@\n";
+  } else { print "makeblastdb done for $ffbn\n" ; }
 
   #now if it made an alias file, fix it up to remove the -blast-db-new
   #and the absolute paths, so that when we move it into place, it works
   if( my $aliasfile = do {
-          my %exts = ( protein => '.pal', nucleotide => '.nal');
+          my %exts = ( protein => '.pdb', nucleotide => '.ndb');
           my $n = $new_ffbn.$exts{$self->type};
           (-f $n) ? $n : undef;
       }
      ) {
-    my $aliases = slurp($aliasfile);
-    $aliases =~ s/-blast-db-new//g; #remove the new extension
-    $aliases =~ s/$ffbn_subdir\/*//g; #remove absolute paths
-    CORE::open my $a_fh, '>', $aliasfile or confess "Could not open $aliasfile for writing";
-    print $a_fh $aliases;
-    #closing not necessary for indirect filehandles in lexical variables
-  }
-
+        my $aliases = slurp($aliasfile);
+        $aliases =~ s/-blast-db-new//g; #remove the new extension
+        $aliases =~ s/$ffbn_subdir\/*//g; #remove absolute paths
+        CORE::open my $a_fh, '>', $aliasfile or confess "Could not open $aliasfile for writing";
+        print $a_fh $aliases;
+        #closing not necessary for indirect filehandles in lexical variables
+      } else {
+          print STDERR "Cannot read file $new_ffbn " . $self->type . "\n";
+      }
   #list of files we will be replacing
   my @oldfiles = _list_files($ffbn,$self->type);
 
   #move the newly formatted files (almost) seamlessly into place
   foreach my $newfile ( sort (_list_files($new_ffbn,$self->type)) ) {
     my $dest = $newfile;
-    $dest =~ s/-blast-db-new\./\./;
-
+    #################################
+    #$dest =~ s/-blast-db-new\./\./;
     #move it into the right place
-    move( $newfile => $dest );
+    #move( $newfile => $dest );
 
     #remove this file from the old files array if it's there,
     #since it has just been overwritten
@@ -361,7 +371,7 @@ sub files_are_complete {
   #assemble list of necessary extensions
   my @necessary_extensions = (qw/sq hr in/, #base database files
 			      #add seqid indexes if called for
-			      $self->indexed_seqs ? qw/sd si/ : (),
+			      $self->indexed_seqs ? qw/tf to/ : (),
 			     );
 
   #add protein/nucleotide prefix to extensions
@@ -406,8 +416,8 @@ sub _list_files {
   my ($ffbn,$type) = @_;
 
   #file extensions for each type of blast database
-  my %valid_extensions = ( protein     => [qw/.psq .phr .pin .psd .psi .pal .pnd .pni/],
-			   nucleotide  => [qw/.nsq .nhr .nin .nsd .nsi .nal .nnd .nni/],
+  my %valid_extensions = ( protein     => [qw/.psq .phr .pin .pog .pos .pot .ptf .pto .pdb .phd .phi /],
+			   nucleotide  => [qw/.nsq .nhr .nin .nog .nos .not .ntf .nto .ndb .nhd .nhi /],
 			 );
 
   #file extensions for _this_ database
@@ -438,7 +448,7 @@ sub get_sequence {
         unless $self->files_are_complete;
 
     croak "cannot call get_sequence on a database that has not been indexed for retrieval!"
-        unless $self->indexed_seqs;
+	unless $self->indexed_seqs;
 
     return Bio::BLAST2::Database::Seq->new(
         -bdb => $self,
@@ -463,11 +473,11 @@ sub _read_blastdbcmd_info {
     print STDERR "BLASTDBCMD RETURNED: $blastdbcmd\n";
 
     my ($title) = $blastdbcmd =~ /Database:\s*([\s\S]+)sequences/
-      or die "could not parse output of blastdbcmd (0):\n$blastdbcmd";
+      or return (print STDERR "could not parse output of blastdbcmd (0):\n$blastdbcmd");
     $title =~ s/\s*[\d,]+\s*$//;
 
     my ($seq_cnt) = $blastdbcmd =~ /([\d,]+)\s*sequences/
-      or die "could not parse output of blastdbcmd (1):\n$blastdbcmd";
+      or return(print STDERR "could not parse output of blastdbcmd (1):\n$blastdbcmd");
     $seq_cnt =~ s/,//g;
 
     my ($datestr) =
@@ -477,8 +487,9 @@ sub _read_blastdbcmd_info {
                       )x
                           or die "could not parse output of blastdbcmd (2):\n$blastdbcmd";
 
+    print STDERR "FILES = ".Dumper(\@files);
 
-    my $indexed = (any {/sd$/} @files) && (any {/si$/} @files);
+    my $indexed = (any {/tf$/} @files) && (any {/to$/} @files);
 
     ### set our data
     $self->type( $self->_guess_type )
@@ -571,7 +582,7 @@ database on disk, which is a set of files, the exact structure of
 which varies a bit with the type and size of the sequence set.
 
 This is mostly an object-oriented wrapper for using NCBI's C<blastdbcmd>
-and C<formatdb> tools.
+and C<makeblastdb> tools.
 
 =head1 ATTRIBUTES
 
@@ -647,9 +658,9 @@ at the existing files and sets this
   Args : hash-style list as:
           seqfile => filename containing sequences,
           title   => (optional) title for this blast database,
-          indexed_seqs => (optional) if true, formats the database with
+          hash_index => (optional) if true, formats the database with
                           indexing (and sets indexed_seqs in this obj)
-  Side Effects: runs 'formatdb' to format the given sequences,
+  Side Effects: runs 'makeblastdb' to format the given sequences,
                 dies on failure
 
 =head2 file_modtime
@@ -700,7 +711,7 @@ at the existing files and sets this
   Usage: print "that thing is split, yo" if $db->is_split;
   Desc : determine whether this database is in multiple parts
   Ret  : true if this database has been split into multiple
-         files by formatdb (e.g. nr.00.pin, nr.01.pin, etc.)
+         files by makeblastdb (e.g. nr.00.pin, nr.01.pin, etc.)
   Args : none
   Side Effects: looks in filesystem
 
@@ -754,4 +765,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

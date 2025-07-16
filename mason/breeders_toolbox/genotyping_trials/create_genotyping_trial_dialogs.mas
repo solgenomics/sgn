@@ -24,18 +24,18 @@ $facilities => ();
                             <p>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</p>
                             <p>In addition to sample ID, you have an option to include facility identifier for each well. </p>
                             <br/><br/>
-                            <center>
+                            <div style="text-align: center">
                                 <button id="next_step_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
                             <& /page/page_title.mas, title=>"Select a genotyping project" &>
                             <p>Genotyping projects are for grouping genotyping plates and/or genotyping data together. Genotyping Project should match Vendor Project if you have one. </p>
-                            <center>
+                            <div style="text-align: center">
                                 <button class="btn btn-info" name="create_genotyping_project_link">If you need to create a genotyping project, click here</button><br/><br/>
                                 <button id="next_step_creating_genotyping_plates" class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a genotyping project, go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <&| /util/workflow.mas:step, title=> "Basic Plate Info" &>
@@ -85,9 +85,9 @@ $facilities => ();
                                     </div>
                                 </div>
                                 <br/>
-                                <center>
+                                <div style="text-align: center">
                                     <button id="plate_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                </center>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Well Info" &>
                                 <& /page/page_title.mas, title=>"Provide information about the wells in your plate" &>
@@ -240,6 +240,9 @@ $facilities => ();
                                                 <option value="leaf">Leaf</option>
                                                 <option value="root">Root</option>
                                                 <option value="stem">Stem</option>
+                                                <option value="seed">Seed</option>
+                                                <option value="fruit">Fruit</option>
+                                                <option value="tuber">Tuber</option>
                                             </select>
                                         </div>
                                     </div>
@@ -282,18 +285,18 @@ $facilities => ();
 
                                 <br/>
                                 <div id="next_upload_button" style="display:none">
-                                    <center>
+                                    <div style="text-align: center">
                                         <button id="well_info_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                    </center>
+                                    </div>
                                 </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
                                 <& /page/page_title.mas, title=>"Is your genotyping plate linked with field trials in the database? This information can also be added from the genotyping plate detail page once the trial is saved in the database." &>
                                 <p>If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.</p>
                                 <br/>
-                                <center>
+                                <div style="text-align: center">
                                     <button id="trial_linkage_intro_button"  class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
-                                <center>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
                                 <& /page/page_title.mas, title=>"Finalize and submit your genotyping plate" &>
@@ -314,9 +317,9 @@ $facilities => ();
 
                                 </form>
                                 <hr/>
-                                <center>
+                                <div style="text-align: center">
                                     <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>
-                                </center>
+                                </div>
                             </&>
 
                             <&| /util/workflow.mas:complete, title=> "Complete" &>
@@ -389,7 +392,7 @@ $facilities => ();
                     <li>row (the row position of the sample in the plate e.g. A)</li>
                     <li>column (the column position of the sample in the plate e.g. 10)</li>
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
-                    <li>tissue_type (must be either leaf, root, or stem)</li>
+                    <li>tissue_type (must be either leaf, root, stem, seed, fruit or tuber)</li>
                     </ul>
 
                     <b>Optional fields:</b>

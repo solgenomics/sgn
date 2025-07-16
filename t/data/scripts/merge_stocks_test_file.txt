@@ -1,0 +1,3 @@
+bad name	good name
+merge_candidate	test_accession4
+

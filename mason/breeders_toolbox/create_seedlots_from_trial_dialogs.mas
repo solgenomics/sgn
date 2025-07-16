@@ -1,5 +1,6 @@
 <%args>
 $timestamp => localtime()
+$default_seedlot_material_type => undef
 </%args>
 
 <div class="modal falde" id="create_seedlots_trial_dialog" name="create_seedlots_trial_dialog" tabindex="-1" aria-labelledby="create_seedlots_trial_dialog_title">
@@ -14,21 +15,21 @@ $timestamp => localtime()
 
                     <!-- CREATE SEEDLOTS WORKFLOW -->
                     <&| /util/workflow.mas, id=> "create_seedlots_trial_workflow" &>
-                        
-                        
+
+
                         <!-- STEP 1: Intro -->
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Introduction" &>
                             <p>
-                                This workflow will guide you through the process of creating seedlots from the accessions 
-                                in a field trial.  You can create one new seedlot for each plot or unique accession 
-                                in the trial.  You can also set the initial contents (count or weight) of the seedlot 
+                                This workflow will guide you through the process of creating seedlots from the accessions
+                                in a field trial.  You can create one new seedlot for each plot or unique accession
+                                in the trial.  You can also set the initial contents (count or weight) of the seedlot
                                 as the value of a recorded trait from the trial.
                             </p>
                             <br/><br/>
-                            <center>
+                            <div style="text-align: center">
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <!-- STEP 2: Select Trial -->
@@ -45,10 +46,13 @@ $timestamp => localtime()
                                 </div>
                             </div>
                             <br /><br /><br /><br />
+                            <div class="alert alert-danger" id="trial_error_message_container" style="display: none">
+                                <p id="trial_error_message"></p>
+                            </div>
                             <br/><br/>
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_select_trial" class="btn btn-primary">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <!-- STEP 3: Select Seedlots -->
@@ -56,11 +60,16 @@ $timestamp => localtime()
                             <& /page/page_title.mas, title=>"Select Seedlots" &>
 
                             <p>
-                                Seedlots can be generated from either each <strong>plot</strong> or <strong>accession</strong> in this trial.
+                                Seedlots can be generated from either each <strong>accession</strong> or <strong>plot</strong>
+                                <span class='create_seedlots_trial_subplots_available'> or <strong>subplot</strong></span>
+                                <span class='create_seedlots_trial_plants_available'> or <strong>plant</strong></span>
+                                in this trial.
                             </p>
                             <ul>
-                                <li>If you select <strong>plots</strong>: <span id="create_seedlots_trial_plot_count"></span> seedlots will be created</li>
                                 <li>If you select <strong>accessions</strong>: <span id="create_seedlots_trial_accession_count"></span> seedlots will be created</li>
+                                <li>If you select <strong>plots</strong>: <span id="create_seedlots_trial_plot_count"></span> seedlots will be created</li>
+                                <li class='create_seedlots_trial_subplots_available_list'>If you select <strong>subplots</strong>: <span id="create_seedlots_trial_subplot_count"></span> seedlots will be created</li>
+                                <li class='create_seedlots_trial_plants_available_list'>If you select <strong>plants</strong>: <span id="create_seedlots_trial_plant_count"></span> seedlots will be created</li>
                             </ul>
 
                             <br /><br />
@@ -69,17 +78,19 @@ $timestamp => localtime()
                                 <div class="col-sm-3"></div>
                                 <div class="col-sm-6" >
                                     <select id="create_seedlots_trial_stock_type" class="form-control">
-                                        <option value="plots">Plots</option>
                                         <option value="accessions">Accessions</option>
+                                        <option value="plots">Plots</option>
+                                        <option class="create_seedlots_trial_subplots_available" value="subplots">Subplots</option>
+                                        <option class="create_seedlots_trial_plants_available" value="plants">Plants</option>
                                     </select>
                                 </div>
                                 <div class="col-sm-3"></div>
                             </div>
-                            
+
                             <br/><br/><br /><br />
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_select_stock_type" class="btn btn-primary">Go to Next Step</button>
-                            </center>
+                            </div>
                         </&>
 
                         <!-- STEP 4: Name Seedlots -->
@@ -92,9 +103,14 @@ $timestamp => localtime()
                             <ul>
                                 <li><code>trial_name</code></li>
                                 <li><code>accession_name</code></li>
+                                <li class="plot_level_variable"><code>plot_name</code></li>
                                 <li class="plot_level_variable"><code>plot_number</code></li>
                                 <li class="plot_level_variable"><code>rep</code></li>
                                 <li class="plot_level_variable"><code>block</code></li>
+                                <li class="subplot_level_variable"><code>subplot_name</code></li>
+                                <li class="subplot_level_variable"><code>subplot_index</code></li>
+                                <li class="plant_level_variable"><code>plant_name</code></li>
+                                <li class="plant_level_variable"><code>plant_index</code></li>
                                 <li><code>index</code> - an incrementing index number, starting with 1</li>
                             </ul>
 
@@ -112,9 +128,9 @@ $timestamp => localtime()
 
                             <br /><br /><br />
 
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_name_seedlots" class="btn btn-primary">Go to Next Step</button>
-                            </center>
+                            </div>
 
                             <br /><br />
 
@@ -127,12 +143,12 @@ $timestamp => localtime()
                             <& /page/page_title.mas, title=>"Set Seedlot Contents" &>
 
                             <p>
-                                Each seedlot needs to have its initial contents (either a count or a weight) set.  You 
-                                can either set the same initial value for each seedlot, use the value from one of the 
-                                traits recorded for this trial, or compute a new value from the recorded traits for this 
-                                trial.  If you are creating a seedlot for each accession and select a trait or a computed 
-                                value as their initial value, then the sum of the trait values for each of the accession's 
-                                plots will be used.  The contents of each seedlot can be modified in the table below 
+                                Each seedlot needs to have its initial contents (either a count or a weight) set.  You
+                                can either set the same initial value for each seedlot, use the value from one of the
+                                traits recorded for this trial, or compute a new value from the recorded traits for this
+                                trial.  If you are creating a seedlot for each accession and select a trait or a computed
+                                value as their initial value, then the sum of the trait values for each of the accession's
+                                plots will be used.  The contents of each seedlot can be modified in the table below
                                 before its creation.
                             </p>
 
@@ -181,10 +197,10 @@ $timestamp => localtime()
                                 <label class="col-sm-3 control-label" style="text-align: right">Trait Variables: </label>
                                 <div class="col-sm-9">
                                     <p>
-                                        Use the following variables as substitutions for the trait values to compute a new value 
-                                        for the initial seedlot contents.  If you are creating one seedlot <strong>per plot</strong>, then 
-                                        the single plot trait value will be used in the computation.  If you are creating one seedlot 
-                                        <strong>per accession</strong>, then the sum of the trait values for each plot of that accession 
+                                        Use the following variables as substitutions for the trait values to compute a new value
+                                        for the initial seedlot contents.  If you are creating one seedlot <strong>per plot</strong>, then
+                                        the single plot trait value will be used in the computation.  If you are creating one seedlot
+                                        <strong>per accession</strong>, then the sum of the trait values for each plot of that accession
                                         will be used in the computation.
                                     </p>
                                     <table class="table table-striped">
@@ -202,7 +218,7 @@ $timestamp => localtime()
                                 <div class="col-sm-9">
                                     <input class="form-control" id="create_seedlots_trial_contents_computed_formula" value="" placeholder="{trait_1}/10">
                                     <p>
-                                        <strong>NOTE:</strong> The formula is evaluated using javascript, so any basic operators (+-*/) or 
+                                        <strong>NOTE:</strong> The formula is evaluated using javascript, so any basic operators (+-*/) or
                                         javascript Math functions (Math.abs(x)) can be used.
                                     </p>
                                 </div>
@@ -214,9 +230,9 @@ $timestamp => localtime()
 
                             <br /><br />
 
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_set_contents" class="btn btn-primary">Go to Next Step</button>
-                            </center>
+                            </div>
 
                             <br /><br />
 
@@ -229,8 +245,8 @@ $timestamp => localtime()
                             <& /page/page_title.mas, title=>"Set Seedlot Metadata" &>
 
                             <p>
-                                The following metadata is required for each seedlot.  Fill out the form at the top 
-                                apply the metadata to all of the seedlots.  Then, each seedlot can be manually 
+                                The following metadata is required for each seedlot.  Fill out the form at the top
+                                apply the metadata to all of the seedlots.  Then, each seedlot can be manually
                                 modified in the table below.
                             </p>
 
@@ -261,6 +277,22 @@ $timestamp => localtime()
                                 </div>
                             </div>
 
+                            <br /><br />
+%if ($default_seedlot_material_type) {
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Material Type: </label>
+                                <div class="col-sm-9">
+                                    <input class="form-control" name="create_seedlots_trial_default_material_type" id="create_seedlots_trial_default_material_type" disabled value="<% $default_seedlot_material_type %>">
+                                </div>
+                            </div>
+% } else {
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Material Type: </label>
+                                <div class="col-sm-9" >
+                                    <div id="create_seedlots_trial_material_type_div"></div>
+                                </div>
+                            </div>
+% }
                             <br /><br />
 
                             <div class="form-group">
@@ -299,15 +331,11 @@ $timestamp => localtime()
 
                             <br /><br /><br />
 
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_update_metadata" class="btn btn-primary">Update</button>
-                            </center>
-
-                            <br />
-
-                            <center>
+                                <br />
                                 <button id="create_seedlots_trial_complete_set_metadata" class="btn btn-primary" disabled>Go to Next Step</button>
-                            </center>
+                            </div>
 
                             <br /><br />
 
@@ -320,18 +348,18 @@ $timestamp => localtime()
                             <& /page/page_title.mas, title=>"Confirm Seedlots" &>
 
                             <p>
-                                Confirm the attributes for the new seedlots in the table below.  If something 
-                                is incorrect, navigate to the previous step and correct the information.  Once 
+                                Confirm the attributes for the new seedlots in the table below.  If something
+                                is incorrect, navigate to the previous step and correct the information.  Once
                                 all the information is correct, continue to the next step to create the seedlots.
                             </p>
 
                             <br /><br />
 
-                            <center>
+                            <div style="text-align: center">
                                 <button id="create_seedlots_trial_complete_confirm_seedlots" class="btn btn-primary">
                                     <span class="glyphicon glyphicon-ok"></span>&nbsp;Create Seedlots
                                 </button>
-                            </center>
+                            </div>
 
                             <br /><br />
 
@@ -344,7 +372,7 @@ $timestamp => localtime()
                             <& /page/page_title.mas, title=>"Create Seedlots" &>
 
                             <br /><br />
-                            
+
                             <div id="create_seedlots_trial_uploading">
                                 <p id="create_seedlots_trial_status"><strong>Creating Seedlots...</strong></p>
                                 <div class="progress">
@@ -382,6 +410,8 @@ $timestamp => localtime()
     let BREEDING_PROGRAM_ID;
     let ACCESSIONS;
     let PLOTS;
+    let SUBPLOTS;
+    let PLANTS;
     let TRAITS;
     let TRAIT_DATA;
     let SEEDLOTS;
@@ -472,12 +502,14 @@ $timestamp => localtime()
 
         // Breeding Program Select Box
         get_select_box('breeding_programs', 'create_seedlots_trial_breeding_program_div', { 'name' : 'create_seedlots_trial_breeding_program_id', 'id' : 'create_seedlots_trial_breeding_program_id' });
+        //Material Type Select Box
+        get_select_box('material_types', 'create_seedlots_trial_material_type_div', { 'name' : 'create_seedlots_trial_material_type', 'id' : 'create_seedlots_trial_material_type' });
 
     });
 
 
 
-    // 
+    //
     // WORKFLOW FUNCTIONS
     //
 
@@ -485,7 +517,7 @@ $timestamp => localtime()
      * Complete the Select Trial step
      * - Get details of selected trial
      */
-    function completeSelectTrial() {
+    async function completeSelectTrial() {
 
         // Make sure trial name was entered
         let trial_name = jQuery("#create_seedlots_trial_name").val();
@@ -497,53 +529,41 @@ $timestamp => localtime()
         // Display working modal and disable button
         jQuery('#working_modal').modal("show");
         jQuery("#create_seedlots_trial_complete_select_trial").attr("disabled", true);
+        jQuery("#trial_error_message_container").hide();
 
-        // Get Trial ID
-        getTrialID(trial_name, function(trial_id) {
-            if ( trial_id ) {
-                TRIAL_ID = trial_id;
-
-                // Get the trial details
-                getTrialDetails(trial_id, function(breeding_program_id, accessions, plots, traits) {
-                    if ( breeding_program_id && accessions && plots ) {
-                        BREEDING_PROGRAM_ID = breeding_program_id;
-                        ACCESSIONS = accessions;
-                        PLOTS = plots;
-                        TRAITS = traits ? traits : [];
-                        if ( traits ) {
-                            getTraitData(function() {
-                                _finish(true);
-                            });
-                        }
-                        else {
-                            _finish(true);
-                        }
-                    }
-                    else {
-                        _finish();
-                    }
-                });
-
+        try {
+            TRIAL_ID = await getTrialID(trial_name);
+            if ( TRIAL_ID ) {
+                const { breeding_program_id, accessions, plots, subplots, plants, traits } = await getTrialDetails(TRIAL_ID);
+                BREEDING_PROGRAM_ID = breeding_program_id;
+                ACCESSIONS = accessions;
+                PLOTS = plots;
+                SUBPLOTS = subplots;
+                PLANTS = plants;
+                TRAITS = traits || [];
+                TRAIT_DATA = await getTraitData(TRAITS);
             }
-            else {
-                _finish();
-            }
-        });
-        
 
-        /**
-         * Hide the working modal, renable the button, and continue (if complete)
-         */
-        function _finish(complete) {
+            // Hide the working modal, renable the button, and continue (if complete)
             jQuery('#working_modal').modal("hide");
             jQuery("#create_seedlots_trial_complete_select_trial").attr("disabled", false);
-            jQuery("#create_seedlots_trial_plot_count").html(PLOTS ? PLOTS.length : '');
             jQuery("#create_seedlots_trial_accession_count").html(ACCESSIONS ? ACCESSIONS.length : '');
-            if ( complete ) {
-                Workflow.complete('#create_seedlots_trial_complete_select_trial');
-                Workflow.focus("#create_seedlots_trial_workflow", 2);
-            }
+            jQuery("#create_seedlots_trial_plot_count").html(PLOTS ? PLOTS.length : '');
+            jQuery("#create_seedlots_trial_subplot_count").html(SUBPLOTS ? SUBPLOTS.length : '');
+            jQuery("#create_seedlots_trial_plant_count").html(PLANTS ? PLANTS.length : '');
+            jQuery(".create_seedlots_trial_subplots_available").css("display", SUBPLOTS && SUBPLOTS.length > 0 ? 'inline' : 'none');
+            jQuery(".create_seedlots_trial_plants_available").css("display", PLANTS && PLANTS.length > 0 ? 'inline' : 'none');
+            jQuery(".create_seedlots_trial_subplots_available_list").css("display", SUBPLOTS && SUBPLOTS.length > 0 ? 'list-item' : 'none');
+            jQuery(".create_seedlots_trial_plants_available_list").css("display", PLANTS && PLANTS.length > 0 ? 'list-item' : 'none');
+            Workflow.complete('#create_seedlots_trial_complete_select_trial');
+            Workflow.focus("#create_seedlots_trial_workflow", 2);
         }
+        catch (err) {
+            jQuery('#working_modal').modal("hide");
+            jQuery("#create_seedlots_trial_complete_select_trial").attr("disabled", false);
+            jQuery("#trial_error_message").html(err || 'An Unknown Error Occurred!');
+            jQuery("#trial_error_message_container").show();
+        };
     }
 
     /**
@@ -554,16 +574,27 @@ $timestamp => localtime()
         let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
 
         // Hide the plot-level variables, if stock type is not plots
-        jQuery(".plot_level_variable").css("display", stock_type === "plots" ? "list-item" : "none");
+        jQuery(".plot_level_variable").css("display", ["plots", "subplots", "plants"].includes(stock_type) ? "list-item" : "none");
+        jQuery(".subplot_level_variable").css("display", stock_type === 'subplots' ? "list-item" : "none");
+        jQuery(".plant_level_variable").css("display", stock_type === 'plants' ? "list-item" : "none");
         jQuery("#create_seedlots_trial_name_template").val(
-            stock_type === "plots" ? 
-            "{trial_name}-{accession_name}-{rep}" : 
+            stock_type === "plots" ? "{trial_name}-{accession_name}-{rep}" :
+            stock_type === "subplots" ? "{trial_name}-{accession_name}-subplot{subplot_index}" :
+            stock_type === "plants" ? "{trial_name}-{accession_name}-plant{plant_index}" :
             "{trial_name}-{accession_name}"
         );
 
         // Build the Seedlots
         SEEDLOTS = [];
-        if ( stock_type === 'plots' ) {
+        if ( stock_type === 'accessions' ) {
+            for ( let i = 0; i < ACCESSIONS.length; i++ ) {
+                SEEDLOTS.push({
+                    accession: ACCESSIONS[i],
+                    name: ""
+                });
+            }
+        }
+        else if ( stock_type === 'plots' ) {
             for ( let i = 0; i < PLOTS.length; i++ ) {
                 SEEDLOTS.push({
                     plot: PLOTS[i].plot,
@@ -572,10 +603,22 @@ $timestamp => localtime()
                 });
             }
         }
-        else if ( stock_type === 'accessions' ) {
-            for ( let i = 0; i < ACCESSIONS.length; i++ ) {
+        else if ( stock_type === 'subplots' ) {
+            for ( let i = 0; i < SUBPLOTS.length; i++ ) {
                 SEEDLOTS.push({
-                    accession: ACCESSIONS[i],
+                    plot: SUBPLOTS[i].plot,
+                    subplot: SUBPLOTS[i].subplot,
+                    accession: SUBPLOTS[i].accession,
+                    name: ""
+                });
+            }
+        }
+        else if ( stock_type === 'plants' ) {
+            for ( let i = 0; i < PLANTS.length; i++ ) {
+                SEEDLOTS.push({
+                    plot: PLANTS[i].plot,
+                    plant: PLANTS[i].plant,
+                    accession: PLANTS[i].accession,
                     name: ""
                 });
             }
@@ -643,17 +686,18 @@ $timestamp => localtime()
      * Complete the seedlot confirmation step
      * - Start uploading Seedlots to DB
      */
-    function completeSeedlotConfirmation() {
+    async function completeSeedlotConfirmation() {
         Workflow.complete('#create_seedlots_trial_complete_confirm_seedlots');
         Workflow.focus("#create_seedlots_trial_workflow", 7);
-        startSeedlotUpload(displayUploadResults);
+        const { upload_count, errors } = await uploadSeedlots();
+        displayUploadResults(errors, upload_count);
     }
 
 
 
     //
     // HELPER FUNCTIONS
-    // 
+    //
 
 
     /**
@@ -664,13 +708,20 @@ $timestamp => localtime()
         let trial_name = jQuery("#create_seedlots_trial_name").val();
         let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
         let name_template = jQuery("#create_seedlots_trial_name_template").val();
+        if ( name_template === '{plot_name}' ) {
+            return alert("The seedlot name cannot be the same as the plot name, please add a prefix or suffix to make the name unique");
+        }
 
         let html = "<thead></tr>";
         if ( stock_type === 'accessions' ) html += "<th>Trial Name</th>";
         html += "<th>Accession Name</th>";
-        if ( stock_type === "plots" ) html += "<th>Plot Number</th>";
-        if ( stock_type === "plots" ) html += "<th>Rep</th>";
-        if ( stock_type === "plots" ) html += "<th>Block</th>";
+        if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += "<th>Plot Number</th>";
+        if ( ["plots", "subplots", "plants"].includes(stock_type)  ) html += "<th>Rep</th>";
+        if ( ["plots", "subplots", "plants"].includes(stock_type)  ) html += "<th>Block</th>";
+        if ( stock_type === 'subplots' ) html += "<th>Subplot Name</th>";
+        if ( stock_type === 'subplots' ) html += "<th>Subplot Index</th>";
+        if ( stock_type === 'plants' ) html += "<th>Plant Name</th>";
+        if ( stock_type === 'plants' ) html += "<th>Plant Index</th>";
         html += "<th>Seedlot Name</th>";
         html += "</tr></thead>";
 
@@ -680,20 +731,35 @@ $timestamp => localtime()
                 .replace("{trial_name}", trial_name)
                 .replace("{accession_name}", SEEDLOTS[i].accession.name)
                 .replace("{index}", index);
-            if ( stock_type === "plots" ) {
+            if ( SEEDLOTS[i].plot ) {
                 name = name
+                    .replace("{plot_name}", SEEDLOTS[i].plot.name)
                     .replace("{plot_number}", SEEDLOTS[i].plot.number)
                     .replace("{rep}", SEEDLOTS[i].plot.rep)
                     .replace("{block}", SEEDLOTS[i].plot.block);
+            }
+            if ( SEEDLOTS[i].subplot ) {
+                name = name
+                    .replace("{subplot_name}", SEEDLOTS[i].subplot.name)
+                    .replace("{subplot_index}", SEEDLOTS[i].subplot.index);
+            }
+            if ( SEEDLOTS[i].plant ) {
+                name = name
+                    .replace("{plant_name}", SEEDLOTS[i].plant.name)
+                    .replace("{plant_index}", SEEDLOTS[i].plant.index);
             }
             SEEDLOTS[i].name = name;
 
             html += "<tr>";
             if ( stock_type === 'accessions' ) html += "<td>" + trial_name + "</td>";
             html += "<td>" + SEEDLOTS[i].accession.name + "</td>";
-            if ( stock_type === 'plots' ) html += "<td>" + SEEDLOTS[i].plot.number + "</td>";
-            if ( stock_type === 'plots' ) html += "<td>" + SEEDLOTS[i].plot.rep + "</td>";
-            if ( stock_type === 'plots' ) html += "<td>" + SEEDLOTS[i].plot.block + "</td>";
+            if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += "<td>" + SEEDLOTS[i].plot.number + "</td>";
+            if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += "<td>" + SEEDLOTS[i].plot.rep + "</td>";
+            if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += "<td>" + SEEDLOTS[i].plot.block + "</td>";
+            if ( stock_type === 'subplots' ) html += "<td>" + SEEDLOTS[i].subplot.name + "</td>";
+            if ( stock_type === 'subplots' ) html += "<td>" + SEEDLOTS[i].subplot.index + "</td>";
+            if ( stock_type === 'plants' ) html += "<td>" + SEEDLOTS[i].plant.name + "</td>";
+            if ( stock_type === 'plants' ) html += "<td>" + SEEDLOTS[i].plant.index + "</td>";
             html += "<td><input class='form-control create_seedlots_trial_name_seedlot' data-index='" + i + "' value='" + name + "'></td>";
             html += "</tr>";
         }
@@ -721,7 +787,7 @@ $timestamp => localtime()
 
         for ( let i = 0; i < SEEDLOTS.length; i++ ) {
             let contents = 0;
-            
+
             // Set contents value
             if ( value === 'constant' ) {
                 contents = constant;
@@ -742,10 +808,10 @@ $timestamp => localtime()
                 try {
                     let eval_value = eval(seedlot_formula);
                     if ( eval_value ) contents = eval_value;
-                } 
+                }
                 catch (e) {}
             }
-        
+
             html += "<tr>";
             html += "<td>" + SEEDLOTS[i].name + "</td>";
             html += "<td><input class='form-control create_seedlots_trial_contents_seedlot' data-index='" + i + "' value='" + contents + "'></td>";
@@ -767,7 +833,7 @@ $timestamp => localtime()
             let contents = 0;
             for ( let j = 0; j < TRAIT_DATA.length; j++ ) {
                 if ( TRAIT_DATA[j].trait_id + '' === trait_id + '' ) {
-                
+
                     // Sum plots of the same accession
                     if ( stock_type === 'accessions' ) {
                         if ( SEEDLOTS[seedlot_index].accession.id === TRAIT_DATA[j].accession_id ) {
@@ -779,12 +845,12 @@ $timestamp => localtime()
                     }
 
                     // Use the plot value
-                    else if ( stock_type === 'plots' ) {
+                    else {
                         if ( SEEDLOTS[seedlot_index].plot.id === TRAIT_DATA[j].plot_id ) {
                             contents = TRAIT_DATA[j].trait_value;
                         }
                     }
-                    
+
                 }
             }
             return contents;
@@ -803,6 +869,13 @@ $timestamp => localtime()
         let o = jQuery("#create_seedlots_trial_organization").val();
         let t = jQuery("#create_seedlots_trial_timestamp").val();
         let d = jQuery("#create_seedlots_trial_description").val();
+        let mt = "";
+        const default_seedlot_material_type = "<%$default_seedlot_material_type%>";
+        if (default_seedlot_material_type) {
+            mt = default_seedlot_material_type;
+        } else {
+            mt = jQuery("#create_seedlots_trial_material_type").val();
+        }
 
         // Check for required fields
         if ( !p_id || p_id === '' ) {
@@ -815,6 +888,10 @@ $timestamp => localtime()
         }
         if ( !b || b === '' ) {
             if (!quiet) alert("Box Name is required");
+            return;
+        }
+        if ( !mt || mt === '' ) {
+            if (!quiet) alert("Material type is required");
             return;
         }
 
@@ -847,6 +924,7 @@ $timestamp => localtime()
                 },
                 location: l,
                 box_name: b,
+                material_type: mt,
                 quality_issues: q,
                 organization: o,
                 timestamp: t,
@@ -873,10 +951,13 @@ $timestamp => localtime()
         html += "<th>Breeding Program</th>";
         html += "<th>Source Accession</th>";
         if ( stock_type === 'plots' ) html += "<th>Source Plot</th>";
+        if ( stock_type === 'subplots' ) html += "<th>Source Subplot</th>";
+        if ( stock_type === 'plants' ) html += "<th>Source Plant</th>";
         if ( contents_type === 'amount' ) html += "<th>Contents (Amount)</th>";
         if ( contents_type === 'weight' ) html += "<th>Contents (Weight)</th>";
         html += "<th>Location</th>";
         html += "<th>Box Name</th>";
+        html += "<th>Material Type</th>";
         html += "<th>Quality Issues</th>";
         html += "<th>Organization</th>";
         html += "<th>Timestamp</th>";
@@ -889,9 +970,12 @@ $timestamp => localtime()
             html += "<td>" + SEEDLOTS[i].metadata.breeding_program.name + "</td>";
             html += "<td>" + SEEDLOTS[i].accession.name + "</td>";
             if ( stock_type === 'plots' ) html += "<td>" + SEEDLOTS[i].plot.name + "</td>";
+            if ( stock_type === 'subplots' ) html += "<td>" + SEEDLOTS[i].subplot.name + "</td>";
+            if ( stock_type === 'plants' ) html += "<td>" + SEEDLOTS[i].plant.name + "</td>";
             html += "<td>" + SEEDLOTS[i].contents + "</td>";
             html += "<td>" + SEEDLOTS[i].metadata.location + "</td>";
             html += "<td>" + SEEDLOTS[i].metadata.box_name + "</td>";
+            html += "<td>" + SEEDLOTS[i].metadata.material_type + "</td>";
             html += "<td>" + SEEDLOTS[i].metadata.quality_issues + "</td>";
             html += "<td>" + SEEDLOTS[i].metadata.organization + "</td>";
             html += "<td>" + SEEDLOTS[i].metadata.timestamp + "</td>";
@@ -904,76 +988,77 @@ $timestamp => localtime()
 
 
     /**
-     * Upload each of the Seedlots to the Database in batches of up to 
+     * Upload each of the Seedlots to the Database in batches of up to
      * UPLOAD_BATCH_SIZE seedlots per batch
-     * @param {Function} callback Callback function(errors, success_count)
+     * @return {Promise<{ upload_count, errors }>} Return a count of successfully uploaded seedlots and error messages
      */
-    function startSeedlotUpload(callback) {
+    function uploadSeedlots() {
         let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
         let contents_type = jQuery("#create_seedlots_trial_contents_type").val();
-        jQuery("#create_seedlots_trial_status").html("<strong>Creating Seedlots...</strong>");
-        jQuery("#create_seedlots_trial_progress").css('width', '0%').attr('aria-valuenow', 0);
-        jQuery("#create_seedlots_trial_results").empty();
+        let seedlot_count = 0;                      // Count of processed seedlots
+        let seedlot_total = SEEDLOTS.length;        // Total number of seedlots
+        let upload_count = 0;                       // Count of successfully created/uploaded seedlots
+        let errors = [];                            // Array of errors encountered during upload
 
-        // Create Results table
-        let html = "<thead><tr>";
-        html += "<th>Seedlot</th>";
-        html += "<th>Progress</th>";
-        html += "</tr></thead>";
-        html += "<tbody id='create_seedlots_trial_results_table_body'></tbody>";
-        for ( let i = 0; i < SEEDLOTS.length; i++ ) {
-            let status_id = "create_seedlots_trial_results_row_" + i;
-            html += "<tr><td>" + SEEDLOTS[i].name + "</td><td id='" + status_id + "'>Pending...</td>";
-            SEEDLOTS[i].status_id = status_id;
-        }
-        jQuery("#create_seedlots_trial_results_table").html(html);
+        return new Promise(async (resolve) => {
+            jQuery("#create_seedlots_trial_status").html("<strong>Creating Seedlots...</strong>");
+            jQuery("#create_seedlots_trial_progress").css('width', '0%').attr('aria-valuenow', 0);
+            jQuery("#create_seedlots_trial_results").empty();
 
-        // Information to return
-        let upload_count = 0;                                           // Count of successfully created/uploaded seedlots
-        let errors = [];                                                // Array of errors encountered during upload
+            // Create Results table
+            let html = "<thead><tr>";
+            html += "<th>Seedlot</th>";
+            html += "<th>Progress</th>";
+            html += "</tr></thead>";
+            html += "<tbody id='create_seedlots_trial_results_table_body'></tbody>";
+            for ( let i = 0; i < SEEDLOTS.length; i++ ) {
+                let status_id = "create_seedlots_trial_results_row_" + i;
+                html += "<tr><td>" + SEEDLOTS[i].name + "</td><td id='" + status_id + "'>Pending...</td>";
+                SEEDLOTS[i].status_id = status_id;
+            }
+            jQuery("#create_seedlots_trial_results_table").html(html);
 
-        // Set counts of seedlots and batches
-        let seedlot_count = 0;                                          // Count of completed seedlots
-        let seedlot_total = SEEDLOTS.length;                            // Total number of seedlots
-        let seedlot_batch_count;                                        // Count of completed seedlots, in current batch
-        let seedlot_batch_total;                                        // Total number of seedlots, in current batch
-        let batch_count = 0                                             // Count of completed batches
-        let batch_total = Math.ceil(seedlot_total/UPLOAD_BATCH_SIZE);   // Total number of batches
+            // Chunk the Seedlots into batches
+            let batches = [];
+            while ( SEEDLOTS.length > 0 ) {
+                batches.push(SEEDLOTS.splice(0, UPLOAD_BATCH_SIZE));
+            }
 
-        // Start the first batch
-        _uploadBatch();
+            // Upload each batch
+            for ( let i = 0; i < batches.length; i++ ) {
+                await _uploadBatch(batches[i]);
+            }
+
+            // Refresh the matviews when complete
+            jQuery.ajax({ url: '/ajax/breeder/refresh?matviews=stockprop' });
+
+            // Display Upload Results
+            resolve({ upload_count, errors });
+        });
 
         /**
          * Upload a batch of Seedlots (max set with UPLOAD_BATCH_SIZE)
-         * - when the seedlot is complete, call _finishSeedlot()
          */
-        function _uploadBatch() {
-            let seedlot_batch_start = batch_count*UPLOAD_BATCH_SIZE;
-            let seedlot_batch_end = seedlot_batch_start+UPLOAD_BATCH_SIZE;
-            if ( seedlot_batch_end > seedlot_total ) seedlot_batch_end = seedlot_total;
-            seedlot_batch_count = 0;
-            seedlot_batch_total = seedlot_batch_end - seedlot_batch_start;
-            for ( let seedlot_index = seedlot_batch_start; seedlot_index < seedlot_batch_end; seedlot_index++ ) {
-                _uploadSeedlot(seedlot_index, function() {
-                    let p = ((seedlot_count+1)/seedlot_total)*100;
-                    jQuery("#create_seedlots_trial_progress").css('width', p+'%').attr('aria-valuenow', p);
-                    _finishSeedlot();
-                });
-            }
+        async function _uploadBatch(batch) {
+            const requests = [];
+            batch.forEach((seedlot) => {
+                requests.push(_processSeedlot(seedlot));
+            });
+            await Promise.all(requests);
         }
 
         /**
-         * Upload the specified seedlot
+         * Process the specified seedlot
          */
-        function _uploadSeedlot(seedlot_index, callback) {
-            let seedlot = SEEDLOTS[seedlot_index];
-            _setStatusInfo(seedlot.status_id, "Creating...");
+        async function _processSeedlot(seedlot) {
+            _setStatusInfo(seedlot, "Creating...");
 
             // Set seedlot request data
             let data = {
                 'seedlot_name': seedlot.name,
                 'seedlot_location': seedlot.metadata.location,
                 'seedlot_box_name': seedlot.metadata.box_name,
+                'seedlot_material_type': seedlot.metadata.material_type,
                 'seedlot_accession_uniquename': seedlot.accession.name,
                 'seedlot_organization': seedlot.metadata.organization,
                 'seedlot_timestamp': seedlot.metadata.timestamp,
@@ -982,92 +1067,71 @@ $timestamp => localtime()
                 'seedlot_quality': seedlot.metadata.quality_issues,
                 'no_refresh': 1
             };
-            if ( stock_type === 'plots' ) data['seedlot_plot_uniquename'] = seedlot.plot.name;
+            if ( stock_type === 'plots' ) data['seedlot_source'] = seedlot.plot.name;
+            if ( stock_type === 'subplots' ) data['seedlot_source'] = seedlot.subplot.name;
+            if ( stock_type === 'plants' ) data['seedlot_source'] = seedlot.plant.name;
             if ( contents_type === 'amount' ) data['seedlot_amount'] = seedlot.contents;
             if ( contents_type === 'weight' ) data['seedlot_weight'] = seedlot.contents;
 
-            jQuery.ajax({
-                url: '/ajax/breeders/seedlot-create',
-                data: data,
-                success: function(response) {
-                    jQuery('#working_modal').modal('hide');
-                    if (response.success === 1) {
-                        upload_count++;
-                        _setStatusComplete(seedlot.status_id);
+            // Upload the Seedlot
+            await _uploadSeedlot(seedlot, data);
+
+            // Update Progress Bar
+            seedlot_count++;
+            let p = (seedlot_count/seedlot_total)*100;
+            jQuery("#create_seedlots_trial_progress").css('width', p+'%').attr('aria-valuenow', p);
+        }
+
+        /**
+         * Upload the specified seedlot
+         */
+        function _uploadSeedlot(seedlot, data) {
+            return new Promise((resolve) => {
+                jQuery.ajax({
+                    url: '/ajax/breeders/seedlot-create',
+                    data: data,
+                    success: (response) => {
+                        if (response.success === 1) {
+                            _setStatusComplete(seedlot);
+                        }
+                        else if (response.error) {
+                            _setStatusError(seedlot, response.error);
+                        }
+                        resolve();
+                    },
+                    error: () => {
+                        _setStatusError(seedlot, "AJAX error");
+                        resolve();
                     }
-                    if (response.error) {
-                        errors.push({
-                            index: seedlot_index,
-                            seedlot: seedlot,
-                            error: response.error
-                        });
-                        _setStatusError(seedlot.status_id, response.error);
-                    }
-                },
-                error: function(response){
-                    let msg = "AJAX error";
-                    errors.push({
-                        index: seedlot_index,
-                        seedlot: seedlot,
-                        error: msg
-                    });
-                    _setStatusError(seedlot.status_id, msg);
-                },
-                complete: function() {
-                    return callback();
-                }
+                });
             });
         }
 
         /**
          * Display an info message for the specified seedlot
          */
-        function _setStatusInfo(id, info) {
-            jQuery("#" + id).html(info);
+        function _setStatusInfo(seedlot, info) {
+            jQuery("#" + seedlot.status_id).html(info);
         }
 
         /**
          * Display a complete message for the specified seedlot
          */
-        function _setStatusComplete(id) {
-            jQuery("#" + id).html("<strong><span class='glyphicon glyphicon-ok-sign text-success'></span></strong>&nbsp;Seedlot Created!");
+        function _setStatusComplete(seedlot) {
+            upload_count++;
+            _setStatusInfo(seedlot, "<strong><span class='glyphicon glyphicon-ok-sign text-success'></span></strong>&nbsp;Seedlot Created!");
         }
 
         /**
          * Display an error message for the specified seedlot
          */
-        function _setStatusError(id, error) {
-            jQuery("#" + id).html("<strong><span class='glyphicon glyphicon-exclamation-sign text-danger'></span>&nbsp;ERROR:</strong> " + error);
-        }
-
-        /**
-         * Finished uploading a seedlot
-         * - when all of the batch's seedlots have been uploaded, call _finishBatch()
-         */
-        function _finishSeedlot() {
-            seedlot_count++;
-            seedlot_batch_count++;
-            if ( seedlot_batch_count >= seedlot_batch_total ) {
-                _finishBatch();
-            }
-        }
-
-        /**
-         * Finished uploading a batch of seedlots
-         * - when all of the batches are complete, refresh the matviews
-         * - if there are remaining batches, start the next batch
-         */
-        function _finishBatch() {
-            batch_count++;
-            if ( batch_count >= batch_total ) {
-                jQuery.ajax({
-                    url: '/ajax/breeder/refresh?matviews=stockprop'
-                });
-                if ( callback ) return callback(errors, upload_count);
-            }
-            else {
-                _uploadBatch();
-            }
+        function _setStatusError(seedlot, error) {
+            errors.push({
+                index: seedlot.status_id,
+                seedlot: seedlot,
+                error: error
+            });
+            _setStatusInfo(seedlot, "<strong><span class='glyphicon glyphicon-exclamation-sign text-danger'></span>&nbsp;ERROR:</strong> " + error);
         }
     }
 
@@ -1106,33 +1170,28 @@ $timestamp => localtime()
     /**
      * Query the database for the trial id (by name)
      * @param {string} trial_name Trial Name
-     * @param {Function} callback Callback function(trial_id)
+     * @return {Promise<trial_id>} the trial id for the named trial
      */
     function getTrialID(trial_name, callback) {
-        let trial_id;
-        jQuery.ajax({
-            type: "GET",
-            url: '/ajax/breeders/trial_lookup',
-            data: {
-                name: trial_name
-            },
-            success: function(response) {
-                if (response.error) {
-                    alert(response.error);
-                }
-                else if ( response.trial_id ) {
-                    trial_id = response.trial_id;
-                }
-                else {
-                    alert('Could not lookup trial');
-                }
-            },
-            error: function(response){
-                alert('Could not lookup trial');
-            },
-            complete: function() {
-                return callback(trial_id);
-            }
+        return new Promise((resolve, reject) => {
+            let trial_id;
+            jQuery.ajax({
+                type: "GET",
+                url: '/ajax/breeders/trial_lookup',
+                data: { name: trial_name },
+                success: (response) => {
+                    if (response.error) {
+                        reject(response.error);
+                    }
+                    else if ( response.trial_id ) {
+                        resolve(response.trial_id);
+                    }
+                    else {
+                        reject('Could not lookup trial');
+                    }
+                },
+                error: () => reject('Could not lookup trial')
+            });
         });
     }
 
@@ -1141,194 +1200,240 @@ $timestamp => localtime()
      * - Breeding Program ID
      * - Accessions
      * - Plots
+     * - Subplots
+     * - Plants
      * - Traits
      * @param {int} trial_id Trial ID
-     * @param {function} callback Callback function(breeding_program_id, accessions, plots, traits)
+     * @return {Promise<{ breeding_program_id, accessions, plots, subplots, plants, traits }>} Returns all trial details
      */
-    function getTrialDetails(trial_id, callback) {
-        let count = 0;
-        let total = 4;
-
-        let breeding_program_id, accessions, plots, traits;
-
-        _getBreedingProgram();
-        _getAccessions();
-        _getPlots();
-        _getTraits();
-
-        function _getBreedingProgram(callback) {
-            jQuery.ajax({
-                type: "GET",
-                url: '/breeders/programs_by_trial/' + trial_id,
-                success: function(response) {
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                    else if ( response.projects ) {
-                        breeding_program_id = response.projects[0][0];
-                    }
-                    else {
-                        alert('Could not lookup trial breeding program');
-                    }
-                },
-                error: function(response){
-                    alert('Could not lookup trial breeding program');
-                },
-                complete: function() {
-                    _finish();
-                }
-            });
-        }
-
-        function _getAccessions(callback) {
-            jQuery.ajax({
-                type: "GET",
-                url: '/ajax/breeders/trial/' + trial_id + '/accessions',
-                success: function(response) {
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                    else if ( response.accessions ) {
-                        accessions = [];
-                        for ( let i = 0; i < response.accessions[0].length; i++ ) {
-                            accessions.push({
-                                id: response.accessions[0][i].stock_id, 
-                                name: response.accessions[0][i].accession_name
-                            });
-                        }
-                    }
-                    else {
-                        alert('Could not lookup trial accessions');
-                    }
-                },
-                error: function(response){
-                    alert('Could not lookup trial accessions');
-                },
-                complete: function() {
-                    _finish();
-                }
-            });
-        }
-
-        function _getPlots(callback) {
-            jQuery.ajax({
-                type: "GET",
-                url: '/ajax/breeders/trial/' + trial_id + '/layout',
-                success: function(response) {
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                    else if ( response.design ) {
-                        plots = [];
-                        for (const [plot, info] of Object.entries(response.design)) {
-                            plots.push({
-                                plot: {
-                                    id: info.plot_id,
-                                    number: info.plot_number,
-                                    name: info.plot_name,
-                                    rep: info.rep_number,
-                                    block: info.block_number
-                                },
-                                accession: {
-                                    name: info.accession_name,
-                                    id: info.accession_id
-                                }
-                            });
-                        }
-                    }
-                    else {
-                        alert('Could not lookup trial plots');
-                    }
-                },
-                error: function(response){
-                    alert('Could not lookup trial plots');
-                },
-                complete: function() {
-                    _finish();
-                }
-            });
-        }
-
-        function _getTraits(callback) {
-            jQuery.ajax({
-                type: "GET",
-                url: '/ajax/breeders/trial/' + trial_id + '/traits_assayed?stock_type=plot',
-                success: function(response) {
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                    else if ( response.traits_assayed ) {
-                        traits = [];
-                        let html = "";
-                        for ( let i = 0; i < response.traits_assayed[0].length; i++ ) {
-                            let id = response.traits_assayed[0][i][0];
-                            let name = response.traits_assayed[0][i][1];
-                            let variable = "trait_" + parseInt(i+1);
-                            traits.push({
-                                id: id,
-                                name: name,
-                                variable: variable
-                            });
-                            html += "<tr><td><code>{" + variable + "}</code></td>";
-                            html += "<td>" + name + "</td></tr>";
-                        }
-                        jQuery("#create_seedlots_trial_contents_computed_table").html(html);
-                    }
-                    else {
-                        alert('Could not lookup trial traits');
-                    }
-                },
-                error: function(response){
-                    alert('Could not lookup trial traits');
-                },
-                complete: function() {
-                    _finish();
-                }
-            });
-        }
-        
-        function _finish() {
-            count++;
-            if ( count >= total ) {
-                return callback(breeding_program_id, accessions, plots, traits);
+    async function getTrialDetails(trial_id, callback) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const [ breeding_program_id, accessions, { plots, subplots, plants }, traits ] = await Promise.all([
+                    _getBreedingProgram(),
+                    _getAccessions(),
+                    _getPlots(),
+                    _getTraits()
+                ]);
+                resolve({ breeding_program_id, accessions, plots, subplots, plants, traits });
             }
+            catch (err) {
+                reject(err);
+            }
+        });
+
+        // Returns breeding_program_id
+        function _getBreedingProgram() {
+            return new Promise((resolve, reject) => {
+                jQuery.ajax({
+                    type: "GET",
+                    url: '/breeders/programs_by_trial/' + trial_id,
+                    success: (response) =>  {
+                        if (response.error) {
+                            reject(response.error);
+                        }
+                        else if ( response.projects ) {
+                            resolve(response.projects[0][0]);
+                        }
+                        else {
+                            reject('Could not lookup trial breeding program');
+                        }
+                    },
+                    error: () => reject('Could not lookup trial breeding program')
+                });
+            });
+        }
+
+        // Returns accessions[]
+        function _getAccessions() {
+            return new Promise((resolve, reject) => {
+                jQuery.ajax({
+                    type: "GET",
+                    url: '/ajax/breeders/trial/' + trial_id + '/accessions',
+                    success: (response) => {
+                        if (response.error) {
+                            reject(response.error);
+                        }
+                        else if ( response.accessions ) {
+                            let accessions = [];
+                            for ( let i = 0; i < response.accessions[0].length; i++ ) {
+                                if ( response.accessions[0][i].stock_type !== 'accession' ) {
+                                    error = `This tool only supports trials with plots that contain accessions.  This trial has one or more plots that contain a ${response.accessions[0][i].stock_type}.`;
+                                }
+                                accessions.push({
+                                    id: response.accessions[0][i].stock_id,
+                                    name: response.accessions[0][i].accession_name
+                                });
+                            }
+                            resolve(accessions);
+                        }
+                        else {
+                            reject('Could not lookup trial accessions');
+                        }
+                    },
+                    error: () => reject('Could not lookup trial accessions')
+                });
+            });
+        }
+
+        // Returns { plots[], subplots[], plants[] }
+        function _getPlots() {
+            return new Promise((resolve, reject) => {
+                jQuery.ajax({
+                    type: "GET",
+                    url: '/ajax/breeders/trial/' + trial_id + '/layout',
+                    success: (response) => {
+                        if (response.error) {
+                            reject(response.error);
+                        }
+                        else if ( response.design ) {
+                            let plots = [];
+                            let subplots = [];
+                            let plants = [];
+                            for (const [plot, info] of Object.entries(response.design)) {
+                                plots.push({
+                                    plot: {
+                                        id: info.plot_id,
+                                        number: info.plot_number,
+                                        name: info.plot_name,
+                                        rep: info.rep_number,
+                                        block: info.block_number
+                                    },
+                                    accession: {
+                                        name: info.accession_name,
+                                        id: info.accession_id
+                                    }
+                                });
+                                if ( info.subplot_names && info.subplot_ids && info.subplot_index_numbers ) {
+                                    for ( let i = 0; i < info.subplot_names.length; i++ ) {
+                                        subplots.push({
+                                            subplot: {
+                                                name: info.subplot_names[i],
+                                                id: info.subplot_ids[i],
+                                                index: info.subplot_index_numbers[i]
+                                            },
+                                            plot: {
+                                                id: info.plot_id,
+                                                number: info.plot_number,
+                                                name: info.plot_name,
+                                                rep: info.rep_number,
+                                                block: info.block_number
+                                            },
+                                            accession: {
+                                                name: info.accession_name,
+                                                id: info.accession_id
+                                            }
+                                        });
+                                    }
+                                }
+                                if ( info.plant_names && info.plant_ids && info.plant_index_numbers ) {
+                                    for ( let i = 0; i < info.plant_names.length; i++ ) {
+                                        plants.push({
+                                            plant: {
+                                                name: info.plant_names[i],
+                                                id: info.plant_ids[i],
+                                                index: info.plant_index_numbers[i]
+                                            },
+                                            plot: {
+                                                id: info.plot_id,
+                                                number: info.plot_number,
+                                                name: info.plot_name,
+                                                rep: info.rep_number,
+                                                block: info.block_number
+                                            },
+                                            accession: {
+                                                name: info.accession_name,
+                                                id: info.accession_id
+                                            }
+                                        });
+                                    }
+                                }
+                                resolve({ plots, subplots, plants });
+                            }
+                        }
+                        else {
+                            reject('Could not lookup trial plots');
+                        }
+                    },
+                    error: () => reject('Could not lookup trial plots')
+                });
+            });
+        }
+
+        // Returns traits[]
+        function _getTraits() {
+            return new Promise((resolve, reject) => {
+                jQuery.ajax({
+                    type: "GET",
+                    url: '/ajax/breeders/trial/' + trial_id + '/traits_assayed?stock_type=plot',
+                    success: (response) => {
+                        if (response.error) {
+                            reject(response.error);
+                        }
+                        else if ( response.traits_assayed ) {
+                            let traits = [];
+                            let html = "";
+                            for ( let i = 0; i < response.traits_assayed[0].length; i++ ) {
+                                let id = response.traits_assayed[0][i][0];
+                                let name = response.traits_assayed[0][i][1];
+                                let variable = "trait_" + parseInt(i+1);
+                                traits.push({
+                                    id: id,
+                                    name: name,
+                                    variable: variable
+                                });
+                                html += "<tr><td><code>{" + variable + "}</code></td>";
+                                html += "<td>" + name + "</td></tr>";
+                            }
+                            jQuery("#create_seedlots_trial_contents_computed_table").html(html);
+                            resolve(traits);
+                        }
+                        else {
+                            reject('Could not lookup trial traits');
+                        }
+                    },
+                    error: () => reject('Could not lookup trial traits')
+                });
+            });
         }
     }
 
     /**
      * Set the plot-level trait data for all of the traits
-     * @param {function} callback Callback function()
+     * @return {Promise<TRAIT_DATA[]>} data for each available trait
      */
-    function getTraitData(callback) {
-        TRAIT_DATA = [];
-        
-        let count = 0;
-        let total = TRAITS.length;
-        for ( let i = 0; i < TRAITS.length; i++ ) {
-            _getTraitData(TRAITS[i].id, TRAITS[i].name);
-        }
+    async function getTraitData(traits = []) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const requests = [];
+                traits.forEach((t) => requests.push(_getTraitData(t.id, t.name)));
+                const data = await Promise.all(requests);
+                resolve(data ? data.flat() : []);
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
 
         function _getTraitData(trait_id, trait_name) {
-            jQuery.ajax({
-                type: "GET",
-                url: '/ajax/breeders/trial/' + TRIAL_ID + '/trait_phenotypes/?trait=' + trait_id + '&display=plot',
-                success: function(response) {
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                    else if ( response.status && response.status === 'success' && response.data ) {
-                        _parseTraitData(response.data, trait_id, trait_name);
-                    }
-                    else {
-                        alert('Could not get trait data');
-                    }
-                },
-                error: function(response){
-                    alert('Could not get trait data');
-                },
-                complete: function() {
-                    _finish();
-                }
+            return new Promise((resolve, reject) => {
+                jQuery.ajax({
+                    type: "GET",
+                    url: '/ajax/breeders/trial/' + TRIAL_ID + '/trait_phenotypes/?trait=' + trait_id + '&display=plot',
+                    success: (response) => {
+                        if (response.error) {
+                            reject(response.error);
+                        }
+                        else if ( response.status && response.status === 'success' && response.data ) {
+                            const data = _parseTraitData(response.data, trait_id, trait_name);
+                            resolve(data);
+                        }
+                        else {
+                            reject('Could not get trait data');
+                        }
+                    },
+                    error: () => reject('Could not get trait data')
+                });
             });
         }
 
@@ -1340,26 +1445,24 @@ $timestamp => localtime()
                 if ( headers[i] === 'observationUnitDbId' ) plot_id_col = i;
                 if ( headers[i] === trait_name ) trait_col = i;
             }
+            let rtn = [];
             for ( let i = 1; i < data.length; i++ ) {
-                TRAIT_DATA.push({
+                rtn.push({
                     accession_id: data[i][accession_id_col],
                     plot_id: data[i][plot_id_col],
                     trait_id: trait_id,
                     trait_value: data[i][trait_col]
-                });
+                })
             }
-        }
-
-        function _finish() {
-            count++;
-            if ( count >= total ) {
-                return callback();
-            }
+            return rtn;
         }
     }
 </script>
 
 <style>
+    .create_seedlots_trial_subplots_available, .create_seedlots_trial_plants_available {
+        display: none;
+    }
     .alert-success, .alert-danger {
         padding: 15px !important;
         margin-bottom: 20px !important;

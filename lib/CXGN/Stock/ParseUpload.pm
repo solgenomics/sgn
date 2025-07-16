@@ -32,6 +32,12 @@ has 'do_fuzzy_search' => (
     default => 1
 );
 
+has 'append_synonyms' => (
+    is => 'ro',
+    isa => 'Bool',
+    default => 1
+);
+
 has 'parse_errors' => (
 		       is => 'ro',
 		       isa => 'HashRef',

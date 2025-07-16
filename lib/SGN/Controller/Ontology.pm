@@ -7,6 +7,7 @@ use URI::FromHash 'uri';
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 use CXGN::Onto;
 use Data::Dumper;
+use Sort::Naturally;
 
 use Moose;
 
@@ -42,10 +43,11 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
       $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
       return;
     }
-
+    my $variable_conf = $c->config->{composable_variables};
     my @composable_cvs = split ",", $c->config->{composable_cvs};
     my $dbh = $c->dbc->dbh();
-    my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id) } );
     my %html_hash;
     foreach my $name (@composable_cvs) {
         $name =~ s/^\s+|\s+$//g; # remove whitespace
@@ -67,6 +69,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
                name => $name,
                id => $id,
                choices => \@root_nodes,
+               class   => "form-control",
                size => '10',
                default => 'Pick an Ontology'
             );
@@ -75,23 +78,27 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
         }
         else {
             my $cv_id = $root_nodes[0][0];
-           my @components = $onto->get_terms($cv_id);
+            my @components;
+            if ($name eq 'trait' && $variable_conf == 1) {
+                @components = $onto->get_variables($cv_id);
+            } else {
+                @components = $onto->get_terms($cv_id);
+            }
+            my $id = $name."_select";
+            my $name = $name."_select";
+            my $default = 0;
+            if ($default) { unshift @components, [ '', $default ]; }
 
-           my $id = $name."_select";
-           my $name = $name."_select";
-           my $default = 0;
-           if ($default) { unshift @components, [ '', $default ]; }
-
-           my $html = simple_selectbox_html(
-              name => $name,
-              multiple => 1,
-              id => $id,
-              choices => \@components,
-              size => '10'
-           );
+            my $html = simple_selectbox_html(
+                name => $name,
+                multiple => 1,
+                id => $id,
+                choices => \@components,
+                size => '10'
+            );
            #put html in hash
            $html_hash{$cv_type} = $html;
-       }
+        }
     }
 
     $c->stash->{object_select} = $html_hash{'object_ontology'};
@@ -99,6 +106,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     $c->stash->{method_select} = $html_hash{'method_ontology'};
     $c->stash->{unit_select} = $html_hash{'unit_ontology'};
     $c->stash->{trait_select} = $html_hash{'trait_ontology'};
+    $c->stash->{meta_select} = $html_hash{'meta_ontology'};
 
     $c->stash->{composable_cvs} = $c->config->{composable_cvs};
     $c->stash->{composable_cvs_allowed_combinations} = $c->config->{composable_cvs_allowed_combinations};
@@ -106,7 +114,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     $c->stash->{composable_toy_root_cvterm} = $c->config->{composable_toy_root_cvterm};
     $c->stash->{composable_gen_root_cvterm} = $c->config->{composable_gen_root_cvterm};
     $c->stash->{composable_evt_root_cvterm} = $c->config->{composable_evt_root_cvterm};
-
+    $c->stash->{composable_meta_root_cvterm} = $c->config->{composable_meta_root_cvterm};
     $c->stash->{user} = $c->user();
     $c->stash->{template} = '/ontology/compose_trait.mas';
 

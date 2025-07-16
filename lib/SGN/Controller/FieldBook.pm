@@ -2,6 +2,9 @@
 package SGN::Controller::FieldBook;
 
 use Moose;
+
+use JSON qw| encode_json |;
+use Imager::QRCode;
 use URI::FromHash 'uri';
 use Spreadsheet::WriteExcel;
 use File::Slurp qw | read_file |;
@@ -10,6 +13,7 @@ use Data::Dumper;
 use CXGN::Trial::TrialLayout;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
+use File::Temp qw | tempfile |;
 use File::Spec::Functions;
 use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
@@ -18,8 +22,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 
 sub field_book :Path("/fieldbook") Args(0) {
     my ($self , $c) = @_;
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+
     if (!$c->user()) {
 	# redirect to login page
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -27,7 +30,9 @@ sub field_book :Path("/fieldbook") Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $user_id);
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my @rows = $schema->resultset('Project::Project')->all();
     #limit to owner
     my @projects = ();
@@ -100,6 +105,35 @@ sub field_book :Path("/fieldbook") Args(0) {
 	}
     }
 
+    my $qc = Imager::QRCode->new();
+
+    my $data = {
+	url => $c->config->{main_production_site_url},
+	name => $c->config->{project_name},
+	v => "2",
+	ps => "10",
+	cs => "10",
+	st => "50000",
+	flow => "implicit",
+	oidc => $c->config->{main_production_site_url}."/.well-known/openid-configuration",
+	cat => "",
+#	clientId => "https://phenoapps.org/field-book",
+    };
+
+    my $json_string = encode_json($data);
+
+    print STDERR "CONFIG JSON: $json_string\n";
+
+    my $img = $qc->plot($json_string);
+
+    my $qrcode_file_url = $c->generated_file_uri("barcode", "fieldbook_config_qrcode.gif");
+    print STDERR "BARCODE URL = $qrcode_file_url\n";
+    my $qrcode_file_path = $c->path_to($qrcode_file_url);
+
+    print STDERR "BARCODE PATH = $qrcode_file_path\n";
+    
+    $img->write( file => $qrcode_file_path );
+    
     $c->stash->{projects} = \@projects;
     $c->stash->{file_metadata} = \@file_metadata;
     $c->stash->{programs} = $breeding_programs;
@@ -107,6 +141,8 @@ sub field_book :Path("/fieldbook") Args(0) {
     $c->stash->{trait_files} = \@trait_files;
     $c->stash->{phenotype_files} = \@phenotype_files;
     $c->stash->{removed_phenotype_files} = \@removed_phenotype_files;
+    $c->stash->{fieldbook_config_qrcode_url} = $qrcode_file_url;
+    $c->stash->{project_name} = $c->config->{project_name};
 
     # get roles
     my @roles = $c->user->roles();
@@ -119,14 +155,15 @@ sub trial_field_book_download : Path('/fieldbook/trial_download/') Args(1) {
     my $self  =shift;
     my $c = shift;
     my $file_id = shift;
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
     print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my $contents = read_file($file_destination);
     my $file_name = $file_row->basename;
     $c->res->content_type('Application/xls');
-    $c->res->header('Content-Disposition', qq[attachment; filename="fieldbook_layout_$file_name"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
     $c->res->body($contents);
 }
 
@@ -134,7 +171,8 @@ sub tablet_trait_file_download : Path('/fieldbook/trait_file_download/') Args(1)
     my $self  =shift;
     my $c = shift;
     my $file_id = shift;
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $sp_person_id);
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
     my $file_destination =  catfile($file_row->dirname, $file_row->basename);
     print STDERR "\n\n\nfile name:".$file_row->basename."\n";
@@ -151,7 +189,8 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
     my $c = shift;
     my $trial_id = shift;
     die "No trial id supplied" if !$trial_id;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $trial = $schema->resultset('Project::Project')->find({project_id => $trial_id});
     die "Trial does not exist with id $trial_id" if !$trial;
     my $dir = $c->tempfiles_subdir('/other');
@@ -191,7 +230,7 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
 sub delete_file : Path('/fieldbook/delete_file/') Args(1) {
      my $self  =shift;
      my $c = shift;
-     my $json = new JSON;
+     my $json = JSON->new();
      my $file_id = shift;
      my $decoded;
      if ($file_id){

@@ -150,6 +150,7 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{editable_stock_props_definitions} = \%def_hash;
+    # $c->stash->{email_address} = $c->user->get_object->get_contact_email();
     $c->stash->{show_grafting_interface} = $c->config->{show_grafting_interface};
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 }
@@ -166,7 +167,8 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
     $c->stash->{is_curator} = $c->user->check_roles("curator");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $person_roles = CXGN::People::Roles->new({ people_schema=>$people_schema });
     my $ascii_chars = 1;
     my $breeding_programs = $person_roles->get_breeding_program_roles($ascii_chars);
 
@@ -330,6 +332,10 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     my $sampling_facilities = $c->config->{sampling_facilities};
     my @sampling_facilities = split ',',$sampling_facilities;
 
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+    my @sample_tissue_types = split ',',$sample_tissue_types_string;
+
+    $c->stash->{sample_tissue_types} = \@sample_tissue_types;
     $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{nirs_files} = $data->{files};
     $c->stash->{deleted_nirs_files} = $data->{deleted_files};
@@ -337,6 +343,37 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     $c->stash->{all_deleted_nirs_files} = $all_data->{deleted_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_nirs.mas';
+
+}
+
+sub manage_transcriptomics :Path("/breeders/transcriptomics") Args(0) {
+    my $self =shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    my @file_types = ( 'transcriptomics spreadsheet' );
+    my $all_data = $self->get_file_data($c, \@file_types, 1);
+    my $data = $self->get_file_data($c, \@file_types, 0);
+
+    my $sampling_facilities = $c->config->{sampling_facilities};
+    my @sampling_facilities = split ',',$sampling_facilities;
+
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+    my @sample_tissue_types = split ',',$sample_tissue_types_string;
+    print STDERR Dumper(@sample_tissue_types);
+
+    $c->stash->{sample_tissue_types} = \@sample_tissue_types;
+    $c->stash->{sampling_facilities} = \@sampling_facilities;
+    $c->stash->{transcriptomics_files} = $data->{files};
+    $c->stash->{deleted_transcriptomics_files} = $data->{deleted_files};
+    $c->stash->{all_transcriptomics_files} = $all_data->{files};
+    $c->stash->{all_deleted_transcriptomics_files} = $all_data->{deleted_files};
+
+    $c->stash->{template} = '/breeders_toolbox/manage_transcriptomics.mas';
 
 }
 
@@ -881,6 +918,7 @@ sub manage_drone_imagery : Path("/breeders/drone_imagery") Args(0) {
 }
 
 
+
 sub manage_product_profiles : Path("/breeders/product_profiles") Args(0) {
     my $self = shift;
     my $c = shift;
@@ -910,6 +948,135 @@ sub product_profile_details : Path("/breeders/product_profile_details") Args(1) 
     $c->stash->{profile_id} = $product_profile_id;
     $c->stash->{template} = '/breeders_toolbox/product_profiles/product_profile_details.mas';
 
+}
+
+
+sub manage_genotyping_projects : Path("/breeders/genotyping_projects") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $projects->get_breeding_programs();
+
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $locations = $projects->get_all_locations_by_breeding_program();
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    $c->stash->{facilities} = \@facilities;
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+
+    $c->stash->{template} = '/breeders_toolbox/genotyping_data_project/manage_genotyping_projects.mas';
+
+}
+
+sub manage_transformations : Path("/breeders/transformations") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+
+	# redirect to login page
+	#
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $bp = CXGN::BreedersToolbox::Projects->new({ schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
+
+
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+
+    my $transformation = CXGN::BreedersToolbox::Projects->new({ schema=>$schema });
+
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    my $is_curator;
+    if (grep { /curator/ } @roles) {
+        $is_curator = 1;
+    }
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $locations = $transformation->get_all_locations_by_breeding_program();
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+    $c->stash->{roles} = $c->user()->roles();
+
+    $c->stash->{is_curator} = $is_curator;
+
+    $c->stash->{template} = '/transformation/manage_transformation.mas';
+
+}
+
+
+sub manage_activities : Path("/breeders/activities") Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+
+    my $activity_project = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $activity_project->get_breeding_programs();
+    my @breeding_programs = @$breeding_programs;
+    my $locations = $activity_project->get_all_locations_by_breeding_program();
+
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    $c->stash->{locations} = $locations;
+    $c->stash->{programs} = \@breeding_programs;
+    $c->stash->{roles} = $c->user()->roles();
+    $c->stash->{template} = '/tracking_activities/manage_activities.mas';
 }
 
 

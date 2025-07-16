@@ -145,7 +145,8 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     values_hash=>$parsed_data,
     has_timestamps=>1,
     overwrite_values=>0,
-    metadata_hash=>\%phenotype_metadata
+    metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$fix->config->{composable_validation_check_name}
 );
 
 my ($stored_phenotype_error_msg, $stored_phenotype_success) = $store_phenotypes->store();
@@ -203,7 +204,8 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     values_hash=>$store_hash,
     has_timestamps=>0,
     overwrite_values=>1,
-    metadata_hash=>\%phenotype_metadata
+    metadata_hash=>\%phenotype_metadata,
+    composable_validation_check_name=>$fix->config->{composable_validation_check_name}
 );
 
 my ($store_error, $store_success) = $store_phenotypes->store();

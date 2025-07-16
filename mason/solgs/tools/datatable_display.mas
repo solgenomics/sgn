@@ -1,0 +1,46 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/datatable_display.mas -  displays datasets or lists of trials or plots or accessions with phenotype data or genotype data
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+$analysis_type => $analysis_type
+$wizard_link_txt => undef
+$breeder_search_params =>''
+</%args>
+<%perl>
+my $label = $analysis_type =~ s/_/ /gr;
+my $analysis_abbr = $analysis_type =~ /correlation/ ? 'corr' : $analysis_type;
+$wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
+</%perl>
+
+<& /util/import_javascript.mas, classes => [ "solGS.Dataset", "CXGN.List"] &>
+
+<div id="lists_datasets_canvas">
+
+    <div id="lists_datasets_message" class="message" style="display:none;">Retrieving lists and datasets...please wait...it may take minutes.
+    </div>
+    <div id="lists_datasets_progress">
+    <& /solgs/spinner/spinner.mas &>
+    </div>
+
+<!-- The container for the list of populations selected for analysis -->
+<div class="sub_infosectioncontent" id="<% $analysis_abbr %>_pops_data_div" style="display:none; margin-top:25px"></div>
+<br>
+
+
+<div id="create_new_list_dataset" class="pull-right margin-bottom-lg" style="display:none;">
+    <a type="button" class="btn btn-success" href="/solgs/breeder_search/<% $breeder_search_params %>" style="color:#ffffff"><%
+    $wizard_link_txt %></a>
+</div>
+
+</div>

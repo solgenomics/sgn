@@ -3,7 +3,11 @@ package CXGN::TimeUtils;
 sub db_time_to_iso {
     my $db_time = shift;
 
-    if ($db_time) { return $db_time."Z"; }
+    if ($db_time) {
+        # Replace space with 'T' to follow ISO 8601 format
+        $db_time =~ s/ /T/;
+        return $db_time."Z";
+    }
 
     return $db_time;
 }
@@ -20,6 +24,12 @@ sub date_to_iso_timestamp {
     }
 
     return $date;
+}
+
+sub db_time_to_iso_utc {
+    my $db_time = shift;
+    my $new_time = $db_time =~ s/ /T/r;
+    return $new_time."Z";
 }
 
 1;

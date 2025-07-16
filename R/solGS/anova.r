@@ -24,13 +24,10 @@ inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
                    what = "character")
 
 phenoDataFile <- grep("phenotype_data", inputFiles, value = TRUE)
-message('pheno file: ', phenoDataFile)
 
 traitsFile <- grep("traits", inputFiles, value = TRUE)
-message('traits file: ', traitsFile)
 
 metadataFile <- grep("metadata", inputFiles, value = TRUE)
-message('metadata file: ', metadataFile)
 
 metaData <- scan(metadataFile, what="character")
 
@@ -53,32 +50,25 @@ traits  <- strsplit(traits, "\t")
 for (trait in traits) {
     
     message('trait: ', trait)
-    anovaFiles     <- grep("anova_table",
+    anovaTableFiles     <- grep("anova_table",
                            outputFiles,
                            value = TRUE)
 
-    message('anova file: ', anovaFiles)
-    anovaHtmlFile  <- grep("html",
-                           anovaFiles,
+    anovaHtmlFile  <- grep("anova_table_html",
+                           anovaTableFiles,
                            value = TRUE)
 
-    message('anova html file: ', anovaHtmlFile)
-    anovaTxtFile   <- grep("txt",
-                           anovaFiles,
+    anovaTxtFile   <- grep("anova_table_txt",
+                           anovaTableFiles,
                            value = TRUE)
 
-    message('anova txt file: ', anovaTxtFile)
     modelSummFile <- grep("anova_model",
                           outputFiles,
                           value = TRUE)
 
-    message('model file: ', modelSummFile)
     adjMeansFile  <- grep("adj_means",
                           outputFiles,
                           value = TRUE)
-
-    message('means file: ', adjMeansFile)
-
 
     diagnosticsFile  <- grep("anova_diagnostics",
                              outputFiles,
@@ -89,7 +79,6 @@ for (trait in traits) {
                        value = TRUE)
 
     anovaOut <- runAnova(phenoData, trait)
-    
     if (class(anovaOut) == 'character') {
         cat(anovaOut, file=errorFile)
     } else if (is.null(anovaOut)) {
@@ -111,12 +100,12 @@ for (trait in traits) {
         qqnorm(resid(anovaOut))      
         dev.off()
  
-        anovaTable <- getAnovaTable(anovaOut,
+        anovaHtmlTable <- getAnovaTable(anovaOut,
                                     tableType="html",
                                     traitName=trait,
                                     out=anovaHtmlFile)
-       
-        anovaTable <- getAnovaTable(anovaOut,
+
+        anovaTxtTable <- getAnovaTable(anovaOut,
                                     tableType="text",
                                     traitName=trait,
                                     out=anovaTxtFile)

@@ -22,24 +22,33 @@ $species_name
 $sample_observation_unit_type_name
 $create_date
 $marker_type
+$marker_info_headers
+$assay_type
+$map_details_protocolprop_id
 </%args>
 
 
-<& /util/import_javascript.mas, classes => [ ] &>
-
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial', 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min'] &>
 
 <br/>
 
 <& /page/page_title.mas, title=>"Genotyping Protocol Detail for ".$protocol_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Genotype Protocol Details</h4>", info_section_subtitle => 'View basic information about the genotyping protocol.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_protocol_details", protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name, marker_type => $marker_type &>
-
+% if ($map_details_protocolprop_id) {
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Genotype Protocol Details</h4>", info_section_subtitle => 'View basic information about the genotyping protocol.',buttons_html => '<button class="btn btn-primary btn-sm" id="edit_genotyping_protocol_details" style="margin:3px">Edit Genotyping Protocol Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_protocol_details", protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name, marker_type => $marker_type, assay_type => $assay_type &>
+% } else {
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Genotype Protocol Details</h4>", info_section_subtitle => 'View basic information about the genotyping protocol.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_protocol_details", protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name, marker_type => $marker_type, assay_type => $assay_type &>
+%}
 % if ($marker_type eq 'SSR') {
     <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Markers</h4>", info_section_subtitle => 'View information about the markers used in this protocol.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "pcr_based_genotyping_markers" &>
 
     <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, marker_names => $marker_names, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this protocol.',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="download_ssr_data_link">Download SSR Data</button>', icon_class => "glyphicon glyphicon-save-file", info_section_id => "pcr_genotyping_protocol_genotype_data" &>
+% } elsif ($assay_type eq 'KASP') {
+    <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, marker_info_headers => $marker_info_headers, info_section_title => "<h4 style='display:inline'>Markers</h4>", info_section_subtitle => 'View information about the markers used in this protocol.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_protocol_markers", buttons_html => '<button class="btn btn-primary btn-sm" id="download_protocol_marker_info" style="margin:3px">Download All Marker Info (CSV)</button>' &>
+
+    <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this protocol.', icon_class => "glyphicon glyphicon-save-file", info_section_id => "genotyping_protocol_genotype_data", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="genotyping_protocol_genotype_data_detail_page_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="genotyping_protocol_genotype_data_detail_page_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button><button class="btn btn-default" style="margin:3px" id="genotyping_protocol_genotype_data_detail_page_download_all_csv">Download All Genotype Data (CSV)</button>' &>
 % } else {
-    <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Markers</h4>", info_section_subtitle => 'View information about the markers used in this protocol.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_protocol_markers" &>
+    <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, marker_info_headers => $marker_info_headers, info_section_title => "<h4 style='display:inline'>Markers</h4>", info_section_subtitle => 'View information about the markers used in this protocol.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_protocol_markers"&>
 
     <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this protocol.', icon_class => "glyphicon glyphicon-save-file", info_section_id => "genotyping_protocol_genotype_data", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="genotyping_protocol_genotype_data_detail_page_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="genotyping_protocol_genotype_data_detail_page_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button>' &>
 % }
@@ -48,3 +57,6 @@ $marker_type
 % if ($c->user() && $c->user()->has_role("curator")) {
 <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Delete Genotyping Protocol and All Data</h4>", info_section_subtitle => 'Delete genotyping protocol and all data from this protocol.', icon_class => "glyphicon glyphicon-trash", info_section_id => "genotyping_protocol_delete_genotype_data" &>
 % }
+
+
+<& /breeders_toolbox/genotyping_protocol/edit_genotyping_protocol_details_dialog.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, reference_genome_name => $reference_genome_name, species_name => $species_name, sample_observation_unit_type_name => $sample_observation_unit_type_name, assay_type => $assay_type &>

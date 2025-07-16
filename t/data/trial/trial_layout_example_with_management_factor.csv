@@ -1,0 +1,9 @@
+plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,fert_factor1,manage_factor2
+trial_management_factor_plot_name1,test_accession1,1,1,0,1,1,1,1,,,,1,
+trial_management_factor_plot_name2,test_accession1,2,1,0,2,1,2,1,,,,1,
+trial_management_factor_plot_name3,test_accession2,3,1,0,1,1,3,1,,,,1,1
+trial_management_factor_plot_name4,test_accession2,4,1,0,2,1,4,1,,,,,1
+trial_management_factor_plot_name5,test_accession3,5,2,0,1,2,1,2,,,,,1
+trial_management_factor_plot_name6,test_accession3,6,2,0,2,2,2,2,,,,1,
+trial_management_factor_plot_name7,test_accession4,7,2,0,1,2,3,2,,,,1,
+trial_management_factor_plot_name8,test_accession4,8,2,0,2,2,4,2,,,,1,

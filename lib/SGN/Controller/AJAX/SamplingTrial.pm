@@ -27,7 +27,8 @@ sub generate_sampling_trial_POST : Args(0) {
         $c->detach();
     }
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $sampling_data = decode_json $c->req->param("sampling_data");
     print STDERR Dumper $sampling_data;
 
@@ -101,9 +102,10 @@ sub parse_sampling_trial_file : Path('/ajax/breeders/parsesamplingtrial') : Acti
 sub parse_sampling_trial_file_POST : Args(0) {
     my ($self, $c) = @_;
 
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;
     my $sampling_trial_name = $c->req->param('sampling_trial_name');
     my $upload_xls = $c->req->upload('sampling_trial_layout_upload');
@@ -115,6 +117,8 @@ sub parse_sampling_trial_file_POST : Args(0) {
         $c->stash->{rest} = {error => 'Sampling trial name must be given!'};
         return;
     }
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+
     my $parser;
     my $parsed_data;
     my $upload = $upload_xls;
@@ -192,7 +196,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
     #Parse of Coordinate Template formatted file requires the plate name to be passed, so that a unique sample name can be created by concatenating the plate name to the well position.
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, allowed_tissue_list => $sample_tissue_types_string);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
 
@@ -277,7 +281,7 @@ sub store_sampling_trial_POST : Args(0) {
         $c->detach();
     }
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $sampling_data = decode_json $c->req->param("sampling_data");
     #print STDERR Dumper $plate_info;
     if ( !$sampling_data->{design} || !$sampling_data->{description} || !$sampling_data->{location} || !$sampling_data->{year} || !$sampling_data->{name} || !$sampling_data->{breeding_program} || !$sampling_data->{sampling_facility} || !$sampling_data->{sample_type} ) {

@@ -1,450 +1,456 @@
+
 package SGN::Controller::AJAX::QualityControl;
 
 use Moose;
-use namespace::autoclean;
 
-use Carp qw/ carp confess croak /;
-use Cache::File;
-use CXGN::Tools::Run;
-use File::Temp qw / tempfile tempdir /;
-use File::Spec::Functions qw / catfile catdir/;
-use File::Slurp qw /write_file read_file/;
-use File::Path qw / mkpath  /;
-use File::Copy;
-use File::Basename;
-use CXGN::Phenome::Population;
+use Data::Dumper;
+use File::Slurp;
+use File::Spec qw | catfile |;
+use File::Path qw(rmtree);
+use JSON::Any;
+use File::Basename qw | basename |;
+use DateTime;
+use Bio::Chado::Schema;
+use CXGN::Dataset::File;
+use CXGN::Phenotypes::File;
+use CXGN::MixedModels;
+use SGN::Controller::AJAX::Dataset;
 use JSON;
-use Try::Tiny;
-use Scalar::Util qw /weaken reftype/;
-use Storable qw/ nstore retrieve /;
-BEGIN { extends 'Catalyst::Controller' }
 
 
-sub check_pheno_qc_result :Path('/phenotype/qualityControl/check/result/') Args(1) {
-    my ($self, $c, $pop_id) = @_;
+BEGIN { extends 'Catalyst::Controller::REST' };
 
-    $c->stash->{pop_id} = $pop_id;
+__PACKAGE__->config(
+    default => 'application/json',
+    stash_key => 'rest',
+    map => { 'application/json' => 'JSON' },
+   );
 
-    $self->pheno_qualityControl_output_files($c);
-    my $qc_output_file = $c->stash->{qc_messages_json_file};
 
-    my $ret->{result} = undef;
+sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = $c->req->param('dataset_id');
 
-    if (-s $qc_output_file && $pop_id =~ /\d+/)
-    {
-    $ret->{result} = 1;
+    if (! $c->user()) {
+        $c->stash->{rest} = {error=>'You must be logged in first!'};
+        $c->detach;
     }
 
-    $ret = to_json($ret);
+    $c->tempfiles_subdir("qualitycontrol");
 
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"qualitycontrol/qc_XXXXX");
 
-}
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $temppath = $c->config->{basepath}."/".$tempfile;
 
+    my $ds_json = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
+    $ds_json->retrieve_traits();
+    my $ds_traits = $ds_json->traits();
 
-sub qualityControl_phenotype_data :Path('/qualityControl/phenotype/data/') Args(0) {
-    my ($self, $c) = @_;
+    
+    # Print extracted traits
+    if ($ds_traits && @$ds_traits) {
+       
+        my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => 1, file_name => $temppath, quotes => 0);
+        $ds->retrieve_phenotypes();
+        my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
 
-    my $pop_id = $c->req->param('population_id');
-    $c->stash->{pop_id} = $pop_id;
+        # my @traits_select = ();
+        my $traits = $pf->traits();
 
-    my $referer = $c->req->referer;
+        my $trait_options = "trait_options";
+        my $trait_html ="";
 
-    my $phenotype_file;
-
-    if ($referer =~ /qtl/)
-    {
-    my $phenotype_dir = $c->stash->{solqtl_cache_dir};
-        $phenotype_file   = 'phenodata_' . $pop_id;
-        $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);
-    }
-    else
-    {
-    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
-    $phenotype_file = $c->stash->{phenotype_file_name};
-    }
-
-    unless (-s $phenotype_file)
-    {
-        $self->create_qualityControl_phenodata_file($c);
-        $phenotype_file =  $c->stash->{phenotype_file_name};
-    }
-
-    my $ret->{result} = undef;
-
-    if (-s $phenotype_file)
-    {
-        $ret->{result} = 1;
-    }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
-
-
-sub trait_acronyms {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id};
-    $c->controller('solGS::Trait')->get_all_traits($c, $pop_id);
-    $c->controller('solGS::Trait')->get_acronym_pairs($c, $pop_id);
-
-}
-
-
-sub create_qualityControl_phenodata_file {
-    my ($self, $c)  = @_;
-
-    my $referer = $c->req->referer;
-
-    my $phenotype_file;
-    my $pop_id = $c->stash->{pop_id};
-
-    if ($referer =~ /qtl/)
-    {
-        my $pheno_exp = "phenodata_${pop_id}";
-        my $dir       = $c->stash->{solqtl_cache_dir};
-
-        $phenotype_file = $c->controller('solGS::Files')->grep_file($dir, $pheno_exp);
-
-        unless ($phenotype_file)
-    {
-            my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);
-            $phenotype_file =  $pop->phenotype_file($c);
+        foreach my $trait (@$traits) {
+           if ($trait =~ m/.+\d{7}/){
+            $trait_html .= '<input type="checkbox" class= "trait_box" name="'.$trait_options.'" value="'.$trait.'">'.$trait.'</input> </br>';
+           }
         }
 
-    }
-    else
-    {
-    $self->qc_pheno_query_jobs_file($c);
-    my $queries =$c->stash->{qc_pheno_query_jobs_file};
 
-    $c->stash->{dependent_jobs} = $queries;
-    $c->controller('solGS::solGS')->run_async($c);
+        $c->stash->{rest} = {
+            selected_variable => $trait_html,
+            tempfile => $tempfile."_phenotype.txt",
+        };
 
-    $c->controller("solGS::Files")->phenotype_file_name($c, $pop_id);
-    $phenotype_file = $c->stash->{phenotype_file_name};
-    }
-
-
-    my $qc_cache_dir = $c->stash->{qualityControl_cache_dir};
-
-    copy($phenotype_file, $qc_cache_dir)
-    or die "could not copy $phenotype_file to $qc_cache_dir";
-
-    my $file = basename($phenotype_file);
-    $c->stash->{phenotype_file_name} = catfile($qc_cache_dir, $file);
-
-}
-
-
-sub create_qualityControl_dir {
-    my ($self, $c) = @_;
-
-    $c->controller('solGS::Files')->get_solgs_dirs($c);
-
-}
-
-
-sub pheno_qualityControl_output_files {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id};
-
-    $self->create_qualityControl_dir($c);
-    my $qc_cache_dir = $c->stash->{qualityControl_cache_dir};
-
-    my $file_cache  = Cache::File->new(cache_root => $qc_cache_dir);
-    $file_cache->purge();
-
-    my $key_table = 'qc_messages_table_' . $pop_id;
-    my $key_json  = 'qc_messages_json_' . $pop_id;
-    my $qc_messages_file      = $file_cache->get($key_table);
-    my $qc_messages_json_file = $file_cache->get($key_json);
-
-    unless ($qc_messages_file && $qc_messages_json_file )
-    {
-        $qc_messages_file = catfile($qc_cache_dir, "qc_messages_table_${pop_id}");
-
-        write_file($qc_messages_file);
-        $file_cache->set($key_table, $qc_messages_file, '30 days');
-
-        $qc_messages_json_file = catfile($qc_cache_dir, "qc_messages_json_${pop_id}");
-
-        write_file($qc_messages_json_file);
-        $file_cache->set($key_json, $qc_messages_json_file, '30 days');
-    }
-
-    $c->stash->{qc_messages_table_file} = $qc_messages_file;
-    $c->stash->{qc_messages_json_file}  = $qc_messages_json_file;
-}
-
-
-
-sub pheno_qualityControl_analysis_output :Path('/phenotypic/qualityControl/analysis/output') Args(0) {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->req->param('population_id');
-    $c->stash->{pop_id} = $pop_id;
-
-    $self->pheno_qualityControl_output_files($c);
-    my $qc_json_file = $c->stash->{qc_messages_json_file};
-    my $qc_table_file = $c->stash->{qc_messages_table_file};
-    my $ret->{status} = 'failed';
-
-    if (!-s $qc_json_file)
-    {
-        $self->run_pheno_qualityControl_analysis($c);
-        $qc_json_file = $c->stash->{qc_messages_json_file};
-        $qc_table_file = $c->stash->{qc_messages_table_file};
-    }
-
-    if (-s $qc_json_file)
-    {
-    # $self->trait_acronyms($c);
-    # my $acronyms = $c->stash->{acronym};
-
-    # $ret->{acronyms} = $acronyms;
-    $ret->{status}   = 'success';
-
-    my $data = $c->controller('solGS::Utils')->read_file_data($qc_table_file);
-    $ret->{data} = $data;
-    #$ret->{data}     = read_file($qc_json_file);
-    }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
-
-
-sub download_phenotypic_qualityControl : Path('/download/phenotypic/qualityControl/population') Args(1) {
-    my ($self, $c, $id) = @_;
-
-    $self->create_qualityControl_dir($c);
-    my $qc_dir = $c->stash->{qualityControl_cache_dir};
-    my $qc_file = catfile($qc_dir,  "qc_messages_table_${id}");
-
-    unless (!-e $qc_file || -s $qc_file <= 1)
-    {
-    my @qc_data;
-    my $count=1;
-
-    foreach my $row ( read_file($qc_file) )
-    {
-        if ($count==1) {  $row = 'Traits,' . $row;}
-        $row =~ s/NA//g;
-        $row = join(",", split(/\s/, $row));
-        $row .= "\n";
-
-        push @qc_data, [ $row ];
-        $count++;
-    }
-
-    $c->res->content_type("text/plain");
-    $c->res->body(join "",  map{ $_->[0] } @qc_data);
+    } else {
+        $c->stash->{rest} = {
+            error => "No traits found in the dataset. Please select a dataset with trial(s) and trait(s).",
+        };
     }
 }
 
+sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-sub temp_pheno_qc_output_file {
-    my ($self, $c) = @_;
+    my $file = $c->req->param("file");
+    my $trait = $c->req->param("trait");
 
-    my $pop_id = $c->stash->{pop_id};
-    $self->pheno_qualityControl_output_files($c);
+    $file = basename($file);
 
-    my $files = join ("\t",
-              $c->stash->{qc_messages_table_file},
-              $c->stash->{qc_messages_json_file},
-    );
-
-    my $tmp_dir = $c->stash->{qualityControl_temp_dir};
-    my $name = "pheno_qc_output_files_${pop_id}";
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
-    write_file($tempfile, $files);
-
-    $c->stash->{temp_pheno_qc_output_file} = $tempfile;
-
-}
-
-
-sub temp_pheno_qc_input_file {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id};
-
-    $c->controller("solGS::Files")->phenotype_file_name($c, $pop_id);
-    #$self->create_qualityControl_phenodata_file($c);
-
-    my $pheno_file = $c->stash->{phenotype_file_name};
-
-    $c->controller("solGS::Files")->formatted_phenotype_file($c);
-    my $formatted_pheno_file = $c->stash->{formatted_phenotype_file};
-
-    $c->controller("solGS::Files")->phenotype_metadata_file($c);
-    my $metadata_file = $c->stash->{phenotype_metadata_file};
-
-    my $files = join ("\t",
-              $pheno_file,
-              $formatted_pheno_file,
-              $metadata_file,
-              $c->req->referer,
-    );
-
-    my $tmp_dir = $c->stash->{qualityControl_temp_dir};
-    my $name = "pheno_qc_input_files_${pop_id}";
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
-    write_file($tempfile, $files);
-    $c->stash->{temp_pheno_qc_input_file} = $tempfile;
-
-}
-
-
-
-sub run_pheno_qualityControl_analysis {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id};
-
-    $self->temp_pheno_qc_input_file($c);
-    $self->temp_pheno_qc_output_file($c);
-
-    $c->stash->{qc_input_files}  = $c->stash->{temp_pheno_qc_input_file};
-    $c->stash->{qc_output_files} = $c->stash->{temp_pheno_qc_output_file};
-
-    $c->stash->{qualityControl_type} = "pheno-qualityControl";
-
-    $c->stash->{qualityControl_script} = "R/qualityControl/qc_rscript.R";
-
-    $self->run_qualityControl_analysis($c);
-
-    $self->trait_acronyms($c);
-}
-
-
-sub run_qualityControl_analysis {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id};
-    my $qc_type = $c->stash->{qualityControl_type};
-
-    $self->qc_pheno_query_jobs_file($c);
-    my $queries_file = $c->stash->{qc_pheno_query_jobs_file};
-
-    $self->qc_pheno_r_jobs_file($c);
-    my $r_jobs_file = $c->stash->{qc_pheno_r_jobs_file};
-
-    $c->stash->{prerequisite_jobs} = $queries_file if $queries_file;
-    $c->stash->{dependent_jobs} = $r_jobs_file;
-
-    $c->controller('solGS::solGS')->run_async($c);
-
-}
-
-
-sub qc_pheno_r_jobs {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{trial_id} || $c->stash->{pop_id};
-
-    my $input_file = $c->stash->{qc_input_files};
-    my $output_file = $c->stash->{qc_output_files};
-
-    my $qc_type = $c->stash->{qualityControl_type};
-
-    $c->stash->{input_files}  = $input_file;
-    $c->stash->{output_files} = $output_file;
-    $c->stash->{r_temp_file}  = "${qc_type}-${pop_id}";
-    $c->stash->{r_script}     = $c->stash->{qualityControl_script};
-
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{qualityControl_temp_dir};
-
-    $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
-    my $jobs  = $c->stash->{cluster_r_job_args};
-
-    if (reftype $jobs ne 'ARRAY')
-    {
-    $jobs = [$jobs];
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol/".$file);
+    my $F;
+    if (! open($F, "<", $temppath)) {
+    $c->stash->{rest} = { error => "Can't find data." };
+    return;
     }
 
-    $c->stash->{qc_pheno_r_jobs} = $jobs;
+    my $header = <$F>;
+    chomp($header);
 
-}
+    my @keys = split("\t", $header);
 
+    my @data = ();
 
-sub qc_pheno_r_jobs_file {
-    my ($self, $c) = @_;
-
-    $self->qc_pheno_r_jobs($c);
-    my $jobs = $c->stash->{qc_pheno_r_jobs};
-
-    my $temp_dir = $c->stash->{qualityControl_temp_dir};
-    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'qc-r-jobs-file');
-
-    nstore $jobs, $jobs_file
-    or croak "qualityControl r jobs : $! serializing qualityControl r jobs to $jobs_file";
-
-    $c->stash->{qc_pheno_r_jobs_file} = $jobs_file;
-
-}
-
-sub qc_pheno_query_jobs {
-    my ($self, $c) = @_;
-
-    my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
-
-    $c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
-    my $jobs = $c->stash->{cluster_phenotype_query_job_args};
-
-    if (reftype $jobs ne 'ARRAY')
-    {
-	$jobs = [$jobs];
+    while (<$F>) {
+        chomp;
+        my @fields = split "\t";
+        my %line = ();
+        
+        for (my $n = 0; $n < @keys; $n++) {
+            if (exists($fields[$n]) && defined($fields[$n])) {
+                $line{$keys[$n]} = $fields[$n];
+            }
+        }
+        if (defined $line{$trait} && $line{$trait} ne '') {
+            push @data, \%line;
+        }
+    }
+    
+    my %unique_names;
+    foreach my $entry (@data) {
+        if (defined $entry->{'studyName'} && $entry->{'studyName'} ne '') {
+            $unique_names{$entry->{'studyName'}} = 1;
+        }
     }
 
-    $c->stash->{qc_pheno_query_jobs} = $jobs;
+    # Format the unique project names for the SQL query
+    
+    $trait =~ s/\|.*//;
+    my $trait_like = $trait . '%';
+    
+    my $project_names = join(", ", map { "'$_'" } keys %unique_names);
 
+    my $trait_sql = qq{
+        select project."name" from projectprop
+        join project on project.project_id = projectprop.project_id 
+        where projectprop.type_id = (select cvterm_id from cvterm where cvterm."name" = 'validated_phenotype')
+        and project.name in ($project_names)
+        and projectprop.value like '$trait_like'
+        group by project."name";
+    };
+
+    my @validated_projects;
+    eval {
+        # Prepare and execute the query
+        my $sth_trait = $dbh->prepare($trait_sql);
+        $sth_trait->execute();
+
+        # Collect project names from the query result
+        while (my ($project_name) = $sth_trait->fetchrow_array) {
+            push @validated_projects, $project_name;
+
+        }
+
+        #print STDERR Dumper \@validated_projects;
+        my $list_projects = join(", ", @validated_projects);
+
+        if (scalar(@validated_projects) > 0) {
+            my $project_names_str = join(", ", @validated_projects);
+            my $message = "Trait $trait is already validated data for trials: $list_projects";
+            $c->stash->{rest} = { message => $message };
+        } else {
+            $c->stash->{rest} = { data => \@data, trait => $trait};
+        }
+    };
+
+    if ($@) {
+        $c->response->body("Failed to search data: $@");
+            return;
+    }
 }
 
+sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-sub qc_pheno_query_jobs_file {
-    my ($self, $c) = @_;
+    my $file = $c->req->param("file");
+    my $trait = $c->req->param("trait");
 
-    $self->qc_pheno_query_jobs($c);
-    my $jobs = $c->stash->{qc_pheno_query_jobs};
+    $file = basename($file);
 
-    my $jobs_file;
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol/".$file);
 
-    if ($jobs->[0])
-    {
-	my $temp_dir = $c->stash->{qualityControl_temp_dir};
-	$jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-qc-query-jobs-file');
-
-	nstore $jobs, $jobs_file
-	    or croak "qualityControl pheno query jobs : $! serializing qualityControl phenoquery jobs to $jobs_file";
+    my $F;
+    if (! open($F, "<", $temppath)) {
+    $c->stash->{rest} = { error => "Can't find data." };
+    return;
     }
 
-    $c->stash->{qc_pheno_query_jobs_file} = $jobs_file;
+    my $header = <$F>;
+    chomp($header);
 
+    my @keys = split("\t", $header);
+
+    my @data = ();
+
+    while (<$F>) {
+        chomp;
+        my @fields = split "\t";
+        my %line = ();
+        
+        for (my $n = 0; $n < @keys; $n++) {
+            if (exists($fields[$n]) && defined($fields[$n])) {
+                $line{$keys[$n]} = $fields[$n];
+            }
+        }
+        if (defined $line{$trait} && $line{$trait} ne '') {
+            push @data, \%line;
+        }
+    }
+
+    my %unique_names;
+    foreach my $entry (@data) {
+        if (defined $entry->{'studyName'} && $entry->{'studyName'} ne '') {
+            $unique_names{$entry->{'studyName'}} = 1;
+        }
+    }
+
+    # Format the unique project names for the SQL query
+    my $project_names = join(", ", map { "'$_'" } keys %unique_names);
+    
+    $c->stash->{rest} = { data => $project_names, trait => $trait};
 }
 
-
-sub begin : Private {
+sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my ($self, $c) = @_;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $operator = $c->user()->get_object()->get_first_name()." ".$c->user()->get_object()->get_last_name();
 
-    $c->controller('solGS::Files')->get_solgs_dirs($c);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my @user_roles = $c->user()->roles;
+    my $curator = (grep { $_ eq 'curator' || $_ eq 'breeder' } @user_roles) ? 1 : 0;
+
+    my $response_data = {
+    is_curator => $curator ? 1 : 0,  # 1 if curator, 0 otherwise
+    };
+
+
+    # Retrieve and decode the outliers from the request
+    my $outliers_string = $c->req->param('outliers');
+    
+    # Now proceed to decode JSON
+    my $outliers_data = decode_json($outliers_string);
+    my $main_trait = $c->req->param('trait');
+
+    my %trait_ids;
+    my %study_names;
+    my $trait;
+
+    my $othertraits_json = $c->req->param('othertraits');  
+    my $othertraits = decode_json($othertraits_json);
+
+    # Remove duplicates using a hash
+    my %unique_traits = map { $_ => 1 } @$othertraits;
+    my @unique_othertraits = keys %unique_traits;
+
+    foreach my $entry (@$outliers_data) { 
+        $trait = $entry->{trait};  # Directly use the trait from the entry
+        my $study_name = $entry->{studyName};
+        $study_names{$study_name} = 1 if defined $study_name;
+    }
+
+    my @alltraits = ($main_trait, @unique_othertraits);
+    foreach my $sel_trait (@alltraits) {
+        $trait_ids{$sel_trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $sel_trait)->cvterm_id;
+    }
+
+        
+    $main_trait =~ s/\|.*//;
+    my $trait_operator = $main_trait."|".$operator;
+
+    # Convert unique study names to a comma-separated list in SQL format
+    my @unique_study_names = keys %study_names;
+    return $c->response->body('No unique study names found.') unless @unique_study_names;
+
+    my $study_names_sql = join(", ", map { $schema->storage->dbh->quote($_) } @unique_study_names);  # Quote each name
+
+    # Add validated traits to projectprop
+    my $trial_sql = qq{
+        INSERT INTO projectprop (project_id, type_id, value, rank)
+        SELECT 
+            p.project_id,
+            (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'),
+            '$trait_operator',
+            COALESCE(MAX(pp.rank), 0) + 1  -- Increment rank
+        FROM project p
+        LEFT JOIN projectprop pp
+            ON p.project_id = pp.project_id
+            AND pp.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype')
+        WHERE p.name in ($study_names_sql)
+        GROUP BY p.project_id;
+    };
+
+    my $experiment_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+    # Execute the first query unconditionally
+    eval {
+        my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
+        $sth_trial->execute();
+    };
+
+    my @plot_names  = map { $_->{plotName} } @$outliers_data;
+    my @plot_values = map { $_->{value} } @$outliers_data;
+
+    my %seen;
+    @plot_names = grep { !$seen{$_}++ } @plot_names;
+
+    print("here are plots:\n");
+    print Dumper \@plot_names;
+    
+    # Proceed only if there are outliers
+    if (@plot_names) {
+        # Extract plot names from the outliers data
+        
+
+        my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
+        my $trait_ids_sql    = join(", ", @unique_trait_ids);
+
+        # Proceed with query only if @plot_names and %trait_ids are valid
+        if (@plot_names && %trait_ids) {
+            my $plot_names_sql = join(", ", map { $schema->storage->dbh()->quote($_) } @plot_names);
+
+            # SQL Query to insert outliers
+            my $outlier_data_sql = "
+                INSERT INTO phenotypeprop (phenotype_id, type_id, value)
+                SELECT phenotype.phenotype_id, 
+                       cvterm_outlier.cvterm_id, 
+                       phenotype.value
+                FROM phenotype
+                JOIN nd_experiment_phenotype 
+                    ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id 
+                JOIN nd_experiment_stock 
+                    ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id 
+                JOIN stock 
+                    ON stock.stock_id = nd_experiment_stock.stock_id 
+                LEFT JOIN phenotypeprop existing_prop
+                    ON existing_prop.phenotype_id = phenotype.phenotype_id
+                    AND existing_prop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
+                CROSS JOIN (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier') AS cvterm_outlier
+                WHERE stock.uniquename IN ($plot_names_sql)
+                AND nd_experiment_stock.type_id = $experiment_type
+                AND phenotype.observable_id IN ($trait_ids_sql)
+                AND existing_prop.phenotype_id IS NULL;";  
+
+
+            # If curator flag is set, execute the second query
+            if ($curator == 1) {
+                eval {
+                    my $sth_outliers = $schema->storage->dbh->prepare($outlier_data_sql);
+                    $sth_outliers->execute();
+                };
+            }
+        }
+    }
+
+    $c->stash->{rest} = $response_data;
+
+
+    
+    ## celaning tempfiles
+    rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
+}
+
+sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
+
+    my ($self, $c) = @_;
+    my $dbh = $c->dbc->dbh();
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my @user_roles = $c->user()->roles;
+    
+    my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
+    
+
+    # Retrieve and decode the outliers from the request
+    my $outliers_string = $c->req->param('outliers');
+    my $outlier_trials;
+    $outlier_trials = decode_json($outliers_string);
+    
+    # getting trait name
+    my $trait = $c->req->param('trait');
+    $trait =~ s/\|.*//;
+
+    my $trait_like = $trait . '%';
+
+    my $response_data = {
+    is_curator => $curator ? 1 : 0,  # 1 if curator, 0 otherwise
+    };
+
+    my $trial_clean_sql = qq{
+        DELETE FROM projectprop
+        WHERE projectprop.project_id IN (
+            SELECT projectprop.project_id
+            FROM projectprop
+            JOIN project ON project.project_id = projectprop.project_id
+            WHERE project.name IN ($outlier_trials)
+        )
+        AND projectprop.value LIKE '$trait_like'
+        AND projectprop.type_id = (
+            SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'
+        );
+    };
+
+    my $outliers_clean_sql = qq{
+        DELETE FROM phenotypeprop
+        WHERE phenotypeprop.phenotype_id IN (
+            SELECT phenotypeprop.phenotype_id
+            FROM phenotypeprop
+            JOIN phenotype ph ON phenotypeprop.phenotype_id = ph.phenotype_id
+            JOIN nd_experiment_phenotype nep ON nep.phenotype_id = phenotypeprop.phenotype_id
+            JOIN nd_experiment_project nes ON nes.nd_experiment_id = nep.nd_experiment_id
+            JOIN project pr ON pr.project_id = nes.project_id
+            WHERE ph.observable_id = (
+                SELECT cvterm_id FROM cvterm WHERE cvterm.name like '$trait_like'
+            )
+            AND pr.name IN ($outlier_trials)
+        );
+    };
+    
+    
+
+    # Execute the SQL query
+    if ($curator eq 'curator'){
+        eval {
+            my $sth_trial = $dbh->prepare($trial_clean_sql);
+            $sth_trial->execute();
+
+            my $sth_clean = $dbh->prepare($outliers_clean_sql);
+            $sth_clean->execute();
+        };
+
+        if ($@) {
+            $c->response->body("Failed to store data: $@");
+            return;
+        } else {
+            $c->stash->{rest} = $response_data;
+        }
+    } else {
+        $c->stash->{rest} = $response_data;
+    }
+
+    ## celaning tempfiles
+    rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 
 }
 
 
-
-####
 1;
-####

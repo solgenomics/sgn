@@ -41,8 +41,9 @@ my $q = CGI->new;
 
 my %args = $q->Vars;
 
-my $schema     = $c->dbic_schema( 'CXGN::GEM::Schema', 'sgn_chado' );
-my $sgn_schema = $c->dbic_schema( 'SGN::Schema' );
+my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+my $schema     = $c->dbic_schema( 'CXGN::GEM::Schema', 'sgn_chado', $sp_person_id );
+my $sgn_schema = $c->dbic_schema( 'SGN::Schema', undef, $sp_person_id );
 
 my $dbh = CXGN::DB::Connection->new();
 

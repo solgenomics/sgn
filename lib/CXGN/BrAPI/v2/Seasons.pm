@@ -23,7 +23,6 @@ sub search {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-
     my $year_filter = $params->{seasonDbId} || ($params->{year} || ());
 
     my @data;
@@ -64,7 +63,6 @@ sub detail {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-
     my @data;
     my $total_count = 0;
     my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project year', 'project_property')->cvterm_id();
@@ -92,13 +90,13 @@ sub detail {
         my $projectprop_id = $_->[2] ? $_->[2] : '';
         push @data, {
             seasonDbId=>qq|$projectprop_id|,
-            season=>$season,
-            year=>$year
+            seasonName=>$season,
+            year=>int($year)
         };
     }
-    my %result = (data=>\@data);
+
     my @data_files;
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Seasons list result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(@data, $pagination, \@data_files, $status, 'Seasons list result constructed');
 }
 
 1;

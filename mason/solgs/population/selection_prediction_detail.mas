@@ -12,14 +12,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 
-
 <%args>
-
 
 $trait_abbr
 $trait_name
 $trait_id
-
 $traits_no => ''
 
 $training_pop_id
@@ -45,24 +42,15 @@ $combo_pops_id => ''
 $genotyping_protocol_id
 $data_set_type => ''
 
-
 </%args>
 
 <%perl>
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS", "solGS.genotypingProtocol",
-                                              "flot.flot", "flot.categories",
-                                              "flot.tooltip", "flot.selection", "flot.navigate",
-                                              "flot.axisLabels",
-                                             ]
-  &>
-
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css', '/static/css/d3-tip.css'] &>
-
+<& /util/import_javascript.mas, classes => ["solGS.genotypingProtocol"] &>
 
 <& /page/page_title.mas,
-   title => "GEBVs for $trait_name ($trait_abbr) in $selection_pop_name"
+   title => "$trait_name ($trait_abbr) GEBVs -- $selection_pop_name"
 &>
 
 <&| /page/info_section.mas,
@@ -100,7 +88,6 @@ $data_set_type => ''
 </&>
 
 <& /solgs/tools/pca/analysis.mas &>
-
 <& /solgs/population/models/model/gebvs.mas &>
 
 <& /solgs/tools/genetic_gain/genetic_gain.mas,

@@ -13,7 +13,7 @@
     <select name="brapi_home_studytable_format" id="brapi_home_studytable_format" class="form-control" />
         <option value="json">JSON (transformed to HTML table)</option>
         <option value="csv">CSV</option>
-        <option value="xls">Excel (xls)</option>
+        <option value="xlsx">Excel (xlsx)</option>
     </select>
     <button class="btn btn-primary" name="brapi_home_studytabledbid_submit" id="brapi_home_studytabledbid_submit">Get Phenotypes</button>
     <br/><br/>

@@ -71,9 +71,10 @@ sub process_file :Path('/tools/simsearch/process_file') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    
     my $filename = $c->config->{basepath}."/".$c->config->{tempfiles_subdir}."/simsearch/".$c->req->param("filename");
 
+    my $fileurl = "/simsearch/".$c->req->param("filename");
+    
     print STDERR "READING FROM $filename\n";
     my $reference_file = $c->req->param("reference_file");
 
@@ -97,6 +98,7 @@ sub process_file :Path('/tools/simsearch/process_file') :Args(0) {
     open(my $F , "<", $filename.".out.clusters") || die "Can't open file $filename.out";
 
     my @line;
+    my @data;
     my $html = "<table cellspacing=\"20\" cellpadding=\"20\" border=\"1\">";
     my $group =1;
     while(<$F>) {
@@ -104,6 +106,7 @@ sub process_file :Path('/tools/simsearch/process_file') :Args(0) {
 	@line = split /\s+/;
 	$html .= '<tr><td>'.$group.'</td><td>'. join('<br />', @line[4..@line-1])."</td></tr>\n";
 	$group++;
+	push @data, \@line;
     }
     $html.="</table>\n";
     close($F);
@@ -113,6 +116,10 @@ sub process_file :Path('/tools/simsearch/process_file') :Args(0) {
     # (use gnuplot or R)
 
     $c->stash->{results} = $html;
+    $c->stash->{data} = \@data;
+    $c->stash->{histogram} = $fileurl.".out_distances_histogram.png";
+
+    
     $c->stash->{template} = '/tools/simsearch/results.mas';
     
     

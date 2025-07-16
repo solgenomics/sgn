@@ -15,6 +15,7 @@ use File::Spec qw | catfile |;
 use File::Slurp qw | read_file write_file |;
 use File::NFSLock qw | uncache |;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
@@ -96,8 +97,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 #    my $jobid = basename($seqfile);
 
 #    print STDERR "JOB ID CREATED: $jobid\n";
-
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
 
     my %arg_handlers =
 	(
@@ -271,8 +272,12 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     my $job;
     my $jobid;
+    my $job_record;
+    my $job_record_id;
+
     eval {
-	my $config = { 
+
+    my $config = { 
 	    backend => $c->config->{backend},
 	    submit_host => $c->config->{cluster_host},
 	    temp_base => $blast_tmp_output,
@@ -282,17 +287,30 @@ sub run : Path('/tools/blast/run') Args(0) {
 	    max_cluster_jobs => 1_000_000_000,
 	    
 	};
+    $job_record = CXGN::Job->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $sp_person_id,
+        name => $params->{program}.' analysis',
+        job_type => 'sequence_analysis',
+        cmd => join(' ', @command),
+        cxgn_tools_run_config => $config,
+        finish_logfile => $c->config->{job_finish_log}
+    });
+
+    $job_record->update_status('submitted');
 	    
 	$job = CXGN::Tools::Run->new($config);
 	$job->do_not_cleanup(1);
-	$job->run_cluster(@command);
-   
-	
 
+	$job->run_cluster(@command);
+
+    $job_record_id = $job_record->sp_job_id();
    
     };
 
     if ($@) {
+    $job_record->update_status('failed');
 	print STDERR "An error occurred! $@\n";
 	$c->stash->{rest} = { error => $@ };
     }
@@ -312,15 +330,23 @@ sub run : Path('/tools/blast/run') Args(0) {
 	print STDERR "Passing jobid code ".$job->jobid()."\n";
 	$c->stash->{rest} = { jobid => $job->jobid(),
   	                      seq_count => $seq_count,
+                          job_dbid => $job_record_id
 	};
     }
 }
 
 
-sub check : Path('/tools/blast/check') Args(1) {
+sub check : Path('/tools/blast/check') Args(2) {
     my $self = shift;
     my $c = shift;
     my $jobid = shift;
+    my $job_record_id = shift;
+
+    my $job_record = CXGN::Job->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_job_id => $job_record_id
+    });
 
     # my $t0 = [gettimeofday]; #-------------------------- TIME CHECK
 
@@ -350,6 +376,8 @@ sub check : Path('/tools/blast/check') Args(1) {
       return;
     }
     else {
+
+        $job_record->update_status("finished");
 
       # my $t3 = [gettimeofday]; #-------------------------- TIME CHECK
 
@@ -450,8 +478,8 @@ sub get_result : Path('/tools/blast/result') Args(1) {
 
     # system("ls $blast_tmp_output 2>&1 >/dev/null");
     # system("ls ".($c->config->{cluster_shared_tempdir})." 2>&1 >/dev/null");
-
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
     my $db = $schema->resultset("BlastDb")->find($db_id);
     if (!$db) { die "Can't find database with id $db_id"; }
     my $parser = CXGN::Blast::Parse->new();
@@ -476,7 +504,8 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     my $file = $self->jobid_to_file($c, $jobid.".out");
     my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/cluster";
 
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
     my $bdb = $schema->resultset("BlastDb")->find($db_id);
     if (!$bdb) { die "Can't find database with id $db_id"; }
 
@@ -850,7 +879,8 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
     my $c = shift;
 
     my @ids;
-    my $schema = $c->dbic_schema("SGN::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
     my $params = $c->req->params();
     my $input_string = $params->{blast_desc};
     my $db_id = $params->{database};

@@ -1,6 +1,8 @@
+
+use strict;
 use lib 't/lib';
 
-use Test::More 'tests' => 76;
+use Test::More 'tests' => 72;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -61,7 +63,7 @@ $t->while_logged_in_as("submitter", sub {
 
         ok($trial_submit_info =~ /Crossing experiment was added successfully/, "Verify feedback after submission, looking for: 'Crossing experiment was added successfully'");
 
-        $t->find_element_ok('add_new_cross_close_modal', 'id', 'find and close "Add New Experiment" modal')->click();
+        $t->find_element_ok('add_crossing_experiment_dismiss_button_2', 'id', 'find and close "Add New Experiment" modal')->click();
         sleep(1);
 
         $t->find_element_ok('next_step_crossing_trial_button', 'id', 'go to next screen - Crossing experiment')->click();
@@ -77,13 +79,8 @@ $t->while_logged_in_as("submitter", sub {
         sleep(1);
         $t->find_element_ok("//select[\@id='upload_crosses_crossing_experiment_id']/option[\@title='$experiment_name']", 'xpath', "select '$experiment_name' as value for crossing experiment")->click();
 
-        $t->find_element_ok('cross_file_format_option', 'id', 'find "file format" select input and click')->click();
-        sleep(1);
-        $t->find_element_ok('//select[@id="cross_file_format_option"]/option[@value="xls_cross_plot"]', 'xpath', 'select "Excel (.xls) file with accession and plot names for parents" as value for crossing file format')->click();
-        sleep(1);
-
         # File
-        my $upload_input = $t->find_element_ok("xls_crosses_plots_file", "id", "find file input");
+        my $upload_input = $t->find_element_ok("upload_crosses_file", "id", "find file input");
         my $filename = $f->config->{basepath} . "/t/data/cross/$file";
         $t->driver()->upload_file($filename);
         $upload_input->send_keys($filename);

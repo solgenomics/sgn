@@ -118,6 +118,16 @@ has 'trait_list' => (
     is => 'rw',
 );
 
+has 'externalReferenceSources' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'externalReferenceIds' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 has 'trial_has_tissue_samples' => (
     isa => 'Bool|Undef',
     is => 'rw',
@@ -171,6 +181,8 @@ sub search {
     my $trait_list = $self->trait_list;
     my $limit = $self->limit;
     my $offset = $self->offset;
+    my $externalReferenceIds = $self->externalReferenceIds();
+    my $externalReferenceSources = $self->externalReferenceSources();
     my $sort_by = $self->sort_by;
     my $order_by = $self->order_by;
 
@@ -311,9 +323,32 @@ sub search {
         $trait_join = " JOIN nd_experiment_project ON(study.project_id=nd_experiment_project.project_id) JOIN nd_experiment AS trial_experiment ON(trial_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_stock ON(trial_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock AS obs_unit ON(nd_experiment_stock.stock_id=obs_unit.stock_id) JOIN nd_experiment_stock AS nd_experiment_stock_obs ON(nd_experiment_stock_obs.stock_id=obs_unit.stock_id) JOIN nd_experiment AS phenotype_experiment ON(nd_experiment_stock_obs.nd_experiment_id=phenotype_experiment.nd_experiment_id AND phenotype_experiment.type_id=$phenotyping_experiment_cvterm_id) JOIN nd_experiment_phenotype ON(nd_experiment_phenotype.nd_experiment_id=phenotype_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) ";
     }
 
+    my @refSource_whereClause = ();
+    foreach my $refSource (@$externalReferenceSources){
+        push @refSource_whereClause, "'$refSource' = ANY(xref.xrefSources)"
+    }
+    my $refSource_whereClause_str = join (" OR " ,@refSource_whereClause);
+    if ($refSource_whereClause_str){
+        push @where_clause, "( $refSource_whereClause_str )";
+    }
+
+    # see  https://plant-breeding-api.readthedocs.io/en/latest/docs/best_practices/Search_Services.html#request-and-response-rules
+    my @refId_whereClause = ();
+    foreach my $refId (@$externalReferenceIds){
+        push @refId_whereClause, "'$refId' = ANY(xref.xrefIds)"
+    }
+    my $refId_whereClause_str = join (" OR " ,@refId_whereClause);
+    if ($refSource_whereClause_str){
+        push @where_clause, "( $refId_whereClause_str )";
+    }
+
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
-    my $q = "SELECT study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, projectprop.value as trial_type_value, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, genotyping_facility.value, genotyping_facility_submitted.value, genotyping_facility_status.value, genotyping_plate_format.value, genotyping_plate_sample_type.value, genotyping_facility_plate_id.value, sampling_facility.value, sampling_facility_sample_type.value, project_additional_info.value, count(study.project_id) OVER() AS full_count
+    if(!$sort_by) {
+        $sort_by = " ORDER BY study.name ";
+    }
+
+    my $q = "SELECT study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, projectprop.value as trial_type_value, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, genotyping_facility.value, genotyping_facility_submitted.value, genotyping_facility_status.value, genotyping_plate_format.value, genotyping_plate_sample_type.value, genotyping_facility_plate_id.value, sampling_facility.value, sampling_facility_sample_type.value, project_additional_info.value, count(study.project_id) OVER() AS full_count, xref.xrefjson
         FROM project AS study
         JOIN project_relationship AS bp_rel ON(study.project_id=bp_rel.subject_project_id AND bp_rel.type_id=$breeding_program_trial_relationship_id)
         JOIN project AS breeding_program ON(bp_rel.object_project_id=breeding_program.project_id)
@@ -337,11 +372,22 @@ sub search {
         LEFT JOIN projectprop AS sampling_facility ON(study.project_id=sampling_facility.project_id AND sampling_facility.type_id=$sampling_facility_cvterm_id)
         LEFT JOIN projectprop AS sampling_facility_sample_type ON(study.project_id=sampling_facility_sample_type.project_id AND sampling_facility_sample_type.type_id=$sampling_facility_sample_type_cvterm_id)
         LEFT JOIN projectprop AS project_additional_info ON(study.project_id=project_additional_info.project_id AND project_additional_info.type_id=$additional_info_cvterm_id)
+        LEFT JOIN (
+                select a.project_id, array_agg(referenceId) as xrefIds, array_agg(referenceSource) as xrefSources, jsonb_agg(jsonb_build_object('referenceSource', a.referenceSource, 'referenceId', a.referenceId)) as xrefjson
+                    from (
+                        select name as referenceSource, dbxref.accession as referenceId, pd.project_id
+                            from db
+                                join dbxref on db.db_id = dbxref.db_id
+                                join project_dbxref pd on dbxref.dbxref_id = pd.dbxref_id
+                    ) a
+                    group by a.project_id
+         ) xref on xref.project_id = study.project_id
+
         $accession_join
         $trait_join
         $where_clause
-        GROUP BY(study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, projectprop.value, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, genotyping_facility.value, genotyping_facility_submitted.value, genotyping_facility_status.value, genotyping_plate_format.value, genotyping_plate_sample_type.value, genotyping_facility_plate_id.value, sampling_facility.value, sampling_facility_sample_type.value, project_additional_info.value)
-        ORDER BY study.name;";
+        GROUP BY(study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, projectprop.value, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, genotyping_facility.value, genotyping_facility_submitted.value, genotyping_facility_status.value, genotyping_plate_format.value, genotyping_plate_sample_type.value, genotyping_facility_plate_id.value, sampling_facility.value, sampling_facility_sample_type.value, project_additional_info.value, xref.xrefjson) " .
+        $sort_by . $order_by . ";";
 
     print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);

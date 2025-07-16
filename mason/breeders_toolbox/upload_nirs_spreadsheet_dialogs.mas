@@ -98,7 +98,7 @@
                 <li><strong>sampling_date</strong>: Optional field. The format allowed is: YYYY-MM-DD.</li>
                 <li><strong>observationunit_name</strong>: Required field that matches with existing data in the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
                 <li><strong>device_id</strong>: Optional field to identify your device. Strings are allowed.</li>
-                <li><strong>device_type</strong>: Required field. It is possible upload data for a single device type. They can be: <strong>SCiO, QST, Foss6500,FOSSDS2500, FOSSXDS, ASDQualityspec,ASDLabSpec,SpecimFX17, BunchiN500, or LinkSquare</strong>.</li>
+                <li><strong>device_type</strong>: Required field. It is possible upload data for a single device type. They can be: <strong>SCiO, QST, Foss6500,FOSSDS2500, FOSSXDS, ASDQualityspec,ASDLabSpec,SpecimFX17, BunchiN500, InnoSpectraNIR-S-G1, LinkSquare, or FTIR6X </strong>.</li>
                 <li><strong>comments</strong>: Optional field for general comments.</li>
                 <li>All other columns are required wavelengths. You can add how many columns you want upload -- there is no limit.</li>
             </ul>

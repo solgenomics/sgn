@@ -18,6 +18,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Cross;
 use SGN::Model::Cvterm;
+use Sort::Naturally;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -52,6 +53,84 @@ my %ADDITIONAL_LIST_DATA = (
             for my $index (0 .. $#$list_item_ids ) {
                 $values{$list_item_ids->[$index]} = $list_item_db_ids->[$index];
             }
+            return \%values;
+        },
+
+        'accession pedigree' => sub {
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+            my $mother_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+            my $father_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+            foreach my $stock_id ( @$list_item_db_ids) {
+
+                # Get the pedigree of the stock
+                my $prs = $schema->resultset("Stock::StockRelationship")->search([
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $father_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    },
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $mother_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    }
+                ], {
+                    'join' => 'subject',
+                    '+select' => ['subject.uniquename'],
+                    '+as' => ['subject_uniquename']
+                });
+
+                # Retrieve the names of the parents
+                my $parents = {};
+                while ( my $p = $prs->next() ) {
+                    if ( $p->type_id == $mother_type_id ) {
+                        $parents->{'mother'} = $p->get_column('subject_uniquename');
+                    }
+                    else {
+                        $parents->{'father'} = $p->get_column('subject_uniquename');
+                    }
+                }
+
+                # Build pedigree string
+                my $pedigree = 'NA/NA';
+                if ( $parents->{'mother'} && $parents->{'father'} ) {
+                    $pedigree = $parents->{'mother'} . '/' . $parents->{'father'};
+                }
+
+                # Add pedigree to return hash
+                for my $index (0 .. $#$list_item_db_ids ) {
+                    if ( $list_item_db_ids->[$index] eq $stock_id ) {
+                        $values{$list_item_ids->[$index]} = $pedigree;
+                    }
+                }
+            }
+
+            return \%values;
+        },
+
+        'accession synonyms' => sub {
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+
+            my $rs = $schema->resultset("Stock::Stockprop")->search({
+                'me.stock_id' => { in => $list_item_db_ids },
+                'me.type_id' => $type_id
+            });
+            while ( my $row = $rs->next() ) {
+                my $accession_id = $row->stock_id();
+                my $synonym = $row->value();
+                for my $index (0 .. $#$list_item_db_ids ) {
+                    if ( $list_item_db_ids->[$index] eq $accession_id ) {
+                        my $id = $list_item_ids->[$index];
+                        $values{$id} = $values{$id} ? $values{$id} . ", " . $synonym : $synonym;
+                    }
+                }
+            }
+
             return \%values;
         }
 
@@ -92,6 +171,75 @@ my %ADDITIONAL_LIST_DATA = (
                 for my $index (0 .. $#$list_item_db_ids ) {
                     if ( $list_item_db_ids->[$index] eq $seedlot_id ) {
                         $values{$list_item_ids->[$index]} = $accession_name;
+                    }
+                }
+            }
+
+            return \%values;
+        },
+
+        'seedlot contents pedigree' => sub {
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+            my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+            my $mother_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+            my $father_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+            my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+
+            # Get the stock ids of the seedlot contents
+            my $rs = $schema->resultset("Stock::StockRelationship")->search({
+                'me.object_id' => { in => $list_item_db_ids },
+                'me.type_id' => $type_id,
+                'subject.type_id' => { in => [$accession_type_id, $cross_type_id] }
+            }, {
+                'join' => 'subject',
+                '+select' => ['subject.uniquename', 'subject.stock_id'],
+                '+as' => ['subject_uniquename', 'subject_stockid']
+            });
+            while ( my $row = $rs->next() ) {
+                my $seedlot_id = $row->object_id();
+                my $stock_id = $row->get_column('subject_stockid');
+
+                # Get the pedigree of the contents
+                my $prs = $schema->resultset("Stock::StockRelationship")->search([
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $father_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    },
+                    {
+                        'me.object_id' => $stock_id,
+                        'me.type_id' => $mother_type_id,
+                        'subject.type_id'=> $accession_type_id
+                    }
+                ], {
+                    'join' => 'subject',
+                    '+select' => ['subject.uniquename'],
+                    '+as' => ['subject_uniquename']
+                });
+
+                # Retrieve the names of the parents
+                my $parents = {};
+                while ( my $p = $prs->next() ) {
+                    if ( $p->type_id == $mother_type_id ) {
+                        $parents->{'mother'} = $p->get_column('subject_uniquename');
+                    }
+                    else {
+                        $parents->{'father'} = $p->get_column('subject_uniquename');
+                    }
+                }
+
+                # Build pedigree string
+                my $pedigree = 'NA/NA';
+                if ( $parents->{'mother'} && $parents->{'father'} ) {
+                    $pedigree = $parents->{'mother'} . '/' . $parents->{'father'};
+                }
+
+                # Add pedigree to return hash
+                for my $index (0 .. $#$list_item_db_ids ) {
+                    if ( $list_item_db_ids->[$index] eq $seedlot_id ) {
+                        $values{$list_item_ids->[$index]} = $pedigree;
                     }
                 }
             }
@@ -193,13 +341,27 @@ __PACKAGE__->config(
 
         # Get additional list data for just the longest item
         if ( $data_type eq 'Lists' ) {
-            my $additional_list_data = get_additional_list_data($c, $source_id, $longest_hash{'list_item_id'}, $longest_hash{'list_item_name'});
+            my %longest_additional_list_data;
+            my $additional_list_data = get_additional_list_data($c, $source_id);
             if ( $additional_list_data ) {
-                my $fields = $additional_list_data->{$longest_hash{'list_item_id'}};
-		if ( (ref($fields) eq "HASH") && (keys(%$fields) > 0) ) {
-		    %longest_hash = (%longest_hash, %$fields);
-		}
+                foreach my $key ( keys(%$additional_list_data) ) {
+                    my $fields = $additional_list_data->{$key};
+                    if ( (ref($fields) eq "HASH") && (keys(%$fields) > 0) ) {
+                        foreach my $field_name ( keys(%$fields) ) {
+                            my $field_value = $fields->{$field_name};
+                            if (exists $longest_additional_list_data{$field_name} ) {
+                                if ( length($field_value) > length($longest_additional_list_data{$field_name}) ) {
+                                    $longest_additional_list_data{$field_name} = $field_value;
+                                }
+                            }
+                            else {
+                                $longest_additional_list_data{$field_name} = $field_value;
+                            }
+                        }
+                    }
+                }
             }
+            %longest_hash = (%longest_hash, %longest_additional_list_data);
         }
 
         $c->stash->{rest} = {
@@ -271,7 +433,63 @@ __PACKAGE__->config(
        my $col_num = $design_params->{'start_col'} || 1;
        my $row_num = $design_params->{'start_row'} || 1;
        my $key_number = 0;
-       my $sort_order = $design_params->{'sort_order'};
+       my $sort_order_1 = $design_params->{'sort_order_1'};
+       my $sort_order_2 = $design_params->{'sort_order_2'};
+       my $sort_order_3 = $design_params->{'sort_order_3'};
+       my @sorted_keys;
+
+       # Sort by Field Layout
+       if ( $sort_order_1 eq 'Trial Layout: Plot Order') {
+            my $layout_order = $design_params->{'sort_order_layout_order'};
+            my $layout_start = $design_params->{'sort_order_layout_start'};
+
+            # Set the Trial IDs
+            # - a single trial = the source id is the trial id
+            # - a list of trials = the source id is the list id
+            #       get the list contents and convert to database ids
+            my @trial_ids;
+            if ( $data_type eq 'Field Trials' ) {
+                push(@trial_ids, $source_id);
+            }
+            elsif ( $data_type eq 'Lists' ) {
+                my $list = CXGN::List->new({ dbh => $schema->storage->dbh(), list_id => $source_id });
+                my $list_elements = $list->retrieve_elements_with_ids($source_id);
+                my @trial_names = map { $_->[1] } @$list_elements;
+                my $lt = CXGN::List::Transform->new();
+                my $tr = $lt->transform($schema, "projects_2_project_ids", \@trial_names);
+                @trial_ids = @{$tr->{transform}};
+            }
+
+            # Get the sorted plots, individually by trial
+            # Add a _plot_order key to each plot in the label design
+            foreach my $trial_id (@trial_ids) {
+                my $results = CXGN::Trial->get_sorted_plots($schema, [$trial_id], $layout_order, $layout_start);
+                if ( $results->{plots} ) {
+                    foreach (@{$results->{plots}}) {
+                        $design->{$_->{plot_name}}{_plot_order} = $_->{order};
+                    }
+                }
+            }
+
+            # Sort the label design elements by trial, plot order, plot number
+            # (if the trial does not have a layout, it will default to sorting by plot number)
+            @sorted_keys = sort {
+                    ncmp($design->{$a}{trial_name}, $design->{$b}{trial_name}) ||
+                    ncmp($design->{$a}{_plot_order}, $design->{$b}{_plot_order}) ||
+                    ncmp($design->{$a}{plot_number}, $design->{$b}{plot_numer}) ||
+                    ncmp($a, $b)
+            } keys %design;
+       }
+
+       # Sort by designated data property(s)
+       else {
+            @sorted_keys = sort {
+                    ncmp($design->{$a}{$sort_order_1}, $design->{$b}{$sort_order_1}) ||
+                    ncmp($design->{$a}{$sort_order_2}, $design->{$b}{$sort_order_2}) ||
+                    ncmp($design->{$a}{$sort_order_3}, $design->{$b}{$sort_order_3}) ||
+                    ncmp($a, $b)
+            } keys %design;
+       }
 
        my $qrcode = Imager::QRCode->new(
            margin        => 0,
@@ -293,7 +511,7 @@ __PACKAGE__->config(
            $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
 
            # loop through design hash, sorting via specified field or default
-           foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or versioncmp($a, $b) } keys %design) {
+           foreach my $key (@sorted_keys) {
                if ($start_number && ($key_number < $start_number)){
                    $key_number++;
                    next;
@@ -409,7 +627,7 @@ __PACKAGE__->config(
            }
            $zpl_obj->end_sequence();
            my $zpl_template = $zpl_obj->render();
-           foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
+           foreach my $key ( @sorted_keys ) {
 
                if ($start_number && ($key_number < $start_number)){
                    $key_number++;
@@ -469,6 +687,19 @@ sub convert_stock_list {
     return \@ids;
 }
 
+sub convert_project_list {
+    my $c = shift;
+    my $schema = shift;
+    my $list_id = shift;
+    my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $list_id);
+    my @list_items = map { $_->[1] } @$list_data;
+    my $t = CXGN::List::Transform->new();
+    my $proj_t = $t->can_transform("projects", "project_ids");
+    my $id_hash = $t->transform($schema, $proj_t, \@list_items);
+    my @ids = @{$id_hash->{transform}};
+    return \@ids;
+}
+
 sub get_trial_from_stock_list {
     my $c = shift;
     my $schema = shift;
@@ -491,9 +722,9 @@ sub get_trial_from_stock_list {
         $trials{$id} = 1;
     }
     my $num_trials = scalar keys %trials;
+    my @all_trial_ids = keys %trials;
     #print STDERR "Number of linked trials is $num_trials\n";
-    my $trial_id = $trial_rs->first->project_id();
-    return $trial_id, $num_trials;
+    return \@all_trial_ids, $num_trials;
 }
 
 sub filter_by_list_items {
@@ -520,70 +751,76 @@ sub filter_by_list_items {
 sub get_trial_design {
     my $c = shift;
     my $schema = shift;
-    my $trial_id = shift;
+    my $trial_ids = shift;
     my $type = shift;
     my %selected_columns = (
-        plate => {genotyping_project_name=>1,genotyping_facility=>1,trial_name=>1,acquisition_date=>1,exported_tissue_sample_name=>1,tissue_sample_name=>1,well_A01=>1,row_number=>1,col_number=>1,source_observation_unit_name=>1,accession_name=>1,accession_id=>1,pedigree=>1,dna_person=>1,notes=>1,tissue_type=>1,extraction=>1,concentration=>1,volume=>1,is_blank=>1,year=>1,location_name=>1},
-        plots => {plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,rep_number=>1,range_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
-        plants => {plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
-        subplots => {subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,rep_number=>1,range_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
-        field_trial_tissue_samples => {tissue_sample_name=>1,tissue_sample_id=>1,plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,tissue_sample_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1}
+        plate => {genotyping_project_name=>1,genotyping_facility=>1,trial_name=>1,acquisition_date=>1,exported_tissue_sample_name=>1,tissue_sample_name=>1,well_A01=>1,row_number=>1,col_number=>1,source_observation_unit_name=>1,accession_name=>1,synonyms=>0,accession_id=>1,pedigree=>1,dna_person=>1,notes=>1,tissue_type=>1,extraction=>1,concentration=>1,volume=>1,is_blank=>1,year=>1,location_name=>1},
+        plots => {plot_name=>1,plot_id=>1,accession_name=>1,synonyms=>0,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,rep_number=>1,range_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
+        plants => {plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,synonyms=>0,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
+        subplots => {subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,synonyms=>0,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,rep_number=>1,range_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
+        field_trial_tissue_samples => {tissue_sample_name=>1,tissue_sample_id=>1,plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,synonyms=>0,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,tissue_sample_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1}
     );
     my %unique_identifier = (
-        plots => 'plot_id',
-        plants => 'plant_id',
-        subplots => 'subplot_id',
-        field_trial_tissue_samples => 'tissue_sample_id',
+        plate => 'tissue_sample_name',
+        plots => 'plot_name',
+        plants => 'plant_name',
+        subplots => 'subplot_name',
+        field_trial_tissue_samples => 'tissue_sample_name',
     );
 
-    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
-    my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
+    my %mapped_design;
+    foreach my $trial_id (@$trial_ids) {
+        my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+        my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
+        my $entry_numbers = $trial->get_entry_numbers();
 
-    my $treatments = $trial->get_treatments();
-    my @treatment_ids = map { $_->[0] } @{$treatments};
-    # print STDERR "treatment ids are @treatment_ids\n";
-    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-        schema => $schema,
-        trial_id => $trial_id,
-        data_level => $type,
-        treatment_project_ids => \@treatment_ids,
-        selected_columns => $selected_columns{$type},
-        selected_trait_ids => [],
-        use_synonyms => 'false',
-        include_measured => 'true'
-    });
-    my $layout = $trial_layout_download->get_layout_output();
+        my $treatments = $trial->get_treatments();
+        my @treatment_ids = map { $_->[0] } @{$treatments};
+        # print STDERR "treatment ids are @treatment_ids\n";
+        my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+            schema => $schema,
+            trial_id => $trial_id,
+            data_level => $type,
+            treatment_project_ids => \@treatment_ids,
+            selected_columns => $selected_columns{$type},
+            selected_trait_ids => [],
+            use_synonyms => 'false',
+            include_measured => 'true'
+        });
+        my $layout = $trial_layout_download->get_layout_output();
 
-    # map array of arrays into hash
-    my @outer_array = @{$layout->{'output'}};
-    my ($inner_array, @keys, %mapped_design);
-    for my $i (0 .. $#outer_array) {
-        $inner_array = $outer_array[$i];
-    # foreach my $inner_array (@{$outer_array}) {
-        if (scalar @keys > 0) {
-            my %detail_hash;
-            @detail_hash{@keys} = @{$outer_array[$i]};
+        # map array of arrays into hash
+        my @outer_array = @{$layout->{'output'}};
+        my ($inner_array, @keys);
+        for my $i (0 .. $#outer_array) {
+            $inner_array = $outer_array[$i];
+        # foreach my $inner_array (@{$outer_array}) {
+            if (scalar @keys > 0) {
+                my %detail_hash;
+                @detail_hash{@keys} = @{$outer_array[$i]};
 
-            my @applied_treatments;
-            foreach my $key (keys %detail_hash) {
-                if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
-                    my $treatment = $key;
-                    $treatment =~ s/ManagementFactor://;
-                    $treatment =~ s/$trial_name//;
-                    $treatment =~ s/^_//;
-                    push @applied_treatments, $treatment;
-                    delete($detail_hash{$key});
+                my @applied_treatments;
+                foreach my $key (keys %detail_hash) {
+                    if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
+                        my $treatment = $key;
+                        $treatment =~ s/ManagementFactor://;
+                        $treatment =~ s/$trial_name//;
+                        $treatment =~ s/^_//;
+                        push @applied_treatments, $treatment;
+                        delete($detail_hash{$key});
+                    }
+                    elsif ( $key =~ /ManagementFactor/ ) {
+                        delete($detail_hash{$key});
+                    }
                 }
-                elsif ( $key =~ /ManagementFactor/ ) {
-                    delete($detail_hash{$key});
-                }
+                $detail_hash{'management_factor'} = join(",", @applied_treatments);
+                $detail_hash{'entry_number'} = $entry_numbers ? $entry_numbers->{$detail_hash{accession_id}} : undef;
+                $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
+
             }
-            $detail_hash{'management_factor'} = join(",", @applied_treatments);
-            $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
-
-        }
-        else {
-            @keys = @{$inner_array};
+            else {
+                @keys = @{$inner_array};
+            }
         }
     }
     return \%mapped_design;
@@ -598,6 +835,7 @@ sub get_data {
     my $include_additional_list_data = shift;
     my $num_trials = 1;
     my $design;
+    my $dbh = $schema->storage->dbh();
 
     # print STDERR "starting to get data,level is $data_level and type is $data_type\n";
     # use data level as well as type to determine and enact correct retrieval
@@ -633,105 +871,151 @@ sub get_data {
         }
     }
     elsif ($data_level eq "plate") {
-        $design = get_trial_design($c, $schema, $id, 'plate');
+        $design = get_trial_design($c, $schema, [$id], 'plate');
     }
     elsif ($data_level eq "plots") {
         if ($data_type =~ m/Field Trials/) {
-            $design = get_trial_design($c, $schema, $id, 'plots');
+            $design = get_trial_design($c, $schema, [$id], 'plots');
         }
         elsif ($data_type =~ m/List/) {
-            my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $design = get_trial_design($c, $schema, $trial_id, 'plots');
-            $design = filter_by_list_items($design, $list_ids, 'plot_id');
+            my $list = CXGN::List->new({ dbh => $dbh, list_id => $id });
+            my $list_type = $list->type();
+            if ( $list_type eq "trials" ) {
+                my $trial_ids = convert_project_list($c, $schema, $id);
+                $design = get_trial_design($c, $schema, $trial_ids, 'plots');
+            }
+            elsif ( $list_type eq "plots" ) {
+                my $plot_ids = convert_stock_list($c, $schema, $id);
+                my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+                my @list_items = map { $_->[1] } @$list_data;
+                my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $plot_ids);
+                $design = get_trial_design($c, $schema, $trial_ids, 'plots');
+                $design = filter_by_list_items($design, \@list_items, 'plot_name');
+            }
         }
     }
     elsif ($data_level eq "plants") {
         if ($data_type =~ m/Field Trials/) {
-            $design = get_trial_design($c, $schema, $id, 'plants');
+            $design = get_trial_design($c, $schema, [$id], 'plants');
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $design = get_trial_design($c, $schema, $trial_id, 'plants');
-            $design = filter_by_list_items($design, $list_ids, 'plant_id');
+            my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+            my @list_items = map { $_->[1] } @$list_data;
+            my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
+            $design = get_trial_design($c, $schema, $trial_ids, 'plants');
+            $design = filter_by_list_items($design, \@list_items, 'plant_name');
         }
     }
     elsif ($data_level eq "subplots") {
         if ($data_type =~ m/Field Trials/) {
-            $design = get_trial_design($c, $schema, $id, 'subplots');
+            $design = get_trial_design($c, $schema, [$id], 'subplots');
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $design = get_trial_design($c, $schema, $trial_id, 'subplots');
-            $design = filter_by_list_items($design, $list_ids, 'subplot_id');
+            my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+            my @list_items = map { $_->[1] } @$list_data;
+            my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
+            $design = get_trial_design($c, $schema, $trial_ids, 'subplots');
+            $design = filter_by_list_items($design, \@list_items, 'subplot_name');
         }
     }
     elsif ($data_level eq "tissue_samples") {
         if ($data_type =~ m/Field Trials/) {
-            $design = get_trial_design($c, $schema, $id, 'field_trial_tissue_samples');
+            $design = get_trial_design($c, $schema, [$id], 'field_trial_tissue_samples');
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $design = get_trial_design($c, $schema, $trial_id, 'field_trial_tissue_samples');
-            $design = filter_by_list_items($design, $list_ids, 'tissue_sample_id');
+            my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+            my @list_items = map { $_->[1] } @$list_data;
+            my ($trial_ids, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
+            $design = get_trial_design($c, $schema, $trial_ids, 'field_trial_tissue_samples');
+            $design = filter_by_list_items($design, \@list_items, 'tissue_sample_name');
         }
     }
     elsif ($data_level eq "crosses") {
-        my $project;
-        my $cross_list_ids;
-        my %all_design;
+        my %cross_info;
         if ($data_type =~ m/Crossing Experiments/) {
-            $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+            my $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+            my $result = $project->get_crosses_and_details_in_crossingtrial();
+            my @cross_data = @$result;
+            foreach my $cross (@cross_data){
+                my $cross_combination;
+                my $male_parent_name;
+                my $male_parent_id;
+
+                if (!$cross->[2] || $cross->[2] eq ''){
+                    $cross_combination = 'No cross combination available';
+                } else {
+                    $cross_combination = $cross->[2];
+                }
+
+                if (!$cross->[8] || $cross->[8] eq ''){
+                    $male_parent_name = 'No male parent available';
+                } else {
+                    $male_parent_name = $cross->[8];
+                }
+
+                if (!$cross->[7] || $cross->[7] eq ''){
+                    $male_parent_id = 'No male parent available';
+                } else {
+                    $male_parent_id = $cross->[7];
+                }
+
+                $cross_info{$cross->[0]} = {
+                    'cross_name' => $cross->[1],
+                    'cross_id' => $cross->[0],
+                    'cross_combination' => $cross_combination,
+                    'cross_type' => $cross->[3],
+                    'female_parent_name' => $cross->[5],
+                    'female_parent_id' => $cross->[4],
+                    'male_parent_name' => $male_parent_name,
+                    'male_parent_id' => $male_parent_id
+                };
+            }
+
         } elsif ($data_type =~ m/List/) {
-            $cross_list_ids = convert_stock_list($c, $schema, $id);
-            my ($crossing_experiment_id, $num_trials) = get_trial_from_stock_list($c, $schema, $cross_list_ids);
-            $project = CXGN::Cross->new({ schema => $schema, trial_id => $crossing_experiment_id});
+            my $cross_list_ids = convert_stock_list($c, $schema, $id);
+            foreach my $cross_id (@$cross_list_ids) {
+                my $cross = CXGN::Cross->new({ schema => $schema, cross_stock_id => $cross_id});
+                my $info = $cross->cross_parents();
+#                print STDERR "INFO =".Dumper($info)."\n";
+                my $cross_combination;
+                my $male_parent_name;
+                my $male_parent_id;
+
+                if (!$info->[0]->[13] || $info->[0]->[13] eq ''){
+                    $cross_combination = 'No cross combination available';
+                } else {
+                    $cross_combination = $info->[0]->[13];
+                }
+
+                if (!$info->[0]->[7] || $info->[0]->[7] eq ''){
+                    $male_parent_name = 'No male parent available';
+                } else {
+                    $male_parent_name = $info->[0]->[7];
+                }
+
+                if (!$info->[0]->[6] || $info->[0]->[6] eq ''){
+                    $male_parent_id = 'No male parent available';
+                } else {
+                    $male_parent_id = $info->[0]->[6];
+                }
+
+                $cross_info{$cross->cross_stock_id()} = {
+                    'cross_name' => $cross->cross_name(),
+                    'cross_id' => $cross->cross_stock_id(),
+                    'cross_combination' => $cross_combination,
+                    'cross_type' => $info->[0]->[12],
+                    'female_parent_name' => $info->[0]->[1],
+                    'female_parent_id' => $info->[0]->[0],
+                    'male_parent_name' => $male_parent_name,
+                    'male_parent_id' => $male_parent_id
+                };
+            }
         }
 
-        my $result = $project->get_crosses_and_details_in_crossingtrial();
-        my @cross_data = @$result;
-        foreach my $cross (@cross_data){
-            my $cross_combination;
-            my $male_parent_name;
-            my $male_parent_id;
-
-            if ($cross->[2] eq ''){
-                $cross_combination = 'No cross combination available';
-            } else {
-                $cross_combination = $cross->[2];
-            }
-
-            if ($cross->[8] eq ''){
-                $male_parent_name = 'No male parent available';
-            } else {
-                $male_parent_name = $cross->[8];
-            }
-
-            if ($cross->[7] eq ''){
-                $male_parent_id = 'No male parent available';
-            } else {
-                $male_parent_id = $cross->[7];
-            }
-
-            $all_design{$cross->[0]} = {'cross_name' => $cross->[1],
-                                      'cross_id' => $cross->[0],
-                                      'cross_combination' => $cross_combination,
-                                      'cross_type' => $cross->[3],
-                                      'female_parent_name' => $cross->[5],
-                                      'female_parent_id' => $cross->[4],
-                                      'male_parent_name' => $male_parent_name,
-                                      'male_parent_id' => $male_parent_id};
-        }
-
-        if ($data_type =~ m/List/) {
-            my %filtered_hash = map { $_ => $all_design{$_} } @$cross_list_ids;
-            $design = \%filtered_hash;
-        } else {
-            $design = \%all_design;
-        }
+        $design = \%cross_info;
     }
 
 #    print STDERR "Design is ".Dumper($design)."\n";

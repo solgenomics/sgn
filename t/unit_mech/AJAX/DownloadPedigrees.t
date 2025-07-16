@@ -41,11 +41,11 @@ test5P002	test_accession4	test_accession5
 test5P003	test_accession4	test_accession5	
 test5P004	test_accession4	test_accession5	
 test5P005	test_accession4	test_accession5	
-test_accession4	test_accession1	test_accession2	biparental
-test_accession5	test_accession3		open
 test_accession1			
 test_accession2			
 test_accession3			
+test_accession4	test_accession1	test_accession2	biparental
+test_accession5	test_accession3		open
 ';
 
 # for identifying whitespace differences

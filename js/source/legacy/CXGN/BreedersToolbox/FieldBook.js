@@ -79,7 +79,6 @@ function generate_trait_file() {
         var list = new CXGN.List();
         trait_list = JSON.stringify(list.getList(trait_list_id));
         var valid_list = JSON.stringify(list.legacy_validate(trait_list_id, 'traits', 1));
-	alert('GOT A LIST. VALIDITY = '+valid_list);
         if (!valid_list) { return; }
         trait_ids = JSON.stringify(list.transform(trait_list_id, 'traits_2_trait_ids'));
         selected_listed = 1;

@@ -259,7 +259,7 @@ sub add_crosses {
                 });
             }
 
-            if ($cross_type eq "self" && $female_parent) {
+            if ( ( $cross_type eq "self" || $cross_type eq "dihaploid_induction" || $cross_type eq "doubled_haploid") &&  $female_parent) {
                 $cross_stock->find_or_create_related('stock_relationship_objects', {
                     type_id => $male_parent_cvterm->cvterm_id(),
                     object_id => $cross_stock->stock_id(),
@@ -437,7 +437,7 @@ sub _validate_cross {
             return;
         }
 
-    } elsif ($cross_type eq "self") {
+    } elsif ($cross_type eq "self" || $cross_type eq "dihaploid_induction" || $cross_type eq "doubled_haploid" ) {
         $female_parent_name = $pedigree->get_female_parent()->get_name();
         $female_parent = $self->_get_accession($female_parent_name);
 
@@ -460,12 +460,13 @@ sub _validate_cross {
 	        $female_parent = $self->_get_accession_or_cross($female_parent_name);
 	        $male_parent = $self->_get_accession_or_cross($male_parent_name);
 
+
         if (!$female_parent || !$male_parent) {
             print STDERR "Parent $female_parent_name or $male_parent_name in pedigree is not a stock\n";
             return;
 	    }
 
-	}
+    }
 
     #add support for other cross types here
 

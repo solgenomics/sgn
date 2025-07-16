@@ -25,7 +25,8 @@ my ($type, $locus_name, $object_id, $organism, $subject_id,  $relationship_id, $
 
 
 my $dbh = CXGN::DB::Connection->new();
-my $schema=  $c->dbic_schema('CXGN::Phenome::Schema');
+my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+my $schema=  $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
 
 my ($login_person_id, $login_user_type)=CXGN::Login->new($dbh)->verify_session();
 

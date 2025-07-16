@@ -238,8 +238,8 @@ sub dataset_genotype_data {
 	my $model = $self->get_model();
 
 	my $genotypes_ids = $model->get_genotypes_from_dataset ($dataset_id);
-    my $cnt = @$genotypes_ids;
-	if (@$genotypes_ids)
+    # my $cnt = @$genotypes_ids;
+	if (@{$genotypes_ids})
 	{
 		$self->genotypes_list_genotype_data($genotypes_ids);
 	}

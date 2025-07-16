@@ -15,6 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
+<& /solgs/tools/base.mas &>
 <& /util/import_javascript.mas, classes => [  "solGS.gebvs", "solGS.histogram"] &>
 
 <&|  /page/info_section.mas,
@@ -25,10 +26,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <div id="gebvs">
     <div id="gebvs_histo_canvas"></div>
+    <& save_gebvs.mas &>
 </div>
-<br/>
-<br/>
-
-<& save_gebvs.mas &>
 
 </&>

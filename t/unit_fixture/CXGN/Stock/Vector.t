@@ -38,6 +38,8 @@ my $vector_type = 'no_nitab';
 my $gene = 'gene1';
 my $promotors = 'promotors1';
 my $terminators = 'terminators1';
+my $bacterial_resistant_marker = 'BR Marker';
+my $plant_antibiotic_resistant_marker = 'PAR Marker';
 
 my $stock = CXGN::Stock::Vector->new({
                     schema=>$schema,
@@ -58,7 +60,9 @@ my $stock = CXGN::Stock::Vector->new({
                     VectorType=>$vector_type,
                     Gene=>$gene,
                     Promotors=>$promotors,
-                    Terminators=>$terminators
+                    Terminators=>$terminators,
+                    PlantAntibioticResistantMarker=>$plant_antibiotic_resistant_marker,
+                    BacterialResistantMarker=>$bacterial_resistant_marker
 });
 
 my $stock_id = $stock->store();
@@ -76,6 +80,9 @@ is_deeply($s->VectorType,$vector_type);
 is_deeply($s->Gene,$gene);
 is_deeply($s->Promotors,$promotors);
 is_deeply($s->Terminators,$terminators);
+is_deeply($s->PlantAntibioticResistantMarker,$plant_antibiotic_resistant_marker);
+is_deeply($s->BacterialResistantMarker,$bacterial_resistant_marker);
 
+$f->clean_up_db();
 
 done_testing();

@@ -87,12 +87,14 @@ sub BUILD {
     $self->username('janedoe');
 
     $self->dbstats_start($self->get_db_stats());
+
+    $self->auditstats_start($self->get_auditdb_stats());
+
 }
 
 has 'config' => ( isa => "Ref",
 		  is => 'rw',
     );
-
 
 has 'dbh' => (
 		is => 'rw',
@@ -134,6 +136,10 @@ has 'dbstats_start' => (isa => 'HashRef', is => 'rw' );
 
 has 'dbstats_end' => (isa => 'HashRef', is => 'rw');
 
+has 'auditstats_start' => (isa => 'HashRef', is => 'rw' );
+
+has 'auditstats_end' => (isa => 'HashRef', is => 'rw');
+
 sub dbic_schema {
     my $self = shift;
     my $name = shift;
@@ -154,7 +160,7 @@ sub dbic_schema {
 	return $self->people_schema();
     }
 
-    return undef;
+    return;
 }
 
 sub get_conf {
@@ -251,6 +257,12 @@ sub get_db_stats {
     $rs = $self->phenome_schema()->resultset('ProjectMdImage')->search( {}, { columns => [ { 'project_md_image_id_max' => { max => 'project_md_image_id' }} ] });
     $stats->{project_images} = defined $rs->get_column('project_md_image_id_max')->first() ? $rs->get_column('project_md_image_id_max')->first() : 0;
 
+    # count images
+    $rs = $self->metadata_schema()->resultset('MdImage')->search( {}, { columns => [ { image_id_max => { max => 'image_id' }} ] });
+    $stats->{images} = defined $rs->get_column('image_id_max')->first() ? $rs->get_column('image_id_max')->first() :0;
+
+    print STDERR "IMAGE STATS : $stats->{images}\n";
+    
     # count metadata file entries
     $rs = $self->metadata_schema()->resultset('MdFiles')->search( {}, { columns => [ { 'file_id_max' => { max => 'file_id' }} ] } );
     $stats->{metadata_files} = $rs->get_column('file_id_max')->first();
@@ -265,6 +277,35 @@ sub get_db_stats {
     return $stats;
 }
 
+sub get_auditdb_stats {
+
+    my $self = shift;
+    my $query = "select relname, n_tup_ins from pg_stat_all_tables WHERE schemaname = 'audit' ORDER BY n_tup_ins;";
+    my $h = $self->dbh()->prepare($query);
+    $h->execute();
+
+    my $auditresults = {};
+
+    # return only audit tables that are not empty (that have non-zero values)
+    while (my ($audittable, $ntupins) = $h->fetchrow_array()) {
+	if ($ntupins > 0) {
+	    $auditresults->{$audittable} = $ntupins;
+	}
+    }
+
+    return $auditresults;
+}
+
+=head1 FUNCTIONS
+
+=head2 function clean_up_db()
+
+  Usage:   $f->clean_up_db();
+  Effects: removes any rows that were added to the database since the 
+           currently running test started. Should be called at the end of the test
+  Note:    Will not revert deletions or updates occuring during the test
+
+=cut
 
 # for tests that cannot use a transaction, such as unit_mech or selenium tests, this function can be used to bring
 # the database back to approx the state before the test. dbstats_start needs to contain the result of the dbstats function
@@ -277,7 +318,7 @@ sub clean_up_db {
 
     if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
 
-    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments');
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images');
     foreach my $table (@deletion_order) {
 	    print STDERR "CLEANING $table...\n";
 	    my $count = $stats->{$table} - $self->dbstats_start()->{$table};
@@ -387,6 +428,11 @@ sub delete_table_entries {
     }
 
     if ($table eq "metadata") {
+        # delete associated images first
+	my $iq = "DELETE FROM phenome.stock_image where metadata_id > ?";
+	my $ih = $self->dbh()->prepare($iq);
+	$ih->execute($previous_max_id);
+	    
         my $rs = undef;
         my $q = "DELETE FROM metadata.md_files where metadata_id > ?";
         my $h = $self->dbh()->prepare($q);
@@ -397,6 +443,11 @@ sub delete_table_entries {
         $h2->execute($previous_max_id);
     }
 
+    if ($table eq "images") {
+	my $q = "DELETE FROM metadata.md_image where image_id > ?";
+	my $h = $self->dbh()->prepare($q);
+	$h->execute($previous_max_id);
+    }
 
     my $count = 0;
     print STDERR "rs value: $rs";
@@ -426,6 +477,11 @@ sub DEMOLISH {
  		$self->dbstats_start()->{$table} ." TO ".$stats->{$table}.". PLEASE CLEAN UP THIS TEST!\n";
  	}
     }
+
+    $self->auditstats_end($self->get_auditdb_stats());
+
+    print STDERR "# MODIFIED AUDIT TABLES BEFORE TEST: " .Dumper($self->auditstats_start())."\n";
+    print STDERR "# MODIFIED AUDIT TABLES AFTER TEST: " .Dumper($self->auditstats_end())."\n";
 }
 
 1;

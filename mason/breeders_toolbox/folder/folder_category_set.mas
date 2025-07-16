@@ -4,6 +4,7 @@ $folder_name => undef
 $folder_for_trials => undef
 $folder_for_crosses => undef
 $folder_for_genotyping_trials => undef
+$folder_for_genotyping_projects => undef
 </%args>
 
 <div class="modal fade" id="edit_folder_category_dialog" name="edit_folder_category_dialog" tabindex="-1" role="dialog" aria-labelledby="editFolderCategoryDialog">
@@ -47,6 +48,16 @@ $folder_for_genotyping_trials => undef
 % }
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Folder for Genotyping Projects:</label>
+                            <div class="col-sm-7" >
+% if ($folder_for_genotyping_projects) {
+                                <span class="glyphicon glyphicon-ok"></span>
+% } else {
+                                <input name="edit_folder_for_genotyping_projects" id="edit_folder_for_genotyping_projects" type="checkbox"/>
+% }
+                            </div>
+                        </div>
                     </form><br/>
 
                 </div>
@@ -78,10 +89,12 @@ function save_folder_categories() {
     var previous_folder_for_trials = "<% $folder_for_trials %>";
     var previous_folder_for_crosses = "<% $folder_for_crosses %>";
     var previous_folder_for_genotyping_trials = "<% $folder_for_genotyping_trials %>";
+    var previous_folder_for_genotyping_projects = "<% $folder_for_genotyping_projects %>";
 
     var folder_for_trials = jQuery('#edit_folder_for_trials').is(":checked");
     var folder_for_crosses = jQuery('#edit_folder_for_crosses').is(":checked");
     var folder_for_genotyping_trials = jQuery('#edit_folder_for_genotyping_trials').is(":checked");
+    var folder_for_genotyping_projects = jQuery('#edit_folder_for_genotyping_projects').is(":checked");
 
     if (previous_folder_for_trials == 1) {
         folder_for_trials = true ;
@@ -95,12 +108,17 @@ function save_folder_categories() {
         folder_for_genotyping_trials = true;
     }
 
+    if (previous_folder_for_genotyping_projects == 1) {
+        folder_for_genotyping_projects = true;
+    }
+
     jQuery.ajax( {
         url: '/ajax/folder/'+<% $folder_id %>+'/categories',
         data: {
           'folder_for_trials' : folder_for_trials,
           'folder_for_crosses' : folder_for_crosses,
           'folder_for_genotyping_trials' : folder_for_genotyping_trials,
+          'folder_for_genotyping_projects' : folder_for_genotyping_projects,
         },
         success: function(response) {
             if (response.error){

@@ -42,6 +42,7 @@ use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
 use Try::Tiny;
 use CXGN::Metadata::Metadbdata;
+use File::Basename qw | basename dirname|;
 
 =head2 accessor schema()
 
@@ -74,6 +75,23 @@ has 'schema' => (
 
 has 'phenome_schema' => (
     isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+);
+
+=head2 accessor metadata_schema()
+
+ Usage:
+ Desc:         provides access the the CXGN::Metadata::Schema, needed for
+               certain user related functions
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
     is => 'rw',
 );
 
@@ -470,6 +488,12 @@ has 'modification_note' => (
     is => 'rw',
 );
 
+has 'create_date' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    );
+
+
 has 'objects' => (
     isa => 'Maybe[Ref]',
     is => 'rw',
@@ -480,30 +504,55 @@ has 'subjects' => (
     is => 'rw',
 );
 
+=head2 accessor obsolete_note()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'obsolete_note' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
 
 sub BUILD {
     my $self = shift;
 
-    #print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
     my $stock;
-    if ($self->stock_id){
-        $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
-        $self->stock($stock);
-        $self->stock_id($stock->stock_id);
-    }
-    elsif ($self->uniquename) {
-	$stock = $self->schema()->resultset("Stock::Stock")->find( { uniquename => $self->uniquename() });
-	if (!$stock) {
-	    print STDERR "Can't find stock ".$self->uniquename.". Generating empty object.\n";
-	}
-	else {
-	    $self->stock($stock);
-	    $self->stock_id($stock->stock_id);
-	}
-    }
+    my $schema = $self->schema;
+    my $stock_id = $self->stock_id;
+    my $uniquename = $self->uniquename;
 
+    # Attempt to retrieve the stock object from DB
+    try {
+        if ($stock_id) {
+            $stock = $schema->resultset("Stock::Stock")->find({ stock_id => $stock_id });
+        }
+        elsif ($uniquename) {
+            $stock = $schema->resultset("Stock::Stock")->find({ uniquename => $uniquename });
+            unless ($stock) {
+                print STDERR "Can't find stock with uniquename '$uniquename'. Generating empty object.\n";
+            }
+        }
+    } catch {
+        warn "Error fetching stock from database: $_";
+        return;
+    };
 
-    if (defined $stock && !$self->is_saving) {
+    # Exit early if stock is not found
+    return unless $stock;
+
+    # Cache the stock object
+    $self->stock($stock);
+    $self->stock_id($stock->stock_id);
+    $self->create_date($stock->create_date);
+
+    unless ($self->is_saving) {
         $self->organism_id($stock->organism_id);
 #	my $organism = $self->schema()->resultset("Organism::Organism")->find( { organism_id => $stock->organism_id() });
 #	$self->organism($organism);
@@ -517,9 +566,7 @@ sub BUILD {
         $self->_retrieve_populations();
     }
 
-
-    if ($self->stock_id()) {
-
+    if ($stock_id) {
 	my @objects;
 	my $object_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_objects();
 	foreach my $object ($object_rs->all()) {
@@ -535,7 +582,6 @@ sub BUILD {
 
 	$self->subjects(\@subjects);
     }
-
 
     return $self;
 }
@@ -611,7 +657,6 @@ sub store {
     }
 
     ###Check first if the name  exists in te database
-    my $exists;
     if ($self->check_name_exists){
 	print STDERR "Checking stock uniquename \n";
         $exists= $self->exists_in_database();
@@ -661,7 +706,7 @@ sub store {
         if ($self->description){ $row->description($self->description()) };
         if ($self->type_id){ $row->type_id($self->type_id()) };
         if ($self->organism_id){ $row->organism_id($self->organism_id()) };
-        if ($self->is_obsolete){ $row->is_obsolete($self->is_obsolete()) };
+        if (defined($self->is_obsolete)){ $row->is_obsolete($self->is_obsolete()) };
         $row->update();
         if ($self->organization_name){
             $self->_update_stockprop('organization', $self->organization_name());
@@ -672,7 +717,7 @@ sub store {
             $self->_update_population_relationship();
         }
     }
-    $self->associate_owner($self->sp_person_id, $self->sp_person_id, $self->user_name, $self->modification_note);
+    $self->associate_owner($self->sp_person_id, $self->sp_person_id, $self->user_name, $self->modification_note, $self->obsolete_note);
 
     return $self->stock_id();
 }
@@ -728,7 +773,7 @@ sub exists_in_database {
 	    return 0;
 	}
     }
-    return undef;
+    return;
 }
 
 
@@ -751,7 +796,7 @@ sub get_organism {
     if ($bcs_stock) {
         return $bcs_stock->organism;
     }
-    return undef;
+    return;
 }
 
 
@@ -773,7 +818,7 @@ sub get_species {
         return $organism->species;
     }
     else {
-	return undef;
+	return;
     }
 }
 
@@ -795,7 +840,7 @@ sub get_genus {
         return $organism->genus;
     }
     else {
-	return undef;
+	return;
     }
 }
 
@@ -973,11 +1018,12 @@ sub associate_owner {
     my $sp_person_id = shift;
     my $user_name = shift;
     my $modification_note = shift;
+    my $obsolete_note = shift;
     if (!$owner_id || !$sp_person_id) {
         warn "Need both owner_id and person_id for linking the stock with an owner!";
         return;
     }
-    my $metadata_id = $self->_new_metadata_id($sp_person_id, $user_name, $modification_note);
+    my $metadata_id = $self->_new_metadata_id($sp_person_id, $user_name, $modification_note, $obsolete_note);
     #check if the owner is already linked
     my $ids =  $self->schema()->storage()->dbh()->selectcol_arrayref
         ( "SELECT stock_owner_id FROM phenome.stock_owner WHERE stock_id = ? AND sp_person_id = ?",
@@ -992,6 +1038,105 @@ sub associate_owner {
     $sth->execute($self->stock_id, $owner_id, $metadata_id);
     my ($id) =  $sth->fetchrow_array;
     return $id;
+}
+
+=head2 associate_owner()
+
+ Usage: $self->associate_uploaded_file($owner_sp_person_id, $archived_filename_with_path, $md5checksum, $stock_id )
+ Desc:  Associate files with metadata and stock
+ Ret:   a database id
+ Args:  owner_id, archived_filename_with_path, md5checksum, stock_id
+ Side Effects:  store a metadata row
+ Example:
+
+=cut
+
+sub associate_uploaded_file {
+
+    my $self = shift;
+    my $user_id = shift;
+    my $archived_filename_with_path = shift;
+    my $md5checksum = shift;
+    my $stock_id = shift;
+
+    my $metadata_id = $self->_new_metadata_id($user_id);
+
+    my $metadata_schema = CXGN::Metadata::Schema->connect(
+        sub { $self->schema()->storage()->dbh() },
+        { on_connect_do => [ 'SET search_path TO metadata'], limit_dialect => 'LimitOffset' }
+        );
+
+    my $file_row = $metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($archived_filename_with_path),
+            dirname  => dirname($archived_filename_with_path),
+            filetype => 'accession_additional_file_upload',
+            md5checksum => $md5checksum,
+            metadata_id => $metadata_id,
+        });
+    my $file_id = $file_row->file_id();
+
+    my $phenome_schema = CXGN::Phenome::Schema->connect(
+	sub { $self->schema()->storage()->dbh() }, { on_connect_do => [ 'SET search_path TO phenome, public, sgn'], limit_dialect => 'LimitOffset' }
+	);
+
+    my $stock_file = $phenome_schema->resultset("StockFile")
+        ->create({
+            stock_id => $stock_id,
+            file_id => $file_id,
+        });
+
+    return {success => 1, file_id=>$file_id};
+}
+
+=head2 obsolete_uploaded_file()
+
+ Usage: $self->obsolete_uploaded_file($file_id, $user_id, $role )
+ Desc:  Obsolete files with metadata
+ Side Effects:
+ Example:
+
+=cut
+
+sub obsolete_uploaded_file {
+
+    my $self = shift;
+    my $file_id = shift;
+    my $user_id = shift;
+    my $role = shift;
+
+    my @errors;
+    # check ownership of that file
+    my $q = "SELECT metadata.md_metadata.create_person_id, metadata.md_metadata.metadata_id, metadata.md_files.file_id
+    FROM metadata.md_metadata
+    join metadata.md_files using(metadata_id)
+    where md_metadata.obsolete=0 and md_files.file_id=? and md_metadata.create_person_id=?";
+
+    my $dbh = $self->bcs_schema->storage()->dbh();
+    my $h = $dbh->prepare($q);
+
+    $h->execute($file_id, $user_id);
+
+    if (my ($create_person_id, $metadata_id, $file_id) = $h->fetchrow_array()) {
+	if ($create_person_id == $user_id || $role eq "curator") {
+	    my $uq = "UPDATE metadata.md_metadata SET obsolete=1 where metadata_id = ?";
+	    my $uh = $dbh->prepare($uq);
+	    $uh->execute($metadata_id);
+	}
+	else {
+	    push @errors, "Only the owner of the uploaded file, or a curator, can delete this file.";
+	}
+
+    }
+    else {
+	push @errors, "No such file currently exists.";
+    }
+
+    if (@errors >0) {
+	return { errors => \@errors };
+    }
+
+    return { success => 1 };
 }
 
 =head2 get_trait_list()
@@ -1058,7 +1203,11 @@ sub get_trials {
     }
 
     my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'project location', 'project_property')->cvterm_id();
-    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on (accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id) where projectprop.type_id=$geolocation_type_id AND accession.stock_id=?;";
+    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on
+	(accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id)
+	JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id)
+	JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id)
+	where projectprop.type_id=$geolocation_type_id AND accession.stock_id=?;";
 
     my $h = $dbh->prepare($q);
     $h->execute($self->stock_id());
@@ -1110,6 +1259,7 @@ sub get_ancestor_hash {
     $pedigree{'cross_type'} = $female_parent_relationship->value();
 	$pedigree{'female_parent'} = get_ancestor_hash( $self, $female_parent_stock_id, $direct_descendant_ids );
   }
+
   my $male_parent_relationship = $stock_relationships->find({type_id => { in => [ $cvterm_male_parent->cvterm_id(), $cvterm_rootstock_of->cvterm_id() ]}, subject_id => {'not_in' => $direct_descendant_ids}});
   if ($male_parent_relationship) {
     my $male_parent_stock_id = $male_parent_relationship->subject_id();
@@ -1167,18 +1317,30 @@ sub get_descendant_hash {
  Usage:
  Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
  Ret:
- Args: $accession_ids, $format (either 'parents_only' or 'full')
+ Args: $accession_ids, $format (either 'parents_only' or 'full'), $include (either 'ancestors' or 'ancestors_descendants')
  Side Effects:
  Example:
 
 =cut
 
 sub get_pedigree_rows {
-    my ($self, $accession_ids, $format) = @_;
+    my ($self, $accession_ids, $format, $include) = @_;
     #print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
 
     my $placeholders = join ( ',', ('?') x @$accession_ids );
+    my @values = ();
+
+    # set the filter criteria based on whether to include ancestors and descendants
     my ($query, $pedigree_rows);
+    my $where = "";
+    if ( $include eq 'ancestors_descendants' ) {
+        $where = "child.stock_id IN ($placeholders) OR m_rel.subject_id IN ($placeholders) OR f_rel.subject_id IN ($placeholders)";
+        push(@values, @$accession_ids, @$accession_ids, @$accession_ids);
+    }
+    else {
+        $where = "child.stock_id IN ($placeholders)";
+        push(@values, @$accession_ids);
+    }
 
     if ($format eq 'parents_only') {
         $query = "
@@ -1191,29 +1353,29 @@ sub get_pedigree_rows {
         LEFT JOIN stock mother ON(m_rel.subject_id = mother.stock_id)
         LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
         LEFT JOIN stock father ON(f_rel.subject_id = father.stock_id)
-        WHERE child.stock_id IN ($placeholders)
+        WHERE $where
         GROUP BY 1,2,3,4
         ORDER BY 1";
     }
     elsif ($format eq 'full') {
         $query = "
         WITH RECURSIVE included_rows(child, child_id, mother, mother_id, father, father_id, type, depth, path, cycle) AS (
-                SELECT c.uniquename AS child,
-                c.stock_id AS child_id,
+                SELECT child.uniquename AS child,
+                child.stock_id AS child_id,
                 m.uniquename AS mother,
                 m.stock_id AS mother_id,
                 f.uniquename AS father,
                 f.stock_id AS father_id,
                 m_rel.value AS type,
                 1,
-                ARRAY[c.stock_id],
+                ARRAY[child.stock_id],
                 false
-                FROM stock c
-                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                FROM stock child
+                LEFT JOIN stock_relationship m_rel ON(child.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
                 LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
-                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
                 LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
-                WHERE c.stock_id IN ($placeholders)
+                WHERE $where
                 GROUP BY 1,2,3,4,5,6,7,8,9,10
             UNION
                 SELECT c.uniquename AS child,
@@ -1234,14 +1396,15 @@ sub get_pedigree_rows {
                 WHERE c.stock_id IN (included_rows.mother_id, included_rows.father_id) AND NOT cycle
                 GROUP BY 1,2,3,4,5,6,7,8,9,10
         )
-        SELECT child, mother, father, type, depth
+        SELECT child, mother, father, type
         FROM included_rows
-        GROUP BY 1,2,3,4,5
-        ORDER BY 5,1;";
+        GROUP BY 1,2,3,4
+        ORDER BY 1;";
+        # depth was removed from this query since including it was creating a lot of duplicate rows
     }
 
     my $sth = $self->schema()->storage()->dbh()->prepare($query);
-    $sth->execute(@$accession_ids);
+    $sth->execute(@values);
 
     no warnings 'uninitialized';
     while (my ($name, $mother, $father, $cross_type, $depth) = $sth->fetchrow_array()) {
@@ -1300,6 +1463,7 @@ sub get_parents {
     $parents{'mother_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
     $parents{'father'} = $pedigree_hashref->{'male_parent'}->{'name'};
     $parents{'father_id'} = $pedigree_hashref->{'male_parent'}->{'id'};
+    $parents{'cross_type'} = $pedigree_hashref->{'female_parent'}->{'cross_type'};
     return \%parents;
 }
 
@@ -1325,6 +1489,28 @@ sub _update_stockprop {
         $r->delete();
     }
     $self->_store_stockprop($type,$value);
+}
+
+# Doesn't split the value like the _store_stockprop method
+sub _store_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    # print STDERR Dumper $type;
+    my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
+    my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
+}
+
+sub _update_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $stockprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->stock->search_related('stockprops', {'type_id'=>$stockprop_cvterm_id});
+    while(my $r=$rs->next){
+        $r->delete();
+    }
+    $self->_store_stockprop_raw($type,$value);
 }
 
 =head2 _retrieve_stockprop
@@ -1409,6 +1595,29 @@ sub _remove_stockprop {
 
 }
 
+sub _remove_stockprop_all_of_type {
+
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$type_id, stock_id => $self->stock_id() } );
+
+    if ($rs->count() > 0) {
+        while (my $row = $rs->next()) {
+            $row->delete();
+        }
+        return 1;
+    }
+    elsif ($rs->count() == 0) {
+        return 0;
+    }
+    else {
+        print STDERR "Error removing stockprop from stock ".$self->stock_id().". Please check this manually.\n";
+        return 0;
+    }
+}
+
 sub _retrieve_organismprop {
     my $self = shift;
     my $type = shift;
@@ -1436,18 +1645,23 @@ sub _store_population_relationship {
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
 
-    print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
-    my $population = $schema->resultset("Stock::Stock")->find_or_create({
-        uniquename => $self->population_name(),
-        name => $self->population_name(),
-        organism_id => $self->organism_id(),
-        type_id => $population_cvterm_id,
-    });
-    $self->stock->find_or_create_related('stock_relationship_subjects', {
-        type_id => $population_member_cvterm_id,
-        object_id => $population->stock_id(),
-        subject_id => $self->stock_id(),
-    });
+    my @populations = split(/\|/, $self->population_name());
+
+    foreach my $population_name (@populations) {
+
+	print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
+	my $population_row = $schema->resultset("Stock::Stock")->find_or_create({
+	    uniquename => $population_name,
+	    name => $population_name,
+	    organism_id => $self->organism_id(),
+	    type_id => $population_cvterm_id,
+        });
+	$self->stock->find_or_create_related('stock_relationship_subjects', {
+	    type_id => $population_member_cvterm_id,
+	    object_id => $population_row->stock_id(),
+	    subject_id => $self->stock_id(),
+        });
+    }
 }
 
 ##Move to a population child object##
@@ -1489,6 +1703,47 @@ sub _retrieve_populations {
         $self->population_name($pop_string);
     }
 }
+
+sub _store_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_accession = shift;
+    my $cross_type = shift;
+    my $schema = $self->schema;
+    my $parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my %return;
+
+    print STDERR "***STOCK.PM : Storing parent relationship $parent_cvterm_id \n\n";
+    my $parent = $schema->resultset("Stock::Stock")->find({
+        uniquename => $parent_accession
+    });
+
+    # TODO: Check the cross type
+
+    if (defined $parent) {
+        # Object is the child, subject is the mother
+        $self->stock->find_or_create_related('stock_relationship_subjects', {
+            type_id    => $parent_cvterm_id,
+            object_id  => $self->stock_id(),
+            subject_id => $parent->stock_id(),
+            value      => $cross_type
+        });
+    } else {
+        return $return{error} = "Parent accession not found: ".$parent_accession;
+    }
+}
+
+sub _remove_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id=>$parent_cvterm_id, object_id => $self->stock_id() } );
+
+    while (my $r=$rs->next){
+        $r->delete();
+    }
+}
+
 ###
 
 =head2 _new_metadata_id()
@@ -1505,6 +1760,7 @@ sub _new_metadata_id {
     my $sp_person_id = shift;
     my $user_name = shift;
     my $modification_note = shift;
+    my $obsolete_note = shift;
     my $metadata_schema = CXGN::Metadata::Schema->connect(
         sub { $self->schema()->storage()->dbh() },
         );
@@ -1515,6 +1771,7 @@ sub _new_metadata_id {
     if ($modification_note){
         my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $user_name, $metadata_id);
         $metadata->set_modification_note($modification_note);
+        $metadata->set_obsolete_note($obsolete_note);
         $metadata_id = $metadata->store()->get_metadata_id();
     }
     $metadata_schema->storage->dbh->do('SET search_path TO public,sgn');
@@ -1628,8 +1885,7 @@ sub merge {
 	print STDERR "Skipping this comparison - not enough data! \n";
     }
     else {
-	print STDERR join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents->{mother_id}, $other_parents->{mother}, $this_parents->{mother_id}, $this_parents->{mother}, "FATHERS", $other_parents->{father_id}, $other_parents->{father}, $this_parents->{father_id}, $this_parents->{father}, "PARENTS DO NOT MATCH!")."\n";
-	return;
+	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents->{mother_id}, $other_parents->{mother}, $this_parents->{mother_id}, $this_parents->{mother}, "FATHERS", $other_parents->{father_id}, $other_parents->{father}, $this_parents->{father_id}, $this_parents->{father}, "PARENTS DO NOT MATCH!")."\n";
     }
 
     # move stockprops
@@ -1750,10 +2006,22 @@ sub merge {
     #
     my $sdrs = $schema->resultset("Stock::StockDbxref")->search( { stock_id => $other_stock_id });
     while (my $row = $sdrs->next()) {
-	$row->stock_id($self->stock_id());
-	$row->update();
-	$stock_dbxref_count++;
-	print STDERR "Moving stock_dbxref relationships from $other_stock_id to stock ".$self->stock_id()."\n";
+
+	# check if the current stock already has the same dbxref assigned
+	# and if yes, do not move as it violates a unique constraint.
+	#
+	my $check_row = $schema-> resultset("Stock::StockDbxref")->find( { dbxref_id => $row->dbxref_id(), stock_id => $self->stock_id() });
+
+        if ($check_row) {
+
+            $row->stock_id($self->stock_id());
+            $row->update();
+            $stock_dbxref_count++;
+            print STDERR "Moving stock_dbxref relationships from $other_stock_id to stock ".$self->stock_id()."\n";
+        }
+        else {
+            print STDERR "Not moving stock_dbxref because it already exists for that stock (".$self->stock_id().")\n";
+        }
     }
 
     # move sgn.pcr_exp_accession relationships
@@ -1877,6 +2145,7 @@ sub merge {
     Other stock deleted: $other_stock_deleted.
 COUNTS
 
+	return;
 }
 
 =head2 delete
@@ -1911,7 +2180,6 @@ sub hard_delete {
     $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
 }
-
 
 ###__PACKAGE__->meta->make_immutable;
 

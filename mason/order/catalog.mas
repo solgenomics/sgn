@@ -19,8 +19,10 @@ $order_properties_dialog => undef
         <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
-                    <button id="upload_catalog_items_button" class="btn btn-primary">Upload Catalog Items</button>
-                    <button id="add_catalog_item_button" class="btn btn-primary">Add a Catalog Item</button>
+                    <button id ="manage_catalog_usage_info_button" class="btn btn-default" >Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>
+                    <button id="add_catalog_item_button" class="btn btn-primary">Add Single Item</button>
+                    <button id="add_catalog_using_list_button" class="btn btn-primary">Add Multiple Items Using List</button>
+                    <button id="upload_catalog_items_button" class="btn btn-primary">Upload Multiple Items</button>
                 </div>
             </div>
         </div>
@@ -143,6 +145,9 @@ $order_properties_dialog => undef
 
 <& /order/upload_catalog_items_dialog.mas, ordering_type => $ordering_type&>
 <& /order/add_catalog_item_dialog.mas, ordering_type => $ordering_type &>
+<& /order/add_catalog_using_list_dialog.mas, ordering_type => $ordering_type &>
+<& /order/manage_catalog_usage_info.mas &>
+
 
 <script>
 
@@ -172,7 +177,14 @@ jQuery(document).ready( function() {
                 { title: "Additional Info", "data": "additional_info" },
                 { title: "Material Source", "data": "material_source" },
                 { title: "Program", "data": "breeding_program" },
-                { title: " ", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\")'>Request</a>"; } },
+                { title: "Availability", "data": "availability"},
+                { title: " ", "data": "null", "render": function ( data, type, row ) {
+                    if (row.availability == 'available') {
+                        return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\")'>Request</a>";
+                    } else {
+                        return ' '
+                    }
+                }},
             ],
         });
     } else {
@@ -191,7 +203,14 @@ jQuery(document).ready( function() {
                 { title: "Additional Info", "data": "additional_info" },
                 { title: "Material Source", "data": "material_source" },
                 { title: "Program", "data": "breeding_program" },
-                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+                { title: "Availability", "data": "availability"},
+                { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) {
+                    if (row.availability == 'available') {
+                        return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\", \""+ordering_service_name+"\", \""+ordering_type+"\", \""+order_properties_dialog+"\" )'><span class='glyphicon glyphicon-shopping-cart'></span></a>";
+                    } else {
+                        return ' '
+                    }
+                }},
             ],
         });
     }
@@ -333,17 +352,19 @@ function addToCart(item_name, additional_order_info, ordering_service_name, orde
     var properties = order_properties_dialog.split(",");
     var html = '';
 
-    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br><br>';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br>';
     for(var i=0; i<properties.length; i++){
         var each_property_info = properties[i].split(":");
-        if (each_property_info.length == 1) {
-            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br><br>';
+        if (each_property_info.length == 1 && (properties[i].includes("Date"))) {
+            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder="YYYY-MM-DD"></div><br><br>';
+        } else if (each_property_info.length == 1) {
+            html = html + '<label class="col-sm-3 control-label">'+ properties[i] +'</label><div class="col-sm-9" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br>';
         } else {
             html = html + '<label class="col-sm-3 control-label">'+ each_property_info[0] +'</label><div class="col-sm-9" ><select class="form-control" id= '+ i +' name= '+ i +'> ';
             for (var j=1; j<each_property_info.length; j++) {
                 html = html + "<option value='"+each_property_info[j]+"'>" + each_property_info[j] + "</option>";
             }
-            html = html + "</select></div><br><br><br>";
+            html = html + "</select></div><br><br>";
         }
     }
     html = html + '</div></div></form>';

@@ -80,7 +80,8 @@ sub add_member_POST :Args(0) {
         return;
     }
     my ($locus_name, $locus_symbol, $locus_id) = split (/\|/ ,$locus_input);
-    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema', undef, $sp_person_id);
     my $locus = $phenome_schema
         ->resultset('Locus')
         ->find({ locus_id => $locus_id, {} } );

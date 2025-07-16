@@ -1,7 +1,7 @@
 const path = require('path');
 const glob = require("glob");
 const filemap = require(path.resolve(__dirname,"./webpack_util/webpack-filemap-plugin.js"));
-const UglifyWebpackPlugin = require("uglifyjs-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 const sourcePath = path.resolve(__dirname, "source");
 const entryPath = path.resolve(sourcePath, "entries");
@@ -39,7 +39,8 @@ module.exports = {
                     options: {
                         sourceType: "unambiguous",
                         presets: [['@babel/preset-env',{
-                          useBuiltIns: 'usage'
+                            "useBuiltIns": "usage",
+			                "corejs": "3"
                         }]]
                     }
                 },{
@@ -59,12 +60,7 @@ module.exports = {
     optimization: {
         minimize: true,
         namedChunks: true,
-        minimizer: [new UglifyWebpackPlugin({
-            uglifyOptions: {
-                output: {
-                    ascii_only: true
-                },
-            },
+        minimizer: [new TerserPlugin({
             'sourceMap': true,
             'parallel': 4,
         })],

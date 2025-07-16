@@ -154,6 +154,12 @@ has 'overwrite_values' => (
     default => 0
 );
 
+has 'remove_values' => (
+    isa => "Bool",
+    is => 'rw',
+    default => 0
+);
+
 has 'ignore_new_values' => (
     isa => "Bool",
     is => 'rw',
@@ -192,6 +198,18 @@ has 'unique_trait_stock_timestamp' => (
     is => 'rw',
 );
 
+has 'composable_validation_check_name' => (
+    isa => "Bool",
+    is => 'rw',
+    default => 0
+);
+
+has 'allow_repeat_measures' => (
+    isa => "Bool",
+    is => 'rw',
+    default => 0
+);
+
 #build is used for creating hash lookups in this case
 sub create_hash_lookups {
     my $self = shift;
@@ -201,7 +219,7 @@ sub create_hash_lookups {
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
-    print STDERR "trait list after filtering @trait_list\n";
+    #print STDERR "trait list after filtering @trait_list\n";
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
 
@@ -210,10 +228,16 @@ sub create_hash_lookups {
     $self->stock_id_list($stock_id_list->{'transform'});
 
     foreach my $trait_name (@trait_list) {
-        print STDERR "trait: $trait_name\n";
+        #print STDERR "trait: $trait_name\n";
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
         $trait_objs{$trait_name} = $trait_cvterm;
-        push @cvterm_ids, $trait_cvterm->cvterm_id();
+
+	if (!$trait_cvterm) {
+	    print STDERR "IGNORING TERM $trait_name - IT DOES NOT EXIST IN THE DB (may need to be added to sgn_local.conf?)\n";
+	}
+	else {
+	    push @cvterm_ids, $trait_cvterm->cvterm_id();
+	}
     }
     $self->trait_objs(\%trait_objs);
 
@@ -226,7 +250,11 @@ sub create_hash_lookups {
     #print STDERR "Cvterm ids are @cvterm_ids";
     if (scalar @cvterm_ids > 0) {
         my $cvterm_ids_sql = join ("," , @cvterm_ids);
-        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype LEFT JOIN nd_experiment_phenotype USING(phenotype_id) LEFT JOIN nd_experiment USING(nd_experiment_id) LEFT JOIN nd_experiment_stock USING(nd_experiment_id) LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
+        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype 
+        LEFT JOIN nd_experiment_phenotype USING(phenotype_id) 
+        LEFT JOIN nd_experiment USING(nd_experiment_id) 
+        LEFT JOIN nd_experiment_stock USING(nd_experiment_id) 
+        LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
         my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
         $h->execute();
 
@@ -243,7 +271,6 @@ sub create_hash_lookups {
                 $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
             }
         }
-
     }
     $self->unique_value_trait_stock(\%check_unique_value_trait_stock);
     $self->unique_trait_stock(\%check_unique_trait_stock);
@@ -258,7 +285,7 @@ sub verify {
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
-    print STDERR Dumper \@trait_list;
+    #print STDERR Dumper \@trait_list;
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
@@ -268,9 +295,13 @@ sub verify {
     # print STDERR Dumper \@plot_list;
     # print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
-    my $trait_validator = CXGN::List::Validate->new();
+    my $trait_validator = CXGN::List::Validate->new(
+        composable_validation_check_name => $self->{composable_validation_check_name}
+    );
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples_or_analysis_instances',\@plot_list)->{'missing'}};
-    my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
+    my $traits_validation = $trait_validator->validate($schema,'traits',\@trait_list);
+    my @traits_missing = @{$traits_validation->{'missing'}};
+    my @traits_wrong_ids = @{$traits_validation->{'wrong_ids'}};
     my $error_message = '';
     my $warning_message = '';
 
@@ -278,8 +309,17 @@ sub verify {
         print STDERR "Plots or traits not valid\n";
         print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
         print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
-        $error_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
-        $error_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
+        $error_message = "Invalid plots: \n".join(", \n", map { "'$_'" } @plots_missing) if (@plots_missing);
+        $error_message = "Invalid traits: \n".join(", \n", map { "'$_'" } @traits_missing) if (@traits_missing);
+
+        # Display matches of traits with the wrong id
+        if ( scalar(@traits_wrong_ids) > 0 ) {
+            $error_message .= "<br /><br /><strong>Possible Trait Matches:</strong>";
+            foreach my $m (@traits_wrong_ids) {
+                $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />should be<br />" . $m->{'matching_term'};
+            }
+        }
+
         return ($warning_message, $error_message);
     }
 
@@ -334,6 +374,7 @@ sub verify {
 
     my %check_file_stock_trait_duplicates;
 
+    my $same_value_count = 0;
     foreach my $plot_name (@plot_list) {
         foreach my $trait_name (@trait_list) {
             my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
@@ -341,20 +382,21 @@ sub verify {
             my $trait_value = $value_array->[0];
             my $timestamp = $value_array->[1];
             #print STDERR "$plot_name, $trait_name, $trait_value\n";
-            if ($trait_value || (defined($trait_value) && $trait_value eq '0')) {
+            if ( defined($trait_value) ) {
                 my $trait_cvterm = $trait_objs{$trait_name};
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
-                if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9,.\-\/\_]/ && $trait_value ne '.')){
-                    $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
-                }
+                #Trait values can be non alphanumeric 
+                #if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9,.\-\/\_]/ && $trait_value ne '.')){
+                #    $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                #}
 
                 #check that trait value is valid for trait name
                 if (exists($check_trait_format{$trait_cvterm_id})) {
                     if ($check_trait_format{$trait_cvterm_id} eq 'numeric') {
                         my $trait_format_checked = looks_like_number($trait_value);
-                        if (!$trait_format_checked) {
+                        if (!$trait_format_checked && $trait_value ne '') {
                             $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
                         }
                     }
@@ -365,22 +407,62 @@ sub verify {
                         }
                     }
                 }
+
                 if (exists($check_trait_category{$trait_cvterm_id})) {
+		    my @check_values;
+
                     my @trait_categories = split /\//, $check_trait_category{$trait_cvterm_id};
-                    my %trait_categories_hash = map { $_ => 1 } @trait_categories;
-                    if (!exists($trait_categories_hash{$trait_value})) {
-                        $error_message = $error_message."<small>This trait value should be one of ".$check_trait_category{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                    my %trait_categories_hash;
+
+		    if ($check_trait_format{$trait_cvterm_id} eq "Multicat") {
+		        @check_values = split /\:/, $trait_value;
+		    }
+		    else {
+			@check_values = ( $trait_value );
+		    }
+
+                    if ($check_trait_format{$trait_cvterm_id} eq 'Ordinal' || $check_trait_format{$trait_cvterm_id} eq 'Nominal' || $check_trait_format{$trait_cvterm_id} eq 'Multicat') {
+                        # Ordinal looks like <value>=<category>
+
+                        foreach my $ordinal_category (@trait_categories) {
+                            my @split_value = split('=', $ordinal_category);
+                            if (scalar(@split_value) >= 1) {
+                                $trait_categories_hash{$split_value[0]} = 1;
+                            }
+                        }
+                    } else {
+                        # Catch everything else
+                        %trait_categories_hash = map { $_ => 1 } @trait_categories;
                     }
+
+		    foreach my $tw (@check_values) { 
+			if ($tw ne '' && !exists($trait_categories_hash{$tw})) {
+			    my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
+			    $error_message = "<small>This trait value should be one of $valid_values: <br/>Plot Name: $plot_name<br/>Trait Name: $trait_name<br/>Value: $trait_value</small><hr>";
+			    print STDERR $error_message;
+			} else {
+			    print STDERR "Trait value is valid $tw.\n";
+			}
+		    }
                 }
 
                 #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
                 #check if the plot_name, trait_name combination already exists in database.
                 if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
+                    my $prev = $check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id};
+                    if ( defined($prev) && length($prev) && defined($trait_value) && length($trait_value) ) {
+                        $same_value_count++;
+                    }
                 } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                    my $prev = $check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp};
+                    if ( defined($prev) ) {
+                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                    }
                 } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
+                    my $prev = $check_unique_trait_stock{$trait_cvterm_id, $stock_id};
+                    if ( defined($prev) ) {
+                        $warning_message = $warning_message."<small>$plot_name already has a <strong>different value</strong> ($prev) than in your file (" . (defined($trait_value) && $trait_value ne '' ? $trait_value : "<em>blank</em>") . ") stored in the database for the trait $trait_name.</small><hr>";
+                    }
                 }
 
                 #check if the plot_name, trait_name combination already exists in same file.
@@ -401,6 +483,11 @@ sub verify {
             }
 
         }
+    }
+
+    # combine all warnings about the same values into a summary count
+    if ( $same_value_count > 0 ) {
+        $warning_message = $warning_message."<small>There are $same_value_count values in your file that are the same as values already stored in the database.</small>";
     }
 
     ## Verify metadata
@@ -439,7 +526,9 @@ sub store {
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
     my $overwrite_values = $self->overwrite_values;
+    my $remove_values = $self->remove_values;
     my $ignore_new_values = $self->ignore_new_values;
+    my $allow_repeat_measures = $self->allow_repeat_measures;
     my $error_message;
     my $transaction_error;
     my $user_id = $self->user_id;
@@ -486,6 +575,7 @@ sub store {
         my $new_count = 0;
         my $skip_count = 0;
         my $overwrite_count = 0;
+        my $remove_count = 0;
         foreach my $plot_name (@plot_list) {
 
             my $stock_id = $data{$plot_name}[0];
@@ -537,147 +627,191 @@ sub store {
                 my $trait_cvterm = $trait_objs{$trait_name};
 
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
-                my $trait_value = $value_array->[0];
-                my $timestamp = $value_array->[1];
-                $operator = $value_array->[2] ? $value_array->[2] : $operator;
-                my $observation = $value_array->[3];
-                my $image_id = $value_array->[4];
-                my $additional_info = $value_array->[5] || undef;
-                my $external_references = $value_array->[6] || undef;
-                my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA'.$upload_date;
 
-                if (defined($trait_value) && length($trait_value)) {
+                my @values;
 
-                    if ($ignore_new_values) {
-                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            $skip_count++;
-                            next;
-                        }
+                # convert to array or array format for single array values to accept old format inputs without refactoring
+                if (ref($value_array->[0]) ne 'ARRAY') {
+                    push @values, $value_array;
+                } else {
+                    @values = @{$value_array};
+                }
+
+                foreach my $value (@values) {
+
+                    # perl doesn't have a problem attempting to access possibly non existing indices
+                    my $trait_value = $value->[0];
+                    my $timestamp = $value->[1];
+                    $operator = $value->[2] ? $value->[2] : $operator;
+                    my $observation = $value->[3];
+                    my $image_id = $value->[4];
+                    my $additional_info = $value->[5] || undef;
+                    my $external_references = $value->[6] || undef;
+                    my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA' . $upload_date;
+
+                    my $existing_trait_value;
+                    if (!$trait_cvterm) {
+                        print STDERR "SKIPPING TERM $trait_name. IT IS NOT AVAILABLE IN THE DATABASE\n";
                     }
+                    else {
+                        $existing_trait_value = $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id};
 
-                    my $plot_trait_uniquename = "stock: " .
-                        $stock_id . ", trait: " .
-                        $trait_cvterm->name .
-                        ", date: $unique_time" .
-                        ", operator: $operator" ;
 
-                    # Remove previous phenotype values for a given stock and trait if $overwrite values is checked, otherwise skip to next
-                    if ($overwrite_values) {
-                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-                            push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
-                            $plot_trait_uniquename .= ", overwritten: $upload_date";
-                            $overwrite_count++;
-                        } else {
-                            $new_count++;
-                        }
-                        $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-                    } else {
-                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            $skip_count++;
-                            next;
-                        } else {
-                            $new_count++;
-                        }
-                    }
+                        if (defined($trait_value) && (length($trait_value) || $remove_values)) {
 
-                    my $phenotype;
-                    if ($observation) {
-                        $phenotype = $trait_cvterm->find_related("phenotype_cvalues", {
-                            observable_id => $trait_cvterm->cvterm_id,
-                            phenotype_id => $observation,
-                        });
-
-                        ## should check that unit and variable (also checked here) are conserved in parse step, if not reject before store
-                        ## should also update operator in nd_experimentprops
-
-                        $phenotype->update({
-                            value => $trait_value,
-                            uniquename => $plot_trait_uniquename,
-                        });
-
-                        $self->handle_timestamp($timestamp, $observation);
-                        $self->handle_operator($operator, $observation);
-
-                        my $q = "SELECT phenotype_id, nd_experiment_id, file_id
-                        FROM phenotype
-                        JOIN nd_experiment_phenotype using(phenotype_id)
-                        JOIN nd_experiment_stock using(nd_experiment_id)
-                        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
-                        JOIN stock using(stock_id)
-                        WHERE stock.stock_id=?
-                        AND phenotype.cvalue_id=?";
-
-                        my $h = $self->bcs_schema->storage->dbh()->prepare($q);
-                        $h->execute($stock_id, $trait_cvterm->cvterm_id);
-                        while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-                            push @overwritten_values, [$file_id, $phenotype_id, $nd_experiment_id];
-                            $experiment_ids{$nd_experiment_id}=1;
-                            if ($image_id) {
-                                $nd_experiment_md_images{$nd_experiment_id} = $image_id;
+                            if ($ignore_new_values) {
+                                if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                                    $skip_count++;
+                                    next;
+                                }
                             }
+
+                            my $plot_trait_uniquename = "stock: " .
+                                $stock_id . ", trait: " .
+                                $trait_cvterm->name .
+                                ", date: $unique_time" .
+                                ", operator: $operator";
+
+                            # Remove previous phenotype values for a given stock and trait if $overwrite values is checked, otherwise skip to next
+                            if ($overwrite_values) {
+                                if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+
+                                    #skip when observation is provided since overwriting doesn't create records it updates observations.
+                                    if (!$observation) {
+                                        push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+                                        push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+                                    }
+                                    $plot_trait_uniquename .= ", overwritten: $upload_date";
+                                    if ( defined($trait_value) && length($trait_value) ) {
+                                        $overwrite_count++;
+                                    }
+                                    elsif ( $existing_trait_value ne "" ) {
+                                        $remove_count++;
+                                    }
+                                } elsif ( length($trait_value) ) {
+                                    $new_count++;
+                                }
+                                $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
+                            } else {
+                                if (!$allow_repeat_measures && exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                                    $skip_count++;
+                                    next;
+                                } else {
+                                    $new_count++;
+                                }
+                            }
+
+
+                            my $phenotype;
+                            if ($observation) {
+                                $phenotype = $trait_cvterm->find_related("phenotype_cvalues", {
+                                    observable_id => $trait_cvterm->cvterm_id,
+                                    phenotype_id  => $observation,
+                                });
+
+                                ## should check that unit and variable (also checked here) are conserved in parse step, if not reject before store
+                                ## should also update operator in nd_experimentprops
+
+                                $phenotype->update({
+                                    value      => $trait_value,
+                                    uniquename => $plot_trait_uniquename,
+                                });
+
+                                $self->handle_timestamp($timestamp, $observation);
+                                $self->handle_operator($operator, $observation);
+
+                                my $q = "SELECT phenotype_id, nd_experiment_id, file_id
+                                                FROM phenotype
+                                            JOIN nd_experiment_phenotype using(phenotype_id)
+                                            JOIN nd_experiment_stock using(nd_experiment_id)
+                                            LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+                                            JOIN stock using(stock_id)
+                                            WHERE stock.stock_id=?
+                                            AND phenotype.cvalue_id=?";
+
+                                my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+                                $h->execute($stock_id, $trait_cvterm->cvterm_id);
+                                while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+                                    push @overwritten_values, [ $file_id, $phenotype_id, $nd_experiment_id ];
+                                    $experiment_ids{$nd_experiment_id} = 1;
+                                    if ($image_id) {
+                                        $nd_experiment_md_images{$nd_experiment_id} = $image_id;
+                                    }
+                                }
+                            }
+                            else {
+                                $phenotype = $trait_cvterm->create_related("phenotype_cvalues", {
+                                    observable_id => $trait_cvterm->cvterm_id,
+                                    value         => $trait_value,
+                                    uniquename    => $plot_trait_uniquename,
+                                });
+
+                                $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
+                                $self->handle_operator($operator, $phenotype->phenotype_id);
+
+                                $experiment->create_related('nd_experiment_phenotypes', {
+                                    phenotype_id => $phenotype->phenotype_id
+                                });
+
+                                # $experiment->find_or_create_related({
+                                #     nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
+                                # });
+
+                                $experiment_ids{$experiment->nd_experiment_id()} = 1;
+                                if ($image_id) {
+                                    $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
+                                }
+                            }
+                            my $additional_info_stored;
+                            if($additional_info){
+                                my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
+                                    phenotype_id => $phenotype->phenotype_id,
+                                    type_id       => $phenotype_addtional_info_type_id,
+                                });
+                                $pheno_additional_info = $pheno_additional_info->update({
+                                    value => encode_json $additional_info,
+                                });
+                                $additional_info_stored = $pheno_additional_info->value ? decode_json $pheno_additional_info->value : undef;
+                            }
+                            my $external_references_stored;
+                            if($external_references){
+                                my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->find_or_create({
+                                    phenotype_id => $phenotype->phenotype_id,
+                                    type_id      => $external_references_type_id,
+                                });
+                                $phenotype_external_references = $phenotype_external_references->update({
+                                    value => encode_json $external_references,
+                                });
+                                $external_references_stored = $phenotype_external_references->value ? decode_json $phenotype_external_references->value : undef;
+                            }
+
+                            my $observationVariableDbId = $trait_cvterm->cvterm_id;
+                            my $observation_id = $phenotype->phenotype_id;
+                            my %details = (
+                                "germplasmDbId"=> qq|$linked_data{$plot_name}->{germplasmDbId}|,
+                                "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
+                                "observationDbId"=> qq|$observation_id|,
+                                "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
+                                "observationUnitDbId"=> qq|$linked_data{$plot_name}->{observationUnitDbId}|,
+                                "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
+                                "observationVariableDbId"=> qq|$observationVariableDbId|,
+                                "observationVariableName"=> $trait_cvterm->name,
+                                "studyDbId"=> qq|$project_id|,
+                                "uploadedBy"=> $operator ? $operator : "",
+                                "additionalInfo" => $additional_info_stored,
+                                "externalReferences" => $external_references_stored,
+                                "value" => $trait_value
+                            );
+
+                            if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
+                            if ($operator) { $details{'collector'} = $operator};
+
+                            push @stored_details, \%details;
                         }
-
-                    } else {
-
-                        $phenotype = $trait_cvterm->create_related("phenotype_cvalues", {
-                            observable_id => $trait_cvterm->cvterm_id,
-                            value => $trait_value ,
-                            uniquename => $plot_trait_uniquename,
-                        });
-
-                        $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
-                        $self->handle_operator($operator, $phenotype->phenotype_id);
-
-                        $experiment->create_related('nd_experiment_phenotypes', {
-                            phenotype_id => $phenotype->phenotype_id
-                        });
-
-                        # $experiment->find_or_create_related({
-                        #     nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
-                        # });
-
-                        $experiment_ids{$experiment->nd_experiment_id()}=1;
-                        if ($image_id) {
-                            $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
+                        elsif ( !length($trait_value) && !$remove_values && $existing_trait_value ne "" ) {
+                            $skip_count++;
                         }
                     }
-
-                    if($additional_info){
-                        my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->create({
-                            phenotype_id => $phenotype->phenotype_id,
-                            type_id       => $phenotype_addtional_info_type_id,
-                            value => encode_json $additional_info,
-                        });
-                    }
-
-                    if($external_references){
-                        my $phenotype_external_references = $schema->resultset("Phenotype::Phenotypeprop")->create({
-                            phenotype_id => $phenotype->phenotype_id,
-                            type_id      => $external_references_type_id,
-                            value => encode_json $external_references,
-                        });
-                    }
-
-                    my $observationVariableDbId = $trait_cvterm->cvterm_id;
-                    my %details = (
-                        "germplasmDbId"=> $linked_data{$plot_name}->{germplasmDbId},
-                        "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
-                        "observationDbId"=> $phenotype->phenotype_id,
-                        "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
-                        "observationUnitDbId"=> $linked_data{$plot_name}->{observationUnitDbId},
-                        "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
-                        "observationVariableDbId"=> qq|$observationVariableDbId|,
-                        "observationVariableName"=> $trait_cvterm->name,
-                        "studyDbId"=> $project_id,
-                        "uploadedBy"=> $operator ? $operator : "",
-                        "value" => $trait_value
-                    );
-
-                    if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
-                    if ($operator) { $details{'collector'} = $operator};
-
-                    push @stored_details, \%details;
                 }
             }
         }
@@ -690,7 +824,8 @@ sub store {
         $success_message = 'All values in your file have been successfully processed!<br><br>';
         $success_message .= "$new_count new values stored<br>";
         $success_message .= "$skip_count previously stored values skipped<br>";
-        $success_message .= "$overwrite_count previously stored values overwritten<br><br>";
+        $success_message .= "$overwrite_count previously stored values overwritten<br>";
+        $success_message .= "$remove_count previously stored values removed<br><br>";
         my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
         my $obsoleted_files = $self->check_overwritten_files_status(keys %files_with_overwritten_values);
         if (scalar (@$obsoleted_files) > 0){
@@ -773,39 +908,75 @@ sub delete_previous_phenotypes {
     my $self = shift;
     my $trait_and_stock_to_overwrite = shift;
     my $saved_nd_experiment_ids = shift;
-    my $stocks_sql = join ("," , @{$trait_and_stock_to_overwrite->{stocks}});
-    my $traits_sql = join ("," , @{$trait_and_stock_to_overwrite->{traits}});
-    my $saved_nd_experiment_ids_sql = join (",", @$saved_nd_experiment_ids);
+    my @stocks = @{$trait_and_stock_to_overwrite->{stocks}};
+    my @traits = @{$trait_and_stock_to_overwrite->{traits}};
     my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    my $q_search = "
-        SELECT phenotype_id, nd_experiment_id, file_id
-        FROM phenotype
-        JOIN nd_experiment_phenotype using(phenotype_id)
-        JOIN nd_experiment_stock using(nd_experiment_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
-        JOIN stock using(stock_id)
-        WHERE stock.stock_id IN ($stocks_sql)
-        AND phenotype.cvalue_id IN ($traits_sql)
-        AND nd_experiment_id NOT IN ($saved_nd_experiment_ids_sql)
-        AND nd_experiment.type_id = $nd_experiment_type_id;
-        ";
-
-    my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
-    $h->execute();
-
-    my %phenotype_ids_and_nd_experiment_ids_to_delete;
     my @deleted_phenotypes;
-    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
-        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
-        push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
-    }
-    my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($self->dbhost, $self->dbname, $self->dbuser, $self->dbpass, $self->temp_file_nd_experiment_id, $self->basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
-    if ($delete_phenotype_values_error) {
-        die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
-    }
+    my $coderef = sub {
+        my $dbh = $self->bcs_schema->storage->dbh();
+
+        # create temp table to hold stock and trait combinations to delete
+        $dbh->do("DROP TABLE IF EXISTS pheno_data_to_delete");
+        $dbh->do("CREATE TEMP TABLE pheno_data_to_delete (stock_id BIGINT, cvterm_id BIGINT)");
+
+        # Insert the stock and trait combinations
+        for my $index (0 .. $#stocks) {
+            my $i = "INSERT INTO pheno_data_to_delete (stock_id, cvterm_id) VALUES (?, ?)";
+            my $h = $dbh->prepare($i);
+            $h->execute($stocks[$index], $traits[$index]);
+        }
+
+        # create temp table to hold experiment ids to keep
+        $dbh->do("DROP TABLE IF EXISTS experiments_to_keep");
+        $dbh->do("CREATE TEMP TABLE experiments_to_keep (nd_experiment_id BIGINT)");
+
+        # Insert saved nd_experiment_ids
+        for my $id (@$saved_nd_experiment_ids) {
+            my $i = "INSERT INTO experiments_to_keep (nd_experiment_id) VALUES (?)";
+            my $h = $dbh->prepare($i);
+            $h->execute($id);
+        }
+
+        my $q_search = "
+            SELECT phenotype_id, nd_experiment_id, file_id
+            FROM phenotype
+            JOIN nd_experiment_phenotype using(phenotype_id)
+            JOIN nd_experiment_stock using(nd_experiment_id)
+            JOIN nd_experiment using(nd_experiment_id)
+            LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+            JOIN stock using(stock_id)
+            JOIN pheno_data_to_delete AS temp ON (temp.stock_id = stock.stock_id AND temp.cvterm_id = phenotype.cvalue_id)
+            WHERE nd_experiment_id NOT IN (SELECT DISTINCT(nd_experiment_id) FROM experiments_to_keep)
+            AND nd_experiment.type_id = $nd_experiment_type_id;
+            ";
+
+        my $h = $dbh->prepare($q_search);
+        $h->execute();
+
+        my %phenotype_ids_and_nd_experiment_ids_to_delete;
+        while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+            push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
+            push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
+            push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
+        }
+
+        if (scalar(@deleted_phenotypes) > 0) {
+            my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($self->dbhost, $self->dbname, $self->dbuser, $self->dbpass, $self->temp_file_nd_experiment_id, $self->basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+            if ($delete_phenotype_values_error) {
+                die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
+            }
+        }
+    };
+
+    my $transaction_error;
+    try {
+        $self->bcs_schema->txn_do($coderef);
+    } catch {
+        $transaction_error =  $_;
+    };
+
+    print STDERR "Transaction error deleting observations: $transaction_error\n" if $transaction_error;
 
     return @deleted_phenotypes;
 }

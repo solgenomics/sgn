@@ -22,6 +22,7 @@ Code structure copied from CXGN::Stock::Seedlot, with inheritance from CXGN::Sto
 package CXGN::Stock::Accession;
 
 use Moose;
+use JSON;
 
 extends 'CXGN::Stock';
 
@@ -58,6 +59,21 @@ has 'germplasmPUI' => (
 has 'pedigree' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+);
+
+has 'mother_accession' => (
+    isa => 'Maybe[Str]',
+    is  => 'rw',
+);
+
+has 'father_accession' => (
+    isa => 'Maybe[Str]',
+    is  => 'rw',
+);
+
+has 'additional_info' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw'
 );
 
 has 'germplasmSeedSource' => (
@@ -390,43 +406,47 @@ sub store {
     my $id = $self->SUPER::store();
 
     if ($self->accessionNumber){
-        $self->_store_stockprop('accession number', $self->accessionNumber);
-    }
-    if ($self->germplasmPUI){
-        $self->_store_stockprop('PUI', $self->germplasmPUI);
+        $self->_update_stockprop('accession number', $self->accessionNumber);
     }
 
     #Include the newly created entry in this database as a PUI
-    my $germplasm_pui = $self->main_production_site_url."/stock/".$id."/view";
-    $self->_store_stockprop('PUI', $germplasm_pui);
+    my @germplasm_pui = ($self->main_production_site_url."/stock/".$id."/view");
+    if ($self->germplasmPUI){
+        push @germplasm_pui, $self->germplasmPUI;
+    }
+    $self->_update_stockprop('PUI', join(',',@germplasm_pui));
 
     if ($self->germplasmSeedSource){
-        $self->_store_stockprop('seed source', $self->germplasmSeedSource);
+        $self->_update_stockprop('seed source', $self->germplasmSeedSource);
     }
+    # Delete synonyms
+    $self->_remove_stockprop_all_of_type('stock_synonym');
+    # Reinsert
     if ($self->synonyms){
-        foreach (@{$self->synonyms}){
-            $self->_store_stockprop('stock_synonym', $_);
-        }
+        $self->_store_stockprop('stock_synonym', join(',', @{ $self->synonyms }));
     }
     if ($self->instituteCode){
-        $self->_store_stockprop('institute code', $self->instituteCode);
+        $self->_update_stockprop('institute code', $self->instituteCode);
     }
     if ($self->instituteName){
-        $self->_store_stockprop('institute name', $self->instituteName);
+        $self->_update_stockprop('institute name', $self->instituteName);
     }
     if ($self->biologicalStatusOfAccessionCode){
-        $self->_store_stockprop('biological status of accession code', $self->biologicalStatusOfAccessionCode);
+        $self->_update_stockprop('biological status of accession code', $self->biologicalStatusOfAccessionCode);
     }
     if ($self->countryOfOriginCode){
-        $self->_store_stockprop('country of origin', $self->countryOfOriginCode);
+        $self->_update_stockprop('country of origin', $self->countryOfOriginCode);
     }
     if ($self->typeOfGermplasmStorageCode){
-        $self->_store_stockprop('type of germplasm storage code', $self->typeOfGermplasmStorageCode);
+        $self->_update_stockprop('type of germplasm storage code', $self->typeOfGermplasmStorageCode);
     }
     if ($self->acquisitionDate){
-        $self->_store_stockprop('acquisition date', $self->acquisitionDate);
+        $self->_update_stockprop('acquisition date', $self->acquisitionDate);
     }
     if ($self->donors){
+        $self->_remove_stockprop_all_of_type('donor');
+        $self->_remove_stockprop_all_of_type('donor institute');
+        $self->_remove_stockprop_all_of_type('donor PUI');
         foreach (@{$self->donors}){
             my $accession = $_->{donorAccessionNumber} || $_->{donorGermplasmName};
             $self->_store_stockprop('donor', $accession);
@@ -434,47 +454,61 @@ sub store {
             $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
         }
     }
+    $self->_remove_parent_relationship('female_parent');
+    if ($self->mother_accession) {
+        my $return = $self->_store_parent_relationship('female_parent', $self->mother_accession, 'biparental');
+        # TODO: delete accession if error and return error
+    }
+    $self->_remove_parent_relationship('male_parent');
+    if ($self->father_accession) {
+        my $return = $self->_store_parent_relationship('male_parent', $self->father_accession, 'biparental');
+        # TODO: delete accession if error and return error
+    }
+    if ($self->additional_info) {
+        $self->_update_stockprop('stock_additional_info', encode_json $self->additional_info);
+    }
+
     if($self->pedigree){
         print STDERR "CXGN::Stock::Accession->store does not store pedigree info yet!\n";
     }
     if ($self->variety){
-        $self->_store_stockprop('variety', $self->variety);
+        $self->_update_stockprop('variety', $self->variety);
     }
     if ($self->state){
-        $self->_store_stockprop('state', $self->state);
+        $self->_update_stockprop('state', $self->state);
     }
     if ($self->notes){
-        $self->_store_stockprop('notes', $self->notes);
+        $self->_update_stockprop('notes', $self->notes);
     }
     if ($self->locationCode){
-        $self->_store_stockprop('location_code', $self->locationCode);
+        $self->_update_stockprop('location_code', $self->locationCode);
     }
     if ($self->ploidyLevel){
-        $self->_store_stockprop('ploidy_level', $self->ploidyLevel);
+        $self->_update_stockprop('ploidy_level', $self->ploidyLevel);
     }
     if ($self->genomeStructure){
-        $self->_store_stockprop('genome_structure', $self->genomeStructure);
+        $self->_update_stockprop('genome_structure', $self->genomeStructure);
     }
     if ($self->transgenic){
-        $self->_store_stockprop('transgenic', $self->transgenic);
+        $self->_update_stockprop('transgenic', $self->transgenic);
     }
     if ($self->introgression_parent){
-        $self->_store_stockprop('introgression_parent', $self->introgression_parent);
+        $self->_update_stockprop('introgression_parent', $self->introgression_parent);
     }
     if ($self->introgression_backcross_parent){
-        $self->_store_stockprop('introgression_backcross_parent', $self->introgression_backcross_parent);
+        $self->_update_stockprop('introgression_backcross_parent', $self->introgression_backcross_parent);
     }
     if ($self->introgression_map_version){
-        $self->_store_stockprop('introgression_map_version', $self->introgression_map_version);
+        $self->_update_stockprop('introgression_map_version', $self->introgression_map_version);
     }
     if ($self->introgression_chromosome){
-        $self->_store_stockprop('introgression_chromosome', $self->introgression_chromosome);
+        $self->_update_stockprop('introgression_chromosome', $self->introgression_chromosome);
     }
     if ($self->introgression_start_position_bp){
-        $self->_store_stockprop('introgression_start_position_bp', $self->introgression_start_position_bp);
+        $self->_update_stockprop('introgression_start_position_bp', $self->introgression_start_position_bp);
     }
     if ($self->introgression_end_position_bp){
-        $self->_store_stockprop('introgression_end_position_bp', $self->introgression_end_position_bp);
+        $self->_update_stockprop('introgression_end_position_bp', $self->introgression_end_position_bp);
     }
     if ($self->other_editable_stock_props){
         while (my ($key, $value) = each %{$self->other_editable_stock_props}) {
@@ -492,7 +526,7 @@ sub store {
                 $cvterm_id = $new_term->cvterm_id();
             }
 
-            $self->_store_stockprop($key, $value);
+            $self->_update_stockprop($key, $value);
         }
     }
 

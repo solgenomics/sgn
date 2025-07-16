@@ -20,9 +20,10 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR "Stock search AJAX\n";
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $params = $c->req->params() || {};
 
     my $owner_first_name;
@@ -52,10 +53,11 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         people_schema=>$people_schema,
         phenome_schema=>$phenome_schema,
         match_type=>$params->{any_name_matchtype},
-        match_name=>$params->{any_name},
+        match_name=>$params->{any_name}, 
         operator=>$params->{operator},
         stockprops_values=>$stockprops_values,
         stockprop_columns_view=>$stockprop_columns_view,
+        search_vectorprop=>$params->{search_vectorprop},
         limit=>$limit,
         offset=>$offset,
         minimal_info=>$params->{minimal_info},

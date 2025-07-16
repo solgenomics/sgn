@@ -2903,3 +2903,147 @@ id: TIME:0000481
 name: at termination
 def: "End of life" []
 is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000482
+name: post inoculation
+def: "After inoculation with a pathogen" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000483
+name: early season
+def: "first third of the growing season" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000484
+name: mid season
+def: "second third of the growing season" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000485
+name: late season
+def: "last third of the growing season" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000486
+name: Timepoint 1
+def: "generic timepoint #1" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000487
+name: Timepoint 2
+def: "generic timepoint #2" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000488
+name: Timepoint 3
+def: "generic timepoint #3" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000489
+name: Timepoint 4
+def: "generic timepoint #4" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000490
+name: Timepoint 5
+def: "generic timepoint #5" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000491
+name: Timepoint 6
+def: "generic timepoint #6" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000492
+name: Timepoint 7
+def: "generic timepoint #7" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000493
+name: Timepoint 8
+def: "generic timepoint #8" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000494
+name: Timepoint 9
+def: "generic timepoint #9" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000495
+name: Timepoint 10
+def: "generic timepoint #10" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000496
+name: Timepoint 11
+def: "generic timepoint #11" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000497
+name: Timepoint 12
+def: "generic timepoint #12" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000498
+name: Timepoint 13
+def: "generic timepoint #13" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000499
+name: Timepoint 14
+def: "generic timepoint #14" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000500
+name: Timepoint 15
+def: "generic timepoint #15" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000501
+name: Timepoint 16
+def: "generic timepoint #16" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000502
+name: Timepoint 17
+def: "generic timepoint #17" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000503
+name: Timepoint 18
+def: "generic timepoint #18" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000504
+name: Timepoint 19
+def: "generic timepoint #19" []
+is_a: TIME:0000477 ! Event relations
+
+[Term]
+id: TIME:0000505
+name: Timepoint 20
+def: "generic timepoint #20" []
+is_a: TIME:0000477 ! Event relations

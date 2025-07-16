@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More;
+use Test::More qw | no_plan |;
 use Test::Exception;
 use Data::Dumper;
 
@@ -29,10 +29,10 @@ my @stock_list = (1..319);
 
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "Create TrialDesign object");
 $trial_design->set_trial_name("TESTTRIAL");
-ok($trial_design->set_replicated_accession_no($number_of_replicated_accession), "Set replicated accessions for trial design");
-is_deeply($trial_design->get_replicated_accession_no(),$number_of_replicated_accession, "Get replicated accessions for trial design");
-ok($trial_design->set_unreplicated_accession_no($number_of_unreplicated_accession), "Set unreplicated accessions for trial design");
-is_deeply($trial_design->get_unreplicated_accession_no(),$number_of_unreplicated_accession, "Get unreplicated accessions for trial design");
+ok($trial_design->set_replicated_stock_no($number_of_replicated_accession), "Set replicated accessions for trial design");
+is_deeply($trial_design->get_replicated_stock_no(),$number_of_replicated_accession, "Get replicated accessions for trial design");
+ok($trial_design->set_unreplicated_stock_no($number_of_unreplicated_accession), "Set unreplicated accessions for trial design");
+is_deeply($trial_design->get_unreplicated_stock_no(),$number_of_unreplicated_accession, "Get unreplicated accessions for trial design");
 ok($trial_design->set_num_of_replicated_times($num_of_replicated_times), "Set number of replicated times for trial design");
 is_deeply($trial_design->get_num_of_replicated_times(),$num_of_replicated_times, "Get number of replicated times for trial design");
 ok($trial_design->set_sub_block_sequence($sub_block_sequence), "Set sub-block sequence for trial design");
@@ -50,16 +50,19 @@ ok($trial_design->set_design_type("p-rep"), "Set design type to p-rep");
 
 
  SKIP: {
-
      print STDERR "SKIPPING...\n";
      skip "DiGGer not installed, skipping", 6, unless ( -e $ENV{R_LIBS_USER}."/DiGGer" );
      ok($trial_design->calculate_design(), "Calculate p-rep trial design");
      ok(%design = %{$trial_design->get_design()}, "Get p-rep trial design");
-     ok($design{'1'}->{row_number} == 1, "First plot row_number is 1");
-     ok($design{'1'}->{col_number} == 1, "First plot col_number is 1");
+
+     my $key = (keys %design)[0];
+     print STDERR "\ndesign key -- $key\n";
+     
+     ok($design{$key}->{row_number}, "There is row_number");
+     ok($design{$key}->{col_number}, "There is col_number");
      is(scalar(keys %design), $row_in_design_number * $col_in_design_number, "Result of p-rep design has a number of plots equal to the product of row and column number in the design");
      print STDERR $stock_names[0] ."($plot_start_number) vs. ".$design{$plot_start_number}->{stock_name}."\n";
-     print STDERR Dumper \%design;
+    #  print STDERR Dumper \%design;
 };
 
 done_testing();

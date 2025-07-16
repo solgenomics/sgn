@@ -1,5 +1,6 @@
 <%args>
 $sampling_facilities => ();
+$sample_tissue_types => ();
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
@@ -172,11 +173,9 @@ $sampling_facilities => ();
                                         <label class="col-sm-7 control-label"><i>Optional</i> Tissue: <small>(If used the same tissue for all samples)</small> </label>
                                         <div class="col-sm-5">
                                             <select class="form-control" id="sampling_trial_tissue">
-                                                <option value="leaf">Leaf</option>
-                                                <option value="root">Root</option>
-                                                <option value="stem">Stem</option>
-                                                <option value="seed">Seed</option>
-                                                <option value="fruit">Fruit</option>
+% foreach my $tissue_type(@$sample_tissue_types){
+    <option value="<%$tissue_type%>"><%$tissue_type%></option>
+% }
                                             </select>
                                         </div>
                                     </div>
@@ -300,7 +299,8 @@ $sampling_facilities => ();
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
                     <li>sample_number (the sample number for the sample. Must be unique within this sampling trial)</li>
                     <li>replicate (the replicate number for the sample)</li>
-                    <li>tissue_type (must be either leaf, root, or stem, or seed, or fruit)</li>
+% my $tissue_string = join(', ', @$sample_tissue_types);
+                    <li>tissue_type (must be one of: <% $tissue_string %>)</li>
                     </ul>
 
                     <b>Optional fields:</b>

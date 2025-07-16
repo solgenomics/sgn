@@ -12,6 +12,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 
-    <div id="si_correlation_canvas" style="clear:both"> </div>
-    <& /solgs/spinner/spinner.mas &>
-    <div id="si_correlation_message"  class="message"> </div>
+  
+    
+    

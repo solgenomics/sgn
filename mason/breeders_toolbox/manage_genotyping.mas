@@ -9,33 +9,22 @@ $facilities => ();
 <& /page/page_title.mas, title=>"Manage Genotyping Plates" &>
 
 <div class="container-fluid">
-
-    <&| /page/info_section.mas, title=>"About Genotyping Plates",  collapsible => 1, collapsed=>1 &>
-        <div class="well well-sm">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <b><p>What are genotyping plates?</p></b>
-                    <ul>
-                    <li>Genotyping plates represent 96 or 384 well plates.</li>
-                    <li>Each well in the plate has a unique tissue sample ID.</li>
-                    <li>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already.</li>
-                    <li>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</li>
-                    </ul>
-
-                    <b><p>How do I record a genotyping plate?</p></b>
-                    <ul>
-                    <li>1) Know what the "source" units for each well will be (either a tissue sample, plant, plot, or accession name). These "source" names must exist in the database (e.g. as tissue samples or plants or plots from a trial, or just as accession names). Ideally you will have the barcodes from the field with you.</li>
-                    <li>2) Use the "Coordinate" Android Application to scan your "source" barcodes and record the position of the tissue sample in the 96 or 384 well plate. If you prefer you can create your own XLS file and upload that, if you do not want to use the Coordinate Application. Alternatively you can let the database generate the genotyping plate for you, and then produce the plate in that layout.</li>
-                    <li><b>For more info about the "Coordinate" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.coordinate">Coordinate</a>.</b></li>
-                    <li>3) Click "Add Genotyping Plate" and fill in the form completely.</li>
-                    <li>4) To ease shipping materials to the genotyping facility, we can generate the required templates for you after the data is in the database.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <&| /page/explanation.mas, title=>'Important Notice', collapsible=>1, collapsed=>0, &>
+        <p>
+            <b>Important notice:</b> Manage Genotyping Plates page will soon be removed and replaced by Manage Genotyping Projects page. Genotyping project can be used to organize both genotyping plates and associated genotyping data.
+            <br/><br/>
+            <b>For previously created genotyping plates:</b>Please move your genotyping plates to a desired genotyping project. On each genotyping project details page, you will find <b>Genotyping Plates</b> section which displays all of the plates included in the project, as well as a link for <b>Move Genotyping Plates to this Project</b> dialog.
+            <br/><br/>
+            <b>For new genotyping plates:</b>You can specify genotyping project during creating or uploading new genotyping plates.
+            <br/><br/>
+            Folders for genotyping plates are now obsoleted.
+            <br/><br/>
+            Links for adding/uploading genotyping plates and related data have been moved to Manage Genotyping Projects page.
+            <a href="/breeders/genotyping_projects"><p>Go To Manage Genotyping Projects</p></a>
+        </p>
     </&>
 
-    <&| /page/info_section.mas, title=>'Genotyping Plates', collapsible=>1, collapsed=>0, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_project_link">Add Genotyping Project</button><button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_trial_link">Add/Upload Genotyping Plate</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_genotyping_data_link">Upload Genotyping Data</button>' &>
+    <&| /page/info_section.mas, title=>'Genotyping Plates', collapsible=>1, collapsed=>0, subtitle => ' ' &>
         <& /breeders_toolbox/genotyping_trials/trials.mas, trials_by_breeding_project=>$genotyping_trials_by_breeding_project, locations=>$locations,  breeding_programs=>$breeding_programs, facilities=>$facilities &>
     </&>
 

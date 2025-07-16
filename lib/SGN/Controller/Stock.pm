@@ -149,10 +149,10 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
 
      if (!$c->user()) {
-	
-	my $url = '/' . $c->req->path;	
+
+	my $url = '/' . $c->req->path;
 	$c->res->redirect("/user/login?goto_url=$url");
-	
+
     } else {
 	$time = time();
 
@@ -160,12 +160,17 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	    $c->forward('get_stock_extended_info');
 	}
 
-	my $logged_user = $c->user;
-	my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-	my $user_role = 1 if $logged_user;
-	my $curator   = $logged_user->check_roles('curator') if $logged_user;
-	my $submitter = $logged_user->check_roles('submitter') if $logged_user;
-	my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
+    my $person_id;
+    my $user_role;
+    my $curator;
+    my $submitter;
+    my $sequencer;
+    my $logged_user = $c->user;
+    $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    $user_role = 1 if $logged_user;
+    $curator   = $logged_user->check_roles('curator') if $logged_user;
+    $submitter = $logged_user->check_roles('submitter') if $logged_user;
+    $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
 
 	my $dbh = $c->dbc->dbh;
 
@@ -175,28 +180,38 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
 	my $stock = $c->stash->{stock};
 	my $stock_id = $stock ? $stock->get_stock_id : undef ;
-	my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
-	my $type = 1 if $stock_type && !$stock_type=~ m/population/;
-	# print message if stock_id is not valid
-	unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
-	    $c->throw_404( "No stock/accession exists for that identifier." );
-	}
-	unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
-	    $c->throw_404( "No stock/accession exists for that identifier." );
-	}
+
+    if (!$stock_id) {
+        $c->stash->{message} = "The requested stock does not exist or has been deleted.";
+        $c->stash->{template} = 'generic_message.mas';
+        return;
+    }
+
+    my $type;
+    my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
+    $type = 1 if $stock_type && !$stock_type=~ m/population/;
+    # print message if stock_id is not valid
+    unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
+        $c->throw_404( "No stock/accession exists for that identifier." );
+    }
+    unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
+        $c->throw_404( "No stock/accession exists for that identifier." );
+    }
 
 	print STDERR "Checkpoint 2: Elapsed ".(time() - $time)."\n";
 
-	my $props = $self->_stockprops($stock);
-	# print message if the stock is visible only to certain user roles
-	my @logged_user_roles = $logged_user->roles if $logged_user;
-	my @prop_roles = @{ $props->{visible_to_role} } if  ref($props->{visible_to_role} );
-	my $lc = List::Compare->new( {
-	    lists    => [\@logged_user_roles, \@prop_roles],
-	    unsorted => 1,
-				     } );
-	my @intersection = $lc->get_intersection;
-	if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
+    my $props = $self->_stockprops($stock);
+    # print message if the stock is visible only to certain user roles
+    my @logged_user_roles;
+    my @prop_roles;
+    @logged_user_roles = $logged_user->roles if $logged_user;
+    @prop_roles = @{ $props->{visible_to_role} } if  ref($props->{visible_to_role} );
+    my $lc = List::Compare->new( {
+        lists    => [\@logged_user_roles, \@prop_roles],
+        unsorted => 1,
+    } );
+    my @intersection = $lc->get_intersection;
+    if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
 	    # $c->throw(is_client_error => 0,
 	    #           title             => 'Restricted page',
 	    #           message           => "Stock $stock_id is not visible to your user!",
@@ -250,6 +265,14 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	$editable_stockprops .= ",PUI,organization";
     my $editable_vectorprops = $c->get_conf('editable_vector_props');
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $transgenic_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property')->cvterm_id;
+    my $transgenic_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $transgenic_type_id});
+    my $is_a_transgenic_line;
+    if ($transgenic_stockprop_rs) {
+        $is_a_transgenic_line = $transgenic_stockprop_rs->value();
+    }
+
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 	################
 	$c->stash(
@@ -286,6 +309,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 		trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
 		editable_stock_props   => $editable_stockprops,
 		editable_vector_props   => $editable_vectorprops,
+        is_obsolete   => $obsolete,
+        is_a_transgenic_line => $is_a_transgenic_line,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
@@ -305,7 +330,7 @@ Path Params:
     name = stock unique name
 
 Search for stock(s) matching the organism query and the stock unique name.
-If 1 match is found, display the stock detail page.  Display an error for 
+If 1 match is found, display the stock detail page.  Display an error for
 0 matches and a list of matches when multiple stocks are found.
 
 =cut
@@ -316,14 +341,14 @@ sub view_by_organism_name : Path('/stock/view_by_organism') Args(2) {
 }
 
 
-=head2 view_by_name 
+=head2 view_by_name
 
 Public Path: /stock/view_by_name/$name
 Path Params:
     name = stock unique name
 
 Search for stock(s) matching the stock unique name.
-If 1 match is found, display the stock detail page.  Display an error for 
+If 1 match is found, display the stock detail page.  Display an error for
 0 matches and a list of matches when multiple stocks are found.
 
 =cut
@@ -385,24 +410,26 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 	return;
     }
 
-    
+
     my $stock_row = $c->stash->{stock_row};
     my $stock_id = $stock_row->stock_id;
     my $stock_name = $stock_row->uniquename;
     my $genotype_id = $c->req->param('genotype_id') ? [$c->req->param('genotype_id')] : undef;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     if (!$genotype_id) {
 
 	my $referer = $c->req->referer;
 	my $message = "<p>Genotype data download for the stock is missing an associated genotype id. <br/>"
 	    .  "<a href=\"$referer\">[ Go back ]</a></p>";
-	   
+
 	$c->stash->{message} = $message;
 	$c->stash->{template} = "/generic_message.mas";
-	
+
     } else {
-	my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+	my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+	my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+
 	my $dl_token = $c->req->param("gbs_download_token") || "no_token";
 	my $dl_cookie = "download".$dl_token;
 
@@ -449,7 +476,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 	    $c->res->body($file_handle);
 	}
     }
-    
+
 }
 
 sub chr_sort {
@@ -501,7 +528,7 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
 sub search_stock : Private {
     my ( $self, $c, $organism_query, $stock_query ) = @_;
     my $rs = $self->schema->resultset('Stock::Stock');
-    
+
     my $matches;
     my $count = 0;
 
@@ -525,9 +552,9 @@ sub search_stock : Private {
     # Search by name
     elsif ( defined($stock_query) ) {
         $matches = $rs->search({
-                'UPPER(uniquename)' => uc($stock_query), 
+                'UPPER(uniquename)' => uc($stock_query),
                 is_obsolete => 'false'
-            }, 
+            },
             {join => 'organism'}
         );
         $count = $matches->count;
@@ -539,7 +566,7 @@ sub search_stock : Private {
         $c->stash->{template} = "generic_message.mas";
         $c->stash->{message} = "<strong>No Matching Stock Found</strong> ($stock_query $organism_query)<br />You can view and search for stocks from the <a href='/search/stocks'>Stock Search Page</a>";
     }
-    
+
     # MULTIPLE MATCHES FOUND
     elsif ( $count > 1 ) {
         my $list = "<ul>";
@@ -1022,11 +1049,11 @@ sub _stock_owner_ids {
 sub _stock_editor_info {
     my ($self,$stock) = @_;
     my @owner_info;
-    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
+    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note, md_metadata.obsolete_note  FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
     my $h = $stock->get_schema->storage->dbh()->prepare($q);
     $h->execute($stock->get_stock_id);
-    while (my ($sp_person_id, $timestamp, $modification_note) = $h->fetchrow_array){
-        push @owner_info, [$sp_person_id, $timestamp, $modification_note];
+    while (my ($sp_person_id, $timestamp, $modification_note, $obsolete_note) = $h->fetchrow_array){
+        push @owner_info, [$sp_person_id, $timestamp, $modification_note, $obsolete_note];
     }
     return \@owner_info;
 }

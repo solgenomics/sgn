@@ -3,12 +3,36 @@ package CXGN::BrAPI::v2::ObservationVariables;
 use Moose;
 use Data::Dumper;
 use JSON;
+use Try::Tiny;
 use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use SGN::Model::Cvterm;
+use CXGN::BrAPI::v2::ExternalReferences;
+use CXGN::BrAPI::v2::Methods;
+use CXGN::BrAPI::v2::Scales;
+use CXGN::BrAPI::Exceptions::NotFoundException;
 
 extends 'CXGN::BrAPI::v2::Common';
+
+has 'trait_ontology_cv_id' => (
+    isa => 'Int',
+    is => 'ro',
+    lazy => 1,
+    default => sub {
+        my $self = shift;
+        my $context = SGN::Context->new;
+        my $cv_name = $context->get_conf('trait_ontology_cv_name');
+        # get cv_id for external references
+        my $cv_id = $self->bcs_schema->resultset("Cv::Cv")->find(
+            {
+                name => $cv_name
+            },
+            { key => 'cv_c1' }
+        )->get_column('cv_id');
+        return $cv_id;
+    }
+);
 
 sub observation_levels {
     my $self = shift;
@@ -18,7 +42,7 @@ sub observation_levels {
 
     my @data_window;
     push @data_window, ({
-            levelName => 'replicate',
+            levelName => 'rep',
             levelOrder => 0 },
         {
             levelName => 'block',
@@ -47,16 +71,16 @@ sub observation_levels {
 
 sub search {
     my $self = shift;
-    my $inputs = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
+    my $inputs = shift;
+    my $c = shift;
     my $status = $self->status;
-    my $supported_crop = $inputs->{supportedCrop};
     my @classes = $inputs->{traitClasses} ? @{$inputs->{traitClasses}} : ();
     my @cvterm_names = $inputs->{observationVariableNames} ? @{$inputs->{observationVariableNames}} : ();
     my @datatypes = $inputs->{datatypes} ? @{$inputs->{datatypes}} : ();
     my @db_ids = $inputs->{ontologyDbIds} ? @{$inputs->{ontologyDbIds}} : ();
-    my @dbxref_ids = $inputs->{externalReferenceIDs} ? @{$inputs->{externalReferenceIDs}} : ();
+    my @dbxref_ids = $inputs->{externalReferenceIds} ? @{$inputs->{externalReferenceIds}} : ();
     my @dbxref_terms = $inputs->{externalReferenceSources} ? @{$inputs->{externalReferenceSources}} : ();
     my @method_ids = $inputs->{methodDbIds} ? @{$inputs->{methodDbIds}} : ();
     my @scale_ids = $inputs->{scaleDbIds} ? @{$inputs->{scaleDbIds}} : ();
@@ -74,9 +98,17 @@ sub search {
 
     my $join = '';
     my @and_wheres;
+
     if (scalar(@trait_ids)>0){
         my $trait_ids_sql = join ',', @trait_ids;
         push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
+    }
+    if (scalar(@cvterm_names)>0){
+        my @quotedNames;
+        my $dbh = $self->bcs_schema->storage->dbh();
+        for my $name (@cvterm_names) {push @quotedNames, $dbh->quote($name);}
+        my $cvterm_names_sql = join ("," , @quotedNames);
+        push @and_wheres, "cvterm.name IN ($cvterm_names_sql)";
     }
     if (scalar(@trait_dbids)>0){
         my $trait_ids_sql = join ',', @trait_dbids;
@@ -87,36 +119,60 @@ sub search {
             push @and_wheres, "db.db_id = '$_'";
         }
     }
-    if (scalar(@dbxref_ids)>0){
-        my @db_names;
-        my @dbxref_accessions;
-        foreach (@dbxref_ids){
-            my ($db_name, $accession) = split ':', $_;
-            push @db_names, $db_name;
-            push @dbxref_accessions, $accession;
+
+    # External reference id and reference source search
+    if (scalar(@dbxref_ids) > 0 || scalar(@dbxref_terms)>0) {
+        my @sub_and_wheres;
+        my @dbxrefid_where;
+        if (scalar(@dbxref_ids)>0){
+            foreach (@dbxref_ids) {
+                my ($db_name,$acc) = split(/:/, $_); 
+                push @dbxrefid_where, "dbxref.accession = '$acc'";
+                push @dbxrefid_where, "db.name = '$db_name'";
+            }
         }
-        foreach (@db_names){
-            push @and_wheres, "db.name = '$_'";
+        if(scalar(@dbxrefid_where)>0) {
+            my $dbxref_id_where_str = '('. (join ' AND ', @dbxrefid_where) . ')';
+            push @sub_and_wheres, $dbxref_id_where_str;
         }
-        foreach (@dbxref_accessions){
-            push @and_wheres, "dbxref.accession = '$_'";
+
+        my @dbxref_term_where;
+        if (scalar(@dbxref_terms)>0) {
+            foreach (@dbxref_terms) {
+                push @dbxref_term_where, "db.name = '$_'";
+                push @dbxref_term_where, "db.description = '$_'";
+                push @dbxref_term_where, "db.url = '$_'";
+            }
         }
+        if(scalar(@dbxref_term_where)>0) {
+            my $dbxref_term_where_str = '('. (join ' OR ', @dbxref_term_where) . ')';
+            push @sub_and_wheres, $dbxref_term_where_str;
+        }
+
+        @and_wheres = @sub_and_wheres;
+        # my $sub_and_where_clause = join ' AND ', @sub_and_wheres;
+
+        # $join = "JOIN (" .
+        #     "select cvterm_id, json_agg(json_build_object(" .
+        #         "'referenceSource', references_query.reference_source, " .
+        #         "'referenceID', references_query.reference_id " .
+        #     ")) AS externalReferences " .
+        #     "from " .
+        #     "(" .
+        #     "select cvterm.cvterm_id, db.name as reference_source, dbxref.accession as reference_id " .
+        #     "FROM " .
+        #     "cvterm " .
+        #     "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) " .
+        #     "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) " .
+        #     "JOIN cvterm_dbxref on cvterm.cvterm_id = cvterm_dbxref.cvterm_id " .
+        #     "JOIN dbxref on cvterm_dbxref.dbxref_id = dbxref.dbxref_id " .
+        #     "JOIN db on dbxref.db_id = db.db_id " .
+        #     "where $sub_and_where_clause " .
+        #     ") as references_query " .
+        #     "group by cvterm_id " .
+        # ") as external_references on external_references.cvterm_id = cvterm.cvterm_id "
     }
-    if (scalar(@dbxref_terms)>0){
-        my @db_names;
-        foreach (@dbxref_terms){
-            my ($db_name, $accession) = split ':', $_;
-            push @db_names, $db_name;
-        }
-        foreach (@db_names){
-            push @and_wheres, "db.name = '$_'";
-        }
-    }
-    if (scalar(@cvterm_names)>0){
-        foreach (@cvterm_names){
-            push @and_wheres, "cvterm.name = '$_'";
-        }
-    }
+
     if (scalar(@datatypes)>0){
         $join = 'JOIN cvtermprop on (cvterm.cvterm_id=cvtermprop.cvterm_id)';
         foreach (@datatypes){
@@ -140,11 +196,12 @@ sub search {
         }
 
         $trait_ids_sql =~ s/^,//g;
-
         if ($trait_ids_sql){
             push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
         } else {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Variables not found for the searched studyDbId'), 400);
+            my @data_files;
+            my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
+            return CXGN::BrAPI::JSONResponse->return_success({data => []}, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
         }
     }
 
@@ -153,261 +210,250 @@ sub search {
 
     my $and_where_clause = join ' AND ', @and_wheres;
 
-    my @data;
-    my $limit = $page_size;
-    my $offset = $page*$page_size;
-    my $total_count = 0;
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.accession, array_agg(cvtermsynonym.synonym ORDER BY CHAR_LENGTH(cvtermsynonym.synonym)), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
-        "JOIN dbxref USING(dbxref_id) ".
-        "JOIN db using(db_id) ".
-        "LEFT JOIN cvtermsynonym using(cvterm_id) ".
-        "inner JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) ".
-        "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join ".
-        "WHERE $and_where_clause ".
-        "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.accession ".
-        "ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
+    $self->get_query($c, $and_where_clause, $join, 1);
 
-    my $sth = $self->bcs_schema->storage->dbh->prepare($q);
-    $sth->execute();
-    while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
-        $total_count = $count;
-        foreach (@$synonym){
-            $_ =~ s/ EXACT \[\]//;
-            $_ =~ s/\"//g;
-        }
-
-        my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
-        my $categories = $trait->categories;
-        my @categories = split '/', $categories;
-        my @brapi_categories;
-        foreach (@categories) {
-            push @brapi_categories, {
-                label => $_,
-                value => $_
-            };
-        }
-
-        my @references;
-        push @references, {
-                referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession . "/",
-                referenceSource => "Crop Ontology"
-            };
-
-        push @data, {
-            additionalInfo => {},
-            commonCropName => $supported_crop,
-            contextOfUse => undef,
-            defaultValue => $trait->default_value,
-            documentationURL => $trait->uri,
-            externalReferences => \@references,
-            growthStage => undef,
-            institution  => undef,
-            language => 'eng',
-            method => {},
-                # additionalInfo
-                # bibliographicalReference
-                # description
-                # externalReferences
-                # formula
-                # methodClass
-                # methodDbId
-                # methodName
-                # ontologyReference => {
-                #         documentationLinks
-                #         ontologyDbId
-                #         ontologyName
-                #         version
-                #     }
-            observationVariableDbId => qq|$cvterm_id|,
-            observationVariableName => $cvterm_name."|".$db_name.":".$accession,
-            ontologyReference => {
-                documentationLinks => $db_url,
-                ontologyDbId => qq|$db_id|,
-                ontologyName => $db_name,
-                version => undef,
-            },
-            scale => {
-                additionalInfo => {},
-                datatype => $trait->format,
-                decimalPlaces => undef,
-                externalReferences => [],
-                ontologyReference => {},
-                #         documentationLinks
-                #         ontologyDbId
-                #         ontologyName
-                #         version
-                scaleDbId => undef,
-                scaleName => undef,
-                validValues => {
-                    min =>$trait->minimum ? $trait->minimum : undef,
-                    max =>$trait->maximum ? $trait->maximum : undef,
-                    categories => \@brapi_categories,
-                },
-
-            },
-            scientist => undef,
-            status => $obsolete = 0 ? "Obsolete" : "Active",
-            submissionTimestamp => undef,
-            synonyms => $synonym,
-            trait => {
-                additionalInfo => {},
-                alternativeAbbreviations => undef,
-                attribute => $cvterm_name,
-                entity => undef,
-                externalReferences => [],
-                mainAbbreviation => undef,
-                ontologyReference => {
-                        documentationLinks => $trait->uri ? $trait->uri : undef,
-                        ontologyDbId => $trait->db_id ? $trait->db_id : undef,
-                        ontologyName => $trait->db ? $trait->db : undef,
-                        version => undef,
-                    },
-                status => $obsolete = 0 ? "Obsolete" : "Active",
-                synonyms => $synonym,
-                traitClass => undef,
-                traitDescription => $cvterm_definition,
-                traitDbId => qq|$cvterm_id|,
-                traitName => $cvterm_name,
-            },
-        };
-    }
-
-    my %result = (data=>\@data);
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
 }
 
 sub detail {
     my $self = shift;
     my $trait_id = shift;
     my $c = shift;
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my $status = $self->status;
-    my $supported_crop = $c->config->{'supportedCrop'};
 
     my $join = '';
     my $and_where;
+
     if ($trait_id){
-        $and_where = "cvterm.cvterm_id IN ($trait_id)";
+        $and_where = $and_where." cvterm.cvterm_id IN ($trait_id)";
     }
 
+    $self->get_query($c, $and_where, $join, 0);
+
+}
+
+sub get_query {
+    my $self = shift;
+    my $c = shift;
+    my $and_where = shift;
+    my $join = shift;
+    my $array = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+
+    my @variables;
     my %result;
     my $limit = $page_size;
     my $offset = $page*$page_size;
     my $total_count = 0;
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.accession, array_agg(cvtermsynonym.synonym ORDER BY CHAR_LENGTH(cvtermsynonym.synonym)), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
+
+    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cvterm_additional_info', 'trait_property')->cvterm_id();
+
+    #TODO: Can try a pivot to speed up this function so we retrieve all at once;
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.dbxref_id, dbxref.accession, array_agg(cvtermsynonym.synonym ORDER BY CHAR_LENGTH(cvtermsynonym.synonym)) filter (where cvtermsynonym.synonym is not null), cvterm.is_obsolete, additional_info.value, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
-        "LEFT JOIN cvtermsynonym using(cvterm_id) ".
+        "LEFT JOIN cvtermsynonym using(cvterm_id) ". # left join to include non-synoynm variables, may break field book due to bug
         "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) ".
         "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join ".
+        "LEFT JOIN cvtermprop as additional_info on (cvterm.cvterm_id = additional_info.cvterm_id and additional_info.type_id = $additional_info_type_id) ".
         "WHERE $and_where " .
-        "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.accession ".
+        "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.dbxref_id, dbxref.accession, additional_info.value ".
         "ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset; "  ;
+
 
     my $sth = $self->bcs_schema->storage->dbh->prepare($q);
     $sth->execute();
-    while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
+    while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $additional_info_string, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
         foreach (@$synonym){
             $_ =~ s/ EXACT \[\]//;
             $_ =~ s/\"//g;
         }
-        my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
-        my $categories = $trait->categories;
-        my @brapi_categories = split '/', $categories;
 
-        my @references;
-        push @references, {
-                referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession . "/",
-                referenceSource => "Crop Ontology"
-            };
+        # Get the external references
+        my @references_cvterms = ($cvterm_id);
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            table_name => 'cvterm',
+            table_id_key => 'cvterm_id',
+            id => \@references_cvterms
+        });
 
-        %result = (
-            additionalInfo => undef,
-            commonCropName => $supported_crop,
-            contextOfUse => undef,
-            defaultValue => $trait->default_value,
-            documentationURL => $trait->uri,
-            externalReferences => \@references,
-            growthStage => undef,
-            institution  => undef,
-            language => 'eng',
-            method => {
-                # additionalInfo
-                # bibliographicalReference
-                # description
-                # externalReferences
-                # formula
-                # methodClass
-                # methodDbId
-                # methodName
-                # ontologyReference => {
-                #         documentationLinks
-                #         ontologyDbId
-                #         ontologyName
-                #         version
-                #     }
-                },
-            observationVariableDbId => qq|$cvterm_id|,
-            observationVariableName => $cvterm_name."|".$db_name.":".$accession,
-            ontologyReference => {
-                documentationLinks => $db_url,
-                ontologyDbId => qq|$db_id|,
-                ontologyName => $db_name,
-                version => undef,
-            },
-            scale => {
-                datatype => $trait->format,
-                decimalPlaces => undef,
-                externalReferences => [],
-                ontologyReference => {
-                #         documentationLinks
-                #         ontologyDbId
-                #         ontologyName
-                #         version
-                },
-                scaleDbId => undef,
-                scaleName => undef,
-                validValues => {
-                    min =>$trait->minimum ? $trait->minimum : undef,
-                    max =>$trait->maximum ? $trait->maximum : undef,
-                    categories => \@brapi_categories,
-                },
+        my $additional_info;
+        if (defined $additional_info_string) {
+            $additional_info = decode_json $additional_info_string;
+        }
+        #TODO: This is running many queries each time, can make one big query above if need be
+        # Retrieve the trait, which retrieves its scales and methods
+        my $trait = CXGN::Trait->new({
+            bcs_schema          => $self->bcs_schema,
+            cvterm_id           => $cvterm_id,
+            dbxref_id           => $dbxref_id,
+            db_id               => $db_id,
+            db                  => $db_name,
+            accession           => $accession,
+            name                => $cvterm_name,
+            external_references => $references,
+            additional_info     => $additional_info,
+            synonyms            => $synonym
+        });
 
-            },
-            scientist => undef,
-            status => $obsolete = 0 ? "Obsolete" : "Active",
-            submissionTimestamp => undef,
-            synonyms => $synonym,
-            trait => {
-                alternativeAbbreviations => undef,
-                attribute => $cvterm_name,
-                entity => undef,
-                externalReferences => [],
-                mainAbbreviation => undef,
-                ontologyReference => {
-                        documentationLinks => $trait->uri ? $trait->uri : undef,
-                        ontologyDbId => $trait->db_id ? $trait->db_id : undef,
-                        ontologyName => $trait->db ? $trait->db : undef,
-                        version => undef,
-                    },
-                status => $obsolete = 0 ? "Obsolete" : "Active",
-                synonyms => $synonym,
-                traitClass => undef,
-                traitDescription => $cvterm_definition,
-                traitDbId => qq|$cvterm_id|,
-                traitName => $cvterm_name,
-            },
-        );
+        push @variables, $self->_construct_variable_response($c, $trait);
     }
 
-    # my %result = (data=>\@data);
+    my $pagination;
+    my %result;
     my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
+
+    if ($array) {
+        %result = (data => \@variables);
+        $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+        return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
+    } else {
+        $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+        return CXGN::BrAPI::JSONResponse->return_success(@variables[0], $pagination, \@data_files, $status, 'Observationvariable search result constructed');
+    }
+
+}
+
+# TODO: Make validation errors better
+sub store {
+
+    my $self = shift;
+    my $data = shift;
+    my $c = shift;
+
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $schema = $self->bcs_schema();
+
+    my @variable_ids;
+
+    my @result;
+
+    my $coderef = sub {
+        foreach my $params (@{$data}) {
+            my $cvterm_id = $params->{observationVariableDbId} || undef;
+            my $name = $params->{observationVariableName};
+            my $ontology_id = $params->{ontologyReference}{ontologyDbId};
+            my $description = $params->{trait}{traitDescription};
+            my $entity = $params->{trait}{entity};
+            my $attribute = $params->{trait}{attribute};
+            my $synonyms = $params->{synonyms};
+            my $active = $params->{status} ne "archived";
+            my $additional_info = $params->{additionalInfo} || undef;
+
+            #TODO: Parse this when it initially comes into the brapi controller
+            my $scale = CXGN::BrAPI::v2::Scales->new({
+                bcs_schema => $self->bcs_schema,
+                scale      => $params->{scale}
+            });
+            my $method = CXGN::BrAPI::v2::Methods->new({
+                bcs_schema => $self->bcs_schema,
+                method     => $params->{method}
+            });
+            my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema          => $self->bcs_schema,
+                external_references => $params->{externalReferences} || [],
+                table_name          => "cvterm",
+                table_id_key        => "cvterm_id",
+                id                  => $cvterm_id
+            });
+            my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
+                cvterm_id                             => $cvterm_id,
+                name                                  => $name,
+                ontology_id                           => $ontology_id,
+                definition                            => $description,
+                entity                                => $entity,
+                attribute                             => $attribute,
+                synonyms                              => $synonyms,
+                external_references                   => $external_references,
+                method                                => $method,
+                scale                                 => $scale,
+                additional_info                       => $additional_info
+            });
+            $trait->{active} = $active;
+
+            my $variable = $trait->store();
+            push @result, $self->_construct_variable_response($c, $variable);
+        }
+    };
+
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        throw $_;
+    };
+
+    my $count = scalar @variable_ids;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
+    my %data_result = (data => \@result);
+    return CXGN::BrAPI::JSONResponse->return_success( \%data_result, $pagination, undef, $self->status(), $count . " Variables were saved.");
+}
+
+sub update {
+
+    my $self = shift;
+    my $data = shift;
+    my $c = shift;
+
+    my $schema = $self->bcs_schema();
+
+    # Check that cvterm that was passed in exists
+    #TODO: This can go away once trait parsed in controller
+    if ($data->{observationVariableDbId}){
+        my ($existing_cvterm) = $schema->resultset("Cv::Cvterm")->find({ cvterm_id => $data->{observationVariableDbId} });
+        if (!defined($existing_cvterm)) {
+            warn "An observationVariableId is required for variable update.";
+            CXGN::BrAPI::Exceptions::NotFoundException->throw({message => 'observationVariableId not specified.'});
+        }
+    }
+
+    #TODO: Add a check for these required values
+    my $cvterm_id = $data->{observationVariableDbId} || undef;
+    my $name = $data->{observationVariableName};
+    my $ontology_id = $data->{ontologyReference}{ontologyDbId};
+    my $description = $data->{trait}{traitDescription};
+    my $entity = $data->{trait}{entity};
+    my $attribute = $data->{trait}{attribute};
+    my $synonyms = $data->{synonyms};
+    my $active = $data->{status} ne "archived";
+    my $additional_info = $data->{additionalInfo} || undef;
+
+    my $scale = CXGN::BrAPI::v2::Scales->new({
+        bcs_schema => $self->bcs_schema,
+        scale => $data->{scale}
+    });
+    my $method = CXGN::BrAPI::v2::Methods->new({
+        bcs_schema => $self->bcs_schema,
+        method => $data->{method}
+    });
+    my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema          => $self->bcs_schema,
+        external_references => $data->{externalReferences} || [],
+        table_name          => "cvterm",
+        table_id_key        => "cvterm_id",
+        id                  => $cvterm_id
+    });
+    my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
+        cvterm_id                             => $cvterm_id,
+        name                                  => $name,
+        ontology_id                           => $ontology_id,
+        definition                            => $description,
+        entity                                => $entity,
+        attribute                             => $attribute,
+        synonyms                              => $synonyms,
+        external_references                   => $external_references,
+        method                                => $method,
+        scale                                 => $scale,
+        additional_info                      => $additional_info
+    });
+    $trait->{active} = $active;
+
+    my $variable = $trait->update();
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,1,1);
+    my $response = $self->_construct_variable_response($c, $variable);
+    return CXGN::BrAPI::JSONResponse->return_success($response, $pagination, undef, $self->status(), "Variable was updated.");
 }
 
 sub observation_variable_ontologies {
@@ -461,6 +507,90 @@ sub observation_variable_ontologies {
     my %result = (data=>$data_window);
     my @data_files;
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Ontologies result constructed');
+}
+
+sub _construct_variable_response {
+    my $self = shift;
+    my $c = shift;
+    my $variable = shift;
+
+    my $external_references_json;
+    if (defined($variable->external_references)) {
+        $external_references_json = $variable->external_references->search()->{$variable->cvterm_id};
+
+        if($c->config->{'brapi_include_CO_xref'}) {
+            push @{ $external_references_json }, {
+                #referenceId => "http://www.cropontology.org/terms/".$variable->db.":".$variable->accession . "/",
+                referenceId => $variable->db.":".$variable->accession,
+                referenceSource => "Crop Ontology"
+            };
+        }
+    }
+    my $method_json;
+    if (defined($variable->method)) { $method_json = $variable->method->method_db();}
+    my $scale_json;
+    if (defined($variable->scale)) { $scale_json = $variable->scale->scale_db();}
+    my @synonyms = $variable->synonyms;
+    my $variable_id = $variable->cvterm_id;
+    my $variable_db_id = $variable->db_id ;
+
+    my $documentation_links;
+    if($variable->uri){
+        push @$documentation_links, {
+            "URL" => $variable->uri, 
+            "type" => "OBO"
+        };
+    }
+
+    return {
+        additionalInfo => $variable->additional_info || {},
+        commonCropName => $c->config->{'supportedCrop'},
+        contextOfUse => undef,
+        defaultValue => $variable->default_value,
+        documentationURL => $variable->uri,
+        externalReferences => $external_references_json,
+        growthStage => undef,
+        institution  => undef,
+        language => 'eng',
+        method => $method_json,
+        observationVariableDbId => qq|$variable_id|,
+        observationVariableName => $variable->name."|".$variable->db.":".$variable->accession,
+        observationVariablePUI => $variable->db.":".$variable->accession,
+        ontologyReference => {
+            documentationLinks => $documentation_links,
+            ontologyDbId => $variable->db_id ? qq|$variable_db_id| : undef,
+            ontologyName => $variable->db ? $variable->db : undef,
+            version => undef,
+        },
+        scale => $scale_json,
+        scientist => undef,
+        status => $variable->get_active_string(),
+        submissionTimestamp => undef,
+        synonyms => @synonyms,
+        trait => {
+            additionalInfo => {},
+            alternativeAbbreviations => undef,
+            attribute => $variable->attribute ? $variable->attribute : undef,
+            attributePUI=> undef,
+            entity => $variable->entity ? $variable->entity : undef,
+            entityPUI=> undef,
+            externalReferences => $external_references_json,
+            mainAbbreviation => undef,
+            ontologyReference => {
+                documentationLinks => $documentation_links,
+                ontologyDbId => $variable->db_id ? qq|$variable_db_id| : undef,
+                ontologyName => $variable->db ? $variable->db : undef,
+                version => undef,
+            },
+            status => $variable->get_active_string(),
+            synonyms => @synonyms,
+            traitClass => undef,
+            traitDescription => $variable->definition,
+            traitDbId => qq|$variable_id|,
+            traitName => $variable->name,
+            traitPUI => undef,
+        }
+    }
 }
 
 1;

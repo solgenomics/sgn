@@ -18,7 +18,8 @@ sub get_folder : Chained('/') PathPart('ajax/folder') CaptureArgs(1) {
     my $c = shift;
 
     my $folder_id = shift;
-    $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     $c->stash->{folder_id} = $folder_id;
 
 }
@@ -33,21 +34,30 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $folder_for_trials;
     my $folder_for_crosses;
     my $folder_for_genotyping_trials;
-    my $project_type = $c->req->param("project_type");
+    my $folder_for_genotyping_projects;
+    my $folder_for_tracking_activities;
+    my $folder_for_transformations;
 
+    my $project_type = $c->req->param("project_type");
     if ($project_type eq 'field_trial') {
         $folder_for_trials = 1;
     } elsif ($project_type eq 'crossing_experiment') {
         $folder_for_crosses = 1;
-    } elsif ($project_type = 'genotyping_plate') {
-        $folder_for_genotyping_trials = 1
+    } elsif ($project_type eq 'genotyping_plate') {
+        $folder_for_genotyping_trials = 1;
+    } elsif ($project_type eq 'genotyping_project') {
+        $folder_for_genotyping_projects = 1;
+    } elsif ($project_type eq 'activity_record') {
+        $folder_for_tracking_activities = 1;
+    } elsif ($project_type eq 'transformation_project') {
+        $folder_for_transformations = 1;
     }
-
 
     if (! $self->check_privileges($c)) {
 	return;
     }
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $existing = $schema->resultset("Project::Project")->find( { name => $folder_name });
 
     if ($existing) {
@@ -61,7 +71,10 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
 	    breeding_program_id => $breeding_program_id,
         folder_for_trials => $folder_for_trials,
         folder_for_crosses => $folder_for_crosses,
-        folder_for_genotyping_trials => $folder_for_genotyping_trials
+        folder_for_genotyping_trials => $folder_for_genotyping_trials,
+        folder_for_genotyping_projects => $folder_for_genotyping_projects,
+        folder_for_tracking_activities => $folder_for_tracking_activities,
+        folder_for_transformations => $folder_for_transformations,
 	});
 
     $c->stash->{rest} = {

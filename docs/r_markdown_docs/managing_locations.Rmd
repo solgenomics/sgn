@@ -1,0 +1,13 @@
+# Managing Locations
+
+Field locations can be managed using the “**Manage Locations**” page. On this page, locations in the database are organized based on their breeding programs. Each location has a link to trials conducted in that location. To add a new location, click on the “Add Location” button that links to the “Add New Location” form.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image141.png')
+```
+
+On the “Add New Location” form, fill out the location name that you want to add. Latitude, longitude, and altitude are optional. Submit the new location by clicking on the “Add Location” button at the bottom right of the form.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image187.png')
+```

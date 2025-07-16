@@ -1,0 +1,16 @@
+
+
+<%args>
+
+</%args>
+
+
+<& /page/page_title.mas, title => 'Reports' &>
+
+<ul>
+  <li><a href="/reports/overview/">Overview</a></li>
+  <li><a href="/reports/trials">Trials</a></li>
+
+</ul>
+
+

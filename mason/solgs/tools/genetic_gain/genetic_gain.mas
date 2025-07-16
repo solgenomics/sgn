@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/genetic_gain/genetic_gain.mas - template for multiple traits genetic gain viz.
+/solgs/tools/genetic_gain/genetic_gain.mas - template for multiple traits genetic gain viz.
 
 =AUTHOR
 
@@ -38,14 +38,13 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ "solGS.geneticGain"] &>
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 
 <&| /page/info_section.mas,
   collapsible => 1,
    collapsed  => 0,
-  title      => "Check Expected Genetic Gain"
+  title      => "Expected genetic gain analysis"
   &>
 
 
@@ -78,3 +77,5 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 </div>
 
 </&>
+
+<& /util/import_javascript.mas, classes => [ "solGS.geneticGain"] &>

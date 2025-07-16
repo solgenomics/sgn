@@ -70,7 +70,8 @@ sub get_crossing_available_forms : Path('/ajax/odk/get_crossing_available_forms'
 
 sub get_crossing_available_forms_GET {
     my ( $self, $c ) = @_;
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $dbh = $bcs_schema->storage->dbh;
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     my $session_id = $c->req->param('session_id');
@@ -145,9 +146,9 @@ sub get_crossing_data_GET {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
     my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
     my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
     my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
@@ -225,8 +226,8 @@ sub schedule_get_crossing_data_GET {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
     my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
     my ($temp_file, $uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_info_downloadXXXXX');
     my $temp_file_path = $temp_file->filename;
@@ -354,8 +355,8 @@ sub get_crossing_available_wishlists_GET {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
 
     my $wishlist_md_files = $metadata_schema->resultset("MdFiles")->search({filetype=> { '-like' => 'cross_wishlist_%',  }});
     my @wishlists;
@@ -399,8 +400,8 @@ sub get_odk_cross_progress_cached_GET {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
 
     my $dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
     eval { make_path($dir) };
@@ -470,8 +471,8 @@ sub get_odk_cross_summary_cached_GET {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
 
     my $dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
     eval { make_path($dir) };
@@ -531,8 +532,8 @@ sub get_crossing_saved_ona_forms_GET {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
     my $dbh = $bcs_schema->storage->dbh;
     my $production_server = $c->config->{production_server};
 

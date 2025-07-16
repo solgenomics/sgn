@@ -22,6 +22,15 @@ use Spreadsheet::ParseXLSX;
 use JSON;
 use Data::Dumper;
 
+
+#
+# DEPRECATED: This plugin has been replaced by the PhenotypeSpreadsheetSimpleGeneric plugin
+#
+
+
+my @oun_columns = ("observationunit_name", "plot_name", "subplot_name", "plant_name", "observationUnitName", "plotName", "subplotName", "plantName");
+my %oun_columns_map = map { $_ => 1 } @oun_columns;
+
 sub name {
     return "phenotype spreadsheet simple";
 }
@@ -67,17 +76,18 @@ sub validate {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header with at least observationunit_name and one trait, as well as one row of phenotypes
-        $parse_result{'error'} = "Spreadsheet is missing observationunit_name and atleast one trait in header.";
+        $parse_result{'error'} = "Spreadsheet is missing observationunit_name and at least one trait in header.";
         print STDERR "Spreadsheet is missing header\n";
         return \%parse_result;
     }
 
-    if ($worksheet->get_cell(0,0)->value() ne 'observationunit_name' ) {
-        $parse_result{'error'} = "First column must be 'observationunit_name'. It may help to recreate your spreadsheet from the website.";
+    # check if the first column is one of the supported variations of observationunit_name
+    if ( !exists($oun_columns_map{$worksheet->get_cell(0,0)->value()}) ) {
+        $parse_result{'error'} = "First column must be one of: '" . join("', '", @oun_columns) . "'. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct\n";
         return \%parse_result;
     }
-    my @fixed_columns = qw | observationunit_name |;
+    my @fixed_columns = ( $worksheet->get_cell(0,0)->value() );
     my $num_fixed_col = scalar(@fixed_columns);
 
     for (my $row=1; $row<$row_max; $row++) {
@@ -155,7 +165,7 @@ sub parse {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    my @fixed_columns = qw | observationunit_name |;
+    my @fixed_columns = ( $worksheet->get_cell(0,0)->value() );
     my $num_fixed_col = scalar(@fixed_columns);
 
     for my $row ( 1 .. $row_max ) {

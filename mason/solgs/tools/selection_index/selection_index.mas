@@ -37,30 +37,35 @@ $training_pop_name
 <&| /page/info_section.mas,
   collapsible => 1,
   collapsed  => 0,
-  title      => "Calculate selection index"
+  title      => "Selection index calculator"
   &>
 
   <div id="si_canvas">
 
     <div class="row">
-      <div class="form-group col-sm-3" id="select_a_population_div" style="margin-right:35px"></div>
+      <div class="form-group col-sm-3" id="si_select_pops_div" style="margin-right:35px"></div>
       <div id="si_help"><p> And assign relative weights to traits.<i style="color:#5cb85c;" class="fa fa-question-circle" id="si_tooltip" title="<% $si_tooltip %>"> </i></p></div>
     </div>
 
-    <div id="selection_index_form"> </div>
-
-    <div id="selected_population_div" style="display:none">
-      <input type="hidden" id="model_id" value="<% $training_pop_id %>" />
-      <input type="hidden" id="model_name" value="<% $training_pop_name %>" />
-      <input type="hidden" id="default_selected_population_name" value="<% $training_pop_name %>"/>
-      <input type="hidden" id="default_selected_population_type" value="<% $pop_type %>"/>
-      <input type="hidden" id="default_selected_population_id" value="<% $training_pop_id %>"/>
-      <input type="hidden" id="selected_population_name" value="" />
-      <input type="hidden" id="selected_population_id" value="" />
-      <input type="hidden" id="selected_population_type" value="" />
+   
+    <div id="si_selected_pop_div" style="display:none">
+      <input type="hidden" id="training_pop_id" value="<% $training_pop_id %>" />
+      <input type="hidden" id="training_pop_name" value="<% $training_pop_name %>" />
+      <input type="hidden" id="si_default_selected_pop_name" value="<% $training_pop_name %>"/>
+      <input type="hidden" id="si_default_selected_pop_type" value="<% $pop_type %>"/>
+      <input type="hidden" id="si_default_selected_pop_id" value="<% $training_pop_id %>"/>
+      <input type="hidden" id="si_selected_pop_name" value="" />
+      <input type="hidden" id="si_selected_pop_id" value="" />
+      <input type="hidden" id="si_selected_pop_type" value="" />
     </div>
 
-    <& selection_index_correlation.mas &>
+    <div id="si_form"> </div>
+
+    <& /solgs/spinner/spinner.mas &>
+    <div id="si_message"  class="message"> </div>
+
+    <div id="si_corr_canvas" style="clear:both"> </div>
+    <!-- <& selection_index_correlation.mas &> -->
 
   </div>
 

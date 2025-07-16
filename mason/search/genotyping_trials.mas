@@ -46,25 +46,24 @@ $nd_geolocation => 'not_provided'
 
 jQuery(document).ready(function () {
 
-   var trial_table = jQuery('#genotyping_trial_search_results').DataTable( {
-       'ajax': '/ajax/tissue_samples/genotyping_trials',
-       "scrollX": true
-   });
-
-   jQuery('#genotyping_trial_search_results').on( 'draw.dt', function () {
-     var name_links = trial_table.column( 0, {page:'current'} ).data();
-     var names = [];
-
-     for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
-       names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
-     }
-
-     jQuery('#genotyping_trial_result_names').html(names);
-     addToListMenu('genotyping_trials_to_list_menu', 'genotyping_trial_result_names', {
-       listType: 'trials'
+    var trial_table = jQuery('#genotyping_trial_search_results').DataTable( {
+        'ajax': '/ajax/tissue_samples/genotyping_trials',
+        "scrollX": true
      });
 
-   });
+    jQuery('#genotyping_trial_search_results').on( 'draw.dt', function () {
+        var name_links = trial_table.column( 0, {page:'current'} ).data();
+        var names = [];
+
+        for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+            names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
+
+        jQuery('#genotyping_trial_result_names').html(names);
+        addToListMenu('genotyping_trials_to_list_menu', 'genotyping_trial_result_names', {
+            listType: 'genotyping_plates'
+        });
+    });
 
 });
 

@@ -37,9 +37,10 @@ jQuery(document).ready(function () {
        'lengthMenu': [ 10, 50, 100, 2000 ],
        'ajax': '/ajax/genotyping_data/search?protocol_id_list=<% $protocol_id %>',
    });
-
+   var refresh_results;
    jQuery("#protocol_genotype_data_forbid_cache").change(function(){
       if (jQuery(this).is(":checked")) {
+       refresh_results = '1';
        var genotypes_data_table = jQuery('#protocol_genotype_data').DataTable({
            'destroy' : true,
            'searching' : false,
@@ -53,11 +54,25 @@ jQuery(document).ready(function () {
    });
 
    jQuery('#genotyping_protocol_genotype_data_detail_page_download_all_vcf').click(function(){
-       window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=VCF&format=accession_ids");
+       if (refresh_results) {
+           window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=VCF&format=accession_ids&forbid_cache=1");
+       } else {
+           window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=VCF&format=accession_ids");
+       }
    });
    jQuery('#genotyping_protocol_genotype_data_detail_page_download_all_dosagematrix').click(function(){
-       window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=DosageMatrix&format=accession_ids");
+       if (refresh_results) {
+           window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=DosageMatrix&format=accession_ids&forbid_cache=1");
+       } else {
+           window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=DosageMatrix&format=accession_ids");
+       }
    });
+
+    jQuery('#genotyping_protocol_genotype_data_detail_page_download_all_csv').click(function(){
+        window.location.replace("/breeders/download_kasp_genotyping_data_csv/?protocol_id=<% $protocol_id %>");
+    });
+
+
 
 });
 

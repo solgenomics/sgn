@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -30,8 +31,8 @@ sub search {
 	my $location_names_arrayref  = $params->{locationNames } || ($params->{locationNames } || ());
 	my $location_types_arrayref = $params->{locationType} || ($params->{locationTypes} || ());
 
-    if (($institute_names_arrayref && scalar($institute_names_arrayref)>0) || ($coordinates && scalar($coordinates)>0 )|| ( $externalreference_sources_arrayref && scalar($externalreference_sources_arrayref)>0) || ($externalreference_ids_arrayref && scalar($externalreference_ids_arrayref)>0)){
-        push @$status, { 'error' => 'The following search parameters are not implemented: instituteNames, coordinates, externalReferenceID, externalReferenceSource' };
+    if (($institute_names_arrayref && scalar($institute_names_arrayref)>0) || ($coordinates && scalar($coordinates)>0 )){
+        push @$status, { 'error' => 'The following search parameters are not implemented: instituteNames, coordinates'};
     }
 
 	my %location_ids_arrayref;
@@ -74,6 +75,16 @@ sub search {
         %location_types_arrayref = map { $_ => 1} @$location_types_arrayref;
     }
 
+	my %externalreference_ids_arrayref;
+	if ($externalreference_ids_arrayref && scalar(@$externalreference_ids_arrayref)>0){
+		%externalreference_ids_arrayref = map { $_ => 1} @$externalreference_ids_arrayref;
+	}
+
+	my %externalreference_sources_arrayref;
+	if ($externalreference_sources_arrayref && scalar(@$externalreference_sources_arrayref)>0){
+		%externalreference_sources_arrayref = map { $_ => 1} @$externalreference_sources_arrayref;
+	}
+
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema ); #, $location_id);
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
 	my @data;
@@ -83,14 +94,32 @@ sub search {
 	foreach (@$locations){
 		if ( (%location_ids_arrayref && !exists($location_ids_arrayref{$_->[0]}))) { next; }
 		if ( (%abbreviations_arrayref && !exists($abbreviations_arrayref{$_->[9]}))) { next; }
-		if ( (%country_codes_arrayref && !exists($country_codes_arrayref{$_->[6]}))) { next; }
-		if ( (%country_names_arrayref && !exists($country_names_arrayref{$_->[5]}))) { next; }
-		if ( (%institute_addresses_arrayref && !exists($institute_addresses_arrayref{$_->[10]}))) { next; }
-		# if ( (%institute_names_arrayref && !exists($institute_names_arrayref{$_->[]}))) { next; }
-		if ( (%location_names_arrayref && !exists($location_names_arrayref{$_->[1]}))) { next; }
-		if ( (%location_types_arrayref && !exists($location_types_arrayref{$_->[8]}))) { next; }
-		if ( $altitude_max && $_->[4] > $altitude_max ) { next; }
-		if ( $altitude_min && $_->[4] < $altitude_min ) { next; }
+    if ( (%country_codes_arrayref && !exists($country_codes_arrayref{$_->[6]}))) { next; }
+    if ( (%country_names_arrayref && !exists($country_names_arrayref{$_->[5]}))) { next; }
+    if ( (%institute_addresses_arrayref && !exists($institute_addresses_arrayref{$_->[10]}))) { next; }
+    # if ( (%institute_names_arrayref && !exists($institute_names_arrayref{$_->[]}))) { next; }
+    if ( (%location_names_arrayref && !exists($location_names_arrayref{$_->[1]}))) { next; }
+    if ( (%location_types_arrayref && !exists($location_types_arrayref{$_->[8]}))) { next; }
+    if ( $altitude_max && $_->[4] > $altitude_max ) { next; } 
+    if ( $altitude_min && $_->[4] < $altitude_min ) { next; }
+
+		# combine referenceID and referenceSource into AND check as used by bi-api filter
+		# won't work with general search but wasn't implemented anyways
+		my $passes_search = 0;
+		# if location has external references
+		if ($_->[11]) { #
+			# see if any of the references match search parameters
+			foreach my $reference (@{$_->[11]}) {
+				my $ref_id = $reference->{'referenceID'};
+				my $ref_source = $reference->{'referenceSource'};
+				if (exists($externalreference_ids_arrayref{$ref_id}) &&
+						exists($externalreference_sources_arrayref{$ref_source})
+				) {
+					$passes_search = 1;
+				}
+			}
+		}
+		if (!$passes_search && %externalreference_ids_arrayref && %externalreference_sources_arrayref) { next; }
 
 		push @available, $_;
 	}
@@ -142,6 +171,7 @@ sub get_response {
 			};
 		}
 
+		my $external_references = $_->[11];
 		push @data, {
 			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
@@ -161,7 +191,7 @@ sub get_response {
 			coordinates=>$coordinates,
 			topography => undef,
 			coordinateUncertainty => undef,
-			externalReferences=> undef
+			externalReferences=> $external_references
 		};
 	}
 
@@ -180,17 +210,12 @@ sub get_response {
 sub store {
 	my $self = shift;
 	my $data = shift;
-	my $user_id =shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema();
     my @location_ids;
-
-	if (!$user_id) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
-	}
 
 	foreach my $params (@{$data}) {
 		my $id = $params->{locationDbId} || undef;
@@ -205,17 +230,36 @@ sub store {
 		my $longitude = $geo_coordinates->[0] || undef;
 		my $altitude  = $geo_coordinates->[2]|| undef;
 		my $noaa_station_id    = $params->{additionalInfo}->{noaaStationId} || undef;
+		my $external_references = $params->{externalReferences};
 		my $program_name;
 
-		my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
+		if ($id) {
+			my $location = $schema->resultset('NaturalDiversity::NdGeolocation')->find({nd_geolocation_id => $id});
+			if (!$location) {
+				my $err_string = sprintf('Location %s does not exist.',$id);
+				warn $err_string;
+				return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
+			}
+		}
+
+		my $existing_name_count = 0;
+		if($id) {
+			$existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name, nd_geolocation_id => { '!=' => $id } })->count();
+		} else {
+			$existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name })->count();
+		}
 		if ($existing_name_count > 0) {
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Location name %s already exists.', $name ));
+			my $err_string = sprintf('Location name %s already exists.', $name );
+			warn $err_string;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 409);
 		}
 
 		if ($program_id) {
 			my $program = $schema->resultset('Project::Project')->find({project_id => $program_id});
 			if (!$program) {
-				return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Program %s does not exist.',$program_id));
+				my $err_string = sprintf('Program %s does not exist.',$program_id);
+				warn $err_string;
+				return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
 			}
 			$program_name = $program->name();
 		}
@@ -234,13 +278,16 @@ sub store {
 			latitude => $latitude,
 			longitude => $longitude,
 			altitude => $altitude,
-			noaa_station_id => $noaa_station_id
+			noaa_station_id => $noaa_station_id,
+			external_references => $external_references
 		});
 
 		my $store = $location->store_location();
 
 		if ($store->{'error'}) {
-		   		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Location %s was not stored.',$name));
+			my $err_string = $store->{'error'};
+			warn $err_string;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 500);
 		} else {
 			push @location_ids, $store->{'nd_geolocation_id'};
 		}

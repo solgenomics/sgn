@@ -1,6 +1,7 @@
 <%args>
 $trial_id => undef
 $trial_name => undef
+$breeding_program_id => undef
 </%args>
 
 % my $cross_additional_info_string = $c->config->{cross_additional_info};
@@ -11,7 +12,7 @@ $trial_name => undef
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="reset" class="close" id="upload_crosses_dismiss_button_2" name="upload_crosses_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="uploadCrossesDialog">Upload Crosses</h4>
             </div>
             <div class="modal-body">
@@ -19,14 +20,27 @@ $trial_name => undef
 
                     <&| /util/workflow.mas, id=> "crosses_upload_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"What are crosses?" &>
+                            <& /page/page_title.mas, title=>"Introduction" &>
                             <ul>
-                                <li>Crosses represent any pollination that occurs.</li>
-                                <li>Crosses can be of different types (biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
-                                <li>Depending on the cross type, an individual cross can be defined as between two accessions (e.g. accession A is the female and accession B is the male in a biparental cross)</li>
-                                <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are only defined as groups of accessions), or between female accession A and unknown male parents</li>
-                                <li>For backcross cross type, cross unique id can be used as one of the parents.</li>
-                                <li>An individual cross can be linked to the specific female plot or plant, as well as the specific male plot or plant.</li>
+                                <li>Crosses can be of different types (biparental, self, open, backcross, sib, polycross, bulk, bulk_open, bulk_self, doubled_haploid, or dihaploid_induction)</li>
+                                    <ul class="a">
+                                        <li>cross type descriptions:</li>
+                                        <ul class="b">
+                                            <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
+                                            <li><b>self:</b> A self pollinated individual plant.</li>
+                                            <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                            <li><b>backcross:</b> An individual plant pollinated by one of its parents. Cross Unique ID can be used as one of the parents.</li>
+                                            <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
+                                            <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
+                                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
+                                            <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
+                                            <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
+                                            <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
+                                            <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from tetraploid to diploid.</li>
+                                        </ul>
+                                    </ul>
+                                </li>
+                                <li>An individual cross can be linked to a female plot or plant, as well as a male plot or plant.</li>
                                 <li>A cross can have a number of properties associated to it, such as number of flowers, pollination date, etc.</li>
                                 <li>A cross can produce seed, which goes into a seedlot.</li>
                                 <li>A cross can ultimately produce progeny, which then become named accessions in the database.</li>
@@ -66,7 +80,6 @@ $trial_name => undef
                         </&>
                         <&| /util/workflow.mas:step, title=> "Upload your crosses" &>
                             <& /page/page_title.mas, title=>"Enter basic information about the crosses and upload your file" &>
-
                             <br/>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
                                 <div id="manage_page_section_2" style="display:none">
@@ -76,7 +89,7 @@ $trial_name => undef
                                             <div id="upload_crosses_breeding_program_select_div">
                                             </div>
                                         </div>
-                                    </div>
+                                    </div><br/>
                                     <div id="manage_page_crossing_experiment" style="display:none">
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Crossing Experiment: </label>
@@ -93,100 +106,29 @@ $trial_name => undef
                                         <div class="col-sm-9" >
                                             <input class="form-control" name="experiment_name" id="experiment_name" disabled value="<% $trial_name %>">
                                             <input name="experiment_id" id="experiment_id" type="hidden" value="<% $trial_id %>">
+                                            <input name="experiment_breeding_program_id" id="experiment_breeding_program_id" type="hidden" value="<% $breeding_program_id %>">                                            
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">File Format: </label>
-                                    <div class="col-sm-9">
-                                        <select class="form-control" id="cross_file_format_option">
-                                            <option value="">Select a file format that you want to upload</option>
-                                            <option value="xls_cross_accession">Excel (.xls or .xlsx) file with only accession/population names for parents</option>
-                                            <option value="xls_cross_plot">Excel (.xls or .xlsx) file with accession and plot names for parents</option>
-                                            <option value="xls_cross_plant">Excel (.xls or .xlsx) file with accession and plant names for parents</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div id="xls_cross_accession_section" style="display:none">
-                                    <h3>You want to upload crosses in an Excel file with accession or population names for parents</h3>
-                                    <div class="well well-sm">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <&| /page/explanation.mas, title=>'Template information' &>
-                                                    <p>
-                                                        <b>File format information</b>
-                                                        <br>
-                                                        <a id="cross_accession_info_format">Spreadsheet format</a>
-                                                    </p>
-                                                </&>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <br/>
-                                                <div class="panel panel-default">
-                                                    <div class="panel-body">
-                                                        <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an XLS File: </label>
-                                                            <div class="col-sm-6">
-                                                                <input type="file" name="xls_crosses_simple_file" id="xls_crosses_simple_file" encoding="multipart/form-data" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                <div class="well well-sm">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="upload_crosses_spreadsheet_format_info">Spreadsheet format</a>
+                                                </p>
+                                            </&>
                                         </div>
-                                    </div>
-                                </div>
-                                <div id="xls_cross_plot_section" style="display:none">
-                                    <h3>You want to upload crosses in an Excel file with accession and plot names for parents</h3>
-                                    <div class="well well-sm">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <&| /page/explanation.mas, title=>'Template information' &>
-                                                    <p>
-                                                        <b>File format information</b>
-                                                        <br>
-                                                        <a id="cross_plot_info_format">Spreadsheet format</a>
-                                                    </p>
-                                                </&>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <br/>
-                                                <div class="panel panel-default">
-                                                    <div class="panel-body">
-                                                        <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an XLS File: </label>
-                                                            <div class="col-sm-6">
-                                                                <input type="file" name="xls_crosses_plots_file" id="xls_crosses_plots_file" encoding="multipart/form-data" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="xls_cross_plant_section" style="display:none">
-                                    <h3>You want to upload crosses in an Excel file with accession and plant names for parents</h3>
-                                    <div class="well well-sm">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <&| /page/explanation.mas, title=>'Template information' &>
-                                                    <p>
-                                                        <b>File format information</b>
-                                                        <br>
-                                                        <a id="cross_plant_info_format">Spreadsheet format</a>
-                                                    </p>
-                                                </&>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <br/>
-                                                <div class="panel panel-default">
-                                                    <div class="panel-body">
-                                                        <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an XLS File: </label>
-                                                            <div class="col-sm-6">
-                                                                <input type="file" name="xls_crosses_plants_file" id="xls_crosses_plants_file" encoding="multipart/form-data" />
-                                                            </div>
+                                        <div class="col-sm-8">
+                                            <br/>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-5 control-label">Upload File: </label>
+                                                        <div class="col-sm-7">
+                                                            <input type="file" name="upload_crosses_file" id="upload_crosses_file" encoding="multipart/form-data" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -214,7 +156,10 @@ $trial_name => undef
                                 </div>
                                 -->
                             </form>
-                            <div id="submit_button_section" style="display:none">
+
+                            <& /help/file_upload_type.mas, type => "Crosses", optional_column => 0 &>
+
+                            <div id="submit_button_section">
                                 <center>
                                     <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
                                 </center>
@@ -244,7 +189,7 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button name="upload_crosses_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="upload_crosses_dismiss_button_1" name="upload_crosses_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -271,24 +216,22 @@ $trial_name => undef
     </div>
 </div>
 
-<div class="modal fade" id="cross_accession_info_dialog" name="cross_accession_info_dialog" tabindex="-1" role="dialog" aria-labelledby="crossAccessionInfoDialog">
+<div class="modal fade" id="cross_spreadsheet_info_dialog" name="cross_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="crossSpreadsheetInfoDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="crossAccessionInfoDialog">Template Information</h4>
+                <h4 class="modal-title" id="crossSpreadsheetInfoDialog">Template Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-
-                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br>
                     <b>Header:</b>
                     <br>
                     To set up crosses in the database, please provide required information. The first row (header) must contain the following:
                     <br>
 
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover" id = "cross_parents_header">
                         <tbody>
                             <tr>
                                 <td>cross_unique_id</td>
@@ -301,200 +244,32 @@ $trial_name => undef
                     </table>
                     <style>
                         ul.a {text-indent};
-                        ul.b {text-indent};
                     </style>
                     <b>Required columns:</b>
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
                         <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid)
-                            <ul class="a">
-                                <li><b>cross type descriptions:</b></li>
-                                <ul class="b">
-                                    <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
-                                    <li><b>self:</b> A self pollinated individual plant.</li>
-                                    <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                                    <li><b>backcross:</b> An individual plant pollinated by one of its parents.</li>
-                                    <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
-                                    <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
-                                    <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
-                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
-                                    <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                                    <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
-                                </ul>
-                            </ul>
-                        </li>
-                        <li><b>female_parent</b> (accession names or population names must exist as <b>uniquenames</b> in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, accession names or population names must exist as <b>uniquenames</b> in the database)</li>
-                    </ul>
-
-                    <b>Optional columns (additional parent info):</b> You can add additional parent info after male_parent column by using one or more of these column headers.
-                    <ul>
-
-% foreach $additional_info(@cross_additional_info){
-                    <li><%$additional_info%></li>
-
-%}
-                    </ul>
-
-                    <b>Additional cross information:</b>
-                    <ul>
-                        <li>After cross unique ids are stored in the database, you can add field crossing data (e.g. pollination date, total number of flowers pollinated, total number of fruits set) or progenies to each cross unique id.</li>
-                        <li>Field crossing data and progenies can be uploaded via links in crossing experiment detail page or can be added directly in each cross detail page.</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="cross_plot_info_dialog" name="cross_plot_info_dialog" tabindex="-1" role="dialog" aria-labelledby="crossPlotInfoDialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="crossPlotInfoDialog">Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-
-                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br>
-                    <b>Header:</b>
-                    <br>
-                    To set up crosses in the database, please provide required information. The first row (header) must contain the following:
-                    <br>
-
-                    <table class="table table-bordered table-hover">
-                        <tbody>
-                            <tr>
-                                <td>cross_unique_id</td>
-                                <td>cross_combination</td>
-                                <td>cross_type</td>
-                                <td>female_parent</td>
-                                <td>male_parent</td>
-                                <td>female_plot</td>
-                                <td>male_plot</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <style>
-                        ul.a {text-indent};
-                        ul.b {text-indent};
-                    </style>
-                    <b>Required columns:</b>
-                    <ul>
-                        <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
-                        <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid)
-                            <ul class="a">
-                                <li><b>cross type descriptions:</b></li>
-                                <ul class="b">
-                                    <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
-                                    <li><b>self:</b> A self pollinated individual plant.</li>
-                                    <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                                    <li><b>backcross:</b> An individual plant pollinated by one of its parents.</li>
-                                    <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
-                                    <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
-                                    <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
-                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
-                                    <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                                    <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
-                                </ul>
-                            </ul>
-                        </li>
-                        <li><b>female_parent</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, accession or population names must exist as <b>uniquenames</b> in the database)</li>
-                        <li><b>female_plot</b> (Plot names must exist in the database)</li>
-                        <li><b>male_plot</b> (Plot names must exist in the database)</li>
-                    </ul>
-                    <b>Optional columns (additional parent info):</b> You can add additional parent info after male_plot column by using one or more of these column headers.
-                    <ul>
-% foreach $additional_info(@cross_additional_info){
-                    <li><%$additional_info%></li>
-
-%}
-                    </ul>
-                    <b>Additional cross information:</b>
-                    <ul>
-                        <li>After cross unique ids are stored in the database, you can add field crossing data (e.g. pollination date, total number of flowers pollinated, total number of fruits set) or progenies to each cross unique id.</li>
-                        <li>Field crossing data and progenies can be uploaded via links in crossing experiment detail page or can be added directly in each cross detail page.</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="cross_plant_info_dialog" name="cross_plant_info_dialog" tabindex="-1" role="dialog" aria-labelledby="crossPlantInfoDialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="crossPlantInfoDialog">Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-
-                    <b>Crosses may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br>
-                    <b>Header:</b>
-                    <br>
-                    To set up crosses in the database, please provide required information. The first row (header) must contain the following:
-                    <br>
-
-                    <table class="table table-bordered table-hover">
-                        <tbody>
-                            <tr>
-                                <td>cross_unique_id</td>
-                                <td>cross_combination</td>
-                                <td>cross_type</td>
-                                <td>female_parent</td>
-                                <td>male_parent</td>
-                                <td>female_plant</td>
-                                <td>male_plant</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <style>
-                        ul.a {text-indent};
-                        ul.b {text-indent};
-                    </style>
-                    <b>Required columns:</b>
-                    <ul>
-                        <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
-                        <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid)
-                            <ul class="a">
-                                <li><b>cross type descriptions:</b></li>
-                                <ul class="b">
-                                    <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
-                                    <li><b>self:</b> A self pollinated individual plant.</li>
-                                    <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                                    <li><b>backcross:</b> An individual plant pollinated by one of its parents.</li>
-                                    <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
-                                    <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
-                                    <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
-                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
-                                    <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
-                                    <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
-                                </ul>
-                            </ul>
-                        </li>
-                        <li><b>female_parent</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, accession or population names must exist as <b>uniquenames</b> in the database)</li>
-                        <li><b>female_plant</b> (Plant names must exist in the database)</li>
-                        <li><b>male_plant</b> (Plant names must exist in the database)</li>
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, backcross, bulk, bulk_open, bulk_self, doubled_haploid, dihaploid_induction)</li>
+                        <ul class="a">
+                            <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
+                            <li><b>self:</b> A self pollinated individual plant.</li>
+                            <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                            <li><b>backcross:</b> An individual plant pollinated by one of its parents.</li>
+                            <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
+                            <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
+                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
+                            <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
+                            <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
+                            <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
+                            <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from 4 to 2.</li>
+                        </ul>
+                        <li><b>female_parent:</b> Female parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
+                        <li><b>male_parent:</b> Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, backcross, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
                     </ul>
                     <b>Optional columns (additional parent info):</b> You can add additional parent info after male_plant column by using one or more of these column headers.
                     <ul>
 % foreach $additional_info(@cross_additional_info){
-                    <li><%$additional_info%></li>
-
+                        <li><%$additional_info%></li>
 %}
                     </ul>
                     <b>Additional cross information:</b>
@@ -529,6 +304,15 @@ jQuery(document).ready(function(){
 
         }
     });
+
+    jQuery("[name='upload_crosses_dismiss_button']").click(function() {
+        jQuery('#upload_crosses_dialog').modal('hide');
+        jQuery('#upload_crosses_breeding_program_select_div').val('');
+        jQuery('#upload_crosses_crossing_experiment_select_div').val('');
+        jQuery('#upload_crosses_file').val('');
+        location.reload();
+    });
+
 
 });
 

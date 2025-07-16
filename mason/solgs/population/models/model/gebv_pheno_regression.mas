@@ -38,7 +38,7 @@ $pop_id = $trial_id if $trial_id;
 
 </style>
 
-<& /util/import_javascript.mas, classes => [ "solGS.gebvPhenoRegression"] &>
+<& /util/import_javascript.mas, classes => [ "solGS.gebvPhenoRegression", "solGS.scatterPlot"] &>
 
   <&| /page/info_section.mas, 
   collapsible => 1, 
@@ -47,12 +47,8 @@ $pop_id = $trial_id if $trial_id;
     &>
     
 <div id="gebv_pheno_regression_canvas">
-  <div id="gebv_pheno_regrssion_plot"></div>
-  
-  <input type="hidden" id="population_id" value="<% $pop_id %>" /> 
-  <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
-  <input type="hidden" id="trait_id" value="<% $trait_id %>" />
-
+  <div id="gebv_pheno_regression_plot"></div>
+  <div id="gebv_pheno_regression_message"></div>
 </div>
 
 </&>

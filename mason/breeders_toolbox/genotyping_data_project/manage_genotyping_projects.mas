@@ -1,0 +1,45 @@
+<%args>
+$locations
+$programs
+$facilities
+</%args>
+
+<br />
+<& /page/page_title.mas, title => "Manage Genotyping Projects" &>
+
+<div class="container-fluid">
+    <&| /page/info_section.mas, title=>"About Genotyping Projects and Genotyping Plates",  collapsible => 1, collapsed=>1 &>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <b><p>What are genotyping projects?</p></b>
+                    <ul>
+                        <li>Genotyping projects allow you to organize both genotyping plates and associated genotyping data on the same page.</li>
+                        <li>Please select a genotyping project previously stored in the database or create a new one before you add/upload a genotyping plate or genotyping data.
+                        <li>Several genotyping projects can be grouped together using genotyping project folders (Note: folders for genotyping plates are now obsoleted)</li>
+                    </ul>
+
+                    <b><p>What are genotyping plates?</p></b>
+                    <ul>
+                        <li>Genotyping plates represent 96 or 384 well plates.</li>
+                        <li>Each well in the plate has a unique tissue sample ID.</li>
+                        <li>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already.</li>
+                        <li>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</li>
+                    </ul>
+
+                    <b><p>How do I record a genotyping plate?</p></b>
+                    <ul>
+                        <li>1) Know what the "source" units for each well will be (either a tissue sample, plant, plot, or accession name). These "source" names must exist in the database (e.g. as tissue samples or plants or plots from a trial, or just as accession names). Ideally you will have the barcodes from the field with you.</li>
+                        <li>2) Use the "Coordinate" Android Application to scan your "source" barcodes and record the position of the tissue sample in the 96 or 384 well plate. If you prefer you can create your own XLS file and upload that, if you do not want to use the Coordinate Application. Alternatively you can let the database generate the genotyping plate for you, and then produce the plate in that layout.</li>
+                        <li><b>For more info about the "Coordinate" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.coordinate">Coordinate</a>.</b></li>
+                        <li>3) Click "Add Genotyping Plate" and fill in the form completely.</li>
+                        <li>4) To ease shipping materials to the genotyping facility, we can generate the required templates for you after the data is in the database.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title=>'Genotyping Projects', collapsible=>1, collapsed=>0, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_project_link">Add Genotyping Project</button><button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_trial_link">Add/Upload Genotyping Plate</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_genotyping_data_link">Upload Genotyping Data</button>' &>
+        <& /breeders_toolbox/genotyping_data_project/genotyping_project_tree.mas, locations=>$locations, programs=>$programs, facilities =>$facilities &>
+    </&>
+</div>

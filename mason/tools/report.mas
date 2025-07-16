@@ -1,0 +1,233 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ "calendar.moment_min", "calendar.fullcalendar_min", "jquery.dataTables", "calendar.fullcalendar_gcal_min", "calendar.bootstrap_datepicker_min" ] &>
+
+<& /util/import_css.mas, paths => ['/css/datepicker.css'] &>
+
+<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
+
+<& /page/page_title.mas, title => "Personalized Report Generator" &>
+
+<div id="mixedmodel_tool">
+</div>
+
+
+<style>
+  .factor {
+  z-index:4;
+  border-style:solid;
+  border-radius:8px;
+  width:200px;
+  height:100;
+  border-color:#337ab7;
+  background-color:#337ab7;
+  color:white;
+  margin:4px
+  }
+  .factor_panel {
+  min-height:100px;
+  height:auto;
+  margin-top:0px;
+  border-style:dotted;
+  border-width:5px;
+  color:grey;
+  background-color:lightyellow;
+  }
+  .factor_interaction_panel {
+  border-style:dotted;
+  border-width:0px;
+  margin-top:20px;
+  height:auto;
+  z-index:1;
+  }
+  .model_bg {
+  margin-left:30px;
+  margin-right:30px;
+  background-color:#DDEEEE;
+  min-height:80px;
+  padding-top:10px;
+  padding-left:10px;
+  padding-bottom:10px;
+  border-radius:8px;
+  }
+
+  /* Input Box Styles */
+  textarea {
+    width: 100%;
+    height: 150px;
+    padding: 10px;
+    font-size: 14px;
+    resize: vertical;
+  }
+  #loading-message {
+    display: none;
+    color: blue;
+    font-weight: bold;
+    margin-top: 15px;
+  }
+
+  #final-message {
+    display: none;
+    color: green;
+    font-weight: bold;
+    margin-top: 15px;
+  }
+
+  .form-section {
+    margin-bottom: 20px;
+  }
+
+  .date-pair {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+</style>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personalized Report Generator</title>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+</head>
+
+<body>
+  <div>
+    <label style="font-size: 18px;">Welcome to the Personalized Report Generator</label>
+
+    <p>This is a <b>CURATOR's</b> tool which allows you to create customized reports based on scripts tailored to the specific instructions of your Breedbase instance. These reports are designed to meet your unique needs and provide detailed insights into your data. If you require a new report type or have specific requirements, please reach out to the Breedbase team for assistance.</p>
+
+    <form>
+      <hr>
+
+      <label style="font-weight: bold;">Available Report Scripts:</label>
+      <div id="available-scripts" style="margin-bottom: 20px;"></div>
+
+      <hr>
+
+      <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+        <div>
+          <label for="start-date">Start Date:</label><br>
+          <input type="text" id="start-date" name="start-date" placeholder="dd/mm/yyyy">
+        </div>
+
+        <div>
+          <label for="end-date">End Date:</label><br>
+          <input type="text" id="end-date" name="end-date" placeholder="dd/mm/yyyy">
+        </div>
+      </div>
+
+      <hr>
+
+      <label for="email" style="font-weight: bold;">Send Report To (Emails):</label>
+      <textarea id="email-textarea" name="email" placeholder="Enter email addresses separated by new lines (one per line)" required></textarea>
+
+      <small>Please enter each email address on a new line (e.g., email1@example.com, email2@example.com).</small>
+
+      <br><br>
+
+      <button type="submit">Generate Report & Send Report</button>
+    </form>
+  </div>
+  <div id="loading-message" style="display:none; color: blue; font-weight: bold; margin-top: 15px;">
+  Your report was submitted. You’ll receive an email when it’s ready. Feel free to navigate to other pages.
+</div>
+
+<div id="final-message" style="display:none; color: green; font-weight: bold; margin-top: 15px;">
+</div>
+
+</body>
+
+<script>
+  $(document).ready(function() {
+    // Initialize datepicker for the start and end date inputs
+    $("#start-date, #end-date").datepicker({
+      dateFormat: "dd/mm/yy", // Use the dd/mm/yyyy format
+      changeMonth: true,
+      changeYear: true
+    });
+
+    // Define the report_scripts variable (semicolon-separated list)
+    var report_scripts = "<% $c->get_conf('report_engine') || 0 %>";
+    
+    // Split the report_scripts string by ";" and add a checkbox for each script
+    var scriptsArray = report_scripts.split(";");
+    scriptsArray.forEach(function(script) {
+      script = script.trim(); // Remove extra whitespace
+      if (script !== "") {
+        // Create checkbox input element
+        var checkbox = $('<input type="checkbox" name="report_script[]" value="' + script + '">');
+        // Create label for the checkbox
+        var label = $('<label></label>').text(" " + script);
+        // Append the checkbox and label to the container
+        $("#available-scripts").append(checkbox).append(label).append("<br>");
+      }
+    });
+
+    $("form").on("submit", function(event) {
+      event.preventDefault(); // Prevent default form submission
+
+      $("#loading-message").show();         // Show "please wait"
+      $("#final-message").hide().text("");  // Clear any previous final message
+
+      // Get start and end dates
+      var startDate = $("#start-date").val();
+      var endDate = $("#end-date").val();
+
+      var emailsText = $("#email-textarea").val();
+      var emails = emailsText.split("\n").map(function(email) {
+        return email.trim();
+      }).filter(function(email) {
+        return email !== "";
+      });
+
+      var selectedScripts = [];
+      $("input[name='report_script[]']:checked").each(function() {
+        selectedScripts.push($(this).val());
+      });
+
+      var formData = {
+        start_date: startDate,
+        end_date: endDate,
+        emails: emails,
+        report_scripts: selectedScripts
+      };
+
+      $.ajax({
+        url: "/ajax/report/generatereport",
+        type: "POST",
+        data: { reportData: JSON.stringify(formData) },
+        dataType: "json",
+        success: function(response) {
+          $("#loading-message").hide();
+          if (response.success) {
+            $("#final-message")
+              .css("color", "green")
+              .text(response.message || "Your report was submitted. You’ll receive an email when it’s ready.")
+              .show();
+          } else {
+            $("#final-message")
+              .css("color", "red")
+              .text("Error: " + (response.error || "Unknown error."))
+              .show();
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error("AJAX Error:", error);
+          $("#loading-message").hide();
+          $("#final-message")
+            .css("color", "red")
+            .text("Error sending report: " + error)
+            .show();
+        }
+      });
+    });
+  });
+</script>

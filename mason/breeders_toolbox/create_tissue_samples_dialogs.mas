@@ -81,7 +81,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                        <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
                                         <div class="col-sm-9" >
                                             <input name="create_tissue_samples_plants_per_plot_inherit_treatments" id="create_tissue_samples_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
                                         </div>
@@ -107,10 +107,17 @@
                                 <div id="create_tissue_samples_names_div">
                                 </div>
 
+
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                    <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
                                     <div class="col-sm-9" >
-                                        <input name="create_tissue_samples_per_plant_inherit_treatments" id="create_tissue_samples_per_plant_inherit_treatments" type="checkbox" checked disabled/>
+                                        <input name="create_tissue_samples_per_plant_inherit_treatments" id="create_tissue_samples_per_plant_inherit_treatments" type="checkbox"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Use Tissue Numbers: </label>
+                                    <div class="col-sm-9" >
+                                        <input name="create_tissue_samples_per_plant_use_tissue_numbers" id="create_tissue_samples_per_plant_use_tissue_numbers" type="checkbox"/>
                                     </div>
                                 </div>
                             </form><br/>
@@ -245,9 +252,15 @@ jQuery(document).ready(function(){
             is_checked = 1;
         }
 
+        var use_tissue_numbers;
+        if(jQuery('#create_tissue_samples_per_plant_use_tissue_numbers').is(":checked")){
+            use_tissue_numbers = 1;
+        }
+
         var tissue_names = [];
         jQuery('input[name="create_tissue_samples_tissue_name"]').each(function() {
             tissue_names.push(this.value);
+
         });
 
         jQuery.ajax({
@@ -259,6 +272,7 @@ jQuery(document).ready(function(){
             data: {
                 'tissue_samples_per_plant' : jQuery('#create_tissue_samples_per_plant_num').val(),
                 'inherits_plot_treatments' : is_checked,
+                'use_tissue_numbers' : use_tissue_numbers,
                 'tissue_samples_names' : JSON.stringify(tissue_names)
             },
             success: function(response) {

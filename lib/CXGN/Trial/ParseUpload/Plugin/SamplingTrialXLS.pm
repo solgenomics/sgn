@@ -11,6 +11,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $sample_tissue_types_string = $self->get_allowed_tissue_list();
     my %errors;
     my @error_messages;
     my %missing_accessions;
@@ -257,10 +258,10 @@ sub _validate_with_plugin {
         if ( ($date || $date ne '') && !$date =~ m/(\d{4})-(\d{2})-(\d{2})/ ) {
             push @error_messages, "Cell A$row_name: date must be YYYY-MM-DD format";
         }
-
-        #tissue_type must not be blank and must be either leaf, root, or step
-        if (!$tissue_type || $tissue_type eq '' || ($tissue_type ne 'leaf' && $tissue_type ne 'root' && $tissue_type ne 'stem' && $tissue_type ne 'fruit' && $tissue_type ne 'seed')) {
-            push @error_messages, "Cell F$row_name: column tissue type and must be either stem, leaf, seed, fruit, or root";
+        
+        my @sample_tissue_types = split ',',$sample_tissue_types_string;   #tissue_type must not be blank and must be in the list of allowed tissue types
+        if (!$tissue_type || $tissue_type eq '' || !(grep(/^$tissue_type$/, @sample_tissue_types))) {
+            push @error_messages, "Cell F$row_name: column tissue type and must be one of $sample_tissue_types_string";
         }
 
     }

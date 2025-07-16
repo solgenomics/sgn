@@ -91,7 +91,7 @@ function listGenCorPopulations ()  {
     var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
    
     if (listTypeSelPops) {
-        var selPopsList = solGS.sIndex.getListTypeSelPopulations();
+        var selPopsList = solGS.listTypeSelectionPopulation.getListTypeSelPopulations();
 
         if (selPopsList) {
             jQuery("#h2_select_a_population_div ul").append(selPopsList);  
@@ -181,7 +181,7 @@ function formatGenCorInputData (popId, type, indexFile) {
             } else {
                 jQuery(divPlace +" #heritability_message")
                     .css({"padding-left": '0px'})
-                    .html("This population has no valid traits to h2late.");
+                    .html("This trial has no valid traits to calculate heritability.");
         
             }
         },
@@ -216,7 +216,7 @@ function phenotypicHeritability () {
  
     var population = getPopulationDetails();
     
-    jQuery("#heritability_message").html("Running heritability... please wait...");
+    jQuery("#heritability_message").html("Running heritability...");
          
     jQuery.ajax({
             type: 'POST',
@@ -239,7 +239,7 @@ function phenotypicHeritability () {
             error: function(response) {
                 jQuery("#heritability_message")
                     .css({"padding-left": '0px'})
-                    .html("Error 1 occured preparing the phenotype data for heritability analysis.");
+                    .html("Please check if the data has replicates.");
 
 		jQuery("#run_pheno_heritability").show();
             }
@@ -274,7 +274,7 @@ function runPhenoHeritabilityAnalysis () {
             } else {
                 jQuery("#heritability_message")
                     .css({"padding-left": '0px'})
-                    .html("There is no heritability output for this dataset."); 
+                    .html("Please, check if there is numerical data and replicates for this trial."); 
         
 		jQuery("#run_pheno_heritability").show();
             }
@@ -294,7 +294,7 @@ function createHeritabilityTable (tableId) {
     
     var table = '<table id="' + tableId + '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
-    table    += '<th>Trait</th><th>VG</th><th>VE</th><th>Heritability</th>'; 
+    table    += '<th>Trait</th><th>VG</th><th>Vres</th><th>Heritability</th>'; 
     table    += '</tr></thead>';
     table    += '</table>';
 

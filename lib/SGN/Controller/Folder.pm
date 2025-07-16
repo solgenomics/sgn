@@ -29,15 +29,17 @@ sub folder_page :Path("/folder") Args(1) {
     my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->schema, folder_id => $folder_id });
 
     my $children = $folder->children();
-    # print STDERR Dumper $children;
+
     my @trials;
     my @cross_trials;
     my @genotyping_trials;
+    my @genotyping_projects;
     my @analyses_trials;
+    my @tracking_activities;
     my @child_folders;
     my $has_child_folders;
     foreach (@$children) {
-        #print STDERR $_->folder_type." : ".$_->name."\n";
+#        print STDERR "CHECK FOLDER =".Dumper($_->folder_type." : ".$_->name)."\n";
         if ($_->folder_type eq 'trial') {
             push @trials, $_;
         }
@@ -47,20 +49,27 @@ sub folder_page :Path("/folder") Args(1) {
         if ($_->folder_type eq 'genotyping_trial') {
             push @genotyping_trials, $_;
         }
+        if ($_->folder_type eq 'genotyping_project') {
+            push @genotyping_projects, $_;
+        }
         if ($_->folder_type eq 'analyses') {
             push @analyses_trials, $_;
+        }
+        if ($_->folder_type eq 'activity_record') {
+            push @tracking_activities, $_;
         }
         if ($_->folder_type eq 'folder') {
             $has_child_folders = 1;
             push @child_folders, $_;
         }
     }
-    #print STDERR Dumper \@crosses;
 
     $c->stash->{trials} = \@trials;
     $c->stash->{crossing_trials} = \@cross_trials;
     $c->stash->{genotyping_trials} = \@genotyping_trials;
+    $c->stash->{genotyping_projects} = \@genotyping_projects;
     $c->stash->{analyses_trials} = \@analyses_trials;
+    $c->stash->{tracking_activities} = \@tracking_activities;
     $c->stash->{child_folders} = \@child_folders;
     $c->stash->{project_parent} = $folder->project_parent();
     $c->stash->{breeding_program} = $folder->breeding_program();
@@ -69,6 +78,9 @@ sub folder_page :Path("/folder") Args(1) {
     $c->stash->{folder_for_trials} = $folder->folder_for_trials();
     $c->stash->{folder_for_crosses} = $folder->folder_for_crosses();
     $c->stash->{folder_for_genotyping_trials} = $folder->folder_for_genotyping_trials();
+    $c->stash->{folder_for_genotyping_projects} = $folder->folder_for_genotyping_projects();
+    $c->stash->{folder_for_tracking_activities} = $folder->folder_for_tracking_activities();
+    $c->stash->{folder_for_transformations} = $folder->folder_for_transformations();    
     $c->stash->{folder_description} = $folder_project->description();
     $c->stash->{has_child_folders} = $has_child_folders;
     if (!$folder->breeding_program) {

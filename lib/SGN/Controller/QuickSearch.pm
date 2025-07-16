@@ -36,7 +36,6 @@ search is Google search is repeated without the domain constraint to
 show the number of hits on the world wide web in total. A link for
 that search is also provided.
 
-
 ## TO DO: Make this a little more modern and move this code to
 ## an AJAX Controller...
 
@@ -54,10 +53,11 @@ my %searches = (
     marker     => { function => \&quick_mapped_geno_marker_search },
     manual_annotations    => { function => \&quick_manual_annotation_search    },
     automatic_annotations => { function => \&quick_automatic_annotation_search },
-    sgn_pages  => { function => \&quick_page_search },
+#    sgn_pages  => { function => \&quick_page_search },
 #    web        => { function => \&quick_web_search  },
     phenotype  => { function => \&quick_phenotype_search },
     accessions => { function => \&quick_accession_search },
+    vectors     => { function => \&quick_vector_search },
     plots      => { function => \&quick_plot_search },
     populations=> { function => \&quick_populations_search },
     trials     => { function => \&quick_trials_search },
@@ -188,6 +188,7 @@ sub redirect_if_only_one_possible : Private {
 sub execute_predefined_searches: Private {
     my ( $self, $c ) = @_;
 
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     # execute all the searches and stash the results
     for my $search_name ( sort keys %searches ) {
 	print STDERR "performing quick search for $search_name (". Dumper($searches{$search_name}).")...\n";
@@ -197,14 +198,14 @@ sub execute_predefined_searches: Private {
              $c->dbc->dbh,
              %$search,
              term => $c->stash->{term},
-	     schema => $c->dbic_schema("Bio::Chado::Schema"),
+	     schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
            );
          $c->stash->{results}{$search_name} = {
              result => $searchresults,
              time   => time - $b,
              exact  => $search->{exact}
            };
-	print STDERR Dumper($searchresults);
+	print STDERR "SEARCH RESULTS: ".Dumper($searchresults);
     }
 }
 
@@ -566,9 +567,27 @@ sub quick_accession_search {
     }
     else {
 	print STDERR "Found no accession... ???\n";
-	return [ '', "0 accession identifers" ];
+	return [ '', "0 accession identifiers" ];
     }
 }
+
+sub quick_vector_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    my ($id, $name) = $self->stock_search($schema, 'vector_construct', $term);
+    if ($id) {
+	print STDERR "Found vector_construct $id, $name\n";
+	return [ '/stock/'.$id.'/view', "1 vector construct: ".$name ];
+    }
+    else {
+	print STDERR "Found no vector construct\n";
+	return [ '', "0 vectors" ];
+    }
+}
+
 
 sub quick_plot_search {
     my $self = shift;

@@ -33,8 +33,14 @@ $folder_tree_refresh_name
                 <input name="edit_folders_for_genotyping_trials" id="edit_folders_for_genotyping_trials" type="checkbox"/>
               </div>
 	        </div>
+            <div class="form-group">
+      	      <label class="col-sm-3 control-label">Folder(s) for Genotyping Projects:</label>
+      	      <div class="col-sm-9" >
+                <input name="edit_folders_for_genotyping_projects" id="edit_folders_for_genotyping_projects" type="checkbox"/>
+              </div>
+	        </div>
 	       </form><br/>
-         
+
         </div>
       </div>
       <div class="modal-footer">
@@ -53,7 +59,7 @@ jQuery(document).ready(function() {
   jQuery('#edit_folders_button').click( function () {
     jQuery('#edit_folders_dialog').modal("show");
   });
-  
+
   jQuery('#edit_folders_categories_save_button').click( function () {
     save_folders_categories();
   });
@@ -64,6 +70,7 @@ function save_folders_categories() {
     var folder_for_trials = jQuery('#edit_folders_for_trials').is(":checked");
     var folder_for_crosses = jQuery('#edit_folders_for_crosses').is(":checked");
     var folder_for_genotyping_trials = jQuery('#edit_folders_for_genotyping_trials').is(":checked");
+    var folder_for_genotyping_projects = jQuery('#edit_folders_for_genotyping_projects').is(":checked");
     var selected = jQuery('#<% $folder_tree_identifier %>').jstree('get_bottom_selected');
     var trial_ids = selected.join(",");
     var trial_id_array = trial_ids.split(",");
@@ -73,10 +80,11 @@ function save_folders_categories() {
     for(var i=0; i<trial_id_array.length; i++){
         jQuery.ajax( {
             url: '/ajax/folder/'+trial_id_array[i]+'/categories',
-            data: { 
+            data: {
               'folder_for_trials' : folder_for_trials,
               'folder_for_crosses' : folder_for_crosses,
-              'folder_for_genotyping_trials' : folder_for_genotyping_trials
+              'folder_for_genotyping_trials' : folder_for_genotyping_trials,
+              'folder_for_genotyping_projects' : folder_for_genotyping_projects,
             },
             success: function(response) {
                 console.log('Success changing categories for folder');

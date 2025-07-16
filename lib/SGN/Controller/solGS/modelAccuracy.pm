@@ -176,8 +176,8 @@ sub create_model_summary {
     $self->get_model_accuracy_value($c, $model_id, $tr_abbr);
     my $accuracy_value = $c->stash->{accuracy_value};
 
-    my $heritability = $c->controller("solGS::Heritability")->get_heritability($c, $model_id, $trait_id);
-    my $additive_variance = $c->controller("solGS::Heritability")->get_additive_variance($c, $model_id, $trait_id);
+    my $heritability = $c->controller("solGS::gebvPhenoRegression")->get_heritability($c, $model_id, $trait_id);
+    my $additive_variance = $c->controller("solGS::gebvPhenoRegression")->get_additive_variance($c, $model_id, $trait_id);
 
     my $model_summary = [$trait_page, $accuracy_value, $additive_variance, $heritability];
 

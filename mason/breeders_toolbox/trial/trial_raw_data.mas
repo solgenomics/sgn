@@ -1,0 +1,120 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &>
+
+<h3>Select Trait</h3>
+
+<div id="trait_selector_for_raw_data">[Loading...]</div><br />
+<button id="raw_data_trait_select_button">Choose trait</button>
+<br />
+<br />
+
+<table id="raw_trait_data_table">
+</table>
+
+<script>
+
+    jQuery(window).ready( function() {
+
+        jQuery('#trial_raw_data_onswitch').click( function() {
+
+	    create_trait_menu_for_trial(<% $trial_id %>)
+	    .then( (result) => fetch_traits(result.result.searchResultsDbId))
+	    .then( (result) => build_menu(result.result))
+	    .then( (final) =>  {
+		});
+	});
+
+
+	jQuery('#raw_data_trait_select_button').click( function() {
+	   var trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
+           get_trait_data(<% $trial_id %>, trait_id)
+	   .then( (result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))
+	   .then( (result) => displayRawObservations(result.result) )
+	   .then( (final) => {
+	   });
+        });
+       
+
+    });
+    
+
+    function create_trait_menu_for_trial(trial_id) {
+
+        return jQuery.ajax( {
+            'url': "/brapi/v2/search/variables",
+	    'data': { 'studyDbIds': [ trial_id ], 'pageSize': 10000 },
+	    'method' : 'POST',
+	});
+     }
+
+     function fetch_traits(searchResultsDbId) {
+
+	return jQuery.ajax( {
+	       'url': "/brapi/v2/search/variables/"+searchResultsDbId,
+	       'method': "GET",
+	       'data': { pageSize: 10000 }
+	       });
+       
+	       
+
+    }   
+
+    function build_menu(result) {
+
+	var menu = '<select id="selectRawDataTrait">';
+	for (var i=0; i<result.data.length; i++) {
+	    menu += '<option value="'+result.data[i].observationVariableDbId+'">'+result.data[i].trait.traitName+'</option>';
+	}
+	menu += '</select>';   
+
+	jQuery('#trait_selector_for_raw_data').html(menu);
+     }
+	    
+
+    function get_trait_data(trial_id, trait_id) {
+
+       return jQuery.ajax( {
+       	      url: "/brapi/v2/search/observations/",
+	      data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ trait_id ] },
+	      method: "POST"
+       });
+
+    }
+
+    function fetch_raw_observation_data_table(searchResultsDbId) {
+
+       return jQuery.ajax( {
+       	      url: "/brapi/v2/search/observations/"+searchResultsDbId,
+	      data: { pageSize: 10000 },
+	      method: "GET"
+	      });     
+    }
+
+
+    function displayRawObservations(result) {
+
+	var data = new Array();
+	for (var i=0; i<result.data.length; i++) {
+	    data.push( [ result.data[i].observationDbId, result.data[i].observationUnitName, result.data[i].observationVariableName, result.data[i].value, result.data[i].collector ]);
+	}
+
+	jQuery('#raw_trait_data_table').DataTable( {
+	   'destroy': true,
+	   'columns': [
+	     { title: 'observation id'},
+	     { title: 'observation unit' },
+	     { title: 'observation variable' },
+	     { title: 'value' },
+	     { title: 'collector' }
+	     ],
+	   'data' : data
+	 });
+	     
+    }
+
+
+</script>

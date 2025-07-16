@@ -12,6 +12,7 @@ use JSON;
 use Spreadsheet::Read;
 
 use CXGN::Dataset;
+use Text::CSV ("csv");
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
@@ -47,21 +48,57 @@ my $trait_id = $sp_data->{options}->[0]->[0];
 
 $mech->get_ok('http://localhost:3010/ajax/heritability/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id, 'run the heritability analysis');
 
+sleep(2);
+
 my $rdata = JSON::Any->decode($mech->content());
 
 print STDERR "RDATA: ".Dumper($rdata);
 
-# check if file names were returned
-#
-ok($rdata->{figure3}, "figure 3 returned");
-ok($rdata->{figure4}, "figure 4 returned");
-ok($rdata->{h2Table}, "h2Table returned");
+ok($rdata->{h2Table}, "h2TableJson returned");
+ok($rdata->{h2CsvTable}, "h2CsvTable returned");
 
 # check if files were created
-#
-ok( -e "static/".$rdata->{figure3}, "figure 3 created");
-#ok( -e "static/".$rdata->{figure4}, "figure 4 created");
 ok( -e "static/".$rdata->{h2Table}, "table created");
+ok( -e "static/".$rdata->{h2CsvTable}, "csv table file created");
+
+my $test_basic_h2_file = csv(in => "static/".$rdata->{h2CsvTable});
+
+is(@$test_basic_h2_file[1]->[1], 'dry matter content percentage', "check value of row name in a table");
+is(@$test_basic_h2_file[1]->[5], '49.92', "check value of Vres fresh.root.weight in a table");
+
+# run test for dataset with outliers but with false outliers parameter
+my $outliers_included_dataset_id = 1;
+my $outliers_included_trait_id = "fresh root weight";
+$mech->get_ok('http://localhost:3010/ajax/heritability/generate_results?dataset_id='.$outliers_included_dataset_id.'&trait_id='.$outliers_included_trait_id, 'run the heritability analysis');
+
+my $rdata_full_set = JSON::Any->decode($mech->content());
+ok($rdata_full_set->{h2Table}, "h2TableJson returned");
+ok($rdata_full_set->{h2CsvTable}, "h2CsvTable returned");
+
+my $test_included_h2_file = csv(in => "static/".$rdata_full_set->{h2CsvTable});
+is(@$test_included_h2_file[2]->[1], 'fresh root weight', "check value of row name in a table");
+is(@$test_included_h2_file[2]->[5], '15.542', "check value of Heritability fresh.root.weight in a table");
+
+# run test for dataset with outliers but with false outliers parameter
+my $outliers_excluded_dataset_id = 1;
+my $outliers_excluded_trait_id = "dry matter content percentage";
+
+# run test for dataset with outliers but with true outliers parameter
+$mech->get_ok('http://localhost:3010/ajax/heritability/generate_results?dataset_id='.$outliers_excluded_dataset_id.'&trait_id='.$outliers_excluded_trait_id.'&dataset_trait_outliers=1', 'run the heritability analysis');
+my $rdata_excluded_set = JSON::Any->decode($mech->content());
+
+# check if names are created in jsn response
+ok($rdata_excluded_set->{h2Table}, "h2TableJson returned");
+ok($rdata_excluded_set->{h2CsvTable}, "h2CsvTable returned");
+
+# check if files were created
+ok( -e "static/".$rdata_excluded_set->{h2Table}, "table created");
+ok( -e "static/".$rdata_excluded_set->{h2CsvTable}, "csv table file created");
+
+# check if values are changed for set with outliers excluded
+my $test_excluded_h2_file = csv(in => "static/".$rdata_excluded_set->{h2CsvTable});
+is(@$test_excluded_h2_file[2]->[1], 'fresh root weight', "check value of row name in a table");
+is(@$test_excluded_h2_file[2]->[5], '8.864', "check value of Heritability fresh.root.weight in a table");
 
 # remove changes to the database
 #

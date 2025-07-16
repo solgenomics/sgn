@@ -1,7 +1,18 @@
 <%init>
-  my $tag = `git describe --abbrev=0 --tags`;
-  my $commit = `git rev-parse --short HEAD`;
-  my $updated = `git log -1 --format=%cd`;
+  my $tag;
+    my $commit;
+    my $updated;
+
+    system("git -C . rev-parse 2>/dev/null");
+    my $isGit = `echo $?`;
+    if($isGit == 0) {
+        $tag = `git describe --abbrev=0 --tags`;
+        $commit = `git rev-parse --short HEAD`;
+        $updated = `git log -1 --format=%cd`;
+    } else {
+        $tag = $ENV{VERSION};
+        $updated = $ENV{BUILD_DATE};
+    }
 </%init>
 
 <!-- BEGIN SITE SPECIFIC FOOTER. -->
@@ -13,17 +24,25 @@
       <div class="row">
           <div class="col-12 col-md-9">
             <span style="font-face:arial;font-size:10pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span> is located at the <a href="https://btiscience.org">Boyce Thompson Institute</a>.<br />
-            <a href="https://btiscience.org"><img src="https://cassavabase.org/static/img/bti_logo_2016.png" width="200"></a>
+            <a href="https://btiscience.org"><img src="/static/img/bti_logo_2024.png" width="200"></a>
           </div>
+
+
           <div class="col-12 col-md-3">
             <div class="git-version">
               <p>
                 <strong>Version</strong>
                 <br />
+% if($isGit == 0) {
                 <span class="git-version-commit"><a href="https://github.com/solgenomics/sgn/commits/<% $commit %>"><% $commit %></a></span>&nbsp;
                 <span class="git-version-tag"><a href="https://github.com/solgenomics/sgn/commits/<% $tag %>"><% $tag %></a></span>
+% } else {
+                <span class=""><% $tag %></span>&nbsp;
+% }
                 <br />
                 <span class="git-version-updated"><% $updated %></span>
+		<br /><br />
+		<a target="_new" href="https://brapi.org/"><img src="/documents/img/brapi-logo.svg" width="160" /></a> 
               </p>
             </div>
           </div>

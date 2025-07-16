@@ -1,0 +1,54 @@
+<%args>
+$trial_id
+</%args>
+
+<div style="overflow:scroll">
+    <table id="genotyping_project_archived_vcf_table" width="100%" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Date Uploaded</th>
+                <th>Uploaded By</th>
+                <th>Options</th>
+            </tr>
+        </thead>
+        <tbody id="genotyping_project_archived_vcf_table_body"></tbody>
+    </table>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+  jQuery.ajax( {
+    'url': '/ajax/genotyping_project/has_archived_vcf',
+    'method': 'GET',
+    'data': { 
+      'genotyping_project_id': <% $trial_id %>
+    },
+    'success': function(response) {
+      let html = "";
+      if ( response && response[<% $trial_id %>] ) {
+        var data = response[<% $trial_id %>];
+        for ( let i = 0; i < data.length; i++ ) {
+          html += "<tr>";
+          html += `<td>${data[i].basename}</td>`;
+          html += `<td>${data[i].create_date}</td>`;
+          html += `<td><a href='/solpeople/profile/${data[i].uploader_id}'>${data[i].uploader_username}</a></td>`;
+          if ( data[i].exists === "true" ) {
+            html += `<td><a href='/ajax/genotyping_project/download_archived_vcf?genotyping_project_id=<% $trial_id %>&basename=${data[i].basename}' target='_blank'>Download</a></td>`;
+          }
+          else {
+            html += "<td>File not found</td>";
+          }
+          html += "</tr>";
+        }
+      }
+      jQuery("#genotyping_project_archived_vcf_table_body").html(html);
+    },
+    error: function(response) {
+      alert('An error occurred');
+    }
+  });
+});
+
+</script>

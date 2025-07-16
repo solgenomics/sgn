@@ -24,6 +24,7 @@ use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
+use CXGN::Cvterm;
 
 has 'chado_schema' => (
 		 is       => 'ro',
@@ -113,22 +114,42 @@ sub validate {
     }
     my $trait_name = $trait_props->{'trait_name'};
 
-    #make sure that the trait name is valid
-    my $trait_cvterm;
-    $trait_cvterm = $chado_schema->resultset("Cv::Cvterm")
-      ->find( {
-	       'dbxref.db_id' => $db_rs->first()->db_id(),
-	       'name'=> $trait_name,
-	      },
-	      {
-	       'join' => 'dbxref'
-	      }
-	    );
-    if (!$trait_cvterm) {
-      print STDERR "Could not find trait $trait_name\n";
-      return;
+    my $accession;
+    
+    if ($trait_name =~ /(.*)\|(.*$)/) {
+        $trait_name = $1;
+        $accession = $2;
     }
 
+    print STDERR "Working with trait $trait_name, accession $accession\n";
+    my $trait_cvterm;
+    
+    if ($accession) { 
+	my $cvterm = CXGN::Cvterm->new( { schema => $chado_schema, accession => $accession });
+	$trait_cvterm = $cvterm->cvterm();
+	
+	if (!$cvterm) {
+	    print STDERR "Could not find trait $trait_name (with $accession)\n";
+	    return;
+	}
+    }
+
+    #make sure that the trait name is valid
+    else { 
+	$trait_cvterm = $chado_schema->resultset("Cv::Cvterm")
+	    ->find( {
+		'dbxref.db_id' => $db_rs->first()->db_id(),
+		    'name'=> $trait_name,
+		    },
+		    {
+			'join' => 'dbxref'
+		    }
+	    );
+	if (!$trait_cvterm) {
+	    print STDERR "Could not find trait $trait_name\n";
+	    return;
+	}
+    }
     #make sure that the trait prop names are valid
     foreach my $prop_name (keys %{$trait_props}) {
       if ($prop_name ne 'trait_name') {
@@ -186,18 +207,38 @@ sub store {
 
     foreach my $trait_props (@trait_props_data) {
 
+	
       my $trait_name = $trait_props->{'trait_name'};
-
-      #get the cvterm for the trait
-      my $trait_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	->find( {
-		 'dbxref.db_id' => $db_rs->first()->db_id(),
-		 'name'=> $trait_name,
-		},
-		{
-		 'join' => 'dbxref'
-		}
+      my $accession;
+      
+      if ($trait_name =~ /(.*)\|(.*$)/) {
+	  $trait_name = $1;
+	  $accession = $2;
+      }
+      
+      my $trait_cvterm;
+      
+      if ($accession) { 
+	  my $cvterm = CXGN::Cvterm->new( { schema => $chado_schema, accession => $accession });
+	  $trait_cvterm = $cvterm->cvterm();
+	  
+	  if (!$cvterm) {
+	      print STDERR "Could not find trait $trait_name (with $accession)\n";
+	      return;
+	  }
+      }
+      else { 
+	  #get the cvterm for the trait
+	  $trait_cvterm = $chado_schema->resultset("Cv::Cvterm")
+	      ->find( {
+		  'dbxref.db_id' => $db_rs->first()->db_id(),
+		      'name'=> $trait_name,
+		      },
+		      {
+			  'join' => 'dbxref'
+		      }
 	      );
+      }
 
       foreach my $prop_name (keys %{$trait_props}) {
 	if ($prop_name ne 'trait_name') {

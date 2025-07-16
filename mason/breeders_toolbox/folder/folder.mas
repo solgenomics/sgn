@@ -20,13 +20,18 @@ $folder_description
 $trials
 $crossing_trials
 $genotyping_trials
+$genotyping_projects
 $analyses_trials
+$tracking_activities
 $child_folders
 $project_parent => undef
 $breeding_program => undef
 $folder_for_trials
 $folder_for_crosses
 $folder_for_genotyping_trials
+$folder_for_genotyping_projects
+$folder_for_tracking_activities
+$folder_for_transformations
 $has_child_folders => undef
 </%args>
 
@@ -36,10 +41,10 @@ $has_child_folders => undef
 
 <& /page/page_title.mas, title=>"Folder detail for ".$folder_name &>
 
-<& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name(), folder_for_trials => $folder_for_trials, folder_for_crosses => $folder_for_crosses, folder_for_genotyping_trials => $folder_for_genotyping_trials &>
+<& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name(), folder_for_trials => $folder_for_trials, folder_for_crosses => $folder_for_crosses, folder_for_genotyping_trials => $folder_for_genotyping_trials, folder_for_genotyping_projects => $folder_for_genotyping_projects , folder_for_tracking_activities => $folder_for_tracking_activities, folder_for_transformations => $folder_for_transformations &>
 <& /breeders_toolbox/folder/folder_move.mas, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name()   &>
 <& /breeders_toolbox/folder/edit_folder_name.mas, trial_id=>$folder_id, trial_name=>$folder_name, trial_type=>"Folder" &>
-<& /breeders_toolbox/folder/folder_category_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, folder_for_trials=>$folder_for_trials, folder_for_crosses=>$folder_for_crosses, folder_for_genotyping_trials=>$folder_for_genotyping_trials &>
+<& /breeders_toolbox/folder/folder_category_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, folder_for_trials=>$folder_for_trials, folder_for_crosses=>$folder_for_crosses, folder_for_genotyping_trials=>$folder_for_genotyping_trials, folder_for_genotyping_projects=>$folder_for_genotyping_projects , folder_for_tracking_activities=>$folder_for_tracking_activities, folder_for_transformations=>$folder_for_transformations&>
 
 <div>
 
@@ -48,6 +53,8 @@ $has_child_folders => undef
     <li role="presentation"><a href="#analyses" aria-controls="analyses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-stats text-success"></span>&nbsp;&nbsp;&nbsp;Analyses</a></li>
     <li role="presentation"><a href="#crosses" aria-controls="crosses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-grain text-success"></span>&nbsp;&nbsp;&nbsp;Crossing Experiments</a></li>
     <li role="presentation"><a href="#genotyping_trials" aria-controls="genotyping_trials" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-th text-success"></span>&nbsp;&nbsp;&nbsp;Genotyping Plates</a></li>
+    <li role="presentation"><a href="#genotyping_projects" aria-controls="genotyping_projects" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-th text-success"></span>&nbsp;&nbsp;&nbsp;Genotyping Projects</a></li>
+    <li role="presentation"><a href="#tracking_activities" aria-controls="tracking_activities" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-list-alt text-success"></span>&nbsp;&nbsp;&nbsp;Tracking Activities</a></li>
     <li role="presentation"><a href="#folders" aria-controls="folders" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;&nbsp;&nbsp;Folders</a></li>
     <li role="presentation"><a href="#breeding_program" aria-controls="breeding_program" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;&nbsp;&nbsp;Breeding Program</a></li>
   </ul>
@@ -100,6 +107,34 @@ $has_child_folders => undef
         </tbody>
         </table>
       </div>
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade" id="genotyping_projects">
+      <div class="well">
+        <h3>Genotyping Projects in Folder</h3>
+        <table name="folder_datatables_table" class="table table-hover table-bordered">
+        <thead><tr><th>Genotyping Project Name</th></tr></thead>
+        <tbody>
+% foreach (@$genotyping_projects) {
+            <tr><td><a href="/breeders/trial/<% $_->folder_id() %>" target=_blank><% $_->name() %></a></td></tr>
+% }
+        </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade" id="tracking_activities">
+        <div class="well">
+            <h3>Projects in Folder</h3>
+            <table name="folder_datatables_table" class="table table-hover table-bordered">
+                <thead><tr><th>Tracking Activities Project Name</th></tr></thead>
+                <tbody>
+% foreach (@$tracking_activities) {
+                    <tr><td><a href="/breeders/trial/<% $_->folder_id() %>" target=_blank><% $_->name() %></a></td></tr>
+% }
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div role="tabpanel" class="tab-pane fade" id="genotyping_trials">
@@ -192,6 +227,14 @@ $has_child_folders => undef
 % }
                     </tr>
                     <tr>
+                        <td><h5>Folder For Genotyping Projects</h5></td>
+% if($folder_for_genotyping_projects){
+                        <td><h4><span class="glyphicon glyphicon-ok"></span></h4></td>
+% } else {
+                        <td><h4><span class="glyphicon glyphicon-remove"></span></h4></td>
+% }
+                    </tr>
+                    <tr>
                         <td><h5>Folder For Genotyping Plates</h5></td>
 % if($folder_for_genotyping_trials){
                         <td><h4><span class="glyphicon glyphicon-ok"></span></h4></td>
@@ -199,6 +242,23 @@ $has_child_folders => undef
                         <td><h4><span class="glyphicon glyphicon-remove"></span></h4></td>
 % }
                     </tr>
+                    <tr>
+                        <td><h5>Folder For Tracking Activities</h5></td>
+% if($folder_for_tracking_activities){
+                        <td><h4><span class="glyphicon glyphicon-ok"></span></h4></td>
+% } else {
+                        <td><h4><span class="glyphicon glyphicon-remove"></span></h4></td>
+% }
+                    </tr>
+                    <tr>
+                        <td><h5>Folder For Transformation Projects</h5></td>
+% if($folder_for_transformations){
+                        <td><h4><span class="glyphicon glyphicon-ok"></span></h4></td>
+% } else {
+                        <td><h4><span class="glyphicon glyphicon-remove"></span></h4></td>
+% }
+                    </tr>
+
                 </tbody>
             </table>
             <button class="btn btn-sm btn-default" id="change_folder_categories_button">Add Additional Folder Type</button>

@@ -1,0 +1,106 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/correlation/analysis.mas - correlation analysis template
+
+To add the correlation analysis interface any where on the website
+add the template '/solgs/tools/correlation/analysis.mas' in your mason template
+and pass any of the arguments listed below.
+Adding the 'data_structure' argument is also recommended.
+A data structure can be any of this: 'list', if of list type; 'dataset', if of dataset type;
+'trial', if of just a trial.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$trial_id => undef
+$list_id => undef
+$dataset_id => undef
+$data_structure => undef
+$pop_name => undef
+$pop_type => undef
+$corr_pop_id => undef
+$corr_pop_name => undef
+$data_set_type => undef
+
+
+</%args>
+
+<%perl>
+
+$corr_pop_id = $trial_id if !$corr_pop_id;
+
+if (!$data_structure) {
+   if ($dataset_id) {
+      $data_structure = 'dataset';
+   } elsif ($list_id) {
+     $data_structure = 'list';
+   }
+}
+
+
+my $url = $c->req->path;
+
+my $title; 
+my $collapsed = 0;
+my $collapsible = 0;
+
+if ($url !~ /correlation\/analysis/) {
+  $title = 'Phenotypic correlation analysis (Pearson)';
+  $collapsible = 1;
+  $collapsed = 1 if $url =~ /breeders\/trial/;
+}
+
+</%perl>
+
+<& /solgs/tools/base.mas &>
+
+% if ($url =~ /correlation\/analysis/) {
+
+<& /page/page_title.mas,
+   title => "Correlation Analysis"
+  &>
+  
+%}
+
+<&| /page/info_section.mas,
+  collapsible => $collapsible,
+  collapsed   => $collapsed,
+  title       => $title
+&>
+
+  <div id='corr_div'>
+
+% if ($url =~ /correlation\/analysis/) {
+
+    <& /solgs/tools/login.mas,
+    tool_url => '/correlation/analysis/' ,
+    analysis_type => 'correlation' 
+    &>
+
+%} else {
+    <input id="run_correlation" class="btn btn-success" type="button" value="Run correlation" />
+%}
+
+<& plot.mas,
+   corr_pop_id => $corr_pop_id,
+   corr_pop_name => $corr_pop_name,
+  list_id => $list_id,
+  dataset_id => $dataset_id,
+  data_structure => $data_structure,
+  data_set_type => $data_set_type
+  &>
+
+</div>
+</&>
+
+
+

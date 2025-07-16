@@ -45,6 +45,7 @@ perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D imagebreedv4 -U pos
 
  -h project_id (Will associate genotype data to an existing project_id)
  -j protocol_id (Will associate genotype data to an existing nd_protocol_id)
+ -T cvterm for genotype data in the vcf file (either 'vcf_snp_genotypying'' or 'vcf_phg_genotyping''). Default is vcf_snp_genotyping. vcf_phg_genotyping refers to Practical Haplotype Graph (PHG) type of genotype vcf data file.
 
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
@@ -67,6 +68,7 @@ Can use a transposedVCF or normal VCF
 =cut
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use Data::Dumper;
@@ -90,9 +92,9 @@ use File::Basename qw | basename dirname|;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
-our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_v, $opt_r, $opt_R, $opt_i, $opt_s, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w, $opt_A, $opt_B);
+our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_v, $opt_r, $opt_R, $opt_i, $opt_s, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w, $opt_A, $opt_B, $opt_T);
 
-getopts('H:U:i:s:r:R:u:c:o:v:tD:p:y:g:axsm:k:l:q:zf:d:b:n:e:h:j:wAB:');
+getopts('H:U:i:s:r:R:u:c:o:v:tD:p:y:g:axsm:k:l:q:zf:d:b:n:e:h:j:wAB:T:');
 
 if ($opt_j && !$opt_h && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || (!$opt_i && !$opt_s) || !$opt_p || !$opt_y || !$opt_l || !$opt_q || !$opt_r || !$opt_R || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ) {
     pod2usage(-verbose => 2, -message => "When a protocol id is given (-j) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file VCF) or -s (input file Tassel HDF5), -r (archive path), -R (root path), -p (project name), -y (project year), -l (location name of project), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure thi file is a fresh file between loadings.)\n");
@@ -170,7 +172,7 @@ if ($opt_c eq 'VCF' && !$opt_w) {
     open (my $Fout, ">", $opt_o) || die "Can't open file $opt_o\n";
     open (my $F, "<", $file) or die "Can't open file $file \n";
     my @outline;
-    my $lastcol;
+    my $lastcol = 0;
     while (<$F>) {
         if ($_ =~ m/^\##/) {
             print $Fout $_;
@@ -244,7 +246,7 @@ if ($protocol_id){
 
 my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
 my @found_organisms;
-my $h = $schema->storage->dbh()->prepare($organism_q);
+$h = $schema->storage->dbh()->prepare($organism_q);
 $h->execute($organism_species);
 while (my ($organism_id) = $h->fetchrow_array()){
     push @found_organisms, $organism_id;
@@ -269,13 +271,28 @@ my $parser = CXGN::Genotype::ParseUpload->new({
 });
 
 $parser->load_plugin($opt_c);
-$parser->parse_with_iterator();
+my $parser_return = $parser->parse_with_iterator();
+if ($parser->get_parse_errors()) {
+    my $parse_errors = $parser->get_parse_errors();
+    print STDERR Dumper $parse_errors;
+    die("parse errors");
+}
 
 my $project_id;
 my $protocol = $parser->protocol_data();
 my $observation_unit_names_all = $parser->observation_unit_names();
 $protocol->{'reference_genome_name'} = $reference_genome_name;
 $protocol->{'species_name'} = $organism_species;
+
+my $vcf_genotyping_type = $opt_T ? $opt_T : 'vcf_snp_genotyping';
+# my $genotyping_type;
+my $genotype_data_type;
+
+if ($vcf_genotyping_type =~ /vcf_phg_genotyping/) {
+    $genotype_data_type = 'PHG';
+} else {
+    $genotype_data_type = 'SNP';
+}
 
 my $store_args = {
     bcs_schema=>$schema,
@@ -301,7 +318,8 @@ my $store_args = {
     archived_filename=>$archived_filename_with_path,
     archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
     temp_file_sql_copy=>$opt_B,
-    genotyping_data_type=>'SNP'
+    genotyping_data_type=> $genotype_data_type,
+    vcf_genotyping_type => $vcf_genotyping_type,
 };
 
 if ($opt_c eq 'VCF') {
@@ -324,11 +342,58 @@ if (scalar(keys %$genotype_info) > 0) {
         die;
     }
     if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-        my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+        my $warning_string = join "\n", @{$verified_errors->{warning_messages}};
         if (!$opt_A){
             print STDERR Dumper $warning_string;
             print STDERR "You can accept these warnings and continue with store if you use -A\n";
             die;
+        }
+    }
+
+    my @protocol_match_errors;
+    if ($protocol_id) {
+        my $new_marker_data = $protocol->{markers};
+        my $stored_protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id
+        });
+        my $stored_markers = $stored_protocol->markers();
+
+        my @all_stored_markers = keys %$stored_markers;
+        my %compare_marker_names = map {$_ => 1} @all_stored_markers;
+        my @mismatch_marker_names;
+        while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+            while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
+                if (exists($compare_marker_names{$marker_name})) {
+                    while (my ($key, $value) = each %$new_marker_details) {
+                        if ($value ne ($stored_markers->{$marker_name}->{$key})) {
+                            push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                        }
+                    }
+                } else {
+                    push @mismatch_marker_names, $marker_name;
+                }
+            }
+        }
+
+        if (scalar(@mismatch_marker_names) > 0){
+            foreach my $error ( sort @mismatch_marker_names) {
+                print STDERR "$error\n";
+	    }
+	    print STDERR "These marker names in your file are not in the selected protocol.\n";
+            die; 
+        }
+
+        if (scalar(@protocol_match_errors) > 0){
+            my $protocol_warning;
+            foreach my $match_error (@protocol_match_errors) {
+                $protocol_warning .= "$match_error\n";
+            }
+            if (!$opt_A){
+                print STDERR Dumper $protocol_warning;
+		print STDERR "Protocol match error\n";
+                die;
+            }
         }
     }
 

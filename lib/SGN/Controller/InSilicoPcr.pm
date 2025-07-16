@@ -156,7 +156,7 @@ sub run_pcr_blast :Path('/tools/pcr_results') :Args(0) {
   	DIR=> $blast_tmp_output,
 	);
   
-  print STDERR "Opening file for sequence ($seqfile)... ";
+  #print STDERR "Opening file for sequence ($seqfile)... ";
   open(my $FH, ">", $seqfile) || die "Can't open file for query ($seqfile)\n";
   print $FH $sequence if $sequence;
   close($FH);
@@ -272,11 +272,11 @@ sub _blast_to_pcr {
 
   foreach my $forward (@fprimer_ids){
     
-    print STDERR "fwd: ".$subject_id{$forward}."\t".$s_start{$forward}."\t".$align_length{$forward}."\t".$mismatches {$forward}."\n";
+      #print STDERR "fwd: ".$subject_id{$forward}."\t".$s_start{$forward}."\t".$align_length{$forward}."\t".$mismatches {$forward}."\n";
    # print STDERR "params: product length: ".$params->{productLength}."\tmm: ".$params->{allowedMismatches}."\tfwd length: ".$params->{flength}."\trev length: ".$params->{rlength}."\n";
     
     foreach my $reverse (@rprimer_ids){
-	print STDERR "rev: ".$subject_id{$reverse}."\t".$s_start{$reverse}."\t".$align_length{$reverse}."\t".$mismatches {$reverse}."\n";
+	#print STDERR "rev: ".$subject_id{$reverse}."\t".$s_start{$reverse}."\t".$align_length{$reverse}."\t".$mismatches {$reverse}."\n";
       
 	if ($subject_id{$forward} eq $subject_id{$reverse}    #both on the same subject seq
 	    and  $s_start{$reverse}- $s_start{$forward}<= $params->{productLength} #product Length is within user's choice
@@ -285,9 +285,9 @@ sub _blast_to_pcr {
 	    and  $align_length{$forward} == $params->{flength}  #primers match exact length
 	    and  $align_length {$reverse} == $params->{rlength}
 	    ) {
-	    print STDERR "\ninside the if\n";
-	    print STDERR "orientation fwd: ".$orientation{$forward}." s_end fwd: ".$s_end{$forward}."\n";
-	    print STDERR "orientation rev: ".$orientation{$reverse}." s_end rev: ".$s_end{$reverse}."\n";
+	    #print STDERR "\ninside the if\n";
+	    #print STDERR "orientation fwd: ".$orientation{$forward}." s_end fwd: ".$s_end{$forward}."\n";
+	    #print STDERR "orientation rev: ".$orientation{$reverse}." s_end rev: ".$s_end{$reverse}."\n";
 	    
 	    #if the product is in the + strand of parent seq add a + sign in the array
 	    

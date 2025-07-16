@@ -84,7 +84,7 @@ my $db_user_password = $config->{dbpass};
 my $dbhost = $config->{dbhost} || 'localhost';
 my $dbport = $config->{dbport} || '5432';
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
-print STDERR "Using $dbhost:$dbport\n";
+print "Using $dbhost:$dbport\n";
 my $test_dsn = $config->{DatabaseConnection}->{sgn_test}->{dsn};
 my $catalyst_server_port = 3010;
 
@@ -129,7 +129,7 @@ if (! $ENV{TEST_DB_NAME}) {
     print STDERR "Done.\n";
 }
 
-print STDERR "# Creating sgn_fixture.conf file... ";
+print STDERR "# Creating sgn_fixture.conf file (using $dbname)... ";
 $config->{dbname} = $dbname;
 $test_dsn =~ s/dbname=(.*)$/dbname=$dbname/;
 $config->{DatabaseConnection}->{sgn_test}->{dsn} = $test_dsn;
@@ -182,7 +182,7 @@ else {
 
 	if (!$verbose) {
 	    print STDERR "# [Server logfile at $logfile]\n";
-	    open (STDERR, ">$logfile") || die "can't open logfile.";
+	    open (STDERR, ">", $logfile) || die "can't open logfile.";
 	}
 	Catalyst::ScriptRunner->run('SGN', 'Server');
 
@@ -193,7 +193,6 @@ else {
 		print STDERR "# [ --noserver option: No logfile to remove]\n";
 	    }
 	    else {
-		print STDERR "# Delete server logfile... ";
 		close($logfile);
 		unlink $logfile;
 		print STDERR "Done.\n";
@@ -241,11 +240,19 @@ unless( $prove_pid ) {
 
     my $v = $verbose ? 'v' : '';
 
+    print STDERR "PROVE ARGS: ".Dumper(\@prove_args);
     $app->process_args(
         '-lr'.$v,
         ( map { -I => $_ } @INC ),
         @prove_args
-        );
+        );    
+
+    if (!$nocleanup) {
+	close($logfile);
+	unlink $logfile;
+	print STDERR "Done.\n";
+    }
+	
     exit( $app->run ? 0 : 1 );
 }
 
@@ -277,10 +284,10 @@ if (!$nocleanup) {
 	print STDERR "# [ --noserver option: No logfile to remove]\n";
     }
     else {
-	# print STDERR "# Delete server logfile... ";
-	# close($logfile);
-	# unlink $logfile;
-	# print STDERR "Done.\n";
+	print STDERR "# Delete server logfile... \n";
+	close($logfile);
+	unlink $logfile;
+	
 
 	print STDERR "# Delete fixture conf file... ";
 	unlink "sgn_fixture.conf";

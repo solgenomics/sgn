@@ -21,7 +21,11 @@ use Data::Dumper;
 use JSON;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Vector;
+use CXGN::Stock::Vector::ParseUpload;
 use Try::Tiny;
+use Encode;
+use JSON::XS qw | decode_json |;
+use utf8;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -38,7 +42,8 @@ sub sync_cass_constructs_POST {
     my $self = shift;
     my $c = shift;
     my $status = '';
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $construct_names = decode_json($c->req->param("data"));
     my %construct_hash = %$construct_names;
@@ -90,7 +95,6 @@ sub create_vector_construct_POST {
     my $self = shift;
     my $c = shift;
     my $status = '';
-    my $schema = $c->dbic_schema("Bio::Chado::Schema",'sgn_chado');
     my $vector_list;
     my $organism_list;
     my $user_id = $c->user ? $c->user->get_object()->get_sp_person_id():undef;
@@ -101,11 +105,12 @@ sub create_vector_construct_POST {
         return;
     }
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema",'sgn_chado', $user_id);
     my $dbh = $schema->storage()->dbh();
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
 
-    my $data = decode_json($c->req->param("data"));
+    my $data = decode_json( encode("utf8", $c->req->param('data')));
 
     foreach (@$data){
         my $vector = $_->{uniqueName} || undef;
@@ -166,6 +171,7 @@ sub create_vector_construct_POST {
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
 
     my @added_stocks;
+    my @added_fullinfo_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
             my $species = $params->{species_name} || undef;
@@ -180,6 +186,8 @@ sub create_vector_construct_POST {
             my $gene = $params->{Gene} || undef;
             my $promotors = $params->{Promotors} || undef;
             my $terminators = $params->{Terminators} || undef;
+            my $plant_antibiotic_resistant_marker = $params->{PlantAntibioticResistantMarker} || undef;
+            my $bacterial_resistant_marker = $params->{BacterialResistantMarker} || undef;
 
             if (exists($allowed_organisms{$species})){
                 my $stock = CXGN::Stock::Vector->new({
@@ -201,10 +209,13 @@ sub create_vector_construct_POST {
                     VectorType=>$vector_type,
                     Gene=>$gene,
                     Promotors=>$promotors,
-                    Terminators=>$terminators
+                    Terminators=>$terminators,
+                    PlantAntibioticResistantMarker=>$plant_antibiotic_resistant_marker,
+                    BacterialResistantMarker=>$bacterial_resistant_marker
                 });
-               my $added_stock_id = $stock->store();
+                my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
+                push @added_fullinfo_stocks, [$added_stock_id, $uniquename];
             }
         }
 
@@ -230,7 +241,240 @@ sub create_vector_construct_POST {
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
     }
 
-    $c->stash->{rest} = {response=>$status};
+    $c->stash->{rest} = {
+        response=>$status,
+        success => "1",
+        added => \@added_fullinfo_stocks
+    };
+}
+
+sub verify_vectors_file : Path('/ajax/vectors/verify_vectors_file') : ActionClass('REST') { }
+sub verify_vectors_file_POST : Args(0) {
+    my ($self, $c) = @_;
+    
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this vector info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this vector info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $upload = $c->req->upload('new_vectors_upload_file');
+    my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_vectors') ? 0 : 1;
+    my $autogenerate_uniquename = !$c->req->param('autogenerate_uniquename') ? 0 : 1;
+
+    if ($user_role ne 'curator' && !$do_fuzzy_search) {
+        $c->stash->{rest} = {error=>'Only a curator can add vectors without using the fuzzy search!'};
+        $c->detach();
+    }
+
+    # These roles are required by CXGN::UploadFile
+    if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
+        $c->stash->{rest} = {error=>'Only a curator, submitter or sequencer can upload a file'};
+        $c->detach();
+    }
+
+    my $subdirectory = "vectors_spreadsheet_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+
+    my @editable_vector_props = split ',', $c->config->{editable_vector_props};
+    my $parser = CXGN::Stock::Vector::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_vector_props, do_fuzzy_search=>$do_fuzzy_search, autogenerate_uniquename=>$autogenerate_uniquename);
+    $parser->load_plugin('VectorsXLS');
+    my $parsed_data = $parser->parse();
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_species => $parse_errors->{'missing_species'}};
+        $c->detach();
+    }
+
+    my $full_data = $parsed_data->{parsed_data};
+    my @vector_names;
+    my %full_vectors;
+    while (my ($k,$val) = each %$full_data){
+        push @vector_names, $val->{germplasmName};
+        $full_vectors{$val->{germplasmName}} = $val;
+    }
+
+    my $new_list_id = CXGN::List::create_list($c->dbc->dbh, "VectorsIn".$upload_original_name.$timestamp, 'Autocreated when upload vectors from file '.$upload_original_name.$timestamp, $user_id);
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $new_list_id } );
+
+    $list->add_bulk(\@vector_names);
+    $list->type('vector_construct');
+
+    my %return = (
+        success => "1",
+        list_id => $new_list_id,
+        full_data => \%full_vectors,
+        absent => $parsed_data->{absent_vectors},
+        fuzzy => $parsed_data->{fuzzy_vectors},
+        found => $parsed_data->{found_vectors},
+        absent_organisms => $parsed_data->{absent_organisms},
+        fuzzy_organisms => $parsed_data->{fuzzy_organisms},
+        found_organisms => $parsed_data->{found_organisms}
+    );
+
+    if ($parsed_data->{error_string}){
+        $return{error_string} = $parsed_data->{error_string};
+    }
+
+        
+    $c->stash->{rest} = \%return;
+}
+
+
+sub verify_vectors_fuzzy_options : Path('/ajax/vector_list/fuzzy_options') : ActionClass('REST') { }
+
+sub verify_vectors_fuzzy_options_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $vector_list_id = $c->req->param('vector_list_id');
+    my $fuzzy_option_hash = decode_json( encode("utf8", $c->req->param('fuzzy_option_data')));
+    my $names_to_add = _parse_list_from_json($c, $c->req->param('names_to_add'));
+
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $vector_list_id } );
+
+    my %names_to_add = map {$_ => 1} @$names_to_add;
+    foreach my $form_name (keys %$fuzzy_option_hash){
+        my $item_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_name'};
+        my $select_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_select'};
+        my $fuzzy_option = $fuzzy_option_hash->{$form_name}->{'fuzzy_option'};
+        if ($fuzzy_option eq 'replace'){
+            $list->replace_by_name($item_name, $select_name);
+            delete $names_to_add{$item_name};
+        } elsif ($fuzzy_option eq 'keep'){
+            $names_to_add{$item_name} = 1;
+        } elsif ($fuzzy_option eq 'remove'){
+            $list->remove_by_name($item_name);
+            delete $names_to_add{$item_name};
+        } elsif ($fuzzy_option eq 'synonymize'){
+            my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$select_name})->stock_id();
+            my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+            $stock->add_synonym($item_name);
+
+            delete $names_to_add{$item_name};
+        }
+    }
+
+    my @names_to_add = sort keys %names_to_add;
+    my $rest = {
+        success => "1",
+        names_to_add => \@names_to_add
+    };
+    $c->stash->{rest} = $rest;
+}
+
+
+sub get_new_vector_uniquename : Path('/ajax/get_new_vector_uniquename') : ActionClass('REST') { }
+
+sub get_new_vector_uniquename_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+
+    my $stocks = $schema->resultset("Stock::Stock")->search({
+        type_id => $stock_type_id,
+    });
+    
+    my $id;
+    my $max=0;
+    while (my $r = $stocks->next()) {
+        $id = $r->uniquename;
+        if ($id =~ m/T[0-9]+/){
+            $id =~ s/T//;
+            if($max < $id){
+                $max = $id;
+            }
+        } 
+    }
+    $max += 1;
+    #Vector construct has letter T before autogenerated number.
+    $c->stash->{rest} = [ "T". $max];
+}
+
+
+sub _parse_list_from_json {
+    my $c = shift;
+    my $list_json = shift;
+    my $json = JSON::XS->new();
+
+    if ($list_json) {
+        debug($c, "LIST_JSON is utf8? ".utf8::is_utf8($list_json)." valid utf8? ".utf8::valid($list_json)."\n");
+        print STDERR "JSON NOW: $list_json\n";
+        my $decoded_list = $json->decode($list_json);
+        
+        my @array_of_list_items = ();
+        if (ref($decoded_list) eq "ARRAY" ) {
+            @array_of_list_items = @{$decoded_list};
+        }
+        else {
+            debug($c, "Dont know what to do " );
+        }
+
+        return \@array_of_list_items;
+    }
+    else {
+        return;
+    }
+}
+
+sub debug {
+    my $c = shift;
+    my $message = shift;
 }
 
 1;

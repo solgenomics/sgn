@@ -31,51 +31,94 @@ use base qw / CXGN::DB::Object / ;
 
 use Try::Tiny;
 
+=head2 accessor schema
+
+=cut
+
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1
 );
 
+=head2 accessor cvterm
+  
+   Returns: Cv::Cvterm DBIx::Class object
+
+=cut
+
 has 'cvterm' => (
     isa => 'Bio::Chado::Schema::Result::Cv::Cvterm',
     is => 'rw',
 );
+
+=head2 accessor cvterm_id
+
+=cut
 
 has 'cvterm_id' => (
     isa => 'Int',
     is => 'rw',
 );
 
+=head2 accessor cv
+
+=cut
+
 has 'cv' => (
     isa => 'Bio::Chado::Schema::Result::Cv::Cv',
     is => 'rw',
 );
+
+=head2 accessor cv_id
+
+=cut
 
 has 'cv_id' => (
     isa => 'Int',
     is => 'rw',
 );
 
+=head2 accessor dbxref
+
+=cut
+
 has 'dbxref' => (
     isa => 'Bio::Chado::Schema::Result::General::Dbxref',
     is => 'rw',
 );
+
+=head2 accessor db
+
+=cut
 
 has 'db' => (
     isa => 'Bio::Chado::Schema::Result::General::Db',
     is => 'rw',
 );
 
+=head2 accessor name
+
+=cut
+
 has 'name' => (
     isa => 'Str',
     is => 'rw',
 );
 
+=head2 accessor definition
+
+=cut
+
 has 'definition' => (
     isa => 'Str',
     is => 'rw',
 );
+
+=head2 accessor is_obsolete
+
+=cut
+
 
 has 'is_obsolete' => (
     isa => 'Bool',
@@ -83,12 +126,23 @@ has 'is_obsolete' => (
     default => 0,
 );
 
+
+=head2 accessor accession
+
+   refers to dbxref.accession column
+
+=cut
+
 has 'accession' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
 
-
+has 'is_variable' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => sub { return 0; },
+    );
 
 #########################################
 
@@ -99,6 +153,19 @@ sub BUILD {
     my $cvterm;
     if ($self->cvterm_id){
         $cvterm = $self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id => $self->cvterm_id() });
+	
+	if ($cvterm) { 
+	    my $cvterm_rel_rs = $self->schema()->resultset("Cv::CvtermRelationship")->search( { subject_id => $self->cvterm_id  });
+	    # require at least one parent to have a variable_of type
+	    #
+	    while (my $row = $cvterm_rel_rs->next()) {
+		#print STDERR "ROW TYPE: ".$row->type()->name()."\n";
+		if (uc($row->type()->name) eq uc('variable_of')) { 
+		    $self->is_variable(1);
+		}
+	    }
+	    
+	}
     } elsif ($self->accession )   {
 	my ($db_name, $dbxref_accession) = split "\:", $self->accession;
 
@@ -134,12 +201,6 @@ sub BUILD {
     }
     return $self;
 }
-
-
-
-
-
-
 
 =head2 function get_image_ids
 

@@ -1,0 +1,17 @@
+<%args>
+$stock_id
+</%args>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Uploaded Additional Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="accession_upload_additional_files_link">Upload Additional Files</button>' &>
+
+            <& /stock/upload_additional_accessions_file.mas, stock_id => $stock_id &>
+
+            </&><!-- closes uploaded additional file section -->
+        </div>
+    </div>
+
+</div><!-- closes well -->
+

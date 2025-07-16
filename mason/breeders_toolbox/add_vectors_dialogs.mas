@@ -1,0 +1,249 @@
+<%args>
+$preferred_species => ""
+$editable_vector_props => {}
+$editable_stock_props_definitions
+</%args>
+
+<%perl>
+    my $user_role = '';
+    if ($c->user) {
+        $user_role = $c->user->get_object()->get_user_type();
+    }
+</%perl>
+
+<div class="modal fade" id="add_vectors_dialog" name="add_vectors_dialog" tabindex="-1" role="dialog" aria-labelledby="addVectorsDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addVectorsDialog">Add Vectors</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <div class="tab-content">
+
+                <div id="with_file_tab" class="tab-pane fade in active">
+                    <hr>
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="vectors_upload_spreadsheet_format_info">Spreadsheet format</a>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_new_vectors_form" name="upload_new_vectors_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <div class="col-sm-8" >
+                                <input type="file" name="new_vectors_upload_file" id="new_vectors_upload_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
+                            <div class="col-sm-8">
+% if ( $user_role eq 'curator' ) {
+                                <input type="checkbox" id="fuzzy_check_upload_vectors" name="fuzzy_check_upload_vectors" checked></input>
+% } else {
+                                <input type="checkbox" id="fuzzy_check_upload_vectors" name="fuzzy_check_upload_vectors" checked disabled></input>
+% }
+                                <br/>
+                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate vectors. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label"> Auto generate uniquename</label><br>
+                            <div class="col-sm-8">
+                                <input type="checkbox" id="autogenerate_uniquename" name="autogenerate_uniquename">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="new_vectors_submit" id="new_vectors_submit">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="vectors_upload_spreadsheet_format_modal" name="vectors_upload_spreadsheet_format_modal" tabindex="-1" role="dialog" aria-labelledby="uploadVectorsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadVectorsInfoDialog">Upload Vectors Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Vectors may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>uniquename </td>
+                                <td>species_name</td>
+%  foreach my $editable_stockprop (@$editable_vector_props) {
+%                               print "<td>$editable_stockprop</td>";
+% }
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Comma Separated Fields:</b>
+                    <ul>
+                    <li>The following fields can take comma-separated values to indicate there are several values for the accession: 
+                    </li>
+                    </ul>
+
+                    <b>Required Fields:</b>
+                    <ul>
+                    <li>name (must be unique)</li>
+                    <li>species_name (must exist in the database)</li>
+                    </ul>
+                    <b>Optional Fields:</b>
+                    <ul>
+%  foreach my $editable_stockprop (@$editable_vector_props) {
+%    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
+%                   print "<li>$editable_stockprop (".$editable_stock_props_definitions->{$editable_stockprop}.")</li>";
+%    } else {
+%                   print "<li>$editable_stockprop (no definition available)</li>";
+%    }
+%  }
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content ui-front">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewAbsentDialog">Vectors to be Added</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div id="add_vectors_using_list_inputs" style="display:none">
+                <label for="species_name_input">Species name for added vectors</label>
+                <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
+                <br><br>
+                <label for="population_name_input">Population name for added vectors (optional)</label>
+                <input class="form-control" type="text" id="population_name_input"></input>
+                <br><br>
+                <label for="organization_name_input">Organization name for added vectors (optional)</label>
+                <input class="form-control" type="text" id="organization_name_input"></input>
+                <br><br>
+                <b>The following vectors are new and will be added to the database:</b>
+                <div id="count_of_absent_vectors"></div>
+                <br>
+                <div id="view_absent"></div>
+            </div>
+            <div id="view_infoToAdd"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-primary" name="review_absent_vectors_submit" id="review_absent_vectors_submit">Add Vectors</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFuzzyDialog">Fuzzy Matches</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+    	  <b>Vectors were found with similar names.</b>
+  	  <br/><br/>
+  	  <div id="view_fuzzy_matches"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="review_fuzzy_matches_download" id="review_fuzzy_matches_download">Download Fuzzy Matches</button>
+        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Make Changes and Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="review_found_matches_dialog" name="review_found_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFoundDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFoundDialog">Found Vectors</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+    	  <b>The following vectors already exist in the database:</b>
+  	  <div id="count_of_found_vectors"></div>
+  	  <br/>
+  	  <div id="view_found_matches"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" name="review_found_matches_hide" id="review_found_matches_hide" data-dismiss="modal">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="add_vectors_saved_message_modal" name="add_vectors_saved_message_modal" tabindex="-1" role="dialog" aria-labelledby="addVectorsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addVectorsSavedDialog">Vectors Saved</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="add_vectors_saved_message"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_add_vectors_saved_message_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="add_vector_fuzzy_match_download" method="post" action="/ajax/accession_list/fuzzy_download" target="TheWindow">
+    <input type="hidden" name="fuzzy_response" value="" />
+</form>
+
+<style>
+.ui-autocomplete {
+  max-height: 100px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+  height: 100px;
+}
+</style>

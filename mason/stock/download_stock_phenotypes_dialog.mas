@@ -22,7 +22,7 @@ $stock_name => undef
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_stock_phenotypes_format">
                         <option value="csv">CSV</option>
-                        <option value="xls">Excel (xls)</option>
+                        <option value="xlsx">Excel (xlsx)</option>
                     </select>
                 </div>
 	        </div>
@@ -60,12 +60,23 @@ $stock_name => undef
             </div>
 
             <div class="form-group">
-                <label class="col-sm-3 control-label">Traits:<br/><small>(Select none for all traits)</small></label>
+                <label class="col-sm-3 control-label">Traits:</label>
                 <div class="col-sm-9" >
                     <div id="download_stock_phenotypes_traits">
                     </div>
                 </div>
             </div>
+           <div class="row">
+               <div id="download_stock_phenotypes_select_all" class="btn btn-sm btn-primary" style="margin:3px">Select all traits</div>
+               <div id="download_stock_phenotypes_select_reset" class="btn btn-sm btn-default" style="margin:3px">Unselect all traits</div>
+           </div>
+
+            <style>
+              #download_stock_phenotypes_traits_select:hover {
+                width:auto;
+                margin-left: -140px;
+              }
+            </style>
 </&>
         </form><br/>
 
@@ -81,6 +92,14 @@ $stock_name => undef
 
 <script>
 
+
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('download_stock_phenotypes_exclude_outliers').value = "1";
+    document.getElementById('download_stock_phenotypes_exclude_outliers').checked = true;
+}
+
 jQuery(document).ready(function() {
 
   jQuery('#stock_download_phenotypes_button').click( function () {
@@ -92,12 +111,30 @@ jQuery(document).ready(function() {
     data_level_change_traits();
   });
 
+  jQuery(document).on('click', "#download_stock_phenotypes_select_all", function() {
+    var trait_collection = document.getElementById('download_stock_phenotypes_traits_select').options;
+    for (var index = 0; index < trait_collection.length; index += 1) {
+      trait_collection[index].selected = true;
+    };
+  });
+
+  jQuery(document).on('click', "#download_stock_phenotypes_select_reset", function() {
+    var trait_collection = document.getElementById('download_stock_phenotypes_traits_select').options;
+    for (var index = 0; index < trait_collection.length; index += 1) {
+      trait_collection[index].selected = false;
+    };
+  });
+
   jQuery('#download_stock_phenotypes_submit_button').click( function () {
     var stock_type = "<% $stock_type %>";
     var stock_id = ["<% $stock_id %>"];
     var format = jQuery("#download_stock_phenotypes_format").val();
     var timestamp = jQuery("#download_stock_phenotypes_timestamp_option").val();
     var traits = jQuery("#download_stock_phenotypes_traits_select").val();
+    if (! Array.isArray(traits) ) {
+       traits = [ traits ];
+    }
+
     var datalevel = jQuery("#download_stock_phenotypes_level_option").val();
     var exclude_phenotype_outlier = jQuery("#download_stock_phenotypes_exclude_outliers").val();
     window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&dataLevel="+datalevel+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&exclude_phenotype_outlier="+exclude_phenotype_outlier);
@@ -107,6 +144,15 @@ jQuery(document).ready(function() {
 
 function data_level_change_traits() {
     var stock_type = "<% $stock_type %>";
-    get_select_box('traits', 'download_stock_phenotypes_traits', { 'name' : 'download_stock_phenotypes_traits_select', 'id' : 'download_stock_phenotypes_traits_select', 'stock_id':<% $stock_id %>, 'stock_type': stock_type });
+    get_select_box(
+        'traits',
+        'download_stock_phenotypes_traits',
+        { 'name' : 'download_stock_phenotypes_traits_select',
+        'id' : 'download_stock_phenotypes_traits_select',
+        'stock_id':<% $stock_id %>,
+        'stock_type': stock_type ,
+        'multiple': true,
+        'full_dropdown':true}
+        );
 }
 </script>

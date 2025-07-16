@@ -1,0 +1,37 @@
+rmd_files: [
+  "index.Rmd",
+  "basic_website_usage.Rmd",
+  "searching_the_database.Rmd",
+  "managing_user_roles.Rmd",
+  "managing_breeding_programs.Rmd",
+  "managing_locations.Rmd",
+  "managing_accessions.Rmd",
+  "managing_seedlots.Rmd",
+  "managing_populations.Rmd",
+  "managing_crosses.Rmd",
+  "managing_field_trials.Rmd",
+  "managing_genotyping_plates.Rmd",
+  "using_fieldbook_app.Rmd",
+  "managing_phenotypic_data.Rmd",
+  "managing_barcodes.Rmd",
+  "using_label_designer.Rmd",
+  "managing_downloads.Rmd",
+  "managing_odk_collection.Rmd",
+  "managing_tissue_samples.Rmd",
+  "managing_observation_variables.Rmd",
+  "managing_image_data.Rmd",
+  "managing_vcf_data.Rmd",
+  "managing_spectral_data.Rmd",
+  "managing_sequence_metadata.Rmd",
+  "managing_outliers_in_dataset.Rmd",
+  "data_analysis_tools.Rmd"
+  ]
+book_filename: BreedbaseManual
+output_dir: ../
+repo: https://github.com/solgenomics/sgn
+delete_merged_file: true
+language:
+  ui:
+    edit: "Edit"
+    chapter_name: "Chapter "
+

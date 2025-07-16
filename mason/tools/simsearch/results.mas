@@ -1,11 +1,18 @@
 
 <%args>
 $results
+$histogram
 </%args>
 
 <& /page/page_title.mas, title => "Simsearch Results" &>
 
 The following genotypes are exceedingly similar and are suspected duplicates:<br />
 
-
 <% $results %>
+
+<br />
+<br />
+<center>
+<img src="<% $histogram %>" border="1"/>
+</center>
+

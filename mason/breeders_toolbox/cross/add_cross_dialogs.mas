@@ -22,7 +22,7 @@ $locations
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="reset" class="close" id="new_cross_close_modal_1" name="new_cross_close_modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="createNewCrosses">Add New Cross</h4>
             </div>
             <div class="modal-body">
@@ -35,7 +35,7 @@ $locations
                             <ul>
                                 <li>The Cross Tool can track any pollinations in a breeding program.</li>
                                 <li>Each cross has a globally unique cross id.</li>
-                                <li>Supported cross types are: biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid</li>
+                                <li>Supported cross types are: biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, doubled_haploid, or dihaploid_induction</li>
                                 <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.</li>
                                 <li>For backcross cross type, cross unique id can be used as one of the parents.</li>
                                 <li>An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.</li>
@@ -78,7 +78,7 @@ $locations
                                         <div id="add_cross_breeding_program_select_div" name="add_cross_breeding_program_select_div">
                                         </div>
                                     </div>
-                                </div><br/><br/><br/>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Crossing Experiment: </label>
                                     <div class="col-sm-9">
@@ -112,6 +112,7 @@ $locations
                                             <option value="bulk_self">bulk selfed</option>
                                             <option value="bulk_open">bulk and open pollinated</option>
                                             <option value="doubled_haploid">doubled haploid</option>
+                                            <option value="dihaploid_induction">dihaploid induction</option>
                                             <option value="polycross">polycross</option>
                                             <option value="reciprocal">reciprocal</option>
                                             <option value="multicross">multicross</option>
@@ -192,6 +193,12 @@ $locations
                                         <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" placeholder="Enter parent name" />
                                     </div><br/><br/>
                                 </div>
+                                <div class="form-group" id="get_dihaploid_induction_parent" style="display: none">
+                                    <label class="col-sm-2 control-label">Dihaploid induction Parent: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="dihaploid_induction_parent" type="text" name="dihaploid_induction" placeholder="Enter parent name" />
+                                     </div><br/><br/>
+                                </div>
                                 <div class="form-group" id="polycross_accessions" style="display: none">
                                     <label class="col-sm-2 control-label">Accessions to use in Polycross: </label>
                                     <div class="col-sm-10">
@@ -223,25 +230,48 @@ $locations
                                         <label class="col-sm-2 control-label">Field Trial: </label>
                                         <div class="col-sm-10">
                                             <div class="input-group">
-                                                <input type ="text" class ="form-control" id ="field_trial" placeholder="Enter trial name">
+                                                <input type ="text" class ="form-control" id="parents_field_trial" name="parents_field_trial" placeholder="Enter trial name">
                                                 <div class ="input-group-btn">
-                                                    <button class = "btn btn-info" id ="search_plots"></i>Search Plots</button>
+                                                    <button class = "btn btn-info" id="search_parents_plots_plants" name="search_plots_plants"></i>Search Plots/Plants</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Female Plot: </label>
+                                        <label class="col-sm-2 control-label">Female Plot/Plant: </label>
                                         <div class="col-sm-10">
-                                            <select class="form-control" id="female_plot" name="female_plot">
+                                            <select class="form-control" id="female_plot_plant" name="female_plot_plant">
                                                 <option value="">Enter trial name first</option>
                                             </select>
                                         </div>
                                     </div><br/><br/>
                                     <div class="form-group">
-                                        <label class="col-sm-2 control-label">Male Plot: </label>
+                                        <label class="col-sm-2 control-label">Male Plot/Plant: </label>
                                         <div class="col-sm-10">
-                                            <select class="form-control" id="male_plot" name="male_plot">
+                                            <select class="form-control" id="male_plot_plant" name="male_plot_plant">
+                                                <option value="">Enter trial name first</option>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="exact_female" style="display: none">
+                                    <& /page/page_title.mas, title=>"Optional: If you choose to record exact cross female parent, you can do so." &>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Field Trial: </label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <input type ="text" class ="form-control" id="female_field_trial" name ="female_field_trial" placeholder="Enter trial name">
+                                                <div class ="input-group-btn">
+                                                    <button class = "btn btn-info" id="search_female_plots_plants" name="search_plots_plants"></i>Search Plots/Plants</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Female Plot/Plant: </label>
+                                        <div class="col-sm-10">
+                                            <select class="form-control" id="open_female_plot_plant" name="open_female_plot_plant">
                                                 <option value="">Enter trial name first</option>
                                             </select>
                                         </div>
@@ -392,7 +422,7 @@ $locations
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="new_cross_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="new_cross_close_modal" name="new_cross_close_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -411,15 +441,16 @@ $locations
                         Individual Crosses:
                     </h2>
 
-                    <p><b>biparental:</b> An individual plant pollinated by another individual plant.<p>
-                    <p><b>self:</b> A self pollinated individual plant.<p>
-                    <p><b>open pollinated:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).<p>
-                    <p><b>backcross:</b> An individual plant pollinated by one of its parents.<p>
-                    <p><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.<p>
-                    <p><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.<p>
-                    <p><b>bulk selfed:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).<p>
-                    <p><b>bulk and open pollinated:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).<p>
-                    <p><b>doubled haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.<p>
+                    <p><b>biparental:</b> An individual plant pollinated by another individual plant.</p>
+                    <p><b>self:</b> A self pollinated individual plant.</p>
+                    <p><b>open pollinated:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</p>
+                    <p><b>backcross:</b> An individual plant pollinated by one of its parents.</p>
+                    <p><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</p>
+                    <p><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</p>
+                    <p><b>bulk selfed:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</p>
+                    <p><b>bulk and open pollinated:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</p>
+                    <p><b>doubled haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</p>
+                    <p><b>dihaploid induction:</b> Plants derived from a chromosome reduction from tetraploid to diploid</p>
                     <br>
 
                     <h2>
@@ -466,89 +497,130 @@ jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    jQuery("#field_trial").autocomplete({
-        source:'/ajax/stock/project_autocomplete',
+    jQuery('input[id*="_field_trial"]').autocomplete({
+        source: '/ajax/trials/trial_autocomplete'
     });
 
-    $("#search_plots").click(function(e){
+    jQuery("[name='search_plots_plants']").click(function(e){
         e.preventDefault();
 
-        var maternal_parent;
-        if ($('#maternal_parent').val() != ''){
-            maternal_parent = $('#maternal_parent').val();
+        let field_trial;
+        let maternal_parent;
+        let paternal_parent;
+        const crossType = jQuery("#cross_type").val();
+
+        if (crossType == 'open') {
+            field_trial = jQuery("#female_field_trial").val();
+            maternal_parent = jQuery('#open_maternal_parent').val();
+        } else  {
+            field_trial = jQuery("#parents_field_trial").val();
+            maternal_parent = jQuery('#maternal_parent').val();
         }
 
-        if ($('#selfed_parent').val() != ''){
-            maternal_parent = $('#selfed_parent').val();
+        if (!field_trial) {
+            alert("Please provide trial name");
+            return;
         }
 
-        if ($('#open_maternal_parent').val() != ''){
-            maternal_parent = $('#open_maternal_parent').val();
+        if (!maternal_parent) {
+            alert("Please provide female parent name");
+            return;
         }
 
-        console.log(maternal_parent);
+        if ((crossType == 'biparental') || (crossType == 'backcross') || (crossType == 'sib')) {
+            paternal_parent = jQuery('#paternal_parent').val();
+            if (!paternal_parent) {
+                alert("Please provide male parent name");
+                return;
+             }
+        }
 
         jQuery.ajax({
-            url:'/ajax/breeders/get_accession_plots',
-            data:{'field_trial':$('#field_trial').val(),
+            url:'/ajax/breeders/get_accession_plots_plants',
+            data:{'field_trial':field_trial,
                   'parent_accession':maternal_parent,
-                  },
+                },
             success: function(response){
-            console.log(response);
-            var html = '<select id = "female_plot" >';
-            for (var i=0; i<response.data.length; i++) {
-            html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
-            }
-            html = html + "</select>";
-            console.log(html);
+                console.log(response);
 
-            if(i ==''){
-            alert("No female plot");
-            return;
-            }
+                var html;
+                if (crossType == 'open') {
+                    html = '<select id = "open_female_plot_plant" >';
+                } else {
+                    html = '<select id = "female_plot_plant" >';
+                }
+                for (var i=0; i<response.data.length; i++) {
+                    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
+                }
+                html = html + "</select>";
+                console.log(html);
 
-            jQuery('#female_plot').html(html);
+                if(i ==''){
+                    alert("No female plot");
+                    return;
+                }
 
+                if (jQuery('#open_maternal_parent').val() != ''){
+                    jQuery('#open_female_plot_plant').html(html);
+                } else {
+                    jQuery('#female_plot_plant').html(html);
+                }
             },
+
             error:function(response){
-            alert("An error occurred getting female plots.");
+                alert("An error occurred getting female plots or plants.");
             }
         });
 
-        var paternal_parent;
+        if (paternal_parent) {
+            jQuery.ajax({
+                url:'/ajax/breeders/get_accession_plots_plants',
+                data:{'field_trial': field_trial,
+                    'parent_accession':paternal_parent,
+                },
+                success: function(response){
+                    console.log(response);
+                    let html = '<select id = "male_plot" >';
+                    for (var i=0; i<response.data.length; i++) {
+                        html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
+                    }
+                    html = html + "</select>";
+                    console.log(html);
 
-        if ($('#paternal_parent').val() != ''){
-        paternal_parent = $('#paternal_parent').val();
+                    if(i ==''){
+                        alert("No male plot");
+                        return;
+                    }
+
+                    jQuery('#male_plot_plant').html(html);
+                },
+            });
         }
-
-        if ($('#selfed_parent').val() != ''){
-        paternal_parent = $('#selfed_parent').val();
-        }
-
-        jQuery.ajax({
-            url:'/ajax/breeders/get_accession_plots',
-            data:{'field_trial':$('#field_trial').val(),
-                  'parent_accession':paternal_parent,
-                  },
-            success: function(response){
-            console.log(response);
-            var html = '<select id = "male_plot" >';
-            for (var i=0; i<response.data.length; i++) {
-            html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
-            }
-            html = html + "</select>";
-            console.log(html);
-
-            if(i ==''){
-            alert("No male plot");
-            return;
-            }
-
-            jQuery('#male_plot').html(html);
-
-            },
-        });
     });
+
+    jQuery("[name='new_cross_close_modal']").click(function() {
+        jQuery('#create_cross').modal('hide');
+        jQuery('#cross_name').val('');
+        jQuery('#dialog_cross_combination').val('');
+        jQuery('#cross_type').val('');
+        jQuery('#maternal_parent').val('');
+        jQuery('#paternal_parent').val('');
+        jQuery('#selfed_parent').val('');
+        jQuery('#open_maternal_parent').val('');
+        jQuery('#open_paternal_population').val('');
+        jQuery('#bulk_maternal_population').val('');
+        jQuery('#bulk_paternal_parent').val('');
+        jQuery('#bulk_selfed_population').val('');
+        jQuery('#bulk_open_maternal_population').val('');
+        jQuery('#doubled_haploid_parent').val('');
+        jQuery('#dihaploid_induction_parent').val('');
+        jQuery('#parents_field_trial').val('');
+        jQuery('#female_field_trial').val('');
+        location.reload();
+    });
+
+
+
 });
 
 </script>

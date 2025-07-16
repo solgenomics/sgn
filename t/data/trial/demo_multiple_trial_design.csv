@@ -1,0 +1,21 @@
+trial_name,breeding_program,location,year,design_type,description,trial_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot
+199934HBEPR_cara,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-04,2000-03-14,199934HBEPR_cara_rep1_UG120002_1,UG120002,1,1,1,2,4,10,1,,2,10,1
+199934HBEPR_cara,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-04,2000-03-14,199934HBEPR_cara_rep1_UG120004_2,UG120004,2,1,1,2,4,20,2,,2,20,2
+199934HBEPR_cara,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-04,2000-03-14,199934HBEPR_cara_rep1_UG120006_3,UG120006,3,1,1,2,4,30,3,,2,30,3
+199934HBEPR_cara,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-04,2000-03-14,199934HBEPR_cara_rep1_UG120008_4,UG120008,4,2,1,2,5,40,4,,2,40,4
+199934HBEPR_cara,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-04,2000-03-14,199934HBEPR_cara_rep1_UG120009_5,UG120009,5,2,1,2,5,50,5,,2,40,5
+199947HBEPR_mora,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-23,2000-10-19,199947HBEPR_mora_rep1_UG120157_1,UG120157,1,1,1,2,6,50,5,,2,50,5
+199947HBEPR_mora,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-23,2000-10-19,199947HBEPR_mora_rep1_UG120158_2,UG120158,2,1,1,2,6,60,6,,2,60,6
+199947HBEPR_mora,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-23,2000-10-19,199947HBEPR_mora_rep1_UG120159_3,UG120159,3,1,1,2,7,70,7,,2,70,7
+199947HBEPR_mora,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-23,2000-10-19,199947HBEPR_mora_rep1_UG120160_4,UG120160,4,1,1,2,8,80,8,,2,80,8
+199947HBEPR_mora,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1999-06-23,2000-10-19,199947HBEPR_mora_rep1_UG120161_5,UG120161,5,1,1,2,8,90,9,,2,90,9
+198667HBEPR_popa,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1984-09-17,1985-08-16,198667HBEPR_popa_rep1_BRA128_5,UG120010,5,1,1,2,6,5,3,,2,100,10
+198667HBEPR_popa,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1985-10-02,1986-09-15,198667HBEPR_popa_rep1_BRA28_6,UG120017,6,1,1,2,6,6,3,,2,110,11
+198667HBEPR_popa,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1985-10-02,1986-09-15,198667HBEPR_popa_rep1_BRA30_7,UG120019,7,1,1,1,6,7,3,,2,120,12
+198667HBEPR_popa,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1985-10-02,1986-09-15,198667HBEPR_popa_rep1_BRA131_8,UG120021,8,1,1,1,6,8,3,,2,130,13
+198667HBEPR_popa,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1985-10-02,1986-09-15,198667HBEPR_popa_rep1_BRA33_9,UG120022,9,1,1,1,6,9,3,,2,140,14
+199275HBEPR_stom,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1992-09-19,1993-08-04,199275HBEPR_stom_rep1_CM3306-4_30,XG120030,30,1,1,1,6,30,2,,2,150,15
+199275HBEPR_stom,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1992-09-19,1993-08-04,199275HBEPR_stom_rep1_SOLITA_31,XG120061,31,1,1,1,6,31,2,,2,160,16
+199275HBEPR_stom,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1992-09-19,1993-08-04,199275HBEPR_stom_rep1_CG917-5_32,XG120068,32,1,1,1,6,32,3,,2,170,17
+199275HBEPR_stom,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1992-09-19,1993-08-04,199275HBEPR_stom_rep1_CG1420-1_33,XG120071,33,1,1,1,6,33,2,,2,180,18
+199275HBEPR_stom,test,test_location,1999,Augmented,EPR,Preliminary Yield Trial,5,5,8,1992-09-19,1993-08-04,199275HBEPR_stom_rep1_CM1785-6_34,XG120073,34,1,1,1,6,34,3,,2,190,19

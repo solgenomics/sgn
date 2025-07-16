@@ -4,6 +4,7 @@ package CXGN::Trial::TrialDesign::Plugin::DRRC;
 use File::Slurp;
 use CXGN::Tools::Run;
 use Moose::Role;
+use List::MoreUtils qw(first_index);
 use Data::Dumper;
 
 sub create_design {
@@ -23,6 +24,7 @@ sub create_design {
   my @is_a_control;
   my @control_names_crbd;
   my @block_numbers;
+  my @rep_numbers;
   my @converted_plot_numbers;
   my @control_list_crbd;
   my %control_names_lookup;
@@ -30,7 +32,11 @@ sub create_design {
   my @fieldmap_row_numbers;
   my $fieldmap_col_number;
   my $plot_layout_format;
-  my @col_number_fieldmaps;
+  my @fieldmap_col_numbers;
+  my $colNumber;
+  my $repNumber;
+  my $rowNumber;
+  my $blockColNumber;
 
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
@@ -43,35 +49,40 @@ sub create_design {
     %control_names_lookup = map { $_ => 1 } @{$self->get_control_list_crbd()};
     $self->_check_controls_and_accessions_lists;
   }
-  if ($self->has_number_of_blocks()) {
-    $number_of_blocks = $self->get_number_of_blocks();
+  if ($self->has_number_of_reps()) {
+    $repNumber = $self->get_number_of_reps();
   } else {
-    die "Number of blocks not specified\n";
+    die "Number of reps not specified\n";
   }
 
-  if ($self->has_fieldmap_col_number()) {
-    $fieldmap_col_number = $self->get_fieldmap_col_number();
+  if ($self->has_number_of_cols()) {
+    $colNumber = $self->get_number_of_cols();
+  } else {
+    die "Number of cols not specified\n";
   }
-  if ($self->has_fieldmap_row_number()) {
-    $fieldmap_row_number = $self->get_fieldmap_row_number();
-    print STDERR "Stock number is ".scalar(@stock_list)." and block number is $number_of_blocks and row number is $fieldmap_row_number\n";
-    my $colNumber = ((scalar(@stock_list) * $number_of_blocks)/$fieldmap_row_number);
-    print STDERR "colNumber is $colNumber\n";
-    $fieldmap_col_number = CXGN::Trial::TrialDesign::validate_field_colNumber($colNumber);
+
+  my $rowNumber = scalar(@stock_list) / ($colNumber/$repNumber);
+
+  ## It checks if number of stocks is divisible by number of columns and rows.
+  if (scalar(@stock_list) % $colNumber == 0) {
+    print "Correct entries and col number proportion.\n";
+  } else {
+    die "The number of entries must be divisible by the number of cols.\nThis design is resulting in:\nCols: $colNumber\nRows: $rowNumber\n";
   }
+  if (scalar(@stock_list) % $rowNumber == 0)  {
+    print "Correct entries and row number proportion.\n "
+    } else {
+    die "Total number of treatments must be divisible by the number of rows.\nThis design is resulting in:\nCols: $colNumber\nRows: $rowNumber\n";
+  }
+
+  print STDERR "Stock number is ".scalar(@stock_list)." and the number of rep is $repNumber and row number is $rowNumber and the number of col is $colNumber\n";
+
   if ($self->has_plot_layout_format()) {
     $plot_layout_format = $self->get_plot_layout_format();
   }
 
   my $plot_start = $self->get_plot_start_number();
-  my $serie;
-  if($plot_start == 1){
-      $serie = 1;
-  }elsif($plot_start == 101){
-      $serie = 2;
-  }elsif($plot_start == 1001){
-      $serie = 3;
-  }
+
 
   my $tempfile = $self->get_tempfile();
 
@@ -79,18 +90,21 @@ sub create_design {
   open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
   print $F "treatments <- c($stock_list)\n";
   print $F "controls <- c($control_list)\n";
-  print $F "nRep <- ".$number_of_blocks."\n";
-  print $F "nRow <- ".$fieldmap_row_number."\n";
-  print $F "nCol <- ".$fieldmap_col_number."\n";
-  print $F "serie <- ".$serie."\n";
+  print $F "nRep <- ".$repNumber."\n";
+  print $F "nRow <- ".$rowNumber."\n";
+  print $F "nCol <- ".$colNumber."\n";
+  print $F "plot_start <- \"$plot_start\"\n";
+  print $F "plot_type <- \"$plot_layout_format\"\n";
+  # print $F "col_per_block <- ".$blockColNumber."\n";
   close($F);
 
+  print "The plot type is $plot_layout_format \n";
 
-  my $cmd = "R CMD BATCH  '--args paramfile=\"".$tempfile.".params\"' " .  " R/drrc_design.R ".$tempfile.".out";
+  my $cmd = "R CMD BATCH  '--args paramfile=\"".$tempfile.".params\"' " .  " R/DRRC.r ".$tempfile.".out";
 
   my $backend = 'Slurm';
   my $cluster_host = "localhost";
-
+  
   my $ctr = CXGN::Tools::Run->new( {
       backend => $self->get_backend(),
       working_dir => $self->get_temp_base(),
@@ -108,32 +122,65 @@ sub create_design {
   my $design_file = $tempfile.".design";
   open my $design, $design_file or die "Could not open $design_file: $!";
 
-  if ( -e $design_file) {
-      my @lines = read_file($design_file);
-      chomp(@lines);
-      print STDERR Dumper @lines;
+  my $design_file = $tempfile.".design";
+  open my $design, $design_file or die "Could not open $design_file: $!";
 
-      my $header_line = shift(@lines);
-      @block_numbers = split('\t', shift(@lines));
-      print STDERR "Block numbers are: @block_numbers\n";
-      @fieldmap_row_numbers = split('\t', shift(@lines));
-      @col_number_fieldmaps = split('\t', shift(@lines));
-      @plot_numbers = split('\t', shift(@lines));
-      @stock_names = split('\t', shift(@lines));
-      @is_a_control = split('\t', shift(@lines));
-  }
+if (-e $design_file) {
+    my @lines = read_file($design_file);
+    chomp(@lines);
+    my $header_line = shift(@lines);
+    my @headers = split('\t', $header_line);
+
+    # Define column names you're interested in
+    my @desired_columns = ('block_number', 'rep_number','row_number', 'col_number', 'plot_number', 'accession_name', 'is_a_control');
+
+    # Find indices of desired columns
+    my %column_indices;
+    for my $col_name (@desired_columns) {
+        my $index = first_index { $_ eq $col_name } @headers;
+        $column_indices{$col_name} = $index;
+    }
+
+    # Extract data based on column names
+    my %data;
+    for my $col_name (@desired_columns) {
+        my $index = $column_indices{$col_name};
+        $data{$col_name} = [ map { (split('\t', $_))[$index] } @lines ];
+    }
+
+    my $index_ref = shift;
+    $index_ref = $column_indices{'block_number'};
+    push @block_numbers, map { (split('\t', $_))[$index_ref] } @lines;
+
+    $index_ref = $column_indices{'rep_number'};
+    push @rep_numbers, map { (split('\t', $_))[$index_ref] } @lines;
+
+    $index_ref = $column_indices{'row_number'};
+    push @fieldmap_row_numbers, map { (split('\t', $_))[$index_ref] } @lines;
+
+    $index_ref = $column_indices{'col_number'};
+    push @fieldmap_col_numbers, map { (split('\t', $_))[$index_ref] } @lines;
+
+    $index_ref = $column_indices{'plot_number'};
+    push @plot_numbers, map { (split('\t', $_))[$index_ref] } @lines;
+
+    $index_ref = $column_indices{'accession_name'};
+    push @stock_names, map { (split('\t', $_))[$index_ref] } @lines;
+
+    $index_ref = $column_indices{'is_a_control'};
+    push @is_a_control, map { (split('\t', $_))[$index_ref] } @lines;
 
 
-  if ($plot_layout_format eq "serpentine") {
-      my @serpentine_pattern = (1..$fieldmap_row_number, reverse 1..$fieldmap_row_number);
-      my $pattern_repetitions = $fieldmap_col_number / 2;
-      @fieldmap_row_numbers = map @serpentine_pattern, 1..$pattern_repetitions;
-  }
+
+
+    print Dumper \%data;
+}
 
     my %seedlot_hash;
     if($self->get_seedlot_hash){
         %seedlot_hash = %{$self->get_seedlot_hash};
     }
+
   for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
@@ -143,19 +190,19 @@ sub create_design {
     }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $plot_numbers[$i];
-    $plot_info{'rep_number'} = $block_numbers[$i];
-    #$plot_info{'plot_num_per_block'} = $plot_numbers[$i];
+    $plot_info{'rep_number'} = $rep_numbers[$i];
     $plot_info{'plot_number'} = $plot_numbers[$i];
     $plot_info{'plot_num_per_block'} = $plot_numbers[$i];
     $plot_info{'is_a_control'} = $is_a_control[$i];
-    #$plot_info_per_block{}
-      if ($fieldmap_row_numbers[$i]){
-      $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
-      $plot_info{'col_number'} = $col_number_fieldmaps[$i];
-    }
+    $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
+    $plot_info{'col_number'} = $fieldmap_col_numbers[$i];
+
     $drrc_design{$plot_numbers[$i]} = \%plot_info;
   }
+
   %drrc_design = %{$self->_build_plot_names(\%drrc_design)};
+  # print Dumper \%drrc_design;
+
   return \%drrc_design;
 }
 

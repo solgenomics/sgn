@@ -20,7 +20,7 @@ my $sample_search = CXGN::Stock::TissueSample::Search->new({
 my $result = $sample_search->search();
 
 Modeled after brapi samples search call.
-observation_unit_db_id_list is for a list of source plot_ids, plant_ids, or tissue_sample_ids 
+observation_unit_db_id_list is for a list of source plot_ids, plant_ids, or tissue_sample_ids
 plate_db_id_list is for a list of genotyping_trial_ids
 germplasm_db_id_list is for a list of accession_ids
 
@@ -237,5 +237,51 @@ sub search {
 
     return (\@result, $records_total);
 }
+
+
+sub get_sample_data {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $plate_list = $self->plate_db_id_list();
+    my $plate_id = $plate_list->[0];
+    my %sample_info;
+
+    my $plate_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $plate_id, experiment_type => 'genotyping_layout'});
+    my $sample_names = $plate_layout->get_plot_names();
+    my $number_of_samples = scalar(@{$sample_names});
+    $sample_info{'number_of_samples'} = $number_of_samples;
+
+    my @sample_id_list;
+    foreach my $sample(@$sample_names) {
+        my $sample_id = $schema->resultset("Stock::Stock")->find({ name => $sample })->stock_id();
+        push @sample_id_list, $sample_id;
+    }
+    $sample_info{'sample_list'} = \@sample_id_list;
+
+    my $where_clause;
+    my $query = join ("," , @sample_id_list);
+    $where_clause = "nd_experiment_stock.stock_id in ($query)";
+    my $q = "SELECT DISTINCT nd_experiment_stock.stock_id
+        FROM nd_experiment_stock
+        JOIN nd_experiment_genotype ON (nd_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
+        JOIN genotypeprop ON (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+        WHERE $where_clause";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+
+    my @samples_with_data = ();
+    while(my ($stock_id) = $h->fetchrow_array()){
+        push @samples_with_data, $stock_id;
+    }
+
+    my $number_of_samples_with_data = scalar(@samples_with_data);
+    $sample_info{'number_of_samples_with_data'} = $number_of_samples_with_data;
+
+    return \%sample_info;
+
+}
+
+
 
 1;

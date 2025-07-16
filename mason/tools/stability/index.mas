@@ -15,91 +15,74 @@
 
 <& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
-<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/vega@3.3.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+<script src="bower_components/radar-chart-d3/src/radar-chart.js"></script>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
 
 <& /page/page_title.mas, title=>"Stability" &>
 
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/stability" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
-
-
   <div class="form-group form-inline">
     <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
     <br>
-
     <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
     <br>
-    <br>
-
     </div>
+        <div class="form-group form-inline">
+          <label class="blast_select_label" for = pheno_select>Available&nbspTraits:&nbsp; </label>
+          <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+          <!-- <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
+        <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+        <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button> -->
+        <br>
+        <br>
+        <br>
+        <center>
+          <div id="pheno_summary_table">
+          </div>
+        </center>
+        <br>
+        <br>
+        </div>
       <div class = "form-group form-inline">
+       <input type="checkbox" id="dataset_trait_outliers" />
+       <label>Exclude dataset outliers &nbsp; </label>
+       <br>      
        <label for = select_method>Available Methods: </label>
        <select class="form-control input-sm" id="select_method">
-        <option selected value="ammi">AMMI</option>
+        <option selected value="method_empty"></option>
+        <option value="ammi">AMMI</option>
         <option value="gge">GGE</option>
        </select>
        <div id = "select_method">
       </div>
-      <button class="btn btn-primary" id="method_btn" type="submit" name="method_btn" value="method_btn">Select Method</button>
+    </div>
+      <div class = "form-group form-inline">
+       <label for = select_imput>Phenotype Impute: </label>
+       <select class="form-control input-sm" id="select_imput">
+        <option selected value="imput_empty"></option>
+        <option value="imput_yes">yes</option>
+        <option value="imput_no">no</option>
+       </select>
+       <div id = "select_method">
+      </div>
       <br>
-    
-    <br>
-    <br>    
-
-      <div class="form-group form-inline">
-        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
-      <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="trait_histogram_plot">
-        </div>
-      </center>
-    
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="pca_output"></div>
-      </center>
-
-
-    <br>
-
-
-    <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
-        <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
-        <br>
-
-        </div>
 
             <div style="text-align: center">
               <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run Stability</button>
             </div>
             <br />
-
     <div id="tempfile" style="display:none" >
     </div>
-
-
-
-
-
 </&>
-
-
-
-
-<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
-
-
-
-  <center>
+<&| /page/info_section.mas, title=>"Instructions", collapsible=>1, collapsed=>1, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+<center>
     <div id="sgn_blast_graph" style="display:none">
         <div id="myCanvas">
           Your browser does not support the HTML5 canvas
@@ -107,27 +90,69 @@
     </div>
   </center>
   <br>
+  <h5><b>Preparing Dataset:</b></h5> 
+  <h5> 1. Dataset must have at least trials and trait(s).</h5>
+  <h5> 2. Trials must be placed in more than 1 location. </h5>
+  <h5> 3. Accessions must be placed in all locations with replications. Check the trial design to make sure it has replications. </h5>
+  <h5> 4. The same trait must be available in all selected locations. Missing data is acceptable for some replications, however the model wont work if it is missing data in all replications. </h5>
+  <h5><b>Impuation:</b></h5>
+  <h5> Imputation is based on genotypes average using the R package mice. The imputation accuracy is processed by subsetting the data and calculating the correlation between imputed and original data. </h5>
+  <h5><b>Output:</b></h5>
+  <h5>The AMMI graphic shows stable varieties with horizintal lines. The slope is proportional to their stability index.</h5>
+  
   <center>
-    <div id="stability_output"></div>
+    <div id="stability_summary"></div>
   </center>
-  <div id="Overview_output"></div>
-  <div id="Coverage_output"></div>
-  <div id="Table_output" style="min-width:900px;"></div>
-  <div id="Bioperl_output"></div>
-  <div id="Basic_output"></div>
-
 </&>
-
-
-
+<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+  <br>
+<div id="stability_message_container">
+    <div id="stability_message"></div>
+</div>
+<br>
+    <center>
+    <div id="stability_output"></div>
+      <br>
+    <br>
+    <button class="btn btn-primary" id="download-button">Download CSV</button>
+  </center>
+</&>
+  <&| /page/info_section.mas, title=>"Graphics", collapsible=>1, collapsed=>1, subtitle=>'<a id="download_graphics" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+  <div style="display: flex;">
+    <div>
+      <p>Press control (or cmd) to select multiple accessions.</p>
+      <select id="accession_select" multiple size="15" style="height: 200px;">
+        <!-- Options for accessions will be added dynamically -->
+      </select>
+    </div>
+    <div style="margin-left: 25px;">
+      <center>
+        <br>
+        <svg id="graphics_output" width="700" height="600"></svg>
+        <div id="tooltip"></div>
+      </center>
+    </div>
+  </div>
+</&>
 
 
 <script>
 
+var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+if (require_login === '1'){
+    auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+    if (!auth_token){ alert("Login required to display heritability"); }
+}
+
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('dataset_trait_outliers').checked = true;
+}
 
 jQuery(document).ready(function() {
   if (isLoggedIn()) {
-    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
+    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox", "analysis_type":"Stability", "show_compatibility":"yes"});
   }
   else {
     alert('You must be logged in to use Stability');
@@ -135,7 +160,7 @@ jQuery(document).ready(function() {
   $('#pheno_select').attr("disabled",true).html('');
   jQuery('#dataset_select').click(function() {
     $('#pheno_select').attr("disabled",true).html('');
-    $('#trait_histogram_plot').html('');
+    $('#pheno_summary_table').html('');
     $('#stability_output').empty();
   });
   jQuery('#selectDataset').click(function() {
@@ -148,115 +173,362 @@ jQuery(document).ready(function() {
           $('#dataset_select').val('ERROR');
         }
         else {
-//	    alert(response.options);
-//	    	    alert(response.options.length);
-	var option_html = '<option selected="selected" value=""> </option>';
-	  for (var i = 0; i < response.options.length; i++) {
-	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-	  }
-	  $('#pheno_select').attr("disabled",false).html(option_html);
-      jQuery('#tempfile').html(response.tempfile);
-
-
-	}
-
-      },
-      error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable, ponto 1");
+    var option_html = '<option selected="selected" value=""> </option>';
+      for (var i = 0; i < response.options.length; i++) {
+        option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+      }
+      $('#pheno_select').attr("disabled",false).html(option_html);
+        jQuery('#tempfile').html(response.tempfile);
+    }
+        },
+        error: function(response) {
+          alert("An error occurred, please check the datase.");
       }
     });
   });
 
 
-  
+$(document).ready(function(){
+    // When the selection changes in the select_imput dropdown
+    $('#pheno_select').change(function(){
+        // Get the selected value
+        var tempfile = jQuery('#tempfile').html();
+        var pheno_select = $(this).val();
+        console.log("Selected value:", pheno_select);
+        console.log(tempfile); // Output the selected value to console
+        if (pheno_select !== '') {
+            $.get('/ajax/stability/getdata', { file: tempfile })
+                .done(function(response) {
+                    if (response && Array.isArray(response.data)) {
+                        var data = response.data;
 
-  jQuery('#method_btn').on('click', function() {
-    var method_id = jQuery('#select_method').val();
-    $.ajax({
-        url: '/ajax/Stability/get_method',
-        data: {'method_id': method_id  },
-      }); // end .ajax    // }; // end else statement 
+                        // Process the data based on the selected column
+                        var selectedColumnData = data.map(function(item) {
+                            return item[pheno_select];
+                        });
+
+                        // Now you can further process the selectedColumnData array
+                        // console.log(selectedColumnData);
+                        var min = calculateMinimum(selectedColumnData);
+                        var max = calculateMaximum(selectedColumnData);
+                        var mean = calculateMean(selectedColumnData);
+                        var standardDeviation = calculateStandardDeviation(selectedColumnData);
+                        var missingPercentage = calculateMissingPercentage(selectedColumnData);
+
+                        // Generate and append the table HTML
+                        var tableHtml = '<table id="summaryTable">';
+                        tableHtml += '<thead class="bg-light-blue"><tr><th>Trait</th><th>Mean</th><th>Minimum</th><th>Maximum</th><th>Std Dev</th><th>Percent Missing</th></tr></thead>';
+                        tableHtml += '<tbody>';
+                        tableHtml += '<tr><td>' + pheno_select + '</td><td>' + mean + '</td><td>' + min + '</td><td>' + max + '</td><td>' + standardDeviation + '</td><td>' + missingPercentage + '</td></tr>';
+                        tableHtml += '</tbody>';
+                        tableHtml += '</table>';
+                        $('#pheno_summary_table').html(tableHtml);
+                    } else {
+                        console.error("Invalid response format.");
+                    }
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error("Error fetching file:", errorThrown);
+                });
+        } else {
+            // If pheno_select is empty, clear the table
+            $('#pheno_summary_table').html('');
+        }
+    });
+});
+
+function calculateMinimum(data) {
+    // Convert values to numbers and filter out NaN values from the data array
+    var filteredData = data.map(parseFloat).filter(function(value) {
+        return !isNaN(value);
+    });
+
+    // Calculate minimum from filtered data
+    var min = Math.min.apply(null, filteredData).toFixed(3);
+    return min;
+}
+
+
+
+function calculateMaximum(data) {
+    // Filter out NaN values from the data array
+    var filteredData = data.map(parseFloat).filter(function(value) {
+        return !isNaN(value);
+    });
+
+    // Calculate minimum from filtered data
+    var min = Math.max.apply(null, filteredData).toFixed(3);
+    return min;
+}
+
+
+function calculateMean(data) {
+  var filteredData = data.map(parseFloat).filter(function(value) {
+        return !isNaN(value);
   });
+  var sum = 0;
+  var count = 0; // Initialize count for valid data points
+  for (var i = 0; i < filteredData.length; i++) {
+      // Parse each value to ensure it's treated as a number
+      var value = parseFloat(filteredData[i]);
+      // Check if the parsed value is a valid number
+      if (!isNaN(value)) {
+          sum += value;
+          count++; // Increment count for valid data points
+      }
+  }
+  var final_mean = count > 0 ? (sum / count).toFixed(3) : NaN; // Calculate mean only if count is greater than 0, otherwise set mean to NaN
+  return final_mean;
+}
+
+// Function to calculate standard deviation
+function calculateStandardDeviation(data) {
+    var filteredData = data.map(parseFloat).filter(function(value) {
+          return !isNaN(value);
+    });
+
+    var mean = calculateMean(filteredData);
+    var deviation = filteredData.reduce(function (acc, val) {
+        return acc + Math.pow(val - mean, 2);
+    }, 0);
+    var sdV = Math.sqrt(deviation / filteredData.length)
+    return sdV.toFixed(3);
+}
+
+// Function to calculate percentage of missing data
+function calculateMissingPercentage(data) {
+    // Filter out non-numeric values and convert to numbers
+    var filteredData = data.map(parseFloat).filter(function(value) {
+        return !isNaN(value);
+    });
+
+    // Calculate the number of missing values
+    var missingCount = data.length - filteredData.length;
+
+    // Calculate the missing percentage based on the length of filteredData
+    var missingPercentage = (missingCount / filteredData.length) * 100;
+
+    // Return the missing percentage with one decimal place
+    return missingPercentage.toFixed(1);
+}
 
 
-  jQuery('#preview_trait_histogram_btn').on('click', function() {
+jQuery('#runAMMI').click( function () {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
+        alert("Please select a dataset and trait.")
+        $('#stability_files').empty();
+    } else if (jQuery('#select_imput').val() == "imput_empty") {
+        alert("Please select if phenotype imputation is required.")
+    } else if (jQuery('#select_method').val() == "method_empty"){
+        alert("Please select the stability method.")
     } else {
-      //alert("Inside trait preview");
-      var tempfile = jQuery('#tempfile').html();
-      var trait = jQuery('#pheno_select').val();
-      //alert(trait);
-      jQuery.ajax( {
-          url: '/ajax/stability/getdata',
-          data: { 'file' : tempfile },
-          success: function(r)  {
-          //alert("data grabbed "+JSON.stringify(r.data));
-          var v = {
-              "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-              "width": 200,
-              "height": 100,
-              "padding": 5,
-              "data": { 'values': r.data },
-              "mark": "bar",
-              "encoding": {
-              "x": {
-                "bin": true,
-                "field": trait,
-                "type": "quantitative"
-              },
-              "y": {
-                "aggregate": "count",
-                "type": "quantitative"
-              }
-             }
-            };
+        $('#stability_files').empty();
+        if ($('#pheno_select').val() != ""){
+            var dataset_id = get_dataset_id();
+            var trait_id = $('#pheno_select').val();
+            var method_id = $('#select_method').val();
+            var imput_id = $('#select_imput').val();
+            var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+            $.ajax({
+                url: '/ajax/stability/generate_results',
+                data: {
+                    'dataset_id': dataset_id,
+                    'trait_id': trait_id,
+                    'method_id':method_id,
+                    'imput_id':imput_id,
+                    'dataset_trait_outliers': dataset_trait_outliers
+                },
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                timeout: 30000000,
+                success: function(response) {
+                    jQuery("#working_modal").modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        $(document).ready(function(){
+                            var AMMIFile_response = response.AMMITable;
+                            $.get(response.myMessage, function(data) {
+                                if (data.length !== 9) {
+                                    alert(data);
+                                }               
+                            });
 
-   //alert("embedding"+ JSON.stringify(v));
-            vegaEmbed("#trait_histogram_plot", v);
-            //alert("done");
-          },
+                            $.getJSON(response.JSONfile, function(data) {
+                                var parsedData = JSON.parse(data);
+
+                                // printing the result of imputation accuracy
+                                if (imput_id === 'imput_yes') {
+                                    var firstLine = parsedData[0];
+                                    var imputAcc = firstLine.imputAcc;
+                                    imputAcc = imputAcc.toFixed(3);
+                                    var message = "<p>The imputation accuracy (correlation) is " + imputAcc + ".</p>";
+                                    $('#stability_message').html(message);
+                                }else{
+                                    var message = "<p>Analysis processed with no phenotypic imputation.</p>";
+                                    $('#stability_message').html(message);
+                                }
+
+                                var table = '<table id="myTable">';
+                                if (method_id == "ammi") {
+                                  table += '<thead class="bg-light-blue"><tr><th>Accession</th><th>Location</th><th>Effect</th><th>Stability Rank</th><th>Means</th></tr></thead>';
+
+                                } else {
+                                  table += '<thead class="bg-light-blue"><tr><th>Accession</th><th>Location</th><th>Means</th><th>Location Rank</th><th>Genotype Rank</th></tr></thead>';
+                                }
+
+                                if ( method_id == "ammi"){
+                                  // Sort parsedData array by Rank in descending order
+                                  parsedData.sort(function(a, b) {
+                                      return a.Rank - b.Rank;
+                                  });
+                                } else {
+                                  parsedData.sort(function(a, b) {
+                                      return a.locationRank - b.locationRank;
+                                  });
+                                }
+                        
+
+                                table += '<tbody>';
+                                for (var i = 0; i < parsedData.length; i++) {
+                                    var Acc = parsedData[i].Accession;
+                                    var Loc = parsedData[i].location;
+                                    var means = parseFloat(parsedData[i].means);
+                                    var Mean = means.toFixed(3);
+                                    if (method_id == "ammi"){
+                                      var Eff = parsedData[i].Effect.toFixed(3);
+                                      var Rank = parsedData[i].Rank;
+                                    } else {
+                                      var locRank = parsedData[i].locationRank;
+                                      var genRank = parsedData[i].genotypeRank;
+                                    }
+                            
+
+                                    // Create a row for each data point
+                                    table += '<tr>';
+                                    table += '<td>' + Acc + '</td>';
+                                    table += '<td>' + Loc + '</td>';
+                                    
+                                    if (method_id == "ammi") {
+                                        table += '<td>' + Eff + '</td>';
+                                        table += '<td>' + Rank + '</td>';
+                                        table += '<td>' + Mean + '</td>';
+                                    } else {
+                                        table += '<td>' + Mean + '</td>';
+                                        table += '<td>' + locRank + '</td>';
+                                        table += '<td>' + genRank + '</td>';
+                                    }
+                                
+                                    table += '</tr>';
+                                }
+                                table += '</tbody>';
+                                table += '</table>';
+
+                                $('#stability_output').empty().append(table);
+
+                                // Initialize DataTable after the table is appended
+                                $('#myTable').DataTable({
+                                    "paging": true, // Enable pagination
+                                    "searching": true // Enable searching
+                                });
+
+                                $('#download-button').click(function() {
+                                    var csvContent = "data:text/csv;charset=utf-8,";
+                                    // Add table headers to CSV content
+
+                                    if( method_id == "ammi"){
+                                        csvContent += "Accession,Location,Effect,StabilityRank,means\n";
+
+                                        // Add table data to CSV content
+                                        for (var i = 0; i < parsedData.length; i++) {
+                                            var row = parsedData[i];
+                                            csvContent += row.Accession + "," + row.location + "," + row.Effect + "," + row.Rank + "," + row.means + "\n";
+                                        }
+                                    } else {
+                                        csvContent += "Accession,Location,Average,locationRank,genotypeRank\n";
+
+                                      // Add table data to CSV content
+                                        for (var i = 0; i < parsedData.length; i++) {
+                                            var row = parsedData[i];
+                                            csvContent += row.Accession + "," + row.location + "," + row.means + "," + row.locationRank + "," + row.genotypeRank + "\n";
+                                        }
+                                    }
+                                              
+                                    // Create a data URI for the CSV content
+                                    var encodedUri = encodeURI(csvContent);
+
+                                    // Create a download link
+                                    var link = document.createElement("a");
+                                    link.setAttribute("href", encodedUri);
+                                    link.setAttribute("download", "stability_data.csv");
+                                    link.innerHTML = "Download CSV";
+
+                                    // Trigger the click event to download the file
+                                    link.click();
+                                });
+                            });
+
+                            $.getJSON(response.myGraph, function(data) {
+                                var parseData = JSON.parse(data);
+                                // Create a Set to store unique accessions
+                                var uniqueAccessions = new Set();
+
+                                // Iterate through parseData to collect unique accessions
+                                for (var i = 0; i < parseData.length; i++) {
+                                    uniqueAccessions.add(parseData[i].Accession);
+                                }
+
+                                // Convert Set back to an array
+                                var uniqueAccessionsArray = Array.from(uniqueAccessions);
+
+                                // Populate the select box with unique accessions
+                                var select = document.getElementById("accession_select");
+
+                                // Clear existing options
+                                select.innerHTML = "";
+
+                                // Add each unique accession as an option
+                                for (var j = 0; j < uniqueAccessionsArray.length; j++) {
+                                    var option = document.createElement("option");
+                                    option.text = uniqueAccessionsArray[j];
+                                    option.value = uniqueAccessionsArray[j];
+                                    select.add(option);
+                                }
+
+                                // Define function to redraw chart based on selected varieties
+                                function redrawChart() {
+                                    // Get selected varieties from the select box
+                                    const selectedVarieties = Array.from(select.selectedOptions).map(option => option.value);
+
+                                    // Filter the data based on the selected varieties
+                                    const filteredData = parseData.filter(d => selectedVarieties.includes(d.Accession));
+
+                                    // Remove the existing plot
+                                    d3.select("#graphics_output svg").remove();
+
+                                    // Call createChart or deviationLinePlot function with the filtered data
+                                    if (method_id === "ammi") {
+                                        createChart(filteredData); // Pass filtered data
+                                    } else {
+                                        deviationLinePlot(filteredData); // Pass filtered data
+                                    }
+                                }
 
 
-        error: function(e) { alert('error!'); }
-      });
-    };
-  });
+                                // Attach event listener to select box for automatic redraw
+                                select.addEventListener('change', redrawChart);
 
-
-  jQuery('#runAMMI').click( function () {
-    if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
-      $('#stability_files').empty();
-    } else {
-      $('#stability_files').empty();
-      if ($('#pheno_select').val() != ""){
-        var dataset_id = get_dataset_id();
-        var trait_id = $('#pheno_select').val();
-        var method_id = $('#select_method').val();
-        $.ajax({
-          url: '/ajax/stability/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'method_id':method_id},
-          beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-          },
-          timeout: 30000000,
-          success: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error) {
-              alert(response.error);
-            }
-            else {
-              var AMMIFile_response = response.AMMITable;
-              var fig1_response = response.figure1;
-              var fig2_response = response.figure2;
-        //alert("Response ID: "+temp_response);
-            //alert("Response ID: "+fig1_response);
-              //setTimeout(function() {
-              $('#stability_output').append("<img id='stability_Table' src='"+ AMMIFile_response + "'/>");
-              $('#stability_output').append("<img id='stability_Figure1' src='"+ fig1_response + "'/>");
-              $('#stability_output').append("<img id='stability_Figure2' src='"+ fig2_response + "'/>");
-              //},6000);
+                                let svgElement;
+                                if ( method_id == "ammi"){
+                                    svgElement = createChart(parseData);
+                                } else {
+                                    svgElement = deviationLinePlot(parseData);
+                                }
+                                $('#graphics_output').append(svgElement);
+                            });
+                        })
+             
             }
           },
           error: function(response) {
@@ -265,7 +537,261 @@ jQuery(document).ready(function() {
         });
       }
     };
-  });
+});
+
+
+function createChart(data) {
+    // Set up SVG dimensions
+    const margin = { top: 10, right: 120, bottom: 40, left: 50 };
+    const width = 600 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    // Create SVG element
+    const svg = d3.select("#graphics_output")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Define scales
+    const xScale = d3.scaleLinear()
+        .domain([d3.min(data, d => d.X), d3.max(data, d => d.X)])
+        .range([0, width]);
+
+    // Find the minimum and maximum y-values in your data
+    const minY = d3.min(data, d => d.value);
+    const maxY = d3.max(data, d => d.value);
+
+    // Define a linear scale to map the original y-values to a range between 0 and 1
+    const yScale = d3.scaleLinear()
+        .domain([0, 1]) // Adjusted domain for y-axis
+        .range([height, 0]);
+
+    // Define line function
+    const line = d3.line()
+        .x(d => xScale(d.X))
+        .y(d => yScale(d.value));
+
+    // Define color scale
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+    // Create a tooltip div
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+    // Append lines to the SVG
+    const lines = svg.selectAll(".line")
+        .data(d3.nest()
+            .key(d => d.Accession)
+            .entries(data))
+        .enter().append("g");
+
+    lines.append("path")
+        .attr("class", "line")
+        .attr("d", d => line(d.values))
+        .attr("fill", "none")
+        .attr("stroke", d => colorScale(d.key))
+        .on("mouseover", function (event, d) {
+            d3.select(this).attr("stroke-width", 4);
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            tooltip.html("Accession: " + d.key) // Display accession name in the tooltip
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 20) + "px");
+        })
+        .on("mouseout", function () {
+            d3.select(this).attr("stroke-width", 2);
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
+
+    // Append variety names at the end of each line
+    lines.each(function (d) {
+        const endData = d.values[d.values.length - 1];
+        svg.append("text")
+            .attr("class", "variety-name")
+            .attr("x", xScale(endData.X) + 5)
+            .attr("y", yScale(endData.value))
+            .text(endData.Accession) // Using "Accession" property
+            .attr("fill", colorScale(d.key));
+    });
+
+    // Plot points
+    svg.selectAll(".point")
+        .data(data)
+        .enter().append("circle")
+        .attr("class", "point")
+        .attr("cx", d => xScale(d.X))
+        .attr("cy", d => yScale(d.value))
+        .attr("r", 3)
+        .attr("fill", d => colorScale(d.Accession));
+
+    // Add axes
+    svg.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScale).ticks(5))
+        .selectAll('path')
+        .style('stroke-width', '2px');
+
+    svg.append("g")
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale))
+        .selectAll('path')
+        .style('stroke-width', '2px');
+
+    // Add labels and title
+    svg.append("text")
+        .attr("class", "title")
+        .attr("x", width / 2)
+        .attr("y", -margin.top / 2)
+        .style("text-anchor", "middle")
+        // .text("Means vs. Value X Grouped by Accessions");
+
+    svg.append("text")
+        .attr("class", "x-label")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom)
+        .style("text-anchor", "middle")
+        .text("Number of Locations");
+
+    svg.append("text")
+        .attr("class", "y-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -margin.left)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Scaled Stability");
+
+    return svg; // Return the SVG node
+}
+
+
+function deviationLinePlot(data) {
+    // Set up SVG dimensions
+    const margin = { top: 10, right: 120, bottom: 40, left: 50 };
+    const width = 600 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    // Extract unique accessions and locations
+    const accessions = [...new Set(data.map(d => d.Accession))];
+    const locations = [...new Set(data.map(d => d.location))];
+
+    // Define scales
+    const xScale = d3.scalePoint()
+        .domain(locations)
+        .range([0, width])
+        .padding(0.5);
+
+    const buffer = 20;
+    const yMin = d3.min(data, d => d.mean - d.sd);
+    const yMax = d3.max(data, d => d.mean + d.sd);
+    const yDomainMin = Math.max(yMin*0.9);
+    const yScale = d3.scaleLinear()
+        .domain([yDomainMin, yMax + buffer])
+        .range([height, 0]);
+
+
+    // Define line generator
+    const line = d3.line()
+        .x(d => xScale(d.location))
+        .y(d => yScale(d.mean));
+
+    // Define color scale
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+    // Create SVG element
+    const svg = d3.select("#graphics_output")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Add lines for each accession
+    accessions.forEach(accession => {
+        const accessionData = data.filter(d => d.Accession === accession);
+        svg.append("path")
+            .datum(accessionData)
+            .attr("class", "line")
+            .attr("d", line)
+            .attr("fill", "none")
+            .attr("stroke", colorScale(accession));
+
+        // Add accession name at the end of the line
+        const lastPoint = accessionData[accessionData.length - 1];
+        svg.append("text")
+            .attr("x", xScale(lastPoint.location) + 5)
+            .attr("y", yScale(lastPoint.mean))
+            .attr("dy", "0.35em")
+            .attr("fill", colorScale(accession))
+            .text(accession);
+    });
+
+    // Add points at each location
+    svg.selectAll(".point")
+        .data(data)
+        .enter().append("circle")
+        .attr("class", "point")
+        .attr("cx", d => xScale(d.location))
+        .attr("cy", d => yScale(d.mean))
+        .attr("r", 3)
+        .attr("fill", d => colorScale(d.Accession)); // Use colorScale to color points
+
+    // Add error bars
+    svg.selectAll(".error-bar")
+        .data(data)
+        .enter().append("line")
+        .attr("class", "error-bar")
+        .attr("x1", d => xScale(d.location))
+        .attr("y1", d => yScale(d.mean + d.sd))
+        .attr("x2", d => xScale(d.location))
+        .attr("y2", d => yScale(d.mean - d.sd))
+        .attr("stroke", d => colorScale(d.Accession)) // Use colorScale to set stroke color
+        .attr("stroke-width", 1);
+
+
+    // Add axes
+    svg.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScale));
+
+    svg.append("g")
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale));
+
+    // Add labels and title
+    svg.append("text")
+        .attr("class", "title")
+        .attr("x", width / 2)
+        .attr("y", -margin.top / 2)
+        .style("text-anchor", "middle");
+
+    svg.append("text")
+        .attr("class", "x-label")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom)
+        .style("text-anchor", "middle")
+        .text("Location");
+
+    svg.append("text")
+        .attr("class", "y-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -margin.left)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Mean");
+
+    return svg; // Return the SVG node
+}
+
 
 function get_dataset_id() {
       var selected_datasets = [];
@@ -279,17 +805,13 @@ function get_dataset_id() {
           alert('Please select only one dataset!');
           return false;
       } else {
-    var dataset_id=selected_datasets[0];
-    return dataset_id;
+      var dataset_id=selected_datasets[0];
+      return dataset_id;
     }
+}
+
   }
-
-});
-
-
-
-
-
+);
 
 
 
@@ -303,12 +825,23 @@ h1 {
   display:none;
 }
 
+.bg-light-blue {
+    background-color: #EEEEFE;
+}
+
+/* Style the background color of the search input field */
+.dataTables_wrapper .dataTables_filter input[type="search"] {
+    background-color: #add8e6; /* Slightly darker shade of light blue */
+    border-color: #add8e6; /* Match the border color to the background color */
+}
+
+
 .seq_map {
-	color: #777777;
-	width: 700px;
-	position:relative;
-	overflow: auto;
-	align: left;
+  color: #777777;
+  width: 700px;
+  position:relative;
+  overflow: auto;
+  align: left;
 }
 
 .blast_select_box {
@@ -323,29 +856,29 @@ h1 {
 }
 
 .ui-dialog {
-	position:relative;
+  position:relative;
 }
 
 #region_square {
-	position:absolute;
-	vertical-align:middle;
+  position:absolute;
+  vertical-align:middle;
 }
 .help_dialog {
-	color:blue;
-	cursor:pointer
+  color:blue;
+  cursor:pointer
 }
 #desc_dialog {
-	overflow: auto;
-	position: relative;
+  overflow: auto;
+  position: relative;
 }
 .help_box {
-	background-color:#EEEEFE;
-	border-color:#AAA;
-	border-width:2px;
-	border-style:solid;
-	border-radius:5px;
-	padding-left: 10px;
-	padding-right: 10px;
+  background-color:#EEEEFE;
+  border-color:#AAA;
+  border-width:2px;
+  border-style:solid;
+  border-radius:5px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 #sequence {
@@ -380,6 +913,40 @@ h1 {
   overflow:scroll;
   overflow-x: hidden;
 }
+
+
+#tooltip {
+  position: absolute;
+  visibility: hidden;
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 10px;
+  z-index: 1;
+}
+
+#stability_message_container {
+    text-align: left;
+}
+
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
 
 
 </style>

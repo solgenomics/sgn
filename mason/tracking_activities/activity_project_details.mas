@@ -1,0 +1,140 @@
+<%args>
+$trial_id
+$trial_name
+$breeding_program_name
+$breeding_program_id
+$location_name
+$country_name
+$year
+$trial_description
+$folder_name
+$folder_id
+$identifier_prefix
+$trial_owner
+$vendor_id
+$parent_project_id
+$activity_type
+</%args>
+
+
+<div class="row">
+    <div class="col-sm-12">
+
+        <table class="table table-hover table-bordered" >
+
+            <tr>
+                <td><b>Tracking Activity Project Name</b></td>
+                <td>
+                    <div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "<span class='text-danger'>[No Tracking Activity Project Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Record Type</b></td>
+                <td>
+                    <div id="activity_type">
+% if ($activity_type eq 'transformation') {
+%     print 'Transformation';
+% } elsif ($activity_type eq 'tissue_culture') {
+%     print 'Tissue Culture';
+% } else {
+%   print "<span class='text-danger'>[No Record Type]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Breeding Program </b></td>
+                <td>
+                    <span id="breeding_program">
+% if ($breeding_program_name) {
+%  print "$breeding_program_name";
+% }
+% else {
+%  print "<span class='text-danger'>[No Breeding Program]</span>";
+% }
+                    </span>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Location</b></td>
+                <td>
+                    <div id="trial_location">
+% if ($location_name && ($location_name ne '[Computation]')) {
+%  print "$location_name ( $country_name )";
+% } else {
+%  print "<span class='text-danger'>[No Location]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Year</b></td>
+                <td>
+                    <div id="trial_year">
+% if ($year) {
+%  print "$year";
+% } else {
+%  print "<span class='text-danger'>[No Year]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+% if ($trial_description) {
+%  print "<div id='trial_description' style='white-space: pre-wrap;'>$trial_description</div>";
+% } else {
+%  print "<div id='trial_description'><span class='text-danger'>[No Description]</span></div>";
+% }
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Folder</b></td>
+                <td>
+                    <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+                    <br/><br/>
+                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Created by</b></td>
+                <td>
+                    <div id="trial_owner">
+% if ($trial_owner) {
+%  print "$trial_owner";
+% } else {
+%  print "<span class='text-danger'>[N/A]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+</div>
+% if (!$vendor_id && !$parent_project_id) {
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="generate_identifiers_link">Generate Tracking Identifiers</button>
+% }
+</br>
+</br>
+% if ($parent_project_id) {
+    <td>
+        <a href='/breeders/trial/<%$parent_project_id%>'><p>Go to Transformation Page</p></a>
+    </td>
+% }
+
+
+<& /tracking_activities/generate_tracking_identifiers_dialog.mas, trial_name => $trial_name, breeding_program_name => $breeding_program_name &>

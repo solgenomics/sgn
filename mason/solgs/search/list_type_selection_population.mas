@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-/solgs/search/list_type_selection_population.mas - template for list type selection popultions 
+/solgs/search/list_type_selection_population.mas - search template for list and dataset  type selection popultions 
 
 =AUTHOR
 
@@ -16,29 +16,22 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation"] &>
-  
-  <div class="list_upload" id="list_label">
-    <label for="list_type_selection_pops">Select a list-based selection population </label>
-  </div> 
-  
-  <div class="list_upload" id="list_type_selection_pops_list">      
-  </div>
-  
-  <div class="list_upload" id="list_type_selection_pop_load">
-    <input type="button" value="Go" />
-  </div>
-   
-  <div class="list_upload" style="margin-left:5px">     
-    <i class="glyphicon-plus"></i>
-    <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list of clones</a>  
-  </div>
-  
-  <br>
-  <br>  
-  
-  <div class="sub_infosectioncontent" id="list_type_selection_populations" style="display:none">
-  </div>
+<%perl>
+my $referer = '/' .$c->req->path;
+
+my $search_params = '?dsp=genotyping_protocols,trials|accessions&dsr=' . $referer;
+</%perl>
+
+<& /util/import_javascript.mas, classes => ["solGS.List", "solGS.listTypeSelectionPopulation"] &>
+
+
+<& /solgs/tools/login.mas,
+    tool_url => $referer,
+    analysis_type => 'list_type_selection',
+    wizard_link_txt => 'Create a new dataset of accessions or trials',
+    breeder_search_params => $search_params  
+&>
+
 
 
 

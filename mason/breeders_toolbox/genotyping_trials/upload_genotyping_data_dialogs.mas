@@ -7,13 +7,13 @@ $facilities
 <div class="modal fade" id="upload_genotypes_dialog" name="upload_genotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypesDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypesDialog">Upload Genotypes</h4>
-            </div>
-            <div class="modal-body">
-                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotypes_form" name="upload_genotypes_form" action="/ajax/genotype/upload">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotypes_form" name="upload_genotypes_form" action="/ajax/genotype/upload">
 
+                <div class="modal-header">
+                    <button type="reset" class="close" id="upload_genotype_data_close_modal_1" name="upload_genotype_data_close_modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="uploadGenotypesDialog">Upload Genotypes</h4>
+                </div>
+                <div class="modal-body">
                     <div class="container-fluid">
 
                         <&| /util/workflow.mas, id=> "upload_genotypes_workflow" &>
@@ -21,13 +21,13 @@ $facilities
                                 <& /page/page_title.mas, title=>"This workflow will guide you through uploading genotypes into the database" &>
                                 <p>Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facilty.</p>
                                 <p>Ideally the sample names in your VCF file will match sample names in genotyping plates in the database; however, the sample names in your file can also match accession names in the database.</p>
-                                <p>Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format and SSR for upload.</p>
+                                <p>Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format, KASP data and SSR data for upload.</p>
                                 <p>If you are uploading many files that used the same genotyping protocol, you can do so, and the database will ensure that the marker information is consistent across the genotyping data (e.g. the same reference, alternate, position, etc.).</p>
 
                                 <br/><br/>
-                                <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </div>
                             </&>
 
                             <&| /util/workflow.mas:step, title=> "Data Type" &>
@@ -40,14 +40,15 @@ $facilities
                                             <option value="vcf">VCF</option>
                                             <option value="tassel_hdf5">Tassel HDF5</option>
                                             <option value="intertek">Intertek</option>
+                                            <option value="KASP">KASP (csv)</option>
                                             <option value="ssr">SSR</option>
                                         </select>
                                     </div>
                                 </div>
                                 <br/><br/>
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_type_check_button">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_type_check_button">Go to Next Step</button>
+                                </div>
                             </&>
 
                             <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
@@ -67,9 +68,9 @@ $facilities
                                     </thead>
                                 </table>
 
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_project_missing_button">My project is not here. Create a new one.</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_project_missing_button">My project is not here. Create a new one.</button>
+                                </div>
                                 <br/>
 
                                 <!-- If genotyping project is selected above, the project_id is passed to controller, negating need to create new project -->
@@ -115,9 +116,9 @@ $facilities
                                 </div>
 
                                 <br/>
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_project_check_button">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_project_check_button">Go to Next Step</button>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Genotyping Protocol" &>
                                 <& /page/page_title.mas, title=>"Provide info about the genotyping protocol used. The genotyping protocol represents a specific instance of how genotypes were called for a set of markers in a genotyping platform. Many genotyping projects can use the same genotyping protocol." &>
@@ -138,9 +139,9 @@ $facilities
                                     </thead>
                                 </table>
 
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_protocol_missing_button">My protocol is not here. Create a new one.</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_protocol_missing_button">My protocol is not here. Create a new one.</button>
+                                </div>
                                 <br/>
 
                                 <!-- If protocol is selected above, the protocol_id is passed to controller, negating need to create new protocol -->
@@ -164,6 +165,17 @@ $facilities
                                             <label class="col-sm-5 control-label">Species:</label>
                                             <div class="col-sm-7">
                                                 <input class="form-control" id="upload_genotypes_species_name_input" name="upload_genotypes_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Assay Type </label>
+                                            <div class="col-sm-7">
+                                                <select class="form-control" id="assay_type_select" name="assay_type_select">
+                                                    <option value="">Select assay type</option>
+                                                    <option value="GBS">GBS</option>
+                                                    <option value="KASP">KASP</option>
+                                                    <option value="SSR">SSR</option>
+                                                </select>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -206,9 +218,9 @@ $facilities
                                 </div>
 
                                 <br/>
-                                <center>
-                                <button class="btn btn-primary" id="upload_genotyping_data_protocol_check_button">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button class="btn btn-primary" id="upload_genotyping_data_protocol_check_button">Go to Next Step</button>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Genotype Info" &>
                                 <& /page/page_title.mas, title=>"Provide genotype information" &>
@@ -322,6 +334,43 @@ $facilities
                                     </div>
                                 </div>
 
+                                <div class="well well-sm" id="upload_genotype_data_format_kasp" style="display:none">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="upload_genotype_kasp_spreadsheet_info_format">KASP data format</a>
+                                                </p>
+                                            </&>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <br/>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Select KASP Marker Information File (csv): </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="upload_genotype_kasp_marker_info_file_input" id="upload_genotype_kasp_marker_info_file_input" encoding="multipart/form-data" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Select KASP Result File (csv): </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="upload_genotype_data_kasp_file_input" id="upload_genotype_data_kasp_file_input" encoding="multipart/form-data" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="well well-sm" id="upload_genotype_data_format_ssr" style="display:none">
                                     <div class="row">
                                         <div class="col-sm-4">
@@ -350,9 +399,10 @@ $facilities
                                 </div>
 
                                 <br/><br/>
-                                <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button type="button" class="btn btn-default" name="file_check_button" id="file_check_button">Check File Type</button>
+                                    <button type="button" style="display:none" class="btn btn-primary" disabled onclick="Workflow.complete(this); return false;" id="genotyping_data_upload_next">Go to Next Step</button>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
                                 <& /page/page_title.mas, title=>"Finalize and submit your genotyping data" &>
@@ -380,9 +430,9 @@ $facilities
                                     </div>
                                 </div>
 
-                                <center>
-                                <button type="button" class="btn btn-primary" name="upload_genotype_submit" id="upload_genotype_submit">Submit</button>
-                                </center>
+                                <div style="text-align: center">
+                                    <button type="button" class="btn btn-primary" name="upload_genotype_submit" id="upload_genotype_submit">Submit</button>
+                                </div>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Complete" &>
                                 <& /page/page_title.mas, title=>"Complete! Your genotyping data was saved in the database." &>
@@ -397,13 +447,12 @@ $facilities
                                 <br/>
                             </&>
                         </&>
-
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
+                    <div class="modal-footer">
+                        <button type="reset" id="upload_genotype_data_close_modal_2" name="upload_genotype_data_close_modal" class="btn btn-default" >Close</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -517,7 +566,7 @@ $facilities
                 <div class="container-fluid">
                     <b>This is for uploading Intertek genotype data.</b>
                     <br/>
-                    <b>Please use CSV formatted files</b>
+                    <b>Please use csv formatted files</b>
                     <br/>
                     <br/>
                     <b>For Intertek SNP Result Grid File:</b>
@@ -553,13 +602,21 @@ $facilities
                                 <td>Alternate</td>
                                 <td>Chromosome</td>
                                 <td>Position</td>
-                                <td>Quality</td>
-                                <td>Filter</td>
-                                <td>Info</td>
-                                <td>Format</td>
+                                <td><b>Optional:</b> additional marker info can be included. Please see below.</td>
                             </tr>
                         </tbody>
                     </table>
+                    <b>
+                        Optional columns:
+                    </b>
+                    You can include additional marker infomation by selecting one or more column headers listed below. Please add the selected column(s) after "Position" column. </li>
+                    <ul>
+                        <li><b>Quality</b></li>
+                        <li><b>Filter</b></li>
+                        <li><b>Info</b></li>
+                        <li><b>Format</b></li>
+                        <li><b>Sequence</b></li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
@@ -859,10 +916,114 @@ $facilities
     </div>
 </div>
 
+<div class="modal fade" id="upload_genotype_kasp_spreadsheet_info_format_dialog" name="upload_genotype_kasp_spreadsheet_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypeKASPDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypeKASPDialog">Upload KASP data Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading KASP genotype data.</b>
+                    <br/>
+                    <b>Please use csv formatted files</b>
+                    <br/>
+                    <br/>
+                    <u><b>For KASP Marker Information File:</b></u>
+                    <br>
+                    <p>The header must be:</p>
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>MarkerName</td>
+                                <td>Xallele</td>
+                                <td>Yallele</td>
+                                <td>Chromosome</td>
+                                <td>Position</td>
+                                <td><b>Optional:</b> additional marker info can be included. Please see below.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Note:</b> For dosage calculation, Xallele is used as reference allele (0) and Yallele is used as alternative allele (1).
+                    <br>
+                    <b>Optional columns:</b>
+                    You can include additional marker information by selecting one or more column headers listed below. Please add the selected column(s) after "Position" column. </li>
+                    <ul>
+                        <li>Quality</li>
+                        <li>Filter</li>
+                        <li>Info</li>
+                        <li>Format</li>
+                        <li>Sequence</li>
+                        <li><b>FacilityMarkerName:</b> if you are uploading genotyping data by using facility marker names, please include these names in the KASP marker information file using "FacilityMarkerName" header</li>
+                    </ul>
+                    <hr class ="solid">
+                    <u><b>For KASP Result File:</b></u>
+                    <br>
+                    <b>Note:</b> If your genotyping facility assigned facility marker names and facility sample names for the genotyping data generated, you have an option to directly use these facility names for uploading. After uploaded into database, the genotyping data will be automatically linked to the original marker names and sample names.
+                    <br>
+                    <br>
+                    <p>If you are uploading genotyping data using your marker names and sample names, the header must be:</p>
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <tbody>
+                            <tr>
+                                <td>MarkerName</td>
+                                <td>SampleName</td>
+                                <td>SNPcall</td>
+                                <td>Xvalue</td>
+                                <td>Yvalue</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <ul>
+                        <li><b>MarkerName:</b> Must exist in the marker information file. If you are uploading genotyping data using previously stored protocol, marker names must exist in the selected protocol.
+                        <li><b>SampleName:</b> Must exist in the database as uniquenames.</li>
+                        <li><b>SNPcall:</b> Allele separated by ":" (for example A:G).
+                        <li><b>Xvalue:</b> raw data of X.
+                        <li><b>Yvalue:</b> raw data of Y.
+                    </ul>
+                    <br>
+                    <p>If you are uploading genotyping data using facility marker names and facility sample names, the header must be:</p>
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>FacilityMarkerName</td>
+                                <td>FacilitySampleName</td>
+                                <td>SNPcall</td>
+                                <td>Xvalue</td>
+                                <td>Yvalue</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <ul>
+                        <li><b>FacilityMarkerName:</b> Must exist in the marker information file.
+                        <li><b>FacilitySampleName:</b> Must exist in the database. You can create a link between each sample name and facility sample name by including facility sample name during uploading genotyping plates</li>
+                        <li><b>SNPcall:</b> Allele separated by ":" (for example A:G).
+                        <li><b>Xvalue:</b> raw data of X.
+                        <li><b>Yvalue:</b> raw data of Y.
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_genotyping_kasp_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
 
 .ui-autocomplete { z-index:2147483647; }
+
+hr.solid { border-top: 3px solid #bbb; }
 
 </style>
 
@@ -877,24 +1038,35 @@ jQuery(document).ready(function(){
         if (data_type == 'vcf') {
             jQuery('#upload_genotype_data_format_vcf').show();
             jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_kasp').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').hide();
         } else if (data_type == 'intertek') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').show();
+            jQuery('#upload_genotype_data_format_kasp').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').hide();
         } else if (data_type == 'tassel_hdf5') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_kasp').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').show();
             jQuery('#upload_genotype_data_format_ssr').hide();
         } else if (data_type == 'ssr') {
             jQuery('#upload_genotype_data_format_vcf').hide();
             jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_kasp').hide();
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').show();
+        } else if (data_type == 'KASP') {
+            jQuery('#upload_genotype_data_format_vcf').hide();
+            jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_kasp').show();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
+            jQuery('#upload_genotype_data_format_ssr').hide();
         }
+
 
     jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
         if (data_type == 'ssr') {
@@ -1012,6 +1184,56 @@ jQuery(document).ready(function(){
         return false;
     });
 
+    jQuery('#file_check_button').click(function(){
+        var data_type = jQuery('#genotype_data_type_select').val();
+        if (data_type == 'vcf') {
+            if (jQuery('#upload_genotype_vcf_file_input').val() == ''){
+                alert('Please select a VCF file.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        } else if (data_type == 'tassel_hdf5') {
+            if (jQuery('#upload_genotype_tassel_hdf5_file_input').val() == ''){
+                alert('Please select a Tassel HDF5 file.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        } else if (data_type == 'intertek') {
+            if (jQuery('#upload_genotype_intertek_file_input').val() == ''){
+                alert('Please select an Intertek SNP Result Grid file.');
+            } else if (jQuery('#upload_genotype_intertek_snp_file_input').val() == ''){
+                alert('Please select an Intertek SNP Information File.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        } else if (data_type == 'KASP') {
+                if (jQuery('#upload_genotype_data_kasp_file_input').val() == ''){
+                    alert('Please select a KASP Result file.');
+                } else if (jQuery('#upload_genotype_kasp_marker_info_file_input').val() == ''){
+                    alert('Please select a KASP Marker Information File.');
+                } else {
+                    jQuery('#file_check_button').hide();
+                    jQuery('#genotyping_data_upload_next').show();
+                    jQuery('#genotyping_data_upload_next').attr('disabled', false);
+                }
+
+        } else if (data_type == 'ssr') {
+            if (jQuery('#upload_genotype_ssr_file_input').val() == ''){
+                alert('Please select a SSR file.');
+            } else {
+                jQuery('#file_check_button').hide();
+                jQuery('#genotyping_data_upload_next').show();
+                jQuery('#genotyping_data_upload_next').attr('disabled', false);
+            }
+        }
+    });
+
     jQuery('#upload_genotype_vcf_spreadsheet_info_format').click(function(){
         jQuery('#upload_genotype_vcf_spreadsheet_info_format_dialog').modal('show');
     });
@@ -1022,6 +1244,10 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_genotype_intertek_spreadsheet_info_format').click(function(){
         jQuery('#upload_genotype_intertek_spreadsheet_info_format_dialog').modal('show');
+    });
+
+    jQuery('#upload_genotype_kasp_spreadsheet_info_format').click(function(){
+        jQuery('#upload_genotype_kasp_spreadsheet_info_format_dialog').modal('show');
     });
 
     jQuery('#upload_ssr_data_spreadsheet_info').click(function(){
@@ -1088,6 +1314,13 @@ jQuery(document).ready(function(){
 
         }
     });
+
+    jQuery("[name='upload_genotype_data_close_modal']").click(function() {
+        jQuery('#upload_genotypes_dialog').modal('hide');
+        location.reload();
+    });
+
+
 
 });
 </script>

@@ -33,8 +33,11 @@ sub define_object {
     my $stock_id  = $args{stock_id} || $args{object_id};
     my $user_type = $self->get_user()->get_user_type();
     my %json_hash= $self->get_json_hash();
+    my $sp_person_id = $self->get_user()->get_sp_person_id();
 
-    my $schema   = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' );
+    print STDERR "this is sp_person_id before dbic_schema: ".$sp_person_id."\n";
+
+    my $schema   = $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     $self->set_object_id($stock_id);
     $self->set_object_name('Stock'); #this is useful for email messages

@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/geno_protocol/index.mas - genotyping protocol selection template
+/solgs/genotyping_protocol/index.mas - genotyping protocol selection template
 
 
 
@@ -14,25 +14,44 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%doc>
 
+<%perl>
+
+my $url = $c->req->path;
+my $geno_msg = "<p>This database has no genotype data or you have not selected a genotyping protocol. ";
+my $geno_msg_part = "either load genotype data to the database and try again or select a genotyping protocol (from above).";
+if ($url =~ /solgs/) {
+  $geno_msg = "$geno_msg Therefore, solGS does not function in this website.</p>
+  <p>Please $geno_msg_part</p>";
+} else {
+  $geno_msg = "$geno_msg  Therefore, this tool does not function on genotype data in this website.</p>
+  <p>If you intend to use the tool on genotype data, please $geno_msg_part</p>";
+}
+
+</%perl>
 
 <& /util/import_javascript.mas, classes => ['solGS.genotypingProtocol'] &>
 
+<div id="genotyping_protocols_canvas">
+  <div id="genotyping_protocols_message" class="message" style="display:none;">Retrieving genotyping protocols...please wait...</div>
+    <div id="genotyping_protocols_progress">
+      <& /solgs/spinner/spinner.mas &>
+    </div>
+  </div>
 
-  <div  class='row text-center'
+<div  class='row text-center'
        id='genotyping_protocol'
-       style='margin-top:30px;margin-bottom:60px;'>
+       style='margin:40px 0 40px 0;display:none'>
     <div>
       <button class='btn btn-light'
 	      type='button'
-	      id='genotyping_protocol_message'>
+	      id='genotyping_protocol_message'>Retrieving genotyping protocols...
       </button>
       <button class='btn btn-success'
 	      type='button'
 	      id='genotyping_protocols_change'>Change
       </button>
     </div>
-    <div id='genotyping_protocols_list_div'
-	 style='text-align:center;width:40%;display:none;margin:0 auto;'>
+    <div id='genotyping_protocols_list_div' style='text-align:center;width:40%;display:none;margin:0 auto;'>
       <select class='form-control text-center'
 	      id='genotyping_protocols_list_select'>
       </select>
@@ -41,4 +60,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
    <input type='hidden'
 	   id='genotyping_protocol_id'
 	   value=''/>
+</div>
+
+<div class="row" style="margin-top:10px;margin-bottom:10px">
+	<div  id="genotype_missing_message"  class="col-md-6 col-md-offset-3  bg-danger" style="padding-top:10px;padding-bottom:10px;display:none">
+  	<% $geno_msg %>
   </div>
+</div>
+

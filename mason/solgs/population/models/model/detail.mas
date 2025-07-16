@@ -27,20 +27,18 @@ $protocol_url => ''
 $combo_pops_id => ''
 $genotyping_protocol_id => ''
 $training_pop_url
+$analysis_type => ''
 </%args>
 
 <%perl>
 
 </%perl>
 
+<& /util/import_javascript.mas, classes => ["solGS.genotypingProtocol", "statistics/simple_statistics"] &>
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.genotypingProtocol", "statistics/simple_statistics"] &>
-
-
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /page/page_title.mas,
-   title => "Genomic selection model for $trait_name ($trait_abbr) in $training_pop_name"
+   title => "Model $trait_name ($trait_abbr)"
 &>
 
 <&| /page/info_section.mas,
@@ -53,7 +51,7 @@ $training_pop_url
     training_pop_id   => $training_pop_id,
    	training_pop_name => $training_pop_name,
     training_pop_desc => $training_pop_desc,
-	  training_pop_url    => $training_pop_url,
+	training_pop_url    => $training_pop_url,
     trial_detail_page => $trial_detail_page,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
@@ -69,6 +67,7 @@ $training_pop_url
      trait_id => $trait_id,
      combo_pops_id => $combo_pops_id,
      genotyping_protocol_id => $genotyping_protocol_id,
+     analysis_type => $analysis_type,
 
      &>
 </&>
@@ -100,17 +99,16 @@ $training_pop_url
    accuracy_report        => $accuracy_report,
 &>
 
-<& gebvs.mas,
-   pop_id             => $training_pop_id,
-  trait_id            => $trait_id
-  &>
-
-  <& gebv_pheno_regression.mas,
+<& gebv_pheno_regression.mas,
         pop_id       => $training_pop_id,
        trait_id      => $trait_id,
        combo_pops_id => $combo_pops_id,
 &>
 
+<& gebvs.mas,
+   pop_id             => $training_pop_id,
+  trait_id            => $trait_id
+  &>
 
 <& /solgs/tools/kinship/analysis.mas,
    pop_id  => $training_pop_id,

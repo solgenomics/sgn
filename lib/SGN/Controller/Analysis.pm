@@ -11,7 +11,6 @@ sub view_analyses :Path('/analyses') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user_id;
     if ($c->user()) {
         $user_id = $c->user->get_object()->get_sp_person_id();
@@ -20,6 +19,8 @@ sub view_analyses :Path('/analyses') Args(0) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     }
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+
     $c->stash->{template} = '/analyses/index.mas';
 }
 
@@ -27,7 +28,6 @@ sub analysis_detail :Path('/analyses') Args(1) {
     my $self = shift;
     my $c = shift;
     my $analysis_id = shift;
-    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user = $c->user();
 
     my $user_id;
@@ -39,19 +39,23 @@ sub analysis_detail :Path('/analyses') Args(1) {
         $c->detach();
     }
 
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     print STDERR "Viewing analysis with id $analysis_id\n";
 
-    my $a = CXGN::Analysis->new({
+    my $a;
+    eval {
+    $a = CXGN::Analysis->new({
         bcs_schema => $bcs_schema,
-        people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         trial_id => $analysis_id,
     });
+    };
 
-    if (! $a) {
+    if ($@) {
         $c->stash->{template} = '/generic_message.mas';
-        $c->stash->{message} = 'The requested analysis ID does not exist in the database.';
+        $c->stash->{message} = 'The requested analysis ID does not exist in the database or has been deleted.';
         return;
     }
 
@@ -74,7 +78,6 @@ sub analysis_model_detail :Path('/analyses_model') Args(1) {
     my $self = shift;
     my $c = shift;
     my $model_id = shift;
-    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $user_id;
     if ($c->user()) {
@@ -85,12 +88,13 @@ sub analysis_model_detail :Path('/analyses_model') Args(1) {
         $c->detach();
     }
 
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     print STDERR "Viewing analysis model with id $model_id\n";
 
     my $m = CXGN::AnalysisModel::GetModel->new({
         bcs_schema=>$bcs_schema,
-        metadata_schema=>$c->dbic_schema("CXGN::Metadata::Schema"),
-        phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema"),
+        metadata_schema=>$c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         nd_protocol_id=>$model_id
     });
     my $saved_model_object = $m->get_model();

@@ -10,6 +10,10 @@ use CXGN::List::Validate;
 use CXGN::BreedersToolbox::StocksFuzzySearch;
 use CXGN::BreedersToolbox::OrganismFuzzySearch;
 
+#
+# DEPRECATED: This plugin has been replaced by the AccessionsGeneric plugin
+#
+
 sub _validate_with_plugin {
     my $self = shift;
 
@@ -57,7 +61,8 @@ sub _validate_with_plugin {
         return;
     }
 
-    #get column headers
+    # get column headers
+    #
     my $accession_name_head;
     my $species_name_head;
     my $population_name_head;
@@ -113,6 +118,7 @@ sub _validate_with_plugin {
     }
 
     my %seen_accession_names;
+    my %accession_name_counts;
     my %seen_species_names;
     my %seen_synonyms;
     for my $row ( 1 .. $row_max ) {
@@ -136,6 +142,7 @@ sub _validate_with_plugin {
         else {
             $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_accession_names{$accession_name}=$row_name;
+	    $accession_name_counts{$accession_name}++;
         }
 
         if (!$species_name || $species_name eq '' ) {
@@ -156,6 +163,13 @@ sub _validate_with_plugin {
         $errors{'missing_species'} = \@species_missing;
     }
 
+    foreach my $k (keys %accession_name_counts) {
+	if ($accession_name_counts{$k} > 1) {
+	    push @error_messages, "Accession $k occures $accession_name_counts{$k} times in the file. Accession names must be unique. Please remove duplicated accession names.";
+	}
+    }
+
+
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
@@ -173,6 +187,7 @@ sub _parse_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $do_fuzzy_search = $self->get_do_fuzzy_search();
+    my $append_synonyms = $self->get_append_synonyms();
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $filename =~ /(\.[^.]+)$/;
@@ -344,6 +359,19 @@ sub _parse_with_plugin {
         #For "updating" existing accessions by adding properties.
         if ($stock_id){
             $row_info{stock_id} = $stock_id;
+
+            # lookup existing accessions, if append_synonyms is selected
+            if ( $append_synonyms ) {
+                my @existing_synonyms;
+                my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+                my $rs = $schema->resultset("Stock::Stockprop")->search({ type_id => $synonym_type_id, stock_id => $stock_id });
+                while( my $r = $rs->next() ) {
+                    push(@existing_synonyms, $r->value);
+                }
+                push(@existing_synonyms, @synonyms);
+                s{^\s+|\s+$}{}g foreach @existing_synonyms;
+                $row_info{synonyms} = \@existing_synonyms;
+            }
         }
 
         my $counter = 0;

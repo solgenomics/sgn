@@ -37,6 +37,7 @@ kmeansPlotFile <- grep("k-means_plot", outputFiles, value = TRUE)
 kResultFile <- grep("result", outputFiles, value = TRUE)
 elbowPlotFile <- grep("elbow_plot", outputFiles, value = TRUE)
 clusterMeansFile <- grep("k-means_means", outputFiles, value = TRUE)
+clusterPcScoresFile <- grep("k-means_pc_scores", outputFiles, value = TRUE)
 variancesFile <- grep("k-means_variances", outputFiles, value = TRUE)
 reportFile <- grep("report", outputFiles, value = TRUE)
 errorFile <- grep("error", outputFiles, value = TRUE)
@@ -76,7 +77,7 @@ extractGenotype <- function(inputFiles) {
 
     } else {
         genoFile <- genoFiles
-        genoData <- fread(genoFile, header = TRUE, na.strings = c("NA", " ", "--",
+        genoData <- fread(genoFile, header = TRUE, na.strings = c("NA", "", "--",
             "-", "."))
 
         if (is.null(genoData)) {
@@ -115,36 +116,7 @@ clusterDataNotScaled <- c()
 
 if (grepl("genotype", dataType, ignore.case = TRUE)) {
     clusterData <- extractGenotype(inputFiles)
-
-    pca <- prcomp(clusterData, retx = TRUE)
-    pca <- summary(pca)
-
-    variances <- data.frame(pca$importance)
-
-    varProp <- variances[3, ]
-    varProp <- data.frame(t(varProp))
-    names(varProp) <- c("cumVar")
-
-    selectPcs <- varProp %>%
-        filter(cumVar <= 0.9)
-    pcsCnt <- nrow(selectPcs)
-
-    reportNotes <- paste0("Before clustering this dataset, principal component analysis (PCA) was perforemd on it to reduce the number of variables (dimensions). ")
-    reportNotes <- paste0(reportNotes, "Based on the PCA, ", pcsCnt, " PCs were used to do the clustering. ")
-    reportNotes <- paste0(reportNotes, "\n\nThe ", pcsCnt, " PCs explain 90% of the variance in the original dataset.",
-        "\n")
-
-    scores <- data.frame(pca$x)
-    scores <- scores[, 1:pcsCnt]
-    scores <- round(scores, 3)
-
-    variances <- variances[2, 1:pcsCnt]
-    variances <- round(variances, 4) * 100
-    variances <- data.frame(t(variances))
-
-    clusterData <- scores
 } else {
-
     if (grepl("gebv", dataType, ignore.case = TRUE)) {
         gebvsFile <- grep("combined_gebvs", inputFiles, value = TRUE)
         gebvsData <- data.frame(fread(gebvsFile, header = TRUE))
@@ -158,7 +130,7 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
 
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
 
-        if (!is.na(predictedTraits) && length(predictedTraits) > 1) {
+        if (length(predictedTraits) > 1) {
             clusterData <- rownames_to_column(clusterData, var = "germplasmName")
             clusterData <- clusterData %>%
                 select(c(germplasmName, predictedTraits))
@@ -244,7 +216,7 @@ dev.off()
 
 clusterMeans <- c()
 if (!grepl('genotype', kResultFile)) {
-    message('adding cluster means to clusters...')
+    message("adding cluster means to clusters...")
     clusterMeans <- aggregate(clusterDataNotScaled, by = list(cluster = kMeansOut$cluster),
     mean)
 
@@ -252,6 +224,31 @@ if (!grepl('genotype', kResultFile)) {
         select(-germplasmName) %>%
         mutate_if(is.double, round, 2)
 
+}
+
+pca <- c()
+if (grepl("genotype", dataType, ignore.case = TRUE)) {
+    pca    <- prcomp(clusterData, retx=TRUE)
+} else if (is.null(selectedIndexGenotypes)) {
+    pca    <- prcomp(clusterData, scale=TRUE, retx=TRUE)
+} else {
+    pca    <- prcomp(clusterData, retx=TRUE)
+}
+
+pca    <- summary(pca)
+scores   <- data.frame(pca$x)
+scores   <- scores[, 1:2]
+scores   <- round(scores, 3)
+
+clusterPcScoresGroups <- c()
+if (length(clusterPcScoresFile)) {
+    message("adding cluster groups to pc scores...")
+    scores <- rownames_to_column(scores)
+    names(scores)[1] <- c("germplasmName")
+
+    clusterPcScoresGroups <- inner_join(kClusters, scores, by = "germplasmName")
+    clusterPcScoresGroups <- clusterPcScoresGroups %>% 
+        arrange(Cluster)
 }
 
 cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
@@ -283,6 +280,11 @@ if (length(kResultFile)) {
 
 if (length(clusterMeansFile) && !is.null(clusterMeans)) {
     fwrite(clusterMeans, file = clusterMeansFile, sep = "\t", row.names = FALSE,
+        quote = FALSE, )
+}
+
+if (length(clusterPcScoresFile) && !is.null(clusterPcScoresGroups)) {
+    fwrite(clusterPcScoresGroups, file = clusterPcScoresFile, sep = "\t", row.names = FALSE,
         quote = FALSE, )
 }
 

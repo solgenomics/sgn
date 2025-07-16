@@ -35,7 +35,24 @@
     }
     var histLoc = d3.select(loc);
     var header = data[0];
-    var traitName = header[header.length-(header[header.length-1]!="notes"?1:2)];
+
+    // var traitName = header[header.length-(header[header.length-1]!="notes"?1:2)];
+
+    // Find the index of the "notes" column
+    var notesIndex = header.indexOf("notes");
+
+    if (notesIndex !== -1 && notesIndex > 0) {
+      // Get the column before "notes"
+      var traitName = header[notesIndex - 1];
+    } else {
+      // Handle the case where "notes" is the first column or not found
+      var traitName = null; // You can use a default value or handle this case as needed
+    }
+
+
+    // The `traitName` variable contains the column before "notes" or null if "notes" is the first column or not found
+    console.log(traitName);
+
 
     var observations = data.slice(1).map(function(d){
       var o = {};

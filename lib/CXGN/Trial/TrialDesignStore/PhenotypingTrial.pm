@@ -36,7 +36,8 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'subplots_names', #For splotplot
         'treatments', #For splitplot
         'subplots_plant_names', #For splitplot
-        'additional_info' # For brapi additional info storage
+        'additional_info', # For brapi additional info storage
+        'external_refs' # For brapi external reference storage
 	]);
 
 }
@@ -51,8 +52,8 @@ sub validate_design {
     my $error = '';
 
     if (defined $design_type){
-        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
-            $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, ARC, MAD, p-rep, greenhouse, Westcott or splitplot";
+        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'URDD'&& $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'stripplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
+            $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, URDD, ARC, MAD, p-rep, greenhouse, Westcott, splitplot or stripplot";
             return $error;
         }
     }
@@ -71,7 +72,7 @@ sub validate_design {
             next;
         }
         if (!exists($design{$stock}->{plot_number})) {
-            $error .= "Property: plot_number is required for stock" . $stock;
+            $error .= "Property: plot_number is required for stock " . $stock;
         }
 
         foreach my $property (keys %{$design{$stock}}){
@@ -144,7 +145,7 @@ sub validate_design {
     my $seedlot_validator = CXGN::List::Validate->new();
     my @seedlots_missing = @{$seedlot_validator->validate($chado_schema,'seedlots',\@source_names)->{'missing'}};
     if (scalar(@seedlots_missing) > 0) {
-        $error .=  "The following seedlots are not in the database as uniquenames or synonyms: ".join(',',@seedlots_missing);
+        $error .=  "The following seedlots are not in the database as uniquenames or synonyms or are marked as discarded: ".join(',',@seedlots_missing);
     }
 
     my @source_stock_types = @{$self->get_source_stock_types()};

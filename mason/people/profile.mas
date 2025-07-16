@@ -29,6 +29,7 @@ $user_status => undef
             <a href="/solpeople/personal-info.pl?action=edit&sp_person_id=<% $sp_person_id %>">View or update personal (contact and research) information</a><br />
             <a href="/user/update">Update account information</a><br />
             <a href="/forum/topics.pl">Post to SGN forum</a><br />
+	    <a href="/about/audit">View audit tables</a><br />
         </div>
     </&>
 
@@ -123,9 +124,9 @@ $user_status => undef
         </div>
     </&>
 
-    <&| /page/info_section.mas, title=>'solGS analyses jobs', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
+    <&| /page/info_section.mas, title=>'Job Submissions', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
         <div class="well">
-            <& /solgs/jobs/log.mas &>
+            <& /jobs/log.mas, sp_person_id => $sp_person_id &>
         </div>
     </&>
 

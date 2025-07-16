@@ -44,31 +44,34 @@ if (!$data_structure) {
 }
 
 my $url = $c->req->path;
-my $title;
+my $title = 'Clustering Analysis';
+my $section_title;
 my $collapsed = 0;
+my $collapsible = 0;
+my $cluster_url = '/cluster/analysis/';
 
-if ($url =~ /cluster\/analysis/) {
-$title = 'Select a list or dataset and run cluster analysis using k-means  and hierarchical methods';
-} else {
-$title = 'Clustering';
-$collapsed = 1 if $url =~ /breeders\/trial/;
+if ($url !~ /cluster\/analysis/) {
+  $collapsible = 1;
+  $collapsed = 1 if $url =~ /breeders\/trial/;
+  $section_title = 'Clustering analysis';
 }
 
 </%perl>
 
+<& /solgs/tools/base.mas &>
+ 
 
 % if ($url =~ /cluster\/analysis/) {
-
-<& /page/page_title.mas,
-   title => "Cluster Analysis"
+  <& /page/page_title.mas,
+   title => $title
   &>
 %}
 
 
 <&| /page/info_section.mas,
-  collapsible => 1,
+  collapsible => $collapsible,
   collapsed   => $collapsed,
-  title       => $title
+  title       => $section_title,
   &>
 
   <div id='cluster_div'>
@@ -92,13 +95,13 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
     <& cluster_options.mas &>
 
 %} elsif ($url =~ /cluster\/analysis/) {
-
-   <& select_menu.mas &>
-
+    <& /solgs/tools/login.mas,
+    tool_url => $cluster_url,
+    analysis_type => 'cluster' 
+    &>
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />
 %}
-
 
 <& plot.mas,
    pop_id => $pop_id,
@@ -109,3 +112,5 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 </div>
 </&>
+
+<& /util/import_javascript.mas, classes => ["solGS.cluster", "solGS.dendrogram"] &>

@@ -8,83 +8,63 @@ $dataset_contents => ''
 </%args>
 
 <& /page/page_title.mas, title => "Dataset $dataset_name" &>
-<& /util/import_javascript.mas, entries => ['dataset_scatterplot'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
-<& /util/import_javascript.mas, entries => ['dataset'] &>
+<& /util/import_javascript.mas, entries => [qw|dataset_scatterplot dataset|], classes => [ qw|jqueryui.js jquery.js dataset jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers jquery.dataTables| ] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <style>
-  .slider {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 20px;
-  background: #d3d3d3;
-  outline: none;
-  opacity: 0.7;
-  border-radius: 5px;
-  -webkit-transition: .2s;
-  transition: opacity .2s;
-  }
+    .top-row {
+        # display: flex;
+        # justify-content: center;
+        margin-top: 20px;    
+    }
 
-  .slider:hover {
-    opacity: 1;
-  }
+    ::-webkit-slider-runnable-track {
+        background: #f7756c;
+    }
 
-  .slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 25px;
-    height: 25px;
-    background: #04AA6D;
-    cursor: pointer;
-  }
+    #pagefooter {
+        min-height: 150px !important;
+    }
 
-  .slider::-moz-range-thumb {
-    width: 25px;
-    height: 25px;
-    background: darkslategrey;
-    cursor: pointer;
-  }
-  #top-row {
-    display: flex;
-    justify-content: center;
+    #trait_selection {
+        font-size: 15px;
+    }
 
-  }
+    #trait_graph {
+        width: 65%;
+        font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;    
+    }
 
-  #pagefooter {
-    min-height: 150px !important;
-  }
+    table, th, td {
+        padding: 15px;
+    }
 
-  #trait_selection {
-    font-size: 15px;
-  }
-  #trait_selections {
-    float: left;
-    max-width: 400px;
-    height: 100px;
-    font-size: 15px;
-  }
+    .sd-line-top {
+        stroke-dasharray: 5,5;
+    }
 
-  #store_outliers {
-    float: right;
-    padding: 5px;
-  }
+    .sd-line-bottom {
+        stroke-dasharray: 5,5;
+    }
 
-  #dataset_slider {
-    margin: 0 auto;
-    padding: 10px;
-    width: 200px;
-  }
+    .mean-line {
+        stroke-dasharray: 5,5;
+    }
 
-  #trait_graph {
+    .btn-dataset {
+        margin-left: 4px;
+    } 
 
-    width: 65%;
-  }
-  table, th, td {
-    padding: 15px;
-  }
+    #rosner_table_wrapper {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    #rosner_table {
+        padding: 0px;
+    }
 
 </style>
-
 
 <head>
   <meta charset="UTF-8">
@@ -98,40 +78,316 @@ $dataset_contents => ''
 </%perl>
 
 <body>
+    <div id="wizard" class="row">
+        <div class="wizard-datasets">
+            <table id="dataset_results"; border="1">
+                    <tr><td>Name<td><% $dataset_name %>
+%                   if ($c->user()) {
+                    <tr><td>Description
+                    <td><input type="text" id="description" value=" <% $dataset_description %>"></input>
+                    <button style="width:9em;bargin-left:4px;" class="btn btn-sm btn-primary" onclick="datasetUpdate(<% $dataset_id %>)">Update</button>
+%                   } else {
+                    <tr><td>Description<td><% $dataset_description %>
+%                   }
+                    <tr><td>Contents<td><% $dataset_contents %>
+%                   if ($c->user()) {
+                        <tr><td>Edit<td>
+                        <span class="input-group-btn">
+                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" onclick="datasetPublic(<% $dataset_id %>)">Make Public</button></span>
+                        <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" onclick="datasetPrivate(<% $dataset_id %>)">Make Private</button></span>
+                        <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger" onclick="datasetDelete(<% $dataset_id %>)">Delete</button></span>
+                        </span>
+%                   }
+                    <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
+                    <tr><td>Tool Compatibility <span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Predicted tool compatibility based on dataset definition. 
+The table details the traits and types of analyses that can
+be performed. If database elements are updated, such as 
+phenotypes added to field trials or accessions, you may wish 
+to recalculate tool compatibility for more accurate results.
+Warning symbols indicate compatibility, but with low sample
+sizes. Hover for details."></span>
+                    <br>
+                    <td>
+                        <div id="predicted-tool-compatibility" style="width:85%;overflow-x:auto;overflow-y:auto">
+                        </div>  
+                        <div><br><button type="button" class="btn btn-sm btn-success" id="tool-compatibility-calc-button" >Check Tool Compatibility</button></div>
+                    <tr><td>Analyses using this dataset<td id="dataset_analysis_usage"></td></td>
+            </table>
+        </div>
+    </div>
 
-  <div id="wizard" class="row">
+    <div class="row">
+        <div class="top-row col-md-12">
+            <div id="trait_selections" class="col-md-6">
+                <label for="trait_selection">Select a Trait: </label>
+                <select id="trait_selection" class="form-control" name="trait_selection">
+                    <option value="default">Select Trait</option>
+                </select>
+            </div>            
 
-  <div class="wizard-datasets">
-  <table id="dataset_results"; border="1">
-         <tr><td>Name<td><% $dataset_name %>
-         <tr><td>Description<td><% $dataset_description %>
-         <tr><td>Contents<td><% $dataset_contents %>
-%        if ($c->user()) {
-             <tr><td>Edit<td>
-             <span class="input-group-btn">
-               <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-public">Make Public</button></span>
-               <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary" id="wizard-dataset-private">Make Private</button></span>
-               <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger" id="wizard-dataset-delete">Delete</button></span>
-             </span>
-%        }
-         <tr><td>Select Dataset in Wizard<td><% $wizard_link %>
-  </table>
-  </div>
-  </div>
+        </div>
+        <div class="col-md-12 well" style="margin-top: 10px;">
+                        
+            <div class="col-md-8">
+                <div id="outliers_range">
+                    <div id="custom-handle" class="ui-slider-handle"></div>
+                </div>
+            </div>
+            <script>
+                $(function() {
+                    $("#outliers_range").slider({
+                        orientation: "horizontal",
+                        range: "min",
+                        max: 12,
+                        min: 0,                        
+                        value: 3,
+                        step: 0.1,
+                    });
+                    var handle = $( "#custom-handle" );
+                    $("#outliers_range").slider({
+                        create: function(event, ui) {                            
+                            handle.text(ui.value);
+                        },
+                        slide: function(event, ui) {                            
+                            handle.text(ui.value);
+                        }
+                    });
+                });
+            </script>
+            <style>                      
+                #outliers_range .ui-slider-range { background: #5cb85c; }
+                #outliers_range .ui-slider-handle { border-color: #d9534f; }                
+                #outliers_range { background: #d9534f; margin-top: 0.7em;}       
+                #custom-handle {
+                    width: 3em;
+                    height: 1.6em;
+                    top: 50%;
+                    margin-top: -.8em;
+                    text-align: center;
+                    line-height: 1.6em;
+                }           
+            </style>
 
-  <script>
 
-    jQuery('#info_table').click(function() {
-      $.ajax({
-      url: '/ajax/dataset/by_user/<% $dataset_id %>',
-      success: function(response) {
-        alert(response.options);
-      },
-      error: function(response) {
-        alert("An error occurred");
-      }  
-    });
-    });
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <input type="radio" aria-label="median" id="median" value="median" name="dataset_metric" checked="true">
+                    </span>
+                    <label for="median" class="form-control" aria-label="median">Median</label>
+                    <span class="input-group-addon">
+                        <input type="radio" aria-label="mean" id="mean" value="mean" name="dataset_metric" >
+                    </span>
+                    <label for="mean" class="form-control" aria-label="mean">Mean</label>
+                    <span class="input-group-addon">
+                        <input type="radio" aria-label="IQR" id="iqr" value="iqr" name="dataset_metric" >
+                    </span>
+                    <label for="iqr" class="form-control" aria-label="iqr">IQR</label>                                                                 
+                </div>
+            </div>
+        </div>
     
-  </script>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id="trait_graph"></div>
+        </div>
+        <div class="col-md-12">
+            <div class="input-group-btn col-md-11 col-md-offset-1">
+                <span>
+                    <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
+                </span>                
+                <span>
+                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
+                </span>
+                <span>
+                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
+                </span>
+                <span>
+                    <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without outliers</button>
+                </span>
+                <span>
+                    <button class="btn btn-sm btn-primary btn-dataset" id="rosner_test">Make Rosner outlier test</button>
+                    <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="row well" style="margin: 5px 10px;">
+      Rosner's test is calculated by the R function rosnerTest{EnvStats} from package EnvStats.<br>
+        <a href="https://cran.r-project.org/web/packages/EnvStats/index.html">https://cran.r-project.org/web/packages/EnvStats/index.html</a>
+    </div>
+
+    <div id="statistic_tests">
+        <!-- 
+        <table id="rosner_table">
+        </table> 
+        -->
+    </div>
+
+
+
+    <& /solgs/tools/dataset_trials_analysis.mas,
+        dataset_id => $dataset_id,
+        dataset_name => $dataset_name,
+        data_structure => 'dataset',    
+    &>
+    
+
+    <script>
+
+    jQuery(document).ready( function() {
+        
+        // console.log('dataset id', '<% $dataset_id %>');
+        var DataSet = window.jsMod['dataset_scatterplot'].init(<% $dataset_id %>);
+        DataSet.render();
+
+        function populate_tool_compatibility(json) {
+
+            var data_summary = {};
+
+            for (key in json) {
+               if (key == "Data Summary"){
+                   var newkey = '<b>' + key + '</b>';
+                   data_summary[newkey] = json[key];
+                   delete json[key];
+                } else {
+                    if (json[key]['compatible'] == 0) {
+                        var newkey = '<b>' + key + ' <span class="glyphicon glyphicon-remove" style="color:red"></span></b>';
+                        delete json[key]['compatible'];
+                        json[newkey] = json[key];
+                        delete json[key];
+                    } else {
+                        if ('warn' in json[key]) {
+                            var newkey = '<b>' + key + ' <span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + json[key]['warn'] + '"></span></b>';
+                            delete json[key]['warn'];
+                            delete json[key]['compatible'];
+                            json[newkey] = json[key];
+                            delete json[key];
+                        } else {
+                            var newkey = '<b>' + key + ' <span class="glyphicon glyphicon-ok" style="color:green"></span></b>';
+                            delete json[key]['compatible'];
+                            json[newkey] = json[key];
+                            delete json[key];
+                        }
+                    }
+                }
+                
+            }
+            
+            function recursive_table_gen(obj) {
+                if (Object.prototype.toString.call(obj) == "[object Array]") {
+                    let table = '<table border="1"><tr><td><p>' + obj.join("</p><p>") + '</p></table>';
+                    return table;
+                }
+                var keys = [];
+                for (key in obj) {
+                    keys.push( key + recursive_table_gen(obj[key]))
+                }
+                if (keys.length == 0) {
+                    return "";
+                }
+                let table = '<table border="1"><tr><td>' + keys.join("<td>") + '</table>';
+                return table;
+            }
+
+            return recursive_table_gen(json) + "<br>" + recursive_table_gen(data_summary);
+        }
+
+        jQuery('#tool-compatibility-calc-button').click(function() {
+            jQuery('#working_modal').modal("show");
+            $.ajax({
+                url: '/ajax/dataset/calc_tool_compatibility/' + <% $dataset_id %>,
+                success: function(response) {
+                    if (response.error) {
+                        jQuery('#working_modal').modal("hide");
+                        alert("An error occured calculating tool compatibility: \n" + response.error);
+                        jQuery('#predicted-tool-compatibility').css('height', '100px');
+                        jQuery('#predicted-tool-compatibility').text("Error calculating tool compatibility.");
+                    } else {
+                        //jQuery('#predicted-tool-compatibility').css('height', '400px');
+                        //jQuery('#predicted-tool-compatibility').html(populate_tool_compatibility(JSON.parse(response.tool_compatibility)));
+                        alert(response.message);
+                        jQuery('#working_modal').modal("hide");
+                    }
+                }, 
+                error: function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    jQuery('#predicted-tool-compatibility').css('height', '100px');
+                    alert("An error occurred calculating tool compatibility");
+                    jQuery('#predicted-tool-compatibility').text("Error calculating tool compatibility.");
+                }
+            });
+        });
+
+        $.ajax({
+            url: '/ajax/dataset/retrieve/' + <% $dataset_id %> + '/tool_compatibility',
+            success: function(response) {
+                if (response.error) {
+                    alert("An error occurred. \n" + response.error);
+                    jQuery('#predicted-tool-compatibility').text("Error retrieving tool compatibility.");
+                } else {
+                    if (response.tool_compatibility == "(not calculated)") {
+                         jQuery('#predicted-tool-compatibility').text(response.tool_compatibility);
+                    } else {
+                        //console.log(JSON.parse(response.tool_compatibility));
+                        jQuery('#predicted-tool-compatibility').css('height', '400px');
+                        jQuery('#predicted-tool-compatibility').html(populate_tool_compatibility(JSON.parse(response.tool_compatibility)));
+                    }
+                }
+            },
+            error: function(response) {
+                alert("An error occurred retrieving tool compatibility");
+                jQuery('#predicted-tool-compatibility').css('height', '100px');
+                jQuery('#predicted-tool-compatibility').text("Error retrieving tool compatibility.");
+            }
+        });
+
+        jQuery('#info_table').click(function() {
+            $.ajax({
+                url: '/ajax/dataset/by_user/<% $dataset_id %>',
+                success: function(response) {
+                    alert(response.options);
+                },
+                error: function(response) {
+                    alert("An error occurred");
+                }  
+            });
+        })        
+
+        jQuery('#outliers_phenotype_download').click(function() {            
+
+            var speed = 'MaterializedViewTable';
+            var format = '.csv';
+            var level = 'all';
+            var timestamp = 0;
+
+            var url = document.location.origin+
+                `/breeders/download_action?trait_ids_list=${DataSet.traitsIds}`+
+                `&format=${format}`+            
+                `&phenotype_datalevel=${level}`+
+                `&timestamp_included=${timestamp}`+
+                `&dataset_id=<% $dataset_id %>`
+
+            window.open(url,'_blank');
+        })
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/ajax/dataset/get_child_analyses/<% $dataset_id %>',
+            success: function(response) {
+                if (response.error){
+                    alert(response.error);
+                } else {
+                    jQuery('#dataset_analysis_usage').html(response.analysis_html_list);
+                }
+            },
+            error: function(response) {
+                alert("Error retrieving analyses using this dataset.");
+            }
+        });
+    });
+
+    </script>
 </body>

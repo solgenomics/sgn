@@ -107,6 +107,19 @@ has 'Terminators' => (
     builder  => '_retrieve_Terminators',
 );
 
+has 'BacterialResistantMarker' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_BacterialResistantMarker',
+);
+
+has 'PlantAntibioticResistantMarker' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_PlantAntibioticResistantMarker',
+);
 
 has 'other_editable_stock_props' => (
     isa => 'Maybe[HashRef]',
@@ -164,7 +177,15 @@ sub _retrieve_Terminators {
     $self->Terminators($self->_retrieve_stockprop('Terminators'));
 }
 
+sub _retrieve_PlantAntibioticResistantMarker {
+    my $self = shift;
+    $self->PlantAntibioticResistantMarker($self->_retrieve_stockprop('PlantAntibioticResistantMarker'));
+}
 
+sub _retrieve_BacterialResistantMarker {
+    my $self = shift;
+    $self->BacterialResistantMarker($self->_retrieve_stockprop('BacterialResistantMarker'));
+}
 
 =head2 store()
 
@@ -217,6 +238,13 @@ sub store {
     }
     if ($self->Terminators){
         $self->_store_stockprop('Terminators', $self->Terminators);
+    }
+
+    if ($self->BacterialResistantMarker){
+        $self->_store_stockprop('BacterialResistantMarker', $self->BacterialResistantMarker);
+    }
+    if ($self->PlantAntibioticResistantMarker){
+        $self->_store_stockprop('PlantAntibioticResistantMarker', $self->PlantAntibioticResistantMarker);
     }
 
     if ($self->other_editable_stock_props){

@@ -1,0 +1,12 @@
+
+<%args>
+$stock_id
+$stock_uniquename
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'CXGN.BreedersToolbox.Accessions' ] &>
+
+
+<a name="manage_populations_delete_population" data-population_id="<%$stock_id%>" data-population_name="<%$stock_uniquename%>">Delete Population</a>
+
+<& /breeders_toolbox/manage_populations_dialogs.mas &>

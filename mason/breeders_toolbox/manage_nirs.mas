@@ -6,6 +6,7 @@ $all_nirs_files => undef
 $all_deleted_nirs_files => undef
 $locations => undef
 $sampling_facilities => ()
+$sample_tissue_types => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial', 'jquery.iframe-post-form' ] &>
@@ -18,7 +19,7 @@ $sampling_facilities => ()
 my $buttons_html = "<button class='btn btn-primary' style='margin:3px' name='upload_high_dim_phenotypes_spreadsheet_link'>Upload NIRS</button><button class='btn btn-success' style='margin:3px' id='nirs_analysis_training_dialog_show'>Train NIRS Models</button><button class='btn btn-success' style='margin:3px' id='nirs_analysis_prediction_dialog_show'>Predict Phenotypes</button><button class='btn btn-default' style='margin:3px' id='nirs_analysis_plot_spectra_show'>Plot Spectra</button><button class='btn btn-default' style='margin:3px' name='high_dimensional_phenotype_download_button'>Download NIRS</button><button class='btn btn-default' style='margin:3px' name='high_dimensional_phenotype_relationship_matrix_download_button'>Download Relationship Matrix</button>";
 </%perl>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>NIRS</h4>", info_section_subtitle => 'Upload and perform analyses using NIRS data. Please <a href="https://www.biorxiv.org/content/10.1101/2020.09.18.278549v1" target=_blank>cite this work</a> if you find it useful.', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_nirs_main", nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities => $sampling_facilities &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>NIRS</h4>", info_section_subtitle => 'Upload and perform analyses using NIRS data. Please <a href="https://www.biorxiv.org/content/10.1101/2020.09.18.278549v1" target=_blank>cite this work</a> if you find it useful.', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_nirs_main", nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities => $sampling_facilities, sample_tissue_types => $sample_tissue_types &>
 
 </div>
 

@@ -48,15 +48,15 @@ sub store_location :Path("/ajax/location/store") Args(0) {
     my $params = $c->request->parameters();
     my $id = $params->{id} || undef;
     my $name = $params->{name};
-    my $abbreviation =  $params->{abbreviation};
-    my $country_name =  $params->{country_name};
-    my $country_code =  $params->{country_code};
-    my $programs =  $params->{programs};
-    my $type =  $params->{type};
-    my $latitude    = $params->{latitude} || undef;
-    my $longitude   = $params->{longitude} || undef;
-    my $altitude    = $params->{altitude} || undef;
-    my $noaa_station_id    = $params->{noaa_station_id} || undef;
+    my $abbreviation = $params->{abbreviation};
+    my $country_name = $params->{country_name};
+    my $country_code = $params->{country_code};
+    my $programs = $params->{programs};
+    my $type = $params->{type};
+    my $latitude = $params->{latitude};
+    my $longitude = $params->{longitude};
+    my $altitude = $params->{altitude};
+    my $noaa_station_id = $params->{noaa_station_id} || undef;
 
     if (! $c->user()) {
         $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
@@ -177,7 +177,7 @@ sub upload_locations_POST : Args(0) {
     unlink $upload_tempfile;
 
     #parse uploaded file with appropriate plugin
-    my $type = 'location excel';
+    my $type = 'location generic';
     my $parser = CXGN::Location::ParseUpload->new();
     my $parse_result = $parser->parse($type, $archived_filename_with_path, $schema);
 

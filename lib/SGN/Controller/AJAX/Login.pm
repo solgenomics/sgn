@@ -2,6 +2,7 @@
 package SGN::Controller::AJAX::Login;
 
 use Moose;
+use Data::Dumper;
 use CXGN::Login;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -20,17 +21,16 @@ sub is_logged_in :Path('/user/logged_in') Args(0) {
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
-    # if (my $user = $c->user()) {
-    my $dbh = $c->dbic_schema("CXGN::People::Schema")->storage->dbh();;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $dbh = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id)->storage->dbh();
+    
     my $login = CXGN::Login->new($dbh);
+    
     if (my ($person_id, $user_type) = $login->has_session()) {
-        my $user_id = CXGN::People::Person->new($dbh,$person_id);
-    	$c->stash->{rest} = $login -> get_login_info;
-    	    # user_id => $user_id,
-    	    # username => $user->get_object->get_username(),
-    	    # first_name => $user->get_object->get_first_name(),
-    	    # last_name => $user->get_object->get_last_name(),
-    	# };
+	my $login_info = $login->get_login_info();
+	#print STDERR "LOGIN INFO: ".Dumper($login_info);
+    	$c->stash->{rest} = $login_info;
     	return;
     }
     $c->stash->{rest} = { user_id => 0 };

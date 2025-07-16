@@ -9,6 +9,7 @@ $trial_description
 $identifier_prefix
 $genotyping_facility
 $genotype_data_type
+$trial_owner
 </%args>
 
 <div class="row">
@@ -17,13 +18,13 @@ $genotype_data_type
         <table class="table table-hover table-bordered" >
 
             <tr>
-                <td><b>Genotyping Data Project Name</b></td>
+                <td><b>Genotyping Project Name</b></td>
                 <td>
                     <div id="trial_name">
 % if ($trial_name) {
 %   print "$trial_name";
 % } else {
-%   print "<span class='text-danger'>[No Trial Name]</span>";
+%   print "<span class='text-danger'>[No Project Name]</span>";
 % }
                     </div>
                 </td>
@@ -104,9 +105,19 @@ $genotype_data_type
                     </div>
                 </td>
             </tr>
-
+            <tr><td><b>Created by</b></td>
+                <td>
+                    <div id="trial_owner">
+% if ($trial_owner) {
+%  print "$trial_owner";
+% } else {
+%  print "<span class='text-danger'>[N/A]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
         </table>
-
+        
     </div>
     <div class="col-sm-4">
         <div class="well well-sm">

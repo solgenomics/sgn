@@ -31,7 +31,7 @@ sub create_design {
     #     $analysis{$plot_num}->{plant_names} = \@plant_names;
     # }
 
-    print STDERR Dumper(\%analysis);
+    # print STDERR Dumper(\%analysis);
     
     return \%analysis;
 }

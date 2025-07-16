@@ -67,6 +67,7 @@ sub get_all_populations {
     my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
 
     my $population_member_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
+    my $member_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property')->cvterm_id();
 
     my $populations_rs = $schema->resultset("Stock::Stock")->search({
         'type_id' => $population_cvterm->cvterm_id(),
@@ -81,6 +82,15 @@ sub get_all_populations {
 	$population_info{'description'}=$population_row->description();
 	$population_info{'stock_id'}=$population_row->stock_id();
 
+    my $member_type;
+    my $member_type_row = $schema->resultset("Stock::Stockprop")->find({ stock_id => $population_row->stock_id(), type_id => $member_type_cvterm_id });
+    if($member_type_row) {
+        $member_type = $member_type_row->value();
+    } else {
+        $member_type = 'accessions';
+    }
+    $population_info{'member_type'} = $member_type;
+
 	push @accessions_by_population, \%population_info;
     }
 
@@ -93,7 +103,7 @@ sub get_population_members {
     my $schema = $self->schema();
     my $population_member_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
 
-    my @accessions_in_population;
+    my @members_in_population;
     my $population_members = $schema->resultset("Stock::Stock")->search(
     {
         'object.stock_id'=> $population_stock_id,
@@ -103,11 +113,14 @@ sub get_population_members {
     );
 
     while (my $population_member_row = $population_members->next()) {
-        my %accession_info;
-        $accession_info{'stock_relationship_id'}=$population_member_row->get_column('stock_relationship_id');
-        $accession_info{'name'}=$population_member_row->name();
-        $accession_info{'description'}=$population_member_row->description();
-        $accession_info{'stock_id'}=$population_member_row->stock_id();
+        my %member_info;
+        $member_info{'stock_relationship_id'}=$population_member_row->get_column('stock_relationship_id');
+        $member_info{'name'}=$population_member_row->name();
+        $member_info{'description'}=$population_member_row->description();
+        $member_info{'stock_id'}=$population_member_row->stock_id();
+
+        my $stock_type = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $population_member_row->type_id()})->name();
+        $member_info{'stock_type'}=$stock_type;
         my $synonyms_rs;
         $synonyms_rs = $population_member_row->search_related('stockprops', {'type.name' => {ilike => '%synonym%' } }, { join => 'type' });
         my @synonyms;
@@ -116,11 +129,87 @@ sub get_population_members {
                 push @synonyms, $synonym_row->value();
             }
         }
-        $accession_info{'synonyms'}=\@synonyms;
-        push @accessions_in_population, \%accession_info;
+        $member_info{'synonyms'}=\@synonyms;
+        push @members_in_population, \%member_info;
     }
-    return \@accessions_in_population;
+    return \@members_in_population;
 }
+
+sub get_population_seedlots {
+    my $self = shift;
+    my $population_stock_id = shift;
+    my $schema = $self->schema();
+    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'collection_of', 'stock_relationship')->cvterm_id();
+    my $current_count_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_count', 'stock_property')->cvterm_id();
+    my $current_weight_gram_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_weight_gram', 'stock_property')->cvterm_id();
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+    my $box_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'location_code', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT member.stock_id, member.uniquename, cvterm.name, seedlot.stock_id, seedlot.uniquename, current_count.value, current_weight_gram.value, box_name.value, nd_geolocation.description
+        FROM stock_relationship AS member_relationship
+        JOIN stock AS member ON (member_relationship.subject_id = member.stock_id) AND member_relationship.type_id = ?
+        JOIN cvterm ON (member.type_id = cvterm.cvterm_id)
+        LEFT JOIN stock_relationship AS seedlot_relationship ON (member.stock_id = seedlot_relationship.subject_id) AND seedlot_relationship.type_id = ?
+        LEFT JOIN stock as seedlot ON (seedlot_relationship.object_id = seedlot.stock_id)
+        LEFT JOIN stockprop AS current_count ON (current_count.stock_id = seedlot.stock_id) AND current_count.type_id = ?
+        LEFT JOIN stockprop AS current_weight_gram ON (current_weight_gram.stock_id = seedlot.stock_id) AND current_weight_gram.type_id = ?
+        LEFT JOIN stockprop AS box_name ON (box_name.stock_id = seedlot.stock_id) AND box_name.type_id = ?
+        LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = seedlot.stock_id) AND nd_experiment_stock.type_id = ?
+        LEFT JOIN nd_experiment ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        LEFT JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)
+        where member_relationship.object_id = ? ORDER BY member.uniquename ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($member_of_type_id, $collection_of_type_id, $current_count_type_id, $current_weight_gram_type_id, $box_name_type_id, $experiment_type_id, $population_stock_id);
+
+    my @population_seedlots = ();
+    while(my($member_id, $member_name, $member_type, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location) = $h->fetchrow_array()){
+        push @population_seedlots, [$member_id, $member_name, $member_type, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location]
+    }
+
+    return \@population_seedlots;
+}
+
+
+sub get_population_source_seedlots {
+    my $self = shift;
+    my $population_stock_id = shift;
+    my $schema = $self->schema();
+    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $seed_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seed transaction', 'stock_relationship')->cvterm_id();
+    my $current_count_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_count', 'stock_property')->cvterm_id();
+    my $current_weight_gram_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'current_weight_gram', 'stock_property')->cvterm_id();
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+    my $box_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'location_code', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT member.stock_id, member.uniquename, cvterm.name, seedlot.stock_id, seedlot.uniquename, current_count.value, current_weight_gram.value, box_name.value, nd_geolocation.description
+        FROM stock_relationship AS member_relationship
+        JOIN stock AS member ON (member_relationship.subject_id = member.stock_id) AND member_relationship.type_id = ?
+        JOIN cvterm ON (member.type_id = cvterm.cvterm_id)
+        LEFT JOIN stock_relationship AS seedlot_transaction ON (member.stock_id = seedlot_transaction.object_id) AND seedlot_transaction.type_id = ?
+        LEFT JOIN stock as seedlot ON (seedlot_transaction.subject_id = seedlot.stock_id)
+        LEFT JOIN stockprop AS current_count ON (current_count.stock_id = seedlot.stock_id) AND current_count.type_id = ?
+        LEFT JOIN stockprop AS current_weight_gram ON (current_weight_gram.stock_id = seedlot.stock_id) AND current_weight_gram.type_id = ?
+        LEFT JOIN stockprop AS box_name ON (box_name.stock_id = seedlot.stock_id) AND box_name.type_id = ?
+        LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = seedlot.stock_id) AND nd_experiment_stock.type_id = ?
+        LEFT JOIN nd_experiment ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        LEFT JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)
+        where member_relationship.object_id = ? ORDER BY member.uniquename ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($member_of_type_id, $seed_transaction_type_id, $current_count_type_id, $current_weight_gram_type_id, $box_name_type_id, $experiment_type_id, $population_stock_id);
+
+    my @population_source_seedlots = ();
+    while(my($member_id, $member_name, $member_type, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location) = $h->fetchrow_array()){
+        push @population_source_seedlots, [$member_id, $member_name, $member_type, $seedlot_id, $seedlot_uniquename, $current_count, $current_weight_gram, $box_name, $location]
+    }
+
+    return \@population_source_seedlots;
+}
+
 
 sub get_possible_seedlots {
     my $self = shift;
@@ -143,6 +232,7 @@ sub get_possible_seedlots {
         $schema,
         $people_schema,
         $phenome_schema,
+        undef,
         undef,
         undef,
         undef,

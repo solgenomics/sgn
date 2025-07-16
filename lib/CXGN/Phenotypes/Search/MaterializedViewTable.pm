@@ -117,6 +117,21 @@ has 'observation_unit_names_list' => (
     is => 'rw',
 );
 
+has 'xref_id_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'xref_source_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'observation_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -154,6 +169,11 @@ has 'offset' => (
     is => 'rw'
 );
 
+has 'order_by' => (
+    isa => 'Str|Undef',
+    is => 'rw'
+);
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -165,8 +185,32 @@ sub search {
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
 
-    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
-    my $order_clause = " ORDER BY trial_name, observationunit_uniquename";
+    my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
+    
+    my $phenotypeprop_sql = '';
+    if ($self->exclude_phenotype_outlier) {
+        $phenotypeprop_sql = " LEFT JOIN (
+            SELECT DISTINCT nes.stock_id
+            FROM nd_experiment_stock nes
+            JOIN nd_experiment_phenotype nep ON nes.nd_experiment_id = nep.nd_experiment_id
+            JOIN phenotypeprop pp ON pp.phenotype_id = nep.phenotype_id
+            WHERE pp.type_id = $phenotype_outlier_type_id
+        ) outlier_stocks ON outlier_stocks.stock_id = materialized_phenotype_jsonb_table.observationunit_stock_id"
+    };
+
+    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table
+                         LEFT JOIN (
+                            select stock.stock_id, array_agg(db.name)::text[] as xref_sources, array_agg(dbxref.accession)::text[] as xref_ids
+                            from stock
+                            join stock_dbxref sd on stock.stock_id = sd.stock_id
+                            join dbxref on sd.dbxref_id = dbxref.dbxref_id
+                            join db on dbxref.db_id = db.db_id 
+                            group by stock.stock_id
+                         ) xref on xref.stock_id = materialized_phenotype_jsonb_table.observationunit_stock_id
+                         $phenotypeprop_sql
+                        ";
+    my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY trial_name, observationunit_uniquename";
+    
 
     my @where_clause;
 
@@ -191,6 +235,12 @@ sub search {
     } elsif ($self->subplot_list && scalar(@{$self->subplot_list})>0) {
         my $subplot_sql = _sql_from_arrayref($self->subplot_list);
         push @where_clause, "observationunit_stock_id in ($subplot_sql)";
+    } elsif ($self->xref_id_list && scalar(@{$self->xref_id_list})>0) {
+        my $xref_id_sql = _sql_from_arrayref($self->xref_id_list);
+        push @where_clause, "xref.xref_ids && '{$xref_id_sql}'";
+    } elsif ($self->xref_source_list && scalar(@{$self->xref_source_list})>0) {
+        my $xref_source_sql = _sql_from_arrayref($self->xref_source_list);
+        push @where_clause, "xref.xref_sources && '{$xref_source_sql}'";
     }
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
@@ -228,35 +278,60 @@ sub search {
     } else {
         push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample' OR observationunit_type_name = 'analysis_instance')"; #plots AND plants AND subplots AND tissue_samples AND analysis_instance
     }
+    # TODO: Should use placeholders or DBI query api to protect against sql injection
     if ($self->observation_unit_names_list && scalar(@{$self->observation_unit_names_list})>0) {
         my @arrayref;
-        for my $name (@{$self->observation_unit_names_list}) {push @arrayref, lc $name;}
-        my $sql = join ("','" , @arrayref);
-        my $ou_name_sql = "'" . $sql . "'";
-        push @where_clause, "LOWER(observationunit_uniquename) in ($ou_name_sql)";
+        my $dbh = $schema->storage->dbh();
+        for my $name (@{$self->observation_unit_names_list}) {push @arrayref, $dbh->quote(lc $name);}
+        my $sql = join ("," , @arrayref);
+        push @where_clause, "LOWER(observationunit_uniquename) in ($sql)";
     }
+
+    my @or_clause;
 
     my %trait_list_check;
     my $filter_trait_ids;
-    my @or_clause;
+    my @trait_ids_or;
     if ($self->trait_list && scalar(@{$self->trait_list})>0) {
         print STDERR "A trait list was included\n";
         foreach (@{$self->trait_list}){
             if ($_){
                 #print STDERR "Working on trait $_\n";
-                push @or_clause, "observations @> '[{\"trait_id\" : $_}]'";
+                push @trait_ids_or, "observations @> '[{\"trait_id\" : $_}]'";
                 $trait_list_check{$_}++;
                 $filter_trait_ids = 1;
             }
         }
+        if($filter_trait_ids) {
+            push @where_clause, "(".join(" OR ", @trait_ids_or).")";
+        }
     }
+
     my $filter_trait_names;
+    my @trait_names_or;
     if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
             if ($_){
-                push @or_clause, "observations @> '[{\"trait_name\" : \"$_\"}]'";
+                push @trait_names_or, "observations @> '[{\"trait_name\" : \"$_\"}]'";
                 $filter_trait_names = 1;
             }
+        }
+        if($filter_trait_names) {
+            push @where_clause, "(".join(" OR ", @trait_names_or).")";
+        }
+    }
+
+    my $filter_observation_ids;
+    my @observation_ids_or;
+    if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
+        foreach (@{$self->observation_id_list}) {
+            if ($_){
+                push @observation_ids_or, "observations @> '[{\"phenotype_id\" : $_}]'";
+                $filter_observation_ids = 1;
+            }
+        }
+        if($filter_observation_ids) {
+            push @where_clause, "(".join(" OR ", @observation_ids_or).")";
         }
     }
     #if ($self->phenotype_min_value && !$self->phenotype_max_value) {
@@ -269,9 +344,11 @@ sub search {
     #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.' && @.value <= '.$self->phenotype_max_value.')\')';
     # }
     #
-    #if ($self->exclude_phenotype_outlier){
-    #    push @where_clause, "observations !@> '[{\"outlier\" : 1}]'";;
-    #}
+
+    if ($self->exclude_phenotype_outlier) {
+        push @where_clause, " outlier_stocks.stock_id IS NULL"
+    };
+
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
     my $or_clause = '';
@@ -288,9 +365,12 @@ sub search {
         $offset_clause = " OFFSET ".$self->offset;
     }
 
+    
+
+
     my  $q = $select_clause . $where_clause . $or_clause . $order_clause . $limit_clause . $offset_clause;
 
-    # print STDERR "QUERY: $q\n\n";
+    print STDERR "QUERY: $q\n\n";
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;
@@ -320,7 +400,7 @@ sub search {
             $ordered_observations{$_->{phenotype_id}} = $_;
         }
 
-        my @return_observations;;
+        my @return_observations;
         foreach my $pheno_id (sort keys %ordered_observations){
             my $o = $ordered_observations{$pheno_id};
             my $trait_name = $o->{trait_name};
@@ -340,6 +420,19 @@ sub search {
                     next;
                 }
             }
+
+            if ($filter_observation_ids){
+                my $skip;
+                foreach (@{$self->observation_id_list}){
+                    if (index($o->{phenotype_id}, $_) == -1) {
+                        $skip = 1;
+                    }
+                }
+                if ($skip){
+                    next;
+                }
+            }
+
             my $phenotype_uniquename = $o->{uniquename};
             $unique_traits{$trait_name}++;
             if ($include_timestamp){
@@ -349,6 +442,7 @@ sub search {
                     my ($p1, $p2) = split /date: /, $phenotype_uniquename;
                     if ($p2){
                         my ($timestamp, $operator_value) = split /  operator = /, $p2;
+                        # this regex won't work for timestamps saved in ISO 8601 format
                         if ( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
                             $timestamp_value = $timestamp;
                         }

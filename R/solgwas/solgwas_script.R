@@ -23,6 +23,7 @@ figure3_file_name <- args[4]
 figure4_file_name <- args[5]
 pc_check <- args[6]
 kinship_check <- args[7]
+gwasresultsPhenoCsv <- args[8]
 
 
 
@@ -194,6 +195,8 @@ legend(1,13.5, c("Bonferroni") ,
        lty=1, col=c('red', 'blue'), bty='n', cex=1,lwd=2)
 dev.off()
 
+# write results to csv file only for testing purpose - not for client use
+write.csv(gwasresults$PHENO, file = gwasresultsPhenoCsv)
 
 N <- length(gwasresults$PHENO)
 expected.logvalues <- sort( -log10( c(1:N) * (1/N) ) )

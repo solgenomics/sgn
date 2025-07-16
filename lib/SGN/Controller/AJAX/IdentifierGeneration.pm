@@ -30,7 +30,8 @@ __PACKAGE__->config(
 sub new_identifier_generation : Path('/ajax/breeders/new_identifier_generation') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     if(!$c->user){
         $c->stash->{rest} = { error => "You must be logged in first!"};
@@ -101,7 +102,8 @@ sub new_identifier_generation : Path('/ajax/breeders/new_identifier_generation')
 sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     if(!$c->user){
         $c->stash->{rest} = { error => "You must be logged in first!"};
@@ -121,7 +123,7 @@ sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list
             my $num = sprintf '%0'.$num_digits.'d', $current_number;
             my $next_identifier = $prefix.$num;
             my $history_button = '<button class="btn btn-primary" name="identifier_generation_history" data-list_id="'.$_->[0].'">View</button>';
-            my $button = '<div class="form-group"><label class="col-sm-6 control-label">Next Count: </label><div class="col-sm-6"> <input type="number" class="form-control" id="identifier_generation_next_numbers_'.$_->[0].'" placeholder="EG: 100" /></div></div><button class="btn btn-primary" name="identifier_generation_download" data-list_id="'.$_->[0].'">Download Next</button>';
+            my $button = '<div class="form-group"><label class="col-sm-4 control-label">Next Count: </label><div class="col-sm-8"> <input type="number" class="form-control" id="identifier_generation_next_numbers_'.$_->[0].'" placeholder="EG: 100" /></div></div><button class="btn btn-primary" name="identifier_generation_download" data-list_id="'.$_->[0].'">Download Next</button>';
             push @data, [$_->[1], $_->[2], $prefix, $num_digits, $current_number, $next_identifier, $history_button, $button];
         }
     }
@@ -133,7 +135,8 @@ sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list
 sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_download') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     if(!$c->user){
         $c->stash->{rest} = { error => "You must be logged in first!"};
@@ -195,7 +198,8 @@ sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_
 sub identifier_generation_history : Path('/ajax/breeders/identifier_generation_history') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     if(!$c->user){
         $c->stash->{rest} = { error => "You must be logged in first!"};

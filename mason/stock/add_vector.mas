@@ -1,21 +1,30 @@
 
 <%args>
 $stockref => undef
+$preferred_species => ""
+$editable_vector_props => {}
+$editable_stock_props_definitions => {}
+
 </%args>
 
 % my $stock_id = $stockref->{stock_id};
+
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Vector'] &>
 
 <& /page/page_title.mas, title=> 'Create a New Vector' &>
 
 
 <&| /page/info_section.mas, title=>"Vector details"  &>
 
+<& /breeders_toolbox/add_vectors_dialogs.mas, preferred_species=>$preferred_species, editable_vector_props=>$editable_vector_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 
 <div class="infosectioncontent">
 
 <p>Add new vector and details.</p> 
+<div style="margin-bottom:10px"><button style="float:right" class="btn btn-default" name="add_vectors_link"> Upload Vectors</button></div>
 <div class="row">
   <div class="col-sm-12">
+    
 
 <div class="container-fluid">
   <div class="well">
@@ -23,18 +32,25 @@ $stockref => undef
   <form class="form-horizontal" id="newVectorForm" action="#" onsubmit="handleSubmit();return false">
 
     <div class="form-group">
+      <label class="col-sm-3 control-label">Uniquename <font color="red">*</font>  
+      </label>
+      <div class="col-sm-6">
+        <input type="text" class="form-control" value="" name="uniqueName" id="uniqueName" required>
+      </div>
+      <input class="col-sm-1" type="checkbox" id="uniqueNameAutoCheck" name="uniqueNameAutoCheck" value="uniqueNameAutoCheck" onclick="jqueryAutoUniqueName()">
+      <label class="col-sm-2" for="uniqueNameAutoCheck"> Auto generate uniquename</label><br>
+    </div>
+    <div class="form-group">
       <label class="col-sm-3 control-label">Organism <font color="red">*</font>  
       </label>
       <div class="col-sm-9">
         <input class="form-control ui-autocomplete-input" type="text" id="species_name" name="species_name" value="" size="" onclick="jqueryStuff()" autocomplete="off" required>
       </div>
     </div>
-
     <div class="form-group">
-      <label class="col-sm-3 control-label">Uniquename <font color="red">*</font>  
-      </label>
+      <label class="col-sm-3 control-label">Cloning Organism Host</label>
       <div class="col-sm-9">
-        <input type="text" class="form-control" value="" name="uniqueName" required>
+        <input type="text" class="form-control" value="" id="CloningOrganism" name="CloningOrganism">
       </div>
     </div>
 
@@ -51,12 +67,6 @@ $stockref => undef
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Cloning Organism </label>
-      <div class="col-sm-9">
-        <input type="text" class="form-control" value="" id="CloningOrganism" name="CloningOrganism">
-      </div>
-    </div>
-    <div class="form-group">
       <label class="col-sm-3 control-label">Inherent Marker </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="InherentMarker" name="InherentMarker">
@@ -66,6 +76,18 @@ $stockref => undef
       <label class="col-sm-3 control-label">Selection Marker </label>
       <div class="col-sm-9">
         <input type="text" class="form-control" value="" id="SelectionMarker" name="SelectionMarker">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Host Antibiotic Resistant Marker </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="PlantAntibioticResistantMarker" name="PlantAntibioticResistantMarker">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-3 control-label">Bacterial Resistant Marker </label>
+      <div class="col-sm-9">
+        <input type="text" class="form-control" value="" id="BacterialResistantMarker" name="BacterialResistantMarker">
       </div>
     </div>
     <div class="form-group">
@@ -92,6 +114,7 @@ $stockref => undef
         <input type="text" class="form-control" value="" id="Terminators" name="Terminators">
       </div>
     </div>
+
 
   <div class="form-group">
     <label class="col-sm-3 control-label"></label>
@@ -122,7 +145,7 @@ function handleSubmit() {
 
     const data = {};
     dataForm.forEach((value, key) => (data[key] = value));
-
+    console.log(data);
     jQuery.ajax({
         type: 'POST',
         data: {'data': JSON.stringify([data])},
@@ -134,24 +157,33 @@ function handleSubmit() {
         error: function(response) {
           alert( 'An Error occured while storing vectors.');
         }
-      });
-
-    console.log(data);
-
+    });
 }
 
-
-  
 </script>  
 
 </&>
 
 <script language="javascript">
-function jqueryStuff() { 
-   jQuery(function() {
-     jQuery("#species_name").autocomplete({
-        source: '/organism/autocomplete'
-     });
-  });
-}
+    function jqueryStuff() { 
+        jQuery(function() {
+            jQuery("#species_name").autocomplete({
+                source: '/organism/autocomplete'
+            });
+        });
+    }
+    function jqueryAutoUniqueName() {
+        jQuery('#uniqueNameAutoCheck').on('change', function () {
+            var checked = jQuery(this).prop('checked');
+            jQuery('#uniqueName').prop('readonly', checked);
+            if(checked){
+                jQuery.get('/ajax/get_new_vector_uniquename',
+                    function (value) {
+                        jQuery("#uniqueName").val(value);
+                });
+            } else {
+                jQuery("#uniqueName").val("");
+            }
+        });
+    }
 </script>

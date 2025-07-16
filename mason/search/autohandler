@@ -31,7 +31,7 @@ Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
     ['/search/cross','Progenies, Parents, Crosses'],
     ['/search/trials', 'Field Trials' ],
     ['/search/genotyping_trials', 'Genotyping Plates' ],
-    ['/search/genotyping_data_projects', 'Genotyping Data Projects' ],
+    ['/search/genotyping_data_projects', 'Genotyping Projects' ],
     ['/search/genotyping_protocols', 'Genotyping Protocols' ],
     ['/search/traits', 'Traits' ],
     #['/search/markers','Markers'],

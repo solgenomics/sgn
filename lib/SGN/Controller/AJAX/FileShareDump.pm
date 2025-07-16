@@ -37,9 +37,9 @@ sub filesharedump_upload_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
     my $upload = $c->req->upload('manage_file_dump_upload_file_dialog_file');
 
     my $upload_original_name = $upload->filename();
@@ -80,9 +80,9 @@ sub filesharedump_list_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
 
     my $q = "SELECT md_file.file_id, md_file.basename, md_file.dirname, sp.sp_person_id, md.create_date, sp.username
         FROM metadata.md_files AS md_file

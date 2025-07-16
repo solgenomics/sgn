@@ -32,7 +32,8 @@ __PACKAGE__->config(
 sub get_all_derived_trait : Path('/ajax/breeders/trial/trait_formula') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+	my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     my $dbh = $c->dbc->dbh();
     my (@cvterm_ids, @derived_traits, @formulas, @derived_traits_array, @trait_ids, @trait_db_ids, @formulas_array, @formulas_array_msg, $formula_json_array);
 
@@ -71,9 +72,10 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	print "TRAIT NAME: $selected_trait\n";
 	print "TRIAl ID: $trial_id\n";
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+	my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 	my $selected_trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $selected_trait);
 	if (!$selected_trait_cvterm) {
 		print STDERR "The trait $selected_trait is not in the database.\n";
@@ -297,6 +299,7 @@ project.project_id=? ) );");
         has_timestamps=>1,
         overwrite_values=>0,
         metadata_hash=>\%phenotype_metadata,
+				composable_validation_check_name=>$c->config->{composable_validation_check_name}
     );
 
     my ($store_error, $store_success) = $store_phenotypes->store();
@@ -319,7 +322,8 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
     #print STDERR "Trait: $trait_name\n";
     #print STDERR "Method: $method\n";
     #print STDERR "Round: $rounding\n";
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+	my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
     my @traits;
     if ($trait_name eq 'all') {
@@ -379,9 +383,10 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
     #print STDERR Dumper $traits;
     #print STDERR $overwrite_values;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+	my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 
     my $overwrite = 0;
     if ($overwrite_values) {
@@ -424,6 +429,7 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
             has_timestamps=>0,
             overwrite_values=>$overwrite,
             metadata_hash=>\%phenotype_metadata,
+						composable_validation_check_name=>$c->config->{composable_validation_check_name}
         );
         my ($store_error, $store_success) = $store_phenotypes->store();
         if ($store_error) {

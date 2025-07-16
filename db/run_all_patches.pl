@@ -33,41 +33,46 @@ my $startfrom = 0;
 my $test;
 
 GetOptions(
-    "user=s" => \$dbuser,
-    "pass=s" => \$dbpass,
-    "host=s" => \$host,
-    "db=s" => \$db,
+    "user=s"        => \$dbuser,
+    "pass=s"        => \$dbpass,
+    "host=s"        => \$host,
+    "db=s"          => \$db,
     "editinguser=s" => \$editinguser,
-    "startfrom:i" => \$startfrom,
-    "test" => \$test
+    "startfrom:i"   => \$startfrom,
+    "test"          => \$test
 );
 
 my $db_patch_path = dirname(abs_path($0));
 chdir($db_patch_path);
 
 my @folders = grep /[0-9]{5}/, (split "\n", `ls -d */`);
-my $cmd = "echo -ne \"$dbpass\n\" | psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
-my @installed = grep { !/^$/ } map { s/^\s+|\s+$//gr } `$cmd`;
+my $cmd = "PGPASSWORD=$dbpass psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
+my @installed = grep {!/^$/} map {s/^\s+|\s+$//gr} `$cmd`;
 
 for (my $i = 0; $i < (scalar @folders); $i++) {
-    if (($folders[$i]=~s/\/$//r)>=$startfrom){
+    if (($folders[$i] =~ s/\/$//r) >= $startfrom) {
         chdir($db_patch_path);
         chdir($folders[$i]);
-        my @patches = grep {!($_ ~~ @installed)} map { s/.pm//r } (split "\n", `ls`);
+        my @patches = grep {!($_ ~~ @installed)} map {s/.pm//r} (split "\n", `ls`);
         for (my $j = 0; $j < (scalar @patches); $j++) {
             my $patch = $patches[$j];
-	    
-	    if ($patch =~ /\~$/) { 
-		print STDERR "Ignoring $patch...\n";
-		next;
-	    }
 
+            if ($patch =~ /\~$/) {
+                print STDERR "Ignoring $patch...\n";
+                next;
+            }
 
-
-            my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser".($test?' -t':'');
-            print STDERR $cmd."\n";
+            my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser" . ($test ? ' -t' : '');
+            print STDERR $cmd . "\n";
             system("bash -c '$cmd'");
+
+            if (($? >> 8) == 255) { #execution error
+                die "Failed executing patch: $patch";
+            }
+
             print STDERR "\n\n\n";
         }
     }
 }
+
+print STDERR "DB patching complete, database is up to date\n";

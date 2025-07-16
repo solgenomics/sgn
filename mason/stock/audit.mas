@@ -1,0 +1,124 @@
+<%doc>
+=head1 NAME
+
+/about/audit.mas- display organism search results and search form
+
+=head1 ARGS
+
+<!--
+
+=head2 results
+
+optional L<DBIx::Class::ResultSet> object for the set of results to
+display.  if not set or not passed, only the search form will be
+displayed.
+
+=head2 form 
+
+required L<HTML::FormFu> form object for the search form.  will call
+C<$form->render> on this.
+
+=head2 pagination_link_maker
+
+subroutine reference that takes a single integer page number for the
+results and returns the appropriate URL for going to that page of results
+
+--> 
+
+=cut
+
+</%doc>
+
+<%args>
+$stock_uniquename
+$stock_id
+</%args>
+
+
+
+<div class="container-fluid">
+
+<style>
+</style>
+
+</div>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<table class="table table-hover table-bordered" id="stock_audit_results"> </table>
+
+<script>
+
+
+jQuery(document).ready(function(){
+    var stock_uniquename = "<% $stock_uniquename %>";
+        jQuery.ajax({
+            url: '/ajax/audit/retrieve_stock_audits',
+            data: {'stock_uniquename':stock_uniquename},
+            timeout: 300000,
+            success: function(response){
+            var json_object = JSON.parse(response.stock_match_after);
+            var datastring;
+            for (var row = 0; row < json_object.length; row++){
+                for (var column = 4; column <= 5; column++){
+                    datastring = json_object[row][column];
+                    if(datastring != null){
+                        for(var character = 0; character < datastring.length; character++){
+                            if(datastring[character] == '{' || datastring[character] == '}' || datastring[character] == '"' || datastring[character] == ','){
+                                if(datastring[character] == ','){
+                                    datastring = datastring.replace(datastring[character],'\n');
+                                }else{
+                                    datastring = datastring.replace(datastring[character],'');
+                                    character --;
+                                }
+                            }
+                        }
+                    }
+                    json_object[row][column] = datastring;
+                }
+            }
+            
+            jQuery('#stock_audit_results').DataTable({
+                data: json_object,
+                columns: [
+                    { title: 'Timestamp' },
+                    { title: 'Operation' },
+                    { title: 'Username' },
+                    { title: 'Logged in User' },
+                    { title: 'Before' },
+                    { title: 'After' },
+                    { title: 'Transaction Code'},
+                    { title: 'Primary Key'},
+                    { title: 'Is Undo'},
+                ],
+                "rowCallback" : function (row, data, index){
+                    if(data[1] == "INSERT"){
+                        jQuery('td', row).css('background-color', 'HoneyDew');
+                    }
+                    if(data[1] == "UPDATE"){
+                        jQuery('td',row).css('background-color', 'LightCyan');
+                    }
+                    if(data[1] == "DELETE"){
+                        jQuery('td',row).css('background-color', 'LightSalmon');
+                    }
+
+                }
+                
+            });
+
+            }
+	});
+});
+
+
+</script>
+
+
+<%init>
+  use Number::Format;
+  use CXGN::Page::FormattingHelpers qw/ columnar_table_html /;
+
+</%init>
+

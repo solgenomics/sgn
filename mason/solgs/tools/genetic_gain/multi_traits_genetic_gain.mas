@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-/solgs/genetic_gain/multi_traits_genetic_gain.mas - template for multiple traits genetic gain viz.
+/solgs/tools/genetic_gain/multi_traits_genetic_gain.mas - template for multiple traits genetic gain viz.
 
 =AUTHOR
 
@@ -22,14 +22,14 @@ $training_traits_ids
 
 
 <div class="row">  
-  <div class="form-group col-sm-3" id="gg_select_a_population_div" style="margin-right:35px"></div>
-  <input id="check_genetic_gain" class="button" type="submit" value="Check Genetic Gain" />
+  <div class="form-group col-sm-3" id="gg_pops_select_div" style="margin-right:35px"></div>
+  <input id="check_genetic_gain" class="btn btn-success" type="submit" value="Check Genetic Gain" />
 </div>
 
-<div id="gg_selected_population_div" style="display:none">    
-  <input type="hidden" id="gg_selected_population_name" value="" />
-  <input type="hidden" id="gg_selected_population_id" value="" />
-  <input type="hidden" id="gg_selected_population_type" value="" />
+<div id="gg_selected_pop_div" style="display:none">    
+  <input type="hidden" id="gg_selected_pop_name" value="" />
+  <input type="hidden" id="gg_selected_pop_id" value="" />
+  <input type="hidden" id="gg_selected_pop_type" value="" />
 </div>
 
 <input type="hidden" id="training_traits_ids" value="<% $training_traits_ids %>" /> 

@@ -43,29 +43,40 @@ $phenotypes_fully_uploaded => undef
 $identifier_prefix => 'SGN'
 $genotyping_facility => undef
 $genotype_data_type => undef
+$trial_owner => undef
 $has_plate => undef
+$marker_names => undef
+$marker_info_headers => undef
+$assay_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
 <br/>
 
-<& /page/page_title.mas, title=>"Genotyping Data Project: ".$trial_name &>
+<& /page/page_title.mas, title=>"Genotyping Project: ".$trial_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data Project Details</h4>", info_section_subtitle => 'View basic information about the genotyping data project.',buttons_html => '<button class="btn btn-primary btn-sm" id="edit_genotyping_project_details" style="margin:3px">Edit Genotyping Project Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_data_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_description => $trial_description, identifier_prefix => $identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Project Details</h4>", info_section_subtitle => 'View basic information about the genotyping project.',buttons_html => '<button class="btn btn-primary btn-sm" id="edit_genotyping_project_details" style="margin:3px">Edit Genotyping Project Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_data_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_description => $trial_description, identifier_prefix => $identifier_prefix, genotyping_facility => $genotyping_facility, genotype_data_type => $genotype_data_type, trial_owner => $trial_owner &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Plates</h4>", info_section_subtitle => 'View information about genotyping plates in this project or move genotyping plates to this project.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_existing_genotyping_plate_link">Move Genotyping Plate(s) to this Project</button>', icon_class => "glyphicon glyphicon-th", info_section_id => "genotyping_project_plates" &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Protocols</h4>", info_section_subtitle => 'View basic information about the genotyping protocols used in this genotyping data project.', icon_class => "glyphicon glyphicon-cog", info_section_id => "genotyping_data_project_protocols" &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Protocols</h4>", info_section_subtitle => 'View basic information about the genotyping protocols used in this genotyping project.', icon_class => "glyphicon glyphicon-cog", info_section_id => "genotyping_data_project_protocols" &>
 
-% if ($genotype_data_type ne 'SSR') {
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_data_project_data" &>
+% if ($genotype_data_type eq 'SSR') {
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, marker_names => $marker_names, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this project.',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="download_project_ssr_data_link">Download SSR Data</button>', icon_class => "glyphicon glyphicon-save-file", info_section_id => "project_pcr_genotype_data" &>
+% } elsif ($assay_type eq 'KASP') {
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button><button class="btn btn-default" style="margin:3px" id="kasp_project_genotype_data_download_all_csv">Download All Genotype Data (CSV)</button>', info_section_id => "genotyping_data_project_data" &>
+% } else {
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", buttons_html => '<button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_vcf">Download All Genotype Data VCF</button><button class="btn btn-primary" style="margin:3px" id="project_genotype_data_download_all_dosagematrix">Download All Genotype Data Dosage Matrix</button>', info_section_id => "genotyping_data_project_data" &>
 % }
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Archived Files</h4>", info_section_subtitle => 'Download archived VCF files associated with this genotyping project.', icon_class => "glyphicon glyphicon-hdd", info_section_id => "genotyping_data_archived_vcf" &>
+
 % my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
 % if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Data Agreement License</h4>", info_section_subtitle => 'View and edit the public data agreement on this experiment.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "trial_data_agreement_section", buttons_html => $data_agreement_link &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Delete Genotyping Project and/or Associated Data</h4>", info_section_subtitle => 'Delete genotyping project, genotyping plates and/or genotyping protocols in this project.', icon_class => "glyphicon glyphicon-trash", info_section_id => "genotyping_project_deletion_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Delete</h4>", info_section_subtitle => 'Delete genotyping project, genotyping plates and/or genotyping data associated with this project.', icon_class => "glyphicon glyphicon-trash", info_section_id => "genotyping_project_deletion_section" &>
 
 <& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/genotyping_data_project/add_existing_genotyping_plate_dialog.mas, breeding_program_id => $breeding_program_id, breeding_program_name => $breeding_program_name, trial_id => $trial_id, trial_name => $trial_name &>

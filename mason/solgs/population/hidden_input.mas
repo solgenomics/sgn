@@ -14,6 +14,8 @@ $data_set_type => ''
 $training_traits_ids => ''
 $selection_traits_ids => ''
 $training_traits_code => ''
+$analysis_type => ''
+
 </%args>
 
 <input type="hidden" id="model_id" value="<% $training_pop_id %>" />
@@ -32,3 +34,5 @@ $training_traits_code => ''
 <input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />
 <input type="hidden" id="training_traits_code" value="<% $training_traits_code %>" />
 <input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
+<input type="hidden" id="analysis_type" value="<% $analysis_type %>" />
+

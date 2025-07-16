@@ -13,6 +13,8 @@ use Spreadsheet::Read;
 use utf8;
 
 my $f = SGN::Test::Fixture->new();
+$f->get_db_stats();
+
 my $schema = $f->bcs_schema;
 
 for my $extension ("xls", "xlsx") {

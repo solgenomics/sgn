@@ -2,36 +2,41 @@ package SGN::Controller::solGS::AnalysisQueue;
 
 use Moose;
 use namespace::autoclean;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path  /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use CXGN::Tools::Run;
 use Try::Tiny;
+use Time::Piece;
+use Time::Seconds;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use Scalar::Util 'reftype';
 use URI;
 
-BEGIN { extends 'Catalyst::Controller' }
+
+BEGIN { extends 'Catalyst::Controller::REST' }
+
+__PACKAGE__->config(
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON' },
+);
+
 
 sub check_user_login : Path('/solgs/check/user/login') Args(0) {
     my ( $self, $c ) = @_;
 
     my $user = $c->user();
-    my $ret->{loggedin} = 0;
+    $c->stash->{rest}{loggedin} = 0;
 
     if ($user) {
-        my $contact = $self->get_user_detail($c);
-
-        $ret->{contact}  = $contact;
-        $ret->{loggedin} = 1;
+        $c->stash->{rest} = {
+          contact => $self->get_user_detail($c),
+          loggedin => 1
+        };
     }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
 
 }
 
@@ -44,19 +49,14 @@ sub save_analysis_profile : Path('/solgs/save/analysis/profile') Args(0) {
     my $analysis_page = $analysis_profile->{analysis_page};
     $c->stash->{analysis_page} = $analysis_page;
 
-    my $ret->{result} = 0;
-
+    $c->stash->{rest}{result} = 0;
     $self->save_profile($c);
     my $error_saving = $c->stash->{error};
 
     if ( !$error_saving ) {
-        $ret->{result} = 1;
+      $c->stash->{rest}{result} = 1;
+
     }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
 
 }
 
@@ -69,13 +69,10 @@ sub run_saved_analysis : Path('/solgs/run/saved/analysis/') Args(0) {
     $self->structure_output_details($c);
     $self->run_analysis($c);
 
-    my $ret->{result} = $c->stash->{status};
-    $ret->{arguments} = $analysis_profile->{arguments};
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
+    $c->stash->{rest} = {
+      result => $c->stash->{status},
+      arguments => $analysis_profile->{arguments}
+    };
 
 }
 
@@ -83,48 +80,16 @@ sub check_analysis_name : Path('/solgs/check/analysis/name') Args() {
     my ( $self, $c ) = @_;
 
     my $new_name = $c->req->param('name');
-    my $match = $self->check_analyses_names( $c, $new_name );
+    my $match    = $self->check_analyses_names( $c, $new_name );
 
-    my $ret->{analysis_exists} = $match;
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
-sub submission_feedback : Path('/solgs/submission/feedback/') Args() {
-    my ( $self, $c ) = @_;
-
-    my $job = $c->req->param('job');
-
-    my $job_type = $self->get_confirm_msg( $c, $job );
-    my $user_id  = $c->user()->get_object()->get_sp_person_id();
-    my $referer  = $c->req->referer;
-
-    my $msg =
-        "<p>$job_type</p>"
-      . "<p>You will receive an email when it is completed. "
-      . "You can also check the status of the job in "
-      . "<a href=\"/solpeople/profile/$user_id\">your profile page</a>"
-      . "<p><a href=\"$referer\">[ Go back ]</a></p>";
-
-    $c->controller('solGS::Utils')->generic_message( $c, $msg );
+    $c->stash->{rest}{analysis_exists} = $match;
 
 }
 
 sub display_analysis_status : Path('/solgs/display/analysis/status') Args(0) {
     my ( $self, $c ) = @_;
 
-    my $panel_data = $self->get_user_solgs_analyses($c);
-
-    my $ret->{data} = $panel_data;
-    my $json = JSON->new();
-    $ret = $json->encode($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
+    $c->stash->{rest}{data} = $self->get_user_solgs_analyses($c);
 }
 
 sub check_analyses_names {
@@ -139,8 +104,9 @@ sub check_analyses_names {
 
     my $db_match;
 
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     if ($new_name) {
-        my $schema = $c->dbic_schema("Bio::Chado::Schema");
+        my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
         $db_match =
           $schema->resultset("Project::Project")->find( { name => $new_name } );
     }
@@ -261,7 +227,8 @@ sub create_itemized_prediction_log_entries {
         else {
             $analysis_page =
               $c->controller('solGS::Path')->model_page_url($url_args);
-            $analysis_type = $c->controller('solGS::Path')->page_type($c, $analysis_page);
+            $analysis_type =
+              $c->controller('solGS::Path')->page_type( $c, $analysis_page );
         }
 
         my $analysis_name =
@@ -437,7 +404,7 @@ sub parse_arguments {
 
     my $analysis_data = $c->stash->{analysis_profile};
     my $arguments     = $analysis_data->{arguments};
-  
+
     if ($arguments) {
         $c->controller('solGS::Utils')->stash_json_args( $c, $arguments );
     }
@@ -450,8 +417,13 @@ sub structure_output_details {
     my $analysis_data = $c->stash->{analysis_profile};
     my $analysis_page = $analysis_data->{analysis_page};
 
-    my $referer        = $c->req->referer || $analysis_page;
-    my $base           = $c->controller('solGS::Path')->clean_base_name($c);
+    my $uri_base = $c->req->base;
+    my $referer  = $c->req->referer || $analysis_page;
+    $referer =~ s/$uri_base//;
+
+    my $base = $c->stash->{hostname};
+    $referer = $base . "/" . $referer;
+
     my $output_details = {};
 
     my $match_pages =
@@ -523,10 +495,10 @@ sub structure_kinship_analysis_output {
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->controller('solGS::Kinship')->stash_data_str_kinship_pop_id($c);
+    $c->controller('solGS::Kinship')->stash_kinship_pop_id($c);
     my $pop_id = $c->stash->{kinship_pop_id};
 
-    my $base = $c->controller('solGS::Path')->clean_base_name($c);
+    my $base = $c->stash->{hostname};
 
     my $kinship_page = $base . $analysis_page;
     $analysis_data->{analysis_page} = $kinship_page;
@@ -559,24 +531,27 @@ sub structure_pca_analysis_output {
     my $analysis_data = $c->stash->{analysis_profile};
     my $analysis_page = $analysis_data->{analysis_page};
 
-    my $base = $c->controller('solGS::Path')->clean_base_name($c);
+    my $base = $c->stash->{hostname};
 
     my $pca_page = $base . $analysis_page;
     $analysis_data->{analysis_page} = $pca_page;
     my $pop_id = $c->stash->{pca_pop_id};
-    
+
     $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
     my $input_file = $c->controller('solGS::pca')->pca_data_input_files($c);
-    
+
     $c->controller('solGS::pca')->pca_scores_file($c);
     my $scores_file = $c->stash->{pca_scores_file};
 
-    my %output_details = ('pca_' . $pop_id  => {
-        'output_page'   => $pca_page,
-        'pca_pop_id'    => $pop_id,
-        'input_file' => $input_file,
-        'scores_file'   => $scores_file,
-    });
+    my %output_details = (
+        'pca_'
+          . $pop_id => {
+            'output_page' => $pca_page,
+            'pca_pop_id'  => $pop_id,
+            'input_file'  => $input_file,
+            'scores_file' => $scores_file,
+          }
+    );
 
     return \%output_details;
 
@@ -590,13 +565,14 @@ sub structure_cluster_analysis_output {
 
     my $pop_id = $c->stash->{cluster_pop_id};
 
-    my $base         = $c->controller('solGS::Path')->clean_base_name($c);
+    my $base         = $c->stash->{hostname};
     my $cluster_page = $base . $analysis_page;
     $analysis_data->{analysis_page} = $cluster_page;
     my $cluster_type = $c->stash->{cluster_type};
 
-    my $input_file =$c->controller('solGS::Cluster')->cluster_data_input_files($c);
-   
+    my $input_file =
+      $c->controller('solGS::Cluster')->cluster_data_input_files($c);
+
     $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
     $c->controller('solGS::Cluster')->cluster_result_file($c);
 
@@ -607,13 +583,16 @@ sub structure_cluster_analysis_output {
     else {
         $result_file = $c->stash->{"${cluster_type}_result_newick_file"};
     }
-    
-    my %output_details = ( 'cluster_' . $pop_id  => {
-        'output_page'    => $cluster_page,
-        'cluster_pop_id' => $pop_id,
-        'input_file'     => $input_file,
-        'result_file'    => $result_file,
-    });
+
+    my %output_details = (
+        'cluster_'
+          . $pop_id => {
+            'output_page'    => $cluster_page,
+            'cluster_pop_id' => $pop_id,
+            'input_file'     => $input_file,
+            'result_file'    => $result_file,
+          }
+    );
 
     return \%output_details;
 
@@ -626,17 +605,53 @@ sub structure_training_modeling_output {
     my $analysis_page = $analysis_data->{analysis_page};
 
     my $training_pop_id = $c->stash->{training_pop_id};
-    my $protocol_id   = $c->stash->{genotyping_protocol_id};
+    my $protocol_id     = $c->stash->{genotyping_protocol_id};
 
-    my @traits_ids = @{ $c->stash->{training_traits_ids} }
-      if $c->stash->{training_traits_ids};
+    my @traits_ids;
+    if ($c->stash->{training_traits_ids}) {
+      @traits_ids = @{ $c->stash->{training_traits_ids} };
+    }
+
     my $referer = $c->req->referer;
+    my $base    = $c->stash->{hostname};
 
-    my $base     = $c->controller('solGS::Path')->clean_base_name($c);
     my $url_args = {
         'training_pop_id'        => $training_pop_id,
         'genotyping_protocol_id' => $protocol_id,
     };
+
+    if (
+        $referer =~ /solgs\/population\//
+        || (   $referer =~ /solgs\/search\/trials\/trait\//
+            && $analysis_page =~ m/solgs\/trait\// )
+      )
+    {
+        $url_args->{data_set_type} = 'single_population';
+    }
+    elsif ($referer =~ /solgs\/populations\/combined\//
+        || $analysis_page =~ /solgs\/model\/combined\/trials\// )
+    {
+        $url_args->{data_set_type} = 'combined_populations';
+
+        $c->stash->{combo_pops_id} = $training_pop_id;
+        $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
+    }
+
+    my $multi_models_url;
+    if ( scalar(@traits_ids) > 1 ) {
+        my $traits_selection_id = $c->controller('solGS::Gebvs')
+          ->create_traits_selection_id( \@traits_ids );
+
+        $c->controller('solGS::Gebvs')
+          ->catalogue_traits_selection( $c, \@traits_ids );
+
+        $url_args->{'traits_selection_id'} = $traits_selection_id;
+
+        $multi_models_url =
+          $c->controller("solGS::Path")->multi_models_page_url($url_args);
+        $multi_models_url = $base . $multi_models_url;
+    }
+
 
     my %output_details = ();
 
@@ -649,95 +664,31 @@ sub structure_training_modeling_output {
         $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
 
         my $trait_abbr = $c->stash->{trait_abbr};
-        my $trait_page;
+       
+        my $model_page =
+          $c->controller('solGS::Path')->model_page_url($url_args);
+        $model_page = $base . $model_page;
 
-        if ( $referer =~ m/solgs\/population\// ) {
-            $url_args->{data_set_type} = 'single_population';
+        $c->controller('solGS::Files')->model_phenodata_file($c);
+        my $model_pheno_file = $c->stash->{model_phenodata_file};
 
-            my $model_page =
-              $c->controller('solGS::Path')->model_page_url($url_args);
-            $trait_page = $base . $model_page;
+        $c->controller('solGS::Files')->model_genodata_file($c);
+        my $model_geno_file = $c->stash->{model_genodata_file};
 
-            if ( $analysis_page =~ m/solgs\/traits\/all\/population\// ) {
-                my $traits_selection_id = $c->controller('solGS::Gebvs')
-                  ->create_traits_selection_id( \@traits_ids );
-                $analysis_data->{analysis_page} =
-                    $base
-                  . "solgs/traits/all/population/"
-                  . $training_pop_id
-                  . '/traits/'
-                  . $traits_selection_id . '/gp/'
-                  . $protocol_id;
-
-                $c->controller('solGS::Gebvs')
-                  ->catalogue_traits_selection( $c, \@traits_ids );
-            }
-        }
-
-        if (   $referer =~ m/solgs\/search\/trials\/trait\//
-            && $analysis_page =~ m/solgs\/trait\// )
-        {
-            $url_args->{data_set_type} = 'single_population';
-
-            my $model_page =
-              $c->controller('solGS::Path')->model_page_url($url_args);
-            $trait_page = $base . $model_page;
-        }
-
-        if ( $referer =~ m/solgs\/populations\/combined\// ) {
-            $url_args->{data_set_type} = 'combined_populations';
-
-            my $model_page =
-              $c->controller('solGS::Path')->model_page_url($url_args);
-            $trait_page = $base . $model_page;
-
-            if ( $analysis_page =~ m/solgs\/models\/combined\/trials\// ) {
-                my $traits_selection_id = $c->controller('solGS::Gebvs')
-                  ->create_traits_selection_id( \@traits_ids );
-                $analysis_data->{analysis_page} =
-                    $base
-                  . "solgs/models/combined/trials/"
-                  . $training_pop_id
-                  . '/traits/'
-                  . $traits_selection_id . '/gp/'
-                  . $protocol_id;
-
-                $c->controller('solGS::Gebvs')
-                  ->catalogue_traits_selection( $c, \@traits_ids );
-            }
-        }
-
-        if ( $analysis_page =~ m/solgs\/model\/combined\/trials\// ) {
-            $url_args->{data_set_type} = 'combined_populations';
-
-            my $model_page =
-              $c->controller('solGS::Path')->model_page_url($url_args);
-
-            $trait_page = $base . $model_page;
-
-            $c->stash->{combo_pops_id} = $training_pop_id;
-            $c->controller('solGS::combinedTrials')
-              ->cache_combined_pops_data($c);
-        }
-    
-      $c->controller('solGS::Files')->model_phenodata_file($c);
-       my $model_pheno_file = $c->stash->{model_phenodata_file};
-
-       $c->controller('solGS::Files')->model_genodata_file($c);
-       my $model_geno_file = $c->stash->{model_genodata_file};
-
-      
         $output_details{ 'trait_id_' . $trait_abbr } = {
             'trait_id'       => $trait_id,
             'trait_name'     => $c->stash->{trait_name},
-            'trait_page'     => $trait_page,
+            'trait_page'     => $model_page,
             'gebv_file'      => $c->stash->{rrblup_training_gebvs_file},
             'pop_id'         => $training_pop_id,
             'phenotype_file' => $model_pheno_file,
             'genotype_file'  => $model_geno_file,
             'data_set_type'  => $c->stash->{data_set_type},
         };
+
     }
+
+    $output_details{'multi_models_url'} = $multi_models_url;
 
     return \%output_details;
 }
@@ -748,7 +699,7 @@ sub structure_training_single_pop_data_output {
     my $pop_id      = $c->stash->{pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    my $base = $c->controller('solGS::Path')->clean_base_name($c);
+    my $base = $c->stash->{hostname};
     my $args = {
         'training_pop_id'        => $pop_id,
         'genotyping_protocol_id' => $protocol_id,
@@ -817,7 +768,7 @@ sub structure_training_combined_pops_data_output {
     my $combo_pops_id = $c->stash->{combo_pops_id};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
-    my $base = $c->controller('solGS::Path')->clean_base_name($c);
+    my $base = $c->stash->{hostname};
     my $args = {
         'training_pop_id'        => $combo_pops_id,
         'genotyping_protocol_id' => $protocol_id,
@@ -884,12 +835,15 @@ sub structure_training_combined_pops_data_output {
 sub structure_selection_prediction_output {
     my ( $self, $c ) = @_;
 
-    my @traits_ids = @{ $c->stash->{training_traits_ids} }
-      if $c->stash->{training_traits_ids};
+    my @traits_ids;
+    if ($c->stash->{training_traits_ids}) {
+      @traits_ids = @{ $c->stash->{training_traits_ids} };
+    }
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    my $referer        = $c->req->referer;
-    my $base           = $c->controller('solGS::Path')->clean_base_name($c);
+    my $referer = $c->req->referer;
+    my $base    = $c->stash->{hostname};
+
     my $data_set_type  = $c->stash->{data_set_type};
     my %output_details = ();
 
@@ -1008,6 +962,15 @@ sub structure_selection_prediction_output {
 
     }
 
+    if ( scalar(@traits_ids) > 1 ) {
+        my $uri_base = $c->req->base;
+        my $referer  = $c->req->referer;
+        $referer =~ s/$uri_base//;
+        my $base = $c->stash->{hostname};
+
+        $output_details{'multi_models_url'} = $base . "/" . $referer;
+    }
+
     return \%output_details;
 
 }
@@ -1021,12 +984,14 @@ sub run_analysis {
     my $analysis_page    = $analysis_profile->{analysis_page};
     $c->stash->{analysis_page} = $analysis_page;
 
-    my $base = $c->controller('solGS::Path')->clean_base_name($c);
+    my $base = $c->stash->{hostname};
     $analysis_page =~ s/$base//;
     my $referer = $c->req->referer;
 
-    my @selected_traits = @{ $c->stash->{training_traits_ids} }
-      if $c->stash->{training_traits_ids};
+    my @selected_traits;
+    if ($c->stash->{training_traits_ids}) {
+       @selected_traits = @{ $c->stash->{training_traits_ids} };
+    }
 
     eval {
         my $modeling_pages =
@@ -1176,7 +1141,7 @@ sub run_kinship_analysis {
 
     my $analysis_page = $c->stash->{analysis_page};
 
-    if ( $analysis_page = ~/kinship\/analysis/ ) {
+    if ( $analysis_page =~ /kinship\/analysis/ ) {
         $c->controller('solGS::Kinship')->run_kinship($c);
     }
 
@@ -1187,7 +1152,7 @@ sub run_pca_analysis {
 
     my $analysis_page = $c->stash->{analysis_page};
 
-    if ( $analysis_page = ~/pca\/analysis/ ) {
+    if ( $analysis_page =~ /pca\/analysis/ ) {
         $c->controller('solGS::pca')->run_pca($c);
     }
 
@@ -1198,7 +1163,7 @@ sub run_cluster_analysis {
 
     my $analysis_page = $c->stash->{analysis_page};
 
-    if ( $analysis_page = ~/cluster\/analysis/ ) {
+    if ( $analysis_page =~ /cluster\/analysis/ ) {
         $c->controller('solGS::Cluster')->run_cluster($c);
     }
 
@@ -1280,15 +1245,113 @@ sub analysis_log_file {
 
 }
 
-sub get_confirm_msg {
-  my ( $self, $c, $job ) = @_;
+# Deletes analysis logfile rows which show dead or failed analyses
+sub delete_dead_analyses : Path('/solgs/delete/dead/analyses') Args(0) {
+  my ( $self, $c ) = @_;
 
-  $job =~ s/[_|-]/ /g;
-  $job = lc($job);
+  $self->analysis_log_file($c);
+  my $log_file = $c->stash->{analysis_log_file};
 
-  my $msg = "Your $job job is submitted.";
-  return $msg;
+    if ($log_file) {
+      my @rows = read_file( $log_file, { binmode => ':utf8' } );
+        my @user_analyses = grep { $_ !~ /User_name\s+/i } @rows;
 
+        $self->index_log_file_headers($c);
+        my $header_index = $c->stash->{header_index};
+
+        my @rows_to_delete = ();
+
+        my $json = JSON->new();
+        foreach my $row (@user_analyses) {
+            my @analysis = split( /\t/, $row );
+            my $submitted_on    = $analysis[ $header_index->{'Submitted on'} ];
+            my $analysis_status = $analysis[ $header_index->{'Status'} ];
+
+            my $submitted_time = Time::Piece->strptime($submitted_on,'%m/%d/%Y %R');
+            my $now = localtime;
+            my $analysis_age = ($now - $submitted_time) / ONE_DAY;
+
+            if ($analysis_status =~ /Submitted/i && $analysis_age >= 2) {
+              push @rows_to_delete, $row;
+            }
+            if ($analysis_status =~ /Failed/i) {
+              push @rows_to_delete, $row;
+            }
+        }
+
+        my @new_logfile = ();
+        foreach my $row (@rows) {
+          if (scalar(grep {$row eq $_} @rows_to_delete) == 0) {
+            push @new_logfile, $row;
+          } 
+        }
+
+        write_file($log_file,{binmode => ':utf8'},@new_logfile);
+    }
+    if ($@){
+      print STDERR "Error: $@";
+      $c->stash->{rest} = {error => "$@"};
+    }
+    $c->stash->{rest} = {success => 1};
+}
+
+# deletes all analyses in logfile older than $time. Time is one week, one month, six months, or one year
+sub delete_old_analyses : Path('/solgs/delete/old/analyses') Args(1) {
+  my ( $self, $c, $time ) = @_;
+
+  my $timetable = {
+    'one_week' => 7,
+    'one_month' => 30,
+    'six_months' => 180,
+    'one_year' => 365
+  };
+
+  print STDERR "Clearing jobs older than $time...\n";
+
+  if ($time ne 'one_week' && $time ne 'one_month' && $time ne 'six_months' && $time ne 'one_year') {
+    $c->stash->{rest} = {error => 'Invalid time period selected.'};
+  }
+
+  $self->analysis_log_file($c);
+  my $log_file = $c->stash->{analysis_log_file};
+
+    if ($log_file) {
+      my @rows = read_file( $log_file, { binmode => ':utf8' } );
+        my @user_analyses = grep { $_ !~ /User_name\s+/i } @rows;
+
+        $self->index_log_file_headers($c);
+        my $header_index = $c->stash->{header_index};
+
+        my @rows_to_delete = ();
+
+        my $json = JSON->new();
+        foreach my $row (@user_analyses) {
+            my @analysis = split( /\t/, $row );
+            my $submitted_on    = $analysis[ $header_index->{'Submitted on'} ];
+
+            my $submitted_time = Time::Piece->strptime($submitted_on,'%m/%d/%Y %R');
+            my $now = localtime;
+            my $analysis_age = ($now - $submitted_time) / ONE_DAY;
+
+            if ($analysis_age > $timetable->{$time}) {
+              push @rows_to_delete, $row;
+            }
+        }
+
+        my @new_logfile = ();
+        foreach my $row (@rows) {
+          if (scalar(grep {$row eq $_} @rows_to_delete) == 0) {
+            push @new_logfile, $row;
+          } 
+        }
+
+        write_file($log_file,{binmode => ':utf8'},@new_logfile);
+    }
+    if ($@){
+      print STDERR "Error: $@";
+      $c->stash->{rest} = {error => "$@"};
+    }
+    $c->stash->{rest} = {success => 1};
 }
 
 sub get_user_solgs_analyses {
@@ -1325,7 +1388,15 @@ sub get_user_solgs_analyses {
                 $result_page = 'N/A';
             }
             elsif ( $analysis_status =~ /Submitted/i ) {
+              my $submitted_time = Time::Piece->strptime($submitted_on,'%m/%d/%Y %R');
+              my $now = localtime;
+              my $time_running = ($now - $submitted_time) / ONE_DAY;
+              if ($time_running >= 2) { #two days is too long!
+                $result_page = 'NA';
+                $analysis_status = 'Timed Out';
+              } else {
                 $result_page = 'In progress...';
+              }
             }
             else {
                 $result_page = qq |<a href=$result_page>[ View ]</a>|;
@@ -1352,7 +1423,11 @@ sub create_analysis_log_dir {
     my $log_dir = $c->stash->{analysis_log_dir};
 
     $log_dir = catdir( $log_dir, $user_id );
-    mkpath( $log_dir, 0, 0755 );
+    # mkpath( $log_dir, 0, 0755 );
+    make_path($log_dir,{
+      verbose => 1,
+      chmod => "0755"
+    });
 
     $c->stash->{analysis_log_dir} = $log_dir;
 

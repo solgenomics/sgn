@@ -443,6 +443,7 @@ sub sort_list_items : Path('/list/sort') Args(0) {
 sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $cross_id_list = decode_json($c->req->param("cross_id_list"));
     #print STDERR Dumper $cross_id_list;
     my $list_id = $c->req->param("list_id");
@@ -452,7 +453,7 @@ sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
     my %response;
     $response{'count'} = 0;
     foreach (@$cross_id_list) {
-        my $cross = CXGN::Cross->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), cross_stock_id=>$_});
+        my $cross = CXGN::Cross->new({ schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), cross_stock_id=>$_});
         my ($maternal_parent, $paternal_parent, $progeny) = $cross->get_cross_relationships();
 
         my @accession_names;
@@ -620,13 +621,14 @@ sub validate : Path('/list/validate') Args(2) {
     my $c = shift;
     my $list_id = shift;
     my $type = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
     my $list = $self->retrieve_list($c, $list_id);
 
     my @flat_list = map { $_->[1] } @$list;
 
     my $lv = CXGN::List::Validate->new();
-    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
+    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, \@flat_list);
 
     print STDERR "DATA = ".Dumper($data);
     $c->stash->{rest} = $data;
@@ -651,7 +653,8 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
 
 	print STDERR "LIST TYPE = ".$list_types[$n]."\n";
 	my $lv = CXGN::List::Validate->new();
-	my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $list_types[$n], \@flat_list);
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+	my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $list_types[$n], \@flat_list);
 
 
 	print STDERR "Return data = ".Dumper($data);
@@ -696,7 +699,8 @@ sub temp_validate_POST : Args(0) {
     my $items = $c->req->param("items") ? decode_json $c->req->param("items") : [];
 
     my $lv = CXGN::List::Validate->new();
-    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, $items);
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, $items);
 
     # Set missing
     my $m = $data->{missing};
@@ -722,7 +726,8 @@ sub fuzzysearch : Path('/list/fuzzysearch') Args(2) {
     my @flat_list = map { $_->[1] } @$list;
 
     my $f = CXGN::List::FuzzySearch->new();
-    my $data = $f->fuzzysearch($c->dbic_schema("Bio::Chado::Schema"), $list_type, \@flat_list);
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $data = $f->fuzzysearch($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $list_type, \@flat_list);
 
     $c->stash->{rest} = $data;
 }
@@ -740,8 +745,8 @@ sub transform :Path('/list/transform/') Args(2) {
     my $list_data = $self->retrieve_list($c, $list_id);
 
     my @list_items = map { $_->[1] } @$list_data;
-
-    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $transform_name, \@list_items);
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $transform_name, \@list_items);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
 	$result->{error}  =  "Warning. This lists contains elements that cannot be converted.";
@@ -758,7 +763,8 @@ sub temp_transform :Path('/list/transform/temp') Args(0) {
     my $items = $c->req->param("items") ? decode_json $c->req->param("items") : [];
 
     my $t = CXGN::List::Transform->new();
-    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $type, $items);
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, $items);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
        $result->{error}  =  "Warning. This temporary list contains elements that cannot be converted.";
@@ -986,7 +992,7 @@ sub get_user : Private {
 	my $user_object = $c->user->get_object();
 	return $user_object->get_sp_person_id();
     }
-    return undef;
+    return;
 }
 
 sub check_user : Private {
@@ -1018,7 +1024,7 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
     	$c->stash->{rest} = { error => 'You must be logged in to use lists.', };
     	return;
     }
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $dbh = $schema->storage->dbh;
 
     my $list = CXGN::List->new( { dbh => $dbh, list_id => $list_id } );
@@ -1094,7 +1100,8 @@ sub get_markerset_items :Path('/markerset/items') Args(0) {
     my $self = shift;
     my $c = shift;
     my $markerset_id = $c->req->param("markerset_id");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
@@ -1123,7 +1130,8 @@ sub get_markerset_type :Path('/markerset/type') Args(0) {
     my $self = shift;
     my $c = shift;
     my $markerset_id = $c->req->param("markerset_id");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
@@ -1178,7 +1186,7 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
 
     print STDERR "Elements: ".Dumper($elements);
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
 
     my $data = $lt->transform($schema, 'accessions_2_accession_case', $elements);
 
@@ -1243,7 +1251,7 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
     my $elements = $list->elements();
     print STDERR "Elements: ".Dumper($elements);
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
 
     my $data = $lt->transform($schema, 'synonyms2accession_uniquename', $elements);
 
@@ -1287,8 +1295,9 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;
 
     my $list = CXGN::List->new( { dbh=>$dbh, schema=>$schema, phenome_schema=>$phenome_schema, list_id=>$list_id });
@@ -1313,10 +1322,12 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
                 content_id => $seedlot->[2],
                 content_name => $seedlot->[3],
                 content_type => $seedlot->[4],
-                box_name => $seedlot->[5],
-                current_count => $seedlot->[6],
-                current_weight => $seedlot->[7],
-                quality => $seedlot->[8],
+                description => $seedlot->[5],
+                box_name => $seedlot->[6],
+                current_count => $seedlot->[7],
+                current_weight => $seedlot->[8],
+                quality => $seedlot->[9],
+                material_type => $seedlot->[10],
             }
         }
     }
@@ -1329,8 +1340,9 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
 sub download_list_details : Path('/list/download_details') {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;
 
     my $list_id = $c->req->param("list_id");
@@ -1345,9 +1357,9 @@ sub download_list_details : Path('/list/download_details') {
         my @details = @$result;
         foreach my $seedlot_ref (@details) {
             my @seedlot = @$seedlot_ref;
-            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\n";
+            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[10]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\t$seedlot[9]\n";
         }
-        $header = "Seedlot_Name\tContent_Name\tContent_type\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
+        $header = "Seedlot_Name\tContent_Name\tContent_type\tMaterial_type\tDescription\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
     }
 
     my $dl_token = $c->req->param("list_download_token") || "no_token";

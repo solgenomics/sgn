@@ -2,7 +2,7 @@
 <%args>
 
 $sp_person_autocomplete_uri => '/ajax/people/autocomplete'
-$stock_types     => undef
+$stock_types     => []
 $editable_vector_props => undef
 </%args>
 
@@ -18,21 +18,20 @@ $editable_vector_props => undef
 use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_selectbox_html/;
 
 my $vector_cvterm_id;
+my $stock_types_number = scalar(@$stock_types);
 
-for (my $i=0; $i<= scalar(@$stock_types); $i++) {
-   if ( $stock_types->[$i][1] eq "vector_construct" ) {
-     $vector_cvterm_id = $stock_types->[$i][0];
-last();
+for (my $i=0; $i<= $stock_types_number; $i++) {
+    if ( $stock_types->[$i][1] eq "vector_construct" ) {
+        $vector_cvterm_id = $stock_types->[$i][0];
+        last();
    }
 }
 
 my $stock_type_select = simple_selectbox_html(
-choices   => $stock_types,
-id        => "stock_type_select",
-selected => $vector_cvterm_id
+    choices   => $stock_types,
+    id        => "stock_type_select",
+    selected => $vector_cvterm_id
 );
-
-
 
 
 </%perl>
@@ -128,8 +127,6 @@ selected => $vector_cvterm_id
     </div>
   </div>
 
-  <div id="editable_stockprop_search_div">
-  </div>
   </&> <!-- closes advanced search -->
 </div>
 </&>
@@ -156,6 +153,7 @@ selected => $vector_cvterm_id
               </span>
                 <span class="input-group-btn">
                   <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_add">Add</button>
+                  <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_remove">Remove</button>
               </span>
             </div>
           </div>
@@ -170,225 +168,211 @@ selected => $vector_cvterm_id
               <table id="stock_search_results" width="100%" class="table table-hover table-striped">
               <thead>
                 <tr>
-                  <th>Stock Name</th>
+                  <th>Vector Name</th>
                   <th>Stock Type</th>
                   <th>Organism</th>
                   <th>Synonyms</th>
                   <th>Submitters</th>
               </tr>
               </thead>
-
               </table>
           </div>
       </div>
   </div>
-
 </div>
-
 </&>
-
-
-
 </div>
 
 <script>
 
-var stock_table;
+    var stock_table;
 
-jQuery(document).ready(function () {
+    jQuery(document).ready(function () {
 
-   jQuery("#person").autocomplete({
-      source: '<% $sp_person_autocomplete_uri %>'
-   });
+        jQuery("#person").autocomplete({
+            source: '<% $sp_person_autocomplete_uri %>'
+        });
 
-   jQuery("#any_name").autocomplete({
-      source: '/ajax/stock/stock_autocomplete?stock_type_id='+jQuery('#stock_type_select option:selected').val(),
-   });
-   jQuery('#stock_type_select').change(function(){
-       jQuery("#any_name").autocomplete({
-          source: '/ajax/stock/stock_autocomplete?stock_type_id='+jQuery('#stock_type_select option:selected').val(),
-       });
-   });
+        jQuery("#any_name").autocomplete({
+            source: '/ajax/stock/stock_autocomplete?stock_type_id=' + '<% $vector_cvterm_id %>',
+        });
+        jQuery('#stock_type_select').change(function(){
+            jQuery("#any_name").autocomplete({
+                source: '/ajax/stock/stock_autocomplete?stock_type_id=' + '<% $vector_cvterm_id %>',
+            });
+        });
 
 
-  var editable_stockprops_search = {};
-  var params = {};
-  var matchtype = {};
-  jQuery('#editable_stockprop_search_add').click( function(){
+        var editable_stockprops_search = {};
+        var params = {};
+        var matchtype = {};
 
-      editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()] = {"matchtype": "contains"};
-      console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
-      _draw_editable_stockprops_search_fields();
-  });
+        var editable_stockprops_selected = function(){
+            var editable_stockprops_search = {};
+            if(jQuery('#field_input_id').val()){
+                editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()] = {"matchtype": "contains"};
+                editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()]["value"] = jQuery('#field_input_id').val();
+            } else if(jQuery('#any_name').val()){
+%  foreach my $stockprop (@$editable_vector_props){
+                editable_stockprops_search['<% $stockprop %>'] = {"matchtype": "contains"};
+                editable_stockprops_search['<% $stockprop %>']["value"] = jQuery('#any_name').val();
+%  }
+            }
+            return editable_stockprops_search;
+        };
 
-  jQuery(document).on('click', 'button[name="editable_stockprop_search_remove"]', function(){
-      delete editable_stockprops_search[jQuery(this).data('property')];
-      _draw_editable_stockprops_search_fields();
-  });
+        //Adding stockprop columns to search result
+        var stockprop_extra_columns_view = { };
+        var stockprop_extra_columns_view_array = [ ];
 
-  //needs to be fixed
-  jQuery('#editable_stockprop_search_div').find("#field_input_id").autocomplete({
-                     source: '/ajax/stock/stockproperty_autocomplete?property='+ jQuery('#editable_stockprop_search_term').val(),
-                  });
+        jQuery('#editable_stockprop_view_column_add').click(function(){
+            var selected_property = jQuery('#editable_stockprop_view_column_term').val();
+            var editable_stockprops_search = editable_stockprops_search ? editable_stockprops_search : editable_stockprops_selected();
+            if (!(selected_property in stockprop_extra_columns_view)){
+                stockprop_extra_columns_view[selected_property] = 1;
+                stockprop_extra_columns_view_array.push(selected_property);
 
-  jQuery(document).on("change", 'select[name="editable_stockprop_matchtype"]', function(){
-      editable_stockprops_search[jQuery(this).data('property')]["matchtype"] = jQuery(this).val();
-      console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
-  });
+                var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Vector Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
+                for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
+                    table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
+                }
+                table_header_html = table_header_html + '</tr></thead></table>';
+                jQuery('#stock_search_results_div').html(table_header_html);
+            }
+            stock_table.destroy();
+            _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+        });
 
-  function _draw_editable_stockprops_search_fields(){
-      jQuery('#editable_stockprop_search_div').html('');
-      for (var property in editable_stockprops_search) {
-          if (editable_stockprops_search.hasOwnProperty(property)) {
-              jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-3 control-label">'+property+': </label><div class="col-sm-9" ><div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%"><select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="'+property+'"><option title="contains" value="contains" selected="selected">contains</option><option title="starts with" value="starts_with">starts with</option><option title="ends with" value="ends_with">ends with</option><option title="exactly" value="exactly">exactly</option><option title="one of" value="one of">one of (separate multiple possibilities with commas)</option></select></span><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+property+'_input_id" data-property="'+property+'" placeholder="Type to Autocomplete"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+property+'" class="btn"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
+        //Removing stockprop columns to search result
+        jQuery('#editable_stockprop_view_column_remove').click(function(){
+            var selected_property = jQuery('#editable_stockprop_view_column_term').val();
+            var editable_stockprops_search = editable_stockprops_search ? editable_stockprops_search : editable_stockprops_selected();
 
-              jQuery('#editable_stockprop_search_div').find("#"+property+"_input_id").autocomplete({
-                 source: '/ajax/stock/stockproperty_autocomplete?property='+property,
-              });
-          }
-      }
-  }
+            if (selected_property in stockprop_extra_columns_view){
+                delete stockprop_extra_columns_view[selected_property];
 
-  //For adding stockprop columns to search result
-  var stockprop_extra_columns_view = { };
-  var stockprop_extra_columns_view_array = [ ];
+                var index = stockprop_extra_columns_view_array.indexOf(selected_property);
+                stockprop_extra_columns_view_array.splice(index, 1);
 
-  jQuery('#editable_stockprop_view_column_add').click(function(){
-      var selected_property = jQuery('#editable_stockprop_view_column_term').val();
-      if (!(selected_property in stockprop_extra_columns_view)){
-          stockprop_extra_columns_view[selected_property] = 1;
-          stockprop_extra_columns_view_array.push(selected_property);
+                var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Vector Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
+                for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
+                    table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
+                }
+                table_header_html = table_header_html + '</tr></thead></table>';
+                jQuery('#stock_search_results_div').html(table_header_html);
+            }
+            stock_table.destroy();
+            _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+        });
 
-          var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Stock Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
-          for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
-              table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
-          }
-          table_header_html = table_header_html + '</tr></thead></table>';
-          jQuery('#stock_search_results_div').html(table_header_html);
-      }
-      stock_table.destroy();
-      _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
-  });
+        parseArgs(editable_stockprops_search);
+        var search_vectorprop = 0;
+        _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
-  parseArgs(editable_stockprops_search);
-  _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+        //stockprop search
+        jQuery('#submit_stock_search').click( function() {
+            var editable_stockprops_search = editable_stockprops_selected();
+            document.getElementById('any_name_tnumber').value= "";
+            document.getElementById('any_name_gene').value= "";
+            document.getElementById('any_name').value= "";
+            search_vectorprop = 1;
 
-  jQuery('#stock_search_results').on( 'draw.dt', function () {
-    var name_links = stock_table.column(0).data();
-    var names = [];
+            _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,'','',search_vectorprop);
+        });
 
-    for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
-      names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
-    }
+        //gene and vector search
+        jQuery('#submit_stock_search_simple').click( function() {
+            var stock_type;
+            var any_name;
+            var gene_name;
+            document.getElementById('field_input_id').value= "";
+            document.getElementById('any_name').value= "";
+            search_vectorprop = 0;
+            editable_stockprops_search = {};
 
-    jQuery('#search_result_names').html(names);
-    addToListMenu('results_to_list_menu', 'search_result_names', {
-      listType: jQuery('#stock_type_select option:selected').text()+'s' || 'null'
+            if(jQuery('#any_name_tnumber').val()){
+                stock_type = 'vector_construct';
+                any_name = jQuery('#any_name_tnumber').val();
+            } 
+            if(jQuery('#any_name_gene').val()){
+                gene_name = jQuery('#any_name_gene').val();
+                editable_stockprops_search['Gene'] = {"matchtype": "contains"};
+                editable_stockprops_search['Gene']["value"] = gene_name;
+                search_vectorprop = 1;
+            }
+            if(!any_name && !gene_name){
+                alert("Type a valid value!",any_name);
+            }
+            _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name,'and',search_vectorprop);
+        });
+
+        //general search
+        jQuery('#submit_stock_search_all').click( function() {
+
+            document.getElementById('field_input_id').value= "";
+            document.getElementById('any_name_tnumber').value= "";
+            document.getElementById('any_name_gene').value= "";
+
+            var editable_stockprops_search = editable_stockprops_selected();
+            var stock_type = 'vector_construct';
+            var any_name = jQuery('#any_name').val();
+
+            _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name);
+        });
+
+        jQuery('#stock_search_form').keypress( function( e ) {
+            var code = e.keyCode || e.which;
+            if( code == 13 ) {
+                jQuery('#submit_stock_search').click();
+            }
+        });
+
     });
 
-  });
+    function parseArgs(editable_stockprops_search) {
+        const params = new URLSearchParams(window.location.search);
+        if ( params.has('any_name') ) {
+            jQuery('#any_name').val(params.get('any_name'));
+            jQuery('#stock_type_select').val(0);
+        }
+        if ( params.has('stock_type') ) {
+            var type = params.get('stock_type');
+            var value =  jQuery("#stock_type_select option[title="+ type +"]").val();
+            jQuery('#stock_type_select').val(value);
+        }
+        if ( params.has('prop') & params.has('value') ) {
+            editable_stockprops_search[params.get('prop')] = {"matchtype": "exactly"};
+            editable_stockprops_search[params.get('prop')]["value"] = params.get('value');
+        }
+    }
 
-  //stockprop search
- jQuery('#submit_stock_search').click( function() {
-      var editable_stockprops_search = {};
-      if(jQuery('#field_input_id').val()){
-          editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()] = {"matchtype": "contains"};
-          editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()]["value"] = jQuery('#field_input_id').val();
-      }
-
-      _load_stock_search_results('vector_construct', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
- });
-
- //gene and vector search
-  jQuery('#submit_stock_search_simple').click( function() {
-      var stock_type;
-      var any_name;
-      var gene_name;
-      if(jQuery('#any_name_tnumber').val()){
-        stock_type = 'vector_construct';
-        any_name = jQuery('#any_name_tnumber').val();
-      } 
-      if(jQuery('#any_name_gene').val()){
-        gene_name = jQuery('#any_name_gene').val();
-        editable_stockprops_search['Gene'] = {"matchtype": "contains"};
-        editable_stockprops_search['Gene']["value"] = gene_name;
-      }
-      if(!any_name && !gene_name){
-        alert("Type a valid value!",any_name);
-      }
-      _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name,'and');
- });
-
-
-  jQuery('#submit_stock_search_all').click( function() {
-    var editable_stockprops_search = {};
-    var stock_type = 'vector_construct';
-    var any_name = jQuery('#any_name').val();
-      if(jQuery('#any_name').val()){
-%  foreach my $stockprop (@$editable_vector_props){
-          editable_stockprops_search['<% $stockprop %>'] = {"matchtype": "contains"};
-          editable_stockprops_search['<% $stockprop %>']["value"] = jQuery('#any_name').val();
-%  }
-      }
-      _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array,any_name);
- });
-
- jQuery('#stock_search_form').keypress( function( e ) {
-         var code = e.keyCode || e.which;
-         if( code == 13 ) {
-              jQuery('#submit_stock_search').click();
-         }
-  } );
-
-
-
-});
-
-function parseArgs(editable_stockprops_search) {
-const params = new URLSearchParams(window.location.search);
-if ( params.has('any_name') ) {
-  jQuery('#any_name').val(params.get('any_name'));
-  jQuery('#stock_type_select').val(0);
-}
-if ( params.has('stock_type') ) {
-  var type = params.get('stock_type');
-  var value =  jQuery("#stock_type_select option[title="+ type +"]").val();
-  jQuery('#stock_type_select').val(value);
-
-}
-if ( params.has('prop') & params.has('value') ) {
-  editable_stockprops_search[params.get('prop')] = {"matchtype": "exactly"};
-  editable_stockprops_search[params.get('prop')]["value"] = params.get('value');
-}
-}
-
-function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array, any_name, operator){
-  console.log(stock_type);
-  console.log("Making AJAX request with editable stockprop "+JSON.stringify(editable_stockprops_search));
-  stock_table = jQuery('#stock_search_results').DataTable({
-      'destroy' : true,
-      'searching' : false,
-      'ordering'  : false,
-      'processing': true,
-      'serverSide': true,
-      'lengthMenu': [10,20,50,100,1000,5000],
-      'ajax': { 'url':  '/ajax/search/vectors',
-          'data': function(d) {
-            d.any_name  = any_name; //jQuery('#any_name').val();
-            d.any_name_matchtype = '';//jQuery('#any_name_matchtype').val();
-            d.operator     = operator;
-            d.stock_type   = stock_type;
-            d.person       = jQuery('#person').val();
-            d.project      = jQuery('#project').val();
-            d.location     = jQuery('#location').val();
-            d.year         = jQuery('#year').val();
-            d.breeding_program = jQuery('#breeding_program').val();
-            d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
-            d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
-            d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
-          }
-      }
-  });
-}
+    function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array, any_name, operator, search_vectorprop){
+        console.log("Making AJAX request with editable stockprop "+JSON.stringify(editable_stockprops_search));
+        stock_table = jQuery('#stock_search_results').DataTable({
+            'destroy' : true,
+            'searching' : false,
+            'ordering'  : false,
+            'processing': true,
+            'serverSide': true,
+            'lengthMenu': [10,20,50,100,1000,5000],
+            'ajax': { 'url':  '/ajax/search/vectors',
+                'data': function(d) {
+                    d.any_name  = any_name; //jQuery('#any_name').val();
+                    d.any_name_matchtype = '';//jQuery('#any_name_matchtype').val();
+                    d.operator     = operator;
+                    d.stock_type   = stock_type;
+                    d.person       = jQuery('#person').val();
+                    d.project      = jQuery('#project').val();
+                    d.location     = jQuery('#location').val();
+                    d.year         = jQuery('#year').val();
+                    d.breeding_program = jQuery('#breeding_program').val();
+                    d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
+                    d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
+                    d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
+                    d.search_vectorprop = search_vectorprop;
+                }
+            }
+        });
+    }
 
 </script>

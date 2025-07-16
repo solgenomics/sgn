@@ -1,0 +1,67 @@
+<%args>
+$trial_id
+$field_headers
+$activity_type
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="project_active_tracking_identifiers_table">
+        <thead>
+            <tr>
+                <th>Tracking Identifier</th>
+% if ($activity_type eq 'transformation') {
+                <th>Transformation ID</th>
+% } elsif ($activity_type eq 'tissue_culture') {
+                <th>Accession</th>
+% }
+% foreach my $column_header(@$field_headers){
+                <th><%$column_header%></th>
+% }
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <&| /page/info_section.mas, title => 'Add Identifiers to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding identifiers in this project to a new or exisiting list</i>'&>
+        <br>
+        <div id="identifiers_to_new_list" style="display:none"></div>
+        <div id="identifiers_add_to_list"></div>
+        </&>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var project_id = "<%$trial_id%>";
+
+    jQuery('#project_active_tracking_identifiers_table').DataTable({
+        'autoWidth': false,
+        'ajax': '/ajax/tracking_activity/project_active_identifiers/'+project_id,
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#identifiers_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i][json.data[i].length -1]+"\n";
+                }
+                jQuery("#identifiers_to_new_list").html(html);
+                addToListMenu("identifiers_add_to_list", "identifiers_to_new_list", {
+                    selectText: true,
+                    listType: 'tracking_identifiers',
+                });
+            }
+        }
+    });
+
+});
+
+</script>

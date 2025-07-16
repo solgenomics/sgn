@@ -36,8 +36,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   print STDERR "Validating criteria_list\n";
   foreach my $select (@criteria_list) { #ensure criteria list arguments are one of the possible categories
     chomp($select);
-    if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'genotyping_protocols', 'genotyping_projects', 'locations', 'plants', 'plots', 'seedlots', 'trait_components', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
-      $error = "Valid keys are accessions, breeding_programs, genotyping_protocols, genotyping_projects, locations, plants, plots, seedlots, trait_components, traits, trials, trial_designs, trial_types and years or undef";
+    if (! any { $select eq $_ } ('accessions', 'organisms','breeding_programs', 'genotyping_protocols', 'genotyping_projects', 'locations', 'plants', 'plots', 'tissue_sample','seedlots', 'trait_components', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
+      $error = "Valid keys are accessions, organisms, breeding_programs, genotyping_protocols, genotyping_projects, locations, plants, plots, tissue_sample, seedlots, trait_components, traits, trials, trial_designs, trial_types and years or undef";
       $c->stash->{rest} = { error => $error };
       return;
     }
@@ -136,7 +136,8 @@ sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
 sub get_genotyping_protocol_chromosomes : Path('/ajax/breeder/search/genotyping_protocol_chromosomes') Args(0) {
   my $self = shift;
   my $c = shift;
-  my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+  my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
   my $genotyping_protocol_id = $c->req->param('genotyping_protocol');
   

@@ -107,6 +107,7 @@ sub _validate_with_plugin {
 
     my %seen_sample_ids;
     my %seen_source_names;
+    my %seen_facility_identifiers;
     while ( my $row = <$fh> ){
         my @columns;
         if ($csv->parse($row)) {
@@ -156,7 +157,11 @@ sub _validate_with_plugin {
         if ($include_facility_identifiers) {
             if (!$columns[6] || $columns[6] eq ''){
                 push @error_messages, 'The seventh column must contain Facility Identifier on row: '.$row;
+            } elsif ($seen_facility_identifiers{$columns[6]}){
+                push @error_messages, "Duplicate Facility Identifier $columns[6] in your file on row: ".$row;
             }
+
+            $seen_facility_identifiers{$columns[6]} = $row;
         }
 
         $columns[1] = sprintf("%02d", $columns[1]);
@@ -164,7 +169,7 @@ sub _validate_with_plugin {
         if ($seen_sample_ids{$sample_name}){
             push @error_messages, "Duplicate Sample Name $sample_name in your file on row: ".$row;
         }
-        $seen_sample_ids{$sample_name}++;
+        $seen_sample_ids{$sample_name} = $row;
     }
 
     my @sample_ids = keys %seen_sample_ids;
@@ -173,7 +178,19 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@sample_ids }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Cell A".$seen_sample_ids{$r->uniquename}.": Value already exists: ".$r->uniquename;
+        push @error_messages, "Row".$seen_sample_ids{$r->uniquename}.": Value already exists: ".$r->uniquename;
+    }
+
+    if ($include_facility_identifiers) {
+        my $facility_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'facility_identifier', 'stock_property')->cvterm_id();
+        my @identifiers = keys %seen_facility_identifiers;
+        my $identifier_rs = $schema->resultset("Stock::Stockprop")->search({
+            'type_id' => $facility_identifier_type_id,
+            'value' => { -in => \@identifiers }
+        });
+        while (my $each_id=$identifier_rs->next){
+            push @error_messages, "Row".$seen_facility_identifiers{$each_id->value}.": facility identifier already exists: ".$each_id->value;
+        }
     }
 
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
@@ -310,8 +327,6 @@ sub _parse_with_plugin {
         $design{$key}->{volume} = 'NA';
         if ($include_facility_identifiers) {
             $design{$key}->{facility_identifier} = $facility_identifier;
-        } else {
-            $design{$key}->{facility_identifier} = 'NA';
         }
     }
 

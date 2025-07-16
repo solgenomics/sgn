@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-/solgs/search/list_type_training_population.mas - template for list type training populations
+/solgs/search/list_type_training_population.mas - search template for list and dataset type training populations
 
 =AUTHOR
 
@@ -15,34 +15,27 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 </%args>
+<%perl>
+my $referer = $c->req->path;
+my $search_params = '?dsp=genotyping_protocols,trials|plots,traits,accessions&dsr=/' . $referer;
+</%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.listTypeTrainingPopulation"] &>
+<& /util/import_javascript.mas, classes => ["CXGN.List", "solGS.List", "solGS.listTypeTrainingPopulation"] &>
 
 <&| /page/info_section.mas, 
     collapsible => 1, 
   collapsed   => 0,
-  title       => "Or use a list or dataset type training population or create a new one",
+  title       => "Or use a list or dataset as a training population",
 &>
 
-  <div class="fileupload-buttonbar">
-   
-    <div class="list_upload" id="list_label">
-       <label for="list_type_training_pops">Select a training population </label>
-    </div>   
-      <div class="list_upload" id="list_type_training_pops_list"></div>
-    <div  class="list_upload" id="list_type_training_pop_load">
-      <input type="button"  value="Go" />
-    </div>  
-    <div class="list_upload" style="margin-left:5px">     
-      <i class="glyphicon-plus"></i>
-      <a href="/breeders/search/?dsp=genotyping_protocols,trials|plots,traits,accessions&dsr=/solgs/search" style="color:#ffffff">Make a new dataset of plots or trials</a>
-    </div>
-    <br>
-    <br>  
-    <div class="sub_infosectioncontent" id="list_reference_populations" style="display:none"></div>
-    <br>
 
-  </div>
+
+  <& /solgs/tools/login.mas,
+    tool_url => '/solgs/search/' ,
+    analysis_type => 'list_type_training',
+    wizard_link_txt => 'Create a new dataset of plots or trials',
+    breeder_search_params => $search_params  
+    &>
 
 </&>
 

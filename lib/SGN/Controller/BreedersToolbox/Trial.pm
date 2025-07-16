@@ -19,6 +19,10 @@ use Data::Dumper;
 use CXGN::TrialStatus;
 use SGN::Model::Cvterm;
 use CXGN::Genotype::GenotypingProject;
+use CXGN::Stock::TissueSample::Search;
+use CXGN::Genotype::Protocol;
+use CXGN::TrackingActivity::ActivityProject;
+use CXGN::Transformation::Transformation;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -29,19 +33,36 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     my $trial_id = shift;
 
     $c->stash->{trial_id} = $trial_id;
-    print STDERR "TRIAL ID = $trial_id\n";
+#    print STDERR "TRIAL ID = $trial_id\n";
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{schema} = $schema;
     my $trial;
     eval {
-	$trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+	    $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     };
     if ($@) {
-	$c->stash->{template} = 'system_message.txt';
-	$c->stash->{message} = "The requested trial ($trial_id) does not exist";
-	return;
+	    $c->stash->{template} = 'system_message.txt';
+	    $c->stash->{message} = "The requested trial ($trial_id) does not exist";
+	    return;
     }
+
+    # Do a database query to see if this is actually an analysis. Redirect if it is
+    my $dbh = $c->dbc->dbh();
+    my $q = "SELECT cvterm.name FROM project
+        JOIN nd_experiment_project USING (project_id)
+        JOIN nd_experiment USING (nd_experiment_id)
+        JOIN cvterm ON (nd_experiment.type_id=cvterm.cvterm_id)
+        WHERE project.project_id=?;";
+
+    my $h = $dbh->prepare($q);
+    $h->execute($trial_id);
+
+    my $trial_type = $h->fetchrow_array();
+    if ($trial_type eq "analysis_experiment"){
+        $c->response->redirect($c->uri_for("/analyses/$trial_id"));
+    }
+
     $c->stash->{trial} = $trial;
 }
 
@@ -55,7 +76,7 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
 
 sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #print STDERR "Check 1: ".localtime()."\n";
-    print STDERR "TRIAL INIT...\n\n";
+    #print STDERR "TRIAL INIT...\n\n";
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
@@ -85,6 +106,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_type_id} = $trial_type_data->[0];
 
     $c->stash->{planting_date} = $trial->get_planting_date();
+    $c->stash->{show_transplanting_date} = $c->config->{show_transplanting_date};
+    $c->stash->{transplanting_date} = $trial->get_transplanting_date();
+    warn "Transplanting Date: ".$c->stash->{transplanting_date};
     $c->stash->{harvest_date} = $trial->get_harvest_date();
 
     $c->stash->{plot_width} = $trial->get_plot_width();
@@ -141,10 +165,13 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{design_name} = $design_type;
     $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
 
+    my $activity_project = CXGN::TrackingActivity::ActivityProject->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
     #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
     if ($design_type eq "genotyping_plate") {
-        $c->stash->{plate_id} = $c->stash->{trial_id};
+        my $plate_id = $c->stash->{trial_id};
+        $c->stash->{plate_id} = $plate_id;
         $c->stash->{raw_data_link} = $trial->get_raw_data_link;
         $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
         $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
@@ -153,9 +180,18 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{genotyping_vendor_submission_id} = $trial->get_genotyping_vendor_submission_id;
         $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
 
+        my $sample_data_search = CXGN::Stock::TissueSample::Search->new({
+            bcs_schema=>$schema,
+            plate_db_id_list => [$plate_id],
+        });
+
+        my $data = $sample_data_search->get_sample_data();
+        $c->stash->{number_of_samples} = $data->{number_of_samples};
+        $c->stash->{number_of_samples_with_data} = $data->{number_of_samples_with_data};
+
         my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_project_and_plate_relationship', 'project_relationship');
         my $genotyping_project_plate_relationship = $schema->resultset("Project::ProjectRelationship")->find ({
-            subject_project_id => $c->stash->{trial_id},
+            subject_project_id => $plate_id,
             type_id => $genotyping_project_relationship_cvterm->cvterm_id()
         });
         if ($genotyping_project_plate_relationship) {
@@ -166,6 +202,23 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             my $genotyping_project_name = $genotyping_project->name();
             my $genotyping_project_link = '<a href="/breeders/trial/'.$genotyping_project_id.'">'.$genotyping_project_name.'</a>';
             $c->stash->{genotyping_project_link} = $genotyping_project_link;
+
+            my $project_info = CXGN::Genotype::GenotypingProject->new({
+                bcs_schema => $schema,
+                project_id => $genotyping_project_id
+            });
+
+            my $associated_protocol  = $project_info->get_associated_protocol();
+
+            if (defined $associated_protocol && scalar(@$associated_protocol)>0) {
+                my $protocol_id = $associated_protocol->[0]->[0];
+                my $protocol_info = CXGN::Genotype::Protocol->new({
+                    bcs_schema => $schema,
+                    nd_protocol_id => $protocol_id
+                });
+                my $assay_type = $protocol_info->{assay_type};
+                $c->stash->{assay_type} = $assay_type;
+            }
         }
 
         if ($trial->get_genotyping_plate_format){
@@ -187,22 +240,79 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
     }
     elsif (($design_type eq "genotype_data_project") || ($design_type eq "pcr_genotype_data_project")){
+        my $project_id = $c->stash->{trial_id};
         if ($design_type eq "pcr_genotype_data_project") {
             $c->stash->{genotype_data_type} = 'SSR'
         } else {
             $c->stash->{genotype_data_type} = 'SNP'
         }
 
-        my $plate_info = CXGN::Genotype::GenotypingProject->new({
+        my $project_info = CXGN::Genotype::GenotypingProject->new({
             bcs_schema => $schema,
-            project_id => $c->stash->{trial_id}
+            project_id => $project_id
         });
-        my ($data, $tc) = $plate_info->get_plate_info();
+        my ($data, $tc) = $project_info->get_plate_info();
         my $has_plate;
         if (!$data) {
             $has_plate = 'none';
         }
         $c->stash->{has_plate} = $has_plate;
+
+        my $associated_protocol  = $project_info->get_associated_protocol();
+
+        if ( defined $associated_protocol && scalar(@$associated_protocol)>0) {
+            my $protocol_id = $associated_protocol->[0]->[0];
+            my $protocol_info = CXGN::Genotype::Protocol->new({
+                bcs_schema => $schema,
+                nd_protocol_id => $protocol_id
+            });
+
+            my $marker_names = $protocol_info->{marker_names};
+            my $assay_type = $protocol_info->{assay_type};
+            $c->stash->{marker_names} = $marker_names;
+            $c->stash->{assay_type} = $assay_type;
+
+            my $marker_info_keys = $protocol_info->marker_info_keys;
+            my @marker_info_headers = ();
+            if (defined $marker_info_keys) {
+                foreach my $info_key (@$marker_info_keys) {
+                    if ($info_key eq 'name') {
+                        push @marker_info_headers, 'Marker Name';
+                    } elsif (($info_key eq 'intertek_name') || ($info_key eq 'facility_name')) {
+                        push @marker_info_headers, 'Facility Marker Name';
+                    } elsif ($info_key eq 'chrom') {
+                        push @marker_info_headers, 'Chromosome';
+                    } elsif ($info_key eq 'pos') {
+                        push @marker_info_headers, 'Position';
+                    } elsif ($info_key eq 'alt') {
+                        if ($assay_type eq 'KASP') {
+                            push @marker_info_headers, 'Y-allele';
+                        } else {
+                            push @marker_info_headers, 'Alternate';
+                        }
+                    } elsif ($info_key eq 'ref') {
+                        if ($assay_type eq 'KASP') {
+                            push @marker_info_headers, 'X-allele';
+                        } else {
+                            push @marker_info_headers, 'Reference';
+                        }
+                    } elsif ($info_key eq 'qual') {
+                        push @marker_info_headers, 'Quality';
+                    } elsif ($info_key eq 'filter') {
+                        push @marker_info_headers, 'Filter';
+                    } elsif ($info_key eq 'info') {
+                        push @marker_info_headers, 'Info';
+                    } elsif ($info_key eq 'format') {
+                        push @marker_info_headers, 'Format';
+                    } elsif ($info_key eq 'sequence') {
+                        push @marker_info_headers, 'Sequence';
+                    }
+                }
+            } else {
+                @marker_info_headers = ('Marker Name','Chromosome','Position','Alternate','Reference','Quality','Filter','Info','Format');
+            }
+            $c->stash->{marker_info_headers} = \@marker_info_headers;
+        }
 
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
@@ -226,6 +336,88 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my $locations_by_program_json = encode_json(\@locations_by_program);
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
+    } elsif ($trial_type_name eq 'activity_record') {
+        my $project_id = $c->stash->{trial_id};
+        my $project_vendor_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_vendor', 'project_property')->cvterm_id();
+        my $activity_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'activity_type', 'project_property')->cvterm_id();
+
+        my $activity_type = $schema->resultset("Project::Projectprop")->find ({ project_id => $project_id, type_id => $activity_type_cvterm_id })->value();
+        $c->stash->{activity_type} = $activity_type;
+
+        my $input_field_headers;
+        if ($activity_type eq 'tissue_culture') {
+            $input_field_headers = $c->config->{tracking_tissue_culture_info_header};
+        } elsif ($activity_type eq 'transformation') {
+            $input_field_headers = $c->config->{tracking_transformation_info_header};
+        }
+        my @field_headers = split ',',$input_field_headers;
+        $c->stash->{field_headers} = \@field_headers;
+
+        my $project_vendor_rs = $schema->resultset("Project::Projectprop")->find ({
+            project_id => $project_id,
+            type_id => $project_vendor_cvterm_id
+        });
+        my $vendor_id;
+        if ($project_vendor_rs) {
+            $vendor_id = $project_vendor_rs->value();
+        }
+
+        $c->stash->{vendor_id} = $vendor_id;
+
+        my $progress_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'progress_of', 'project_relationship')->cvterm_id();
+        my $project_rel_row = $schema->resultset('Project::ProjectRelationship')->find({subject_project_id => $project_id, type_id => $progress_of_cvterm_id });
+        if ($project_rel_row) {
+            my $parent_project_id = $project_rel_row->object_project_id;
+            $c->stash->{parent_project_id} = $parent_project_id;
+        }
+
+        $c->stash->{template} = '/tracking_activities/activity_project.mas';
+    }
+    elsif ($trial_type_name eq "transformation_project"){
+        my $transformation_project_id = $c->stash->{trial_id};
+        my $program_name = $breeding_program_data->[0]->[1];
+        my $locations = $program_object->get_all_locations_by_breeding_program();
+        my @locations_by_program;
+        foreach my $location_hashref (@$locations) {
+            my $properties = $location_hashref->{'properties'};
+            my $program = $properties->{'Program'};
+            my $name = $properties->{'Name'};
+            if ($program eq $program_name) {
+                push @locations_by_program, $name;
+            }
+        }
+        my $locations_by_program_json = encode_json(\@locations_by_program);
+        $c->stash->{locations_by_program_json} = $locations_by_program_json;
+
+        my $progress_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'progress_of', 'project_relationship')->cvterm_id();
+        my $project_rel_row = $schema->resultset('Project::ProjectRelationship')->find({object_project_id => $transformation_project_id, type_id => $progress_of_cvterm_id });
+        if ($project_rel_row) {
+            my $tracking_project_id = $project_rel_row->subject_project_id;
+            $c->stash->{tracking_project_id} = $tracking_project_id;
+        }
+
+        my $name_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'autogenerated_name_metadata', 'project_property')->cvterm_id();
+        my $name_metadata_rs = $schema->resultset("Project::Projectprop")->find ({
+            project_id =>  $breeding_program_data->[0]->[0],
+            type_id => $name_metadata_cvterm_id
+        });
+        if($name_metadata_rs) {
+            my $name_metadata = $name_metadata_rs->value;
+            my $name_metadata_hash = decode_json $name_metadata;
+            my @name_formats = keys %{$name_metadata_hash};
+            $c->stash->{autogenerated_name_formats} = \@name_formats;
+        }
+
+        my $transformation_project = CXGN::Transformation::Transformation->new({schema=>$schema, dbh => $c->dbc->dbh, project_id=>$transformation_project_id});
+        my $name_format = $transformation_project->get_autogenerated_name_format();
+        my $default_plant_material = $transformation_project->get_default_plant_material();
+        my $default_plant_material_id = $default_plant_material->[0];
+        my $default_plant_material_name = $default_plant_material->[1];
+
+        $c->stash->{name_format} = $name_format;
+        $c->stash->{default_plant_material_id} = $default_plant_material_id;
+        $c->stash->{default_plant_material_name} = $default_plant_material_name;
+        $c->stash->{template} = '/transformation/transformation_project.mas';
     }
     else {
         my $field_management_factors = $c->config->{management_factor_types};
@@ -301,8 +493,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
-    print STDERR "WHAT =".Dumper($what)."\n";
-    print STDERR Dumper $c->req->params();
+    #print STDERR "trial_download: WHAT =".Dumper($what)."\n";
+    #print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -310,7 +502,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         return;
     }
 
-    my $format = $c->req->param("format") || "xls";
+    my $format = $c->req->param("format") || "xlsx";
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
@@ -367,7 +559,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $plugin = "";
-    if ( ($format eq "xls") && ($what eq "layout")) {
+    if ( ($format eq "xlsx") && ($what eq "layout")) {
         $plugin = "TrialLayoutExcel";
     }
     if (($format eq "csv") && ($what eq "layout")) {
@@ -407,14 +599,14 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $trial_name = $trial->get_name();
+    $trial_name =~ s/ /\_/g;
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
-    my $temp_file_name = $trial_id . "_" . "$what" . "XXXX";
+    my $temp_file_name = $trial_name . "_" . "$what" . "XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEMPFILE : $tempfile\n";
 
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
@@ -441,7 +633,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         $format = 'csv';
     }
 
-    my $file_name = $trial_id . "_" . "$what" . ".$format";
+    #my $file_name = $trial_id . "_" . "$what" . ".$format";
+    my $file_name = $trial_name . "_" . "layout" . ".$format";
     $c->res->content_type('Application/'.$format);
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
@@ -453,7 +646,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     my $self = shift;
     my $c = shift;
-    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -489,7 +681,7 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEMPFILE : $tempfile\n";
+    #print STDERR "TEMPFILE : $tempfile\n";
 
     my $trial_download_args = {
         bcs_schema => $schema,

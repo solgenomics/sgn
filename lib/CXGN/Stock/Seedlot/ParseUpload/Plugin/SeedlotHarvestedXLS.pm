@@ -8,6 +8,10 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
+#
+# DEPRECATED: This plugin has been replaced by the SeedlotFromCrossGeneric plugin
+#
+
 sub _validate_with_plugin {
     my $self = shift;
 
@@ -148,6 +152,10 @@ sub _validate_with_plugin {
             $box_name =  $worksheet->get_cell($row,6)->value();
         }
 
+        if (!defined $seedlot_name && !defined $cross_name) {
+            last;
+        }
+
         if (!$seedlot_name || $seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: seedlot_name missing.";
         }
@@ -197,15 +205,16 @@ sub _validate_with_plugin {
         $errors{'missing_crosses'} = \@crosses_missing;
     }
 
-    # Not checking if seedlot name already exists because the database will just update the seedlot entries
-    # my @seedlots = keys %seen_seedlot_names;
-    # my $rs = $schema->resultset("Stock::Stock")->search({
-    #     'is_obsolete' => { '!=' => 't' },
-    #     'uniquename' => { -in => \@seedlots }
-    # });
-    # while (my $r=$rs->next){
-    #     push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": seedlot name already exists in database: ".$r->uniquename;
-    # }
+    # Check if Seedlot names already exist as other stock names
+    my @seedlots = keys %seen_seedlot_names;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'uniquename' => { -in => \@seedlots }
+    });
+    while (my $r=$rs->next) {
+        if ( $r->type->name ne 'seedlot' ) {
+            push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": stock name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
+        }
+    }
 
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
@@ -262,6 +271,11 @@ sub _parse_with_plugin {
             $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
+
+        if (!defined $seedlot_name && !defined $cross_name) {
+            last;
+        }
+
     }
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -324,9 +338,8 @@ sub _parse_with_plugin {
             $box_name =~ s/^\s+|\s+$//g;
         }
 
-        #skip blank lines
-        if (!$seedlot_name && !$cross_name && !$description) {
-            next;
+        if (!defined $seedlot_name && !defined $cross_name) {
+            last;
         }
 
 

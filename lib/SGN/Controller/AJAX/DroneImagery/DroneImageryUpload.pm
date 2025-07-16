@@ -32,6 +32,7 @@ use LWP::UserAgent;
 use CXGN::ZipFile;
 use Text::CSV;
 use SGN::Controller::AJAX::DroneImagery::DroneImagery;
+our $VERSION = '0.01';
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -48,7 +49,8 @@ sub upload_drone_imagery_check_drone_name_GET : Args(0) {
     my $c = shift;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $drone_name = $c->req->param('drone_run_name');
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $project_rs = $schema->resultset("Project::Project")->search({name=>$drone_name});
     if ($project_rs->count > 0) {
@@ -67,9 +69,10 @@ sub upload_drone_imagery_POST : Args(0) {
     my $c = shift;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     print STDERR Dumper $c->req->params();
 
@@ -1355,9 +1358,11 @@ sub upload_drone_imagery_new_vehicle : Path('/api/drone_imagery/new_imaging_vehi
 sub upload_drone_imagery_new_vehicle_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    
     my $vehicle_name = $c->req->param('vehicle_name');
     my $vehicle_desc = $c->req->param('vehicle_description');
     my $battery_names_string = $c->req->param('battery_names');

@@ -30,6 +30,7 @@ use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
+use CXGN::BreedersToolbox::Projects;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -47,7 +48,7 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -78,10 +79,17 @@ sub upload_phenotype_verify_POST : Args(1) {
         has_timestamps=>$timestamp,
         metadata_hash=>$phenotype_metadata,
         image_zipfile_path=>$image_zip,
+        composable_validation_check_name=>$c->config->{composable_validation_check_name}
     );
 
-    my $warning_status;
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    my ($warning_status, $verified_warning, $verified_error);
+    try {
+        ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    }
+    catch {
+        $verified_error = $_;
+    };
+
     if ($verified_error) {
         push @$error_status, $verified_error;
         $c->stash->{rest} = {success => $success_status, error => $error_status };
@@ -102,7 +110,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -110,6 +118,10 @@ sub upload_phenotype_store_POST : Args(1) {
     my $overwrite = 0;
     if ($overwrite_values) {
         $overwrite = 1;
+    }
+    my $remove = 0;
+    if ($remove_values) {
+        $remove = 1;
     }
     my $timestamp = 0;
     if ($timestamp_included) {
@@ -135,8 +147,11 @@ sub upload_phenotype_store_POST : Args(1) {
         values_hash=>$parsed_data,
         has_timestamps=>$timestamp,
         overwrite_values=>$overwrite,
+        remove_values=>$remove,
         metadata_hash=>$phenotype_metadata,
         image_zipfile_path=>$image_zip,
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
 
     #upload_phenotype_store function redoes the same verification that upload_phenotype_verify does before actually uploading. maybe this should be commented out.
@@ -148,7 +163,14 @@ sub upload_phenotype_store_POST : Args(1) {
     #}
     #push @$success_status, "File data verified. Plot names and trait names are valid.";
 
-    my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+    my ($stored_phenotype_error, $stored_phenotype_success);
+    try {
+        ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+    }
+    catch {
+        $stored_phenotype_error = $_;
+    };
+
     if ($stored_phenotype_error) {
         push @$error_status, $stored_phenotype_error;
         $c->stash->{rest} = {success => $success_status, error => $error_status};
@@ -201,7 +223,7 @@ sub _prep_upload {
         if ($spreadsheet_format eq 'detailed'){
             $validate_type = "phenotype spreadsheet";
         } elsif ($spreadsheet_format eq 'simple'){
-            $validate_type = "phenotype spreadsheet simple";
+            $validate_type = "phenotype spreadsheet simple generic";
         } elsif ($spreadsheet_format eq 'associated_images'){
             $validate_type = "phenotype spreadsheet associated_images";
         } else {
@@ -243,6 +265,13 @@ sub _prep_upload {
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
+            return (\@success_status, \@error_status);
+        }
+    }
+    my $remove_values = $overwrite_values && $c->req->param('phenotype_upload_remove_values');
+    if ( $remove_values ) {
+        if ($user_type ne 'curator') {
+            push @error_status, 'Must be a curator to remove values! Please contact us!';
             return (\@success_status, \@error_status);
         }
     }
@@ -340,7 +369,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $user_id, $validate_type);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $archived_image_zipfile_with_path, $user_id, $validate_type);
 }
 
 sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }
@@ -352,6 +381,7 @@ sub update_plot_phenotype_POST : Args(0) {
   my $trait_id = $c->req->param("trait");
   my $trait_value = $c->req->param("trait_value");
   my $trait_list_option = $c->req->param("trait_list_option");
+  my $trial_id = $c->req->param("trial_id");
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
   my $dbh = $c->dbc->dbh();
@@ -365,12 +395,26 @@ sub update_plot_phenotype_POST : Args(0) {
   my $plot_type_id = $plot->type_id();
 
   if (!$c->user()) {
-    print STDERR "User not logged in... not uploading phenotype.\n";
-    $c->stash->{rest} = {error => "You need to be logged in to upload phenotype." };
+    print STDERR "User not logged in... not recording phenotype.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to record phenotype." };
     return;
   }
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload phenotype." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to record phenotype." };
+    return;
+  }
+
+  my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+  my $program_ref = $program_object->get_breeding_programs_by_trial($trial_id);
+
+  my $program_array = @$program_ref[0];
+  my $breeding_program_name = @$program_array[1];
+  my @user_roles = $c->user->roles();
+  my %has_roles = ();
+  map { $has_roles{$_} = 1; } @user_roles;
+
+  if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+    $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to record phenotype." };
     return;
   }
 
@@ -418,6 +462,8 @@ sub update_plot_phenotype_POST : Args(0) {
       has_timestamps=> 1,
       overwrite_values=> 1,
       metadata_hash=>\%phenotype_metadata,
+      composable_validation_check_name=>$c->config->{composable_validation_check_name},
+      allow_repeat_measures=>$c->config->{allow_repeat_measures}
   );
 
   my ($verified_warning, $verified_error) = $store_phenotypes->verify();
@@ -456,18 +502,22 @@ sub retrieve_plot_phenotype_POST : Args(0) {
       }
   }
 
-  my $h = $dbh->prepare("SELECT phenotype.value FROM stock
-    JOIN nd_experiment_stock USING(stock_id)
-    JOIN nd_experiment_phenotype USING(nd_experiment_id)
-    JOIN phenotype USING(phenotype_id)
-    WHERE cvalue_id =? and stock_id=?;"
-    );
-  $h->execute($trait_id,$stock_id);
-  while (my ($plot_value) = $h->fetchrow_array()) {
-    $trait_value = $plot_value;
-  }
+    if ($trait_id) {
+        my $q = "SELECT phenotype.value FROM stock
+            JOIN nd_experiment_stock USING(stock_id)
+            JOIN nd_experiment_phenotype USING(nd_experiment_id)
+            JOIN phenotype USING(phenotype_id)
+            WHERE cvalue_id =? and stock_id=?";
 
-  $c->stash->{rest} = {trait_value => $trait_value};
+        my $h = $dbh->prepare ($q);
+        $h->execute($trait_id,$stock_id);
+
+        while (my ($plot_value) = $h->fetchrow_array()) {
+            $trait_value = $plot_value;
+        }
+    }
+
+    $c->stash->{rest} = {trait_value => $trait_value};
 
 }
 

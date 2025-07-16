@@ -33,7 +33,6 @@ sub common_traits_by_trial_list_GET : Args(0) {
    my $trial_list_id = $c->request->param('trial_list_id');
 
    #get userinfo from db
-   my $schema = $c->dbic_schema("Bio::Chado::Schema");
    my $user = $c->user();
    if (! $c->user) {
      $c->stash->{rest} = {
@@ -42,6 +41,7 @@ sub common_traits_by_trial_list_GET : Args(0) {
      return;
    }
    my $user_id = $user->get_object()->get_sp_person_id();
+   my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
 
    #get list contents
    my $dbh = $schema->storage()->dbh();
@@ -112,7 +112,6 @@ sub common_traits_by_plot_list_GET : Args(0) {
    my $plot_list_id = $c->request->param('plot_list_id');
 
    #get userinfo from db
-   my $schema = $c->dbic_schema("Bio::Chado::Schema");
    my $user = $c->user();
    if (! $c->user) {
      $c->stash->{rest} = {
@@ -121,6 +120,7 @@ sub common_traits_by_plot_list_GET : Args(0) {
      return;
    }
    my $user_id = $user->get_object()->get_sp_person_id();
+   my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
 
    #get list contents
    my $dbh = $schema->storage()->dbh();
@@ -168,7 +168,8 @@ sub common_traits_by_trials_GET : Args(0) {
    my $c = shift;
 
    #get schema
-   my $schema = $c->dbic_schema("Bio::Chado::Schema");
+   my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+   my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
    #parse trial params
    my $trial_ids = $c->request->parameters->{'trial_id'};

@@ -18,6 +18,16 @@ sub search {
     $page_size = 1000;
 
 	my $status = $self->status;
+
+	# define the request methods for the 'variables' endpoints
+	my @variable_request_methods = ('GET');
+	if ($c->config->{brapi_put_variables}){
+		push @variable_request_methods, "PUT";
+	}
+	if ($c->config->{brapi_post_variables}){
+		push @variable_request_methods, "POST";
+	}
+
 	my @available = (
 		#core
 		[['application/json'],['GET'],'serverinfo',['2.0']],
@@ -52,12 +62,13 @@ sub search {
 		[['application/json'],['GET','PUT'],'trials/{trialDbId}',['2.0']],
 		[['application/json'],['POST'],'search/trials',['2.0']],
 		[['application/json'],['GET'],'search/trials/{searchResultsDbId}',['2.0']],
+
 		#phenotyping
-		[['application/json'],['GET','POST'], 'images',['2.0']],
-		[['application/json'],['GET','PUT'], 'images/{imageDbId}',['2.0']],
-		[['application/json'],['PUT'], 'images/{imageDbId}/imagecontent',['2.0']],
-		[['application/json'],['POST'],'search/images',['2.0']],
-		[['application/json'],['GET'], 'search/images/{searchResultsDbId}',['2.0']],
+		[['application/json'],['GET','POST'], 'images',['2.0','2.1']],
+		[['application/json'],['GET','PUT'], 'images/{imageDbId}',['2.0','2.1']],
+		[['application/json'],['PUT'], 'images/{imageDbId}/imagecontent',['2.0','2.1']],
+		[['application/json'],['POST'],'search/images',['2.0','2.1']],
+		[['application/json'],['GET'], 'search/images/{searchResultsDbId}',['2.0','2.1']],
 		[['application/json'],['GET','POST','PUT'], 'observations',['2.0']],
 		[['application/json'],['GET','PUT'], 'observations/{observationDbId}',['2.0']],
 		[['application/json'],['GET'], 'observations/table',['2.0']],
@@ -69,13 +80,14 @@ sub search {
 		[['application/json'],['POST'],'search/observationunits',['2.0']],
 		[['application/json'],['GET'], 'search/observationunits/{searchResultsDbId}',['2.0']],
 		[['application/json'],['GET'], 'ontologies',['2.0']],
-		[['application/json'],['GET'], 'traits',['2.0']],
-		[['application/json'],['GET'], 'traits/{traitDbId}',['2.0']],
-		[['application/json'],['GET'], 'variables',['2.0']],
+		[['application/json'],['GET'], 'traits',['2.0','2.1']],
+		[['application/json'],['GET'], 'traits/{traitDbId}',['2.0','2.1']],
+		[['application/json'],\@variable_request_methods, 'variables',['2.0','2.1']],
 		[['application/json'],['GET'], 'variables/{observationVariableDbId}',['2.0']],
 		[['application/json'],['POST'],'search/variables',['2.0']],
 		[['application/json'],['GET'], 'search/variables/{searchResultsDbId}',['2.0']],
         [['application/json'],['GET'], 'events',['2.0']],
+
 		#genotyping
 		[['application/json'],['GET'], 'calls',['2.0']],
 		[['application/json'],['POST'],'search/calls',['2.0']],
@@ -116,6 +128,7 @@ sub search {
 		[['application/json'],['GET'], 'variantsets/{variantSetDbId}/variants',['2.0']],
 		[['application/json'],['POST'],'search/variantsets',['2.0']],
 		[['application/json'],['GET'], 'search/variantsets/{searchResultsDbId}',['2.0']],
+		
 		#Germplasm
 		[['application/json'],['GET','POST'], 'germplasm',['2.0']],
 		[['application/json'],['GET','PUT'], 'germplasm/{germplasmDbId}',['2.0']],
@@ -136,10 +149,11 @@ sub search {
 		[['application/json'],['GET','POST'], 'crossingprojects',['2.0']],
 		[['application/json'],['GET','PUT'], 'crossingprojects/{crossingProjectDbId}',['2.0']],
 		[['application/json'],['GET','POST'], 'crosses',['2.0']],
-		[['application/json'],['GET','POST'], 'seedlots',['2.0']],
+		[['application/json'],['GET','POST'], 'seedlots',['2.0','2.1']],
 		[['application/json'],['GET','POST'], 'seedlots/transactions',['2.0']],
 		[['application/json'],['GET','PUT'], 'seedlots/{seedLotDbId}',['2.0']],
 		[['application/json'],['GET'], 'seedlots/{seedLotDbId}/transactions',['2.0']],
+		[['application/json'],['GET'], 'pedigree',['2.1']]
 	);
 
 	my @call_search;
@@ -159,7 +173,8 @@ sub search {
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@call_search, $page_size, $page);
 	foreach (@$data_window){
 		push @data, {
-			datatypes=>$_->[0],
+			contentTypes=>$_->[0],
+			dataTypes=>$_->[0],
 			methods=>$_->[1],
 			service=>$_->[2],
             versions=>$_->[3]

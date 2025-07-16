@@ -12,7 +12,12 @@ use SGN::Test::solGSData;
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
-my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
+my $solgs_data = SGN::Test::solGSData->new({
+    'fixture' => $f, 
+    'accessions_list_subset' => 60, 
+    'plots_list_subset' => 60,
+    'user_id' => 40,
+});
 
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
 my $protocol_dir = $solgs_data->default_protocol_dir();
@@ -67,9 +72,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->get_ok('/cluster/analysis', 'cluster home page');
     sleep(1);
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select clones list')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
@@ -89,11 +94,11 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $plots_list_name . '"]', 'xpath', 'select plots list')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $plots_list_name . '"]', 'xpath', 'select plots list')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
-    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierachical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(1);
@@ -111,9 +116,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
@@ -134,9 +139,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $trials_list_name . '"]', 'xpath', 'select trials list')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
      sleep(1);
@@ -155,9 +160,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
@@ -176,9 +181,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'select trials dataset')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'go btn')->click();
     sleep(5);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(1);
@@ -244,9 +249,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(5);
@@ -261,9 +266,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(5);
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(15);
@@ -293,11 +298,11 @@ $d->while_logged_in_as("submitter", sub {
 # sleep(15);
 # # ######################################################################
 # #
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(30);
-    $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
+    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
@@ -310,9 +315,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(15);
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'accessions list sl pop')->click();
+    $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'accessions list sl pop')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
@@ -328,9 +333,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(15);
 
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
+    $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select dataset sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select dataset sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'list sel pred')->click();
     sleep(5);
@@ -350,25 +355,25 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -200);", $sel_pops);
 
-    $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
-    $d->find_element_ok('list_type_selection_pops_list_select', 'id', 'select clones list menu')->click();
+    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
     sleep(5);
-    my $list = $d->find_element_ok('//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop');
+    my $list = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop');
     $list->click();
     sleep(5);
 
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -100);", $sel_pops);
-    $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
      sleep(15);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -387,20 +392,20 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);", $sel_pops);
     sleep(5);
-    $d->find_element_ok('list_type_selection_pops_list_select', 'id', 'select clones list menu')->click();
+    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
     sleep(5);
 
-    my $dataset = $d->find_element_ok('//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
+    my $dataset = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
     $dataset->click();
     sleep(5);
-    $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'GO select dataset sel popp')->click();
+    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'GO select dataset sel popp')->click();
      sleep(15);
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -423,20 +428,20 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);", $sel_pops);
     sleep(5);
-    $d->find_element_ok('list_type_selection_pops_list_select', 'id', 'select clones list menu')->click();
+    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
     sleep(5);
-    my $dataset = $d->find_element_ok('//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
+    my $dataset = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
     $dataset->click();
     sleep(5);
-    $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
      sleep(15);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -455,9 +460,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Kasese solgs trial"]', 'xpath', 'select trial tr pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial tr pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -476,9 +481,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Kasese solgs trial"]', 'xpath', 'select trial tr pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial tr pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -497,9 +502,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Kasese solgs trial"]', 'xpath', 'select trial tr pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial tr pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -517,9 +522,9 @@ $d->while_logged_in_as("submitter", sub {
     my $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
     sleep(5);
-    $d->find_element_ok('si_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="si_dropdown"]/dd/ul/li/a[text()="Kasese solgs trial"]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);
@@ -531,9 +536,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="139-DMCP-3-FRW-5"]', 'xpath', 'select sel index pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="139-DMCP-3-FRW-5"]', 'xpath', 'select sel index pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -554,9 +559,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -575,9 +580,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -604,9 +609,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -631,9 +636,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -650,9 +655,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -677,9 +682,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -696,9 +701,9 @@ $d->while_logged_in_as("submitter", sub {
     my $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
     sleep(5);
-    $d->find_element_ok('si_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="si_dropdown"]/dd/ul/li/a[text()="Kasese solgs trial"]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);
@@ -710,9 +715,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="139-DMCP-3-FRW-5"]', 'xpath', 'select sel index pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="139-DMCP-3-FRW-5"]', 'xpath', 'select sel index pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -737,9 +742,9 @@ $d->while_logged_in_as("submitter", sub {
     my $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
     sleep(5);
-    $d->find_element_ok('si_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="si_dropdown"]/dd/ul/li/a[text()="Kasese solgs trial"]', 'xpath', 'select trial type tr pop')->click();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);
@@ -751,9 +756,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="139-DMCP-3-FRW-5"]', 'xpath', 'select sel index pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="139-DMCP-3-FRW-5"]', 'xpath', 'select sel index pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -777,9 +782,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -827,22 +832,22 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get_ok('/solgs', 'solgs home page');
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(1);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(1);
 
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
     sleep(2);
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
     sleep(2);
-    $d->find_element_ok('done_selecting', 'id', 'done selecting')->click();
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
     sleep(2);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(3);
@@ -861,22 +866,22 @@ $d->while_logged_in_as("submitter", sub {
    #  #sleep(5);
    #
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(1);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->clear();
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 nacrri');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
-    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(3);
 
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
     sleep(2);
     $d->find_element_ok('//table[@id="searched_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
     sleep(2);
-    $d->find_element_ok('done_selecting', 'id', 'done selecting')->click();
+    $d->find_element_ok('select_trials_btn', 'id', 'done selecting')->click();
     sleep(2);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(15);
@@ -909,11 +914,11 @@ $d->while_logged_in_as("submitter", sub {
     ## $d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1', 'combined trials models summary page');
     # #sleep(5);
 
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
+    $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(5);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
     sleep(20);
-    $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
+    $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
@@ -926,9 +931,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(15);
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'list sl pop')->click();
+    $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'list sl pop')->click();
     sleep(10);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(20);
@@ -948,9 +953,9 @@ $d->while_logged_in_as("submitter", sub {
   #sleep(5);
 ########
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
+    $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
     sleep(5);
-    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select dataset sel pop')->click();
+    $d->find_element_ok('//input[@value="View"]', 'xpath', 'select dataset sel pop')->click();
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
@@ -968,9 +973,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Training population 2804608595"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -989,9 +994,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Training population 2804608595"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -1010,9 +1015,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'click cluster pops')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'click cluster pops')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Training population 2804608595"]', 'xpath', 'select tr pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select tr pop')->click();
     sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -1031,9 +1036,9 @@ $d->while_logged_in_as("submitter", sub {
     my $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
     sleep(5);
-    $d->find_element_ok('si_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="si_dropdown"]/dd/ul/li/a[text()="Training population 2804608595"]', 'xpath', 'select combo pop')->click();
+    $d->find_element_ok('//select[@id="si_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select combo pop')->click();
     sleep(3);
     $d->find_element_ok('DMCP', 'id', 'rel wt 1st')->send_keys(3);
     sleep(5);
@@ -1045,9 +1050,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'click cluster pops')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'click cluster pops')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="2804608595-DMCP-3-FRW-5"]', 'xpath', 'si')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="2804608595-DMCP-3-FRW-5"]', 'xpath', 'si')->click();
     sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -1068,21 +1073,21 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);", $sel_pops);
     sleep(5);
-    $d->find_element_ok('list_type_selection_pops_list_select', 'id', 'select clones list menu')->click();
+    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
     sleep(5);
-    my $dataset = $d->find_element_ok('//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
+    my $dataset = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop');
     $dataset->click();
     sleep(5);
-    $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
      sleep(15);
 
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select dataset sel pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -1101,22 +1106,22 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -200);", $sel_pops);
 
-    $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
-    $d->find_element_ok('list_type_selection_pops_list_select', 'id', 'select clones list menu')->click();
+    $d->find_element_ok('list_type_selection_pops_select', 'id', 'select clones list menu')->click();
     sleep(5);
-    my $list = $d->find_element_ok('//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop');
+    my $list = $d->find_element_ok('//select[@id="list_type_selection_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop');
     $list->click();
     sleep(5);
-    $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//div[ @id="list_type_selection_pop_go_btn"]/input[@value="View"]', 'xpath', 'select list sel pop')->click();
      sleep(15);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="' . $accessions_list_name . '"]', 'xpath', 'select list sel pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -1135,9 +1140,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
@@ -1156,9 +1161,9 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
     sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    $d->find_element_ok('cluster_pops_select', 'id', 'select list sl pop')->click();
     sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
+    $d->find_element_ok('//select[@id="cluster_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
     $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);

@@ -5,7 +5,7 @@ package SGN::Controller::BreedersToolbox::GraphicalFiltering;
 use Moose;
 use URI::FromHash 'uri';
 use Data::Dumper;
-
+our $VERSION = '0.01';
 
 BEGIN { extends 'Catalyst::Controller'; }
 

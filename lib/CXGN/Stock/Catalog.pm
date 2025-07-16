@@ -33,6 +33,8 @@ has 'additional_info' => ( isa => 'Maybe[Str]', is => 'rw' );
 
 has 'contact_person_id' => ( isa => 'Int', is => 'rw') ;
 
+has 'availability' => ( isa => 'Maybe[Str]', is => 'rw');
+
 # a general human readable description of the stock
 #has 'description' => ( isa => 'Str', is => 'rw' );
 
@@ -49,7 +51,7 @@ sub BUILD {
     $self->prop_primary_key('stockprop_id');
     $self->prop_type('stock_catalog_json');
     $self->cv_name('stock_property');
-    $self->allowed_fields( [ qw | item_type species variety material_type category material_source additional_info breeding_program contact_person_id images | ] );
+    $self->allowed_fields( [ qw | item_type species variety material_type category material_source additional_info breeding_program availability contact_person_id images | ] );
     $self->parent_table('stock');
     $self->parent_primary_key('stock_id');
 

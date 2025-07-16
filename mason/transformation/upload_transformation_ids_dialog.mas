@@ -1,0 +1,194 @@
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+<div class="modal fade" id="upload_transformation_ids_dialog" name="upload_transformation_ids_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransformationIDsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransformationIDsDialog">Upload Transformation IDs</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="transformation_ids_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                        </p>
+                    </&>
+                    <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_transformation_ids_form" name="upload_transformation_ids_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="transformation_ids_file" id="transformation_ids_file" encoding="multipart/form-data" />
+                                <input name="transformation_project_id" id="transformation_project_id" type="hidden" value="<% $trial_id %>">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_transformation_ids_submit" id="upload_transformation_ids_submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transformation_ids_saved_dialog_message" name="transformation_ids_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="transformationIdsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transformationIdsSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The transformation identifiers were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_transformation_ids_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_transformation_ids_error_display" name="upload_transformation_ids_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTransformationIdsErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransformationIdsErrorDialog">Upload Transformation Identifiers Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transformation_id_upload_spreadsheet_info_dialog" name="transformation_id_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransformationIDInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransformationIDInfoDialog">Upload Template Information For Transformation Identifiers</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>transformation_identifier</td>
+                                <td>accession_name</td>
+                                <td>vector_construct</td>
+                                <td>notes</td>
+                                <td>is_a_control</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                        <li>transformation_identifier (must be unique)</li>
+                        <li>accession_name (must exist in the database)</li>
+                        <li>vector_construct (must exist in the database)</li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li>notes (additional information about transformation identifier)</li>
+                        <li>is_a_control (if you would like to set any transformation identifier <b>as a control</b>, please indicate "1" for the "is_a_control" column. To <b>set a control</b> for any transformation ID, please use the link "Set Transformation Control" on the transformation ID detail page.)</li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Transformation Identifiers", optional_column => 1 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_transformation_id_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_transformation_ids_link').click(function() {
+        jQuery("#upload_transformation_ids_dialog").modal("show");
+    });
+
+    jQuery('#upload_transformation_ids_spreadsheet_format_info').click(function(){
+        jQuery("#transformation_ids_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_transformation_ids_submit").click(function(){
+        var uploadFile = jQuery("#transformation_ids_file").val();
+
+        jQuery('#upload_transformation_ids_form').attr("action", "/ajax/transformation/upload_transformation_identifiers");
+
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery("#upload_transformation_ids_form").submit();
+        jQuery("#upload_transformation_ids_dialog").modal("hide");
+    });
+
+    jQuery('#upload_transformation_ids_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_transformation_ids_error_display tbody").html('');
+                jQuery("#upload_transformation_ids_error_display tbody").append(response.error_string);
+                jQuery("#upload_transformation_ids_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#transformation_ids_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_transformation_ids_saved_dialog").click(function(){
+        location.reload();
+    });
+
+    jQuery('#transformation_ids_upload_spreadsheet_format_info').click(function() {
+        jQuery("#transformation_id_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+
+});
+
+</script>

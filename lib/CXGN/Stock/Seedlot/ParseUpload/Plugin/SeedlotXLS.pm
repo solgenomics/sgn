@@ -8,6 +8,10 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
+#
+# DEPRECATED: This plugin has been replaced by the SeedlotFromAccessionGeneric plugin
+#
+
 sub _validate_with_plugin {
     my $self = shift;
 
@@ -168,6 +172,11 @@ sub _validate_with_plugin {
             $source = $worksheet->get_cell($row, 8)->value();
             $source =~ s/^\s+|\s+$//g;
         }
+
+        if (!defined $seedlot_name && !defined $accession_name) {
+            last;
+        }
+
         if (!$seedlot_name || $seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: seedlot_name missing.";
         }
@@ -231,21 +240,23 @@ sub _validate_with_plugin {
 
     my @sources = keys %seen_source_names;
     my $source_validator = CXGN::List::Validate->new();
-    my @sources_missing = @{$source_validator->validate($schema,'seedlots_or_plots_or_crosses_or_accessions',\@sources)->{'missing'}};
+    my @sources_missing = @{$source_validator->validate($schema,'seedlots_or_plots_or_subplots_or_plants_or_crosses_or_accessions',\@sources)->{'missing'}};
 
     if (scalar(@sources_missing) > 0) {
 	push @error_messages, "The following source seedlots could not be found in the database: ".join(',',@sources_missing);
 	$errors{'missing_sources'} = \@sources_missing;
     }
-    # Not checking if seedlot name already exists because the database will just update the seedlot entries
-    # my @seedlots = keys %seen_seedlot_names;
-    # my $rs = $schema->resultset("Stock::Stock")->search({
-    #     'is_obsolete' => { '!=' => 't' },
-    #     'uniquename' => { -in => \@seedlots }
-    # });
-    # while (my $r=$rs->next){
-    #     push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": seedlot name already exists in database: ".$r->uniquename;
-    # }
+
+    # Check if Seedlot names already exist as other stock names
+    my @seedlots = keys %seen_seedlot_names;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'uniquename' => { -in => \@seedlots }
+    });
+    while (my $r=$rs->next) {
+        if ( $r->type->name ne 'seedlot' ) {
+            push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": stock name already exists in database: ".$r->uniquename.".  The seedlot name must be unique.";
+        }
+    }
 
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
@@ -302,7 +313,13 @@ sub _parse_with_plugin {
             $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_accession_names{$accession_name}++;
         }
+
+        if (!defined $seedlot_name && !defined $accession_name) {
+            last;
+        }
+
     }
+
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
@@ -377,14 +394,13 @@ sub _parse_with_plugin {
             $source = $worksheet->get_cell($row, 8)->value();
         }
 
+        if (!defined $seedlot_name && !defined $accession_name) {
+            last;
+        }
+
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $source =~ s/^\s+|\s+$//g; # also trim
-
-        #skip blank lines
-        if (!$seedlot_name && !$accession_name && !$description) {
-            next;
-        }
 
         my $accession_stock_id;
         if ($acc_synonyms_lookup{$accession_name}){
@@ -418,9 +434,9 @@ sub _parse_with_plugin {
             description => $description,
             box_name => $box_name,
             operator_name => $operator_name,
-	    quality => $quality,
-	    source => $source,
-	    source_id => $source_id,
+            quality => $quality,
+            source => $source,
+            source_id => $source_id,
         };
 
     }

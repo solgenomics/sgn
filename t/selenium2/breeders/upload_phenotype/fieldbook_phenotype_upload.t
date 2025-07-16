@@ -1,6 +1,6 @@
 use lib 't/lib';
 
-use Test::More 'tests' => 83;
+use Test::More 'tests' => 57;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -88,25 +88,11 @@ $t->while_logged_in_as("submitter", sub {
         "upload_phenotype_fieldbook_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
 
+    ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation");
+    ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
     ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
-    ok($verify_status =~ /If you continue, by default any new values will be uploaded/, "Verify warnings after store validation");
     ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial21 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /trait dry matter content|CO_334:0000092/, "Verify warnings after store validation");
-    ok($verify_status =~ /trait dry yield|CO_334:0000014/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial210 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial211 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial212 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial213 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial215 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial22 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial23 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial24 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial25 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial26 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial27 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial28 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial29 already has the same value as in your file/, "Verify warnings after store validation");
+    ok($verify_status =~ /There are 28 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
 
     $t->find_element_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
     sleep(10);
@@ -118,6 +104,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /0 new values stored/, "Verify warnings after store validation");
     ok($verify_status =~ /28 previously stored values skipped/, "Verify warnings after store validation");
     ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation");
+    ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation");
     ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation");
 
     $t->get_ok('/fieldbook');
@@ -144,25 +131,11 @@ $t->while_logged_in_as("submitter", sub {
         "upload_phenotype_fieldbook_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
 
+    ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation");
+    ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation");
     ok($verify_status =~ /Warnings are shown in yellow. Either fix the file and try again/, "Verify warnings after store validation");
-    ok($verify_status =~ /If you continue, by default any new values will be uploaded/, "Verify warnings after store validation");
     ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial21 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /trait dry matter content|CO_334:0000092/, "Verify warnings after store validation");
-    ok($verify_status =~ /trait dry yield|CO_334:0000014/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial210 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial211 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial212 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial213 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial215 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial22 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial23 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial24 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial25 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial26 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial27 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial28 already has the same value as in your file/, "Verify warnings after store validation");
-    ok($verify_status =~ /test_trial29 already has the same value as in your file/, "Verify warnings after store validation");
+    ok($verify_status =~ /There are 28 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
 
     $t->find_element_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
     sleep(10);
@@ -174,6 +147,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /0 new values stored/, "Verify warnings after store validation");
     ok($verify_status =~ /28 previously stored values skipped/, "Verify warnings after store validation");
     ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation");
+    ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation");
     ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation");
    
     }

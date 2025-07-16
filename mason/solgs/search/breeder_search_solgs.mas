@@ -1,36 +1,17 @@
 
-<%args>
-
-</%args>
-
-<%perl>
-
-my $referer = $c->req->referer;
-my $back;
-if ($referer =~ /pca\/analysis/) {
-$back = 'PCA analysis';
-} elsif ($referer =~ /cluster\/analysis/) {
-$back = 'Cluster analysis';
-} else {
-$back = 'solGS';
-}
-
-</%perl>
-
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-<& /page/page_title.mas, title=>"Search Wizard" &>
-
 <div> 
   <& /breeders_toolbox/breeder_search_page.mas &>
 </div>
 
-<button class="button" id="goback_button" >Go to back to <% $back %> </button>
+<button type="button" class="btn btn-success" id="go_back">Back</button>
    
-
 <script>
-  jQuery('#goback_button').click( function(){
-  window.location.href='<% $referer %>';
+
+jQuery('#go_back').html(`Back to solGS`);
+jQuery('#go_back').click( function(){
+  window.location.href=  document.referrer;
   });
 </script>
+    
     
 

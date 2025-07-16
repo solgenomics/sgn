@@ -8,8 +8,8 @@ $map_html => undef
 <table class="table table-hover table-bordered" id="stock_direct_genotypes_datatable">
     <thead>
         <tr>
-            <th>Genotyping Data Project Name</th>
-            <th>Genotyping Data Project Description</th>
+            <th>Genotyping Project Name</th>
+            <th>Genotyping Project Description</th>
             <th>Protocol Name</th>
             <th>Genotype Description</th>
             <th>Download</th>

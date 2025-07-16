@@ -12,9 +12,12 @@ sub convert_arrayref_to_hashref {
 
     my %hash_var = ();
 
-    foreach my $dt (@$array_ref)
-    {
-        $hash_var{$dt->[0]} = $dt->[1];
+    foreach my $dt (@$array_ref) {
+        my $rowname = $dt->[0];
+        shift(@$dt);
+        # for (my $i=1; $i < scalar(@$dt); $i++) {
+        $hash_var{$rowname} = $dt;
+        # }
     }
     return \%hash_var;
 }
@@ -47,13 +50,25 @@ sub read_file_data {
 }
 
 
-sub read_file_data_cols {
-    my ($self, $file, $cols) = @_;
+sub get_data_col_headers {
+    my ($self, $file) = @_;
 
     my @lines = read_file($file, {binmode => ':utf8'});
     my @headers =  split(/\t/, shift(@lines));
+
+    return @headers;
+}
+
+sub read_file_data_cols {
+    my ($self, $file, $cols, $include_rownames) = @_;
+
+    my @lines = read_file($file, {binmode => ':utf8'});
+    # my @headers =  split(/\t/, shift(@lines));
+    my @headers = $self->get_data_col_headers($file);
+
     my @h_indices;
-    foreach my  $col (@$cols)
+
+    foreach my $col (@$cols)
     {
         my $index = first_index { $_ eq $col } @headers;
         push @h_indices, $index;
@@ -64,11 +79,14 @@ sub read_file_data_cols {
     my @data;
     foreach my $line (@lines) {
         my @vals = split(/\t/, $line);
-
-        push @data, [@vals[@h_indices]];
+        if ($include_rownames) {
+            push @data, [@vals[0], @vals[@h_indices]];
+        } else {
+            push @data, [@vals[@h_indices]];
+        }
 
     }
-
+    
     return \@data;
 
 }
@@ -247,7 +265,7 @@ sub remove_ontology {
 		my $name = $tr->[1];
 		$name= $self->clean_traits($name);
 
-	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
+	my $id_nm = {'id' => $tr->[0], 'name' => $name};
  	push @clean_traits, $id_nm;
     }
 
@@ -265,7 +283,7 @@ sub get_clean_trial_trait_names {
 
     foreach my $tr (@$clean_traits)
     {
-		push @trait_names, $tr->{trait_name};
+		push @trait_names, $tr->{name};
     }
 
     return \@trait_names;
@@ -292,56 +310,60 @@ sub stash_json_args {
 
     my $json = JSON->new();
     my $args_hash = $json->decode($args_json);
+
     my $data_set_type = $args_hash->{'data_set_type'};
+    my $data_str = $args_hash->{'data_structure'};
 
     my $protocol_id =  $args_hash->{'genotyping_protocol_id'};
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
-    foreach my $key (keys %{$args_hash})
-    {
+    foreach my $key (keys %{$args_hash}) {
         my $val = $args_hash->{$key};
         $val = $val =~ /null|undefined/ ? undef : $val;
 
-        if (ref($val) eq 'ARRAY' && scalar(@$val) == 1)
-        {
+        if (ref($val) eq 'ARRAY' && scalar(@$val) == 1) {
             $c->stash->{$key} = $val->[0];
 
-            if ($key =~ /training_pop_id|model_id|combo_pops_list|combo_pops_id/)
-    		{
-                 if ($val->[0] =~ /\d+/)
-                 {
+            if ($key =~ /training_pop_id|model_id|combo_pops_list|combo_pops_id/) {
+                 if ($val->[0] =~ /\d+/) {
             		    $c->stash->{pop_id} = $val->[0];
                         $c->stash->{model_id} = $val->[0];
                         $c->stash->{training_pop_id} = $val->[0];
                  }
             }
 
-            if ($key =~ /trait_id|training_traits_ids/)
-            {
+            if ($key =~ /trait_id|training_traits_ids/) {
                 $c->stash->{training_traits_ids} = $val;
                 $c->stash->{trait_id} = $val->[0];
             }
 
-        }
-        else
-        {
+        } else {
+            no warnings 'uninitialized';
             $c->stash->{$key} = $val;
+            if ($data_str =~ /dataset|list/  && $key =~ /(cluster|kinship|pca|corr)_pop_id/) {
+                my $name = "${data_str}_id";
+                $val =~ s/\d+-\w+_|\w+_//g;
+                $c->stash->{$name} = $val;
+            }
         }
     }
 
-    if  ($c->stash->{data_set_type} =~ /combined/)
-    {
+    if ($data_str =~ /dataset|list/) {
+        my $name = "${data_str}_id";
+        my $id = $c->stash->{$name} =~ s/\w+_//gr;
+        $c->stash->{$name} = $id;
+    }
+
+    if  ($c->stash->{data_set_type} =~ /combined/) {
         $c->stash->{combo_pops_id} = $c->stash->{training_pop_id};
     }
 
 }
 
-
 sub generic_message {
     my ($self, $c, $msg) = @_;
 
     $c->stash->{message} = $msg;
-
     $c->stash->{template} = "/generic_message.mas";
 }
 
@@ -350,6 +372,7 @@ sub require_login {
 
     my $page = "/" . $c->req->path;
     $c->res->redirect("/solgs/login/message?page=$page");
+
     $c->detach;
 
 }

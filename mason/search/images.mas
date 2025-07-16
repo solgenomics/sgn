@@ -2,6 +2,12 @@
 <%args>
 </%args>
 
+<style>
+#images_search_results {
+    width: 100% !important;
+}
+</style>
+
 <& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
 
 <& /page/page_title.mas, title => "Image Search" &>
@@ -35,6 +41,12 @@
                 </div>
             </div>
             <div class="form-group">
+                <label class="col-sm-6 control-label">Related stock: </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" id="image_related_stock" name="image_related_stock" placeholder="e.g. Accession/Plot/TissueSample" />
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="col-sm-6 control-label">Associated project: </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="image_project_name" name="image_project_name" placeholder="e.g. DroneProject 01/01/2019" />
@@ -60,6 +72,7 @@
                     <th>Description</th>
                     <th>Submitter</th>
                     <th>Associations</th>
+                    <th>Related Accession</th>
                     <th>Tags</th>
                 </tr>
                 </thead>
@@ -79,6 +92,14 @@ jQuery(document).ready(function () {
 
     jQuery("#image_submitter").autocomplete({
         source: '/ajax/people/autocomplete'
+    });
+
+    jQuery("#image_stock_uniquename").autocomplete({
+        source: '/ajax/stock/stock_autocomplete'
+    });
+
+    jQuery("#image_related_stock").autocomplete({
+        source: '/ajax/stock/stock_autocomplete'
     });
 
     jQuery('#image_search_submit').click( function() {
@@ -108,11 +129,13 @@ function _load_image_search_results() {
         'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url':  '/ajax/search/images',
+            'type': 'POST',
             'data': function(d) {
               d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();
               d.image_person = jQuery('#image_submitter').val();
               d.image_tag = jQuery('#image_tag').val();
               d.image_stock_uniquename = jQuery('#image_stock_uniquename').val();
+              d.image_related_stock = jQuery('#image_related_stock').val();
               d.image_project_name = jQuery('#image_project_name').val();
             }
         }

@@ -1,0 +1,173 @@
+<%args>
+$stock_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form' ] &>
+
+<div id="stock_additional_uploaded_files_div">
+[Loading...]
+</div>
+
+<div class="modal fade" id="accession_upload_additional_file_dialog" name="stock_upload_additional_file_dialog" tabindex="-1" role="dialog" aria-labelledby="stockUploadAdditionalFileDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="stockUploadAdditionalFileDialog">Upload Additional File to Accession</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File upload information</b>
+                            <br>
+                            <a id="accession_upload_additional_file_format">Upload Information</a>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="accession_upload_additional_file_form" name="accession_upload_additional_file_form">
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <div class="col-sm-8" >
+                                <input type="file" name="accession_upload_additional_file" id="accession_upload_additional_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="accession_upload_additional_file_cancel_button" id="accession_upload_additional_file_cancel_button"     data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="accession_upload_additional_file_submit_button" id="accession_upload_additional_file_submit_button" title="Submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="accession_upload_additional_file_info_dialog" name="accession_upload_additional_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="stockUploadAdditionalFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="stockUploadAdditionalFileInfoDialog">Upload Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading any additional files you may have for the accession.</b>
+                    <br/><br/>
+                    <p>Possible additional files inlude, but are not limited to:</p>
+                    <ul>
+                        <li>Accession Related Images, such as a physical field image or an aerial picture of the field.</li>
+                        <li>Accession Related Documentation, such as protocols or permits for the accession.</li>
+                        <li>Accession Related Reports, such as supplementary information or publications.</li>
+                        <li>Accession Related Recordings, whether audio or video.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_accession_upload_additional_file_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    jQuery(document).ready(function(){
+
+        display_stock_additional_upload_files();
+
+        jQuery('#accession_upload_additional_files_link').click( function(){
+            jQuery('#accession_upload_additional_file_dialog').modal('show');
+        });
+
+        jQuery('#accession_upload_additional_file_format').click( function(){
+            jQuery('#accession_upload_additional_file_info_dialog').modal('show');
+        });
+
+        jQuery('#accession_upload_additional_file_submit_button').click(function () {
+
+            var uploadFile = jQuery("#accession_upload_additional_file").val();
+
+            if (uploadFile === '') {
+                alert("Please select a file");
+                return;
+            }
+            jQuery('#accession_upload_additional_file_form').attr("action", "/stock/"+<% $stock_id %>+"/upload_additional_file");
+            jQuery("#accession_upload_additional_file_form").submit();
+        });
+
+        jQuery('#accession_upload_additional_file_form').iframePostForm({
+            json: false,
+            post: function () {
+                console.log("Responseeee" , "response");
+                jQuery('#working_modal').modal("show");
+            },
+            complete: function (r) {
+                var clean_r = r.replace(/^<pre[^>]*>/, '');
+                clean_r = clean_r.replace('</pre>', '');
+                response = JSON.parse(clean_r);
+
+                jQuery('#working_modal').modal("hide");
+
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                    return;
+                }
+                if (response.success) {
+                    alert("File uploaded successfully");
+                    location.reload();
+                }
+            }
+        });
+
+
+        function display_stock_additional_upload_files (){
+            jQuery.ajax ({
+                url : '/stock/'+<% $stock_id %>+'/get_uploaded_additional_file',
+                beforeSend : function(){
+                    jQuery('#stock_additional_uploaded_files_div').html("[LOADING...]");
+                },
+                success: function(response){
+                    console.log("response" ,response);
+                    var html = "<table class='table table-hover table-condensed table-bordered' id='stock_additional_uploaded_files_table'><thead><tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>Options</th></tr></thead><tbody>";
+                    for (i=0; i<response.files.length; i++) {
+                        html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">Download</a> </td></tr>';
+                    }
+                    html = html + "</tbody></table>";
+                    jQuery('#stock_additional_uploaded_files_div').html(html);
+                    jQuery('#stock_additional_uploaded_files_table').DataTable();
+                },
+                error: function(response){
+                    alert("Error retrieving additional uploaded files.");
+                }
+            });
+        }                          
+
+
+        function obsolete_additional_file(stock_id, file_id) {
+            var yes = confirm('Are you sure you want to obsolete this file? This operation cannot be undone.');
+            if (yes) {
+                jQuery.ajax({
+                    url: '/stock/'+stock_id+'/obsolete_uploaded_additional_file/'+file_id,
+                    success: function(r) {
+                        if (r.error) { alert(r.error); }
+                        else {
+                            jQuery('#stock_additional_uploaded_files_table').DataTable().clear().draw();
+                            alert("The file has been obsoleted.");
+                        }
+                    },
+                    error: function(r) {  alert("An error occurred!") }
+                });
+            }
+        }
+
+
+
+});                      
+</script>

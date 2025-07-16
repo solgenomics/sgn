@@ -84,7 +84,7 @@ if ( $login_user_type eq 'curator' ) {
             }
             elsif ( $object_type eq 'stock' ) {
                 my $stock =
-                  $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
+                  $c->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado', $sp_person_id )
                   ->resultset("Stock::Stock")
                   ->find( { stock_id => $object_id } );
                 $stock->create_stockprops(

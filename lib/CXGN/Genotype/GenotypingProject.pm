@@ -24,6 +24,8 @@ use JSON;
 use CXGN::Trial::Search;
 use Try::Tiny;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayout;
+use CXGN::Stock::TissueSample::Search;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -56,7 +58,6 @@ has 'new_genotyping_plate_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
-
 
 sub BUILD {
 
@@ -170,21 +171,73 @@ sub get_plate_info {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $plate_list = $self->genotyping_plate_list();
-    my $number_of_plate = scalar (@$plate_list);
+    my $number_of_plates = scalar (@$plate_list);
     my $data;
     my $total_count;
-    if ($number_of_plate > 0) {
+    my @all_plates;
+    my $number_of_samples;
+    if ($number_of_plates > 0) {
         my $trial_search = CXGN::Trial::Search->new({
             bcs_schema => $schema,
             trial_design_list => ['genotyping_plate'],
             trial_id_list => $plate_list
         });
         ($data, $total_count) = $trial_search->search();
+
+        foreach my $plate (@$data){
+            my $plate_id = $plate->{trial_id};
+            my @plate_list = ();
+            @plate_list = ($plate_id);
+            my $plate_samples = CXGN::Stock::TissueSample::Search->new({
+                bcs_schema => $schema,
+                plate_db_id_list => \@plate_list,
+            });
+
+            my $data = $plate_samples->get_sample_data();
+            my $number_of_samples = $data->{number_of_samples};
+            my $number_of_samples_with_data = $data->{number_of_samples_with_data};
+
+            push @all_plates, {
+                plate_id => $plate->{trial_id},
+                plate_name => $plate->{trial_name},
+                plate_description => $plate->{description},
+                plate_format => $plate->{genotyping_plate_format},
+                sample_type => $plate->{genotyping_plate_sample_type},
+                number_of_samples => $number_of_samples,
+                number_of_samples_with_data => $number_of_samples_with_data
+            };
+        }
     }
 
-    return $data;
+    return (\@all_plates, $number_of_plates);
 
 }
+
+
+sub get_associated_protocol {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $genotyping_project_id = $self->project_id();
+
+    my $q = "SELECT DISTINCT nd_protocol.nd_protocol_id, nd_protocol.name
+        FROM nd_experiment_project
+        JOIN nd_experiment_genotype ON (nd_experiment_project.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
+        JOIN nd_experiment_protocol ON (nd_experiment_project.nd_experiment_id = nd_experiment_protocol.nd_experiment_id)
+        JOIN nd_protocol ON (nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($genotyping_project_id);
+
+    my @associated_protocol = ();
+    while (my ($protocol_id, $protocol_name) = $h->fetchrow_array()){
+        push @associated_protocol, [$protocol_id, $protocol_name]
+    }
+
+    return \@associated_protocol;
+
+}
+
 
 
 1;

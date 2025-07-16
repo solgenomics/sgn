@@ -12,6 +12,8 @@ use CXGN::Login;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::CreatePlateOrder;
 use CXGN::Genotype::StoreGenotypingProject;
+use CXGN::Stock::TissueSample::Search;
+use CXGN::Genotype::Delete;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -31,7 +33,8 @@ sub generate_genotype_trial_POST : Args(0) {
         $c->detach();
     }
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $plate_info = decode_json $c->req->param("plate_data");
     #print STDERR Dumper $plate_info;
 
@@ -84,7 +87,6 @@ sub generate_genotype_trial_POST : Args(0) {
         $_->{acquisition_date} = $plate_info->{well_date};
         $_->{notes} = $plate_info->{well_notes};
         $_->{ncbi_taxonomy_id} = $plate_info->{ncbi_taxonomy_id};
-        $_->{facility_identifier} = 'NA';
     }
     #print STDERR Dumper($design);
 
@@ -96,9 +98,10 @@ sub parse_genotype_trial_file : Path('/ajax/breeders/parsegenotypetrial') : Acti
 sub parse_genotype_trial_file_POST : Args(0) {
     my ($self, $c) = @_;
 
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $dbh = $c->dbc->dbh;
     my $genotyping_plate_name = $c->req->param('genotyping_trial_name');
     my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
@@ -308,7 +311,7 @@ sub store_genotype_trial_POST : Args(0) {
         $c->detach();
     }
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $plate_info = decode_json $c->req->param("plate_data");
 #    print STDERR "PLATE INFO =".Dumper($plate_info)."\n";
 
@@ -472,7 +475,8 @@ sub get_genotyping_data_projects : Path('/ajax/genotyping_data/projects') : Acti
 sub get_genotyping_data_projects_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
 
     my $trial_search = CXGN::Trial::Search->new({
@@ -506,7 +510,8 @@ sub get_genotyping_data_protocols : Path('/ajax/genotyping_data/protocols') : Ac
 sub get_genotyping_data_protocols_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     # my @protocol_list = $c->req->param('protocol_ids') ? split ',', $c->req->param('protocol_ids') : ();
     # my @accession_list = $c->req->param('accession_ids') ? split ',', $c->req->param('accession_ids') : ();
@@ -551,7 +556,8 @@ sub create_plate_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $plate_info = decode_json $c->req->param("order_info");
 
     my $plate_id = $plate_info->{plate_id};
@@ -591,7 +597,8 @@ sub store_plate_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $order_info = decode_json $c->req->param("order");
 
     my $plate_id = $c->req->param("plate_id");
@@ -628,7 +635,8 @@ sub set_project_for_genotyping_plate : Path('/ajax/breeders/set_project_for_geno
 sub set_project_for_genotyping_plate_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
     my $genotyping_plate_ids = decode_json $c->req->param("genotyping_plate_ids");
 
@@ -659,6 +667,82 @@ sub set_project_for_genotyping_plate_POST : Args(0) {
 
     $c->stash->{rest} = { success => 1};
 }
+
+
+sub plate_genotyping_data_delete : Path('/ajax/breeders/plate_genotyping_data_delete') : ActionClass('REST') { }
+
+sub plate_genotyping_data_delete_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+
+    #print STDERR Dumper $c->req->params();
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_role;
+    my $user_name;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]) {
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
+
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = { error => 'Must have correct permissions to delete genotyping data! Please contact us.' };
+        $c->detach();
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $genotyping_data = CXGN::Genotype::Delete->new( { bcs_schema => $schema, genotyping_plate_id => $genotyping_plate_id });
+    my $response = $genotyping_data->delete_genotype_data();
+
+    my $empty_protocol_name;
+    my $empty_protocol_id;
+    if ($response) {
+        if ($response->{empty_protocol_id}) {
+            $empty_protocol_id = $response->{empty_protocol_id};
+            $empty_protocol_name = $response->{empty_protocol_name};
+        } else {
+            $c->stash->{rest} = { error => "An error occurred attempting to delete genotyping data. ($@)" };
+            return;
+        }
+    }
+
+    my $basepath = $c->config->{basepath};
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$dbname, } );
+    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath);
+
+    my $async_refresh = CXGN::Tools::Run->new();
+    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+
+    if ($empty_protocol_id) {
+        $c->stash->{rest} = { empty_protocol_id => $empty_protocol_id, empty_protocol_name => $empty_protocol_name };
+    } else {
+        $c->stash->{rest} = { success => 1 };
+    }
+
+}
+
 
 
 1;

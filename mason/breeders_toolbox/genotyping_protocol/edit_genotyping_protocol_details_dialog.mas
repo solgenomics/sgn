@@ -1,0 +1,186 @@
+
+<%args>
+$protocol_id
+$protocol_name
+$protocol_description
+$reference_genome_name
+$species_name
+$sample_observation_unit_type_name
+$assay_type
+</%args>
+
+<div class="modal fade" id="genotyping_protocol_details_edit_dialog" tabindex="-1" role="dialog" aria-labelledby="genotypingProtocolDetailsEditDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingProtocolDetailsEditDialog">Edit Genotyping Protocol Details</h4>
+            </div>
+            <div class="modal-body" id="protocol_details_edit_body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" for="edit_protocol_name">Genotyping Protocol Name: </label>
+                            <div class="col-sm-7">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_protocol_name" title="name" type="text" value="<%$protocol_name%>" aria-describedby="edit_protocol_name_status"/>
+                                </div>
+                            </div>
+                        </div>
+                        <!--
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" for="edit_protocol_assay_type">Assay Type: </label>
+                            <div class="col-sm-7">
+                                <div class="input-group">
+                                    <select class="form-control" id="edit_protocol_assay_type" title="assay_type" value="<%$assay_type%>"></select>
+                                </div>
+                            </div>
+                        </div>
+                        -->
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" for="edit_protocol_reference_genome_name">Reference Genome Name: </label>
+                            <div class="col-sm-7">
+                                <div class="input-group">
+                                    <input class="form-control" id="edit_protocol_reference_genome_name" title="reference_genome_name" value="<%$reference_genome_name%>"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" for="edit_protocol_species_name">Species Name: </label>
+                            <div class="col-sm-7">
+                                <div class="input-group">
+                                    <input class="form-control" id="edit_protocol_species_name" title="species_name" value="<%$species_name%>"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" for="edit_protocol_description">Description: </label>
+                            <div class="col-sm-7">
+                                <div class="input-group">
+                                    <textarea class="form-control" id="edit_protocol_description" title="description" rows="3" maxlength="250"><% $protocol_description %></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_protocol_details_cancel_button">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save_protocol_details">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="protocol_details_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="protocolDetailsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="protocolDetailsSavedDialog">Details Saved</h4>
+            </div>
+            <div class="modal-body" id="protocol_details_saved_body">
+                <ul class="list-group" id="protocol_details_saved_message"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="protocol_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="protocol_details_error_dialog" tabindex="-1" role="dialog" aria-labelledby="protocolDetailsErrorDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="protocolDetailsErrorDialog">Error Saving Genotyping Protocol Details</h4>
+            </div>
+            <div class="modal-body" id="protocol_details_error_body">
+                <ul class="list-group" id="protocol_details_error_message"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="protocol_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#edit_genotyping_protocol_details').click(function(){
+        jQuery('#genotyping_protocol_details_edit_dialog').modal("show");
+        edit_protocol_details();
+    });
+
+    jQuery('#save_protocol_details').click(function(){
+        var protocol_id = "<% $protocol_id %>";
+        var changed_elements = document.getElementsByName("changed");
+        var categories = [];
+        var new_details = {};
+        var success_message = '';
+        for(var i=0; i<changed_elements.length; i++){
+            var id = changed_elements[i].id;
+            var type = changed_elements[i].title;
+            var new_value = changed_elements[i].value;
+            categories.push(type);
+            new_details[type] = new_value;
+            success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_value+"</b></li>";
+        }
+
+        save_protocol_details(protocol_id, categories, new_details, success_message);
+
+    });
+});
+
+function edit_protocol_details(){
+
+    jQuery('[id^="edit_protocol_"]').change(function (){
+        var this_element = jQuery(this);
+        highlight_changed_details(this_element);
+    });
+
+    var edit_details_body_html = document.getElementById('protocol_details_edit_body').innerHTML;
+
+    jQuery('#edit_protocol_details_cancel_button').click(function(){
+        reset_dialog_body('protocol_details_edit_body', edit_details_body_html);
+    });
+
+    jQuery('#protocol_details_error_close_button').click( function() {
+        document.getElementById('protocol_details_error_message').innerHTML = "";
+    });
+
+    jQuery('#protocol_details_saved_close_button').click( function() {
+        location.reload();
+    });
+
+}
+
+function save_protocol_details (protocol_id, categories, details, success_message) {
+
+    jQuery.ajax( {
+        url: '/ajax/genotyping_protocol/details',
+        type: 'POST',
+        data: { 'protocol_id' : protocol_id, 'categories' : categories, 'details' : details },
+        success: function(response) {
+            if (response.success) {
+                document.getElementById('protocol_details_saved_message').innerHTML = success_message;
+                jQuery('#protocol_details_saved_dialog').modal("show");
+                return;
+            } else {
+                document.getElementById('protocol_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'>"+response.error+"</li>";
+                jQuery('#protocol_details_error_dialog').modal("show");
+            }
+        },
+        error: function(response) {
+            document.getElementById('protocol_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'> Protocol detail update AJAX request failed. Update not completed.</li>";
+            jQuery('#protocol_details_error_dialog').modal("show");
+        },
+    });
+
+}
+
+</script>

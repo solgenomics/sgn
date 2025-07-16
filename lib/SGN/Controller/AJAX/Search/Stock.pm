@@ -20,11 +20,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR "Stock search AJAX\n";
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $params = $c->req->params() || {};
-    #print STDERR Dumper $params;
+    # print STDERR Dumper $params;
 
     my $owner_first_name;
     my $owner_last_name;
@@ -82,7 +83,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         limit=>$limit,
         offset=>$offset,
         minimal_info=>$params->{minimal_info},
-        display_pedigree=>0
+        display_pedigree=>0,
+        is_obsolete=>$params->{is_obsolete} eq 'true'
     });
     my ($result, $records_total) = $stock_search->search();
 
@@ -100,22 +102,16 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
             my $type = $_->{stock_type};
             my $organism = $_->{species};
             my $synonym_string = join ',', @{$_->{synonyms}};
-            my @owners = @{$_->{owners}};
-            my @owners_html;
-            foreach (@owners){
-                push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[2].' '.$_->[3].'</a>';
-            }
-            my $owners_string = join ', ', @owners_html;
 
             my @return_row;
             if ($type eq "cross"){
-                @return_row = ( "<a href=\"/cross/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
+                @return_row = ( "<a href=\"/cross/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string );
             }  elsif ($type eq "family_name"){
-                @return_row = ( "<a href=\"/family/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
+                @return_row = ( "<a href=\"/family/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string );
             } elsif ($type eq "seedlot"){
-                @return_row = ( "<a href=\"/breeders/seedlot/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
+                @return_row = ( "<a href=\"/breeders/seedlot/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string );
             } else {
-                @return_row = ( "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
+                @return_row = ( "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string );
             }
             foreach my $property (@$stockprop_columns_view_array){
                 push @return_row, $_->{$property};

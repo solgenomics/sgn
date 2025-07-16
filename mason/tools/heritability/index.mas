@@ -8,21 +8,20 @@
 
 <%perl>
   use JSON::Any;
-
-
+  
 </%perl>
 
 
 <& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
-<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@4"></script>
 
 <& /page/page_title.mas, title=>"Heritability" &>
 
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/heritability" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
 
 
@@ -41,6 +40,10 @@
         <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
       <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
       <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+      <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
+      <br>
+      <input type="checkbox" id="dataset_trait_outliers" />
+      <label>Exclude dataset outliers &nbsp; </label>          
       <br>
       <br>
       <br>
@@ -49,13 +52,6 @@
         </div>
       </center>
     
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="pca_output"></div>
-      </center>
-
 
     <br>
 
@@ -82,6 +78,28 @@
 
 
 
+<&| /page/info_section.mas, title=>"Instructions", collapsible=>1, collapsed=>1, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+
+
+
+  <center>
+    <div id="sgn_blast_graph" style="display:none">
+        <div id="myCanvas">
+          Your browser does not support the HTML5 canvas
+        </div>
+    </div>
+  </center>
+  <br>
+  <h5><b>Dataset:</b></h5>
+  <h5>1. The dataset must contain trails and numerical traits. Inclusion of accession, plots, locations, and years is optional.</h5>
+  <h5>2. The model will adapt to your dataset. For instance, if the dataset has more than one location, then the model will take the interaction among locations and accessions.</h5>
+  <h5>3. Traits with more than 60% of missing data are removed from the analysis.</h5>
+  <h5>4. Outliers can be removed by accessing the <a href="/search/datasets" target="_blank"> Datasets tab </a>. </h5>
+  <h5>5. Selecting the 'Exclude dataset outliers', heritability is calculated using filtered data.</h5>
+
+
+</&>
+
 
 <&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 
@@ -97,6 +115,8 @@
   <br>
   <center>
     <div id="heritability_output"></div>
+    <br>
+    <button class="btn btn-primary" id="download-button">Download CSV</button>
   </center>
   <div id="Overview_output"></div>
   <div id="Coverage_output"></div>
@@ -105,17 +125,24 @@
   <div id="Basic_output"></div>
 
 </&>
-
-
-
-
-
 <script>
 
 
+var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+if (require_login === '1'){
+    auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+    if (!auth_token){ alert("Login required to display heritability"); }
+}
+
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('dataset_trait_outliers').checked = true;
+}
+
 jQuery(document).ready(function() {
   if (isLoggedIn()) {
-    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
+    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox", "analysis_type":"Heritability", "show_compatibility":"yes"});
   }
   else {
     alert('You must be logged in to use Heritability');
@@ -126,35 +153,46 @@ jQuery(document).ready(function() {
     $('#trait_histogram_plot').html('');
     $('#heritability_output').empty();
   });
+
   jQuery('#selectDataset').click(function() {
-    var dataset_id = get_dataset_id();
+    var dataset_id = get_dataset_id();    
+    if (!dataset_id) {
+      return;
+    }
+
+    dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    document.getElementById("preview_trait_histogram_btn").disabled = true;  
+    document.getElementById("loading-spinner").style.visibility = 'visible'; 
     $.ajax({
-      url: '/ajax/heritability/shared_phenotypes',
-      data: {'dataset_id': dataset_id},
+      url: '/ajax/heritability/shared_phenotypes',      
+      data: {
+        'dataset_id': dataset_id,
+        'dataset_trait_outliers': dataset_trait_outliers,
+        },
       success: function(response) {
         if (response.error) {
-          $('#dataset_select').val('ERROR');
+          $('#dataset_select').val('ERROR');            
+          document.getElementById("loading-spinner").style.visibility = 'hidden';  
         }
-        else {
-	    // alert(response.options);
-	    	    // alert(response.options.length);
-	var option_html = '<option selected="selected" value=""> </option>';
-	  for (var i = 0; i < response.options.length; i++) {
-	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-	  }
-	  $('#pheno_select').attr("disabled",false).html(option_html);
-      jQuery('#tempfile').html(response.tempfile);
-
-
-	}
+        else {	        
+	        var option_html = '<option selected="selected" value=""> </option>';
+	        for (var i = 0; i < response.options.length; i++) {
+	          option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+	        }
+	        $('#pheno_select').attr("disabled",false).html(option_html);
+          jQuery('#tempfile').html(response.tempfile);
+          document.getElementById("preview_trait_histogram_btn").disabled = false;
+          document.getElementById("loading-spinner").style.visibility = 'hidden';
+	      }
 
       },
       error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable, ponto 1");
+        alert("An error occurred, the service may temporarily be unavailable, ponto 1 selectDataset ");
+        document.getElementById("preview_trait_histogram_btn").disabled = false;
+        document.getElementById("loading-spinner").style.visibility = 'hidden';
       }
     });
   });
-
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
@@ -188,48 +226,142 @@ jQuery(document).ready(function() {
               }
              }
             };
-
-   //alert("embedding"+ JSON.stringify(v));
             vegaEmbed("#trait_histogram_plot", v);
-            //alert("done");
           },
-
-
         error: function(e) { alert('error!'); }
       });
     };
   });
 
+  jQuery('#dataset_trait_outliers').on('click', function() {
+    var dataset_id = get_dataset_id();
+    if (!dataset_id) {
+      return;
+    }  
+    var  dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+    document.getElementById("preview_trait_histogram_btn").disabled = true;  
+    document.getElementById("loading-spinner").style.visibility = 'visible';    
+    $.ajax({
+      url: '/ajax/heritability/shared_phenotypes',
+      data: {
+        'dataset_id': dataset_id,
+        'dataset_trait_outliers': dataset_trait_outliers,
+      },            
+      success: function(response) {
+        if (response.error) {
+          $('#dataset_select').val('ERROR');          
+          alert("An error occurred, the is some problem with data");          
+          document.getElementById("loading-spinner").style.visibility = 'hidden';
+        }
+        else {	        
+          jQuery('#tempfile').html(response.tempfile);
+          document.getElementById("preview_trait_histogram_btn").disabled = false;
+          document.getElementById("loading-spinner").style.visibility = 'hidden'; 
+	      }
+      },
+      error: function(response) {
+        alert("An error occurred, the service may temporarily be unavailable");
+        document.getElementById("preview_trait_histogram_btn").disabled = false; 
+        document.getElementById("loading-spinner").style.visibility = 'hidden';
+      }
+    });
+
+  });
+
 
   jQuery('#runH2').click( function () {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
-      $('#heritability_output').empty();
+      alert("Please select a dataset and trait.");
+      $('#heritability_output').empty();      
     } else {
       $('#heritability_output').empty();
+
       if ($('#pheno_select').val() != ""){
         var dataset_id = get_dataset_id();
+        console.log("dataset_id", dataset_id);
         var trait_id = $('#pheno_select').val();
+
+        console.log("trait_id", trait_id);
+        var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+
         $.ajax({
           url: '/ajax/heritability/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+          data: {
+            'dataset_id': dataset_id, 
+            'trait_id': trait_id,
+            'dataset_trait_outliers': dataset_trait_outliers,            
+            },
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
+
           timeout: 30000000,
           success: function(response) {
             jQuery("#working_modal").modal("hide");
-            if (response.error) {
+            
+			if (response.error) {
               alert(response.error);
-            }
-            var fig1_response = response.h2Table;
-            var fig2_response = response.figure3;
-      //alert("Response ID: "+temp_response);
-          //alert("Response ID: "+fig1_response);
+            }          
 
-            $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
-            $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig2_response + "'/>");
-          },
+			$.getJSON(response.h2Table, function(data){
+				var parsedData = JSON.parse(data);
+				var traitValue = '';
+				var varG = '';
+				var varE = '';
+				var varRes = '';
+				var herit = ''; 
+
+				var table = '<table>';
+				table += '<thead><tr><th>Trait</th><th>Vg</th><th>Ve</th><th>Vres</th><th>Heritability</th></tr></thead>';
+				table += '<tbody>';
+
+				for (var i = 0; i < parsedData.length; i++) {
+					traitValue = parsedData[i].trait;
+					varG = parsedData[i].Vg;
+					varE = parsedData[i].Ve;
+					varRes = parsedData[i].Vres;
+					herit = parsedData[i].Hert;
+
+					// Create a row for each data point
+					table += '<tr>';
+					table += '<td>' + traitValue + '</td>';
+					table += '<td>' + varG + '</td>';
+					table += '<td>' + varE + '</td>';
+					table += '<td>' + varRes + '</td>';
+					table += '<td>' + herit + '</td>';
+					table += '</tr>';
+				}
+				$('#heritability_output').append(table);
+                
+                $('#download-button').click(function() {
+					var csvContent = "data:text/csv;charset=utf-8,";
+
+					// Add table headers to CSV content
+					csvContent += "Trait,Vg,Ve,Vres,Heritability\n";
+
+					// Add table data to CSV content
+					for (var i = 0; i < parsedData.length; i++) {
+						var row = parsedData[i];
+						csvContent += row.trait + "," + row.Vg + "," + row.Ve + "," + row.Vres + "," + row.Hert + "\n";
+					}
+
+					// Create a data URI for the CSV content
+					var encodedUri = encodeURI(csvContent);
+
+					// Create a download link
+					var link = document.createElement("a");
+					link.setAttribute("href", encodedUri);
+					link.setAttribute("download", "heritability_data.csv");
+					link.innerHTML = "Download CSV";
+
+					// Trigger the click event to download the file
+					link.click();
+                });
+
+			}).fail(function(){
+				console.log("An error has occurred.");
+				});                                           
+		  },
           error: function(xhr, status, error) {
             var err = eval("(" + xhr.responseText + ")");
             alert(err.Message);
@@ -258,14 +390,7 @@ function get_dataset_id() {
 });
 
 
-
-
-
-
-
-
 </script>
-
 
 <!-- STYLE -->
 <style>
@@ -322,7 +447,6 @@ h1 {
 #sequence {
   min-height: 80px;
   max-height: 300px;
-/*  min-width: 700px;*/
   max-width: 98%;
 }
 
@@ -341,11 +465,26 @@ h1 {
   overflow:hidden;
 }
 
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+
 #myCanvas {
-/*  border-style: solid;*/
-/*  border-width: 1px;*/
-/*  border-color: #ddd;*/
-/*  border-width:0px 1px 1px 1px;*/
   height:450px;
   width:1020px;
   overflow:scroll;

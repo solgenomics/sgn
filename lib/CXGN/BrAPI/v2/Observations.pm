@@ -22,100 +22,15 @@ sub search {
     my $page = $self->page;
     my $status = $self->status;
 
-    my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ()); 
-    my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
-    # externalReferenceID
-    # externalReferenceSource
-    my $observation_level = $params->{observationLevel}->[0] || 'all'; # need to be changed in v2
-    my $season_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
-    my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
-    my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
-    my $trial_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
-    my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
-    my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
-    my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
-    my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
-    my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
-    # observationUnitLevelName
-    # observationUnitLevelOrder
-    # observationUnitLevelCode
-    my @trial_ids;
-    if ($study_ids_arrayref){ 
-        push @trial_ids, @$study_ids_arrayref;
-    }
-    if ($trial_ids_arrayref){ 
-        push @trial_ids, @$trial_ids_arrayref;
-    }
-    my $trial_ids = \@trial_ids;
-
+    my $data;
+	my $counter=0;
     my $limit;
-    if (!$trial_ids) { $limit=1000000; } # if no ids, limit should be set to max and retrieve whole database. If ids no limit to retrieves all
-    my $offset; # = $page_size*$page;
+    my $brapi_study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+    if (!$brapi_study_ids_arrayref || scalar (@$brapi_study_ids_arrayref) < 1) { $limit=1000000; } # if no ids, limit should be set to max and retrieve whole database. If ids no limit to retrieves all
 
-    my $start_index = $page*$page_size;
-    my $end_index = $page*$page_size + $page_size - 1;
+    ($data,$counter) = _search($self,$params,$limit);
 
-    my ($data, $unique_traits)  = _search_observation_id(
-            $self->bcs_schema,
-            $observation_level,
-            $trial_ids,
-            $trial_ids_arrayref,
-            1,
-            $season_arrayref,
-            $location_ids_arrayref,
-            $accession_ids_arrayref,
-            $program_ids_arrayref,
-            \@observation_variable_db_ids,
-            $observation_db_id,
-            $observation_unit_db_id, #plot_list
-            $limit,
-            $offset,
-    );
-
-    my @data_window;
-    my $counter = 0;
-
-    foreach my $obs_unit (@$data){
-        my @brapi_observations;
-        my $observations = $obs_unit->{observations};
-        foreach (@$observations){
-            my $observation_id = "$_->{phenotype_id}";
-            # if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
-                my @season = {
-                    year => $obs_unit->{year},
-                    season => $obs_unit->{year},
-                    seasonDbId => $obs_unit->{year}
-                };
-
-                my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
-                if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
-                if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
-
-                if ($counter >= $start_index && $counter <= $end_index) {
-                    push @data_window, {
-                        additionalInfo=>$_->{additional_info},
-                        externalReferences=>$_->{external_references},
-                        germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
-                        germplasmName => $obs_unit->{germplasm_uniquename},
-                        observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
-                        observationUnitName => $obs_unit->{observationunit_uniquename},
-                        observationDbId => $observation_id,
-                        observationVariableDbId => qq|$_->{trait_id}|,
-                        observationVariableName => $_->{trait_name},
-                        observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
-                        season => \@season,
-                        collector => $_->{operator},
-                        studyDbId => qq|$obs_unit->{trial_id}|,
-                        uploadedBy=> $_->{operator},
-                        value => qq|$_->{value}|,
-                    };
-                }
-                $counter++;
-            # }
-        }
-    }
-
-    my %result = (data=>\@data_window);
+    my %result = (data=>$data);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations result constructed');
@@ -124,92 +39,24 @@ sub search {
 sub detail {
     my $self = shift;
     my $params = shift;
-
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
 
-    my $observation_db_id = $params->{observationDbId};
+    $params->{observationDbId} = [$params->{observationDbId}];
 
-    my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
-# externalReferenceID
-# externalReferenceSource
-    my $observation_level = $params->{observationLevel}->[0] || 'all';
-    my $season_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
-    my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
-    my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
-    my $trial_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
-    my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
-    my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
-    my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
-    my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
-    my $observation_unit_db_id = $params->{observationUnitDbId} || "";
+    my $data;
+	my $counter=0;
+    ($data,$counter) = _search($self,$params);
 
-    my $trial_ids;
-    if ($study_ids_arrayref || $trial_ids_arrayref){
-        $trial_ids = ($study_ids_arrayref, $trial_ids_arrayref); 
-    }
-
-    my $limit;
-    my $offset;
-
-    my ($data, $unique_traits)  = _search_observation_id(
-            $self->bcs_schema,
-            $observation_level,
-            $trial_ids,
-            $trial_ids_arrayref,
-            1,
-            $season_arrayref,
-            $location_ids_arrayref,
-            $accession_ids_arrayref,
-            $program_ids_arrayref,
-            \@observation_variable_db_ids,
-            [$observation_db_id],
-            $observation_unit_db_id, # plot_list
-            $limit,
-            $offset,
-    );
-
-
-    my @data_window;
-
-    foreach my $obs_unit (@$data){
-        my @brapi_observations;
-        my $observations = $obs_unit->{observations};
-        foreach (@$observations){
-            my @season = {
-                year => $obs_unit->{year},       
-                season => $obs_unit->{year},
-                seasonDbId => $obs_unit->{year}
-            };
-
-            my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
-            if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
-            if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
-
-            push @data_window, {
-                additionalInfo=>$_->{additional_info},
-                externalReferences => $_->{external_references},
-                germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
-                germplasmName => $obs_unit->{germplasm_uniquename},
-                observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
-                observationUnitName => $obs_unit->{observationunit_uniquename},
-                observationDbId => qq|$_->{phenotype_id}|,
-                observationVariableDbId => qq|$_->{trait_id}|,
-                observationVariableName => $_->{trait_name},
-                observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
-                season => \@season,
-                collector => $_->{operator},
-                studyDbId => qq|$obs_unit->{trial_id}|,
-                uploadedBy=> $_->{operator},
-                value => qq|$_->{value}|,
-            };
-        }
-    }
-
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(@data_window, $pagination, \@data_files, $status, 'Observations result constructed');
+    if ($data > 0){
+		my $result = @$data[0];
+		my @data_files;
+		my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
+		return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Observations result constructed');
+	} else {
+		return CXGN::BrAPI::JSONResponse->return_error($status, 'ObservationDbId not found', 404);
+	}
 }
 
 sub observations_store {
@@ -249,7 +96,7 @@ sub observations_store {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!', 403);
     }
 
-    my $p = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->find({sp_person_id=>$user_id});
+    my $p = $c->dbic_schema("CXGN::People::Schema", undef, $user_id)->resultset("SpPerson")->find({sp_person_id=>$user_id});
     my $user_name = $p->username;
 
     ## Validate request structure and parse data
@@ -262,6 +109,7 @@ sub observations_store {
     if (!$validated_request || $validated_request->{'error'}) {
         my $parse_error = $validated_request ? $validated_request->{'error'} : "Error parsing request structure";
         print STDERR $parse_error;
+        push @$status, {'400' => 'Invalid request.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error, 400);
     } elsif ($validated_request->{'success'}) {
         push @$status, {'info' => $validated_request->{'success'} };
@@ -276,6 +124,7 @@ sub observations_store {
     if (!$parsed_request || $parsed_request->{'error'}) {
         my $parse_error = $parsed_request ? $parsed_request->{'error'} : "Error parsing request data";
         print STDERR $parse_error;
+        push @$status, {'400' => 'Invalid request.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error, 400);
     } elsif ($parsed_request->{'success'}) {
         push @$status, {'info' => $parsed_request->{'success'} };
@@ -301,6 +150,7 @@ sub observations_store {
     my $archive_error_message = $response->{error_message};
     my $archive_success_message = $response->{success_message};
     if ($archive_error_message){
+        push @$status, {'500' => 'Internal error.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message, 500);
     }
     if ($archive_success_message){
@@ -337,11 +187,15 @@ sub observations_store {
         metadata_hash=>\%phenotype_metadata,
         overwrite_values=>$overwrite_values,
         #image_zipfile_path=>$image_zip,
+        composable_validation_check_name=>$c->config->{composable_validation_check_name},
+        allow_repeat_measures=>$c->config->{allow_repeat_measures}
     );
+
     my ($verified_warning, $verified_error) = $store_observations->verify();
 
     if ($verified_error) {
         print STDERR "Error: $verified_error\n";
+        push @$status, {'500' => 'Internal error.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request did not pass the checks.", 500);
     }
     if ($verified_warning) {
@@ -352,19 +206,18 @@ sub observations_store {
 
     if ($stored_observation_error) {
         print STDERR "Error: $stored_observation_error\n";
+        push @$status, {'500' => 'Internal error.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request could not be processed correctly.", 500);
     }
     if ($stored_observation_success) {
         #if no error refresh matviews 
-        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+        # my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        # my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 
         print STDERR "Success: $stored_observation_success\n";
-        # result need to be updated with v2 format
         $result{data} = $stored_observation_details;
-
     }
-    # result need to be updated with v2 format, StorePhenotypes needs to be modified as v2
+
     my @data_files = ();
     my $total_count = scalar @{$observations};
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
@@ -372,292 +225,112 @@ sub observations_store {
 
 }
 
-sub _search_observation_id {
-    my $schema = shift;
-    my $data_level = shift;
-    my $trial_list = shift;
-    my $folder_list = shift;
-    my $include_timestamp = shift;
-    my $year_list = shift;
-    my $location_list = shift;
-    my $accession_list = shift;
-    my $program_list = shift;
-    my $observation_variable_list = shift;
-    my $observations_list = shift;
-    my $plot_list = shift;
+sub _search {
+    my $self = shift;
+    my $params = shift;
     my $limit = shift;
-    my $offset = shift;
-    my ($plant_list, $subplot_list);
-    my $trait_contains;
-    my $trait_list;
-   
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
-    my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
 
-    my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-    my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
+    # my $observation_db_ids = $params->{observationDbId};
+    my $observation_db_ids = $params->{observationDbId} || ($params->{observationDbIds} || ());
 
-    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
-    # $select_clause = $select_clause . " cross join lateral jsonb_array_elements(materialized_phenotype_jsonb_table.observations) as obs "
-    my $order_clause = " ORDER BY trial_name, observationunit_uniquename";
+    my @observation_variable_db_ids = $params->{observationVariableDbId} ? @{$params->{observationVariableDbId}} :
+        ($params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}}: ());
+    my @observation_variable_names = $params->{observationVariableName} ? @{$params->{observationVariableName}} :
+        ($params->{observationVariableNames} ? @{$params->{observationVariableNames}}: ());
+    # externalReferenceID
+    # externalReferenceSource
+    my $observation_level = $params->{observationLevel}->[0] || 'all'; # need to be changed in v2
+    my $season_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
+    my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
+    my $brapi_study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+    my $brapi_trial_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
+    my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+    my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
+    my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
+    my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
+    my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
+    # observationUnitLevelName
+    # observationUnitLevelOrder
+    # observationUnitLevelCode
 
-    my @where_clause;
+    my $offset; # = $page_size*$page;
 
-    if (($plot_list && scalar(@{$plot_list})>0) && ($plant_list && scalar(@{$plant_list})>0) && ($subplot_list && scalar(@{$subplot_list})>0)) {
-        my $plot_and_plant_and_subplot_sql = _sql_from_arrayref($plot_list) .",". _sql_from_arrayref($plant_list) .",". _sql_from_arrayref($subplot_list);
-        push @where_clause, "observationunit_stock_id in ($plot_and_plant_and_subplot_sql)";
-    } elsif (($plot_list && scalar(@{$plot_list})>0) && ($plant_list && scalar(@{$plant_list})>0)) {
-        my $plot_and_plant_sql = _sql_from_arrayref($plot_list) .",". _sql_from_arrayref($plant_list);
-        push @where_clause, "observationunit_stock_id in ($plot_and_plant_sql)";
-    } elsif (($plot_list && scalar(@{$plot_list})>0) && ($subplot_list && scalar(@{$subplot_list})>0)) {
-        my $plot_and_subplot_sql = _sql_from_arrayref($plot_list) .",". _sql_from_arrayref($subplot_list);
-        push @where_clause, "observationunit_stock_id in ($plot_and_subplot_sql)";
-    } elsif (($plant_list && scalar(@{$plant_list})>0) && ($subplot_list && scalar(@{$subplot_list})>0)) {
-        my $plant_and_subplot_sql = _sql_from_arrayref($plant_list) .",". _sql_from_arrayref($subplot_list);
-        push @where_clause, "observationunit_stock_id in ($plant_and_subplot_sql)";
-    } elsif ($plot_list && scalar(@{$plot_list})>0) {
-        my $plot_sql = _sql_from_arrayref($plot_list);
-        push @where_clause, "observationunit_stock_id in ($plot_sql)";
-    } elsif ($plant_list && scalar(@{$plant_list})>0) {
-        my $plant_sql = _sql_from_arrayref($plant_list);
-        push @where_clause, "observationunit_stock_id in ($plant_sql)";
-    } elsif ($subplot_list && scalar(@{$subplot_list})>0) {
-        my $subplot_sql = _sql_from_arrayref($subplot_list);
-        push @where_clause, "observationunit_stock_id in ($subplot_sql)";
-    }
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
 
-    if ($trial_list && scalar(@{$trial_list})>0) {
-        my $trial_sql = _sql_from_arrayref($trial_list);
-        push @where_clause, "trial_id in ($trial_sql)";
-    }
-    if ($program_list && scalar(@{$program_list})>0) {
-        my $program_sql = _sql_from_arrayref($program_list);
-        push @where_clause, "breeding_program_id in ($program_sql)";
-    }
-    if ($folder_list && scalar(@{$folder_list})>0) {
-        my $folder_sql = _sql_from_arrayref($folder_list);
-        push @where_clause, "folder_id in ($folder_sql)";
-    }
-    if ($accession_list && scalar(@{$accession_list})>0) {
-        my $arrayref = $accession_list;
-        my $sql = join ("','" , @$arrayref);
-        my $accession_sql = "'" . $sql . "'";
-        push @where_clause, "germplasm_stock_id in ($accession_sql)";
-    }
-    if ($location_list && scalar(@{$location_list})>0) {
-        my $arrayref = $location_list;
-        my $sql = join ("','" , @$arrayref);
-        my $location_sql = "'" . $sql . "'";
-        push @where_clause, "location_id in ($location_sql)";
-    }
-    if ($year_list && scalar(@{$year_list})>0) {
-        my $arrayref = $year_list;
-        my $sql = join ("','" , @$arrayref);
-        my $year_sql = "'" . $sql . "'";
-        push @where_clause, "year in ($year_sql)";
-    }
-    if ($data_level ne 'all') {
-        push @where_clause, "observationunit_type_name = '".$data_level."'"; #ONLY plot or plant or subplot or tissue_sample
-    } else {
-        push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample')"; #plots AND plants AND subplots AND tissue_samples
-    }
-
-    my %trait_list_check;
-    my $filter_trait_ids;
-    my @or_clause;
-    if ($trait_list && scalar(@{$trait_list})>0) {
-        print STDERR "A trait list was included\n";
-        foreach (@{$trait_list}){
-            if ($_){
-                #print STDERR "Working on trait $_\n";
-                push @or_clause, "observations @> '[{\"trait_id\" : $_}]'";
-                $trait_list_check{$_}++;
-                $filter_trait_ids = 1;
-            }
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'Native',
+        {
+            bcs_schema=>$self->bcs_schema,
+            data_level=>$observation_level,
+            trial_list=>$brapi_study_ids_arrayref,
+            folder_list=>$brapi_trial_ids_arrayref,
+            include_timestamp=>1,
+            year_list=>$season_arrayref,
+            location_list=>$location_ids_arrayref,
+            accession_list=>$accession_ids_arrayref,
+            program_list=>$program_ids_arrayref,
+            trait_list=>\@observation_variable_db_ids,
+            trait_contains=>\@observation_variable_names,
+            plot_list=>$observation_unit_db_id,
+            observation_id_list=>$observation_db_ids,
+            limit=>$limit,
+            offset=>$offset,
+            order_by=>"plot_number",
+            include_timestamp=>1
         }
-    }
-    my $filter_trait_names;
-    if ($trait_contains && scalar(@{$trait_contains})>0) {
-        foreach (@{$trait_contains}) {
-            if ($_){
-                push @or_clause, "observations @> '[{\"trait_name\" : \"$_\"}]'";
-                $filter_trait_names = 1;
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+
+    my @data_window;
+    my $counter = 0;
+
+    foreach (@$data){
+        if ( ($_->{phenotype_value} && $_->{phenotype_value} ne "") || $_->{phenotype_value} eq '0' ) {
+            my $observation_id = "$_->{phenotype_id}";
+            my $additional_info;
+            my $external_references;
+
+            my %season = (
+                year => $_->{year},
+                season => $_->{year},
+                seasonDbId => $_->{year}
+            );
+            my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
+            if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
+            if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
+
+            if ($counter >= $start_index && $counter <= $end_index) {
+                push @data_window, {
+                    additionalInfo => $_->{phenotype_additional_info} ? decode_json($_->{phenotype_additional_info}) : undef,
+                    externalReferences => $_->{phenotype_external_references} ? decode_json($_->{phenotype_external_references}) : undef,
+                    germplasmDbId => qq|$_->{accession_stock_id}|,
+                    germplasmName => $_->{accession_uniquename},
+                    observationUnitDbId => qq|$_->{obsunit_stock_id}|,
+                    observationUnitName => $_->{obsunit_uniquename},
+                    observationDbId => $observation_id,
+                    observationVariableDbId => qq|$_->{trait_id}|,
+                    observationVariableName => $_->{trait_name},
+                    observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
+                    season => \%season,
+                    collector => $_->{operator},
+                    studyDbId => qq|$_->{trial_id}|,
+                    uploadedBy=> $_->{operator},
+                    value => qq|$_->{phenotype_value}|,
+                    # geoCoordinates => undef #needs to be implemented for v2.1
+                };
             }
-        }
-    }
-    if ($observations_list && scalar(@{$observations_list})>0) {
-        foreach (@{$observations_list}) {
-            if ($_){
-                push @or_clause, "observations @> '[{\"phenotype_id\" : $_}]'";
-            }
+            $counter++;
         }
     }
 
-    my $where_clause = " WHERE " . (join (" AND " , @where_clause));
-    my $or_clause = '';
-    if (scalar(@or_clause) > 0){
-        $or_clause = " AND ( " . (join (" OR " , @or_clause)) . " ) ";
-    }
-
-    my $offset_clause = '';
-    my $limit_clause = '';
-    if ($limit){
-        $limit_clause = " LIMIT ".$limit;
-    }
-    if ($offset){
-        $offset_clause = " OFFSET ".$offset;
-    }
-
-    my  $q = $select_clause . $where_clause . $or_clause . $order_clause . $limit_clause . $offset_clause;
-
-    print STDERR "QUERY: $q\n\n";
-
-    my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
-    my %location_id_lookup;
-    while( my $r = $location_rs->next()){
-        $location_id_lookup{$r->nd_geolocation_id} = $r->description;
-    }
-
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
-    my @result;
-
-    my $calendar_funcs = CXGN::Calendar->new({});
-    my %unique_traits;
-
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $notes, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments, $observations, $full_count) = $h->fetchrow_array()) {
-        my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
-        my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
-        my $synonyms = $synonym_hash_lookup{$germplasm_uniquename};
-        my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
-        my $observations = decode_json $observations;
-        my $treatments = decode_json $treatments;
-        my $available_germplasm_seedlots = decode_json $available_germplasm_seedlots;
-        my $seedlot_transaction = $seedlot_transaction ? decode_json $seedlot_transaction : {};
-
-        my %ordered_observations;
-        foreach (@$observations){
-            my $id = $_->{phenotype_id};
-            $ordered_observations{$id} = $_ if ( !$observations_list || grep(/^$id$/, @$observations_list));
-        }
-
-        my @return_observations;;
-        foreach my $pheno_id (sort keys %ordered_observations){
-            my $o = $ordered_observations{$pheno_id};
-            my $trait_name = $o->{trait_name};
-
-            my $phenotype_uniquename = $o->{uniquename};
-            $unique_traits{$trait_name}++;
-            if ($include_timestamp){
-                my $timestamp_value;
-                my $operator_value;
-                if ($phenotype_uniquename){
-                    my ($p1, $p2) = split /date: /, $phenotype_uniquename;
-                    if ($p2){
-                        my ($timestamp, $operator_value) = split /  operator = /, $p2;
-                        if ( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                            $timestamp_value = $timestamp;
-                        }
-                    }
-                }
-                $o->{timestamp} = $timestamp_value;
-            }
-            if (!$o->{operator}){
-                if ($phenotype_uniquename){
-                    my ($p1, $p2) = split /date: /, $phenotype_uniquename;
-                    if ($p2){
-                        my ($timestamp, $operator_value) = split /  operator = /, $p2;
-                        $o->{operator} = $operator_value;
-                    }
-                }
-            }
-            #get additional info
-            my $rs = $schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $additional_info_type_id, phenotype_id => $pheno_id });
-            if ($rs->count() > 0){
-                my $additional_info_json = $rs->first()->value();
-                $o->{additional_info}  = $additional_info_json ? decode_json($additional_info_json) : undef;
-            }
-            #get external references
-            my $rs2 = $schema->resultset("Phenotype::Phenotypeprop")->search({ type_id => $external_references_type_id, phenotype_id => $pheno_id });
-            if ($rs2->count() > 0){
-                my $external_references_json = $rs2->first()->value();
-                $o->{external_references}  = $external_references_json ? decode_json($external_references_json) : undef;
-            }
-
-            push @return_observations, $o;
-        }
-
-        no warnings 'uninitialized';
-        
-        if ($notes) { $notes =~ s/\R//g; }
-        if ($trial_description) { $trial_description =~ s/\R//g; }
-        if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };
-        if ($folder_description) { $folder_description =~ s/\R//g };
-
-        my $seedlot_transaction_description = $seedlot_transaction->{description};
-        if ($seedlot_transaction_description) { $seedlot_transaction_description =~ s/\R//g; }
-
-        push @result, {
-            observationunit_stock_id => $observationunit_stock_id,
-            observationunit_uniquename => $observationunit_uniquename,
-            observationunit_type_name => $observationunit_type_name,
-            germplasm_uniquename => $germplasm_uniquename,
-            germplasm_stock_id => $germplasm_stock_id,
-            germplasm_synonyms => $synonyms,
-            obsunit_rep => $rep,
-            obsunit_block => $block,
-            obsunit_plot_number => $plot_number,
-            obsunit_row_number => $row_number,
-            obsunit_col_number => $col_number,
-            obsunit_plant_number => $plant_number,
-            obsunit_is_a_control => $is_a_control,
-            notes => $notes,
-            trial_id => $trial_id,
-            trial_name => $trial_name,
-            trial_description => $trial_description,
-            plot_width => $plot_width,
-            plot_length => $plot_length,
-            field_size => $field_size,
-            field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
-            field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
-            breeding_program_id => $breeding_program_id,
-            breeding_program_name => $breeding_program_name,
-            breeding_program_description => $breeding_program_description,
-            year => $year,
-            design => $design,
-            trial_location_id => $location_id,
-            trial_location_name => $location_name,
-            planting_date => $planting_date_value,
-            harvest_date => $harvest_date_value,
-            folder_id => $folder_id,
-            folder_name => $folder_name,
-            folder_description => $folder_description,
-            seedlot_transaction_amount => $seedlot_transaction->{amount},
-            seedlot_transaction_weight_gram => $seedlot_transaction->{weight_gram},
-            seedlot_transaction_timestamp => $seedlot_transaction->{timestamp},
-            seedlot_transaction_operator => $seedlot_transaction->{operator},
-            seedlot_transaction_description => $seedlot_transaction_description,
-            seedlot_stock_id => $seedlot_stock_id,
-            seedlot_uniquename => $seedlot_uniquename,
-            seedlot_current_count => $seedlot_current_count,
-            seedlot_current_weight_gram => $seedlot_current_weight_gram,
-            seedlot_box_name => $seedlot_box_name,
-            available_germplasm_seedlots => $available_germplasm_seedlots,
-            treatments => $treatments,
-            observations => \@return_observations,
-            full_count => $full_count,
-        };
-    }
-
-    print STDERR "Search End:".localtime."\n";
-    return (\@result, \%unique_traits);
+    return (\@data_window,$counter);
 }
 
-sub _sql_from_arrayref {
-    my $arrayref = shift;
-    my $sql = join ("," , @$arrayref);
-    return $sql;
-}
 
 1;
+
+
