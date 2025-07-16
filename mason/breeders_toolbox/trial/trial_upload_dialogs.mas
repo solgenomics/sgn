@@ -48,13 +48,13 @@ $design_types => ()
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "File Formatting" &>
-                                <ul class="nav nav-pills nav-justified" id="upload_trial_designs_tab_select">
+                                <!-- <ul class="nav nav-pills nav-justified" id="upload_trial_designs_tab_select">
                                     <li class="active" id="upload_single_trial_design_tab"><a data-toggle="tab" href="#single_tab">Single Trial Design</a></li>
                                     <li id="upload_multiple_trial_designs_tab"><a data-toggle="tab" href="#multiple_tab">Multiple Trial Designs</a></li>
                                 </ul>
-                                <div class="tab-content">
+                                <div class="tab-content"> -->
 
-                                    <div id="single_tab" class="tab-pane fade in active">
+                                <!--    <div id="single_tab" class="tab-pane fade in active">
                                         <hr>
                                         <center>
                                             <&| /page/explanation.mas, title=>'Template information' &>
@@ -68,9 +68,10 @@ $design_types => ()
                                         </center>
                                         <br /><br />
                                         <& /help/file_upload_type.mas, type => "Single Trial Designs", optional_column => 1 &>
-                                    </div>
+                                    </div> -->
 
-                                    <div id="multiple_tab" class="tab-pane fade">
+                                    <!-- <div id="multiple_tab" class="tab-pane fade "> -->
+                                    <div id="multiple_tab">
                                         <hr>
                                         <center>
                                             <&| /page/explanation.mas, title=>'Template information' &>
@@ -124,7 +125,7 @@ $design_types => ()
                                         <& /help/file_upload_type.mas, type => "Multiple Trial Designs", optional_column => 1 &>
                                     </div>
 
-                                </div>
+                                <!-- </div> -->
                             </&>
 
                             <&| /util/workflow.mas:step, title=> "Enter trial information" &>
