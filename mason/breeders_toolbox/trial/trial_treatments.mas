@@ -22,14 +22,42 @@ jQuery(document).ready(function () {
             success: function(response){
                 //console.log(response);
                 jQuery("#working_modal").modal("hide");
-                var trial_treatments_html = "<table class='table table-hover table-condensed table-bordered' id='trial_treatments_table_html'><thead><tr><th>Name</th></tr></thead><tbody>";
+                var trial_treatments_html = "<table class='table table-hover table-condensed table-bordered' id='trial_treatments_table_html'><thead><tr><th>Name</th><th></th></tr></thead><tbody>";
                 for (i=0; i<response.treatments.length; i++) {
-                    trial_treatments_html = trial_treatments_html + "<tr><td><a href='/breeders/trial/" + response.treatments[i][0] +"'>"+ response.treatments[i][1] + "</a></td></tr>";
+                    trial_treatments_html = trial_treatments_html + "<tr><td><a href='/breeders/trial/" + response.treatments[i][0] +"'>"+ response.treatments[i][1] + "</a></td><td><button class='btn btn-danger btn-xs remove-treatment-btn' data-treatment-id='" + response.treatments[i][0] + "'>Remove</button></td></tr>";
                 }
                 trial_treatments_html = trial_treatments_html + "</tbody></table>";
+            
                 jQuery('#trial_treatments_html').empty();
                 jQuery('#trial_treatments_html').html(trial_treatments_html);
                 enable_treatments_datatable('trial_treatments_table_html');
+
+                jQuery('.remove-treatment-btn').click(function(){
+                    var treatment_id = jQuery(this).data('treatment-id');
+                    if (confirm("Are you sure you want to remove this treatment from the trial?")) {
+                        jQuery.ajax({
+                            url:'/ajax/breeders/trial/'+<% $trial_id %>+'/remove_treatment/',
+                            type: 'POST',
+                            data: { treatment_id: treatment_id },
+                            beforeSend: function() {
+                                jQuery("#working_modal").modal("show");
+                            },
+                            success: function(response){
+                                jQuery("#working_modal").modal("hide");
+                                if(response.success){
+                                    alert("Treatment removed.");
+                                    location.reload();
+                                } else {
+                                    alert("Error removing treatment: " + response.error);
+                                }
+                            },
+                            error: function(){
+                                jQuery("#working_modal").modal("hide");
+                                alert("Error removing treatment.");
+                            }
+                        })
+                    }
+                })
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");

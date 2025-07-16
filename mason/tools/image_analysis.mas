@@ -427,15 +427,23 @@ jQuery(document).ready(function(){
             // console.log("Results are:");
             // console.log(results);
             var first = results[0];
-            let metricsData = Object.entries(first.result.analysis_info).map(( [key, value] ) => ({ key : value }));
 
-            jQuery('#metrics_table').DataTable({
-                "data": metricsData,
-                "columns": [
-                    { "data": "metric" },
-                    { "data": "value" },
-                ]
-            });
+            let metricsData = Object.entries(first.result.analysis_info)
+                .filter(([key, value]) => key != null && value != null)
+                .map(([key, value]) => ({
+                    metric: key,
+                    value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+                }));
+
+            if (metricsData.length > 0) {
+                jQuery('#metrics_table').DataTable({
+                    "data": metricsData,
+                    "columns": [
+                        { "data": "metric" },
+                        { "data": "value" },
+                    ]
+                });
+            }
 
             if (results.length > 0) {
                 jQuery.ajax({

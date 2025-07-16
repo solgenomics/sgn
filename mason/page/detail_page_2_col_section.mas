@@ -231,7 +231,8 @@ $propagation_type => undef
 				&>
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/tools/correlation/analysis.mas,
-                                    corr_pop_id => $trial_id
+                                    corr_pop_id => $trial_id,
+                                    corr_pop_name => $trial_name
                                 &>
 
                                 <& /solgs/tools/anova/analysis.mas,

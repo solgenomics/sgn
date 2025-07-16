@@ -23,7 +23,7 @@ my $result = $trial_plot_layout->retrieve();
 
 =head1 DESCRIPTION
 
-Will output an array of arrays, where each row is a plot in the trial. the columns are based on the supplied selected_cols and the columns will include any treatments (management factors) that are part of the trial. additionally, trait performance can be included in column using the overall_performance_hash. this should only be called from CXGN::Trial::TrialLayoutDownload
+Will output an array of arrays, where each row is a plot in the trial. the columns are based on the supplied selected_cols and the columns will include any treatments that are part of the trial. additionally, trait performance can be included in column using the overall_performance_hash. this should only be called from CXGN::Trial::TrialLayoutDownload
 
 =head1 AUTHORS
 
@@ -73,7 +73,7 @@ sub retrieve {
         }
     }
     foreach (@$treatment_name_list){
-        push @header, "ManagementFactor:".$_;
+        push @header, "Treastment:".$_;
     }
     foreach (@$trait_header){
         push @header, $_;

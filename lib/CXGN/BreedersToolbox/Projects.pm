@@ -194,7 +194,7 @@ sub get_trials_by_breeding_program {
     my %project_name;
     my %project_description;
     my %projects_that_are_genotyping_trials;
-    my %projects_that_are_treatment_trials; #Field Management Factors
+    my %projects_that_are_treatment_trials;
     my %projects_that_are_genotyping_data_projects;
     my %projects_that_are_drone_run_projects;
     my %projects_that_are_drone_run_band_projects;

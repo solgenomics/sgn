@@ -151,9 +151,9 @@ has 'trial' => (
     is => 'rw',
 );
 
-#This treatment_info_hash contains all the info needed to make and fill the columns for the various treatments (management factors). All of these lists are in the same order.
-#A key called treatment_trial_list that is a arrayref of the CXGN::Trial entries that represent the treatments (management factors) in this trial
-#A key called treatment_trial_names_list that is an arrayref of just the treatment (management factor) names
+#This treatment_info_hash contains all the info needed to make and fill the columns for the various treatments. All of these lists are in the same order.
+#A key called treatment_trial_list that is a arrayref of the CXGN::Trial entries that represent the treatments in this trial
+#A key called treatment_trial_names_list that is an arrayref of just the treatment names
 #A key called treatment_units_hash_list that is a arrayref of hashrefs where the hashrefs indicate the stocks that the treatment was applied to.
 has 'treatment_info_hash' => (
     isa => 'HashRef',
@@ -236,7 +236,7 @@ sub get_layout_output {
     my $has_plants = $selected_trial->has_plant_entries();
     my $has_subplots = $selected_trial->has_subplot_entries();
     my $has_tissue_samples = $selected_trial->has_tissue_sample_entries();
-    
+
     my $accessions = $selected_trial->get_accessions();
     my @accession_ids;
     foreach (@$accessions){
