@@ -45,5 +45,5 @@ use CXGN::Phenotypes::StorePhenotypes;
 
 our ($opt_H, $opt_D, $opt_U, $opt_P);
 
-getopts('F:d:H:o:n:vD:tp:us:r:g:')
+getopts('H:D:U:P')
     or pod2usage();
