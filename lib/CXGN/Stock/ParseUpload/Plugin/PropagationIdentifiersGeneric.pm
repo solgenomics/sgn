@@ -52,6 +52,12 @@ sub _validate_with_plugin {
     my $seen_propagation_identifiers = $parsed_values->{'propagation_identifier'};
     my $seen_rootstocks = $parsed_values->{'rootstock'};
 
+    my $propagation_group_id_validator = CXGN::List::Validate->new();
+    my @propagation_group_ids_missing = @{$propagation_group_id_validator->validate($schema,'propagation_group_identifiers', $seen_propagation_group_identifiers)->{'missing'}};
+    if (scalar(@propagation_group_ids_missing) > 0) {
+        push @error_messages, "The following propagation group identifiers are not in the database: ".join(',',@propagation_group_ids_missing);
+    }
+
     if (scalar(@$seen_rootstocks) > 0) {
         my $accession_validator = CXGN::List::Validate->new();
         my @accessions_missing = @{$accession_validator->validate($schema,'accessions', $seen_rootstocks)->{'missing'}};
