@@ -101,20 +101,32 @@ $trial_name
                             <tr>
                                 <td>propagation_group_identifier</td>
                                 <td>accession_name</td>
+                                <td>material_type</td>
+                                <td>material_source_type</td>
+                                <td>source_name</td>
+                                <td>date</td>
+                                <td>sub_location</td>
+                                <td>description</td>
+                                <td>operator_name</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <b>Required fields:</b>
                     <ul>
-                        <li>propagation_group_identifier (must be unique)</li>
-                        <li>accession_name (must exist in the database)</li>
+                        <li>propagation_group_identifier (must be globally unique and must not exist in the database )</li>
+                        <li>accession_name (must exist as <b>uniquenames</b> in the database)</li>
+                        <li>material_type (must be one of the following: plant, seed, budwood, tissue_culture. If you would like to add additional types, please contact us.)</li>
+                        <li>date (propagation initiation date)</li>
+                        <li>description</li>
+                        <li>operator_name</li>
                     </ul>
 
                     <b>Optional fields:</b>
                     <ul>
-                        <li></li>
-                        <li></li>
+                        <li>material_source_type (can be plot, subplot, plant or tissue_sample type)</li>
+                        <li>source_name (must exist as <b>uniquenames</b> in the database, can be plot, subplot, plant or tissue_sample stock type.)</li>
+                        <li>sub_location (detailed location of propagation materials)</li>
                     </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Propagation Group Identifiers", optional_column => 1 &>
