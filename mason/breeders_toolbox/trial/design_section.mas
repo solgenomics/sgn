@@ -5,6 +5,7 @@ $has_subplot_entries
 $has_plant_entries
 $has_tissue_sample_entries
 $trial_stock_type => undef
+$management_factor_types => undef
 </%args>
 
 <div class="well well-sm">
@@ -20,6 +21,11 @@ $trial_stock_type => undef
 
 % }
 
+  <&| /page/info_section.mas, id => "field_management_regime", title=> 'Field Management Regime', subtitle => '<div class="col-sm-4"><div id="field_management_factors"></div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>
+
+      <& /breeders_toolbox/trial/design_section_management_regime.mas, trial_id => $trial_id,management_factor_types => $management_factor_types &>
+
+  </&>
 
   <& /breeders_toolbox/trial/trial_stocks_count.mas, trial_id => $trial_id &>
   <&| /page/info_section.mas, id => "trial_stocks", title=> $stock_label, subtitle => '<div class="col-sm-4"><div id="stocks_counts"></div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>

@@ -7,6 +7,7 @@ $trial_id
 
 <div id="trial_treatments_html">
 </div>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatment</button>
 
 <script>
 
@@ -29,7 +30,7 @@ jQuery(document).ready(function () {
                 trial_treatments_html = trial_treatments_html + "</tbody></table>";
             
                 jQuery('#trial_treatments_html').empty();
-                jQuery('#trial_treatments_html').html(trial_treatments_html);
+                jQuery('#trial_treatments_html').append(trial_treatments_html);
                 enable_treatments_datatable('trial_treatments_table_html');
 
                 jQuery('.remove-treatment-btn').click(function(){

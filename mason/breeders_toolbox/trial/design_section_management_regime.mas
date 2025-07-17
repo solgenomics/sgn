@@ -1,0 +1,16 @@
+<%args>
+$trial_id
+$management_factor_types => ()
+</%args>
+
+<div class="well well-sm">
+    This is a test. Something like a table will go here. 
+
+    <div>
+        <select id="new_management_factor_type" name="new_management_factor_type">
+%   foreach my $management_factor_type(@$management_factor_types){
+        <option value="<%$management_factor_type%>"><%$management_factor_type%></option>
+%   }
+        </select>
+    </div>
+</div>
