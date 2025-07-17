@@ -7,25 +7,25 @@ $management_factor_types => ()
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTrialDesignTreatmentsDialog">Add Field Management Factor to Design</h4>
+                <h4 class="modal-title" id="addTrialDesignTreatmentsDialog">Add Treatment to Design</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Add Field Management Factor Name: </label>
+                            <label class="col-sm-4 control-label">Treatment Name: </label>
                             <div class="col-sm-8">
                                 <input class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="e.g. Fertilizer01_20N40P50K or Weeding01_Manual"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Add Field Management Factor Description: </label>
+                            <label class="col-sm-4 control-label">Treatment Description: </label>
                             <div class="col-sm-8">
                                 <input class="form-control" id="new_treatment_description" name="new_treatment_description" type="text" placeholder="e.g. Fertilizer Brand Sprayed with 20N40P50K"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Field Management Factor Type: </label>
+                            <label class="col-sm-4 control-label">Treatment Type: </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="new_treatment_type" name="new_treatment_type">
 % foreach my $management_factor_type(@$management_factor_types){
@@ -35,13 +35,13 @@ $management_factor_types => ()
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Field Management Factor Year: </label>
+                            <label class="col-sm-4 control-label">Treatment Year: </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="new_treatment_year" name="new_treatment_year" type="text"></select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Field Management Factor Date: </label>
+                            <label class="col-sm-4 control-label">Treatment Date: </label>
                             <div class="col-sm-8">
                                 <input class="form-control" id="new_treatment_date" name="new_treatment_date" title="planting_date" type="text"/>
                             </div>
@@ -72,7 +72,7 @@ $management_factor_types => ()
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTrialDesignTreatmentSelectDialog">Add Field Management Factor to Design</h4>
+                <h4 class="modal-title" id="addTrialDesignTreatmentSelectDialog">Add Treatment to Design</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -80,7 +80,7 @@ $management_factor_types => ()
                 </div>
             </div>
             <div class="modal-footer">
-                Apply Field Management Factors to Plants and Subplots and Tissue Samples (if available): <input type="checkbox" id="new_trial_add_treatments_apply_to_plants" checked disabled />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                Apply Treatments to Plants and Subplots and Tissue Samples (if available): <input type="checkbox" id="new_trial_add_treatments_apply_to_plants" checked disabled />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <button type="button" class="btn btn-info" id="new_trial_add_treatments_submit" >Continue</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>

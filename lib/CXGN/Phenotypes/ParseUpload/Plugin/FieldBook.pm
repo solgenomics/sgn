@@ -46,7 +46,7 @@ sub validate {
     foreach my $fl (@file_lines) {
 	$fl =~ s/\r//g;
     }
-    
+
     if (!@file_lines) {
         $parse_result{'error'} = "Could not read file.";
         print STDERR "Could not read file.\n";
@@ -60,7 +60,7 @@ sub validate {
     }
 
     my $header = shift(@file_lines);
-    my $status  = $csv->parse($header);
+    my $status = $csv->parse($header);
     my @header_row = $csv->fields();
 
     if (!$header_row[1]) {
@@ -69,38 +69,40 @@ sub validate {
         return \%parse_result;
     }
 
-    #  Check header row contents
-    if ($header_row[0] ne 'plot_id' && $header_row[0] ne 'plot_name' && $header_row[0] ne 'plant_name' && $header_row[0] ne 'subplot_name'){
-        $parse_result{'error'} = "File contents incorrect. First column in header is $header_row[0], but it must be plot_id, plot_name, plant_name, or subplot_name.";
-        return \%parse_result;
-    }
-
-    if($data_level ne 'plots' && $data_level ne 'plants' && $data_level ne 'subplots'){
-        $parse_result{'error'} = "You must specify if you are uploading plot, plant, or subplot level phenotypes.";
-        return \%parse_result;
-    }
-    if($data_level eq 'plots' && ($header_row[0] ne "plot_id" && $header_row[0] ne "plot_name")){
-        $parse_result{'error'} = "File contents incorrect. First column in header is $header_row[0] but must be plot_id or plot_name if you are uploading plot level phenotypes.";
-        return \%parse_result;
-    } elsif ($data_level eq 'plants' && $header_row[0] ne "plant_name"){
-        $parse_result{'error'} = "File contents incorrect. First column in header is $header_row[0] but must be plot_id or plot_name if you are uploading plant level phenotypes.";
-        return \%parse_result;
-    } elsif ($data_level eq 'subplots' && $header_row[0] ne "subplot_name"){
-        $parse_result{'error'} = "File contents incorrect. First column in header is $header_row[0] but must be plot_id or plot_name if you are uploading subplot level phenotypes.";
-        return \%parse_result;
-    }
+    # Define possible unit headers for each data level
+    my %unit_headers = (
+        plots    => [qw(plot_id plot_name ObservationUnitDbId ObservationUnitName)],
+        plants   => [qw(plant_name ObservationUnitName)],
+        subplots => [qw(subplot_name ObservationUnitName)],
+    );
 
     my %header_column_info;
+    my $header_column_number = 0;
+    my $unit_col;
     foreach my $header_cell (@header_row) {
         # $header_cell =~ s/\"//g; #substr($header_cell,1,-1);  #remove double quotes
 
         if ($header_cell eq "trait") {
-            $header_column_info{'trait'}++;
+            $header_column_info{'trait'} = $header_column_number;
         }
         if ($header_cell eq "value") {
-            $header_column_info{'value'}++;
+            $header_column_info{'value'} = $header_column_number;
         }
+        if ($header_cell eq "timestamp") {
+            $header_column_info{'timestamp'} = $header_column_number;
+        }
+        if ($header_cell eq "person") {
+            $header_column_info{'person'} = $header_column_number;
+        }
+        foreach my $possible_unit_col (@{ $unit_headers{$data_level} }) {
+            if ($header_cell eq $possible_unit_col) {
+                $header_column_info{$possible_unit_col} = $header_column_number;
+                $unit_col = $possible_unit_col unless defined $unit_col; # prefer first match
+            }
+        }
+        $header_column_number++;
     }
+
     if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
         $parse_result{'error'} = "trait or value column not found. Make sure to use the database Fieldbook format.";
         print STDERR "trait or value column not found. Make sure to use the database Fieldbook format.";
@@ -124,11 +126,10 @@ sub parse {
     my %parse_result;
     my @file_lines;
     my $header;
-    my $header_column_number = 0;
     my %header_column_info; #column numbers of key info indexed from 0;
-    my %plots_seen;
+    my %units_seen;
     my %traits_seen;
-    my @plots;
+    my @units;
     my @traits;
     my %data;
 
@@ -147,9 +148,16 @@ sub parse {
     my $status  = $csv->parse($header);
     my @header_row = $csv->fields();
 
-    ## Get column numbers (indexed from 1) of the plot_id, trait, and value.
-    foreach my $header_cell (@header_row) {
+    # Define possible unit headers for each data level
+    my %unit_headers = (
+        plots    => [qw(plot_id plot_name ObservationUnitDbId ObservationUnitName)],
+        plants   => [qw(plant_name ObservationUnitName)],
+        subplots => [qw(subplot_name ObservationUnitName)],
+    );
 
+    my $header_column_number = 0;
+    my $unit_col;
+    foreach my $header_cell (@header_row) {
         if ($header_cell eq "trait") {
             $header_column_info{'trait'} = $header_column_number;
         }
@@ -162,33 +170,34 @@ sub parse {
         if ($header_cell eq "person") {
             $header_column_info{'person'} = $header_column_number;
         }
+        foreach my $possible_unit_col (@{ $unit_headers{$data_level} }) {
+            if ($header_cell eq $possible_unit_col) {
+                $header_column_info{$possible_unit_col} = $header_column_number;
+                $unit_col = $possible_unit_col unless defined $unit_col; # prefer first match
+            }
+        }
         $header_column_number++;
     }
+    
     if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
         $parse_result{'error'} = "trait or value column not found. Make sure to use the database Fieldbook format.";
-        print STDERR "trait or value column not found. Make sure to use the database Fieldbook format.";
         return \%parse_result;
     }
-
 
     for my $index (0..$#file_lines) {
         my $line = $file_lines[$index];
         my $line_number = $index + 2;
-        my $status  = $csv->parse($line);
+        my $status = $csv->parse($line);
         my @row = $csv->fields();
-        my $plot_id = $row[0];
 
+        my $unit_value = $row[$header_column_info{$unit_col}];
         my $trait = $row[$header_column_info{'trait'}];
-
         my $value = $row[$header_column_info{'value'}];
+        my $timestamp = defined $header_column_info{'timestamp'} ? $row[$header_column_info{'timestamp'}] : '';
+        my $collector = defined $header_column_info{'person'} ? $row[$header_column_info{'person'}] : '';
 
-        my $timestamp = $row[$header_column_info{'timestamp'}];
-
-        my $collector = $row[$header_column_info{'person'}];
-
-        if (!defined($plot_id) || !defined($trait) || !defined($value) || !defined($timestamp)) {
-            $parse_result{'error'} = "Error parsing line $line_number: plot_name, trait, value, or timestamp is undefined.";
-            print STDERR "line $line_number has value: $value\n";
+        if (!defined($unit_value) || !defined($trait) || !defined($value) || !defined($timestamp)) {
+            $parse_result{'error'} = "Error parsing line $line_number: unit, trait, or value is undefined.";
             return \%parse_result;
         }
         if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
@@ -196,8 +205,10 @@ sub parse {
             print STDERR "line $line_number has timestamp: $timestamp\n";
             return \%parse_result;
         }
-        $plots_seen{$plot_id} = 1;
+
+        $units_seen{$unit_value} = 1;
         $traits_seen{$trait} = 1;
+
         if (defined($value) && defined($timestamp)) {
 	    print STDERR "KEEPING $trait with value $value for plot $plot_id...\n";
             push @{$data{$plot_id}->{$trait}}, [$value, $timestamp, $collector, ''];
@@ -205,17 +216,20 @@ sub parse {
 	else {
 	    print STDERR "PROBLEM WITH value $value or TIMESTAMP $timestamp\n";
 	}
+
+        $data{$unit_value}->{$trait} = [$value, $timestamp, $collector, ''];
+
     }
 
-    foreach my $plot (sort keys %plots_seen) {
-        push @plots, $plot;
+    foreach my $unit (sort keys %units_seen) {
+        push @units, $unit;
     }
     foreach my $trait (sort keys %traits_seen) {
         push @traits, $trait;
     }
 
     $parse_result{'data'} = \%data;
-    $parse_result{'units'} = \@plots;
+    $parse_result{'units'} = \@units;
     $parse_result{'variables'} = \@traits;
 
     return \%parse_result;

@@ -1229,7 +1229,7 @@ for my $extension ("xls", "xlsx", "csv") {
 	]);
 
 
-	#Upload trial with management factors
+	#Upload trial with Treatments
 
 	my $file_name_with_managementfactors = "t/data/trial/trial_layout_example_with_management_factor.$extension";
 
@@ -1376,7 +1376,7 @@ for my $extension ("xls", "xlsx", "csv") {
 		chado_schema      => $c->bcs_schema(),
 		dbh               => $c->dbh(),
 		trial_year        => "2016",
-		trial_description => "Trial Upload Test with Management Factors",
+		trial_description => "Trial Upload Test with Treatments",
 		trial_location    => "test_location",
 		trial_name        => "Trial_upload_test_with_management_factor",
 		design_type       => "RCBD",
@@ -1389,7 +1389,7 @@ for my $extension ("xls", "xlsx", "csv") {
 
 	my $save_with_management_factor = $trial_create_with_management_factor->save_trial();
 
-	ok($save_with_management_factor->{'trial_id'}, "check that trial_create worked with management factor");
+	ok($save_with_management_factor->{'trial_id'}, "check that trial_create worked with treatment");
 	my $project_name_with_management_factor = $c->bcs_schema()->resultset('Project::Project')->find({ project_id => $save_with_management_factor->{'trial_id'} })->name();
 	ok($project_name_with_management_factor == "Trial_upload_test_with_management_factor", "check that trial_create really worked");
 

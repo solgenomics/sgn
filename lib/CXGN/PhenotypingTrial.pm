@@ -6,6 +6,7 @@ use Moose;
 extends 'CXGN::Project';
 
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 =head2 function set_field_trials_source_field_trials()
 
@@ -166,7 +167,6 @@ sub get_trial_stock_type {
     }
 }
 
-
 =head2 get_stock_entry_summary
 
  Usage:        my $stock_entry_summary = $t->get_stock_entry_summary();
@@ -217,6 +217,95 @@ sub get_stock_entry_summary {
     return \@stock_entry_summary;
 }
 
+=head2 remove_treatment
+
+ Usage:        my $trial_object->remove_treatment($treatment_id);
+ Desc:         removes the selected treatment from this trial
+ Ret:
+ Args:         $treatment_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub remove_treatment {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $treatment_id =shift;
+
+    my $trial_id = $self->get_trial_id();
+
+    my $treatment_rs = $schema->resultset('Project::Project')->find({ project_id => $treatment_id });
+    if (!$treatment_rs) {
+        return { error => "Treatment not found" };
+    }
+
+    eval {
+        $treatment_rs->delete();
+    };
+
+    return { success => 1 };
+}
+
+
+=head2 function get_crossing_experiments_from_field_trial()
+
+ Usage:
+ Desc:         return associated crossing experiments from field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_crossing_experiments_from_field_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $field_trial_id = $self->get_trial_id();
+    my $plots = $self->get_plots();
+    my $plants = $self->get_plants();
+
+    my @related_stock_ids;
+    foreach my $plot (@$plots){
+        push @related_stock_ids, $plot->[0];
+    }
+
+    if ($plants) {
+        foreach my $plant (@$plants) {
+            push @related_stock_ids, $plant->[0];
+        }
+    }
+
+    my @where_clause;
+    my $stock_ids_sql = join (",", @related_stock_ids);
+    push @where_clause, "stock_relationship.subject_id IN ($stock_ids_sql)";
+    my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
+
+    my $female_plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
+    my $male_plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
+    my $female_plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plant_of", "stock_relationship")->cvterm_id();
+    my $male_plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
+    my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', "experiment_type")->cvterm_id();
+
+
+    my $q = "SELECT DISTINCT project.project_id, project.name
+        FROM stock_relationship
+        JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id IN (?,?,?,?)
+        JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
+        JOIN project ON (nd_experiment_project.project_id = project.project_id)
+        $where_clause;";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_plot_of_type_id, $male_plot_of_type_id, $female_plot_of_type_id, $male_plant_of_type_id, $cross_experiment_type_id);
+
+    my @crossing_experiments = ();
+    while(my($experiment_id, $experiment_name) = $h->fetchrow_array()){
+        push @crossing_experiments, [$experiment_id, $experiment_name];
+    }
+
+    return  \@crossing_experiments;
+}
 
 
 1;
