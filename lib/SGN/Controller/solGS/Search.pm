@@ -278,13 +278,14 @@ sub check_population_exists : Path('/solgs/check/population/exists/') Args(0) {
 
     my $rs = $self->model($c)->project_details_by_name($name);
 
-    my @pop_ids;
+    my $trial_id;
     while ( my $row = $rs->next ) {
-        push @pop_ids, $row->id;
-        my $id = $row->id;
+        $trial_id = $row->id;
     }
 
-    my $ret->{population_ids} = \@pop_ids;
+    print STDERR "Found population ID: $trial_id\n";
+    
+    my $ret->{trial_id} = $trial_id;
     $ret = to_json($ret);
 
     $c->res->content_type('application/json');
@@ -292,39 +293,26 @@ sub check_population_exists : Path('/solgs/check/population/exists/') Args(0) {
 
 }
 
-sub check_training_population : Path('/solgs/check/training/population/')
-  Args() {
+sub check_training_population : Path('/solgs/check/training/population/') Args() {
     my ( $self, $c ) = @_;
 
-    $c->controller('solGS::Utils')
-      ->stash_json_args( $c, $c->req->param('arguments') );
-    my @pop_ids     = $c->stash->{population_ids};
+    $c->controller('solGS::Utils')->stash_json_args( $c, $c->req->param('arguments') );
+    my $pop_id     = $c->stash->{trial_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    my @gs_pop_ids;
-
-    foreach my $pop_id (@pop_ids) {
-        $c->stash->{pop_id}          = $pop_id;
-        $c->stash->{training_pop_id} = $pop_id;
-
-        my $is_training_pop =
-          $self->check_population_is_training_population( $c, $pop_id,
-            $protocol_id );
-
-        if ($is_training_pop) {
-            push @gs_pop_ids, $pop_id;
-        }
-    }
+    print STDERR "Checking training population: $pop_id\n";
+    my $is_training_pop = $self->check_population_is_training_population( $c, $pop_id, $protocol_id );
+    print STDERR "Is training population: $is_training_pop\n";
 
     my $training_pop_data;
-    my $ret = { is_training_population => 0 };
-    if (@gs_pop_ids) {
-        my $pr_rs = $self->model($c)->project_details( \@gs_pop_ids );
-        $self->projects_links( $c, $pr_rs );
-        $training_pop_data             = $c->stash->{projects_pages};
-        $ret->{is_training_population} = 1 if @gs_pop_ids;
-        $ret->{training_pop_data}      = $training_pop_data;
-    }
+    my $ret = { };
+    
+    my $pr_rs = $self->model($c)->project_details($pop_id);
+
+    $self->projects_links( $c, $pr_rs );
+    $training_pop_data             = $c->stash->{projects_pages};
+    $ret->{is_training_population} = $is_training_pop;
+    $ret->{training_pop_data}      = $training_pop_data;
 
     $ret = to_json($ret);
     $c->res->content_type('application/json');
