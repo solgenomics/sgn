@@ -124,8 +124,11 @@ jQuery(document).ready(function(){
     });
 
 
-});
 
+
+
+
+});
 
 function updatePropagationStatus(propagation_stock_id, propagation_name){
     var html = '';
@@ -137,13 +140,26 @@ function updatePropagationStatus(propagation_stock_id, propagation_name){
     html += '<option value='+"Dead"+'>'+"Dead"+'</option>';
     html += '<option value='+"Disposed"+'>'+"Disposed"+'</option>';
     html += '</select></div></div>';
-    html += '<div class="form-group" style="display:none" ><div class="col-sm-9" ><input class="form-control" id="propagation_stock_id" value="'+propagation_stock_id+'"></div></div>';
-    html += '<div class="form-group"><label class="col-sm-3 control-label">Notes: </label><div class="col-sm-9" ><input class="form-control" id="propagation_status_notes" placeholder="Optional"></div></div></form>'
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Notes: </label><div class="col-sm-9" ><input class="form-control" id="propagation_status_notes" placeholder="Optional"></div></div>'
+    html += '<div id="inventory_id_section" style="display:none"><div class="form-group"><label class="col-sm-3 control-label">Inventory ID: </label><div class="col-sm-9" ><input class="form-control" id="inventory_id" placeholder=""></div></div>'
+
+    html += '<div class="form-group" style="display:none" ><div class="col-sm-9" ><input class="form-control" id="propagation_stock_id" value="'+propagation_stock_id+'"></div></div></div></form>';
 
     jQuery('#update_propagation_status_div').html(html);
     jQuery('#update_propagation_status_dialog').modal('show');
 
+    jQuery("#update_propagation_status").change(function() {
+        var status = jQuery('#update_propagation_status').val();
+        if (status == "Inventoried") {
+            jQuery('#inventory_id_section').modal('show');
+        } else {
+            jQuery('#inventory_id_section').modal('hide');
+        }
+
+    });
+
 }
+
 
 
 
