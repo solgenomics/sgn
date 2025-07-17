@@ -16,6 +16,7 @@ sub validate {
     my $context = SGN::Context->new;
     my @missing;
     my @wrong_ids;
+    my @not_variables;
 
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
@@ -39,8 +40,6 @@ sub validate {
         $trait_name =~ s/\s+$//;
         $trait_name =~ s/^\s+//;
 
-        print STDERR $db_name."\n";
-        print STDERR $trait_name."\n";
         if (!$context->get_conf('list_trait_require_id') && ($db_name eq '' || $db_name eq $trait_name)) {
           $db_name = $context->get_conf('trait_ontology_db_name');
         }
@@ -66,6 +65,7 @@ sub validate {
             my $rs = $schema->resultset("Cv::Cvterm")->search($query, {'join' => 'dbxref'});
 
             my $is_missing = 0;
+            my $is_not_variable = 0;
             if ($rs->count == 0) {
                 print STDERR "Problem found with term $term at cvterm rs from accession $accession point 2\n";
                 push @missing, $term;
@@ -76,6 +76,7 @@ sub validate {
                     print STDERR "Problem found with term $term at variable check point 3\n";
                     push @missing, $term;
                     $is_missing = 1;
+                    $is_not_variable = 1;
                 }
             }
 
@@ -84,10 +85,11 @@ sub validate {
                 my $rs_match = $schema->resultset("Cv::Cvterm")->search(
                     {
                         'dbxref.db_id' => $db->db_id(),
-                        'me.name' => $trait_name
+                        'me.name' => $trait_name,
+                        'type.name' => 'VARIABLE_OF'
                     },
                     {
-                        'join' => 'dbxref',
+                        'join' => [ 'dbxref', {'cvterm_relationship_subjects' => 'type'} ],
                         '+select' => 'dbxref.accession',
                         '+as' => 'accession'
                     }
@@ -101,6 +103,31 @@ sub validate {
                     }
                 }
             }
+
+            # Try to find matching variable from a trait term
+            if ( $is_not_variable ) {
+                my $rs_var = $rs->search_related(
+                    'cvterm_relationship_objects',
+                    { 'type.name' => 'VARIABLE_OF' },
+                    {
+                        'join' => ['type', 'subject'],
+                        '+select' => ['subject.cvterm_id', 'subject.name'],
+                        '+as' => ['subject_id', 'subject_name']
+                    }
+                );
+                if ( $rs_var->count > 0 ) {
+                    while (my $m = $rs_var->next() ) {
+                        my $cvterm_id = $m->subject_id();
+                        my $dbxref_rs = $schema->resultset("Cv::Cvterm")->search({ cvterm_id => $cvterm_id })->search_related("dbxref")->first();
+                        push @not_variables, {
+                            original_term => $term,
+                            matching_name => $m->get_column('subject_name'),
+                            matching_id => $db_name . ':' . $dbxref_rs->get_column('accession'),
+                            matching_term => $m->get_column('subject_name') . '|' . $db_name . ':' . $dbxref_rs->get_column('accession')
+                        }
+                    }
+                }
+            }
         }
 
     }
@@ -108,7 +135,8 @@ sub validate {
     print STDERR Dumper \@wrong_ids;
     return {
         missing => \@missing,
-        wrong_ids => \@wrong_ids
+        wrong_ids => \@wrong_ids,
+        not_variables => \@not_variables
     };
 }
 
