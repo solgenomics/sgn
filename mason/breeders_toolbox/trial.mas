@@ -99,10 +99,10 @@ $project_id => undef
 
 <div class="row">
     <div class="col-sm-6">
-        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, button_id => "generate_trial_barcode_link" &>
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, label_design_btn_id => "label_designer_link", legacy_barcode_btn_id => "generate_trial_barcode_link" &>
     </div>
     <div class="col-sm-6">
-        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", button_id => "direct_phenotyping_link" &>
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", go_btn_id => "direct_phenotyping_link" &>
     </div>
 </div>
 
