@@ -58,12 +58,6 @@ has 'propagation_group_stock_id' => (
     required => 1,
 );
 
-has 'accession_stock_id' => (
-    isa =>'Int',
-    is => 'rw',
-    required => 1,
-);
-
 
 sub add_propagation_identifier {
     my $self = shift;
@@ -71,7 +65,6 @@ sub add_propagation_identifier {
     my $phenome_schema = $self->get_phenome_schema();
     my $propagation_identifier = $self->get_propagation_identifier();
     my $propagation_group_stock_id = $self->get_propagation_group_stock_id();
-    my $accession_stock_id = $self->get_accession_stock_id();
     my $rootstock_name = $self->get_rootstock_name();
     my $owner_id = $self->get_owner_id();
     my %return;
@@ -82,8 +75,14 @@ sub add_propagation_identifier {
         my $propagation_rootstock_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_rootstock_of', 'stock_relationship')->cvterm_id();
         my $propagation_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_member_of', 'stock_relationship')->cvterm_id();
         my $propagation_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_material_of', 'stock_relationship')->cvterm_id();
-
         my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+        my $propagation_material = $schema->resultset("Stock::StockRelationship")->find ({
+            object_id => $propagation_group_stock_id,
+            type_id => $propagation_material_of_cvterm_id,
+        });
+
+        my $propagation_material_stock_id = $propagation_material->subject_id();
 
         my $rootstock_rs = $schema->resultset("Stock::Stock")->find({
             uniquename => $rootstock_name,
@@ -117,7 +116,7 @@ sub add_propagation_identifier {
         $propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
             type_id => $propagation_material_of_cvterm_id,
             object_id => $propagation_stock_id,
-            subject_id => $accession_stock_id,
+            subject_id => $propagation_material_stock_id,
         });
 
     };

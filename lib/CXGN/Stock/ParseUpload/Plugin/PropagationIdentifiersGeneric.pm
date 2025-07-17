@@ -53,7 +53,7 @@ sub _validate_with_plugin {
     my $seen_rootstocks = $parsed_values->{'rootstock'};
 
     my $propagation_group_id_validator = CXGN::List::Validate->new();
-    my @propagation_group_ids_missing = @{$propagation_group_id_validator->validate($schema,'propagation_group_identifiers', $seen_propagation_group_identifiers)->{'missing'}};
+    my @propagation_group_ids_missing = @{$propagation_group_id_validator->validate($schema,'propagation_groups', $seen_propagation_group_identifiers)->{'missing'}};
     if (scalar(@propagation_group_ids_missing) > 0) {
         push @error_messages, "The following propagation group identifiers are not in the database: ".join(',',@propagation_group_ids_missing);
     }
@@ -76,7 +76,7 @@ sub _validate_with_plugin {
     my %duplicated_propagation_identifiers;
     foreach my $row (@$parsed_data) {
         my $row_num = $row->{_row};
-        my $propagation_group_identifier = $row->{'propagation_identifier'};
+        my $propagation_identifier = $row->{'propagation_identifier'};
 
         if ($duplicated_propagation_identifiers{$propagation_identifier}) {
             push @error_messages, "Cell A$row_num: duplicate propagation identifier: $propagation_identifier. Propagation Identifier must be unique.";
@@ -108,7 +108,7 @@ sub _parse_with_plugin {
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}} = $row->{'rootstock'};
     }
 
-    $self->_set_parsed_data(\%propagation_identifier_info);
+    $self->_set_parsed_data($propagation_identifier_info);
 
     return 1;
 }

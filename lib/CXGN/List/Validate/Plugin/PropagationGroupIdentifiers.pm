@@ -1,10 +1,10 @@
 
-package CXGN::List::Validate::Plugin::PropagationGroupIdentifiers
+package CXGN::List::Validate::Plugin::PropagationGroupIdentifiers;
 
 use Moose;
 
 sub name {
-    return "propagation_group_identifiers";
+    return "propagation_groups";
 }
 
 sub validate {
@@ -12,9 +12,9 @@ sub validate {
     my $schema = shift;
     my $list = shift;
 
-    my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"propagation_group_identifier" })->first->cvterm_id();
+    my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"propagation_group" })->first->cvterm_id();
 
-    #print STDERR "PROPAGATION GROUP IDENTIFIER TYPE ID $type_id\n";
+#    print STDERR "PROPAGATION GROUP IDENTIFIER TYPE ID $type_id\n";
 
     my @missing = ();
     foreach my $l (@$list) {
