@@ -217,7 +217,7 @@ sub parse {
 	    print STDERR "PROBLEM WITH value $value or TIMESTAMP $timestamp\n";
 	}
 
-        $data{$unit_value}->{$trait} = [$value, $timestamp, $collector, ''];
+     #   $data{$unit_value}->{$trait} = [$value, $timestamp, $collector, ''];
 
     }
 
