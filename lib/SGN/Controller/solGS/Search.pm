@@ -820,7 +820,7 @@ sub check_saved_analysis_trial {
 sub check_population_has_phenotype {
     my ( $self, $c, $pop_id ) = @_;
 
-    my $pop_id = $c->stash->{pop_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} if !$pop_id;
 
     $c->controller('solGS::Files')->phenotype_file_name( $c, $pop_id );
     my $pheno_file = $c->stash->{phenotype_file_name};
@@ -899,10 +899,10 @@ sub get_project_owners {
 
     my $owners = $self->model($c)->get_stock_owners($pr_id);
     my $owners_names;
-
+    my $owner_name;
     if (@$owners) {
         for ( my $i = 0 ; $i < scalar(@$owners) ; $i++ ) {
-            my $owner_name =
+            $owner_name =
                 $owners->[$i]->{'first_name'} . "\t"
               . $owners->[$i]->{'last_name'}
               if $owners->[$i];
@@ -1045,10 +1045,11 @@ sub compare_genotyping_platforms {
 
         unless ( $similarity > 0.5 ) {
             no warnings 'uninitialized';
-            my $pop_id_1 = fileparse( $pair->[0] );
-            my $pop_id_2 = fileparse( $pair->[1] );
+            my $file_pop_1 = fileparse( $pair->[0] );
+            my $file_pop_2 = fileparse( $pair->[1] );
 
-            map { s/genotype_data_|\.txt//g } $pop_id_1, $pop_id_2;
+            my $pop_id_1 = $file_pop_1 =~ s/genotype_data_|\.txt//gr;
+            my $pop_id_2 = $file_pop_2 =~ s/genotype_data_|\.txt//gr;
 
             my $list_type_pop = $c->stash->{list_prediction};
 
