@@ -75,6 +75,19 @@ has 'is_a_control' => (
 );
 
 
+sub existing_transformation_id {
+    my $self = shift;
+    my $schema = $self->get_chado_schema();
+    my $transformation_identifier = $self->get_transformation_identifier();
+
+    if ($schema->resultset('Stock::Stock')->find({ 'uniquename' => $transformation_identifier, 'is_obsolete' => { '!=' => 't' }})){
+        return 1;
+    } else {
+        return;
+    }
+}
+
+
 sub add_transformation_identifier {
     my $self = shift;
     my $schema = $self->get_chado_schema();
@@ -89,8 +102,11 @@ sub add_transformation_identifier {
     my $vector_construct_stock_id;
     my %return;
     my $transformation_stock_id;
+    my $owner_id = $self->get_owner_id();
 
-    my $owner_id = $self->get_owner_id();;
+    if ($self->existing_transformation_id()){
+        return {error => "Error: Transformation identifier already exists in the database."};
+    }
 
     my $coderef = sub {
 
