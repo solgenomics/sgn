@@ -22,6 +22,8 @@ my $phenome_schema = $f->phenome_schema;
 my $mech = Test::WWW::Mechanize->new;
 my $json = JSON->new->allow_nonref;
 my @all_new_stocks;
+my $time = DateTime->now();
+my $upload_date = $time->ymd();
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
@@ -126,16 +128,16 @@ my $transformation4_name = $transformations->[3]->[1];
 my $transformation4_is_a_control = $transformations->[3]->[7];
 my $transformation4_control_name = $transformations->[3]->[9];
 
-is($transformation1_name, 'test_bti_transformation_1_BTI_1_batch_1');
-is($transformation2_name, 'test_bti_transformation_1_BTI_C_batch_1');
-is($transformation3_name, 'test_bti_transformation_1_BTI_2_batch_2');
-is($transformation4_name, 'test_bti_transformation_1_BTI_C_batch_2');
+is($transformation1_name, "bti_transformation_1_".$upload_date."_BTI_1_batch_1");
+is($transformation2_name, "bti_transformation_1_".$upload_date."_BTI_C_batch_1");
+is($transformation3_name, "bti_transformation_1_".$upload_date."_BTI_2_batch_2");
+is($transformation4_name, "bti_transformation_1_".$upload_date."_BTI_C_batch_2");
 
 is($transformation2_is_a_control, '1');
 is($transformation4_is_a_control, '1');
 
-is($transformation1_control_name, 'test_bti_transformation_1_BTI_C_batch_1');
-is($transformation3_control_name, 'test_bti_transformation_1_BTI_C_batch_2');
+is($transformation1_control_name, "bti_transformation_1_".$upload_date."_BTI_C_batch_1");
+is($transformation3_control_name, "bti_transformation_1_".$upload_date."_BTI_C_batch_2");
 
 #checking transformants in each transformation id
 my $transformants_1 = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation1_stock_id});

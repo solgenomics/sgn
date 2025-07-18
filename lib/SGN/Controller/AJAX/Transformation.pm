@@ -1229,6 +1229,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     my %parsed_data;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $upload_date = $time->ymd();
     my $user_role;
     my $user_id;
     my $user_name;
@@ -1348,7 +1349,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 my $transformant_name_info = $transformant_info->{$accession_type};
 
                 my @transformants = (keys %$transformant_name_info);
-                my @name_array = ($breeding_program_name, $transgenic_data_project_name, $vector_construct, 'batch', $batch_number);
+                my @name_array = ($transgenic_data_project_name, $upload_date, $vector_construct, 'batch', $batch_number);
                 my $transformation_identifier = join('_', @name_array);
 
                 my $add_transformation = CXGN::Transformation::AddTransformationIdentifier->new({
@@ -1416,7 +1417,6 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                         push @transformation_ids, $transformation_stock_id;
                     }
                 }
-
             }
 
             if ($control_transformation_id && (scalar @transformation_ids > 0)) {
