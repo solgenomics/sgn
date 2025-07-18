@@ -212,6 +212,9 @@ $field_headers => ()
    <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 % }
 
+% if ($info_section_id eq 'repetitive_measurements_data') {
+    <& /breeders_toolbox/trial/repetitive_measurements_data.mas, trial_id => $trial_id, trial_stock_type =>$trial_stock_type &>
+% }
 
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
