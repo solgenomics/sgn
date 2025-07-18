@@ -3,11 +3,11 @@
 
 =head1 NAME
 
-AddFieldManagementDescriptionProjectProp.pm
+AddFieldManagementRegimeProjectProp.pm
 
 =head1 SYNOPSIS
 
-mx-run AddFieldManagementDescriptionProjectProp [options] -H hostname -D dbname -u username [-F]
+mx-run AddFieldManagementRegimeProjectProp [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddFieldManagementDescriptionProjectProp;
+package AddFieldManagementRegimeProjectProp;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';

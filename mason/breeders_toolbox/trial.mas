@@ -227,7 +227,6 @@ $project_id => undef
 <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/add_plants_per_subplot.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
-<& /breeders_toolbox/trial/design_section_management_regime.mas, trial_id => $trial_id, management_factor_types => $management_factor_types &>
 <& /breeders_toolbox/trial/change_plot_accessions_dialogs.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
 <& /breeders_toolbox/trial/update_experimental_design_type.mas, trial_id => $trial_id, trial_name => $trial_name, design_name => $design_name &>

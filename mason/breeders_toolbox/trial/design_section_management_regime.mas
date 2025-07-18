@@ -6,11 +6,53 @@ $management_factor_types => ()
 <div class="well well-sm">
     This is a test. Something like a table will go here. 
 
-    <div>
-        <select id="new_management_factor_type" name="new_management_factor_type">
-%   foreach my $management_factor_type(@$management_factor_types){
-        <option value="<%$management_factor_type%>"><%$management_factor_type%></option>
-%   }
-        </select>
-    </div>
+    <table id="field_management_regime_table">
+    </table>
+
+    <br>
+    
+    <table style="width:100%;">
+        <tr>
+            <td style="padding:30px;">
+                <button id="edit_management_regime" class="btn btn-sm btn-primary">Add field management factor
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="new_management_factor_form_container" style="">
+                    <form class="form-horizontal" role="form" method="post" id="new_management_factor_form" name="new_management_factor_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Management factor description:</label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_management_factor_description" name="new_management_factor_description" type="text" placeholder="e.g. Fertilizer Brand Sprayed with 20N40P50K"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Application schedule:</label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_management_factor_schedule" name="new_management_factor_schedule" type="text" placeholder="e.g. Twice weekly on Mondays and Thursdays starting 1 July 2025"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Management factor type:</label>
+                            <div class="col-sm-9">
+                                    <select class="form-control" id="new_management_factor_type" name="new_management_factor_type">
+%                                   foreach my $management_factor_type(@$management_factor_types){
+                                        <option value="<%$management_factor_type%>"><%$management_factor_type%></option>
+%                                   }
+                                    </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">&nbsp;</label>
+                            <div class="col-sm-9">
+                                <button class="btn btn-sm btn-primary">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                    <br>
+                </div>
+            </td>
+        </tr>
+    </table>
 </div>
