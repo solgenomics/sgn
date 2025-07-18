@@ -107,15 +107,16 @@ $default_plant_material_name => undef
                             <tr>
                                 <td>accession_name</td>
                                 <td>vector_construct</td>
-                                <td>is_a_control</td>
                                 <td>batch_number</td>
+                                <td>is_a_control</td>
+                                <td>existing_accession</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <b>Required fields:</b>
                     <ul>
-                        <li>accession_name (must NOT exist in the database)</li>
+                        <li>accession_name (accession name can be either new or existing accession. If you are uploading a file using existing accessions, you must indicate '1' in the 'existing_accession' column. Please check the optional fields. <b> IMPORTANT: all accessions in the file should be the same type (either new or existing accession type).</b> )</li>
                         <li>vector_construct (must exist in the database)</li>
                         <li>batch_number (transgenic plants containing the same vector construct in the same batch will be grouped in an auto-generated transformation ID and will be automatically linked to control plants included in the same batch. <b> IMPORTANT: please include all accessions from the same batch number in one file.</b> )</li>
                     </ul>
@@ -123,6 +124,7 @@ $default_plant_material_name => undef
                     <b>Optional fields:</b>
                     <ul>
                         <li>is_a_control (if you would like to set any new accession as a control for any batch, please indicate "1" for the "is_a_control" column.)</li>
+                        <li>existing_accession (if accession names are existing accessions and you would like to only link those names to transformation info, please indicate "1" for the "existing_accession" column. <b> IMPORTANT: all accessions in the file should be the same type (either new or existing accession type).</b>)</li>
                     </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Transgenic Historical Data", optional_column => 1 &>
