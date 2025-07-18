@@ -64,12 +64,33 @@ sub _validate_with_plugin {
         push @error_messages, "The following vector constructs are not in the database, or are not in the database as uniquenames: ".join(',',@vector_constructs_missing);
     }
 
+    my $transgenic_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property')->cvterm_id;
+    my $accession_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id;
+
     if (scalar(@$is_existing_accessions) > 0) {
         my $accession_validator = CXGN::List::Validate->new();
         my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames', $seen_accession_names)->{'missing'}};
         if (scalar(@accessions_missing) > 0) {
             push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
         }
+
+        foreach $existing_accession (@$seen_accession_names) {
+            my $is_a_transgenic_line;
+            my $accession_stock = $schema->resultset("Stock::Stock")->find ({
+                uniquename => $existing_accession,
+                type_id => $accession_type_id,
+            });
+
+            if ($accession_stock) {
+                my $transgenic_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $accession_stock->stock_id(), type_id => $transgenic_type_id});
+                if ($transgenic_stockprop_rs) {
+                    $is_a_transgenic_line = $transgenic_stockprop_rs->value();
+                }
+            }
+            if (!$is_a_transgenic_line) {
+                push @error_messages, "Accession name is not a transgenic line: $existing_accession";
+            }
+        }        
     } else {
         my $rs = $schema->resultset("Stock::Stock")->search({
             'uniquename' => { -in => $seen_accession_names }

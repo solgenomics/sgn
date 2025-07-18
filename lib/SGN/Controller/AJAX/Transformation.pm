@@ -1396,11 +1396,8 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                     } elsif ($accession_type eq 'existing_accession') {
                         my $add_transformants = CXGN::Transformation::LinkTransformationInfo->new({
                             schema => $schema,
-                            phenome_schema => $phenome_schema,
-                            dbh => $dbh,
                             transformation_stock_id => $transformation_stock_id,
                             transformant_names => \@transformants,
-                            owner_id => $user_id,
                         });
 
                         my $response = $add_transformants->link_info();
