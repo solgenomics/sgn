@@ -234,6 +234,10 @@ sub phenotype_file_name {
     my ($self, $c, $pop_id) = @_;
     
     $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+
+    unless ($pop_id) {
+       die "No population ID (pop_id) provided for phenotype file name.\n";
+    }
  
     my $dir;
     if ($pop_id =~ /list/)
@@ -326,6 +330,10 @@ sub genotype_file_name {
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
+
+    unless ($pop_id && $protocol_id) {
+       die "No population ID (pop_id) and/or genotype protocol id provided for genotype file name.\n";
+    }
 
     my $dir;
     if ($pop_id =~ /list/)
