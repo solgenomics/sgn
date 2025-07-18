@@ -1336,8 +1336,18 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 if ($type eq 'control') {
                     $is_a_control = 1;
                 }
+
                 my $transformant_info = $vector_construct_info->{$type};
-                my @transformants = (keys %$transformant_info);
+                my @check_accession_type = keys %$transformant_info;
+                if (scalar(@check_accession_type) > 1) {
+                    $c->stash->{rest} = { error => "Error! All accessions in the same file should have the same accession type (either an existing accession in the database or new accession)."};
+                    return;
+                }
+
+                my $accession_type = $check_accession_type[0];
+                my $transformant_name_info = $transformant_info->{$accession_type};
+
+                my @transformants = (keys %$transformant_name_info);
                 my @name_array = ($breeding_program_name, $transgenic_data_project_name, $vector_construct, 'batch', $batch_number);
                 my $transformation_identifier = join('_', @name_array);
 
@@ -1367,20 +1377,38 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                 }
 
                 if ($transformation_stock_id) {
-                    my $add_transformants = CXGN::Transformation::AddTransformant->new({
-                        schema => $schema,
-                        phenome_schema => $phenome_schema,
-                        dbh => $dbh,
-                        transformation_stock_id => $transformation_stock_id,
-                        transformant_names => \@transformants,
-                        owner_id => $user_id,
-                    });
+                    if ($accession_type eq 'new') {
+                        my $add_transformants = CXGN::Transformation::AddTransformant->new({
+                            schema => $schema,
+                            phenome_schema => $phenome_schema,
+                            dbh => $dbh,
+                            transformation_stock_id => $transformation_stock_id,
+                            transformant_names => \@transformants,
+                            owner_id => $user_id,
+                        });
 
-                    my $response = $add_transformants->add_transformant();
-                    my $add_transformant_error = $response->{error};
-                    if ($add_transformant_error){
-                        $c->stash->{rest} = {error => "Error adding new accessions for vector contruct: $vector_construct in batch $batch_number."};
-                        return;
+                        my $response = $add_transformants->add_transformant();
+                        my $add_transformant_error = $response->{error};
+                        if ($add_transformant_error){
+                            $c->stash->{rest} = {error => "Error adding new accessions for vector contruct: $vector_construct in batch $batch_number."};
+                            return;
+                        }
+                    } elsif ($accession_type eq 'existing_accession') {
+                        my $add_transformants = CXGN::Transformation::LinkTransformationInfo->new({
+                            schema => $schema,
+                            phenome_schema => $phenome_schema,
+                            dbh => $dbh,
+                            transformation_stock_id => $transformation_stock_id,
+                            transformant_names => \@transformants,
+                            owner_id => $user_id,
+                        });
+
+                        my $response = $add_transformants->link_info();
+                        my $add_transformant_error = $response->{error};
+                        if ($add_transformant_error){
+                            $c->stash->{rest} = {error => "Error linking accession names with tansformation info for vector contruct: $vector_construct in batch $batch_number."};
+                            return;
+                        }
                     }
                 }
 

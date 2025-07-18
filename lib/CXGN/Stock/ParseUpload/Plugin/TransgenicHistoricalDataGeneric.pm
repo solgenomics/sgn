@@ -18,12 +18,13 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'accession_name', 'vector_construct', 'batch_number'],
-        optional_columns => [ 'is_a_control' ],
+        optional_columns => [ 'is_a_control', 'existing_accession' ],
         column_aliases => {
             'accession_name' => ['accession name'],
             'vector_construct' => ['vector construct'],
             'batch_number' => ['batch number'],
             'is_a_control' => ['is a control'],
+            'existing_accession' => ['existing accession'],
         }
     );
     my $parsed = $parser->parse();
@@ -48,8 +49,14 @@ sub _validate_with_plugin {
         return;
     }
 
-    my $seen_new_accession_names = $parsed_values->{'accession_name'};
+    my $seen_accession_names = $parsed_values->{'accession_name'};
     my $seen_vector_constructs = $parsed_values->{'vector_construct'};
+    my $is_existing_accessions = $parsed_values->{'existing_accession'};
+    if (scalar(@$is_existing_accessions) > 0) {
+        if (scalar(@$is_existing_accessions) != scalar(@$seen_accessions)) {
+            push @error_messages, "If you are uploading information for existing accessions in the database, please indicate '1' for the column 'existing-accession' in all rows";
+        }
+    }
 
     my $vector_construct_validator = CXGN::List::Validate->new();
     my @vector_constructs_missing = @{$vector_construct_validator->validate($schema,'vector_constructs', $seen_vector_constructs)->{'missing'}};
@@ -57,22 +64,30 @@ sub _validate_with_plugin {
         push @error_messages, "The following vector constructs are not in the database, or are not in the database as uniquenames: ".join(',',@vector_constructs_missing);
     }
 
-    my $rs = $schema->resultset("Stock::Stock")->search({
-        'uniquename' => { -in => $seen_new_accession_names }
-    });
-    while (my $r=$rs->next){
-        push @error_messages, "Accession name already exists in database: ".$r->uniquename;
+    if (scalar(@$is_existing_accessions) > 0) {
+        my $accession_validator = CXGN::List::Validate->new();
+        my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames', $seen_accession_names)->{'missing'}};
+        if (scalar(@accessions_missing) > 0) {
+            push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
+        }
+    } else {
+        my $rs = $schema->resultset("Stock::Stock")->search({
+            'uniquename' => { -in => $seen_accession_names }
+        });
+        while (my $r=$rs->next){
+            push @error_messages, "Accession name already exists in database: ".$r->uniquename;
+        }
     }
 
-    my %duplicated_new_accession_names;
+    my %duplicated_accession_names;
     foreach my $row (@$parsed_data) {
         my $row_num = $row->{_row};
-        my $new_accession = $row->{'accession_name'};
+        my $accession_name = $row->{'accession_name'};
 
-        if ($duplicated_new_accession_names{$new_accession}) {
-            push @error_messages, "Cell A$row_num: duplicate new accession name: $new_accession. Accession name must be unique.";
+        if ($duplicated_accession_names{$accession_name}) {
+            push @error_messages, "Cell A$row_num: duplicate accession name: $accession_name. Accession name must be unique.";
         } else {
-            $duplicated_new_accession_names{$new_accession}++;
+            $duplicated_accession_names{$accession_name}++;
         }
     }
 
@@ -96,13 +111,20 @@ sub _parse_with_plugin {
 
     foreach my $row (@$parsed_data) {
         my $type;
+        my $accession_type;
         if ($row->{'is_a_control'}) {
             $type = 'control';
         } else {
             $type = 'transformant';
         }
 
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$row->{'accession_name'}}++;
+        if ($row->{'existing_accession'}) {
+            $accession_type = 'existing_accession';
+        } else {
+            $accession_type = 'new';
+        }
+
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$accession_type}->{$row->{'accession_name'}}++;
     }
 
     $self->_set_parsed_data($transgenic_data);
