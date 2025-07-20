@@ -44,7 +44,7 @@ has 'transformant_names' => (
     required => 1,);
 
 
-sub add_transformant {
+sub link_info {
 
     my $self = shift;
     my $schema = $self->get_schema();
@@ -53,15 +53,13 @@ sub add_transformant {
     my $transaction_error;
     my @accession_stock_ids;
 
-    my $owner_id = $self->get_owner_id();;
-
     my $coderef = sub {
 
         my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
         my $transformant_of_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_of', 'stock_relationship');
 
         foreach my $name (@transformant_names) {
-            $accession_stock = $schema->resultset("Stock::Stock")->find ({
+            my $accession_stock = $schema->resultset("Stock::Stock")->find ({
                 uniquename => $name,
                 type_id => $accession_cvterm->cvterm_id(),
             });

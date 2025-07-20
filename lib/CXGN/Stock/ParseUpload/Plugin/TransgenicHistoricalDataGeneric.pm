@@ -52,13 +52,6 @@ sub _validate_with_plugin {
     my $seen_accession_names = $parsed_values->{'accession_name'};
     my $seen_vector_constructs = $parsed_values->{'vector_construct'};
     my $is_existing_accessions = $parsed_values->{'existing_accession'};
-    if ($is_existing_accessions){
-        if (scalar(@$is_existing_accessions) > 0) {
-            if (scalar(@$is_existing_accessions) != scalar(@$seen_accession_names)) {
-                push @error_messages, "If you are uploading information for existing accessions in the database, please indicate '1' for the column 'existing-accession' in all rows";
-            }
-        }
-    }
 
     my $vector_construct_validator = CXGN::List::Validate->new();
     my @vector_constructs_missing = @{$vector_construct_validator->validate($schema,'vector_constructs', $seen_vector_constructs)->{'missing'}};
@@ -66,8 +59,9 @@ sub _validate_with_plugin {
         push @error_messages, "The following vector constructs are not in the database, or are not in the database as uniquenames: ".join(',',@vector_constructs_missing);
     }
 
-    my $transgenic_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property')->cvterm_id;
     my $accession_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id;
+    my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'male_parent', 'stock_relationship')->cvterm_id();
 
     if ($is_existing_accessions) {
         if (scalar(@$is_existing_accessions) > 0) {
@@ -77,21 +71,36 @@ sub _validate_with_plugin {
                 push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
             }
 
-            foreach my $existing_accession (@$seen_accession_names) {
-                my $is_a_transgenic_line;
+            foreach my $row (@$parsed_data) {
+                my $accession_name = $row->{'accession_name'};
+                my $vector_construct = $row->{'vector_construct'};
+
                 my $accession_stock = $schema->resultset("Stock::Stock")->find ({
-                    uniquename => $existing_accession,
+                    uniquename => $accession_name,
                     type_id => $accession_type_id,
                 });
 
                 if ($accession_stock) {
-                    my $transgenic_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $accession_stock->stock_id(), type_id => $transgenic_type_id});
-                    if ($transgenic_stockprop_rs) {
-                        $is_a_transgenic_line = $transgenic_stockprop_rs->value();
+                    my $accession_vector_construct_relationship = $schema->resultset("Stock::StockRelationship")->find ({
+                        object_id => $accession_stock->stock_id(),
+                        type_id => $male_parent_type_id,
+                    });
+
+                    if ($accession_vector_construct_relationship) {
+                        my $vector_construct_stock = $schema->resultset("Stock::Stock")->find ({
+                            stock_id => $accession_vector_construct_relationship->subject_id(),
+                            type_id => $vector_construct_type_id,
+                        });
+
+                        if (!$vector_construct_stock) {
+                            push @error_messages, "Previously stored accession: $accession_name is not linked to any vector construct in the database";
+                        } else {
+                            my $stored_vector_construct = $vector_construct_stock->uniquename();
+                            if ($stored_vector_construct ne $vector_construct) {
+                                push @error_messages, "Previously stored accession: $accession_name has vector construct: $stored_vector_construct, but the vector construct in the file is $vector_construct";
+                            }
+                        }
                     }
-                }
-                if (!$is_a_transgenic_line) {
-                    push @error_messages, "Accession name is not a transgenic line: $existing_accession";
                 }
             }
         }
