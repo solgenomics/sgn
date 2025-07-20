@@ -105,7 +105,7 @@ sub add_transformation_identifier {
     my $owner_id = $self->get_owner_id();
 
     if ($self->existing_transformation_id()){
-        return {error => "Error: Transformation identifier already exists in the database."};
+        return {error => "Error: Transformation identifier: $transformation_identifier already exists in the database."};
     }
 
     my $coderef = sub {
