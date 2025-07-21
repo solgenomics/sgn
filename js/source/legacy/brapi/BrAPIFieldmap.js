@@ -2294,7 +2294,23 @@
 	  drawPlots() {
 	    if (this.plotsLayer) this.plotsLayer.remove();
 	    this.plotsLayer = L.featureGroup(this.plots.features.map((plot)=>{
-	      return L.geoJSON(turf.transformScale(plot, this.opts.plotScaleFactor), this.opts.style);
+			const geometry = convertCoordstoNumbers(plot);
+
+			if (geometry.geometry.type === "Polygon" || geometry.geometry.type === "MultiPolygon") {
+				const scaled = turf.transformScale(geometry, this.opts.plotScaleFactor);
+				return L.geoJSON(scaled, this.opts.style);
+			} else if (geometry.geometry.type === "Point") {
+				return L.geoJSON(geometry, {
+					pointToLayer: (feature, latlng) => {
+						return L.circleMarker(latlng, {
+							radius: 6,
+							color: '#ff0000',
+							fillColor: '#ff0000',
+							fillOpacity: 0.8
+						});
+					}
+				});
+			}
 	    })).on('contextmenu', (e)=>{
 	      if (this.editablePlot) {
 	        this.finishPlotEdition();
@@ -2500,7 +2516,6 @@
 
 	  shape(data){
 	    data.shape = {};
-
 	    // Determine what information is available for each obsUnit
 	    data.plots.forEach((ou)=>{
 	      const oup = get_oup(ou);
@@ -2588,29 +2603,47 @@
 	    data.plots_shaped = false;
 	    if(data.plots.every(plot=>(plot._type=="Polygon"))){
 	      // Plot shapes already exist!
+
 	      data.plots_shaped = this.opts.useGeoJson;
 	    }
 	    else if(data.plots.every(plot=>(plot._type=="Point"||plot._type=="Polygon"))){
 	      // Create plot shapes using centroid Voronoi
-	      var centroids = turf.featureCollection(data.plots.map((plot,pos)=>{
-	        return turf.centroid(plot._geoJSON)
-	      }));
-	      var scale_factor = 50; //prevents rounding errors
-	      var scale_origin = turf.centroid(centroids);
-	      centroids = turf.transformScale(centroids,scale_factor,{origin:scale_origin});
-	      var bbox = turf.envelope(centroids);
-	      var area = turf.area(bbox);
-	      var offset = -Math.sqrt(area/data.plots.length)/1000/2;
-	      var hull = turf.polygonToLine(turf.convex(centroids, {units: 'kilometers'}));
-	      var crop = turf.lineToPolygon(turf.lineOffset(hull, offset, {units: 'kilometers'}));
-	      var voronoiBox = turf.lineToPolygon(turf.polygonToLine(turf.envelope(crop)));
-	      var cells = turf.voronoi(centroids,{bbox:turf.bbox(voronoiBox)});
-	      var cells_cropped = turf.featureCollection(cells.features.map(cell=>turf.intersect(cell,crop)));
-	      cells_cropped = turf.transformScale(cells_cropped,1/scale_factor,{origin:scale_origin});
-	      data.plots.forEach((plot,i)=>{
-	        plot._geoJSON = cells_cropped.features[i];
-	      });
-	      data.plots_shaped = this.opts.useGeoJson;
+			
+			var centroids = turf.featureCollection(data.plots.map((plot, pos) => {
+				return turf.centroid(plot._geoJSON)
+			}));
+
+			if (centroids.features.length === 1) {
+				//console.log("one point using buffer");
+				const buffered = turf.buffer(centroids.features[0], 100, { units: 'centimeters' });
+				data.plots[0]._geoJSON = buffered;
+				data.plots_shaped = this.opts.useGeoJson;
+			} else {
+				var scale_factor = 50; //prevents rounding errors
+				var scale_origin = turf.centroid(centroids);
+				centroids = turf.transformScale(centroids,scale_factor,{origin:scale_origin});
+				var bbox = turf.envelope(centroids);
+				var area = turf.area(bbox);
+				var offset = -Math.sqrt(area/data.plots.length)/1000/2;
+				
+				var convexHull = turf.convex(centroids, {units: 'kilometers'});
+				if (convexHull) {
+					var hull = turf.polygonToLine(convexHull);
+					var crop = turf.lineToPolygon(turf.lineOffset(hull, offset, {units: 'kilometers'}));
+					var voronoiBox = turf.lineToPolygon(turf.polygonToLine(turf.envelope(crop)));
+
+					var cells = turf.voronoi(centroids,{bbox:turf.bbox(voronoiBox)});
+					var cells_cropped = turf.featureCollection(cells.features.map(cell=>turf.intersect(cell,crop)));
+					cells_cropped = turf.transformScale(cells_cropped,1/scale_factor,{origin:scale_origin});
+					data.plots.forEach((plot,i)=>{
+						plot._geoJSON = cells_cropped.features[i];
+					});
+					data.plots_shaped = this.opts.useGeoJson;
+				} else {
+					console.warn("Convex hull could not be computed, invalid points");
+				}
+			}
+	      
 	    }
 
 	    let plot_XY_groups = {};
@@ -2803,9 +2836,9 @@
 
 			let params = {};
 			this.plots.features.forEach((plot)=>{
-				params[plot.properties.observationUnitDbId] = {
+					params[plot.properties.observationUnitDbId] = {
 					observationUnitPosition: {geoCoordinates: plot, observationLevel:{levelName: this.opts.brapi_levelName }}
-				};
+					};
 			});
 
 			return new Promise((resolve, reject)=> {
@@ -2831,6 +2864,17 @@
 
 	function get_oup_rel(ou) {
 	  return (ou.observationUnitPosition || {}).observationLevelRelationships || {};
+	}
+
+	function convertCoordstoNumbers(geo_object) {
+		if (geo_object.geometry.type === "Polygon") {
+			geo_object.geometry.coordinates = geo_object.geometry.coordinates.map(ring =>
+				ring.map(coord => coord.map(Number))
+			);
+		} else if (geo_object.geometry.type === "Point") {
+			geo_object.geometry.coordinates = geo_object.geometry.coordinates.map(Number);
+		}
+		return geo_object;
 	}
 
 	applyDefaultPlot(Fieldmap);
