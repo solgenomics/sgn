@@ -4510,33 +4510,33 @@ sub images_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
-    my $brapi_package_result = $brapi_module->search($clean_inputs);
+    my $brapi_package_result = $brapi_module->search($clean_inputs, $c->config->{main_production_site_url});
     _standard_response_construction($c, $brapi_package_result);
 }
 
 sub images_POST {
     my $self = shift;
-	my $c = shift;
-
-	# Check user auth. This matches observations PUT observations endpoint authorization.
-	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = $c->config->{brapi_images_require_login};
-	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
-
+    my $c = shift;
+    
+    # Check user auth. This matches observations PUT observations endpoint authorization.
+    # No specific roles are check, just that the user has an account.
+    my $force_authenticate = $c->config->{brapi_images_require_login};
+    my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
+    
     my $clean_inputs = $c->stash->{clean_inputs};
-	my @all_images;
-	foreach my $image (values %{$clean_inputs}) {
-		push @all_images, $image;
-	}
+    my @all_images;
+    foreach my $image (values %{$clean_inputs}) {
+	push @all_images, $image;
+    }
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
 
-    my $brapi_package_result = $brapi_module->image_metadata_store(\@all_images, $image_dir, $user_id, $user_type);
-	my $status = $brapi_package_result->{status};
-	my $http_status_code = _get_http_status_code($status);
-
-	_standard_response_construction($c, $brapi_package_result, $http_status_code);
+    my $brapi_package_result = $brapi_module->image_metadata_store(\@all_images, $image_dir, $user_id, $user_type, $c->config->{main_production_site_url});
+    my $status = $brapi_package_result->{status};
+    my $http_status_code = _get_http_status_code($status);
+    
+    _standard_response_construction($c, $brapi_package_result, $http_status_code);
 }
 
 sub images_by_id :  Chained('brapi') PathPart('images') CaptureArgs(1) {
@@ -4553,7 +4553,7 @@ sub images_single_GET {
     my $c = shift;
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
-    my $brapi_package_result = $brapi_module->detail( { image_id => $c->stash->{image_id} });
+    my $brapi_package_result = $brapi_module->detail( { image_id => $c->stash->{image_id} }, $c->config->{main_production_site_url} );
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -4591,19 +4591,19 @@ sub image_content_store :  Chained('images_by_id') PathPart('imagecontent') Args
 sub image_content_store_PUT {
     my $self = shift;
     my $c = shift;
-
-	# Check user auth. This matches observations PUT observations endpoint authorization.
-	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = $c->config->{brapi_images_require_login};
-	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
-
+    
+    # Check user auth. This matches observations PUT observations endpoint authorization.
+    # No specific roles are check, just that the user has an account.
+    my $force_authenticate = $c->config->{brapi_images_require_login};
+    my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
+    
     my $clean_inputs = $c->stash->{clean_inputs};
     print STDERR Dumper($clean_inputs);print Dumper $c->req->body();
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
 
-    my $brapi_package_result = $brapi_module->image_data_store($image_dir, $c->stash->{image_id}, $c->req->body(), $c->req->content_type());
+    my $brapi_package_result = $brapi_module->image_data_store($image_dir, $c->stash->{image_id}, $c->req->body(), $c->req->content_type(), $c->config->{main_production_site_url});
 
 	my $status = $brapi_package_result->{status};
 	my $http_status_code = _get_http_status_code($status);
