@@ -84,10 +84,18 @@ jQuery(document).ready(function(){
     jQuery('#update_propagation_status_button').click( function() {
         const propagation_stock_id = jQuery('#propagation_stock_id').val();
         const propagation_status = jQuery('#update_propagation_status').val();
+        const inventory_identifier = jQuery('#propagation_inventory_identifier').val();
+
         if (!propagation_status) {
             alert ("Please select a status");
             return;
         }
+
+        if ((propagation_status === 'Inventoried') && !inventory_identifier) {
+            alert ("Please provide Inventory Identifier");
+            return;
+        }
+
         const propagation_status_notes = jQuery('#propagation_status_notes').val();
 
         jQuery.ajax({
@@ -97,7 +105,8 @@ jQuery(document).ready(function(){
             data : {
                 'propagation_stock_id' : propagation_stock_id,
                 'propagation_status': propagation_status,
-                'propagation_status_notes': propagation_status_notes
+                'propagation_status_notes': propagation_status_notes,
+                'inventory_identifier': inventory_identifier,
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -141,7 +150,7 @@ function updatePropagationStatus(propagation_stock_id, propagation_name){
     html += '<option value='+"Disposed"+'>'+"Disposed"+'</option>';
     html += '</select></div></div>';
     html += '<div class="form-group"><label class="col-sm-3 control-label">Notes: </label><div class="col-sm-9" ><input class="form-control" id="propagation_status_notes" placeholder="Optional"></div></div>'
-    html += '<div id="inventory_id_section" style="display:none"><div class="form-group"><label class="col-sm-3 control-label">Inventory ID: </label><div class="col-sm-9" ><input class="form-control" id="inventory_id" placeholder=""></div></div>'
+    html += '<div id="inventory_id_section" style="display:none"><div class="form-group"><label class="col-sm-3 control-label">Inventory ID: </label><div class="col-sm-9" ><input class="form-control" id="propagation_inventory_identifier" placeholder="must be globally unique"></div></div>'
 
     html += '<div class="form-group" style="display:none" ><div class="col-sm-9" ><input class="form-control" id="propagation_stock_id" value="'+propagation_stock_id+'"></div></div></div></form>';
 

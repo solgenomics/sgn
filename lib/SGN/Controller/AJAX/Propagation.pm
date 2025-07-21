@@ -15,6 +15,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Propagation::AddPropagationProject;
 use CXGN::Propagation::AddPropagationGroup;
 use CXGN::Propagation::AddPropagationIdentifier;
+use CXGN::Propagation::AddInventoryIdentifier;
 use CXGN::Propagation::Propagation;
 use CXGN::Propagation::Status;
 use DateTime;
@@ -733,6 +734,7 @@ sub update_propagation_status_POST : Args(0) {
     my $propagation_stock_id = $c->req->param('propagation_stock_id');
     my $status_type = $c->req->param('propagation_status');
     my $update_notes = $c->req->param('propagation_status_notes');
+    my $inventory_identifier = $c->req->param('inventory_identifier');
     my $time = DateTime->now();
     my $update_date = $time->ymd();
     my $user_id;
@@ -747,6 +749,8 @@ sub update_propagation_status_POST : Args(0) {
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
 #    print STDERR "STOCK ID =".Dumper($propagation_stock_id)."\n";
 #    print STDERR "STATUS TYPE =".Dumper($status_type)."\n";
 #    print STDERR "STATUS NOTES =".Dumper($update_notes)."\n";
@@ -769,12 +773,34 @@ sub update_propagation_status_POST : Args(0) {
     $status->update_person($user_id);
     $status->update_date($update_date);
     $status->update_notes($update_notes);
-
     $status->store();
 
     if (!$status->store()){
         $c->stash->{rest} = {error_string => "Error saving propagation status",};
         return;
+    }
+
+    my $inventory_stock_id;
+    if ($status->store() && $inventory_identifier) {
+        eval {
+            my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
+                chado_schema => $schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                propagation_stock_id => $propagation_stock_id,
+                inventory_identifier => $inventory_identifier,
+                owner_id => $user_id,
+            });
+
+            my $add = $add_inventory_identifier->add();
+            $inventory_stock_id = $add->{inventory_stock_id};
+        };
+
+        if ($@) {
+            $c->stash->{rest} = { success => 0, error => $@ };
+            print STDERR "An error condition occurred, was not able to create inventory identifier. ($@).\n";
+            return;
+        }
     }
 
     $c->stash->{rest} = {success => "1",};
