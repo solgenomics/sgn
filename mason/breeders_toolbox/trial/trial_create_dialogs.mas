@@ -262,7 +262,7 @@ rect.bordered {
                                         <input class="form-control" id="add_plant_entries" name="add_plant_entries" type="text" />
                                         <p><i>Creates plant entries for each plot. Ignore if not adding plant entries.</i></p>
                                     </div>
-                                    <label style="font-size: 80%;" class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                    <label style="font-size: 80%;" class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
                                         <div class="col-sm-8" >
                                             <input name="trial_create_plants_per_plot_inherit_treatments" id="trial_create_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
                                         </div>
@@ -891,7 +891,7 @@ rect.bordered {
 
                                 <br/>
                                 <center>
-                                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Field Management Factor(s) to Design</button>
+                                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Treatment(s) to Design</button>
                                 <button type="button" class="btn btn-lg btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm (Saves Trial In Database)</button>
                                 </center>
 
@@ -1029,7 +1029,7 @@ jQuery(document).ready(function(){
         } else {
             jQuery('#trial_create_plant_row_column_format_dialog').hide();
         }
-        
+
     });
 
     var selectedProgram = jQuery('#select_breeding_program').val()

@@ -67,7 +67,7 @@ $project_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
-      
+
 
 
 <br/>
@@ -99,10 +99,10 @@ $project_id => undef
 
 <div class="row">
     <div class="col-sm-6">
-        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, button_id => "generate_trial_barcode_link" &>
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, label_design_btn_id => "label_designer_link", legacy_barcode_btn_id => "generate_trial_barcode_link" &>
     </div>
     <div class="col-sm-6">
-        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", button_id => "direct_phenotyping_link" &>
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", go_btn_id => "direct_phenotyping_link" &>
     </div>
 </div>
 
@@ -178,11 +178,13 @@ $project_id => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, has_col_and_row_numbers => $has_col_and_row_numbers, has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Management Factor</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatment</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Raw Data</h4>", info_section_subtitle => 'View phenotyping raw data.', info_section_id => "trial_raw_data", trial_name => $trial_name, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download uploaded phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", has_expression_atlas => $has_expression_atlas, trial_name => $trial_name, expression_atlas_url => $expression_atlas_url, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Raw Data</h4>", info_section_subtitle => 'View phenotyping raw data.', info_section_id => "trial_raw_data", trial_name => $trial_name, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, site_projct_name => $site_project_name, sgn_session_id => $sgn_session_id, username=> $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type, info_section_title => "<h4 style='display:inline'>Repetitive Measurements</h4>", info_section_subtitle => 'View a plot by repetitive measurements level', info_section_id => "repetitive_measurements_data", icon_class => "glyphicon glyphicon-repeat" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Compute New Phenotypes</h4>", info_section_subtitle => 'Compute derived traits or compute plot phenotypes from plant phenotypes.', icon_class => "glyphicon glyphicon-floppy-save", info_section_id => "compute_derived_traits" &>
 
@@ -315,4 +317,3 @@ jQuery(document).ready(function () {
 
 //jQuery(document).on('click', '#confirm_store_spatial_correction',  function(e) {}
 </script>
-

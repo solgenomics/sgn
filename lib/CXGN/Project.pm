@@ -29,7 +29,6 @@ use Moose;
 
 use Data::Dumper;
 use Try::Tiny;
-use Data::Dumper;
 use CXGN::Trial::Folder;
 use CXGN::Stock;
 use CXGN::Trial::TrialLayout;
@@ -1650,7 +1649,7 @@ sub set_management_factor_date {
         $row->value($management_factor_event);
         $row->update();
     } else {
-        print STDERR "date format did not pass check while preparing to set management factor date: $management_factor_date \n";
+        print STDERR "date format did not pass check while preparing to set treatment date: $management_factor_date \n";
     }
 }
 
@@ -2563,7 +2562,7 @@ sub _delete_management_factors_experiments {
         });
         my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>$management_factor_type_id, 'project.project_id'=>$m->get_trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
         if ($nde_rs->count != 1){
-            die "Management factor ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!"
+            die "Treatment ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!"
         }
         while( my $r = $nde_rs->next){
             $r->delete();
@@ -2794,7 +2793,7 @@ sub obsolete_additional_uploaded_file {
 
 
 
-=head2 function get_phenotypes_for_trait($trait_id)
+=head2 function get_phenotypes_for_trait($trait_id, $stock_type, $start_date, $end_date)
 
  Usage:
  Desc:         returns the measurements for the given trait in this trial as an array of values, e.g. [2.1, 2, 50]
@@ -2811,6 +2810,14 @@ sub get_phenotypes_for_trait {
     my $stock_type = shift;
     my @data;
     my $dbh = $self->bcs_schema->storage()->dbh();
+    my $start_date = shift;
+    my $end_date = shift;
+    my $date_sql = '';
+    my @date_placeholders;
+    if ($start_date && $end_date) {
+        $date_sql = " AND (collect_date > ? and collect_date < ?)";
+        @date_placeholders = ($start_date, $end_date);
+    }
 	#my $schema = $self->bcs_schema();
 
 	my $h;
@@ -2821,11 +2828,11 @@ sub get_phenotypes_for_trait {
 		$join_string = 'JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id)';
 		$where_string = "stock.type_id=$stock_type_id and";
 	}
-	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? ORDER BY phenotype_id ASC;";
+	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? $date_sql ORDER BY phenotype_id ASC;";
 	$h = $dbh->prepare($q);
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
+    $h->execute($self->get_trial_id(), $trait_id, $numeric_regex, @date_placeholders );
     while (my ($value) = $h->fetchrow_array()) {
 	   push @data, $value + 0;
     }
@@ -2942,26 +2949,31 @@ sub get_traits_assayed {
         $cvtermprop_where = " AND cvtermprop.type_id = $trait_format_cvterm_id AND cvtermprop.value = '$trait_format' ";
     }
 
-    my $contains_relationship_rs = $schema->resultset("Cv::Cvterm")->search({ name => 'contains' });
-    if ($contains_relationship_rs->count == 0) {
-        die "The cvterm 'contains' was not found! Please add this cvterm! Generally this term is added when loading an ontology into the database.\n";
+
+    my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+    my $rel_cv_id;
+    if ($relationship_cv) {
+        $rel_cv_id = $relationship_cv->cv_id ;
+    } else {
+        print STDERR "relationship ontology is not found in the database\n";
     }
-    elsif ($contains_relationship_rs->count > 1) {
-        die "The cvterm 'contains' was found more than once! Please consolidate this cvterm by updating cvterm_relationship entries and then deleting the left over cvterm entry! Generally this term is added when loading an ontology into the database.\n";
+
+    my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF'  , cv_id => $rel_cv_id });
+    if (!$variable_relationship) {
+        die "The cvterm 'VARIABLE_OF' was not found! Please make sure your database us up-to-date! This term is part of the relationship ontology.\n";
     }
-    my $contains_relationship_cvterm_id = $contains_relationship_rs->first->cvterm_id;
-    my $variable_relationship_rs = $schema->resultset("Cv::Cvterm")->search({ name => 'VARIABLE_OF' });
-    if ($variable_relationship_rs->count == 0) {
-        die "The cvterm 'VARIABLE_OF' was not found! Please add this cvterm! Generally this term is added when loading an ontology into the database.\n";
+    my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains', cv_id => $rel_cv_id });
+    if (!$contains_relationship) {
+        die "The cvterm 'contains' was not found! Please make sure your database is up-to-date! This term is part of the relationship ontology.\n";
     }
-    elsif ($variable_relationship_rs->count > 1) {
-        die "The cvterm 'VARIABLE_OF' was found more than once! Please consolidate this cvterm by updating cvterm_relationship entries and then deleting the left over cvterm entry! Generally this term is added when loading an ontology into the database.\n";
-    }
+    my $contains_relationship_cvterm_id = $contains_relationship->cvterm_id;
+
 
     my $composable_cv_type_cvterm_id = $contains_composable_cv_type ? SGN::Model::Cvterm->get_cvterm_row($schema, $contains_composable_cv_type, 'composable_cvtypes')->cvterm_id : '';
 
     my $q;
     if ($stock_type) {
+        # print STDERR " the stock type here: = $stock_type\n";
         my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
         $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
             FROM cvterm
@@ -3001,7 +3013,7 @@ sub get_traits_assayed {
             FILTER (WHERE component_cvterm.cvterm_id IS NOT NULL), '[]'
         ) AS components
         FROM cvterm
-        LEFT JOIN cvterm_relationship on (cvterm.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = $contains_relationship_cvterm_id)
+        LEFT JOIN cvterm_relationship on (cvterm.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = ?)
         LEFT JOIN cvterm AS component_cvterm on (cvterm_relationship.subject_id = component_cvterm.cvterm_id)
         LEFT JOIN cv on (component_cvterm.cv_id = cv.cv_id)
         LEFT JOIN cvprop on (cv.cv_id = cvprop.cv_id)
@@ -3015,7 +3027,7 @@ sub get_traits_assayed {
 
     $traits_assayed_h->execute($self->get_trial_id());
     while (my ($trait_name, $trait_id, $imaging_project_id, $imaging_project_name, $count) = $traits_assayed_h->fetchrow_array()) {
-        $component_h->execute($trait_id);
+        $component_h->execute($contains_relationship_cvterm_id, $trait_id);
         my ($component_terms) = $component_h->fetchrow_array();
         $component_terms = decode_json $component_terms;
         if ($contains_composable_cv_type) {
@@ -3407,9 +3419,9 @@ sub save_plant_entries {
                     ($row_num, $col_num) = split(",", $coord_pair);
                 }
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
-                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
-                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, 
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism,
+                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm,
+                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm,
                 $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
                 $plant_index_number++;
                 $increment++;
@@ -3723,10 +3735,10 @@ sub save_plant_subplot_entries {
                     ($row_num, $col_num) = split(",", $coord_pair);
                 }
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, 
-                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, 
-                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, 
-                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, 
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism,
+                $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm,
+                $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $row_num_cvterm, $row_num, $col_num_cvterm, $col_num, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm,
+                $inherits_plot_treatments, $treatments, $plot_relationship_cvterm,
                 \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
                 $subplot_stock_id, $plant_subplot_relationship_cvterm);
                 $plant_index_number++;
