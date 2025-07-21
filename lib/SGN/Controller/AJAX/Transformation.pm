@@ -25,6 +25,7 @@ use CXGN::Transformation::Transformant;
 use CXGN::Transformation::LinkTransformationInfo;
 use DateTime;
 use List::MoreUtils qw /any /;
+use Sort::Key::Natural qw(natkeysort);
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -696,11 +697,11 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
     my $dbh = $c->dbc->dbh;
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-
     my $result = $transformation_obj->transformants();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
 
     my @transformants;
-    foreach my $r (@$result){
+    foreach my $r (@sorted_names){
         my ($stock_id, $stock_name) =@$r;
         push @transformants, {
             transformant_id => $stock_id,
@@ -721,11 +722,11 @@ sub get_obsoleted_transformants :Path('/ajax/transformation/obsoleted_transforma
     my $dbh = $c->dbc->dbh;
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-
     my $result = $transformation_obj->obsoleted_transformants();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
 
     my @obsoleted_transformants;
-    foreach my $r (@$result){
+    foreach my $r (@sorted_names){
         my ($stock_id, $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) =@$r;
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
@@ -1151,9 +1152,10 @@ sub get_related_transformants :Path('/ajax/transformation/related_transformants'
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
     my $result = $transformation_obj->transformants();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
 
     my @related_transformants;
-    foreach my $r (@$result){
+    foreach my $r (@sorted_names){
         my ($stock_id, $stock_name) =@$r;
         if ($stock_id != $transformant_stock_id) {
             push @related_transformants, {
@@ -1188,8 +1190,9 @@ sub get_control_transformants :Path('/ajax/transformation/control_transformants'
             $control_id = $transformation_control_rs->subject_id();
             my $control_transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$control_id});
             my $result = $control_transformation_obj->transformants();
+            my @sorted_names = natkeysort {($_->[1])} @$result;
 
-            foreach my $r (@$result) {
+            foreach my $r (@sorted_names) {
                 my ($stock_id, $stock_name) =@$r;
                 push @control_transformants, {
                     control_transformant_id => $stock_id,
