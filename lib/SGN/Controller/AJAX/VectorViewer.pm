@@ -27,14 +27,21 @@ sub store :Chained('vector') PathPart('store') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $data = $c->req->param('data');
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $vector_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vectorviewer_data', 'stock_property')->cvterm_id();
-    my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
-
-    my $vector_check_row = $schema->resultset("Stock::Stock")->find( { type_id => $vector_construct_cvterm_id, stock_id => $c->stash->{vector_stock_id} });
-
-    if (!$vector_check_row) {
+    if (! $c->user()) {
+	$c->stash->{rest} = { error => 'You need to be logged in to store vectors.' };
+	return;
+    }
+    
+    if ($c->user && $c->user->check_roles('curator')) { 
+   
+	my $data = $c->req->param('data');
+	my $schema = $c->dbic_schema('Bio::Chado::Schema');
+	my $vector_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vectorviewer_data', 'stock_property')->cvterm_id();
+	my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+	
+	my $vector_check_row = $schema->resultset("Stock::Stock")->find( { type_id => $vector_construct_cvterm_id, stock_id => $c->stash->{vector_stock_id} });
+	
+	if (!$vector_check_row) {
 	$c->stash->{rest} = { error => 'The vector construct with id ".$c->stash->{vector_stock_id}." does not seem to exist' };
 	return;
     }
