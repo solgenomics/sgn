@@ -272,7 +272,7 @@ sub image_metadata_store {
     my $page = $self->page;
     my $status = $self->status;
     my $dbh = $self->bcs_schema()->storage()->dbh();
-    my $page_obj = CXGN::Page->new();
+#    my $page_obj = CXGN::Page->new();
     my @image_ids;
 
     foreach my $params (@{$data}) {
@@ -561,7 +561,7 @@ sub image_data_store {
 
     foreach (@$search_result) {
         my $sgn_image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
-        my $page_obj = CXGN::Page->new();
+#        my $page_obj = CXGN::Page->new();
         my $url = $main_production_site_url.$sgn_image->get_image_url('medium');
         my $filename = $sgn_image->get_filename();
         my $size = (stat($filename))[7];

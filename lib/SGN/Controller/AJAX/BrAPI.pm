@@ -1754,9 +1754,9 @@ sub lists_GET {
 	my $brapi_module = $brapi->brapi_wrapper('Lists');
 	my $brapi_package_result;
 	if($c->config->{brapi_lists_require_login}) {
-		$brapi_package_result = $brapi_module->search($clean_inputs, $user_id, 1);
+		$brapi_package_result = $brapi_module->search($clean_inputs, $user_id, 1, $c->config->{main_production_site_url});
 	} else {
-		$brapi_package_result = $brapi_module->search($clean_inputs, undef, 0);
+		$brapi_package_result = $brapi_module->search($clean_inputs, undef, 0, $c->config->{main_production_site_url});
 	}
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1794,7 +1794,7 @@ sub list_detail_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Lists');
-	my $brapi_package_result = $brapi_module->detail($c->stash->{list_id},$user_id);
+	my $brapi_package_result = $brapi_module->detail($c->stash->{list_id},$user_id, $c->config->{main_production_site_url});
 	_standard_response_construction($c, $brapi_package_result);
 }
 
