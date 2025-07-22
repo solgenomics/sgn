@@ -91,7 +91,7 @@ sub add_propagation_project_POST :Args(0){
             propagation_project_name => $project_name,
             propagation_type => $propagation_type,
             nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id(),
-            operator_id => $user_id
+            owner_id => $user_id
         });
 
         $return = $add_propagation_project->save_propagation_project();
