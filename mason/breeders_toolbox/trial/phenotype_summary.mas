@@ -415,6 +415,7 @@ input[type="text"] {
 
             },
             error: function(response){
+                jQuery("#working_modal").modal("hide");
                 alert('Error retrieving traits assayed in this trial');
             }
 
