@@ -700,6 +700,13 @@ sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_prop
         my $updated_by = $status_info->{update_person};
         my $notes = $status_info->{update_notes};
 
+        if ($status_type eq 'Inventoried') {
+            my $inventory = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_stock_id=>$propagation_stock_id});
+            my $inventory_info = $inventory->get_associated_inventory_identifier();
+            my $inventory_identifier = $inventory_info->[1];
+            $status_type = 'Inventoried'.':'. ' '.$inventory_identifier;
+        }
+
         my $person_name= CXGN::People::Person->new($dbh, $updated_by);
         my $full_name = $person_name->get_first_name()." ".$person_name->get_last_name();
 

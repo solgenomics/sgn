@@ -41,6 +41,12 @@ has 'propagation_group_stock_id' => (
     is => 'rw',
 );
 
+has 'propagation_stock_id' => (
+    isa => "Int",
+    is => 'rw',
+);
+
+
 sub get_propagation_groups_in_project {
     my $self = shift;
     my $schema = $self->schema();
@@ -161,6 +167,26 @@ sub get_propagation_ids_in_group {
     }
 
     return \@propagation_ids;
+}
+
+
+sub get_associated_inventory_identifier {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $propagation_stock_id = $self->propagation_stock_id();
+    my @inventory_identifier_info;
+
+    my $inventory_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'inventory', 'stock_type')->cvterm_id();
+    my $propagation_inventory_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_inventory_of', 'stock_relationship')->cvterm_id();
+
+    my $propagation_inventory_relationship = $schema->resultset("Stock::StockRelationship")->find({object_id => $propagation_stock_id, type_id => $propagation_inventory_of_cvterm_id});
+    if ($propagation_inventory_relationship) {
+        my $inventory_stock_id = $propagation_inventory_relationship->subject_id();
+        my $inventory_identifier = $schema->resultset("Stock::Stock")->find ({stock_id => $inventory_stock_id})->uniquename();
+        push @inventory_identifier_info, ($inventory_stock_id, $inventory_identifier);
+    }
+
+    return \@inventory_identifier_info;
 }
 
 
