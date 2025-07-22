@@ -231,6 +231,11 @@ addToListMenu('existing_traits_to_list', 'existing_traits', {
   selectText: true,
   listType: 'traits'
 });
+jQuery(document).on('click', '#existing_traits_add_to_new_list, #new_trait_names_add_to_new_list', function () {
+  setTimeout(function () {
+    refreshListSelect('existing_traits_list_select', 'traits');
+  }, 500);
+});
 
 function updateComposeButtonState() {
     const newTraitOptions = jQuery("#new_traits option");
