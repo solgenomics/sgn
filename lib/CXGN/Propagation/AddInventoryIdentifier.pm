@@ -100,7 +100,7 @@ sub add {
             subject_id => $inventory_stock_id,
         });
     };
-    print STDERR "INVENTORY STOCK ID =".Dumper($inventory_stock_id)."\n";
+
     my $transaction_error;
     try {
         $schema->txn_do($coderef);

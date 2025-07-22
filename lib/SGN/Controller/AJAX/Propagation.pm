@@ -751,10 +751,13 @@ sub update_propagation_status_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-#    print STDERR "STOCK ID =".Dumper($propagation_stock_id)."\n";
-#    print STDERR "STATUS TYPE =".Dumper($status_type)."\n";
-#    print STDERR "STATUS NOTES =".Dumper($update_notes)."\n";
-#    print STDERR "PERSON =".Dumper($user_id)."\n";
+    if ($inventory_identifier) {
+        my $inventory_identifier_stock = $schema->resultset('Stock::Stock')->find({ uniquename => $inventory_identifier});
+        if ($inventory_identifier_stock) {
+            $c->stash->{rest} = {error => "Error: inventory identifier already exists, please use another inventory identifier!"};
+            return;
+        }
+    }
 
     my $propagation_status_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_status', 'stock_property')->cvterm_id();
     my $previous_status = $schema->resultset("Stock::Stockprop")->find( {stock_id => $propagation_stock_id, type_id => $propagation_status_cvterm_id });
@@ -776,29 +779,26 @@ sub update_propagation_status_POST : Args(0) {
     $status->store();
 
     if (!$status->store()){
-        $c->stash->{rest} = {error_string => "Error saving propagation status",};
+        $c->stash->{rest} = {error => "Error saving propagation status",};
         return;
     }
 
     my $inventory_stock_id;
     if ($status->store() && $inventory_identifier) {
-        eval {
-            my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
-                chado_schema => $schema,
-                phenome_schema => $phenome_schema,
-                dbh => $dbh,
-                propagation_stock_id => $propagation_stock_id,
-                inventory_identifier => $inventory_identifier,
-                owner_id => $user_id,
-            });
+        my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
+            chado_schema => $schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            propagation_stock_id => $propagation_stock_id,
+            inventory_identifier => $inventory_identifier,
+            owner_id => $user_id,
+        });
 
-            my $add = $add_inventory_identifier->add();
-            $inventory_stock_id = $add->{inventory_stock_id};
-        };
-
-        if ($@) {
-            $c->stash->{rest} = { success => 0, error => $@ };
-            print STDERR "An error condition occurred, was not able to create inventory identifier. ($@).\n";
+        my $add = $add_inventory_identifier->add();
+        $inventory_stock_id = $add->{inventory_stock_id};
+        print STDERR "INVENTORY STOCK ID =".Dumper($inventory_stock_id)."\n";
+        if (!$inventory_stock_id) {
+            $c->stash->{rest} = {error => "Error saving Inventory Identifier!",};
             return;
         }
     }

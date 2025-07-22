@@ -117,7 +117,7 @@ jQuery(document).ready(function(){
                     jQuery('#propagation_update_saved_dialog').modal('show');
                     jQuery('#update_propagation_status_dialog').modal('hide');
                 }
-                if (response.error_string) {
+                if (response.error) {
                     alert(response.error);
                 }
             },
