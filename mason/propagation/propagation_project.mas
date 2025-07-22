@@ -47,3 +47,4 @@ $propagation_type
 
 <& /breeders_toolbox/folder/folder_set.mas, project_type => 'propagation_project', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type => 'propagation_project', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
+<& /propagation/edit_propagation_project_details_dialog.mas, trial_name => $trial_name, breeding_program_id => $breeding_program_id, location_id => $location_id, year => $year, trial_description => $trial_description &>
