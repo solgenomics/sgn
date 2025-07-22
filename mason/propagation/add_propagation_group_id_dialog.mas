@@ -2,6 +2,7 @@
 $trial_id
 $trial_name
 $breeding_program_name
+$date
 
 </%args>
 
@@ -72,9 +73,9 @@ $breeding_program_name
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Date: </label>
+                            <label class="col-sm-4 control-label">Date (YYYY-MM-DD): </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" id="propagation_date" placeholder="YYYY/MM/DD">
+                                <input class="form-control" name="propagation_date" id="propagation_date" value="<%$date%>">
                             </div>
                         </div>
                         <div class="form-group">

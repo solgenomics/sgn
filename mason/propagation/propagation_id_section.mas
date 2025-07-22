@@ -30,7 +30,7 @@ $propagation_group_stock_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="reset" id="close_update_propagation_status_dialog" name="close_update_propagation_status_dialog" class="btn btn-default" >Close</button>
                 <button id="update_propagation_status_button" type="button" class="btn btn-primary" >Update</button>
             </div>
         </div>
@@ -132,10 +132,10 @@ jQuery(document).ready(function(){
         location.reload();
     });
 
-
-
-
-
+    jQuery("#close_update_propagation_status_dialog").click(function() {
+        jQuery("#update_propagation_status_dialog").modal('hide');
+        location.reload();
+    });
 
 });
 

@@ -117,7 +117,7 @@ $trial_name
                         <li>propagation_group_identifier (must be globally unique and must not exist in the database )</li>
                         <li>accession_name (must exist as <b>uniquenames</b> in the database)</li>
                         <li>material_type (must be one of the following: plant, seed, budwood, tissue_culture. If you would like to add additional types, please contact us.)</li>
-                        <li>date (propagation initiation date)</li>
+                        <li>date (propagation initiation date YYYY-MM-DD)</li>
                         <li>description</li>
                         <li>operator_name</li>
                     </ul>

@@ -443,6 +443,10 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my $propagation_type = $propagation_type_rs->value;
         $c->stash->{propagation_type} = $propagation_type;
 
+        my $time = DateTime->now();
+        my $date = $time->ymd();
+        $c->stash->{date} = $date;
+
         $c->stash->{template} = '/propagation/propagation_project.mas';
     }
 
