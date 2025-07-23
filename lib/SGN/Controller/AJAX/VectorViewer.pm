@@ -28,20 +28,24 @@ sub store :Chained('vector') PathPart('store') Args(0) {
     my $c = shift;
 
     if (! $c->user()) {
-	$c->stash->{rest} = { error => 'You need to be logged in to store vectors.' };
+	$c->stash->{rest} = { error => 'You need to be logged in with corresponding privileges to store vectors.' };
 	return;
     }
     
-    if ($c->user && $c->user->check_roles('curator')) { 
-   
-	my $data = $c->req->param('data');
-	my $schema = $c->dbic_schema('Bio::Chado::Schema');
-	my $vector_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vectorviewer_data', 'stock_property')->cvterm_id();
-	my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
-	
-	my $vector_check_row = $schema->resultset("Stock::Stock")->find( { type_id => $vector_construct_cvterm_id, stock_id => $c->stash->{vector_stock_id} });
-	
-	if (!$vector_check_row) {
+    if ($c->user && ! $c->user->check_roles('curator')) {
+
+	$c->stash->{rest} = { error => 'You do not have the privileges to store vectors.' };
+	return;
+    }
+    
+    my $data = $c->req->param('data');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $vector_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vectorviewer_data', 'stock_property')->cvterm_id();
+    my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+    
+    my $vector_check_row = $schema->resultset("Stock::Stock")->find( { type_id => $vector_construct_cvterm_id, stock_id => $c->stash->{vector_stock_id} });
+    
+    if (!$vector_check_row) {
 	$c->stash->{rest} = { error => 'The vector construct with id ".$c->stash->{vector_stock_id}." does not seem to exist' };
 	return;
     }
@@ -82,12 +86,22 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $vector_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vectorviewer_data', 'stock_property')->cvterm_id();
 
+    if (! $c->user()) {
+	$c->stash->{rest} = { error => 'You need to be logged in to view vector data.' };
+	return;
+    }
+
     my $row = $schema->resultset("Stock::Stockprop")->find(
 	{
 	    stock_id => $c->stash->{vector_stock_id},
 	    type_id => $vector_data_cvterm_id,
 	});
 
+    if (! defined($row)) {
+	$c->stash->{rest} = { error => 'The vector information you are trying to access does not exist.' };
+	return;
+    }
+    
     my $data = $row->value_jsonb();
 
     print STDERR "RETRIEVED DATA: $data\n";
