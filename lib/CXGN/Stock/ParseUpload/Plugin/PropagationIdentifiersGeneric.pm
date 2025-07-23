@@ -19,12 +19,12 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'propagation_group_identifier', 'propagation_identifier'],
-        optional_columns => [ 'rootstock', 'status', 'status_date', 'status_note', 'status_updated_by', 'inventory_identifier'],
+        optional_columns => [ 'rootstock', 'status', 'status_date', 'status_notes', 'status_updated_by', 'inventory_identifier'],
         column_aliases => {
             'propagation_group_identifier' => ['propagation group identifier'],
             'propagation_identifier' => ['propagation identifier'],
             'status_date' => ['status date'],
-            'status_note' => ['status note'],
+            'status_notes' => ['status notes'],
             'status_updated_by' => ['status updated by'],
             'inventory_identifier' => ['inventory identifier'],
         }
@@ -138,7 +138,7 @@ sub _parse_with_plugin {
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'rootstock'} = $row->{'rootstock'};
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status'} = $row->{'status'};
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_date'} = $row->{'status_date'};
-        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_note'} = $row->{'status_note'};
+        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_notes'} = $row->{'status_notes'};
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_updated_by'} = $row->{'status_updated_by'};
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'inventory_identifier'} = $row->{'inventory_identifier'};
 

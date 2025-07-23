@@ -398,6 +398,8 @@ sub add_propagation_identifier_POST :Args(0){
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $person_name= CXGN::People::Person->new($dbh, $user_id);
+    my $full_name = $person_name->get_first_name()." ".$person_name->get_last_name();
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession', 'stock_type')->cvterm_id();
 
@@ -438,7 +440,7 @@ sub add_propagation_identifier_POST :Args(0){
         });
 
         $status->status_type('In Progress');
-        $status->update_person($user_id);
+        $status->update_person($full_name);
         $status->update_date($update_date);
 
         $status->store();
@@ -511,6 +513,8 @@ sub upload_propagation_identifiers_POST : Args(0) {
         $c->detach();
     }
 
+    my $person_name= CXGN::People::Person->new($dbh, $user_id);
+    my $full_name = $person_name->get_first_name()." ".$person_name->get_last_name();
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -561,7 +565,13 @@ sub upload_propagation_identifiers_POST : Args(0) {
 
             my $propagation_id_info = $parsed_data->{$group_id};
             foreach my $propagation_identifier (sort keys %$propagation_id_info) {
-                my $rootstock_name = $propagation_id_info->{$propagation_identifier};
+                my $rootstock_name = $propagation_id_info->{$propagation_identifier}->{'rootstock'};
+                my $status = $propagation_id_info->{$propagation_identifier}->{'status'};
+                my $status_date = $propagation_id_info->{$propagation_identifier}->{'status_date'};
+                my $status_notes = $propagation_id_info->{$propagation_identifier}->{'status_notes'};
+                my $status_updated_by = $propagation_id_info->{$propagation_identifier}->{'status_updated_by'};
+                my $inventory_identifier = $propagation_id_info->{$propagation_identifier}->{'inventory_identifier'};
+
                 my $add_propagation_identifier = CXGN::Propagation::AddPropagationIdentifier->new({
                     chado_schema => $schema,
                     phenome_schema => $phenome_schema,
@@ -580,20 +590,51 @@ sub upload_propagation_identifiers_POST : Args(0) {
                     return;
                 }
 
-                my $status = CXGN::Propagation::Status->new({
-                    bcs_schema => $schema,
-                    parent_id => $propagation_stock_id,
-                });
+                if (!$status) {
+                    $status = 'In Progress';
+                }
+                if (!$status_date) {
+                    $status_date = $update_date;
+                }
+                if (!$status_updated_by) {
+                    $status_updated_by = $full_name;
+                }
 
-                $status->status_type('In Progress');
-                $status->update_person($user_id);
-                $status->update_date($update_date);
+                if ($propagation_stock_id)  {
+                    my $status = CXGN::Propagation::Status->new({
+                        bcs_schema => $schema,
+                        parent_id => $propagation_stock_id,
+                    });
 
-                $status->store();
+                    $status->status_type($status);
+                    $status->update_person($status_updated_by);
+                    $status->update_date($status_date);
+                    $status->update_notes($status_notes);
+                    $status->store();
 
-                if (!$status->store()){
-                    $c->stash->{rest} = {error => "Error saving new propagation identifier",};
-                    return;
+                    if (!$status->store()){
+                        $c->stash->{rest} = {error => "Error saving new propagation identifier",};
+                        return;
+                    }
+
+                    if (($status eq 'Inventoried') && $inventory_identifier) {
+                        my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
+                            chado_schema => $schema,
+                            phenome_schema => $phenome_schema,
+                            dbh => $dbh,
+                            propagation_stock_id => $propagation_stock_id,
+                            inventory_identifier => $inventory_identifier,
+                            owner_id => $user_id,
+                        });
+
+                        my $add = $add_inventory_identifier->add();
+                        my $inventory_stock_id = $add->{inventory_stock_id};
+                        print STDERR "INVENTORY STOCK ID =".Dumper($inventory_stock_id)."\n";
+                        if (!$inventory_stock_id) {
+                            $c->stash->{rest} = {error => "Error saving Inventory Identifier!",};
+                            return;
+                        }
+                    }
                 }
             }
         }
@@ -656,9 +697,6 @@ sub get_active_propagation_ids_in_group :Path('/ajax/propagation/active_propagat
         my $updated_date = $status_info->{update_date};
         my $updated_by = $status_info->{update_person};
 
-        my $person_name= CXGN::People::Person->new($dbh, $updated_by);
-        my $full_name = $person_name->get_first_name()." ".$person_name->get_last_name();
-
         if ($status_type eq 'In Progress') {
             push @propagations, {
                 propagation_stock_id => $propagation_stock_id,
@@ -669,7 +707,7 @@ sub get_active_propagation_ids_in_group :Path('/ajax/propagation/active_propagat
                 rootstock_name => $rootstock_name,
                 propagation_status => $status_type,
                 updated_date => $updated_date,
-                updated_by => $full_name,
+                updated_by => $updated_by,
             };
         }
     }
@@ -707,9 +745,6 @@ sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_prop
             $status_type = 'Inventoried'.':'. ' '.$inventory_identifier;
         }
 
-        my $person_name= CXGN::People::Person->new($dbh, $updated_by);
-        my $full_name = $person_name->get_first_name()." ".$person_name->get_last_name();
-
         if ($status_type ne 'In Progress') {
             push @propagations, {
                 propagation_stock_id => $propagation_stock_id,
@@ -720,7 +755,7 @@ sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_prop
                 rootstock_name => $rootstock_name,
                 propagation_status => $status_type,
                 updated_date => $updated_date,
-                updated_by => $full_name,
+                updated_by => $updated_by,
                 notes => $notes
             };
         }
@@ -755,6 +790,9 @@ sub update_propagation_status_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
     }
 
+    my $person_name= CXGN::People::Person->new($dbh, $user_id);
+    my $full_name = $person_name->get_first_name()." ".$person_name->get_last_name();
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
@@ -780,7 +818,7 @@ sub update_propagation_status_POST : Args(0) {
     });
 
     $status->status_type($status_type);
-    $status->update_person($user_id);
+    $status->update_person($full_name);
     $status->update_date($update_date);
     $status->update_notes($update_notes);
     $status->store();
