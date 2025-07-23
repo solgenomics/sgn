@@ -417,51 +417,54 @@ sub search {
 
     my @vectorprop_filtered_stock_ids;
 
-    if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
+    # if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
 
-        my @stockprop_wheres;
-        foreach my $term_name (keys %{$self->stockprops_values}){
-            my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
-            if ($property_term){
-                my $matchtype = $self->stockprops_values->{$term_name}->{'matchtype'};
-                my $value = $self->stockprops_values->{$term_name}->{'value'};
+    #     my @stockprop_wheres;
+    #     foreach my $term_name (keys %{$self->stockprops_values}){
+    #         my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
+    #         if ($property_term){
+    #             my $matchtype = $self->stockprops_values->{$term_name}->{'matchtype'};
+    #             my $value = $self->stockprops_values->{$term_name}->{'value'};
 
-                my $start = '%';
-                my $end = '%';
-                if ( $matchtype eq 'exactly' ) {
-                    $start = '%"';
-                    $end = '"%';
-                } elsif ( $matchtype eq 'starts_with' ) {
-                    $start = '';
-                } elsif ( $matchtype eq 'ends_with' ) {
-                    $end = '';
-                }
-                my $search = "'$start$value$end'";
-                if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
-                    $search =~ tr/*?/%_/;
-                }
+    #             my $start = '%';
+    #             my $end = '%';
+    #             if ( $matchtype eq 'exactly' ) {
+    #                 $start = '%"';
+    #                 $end = '"%';
+    #             } elsif ( $matchtype eq 'starts_with' ) {
+    #                 $start = '';
+    #             } elsif ( $matchtype eq 'ends_with' ) {
+    #                 $end = '';
+    #             }
+    #             my $search = "'$start$value$end'";
+    #             if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
+    #                 $search =~ tr/*?/%_/;
+    #             }
 
-                if ( $matchtype eq 'one of' ) {
-                    my @values = split ',', $value;
-                    my $search_vals_sql = "'".join ("','" , @values)."'";
-                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
-                } else {
-                    push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
-                }
+    #             # if ( $matchtype eq 'one of' ) {
+    #             #     my @values = split ',', $value;
+    #             #     my $search_vals_sql = "'".join ("','" , @values)."'";
+    #             #     push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
+    #             # } else {
+    #             #     push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
+    #             # }
 
-            } else {
-                print STDERR "Stockprop $term_name is not in this database! Only use stock_property in sgn_local configuration!\n";
-            }
-        }
-        my $stockprop_where = 'WHERE ' . join ' OR ', @stockprop_wheres;
+    #         } else {
+    #             print STDERR "Stockprop $term_name is not in this database! Only use stock_property in sgn_local configuration!\n";
+    #         }
+    #     }
+    #     my $stockprop_where = 'WHERE ' . join ' OR ', @stockprop_wheres;
 
-        my $stockprop_query = "SELECT stock_id FROM materialized_stockprop $stockprop_where;";
-        my $h = $schema->storage->dbh()->prepare($stockprop_query);
-        $h->execute();
-        while (my $stock_id = $h->fetchrow_array()) {
-            push @vectorprop_filtered_stock_ids, $stock_id;
-        }
-    }
+    #     my $stockprop_query = "SELECT stock_id FROM materialized_stockprop $stockprop_where;";
+
+    # 	print STDERR "STOCKPROPQUERY = $stockprop_query\n";
+	
+    #     my $h = $schema->storage->dbh()->prepare($stockprop_query);
+    #     $h->execute();
+    #     while (my $stock_id = $h->fetchrow_array()) {
+    #         push @vectorprop_filtered_stock_ids, $stock_id;
+    #     }
+    # }
 
     if ($stock_type_search == $stock_type_id){
         $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
@@ -580,6 +583,10 @@ sub search {
 
         my $stockprop_select_sql .= ', "' . join ('","', @stockprop_view) . '"';
         my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
+
+	print STDERR "STOCKPROP QUERY = $stockprop_query\n";
+
+	
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
@@ -621,6 +628,8 @@ sub _refresh_materialized_stockprop {
     eval {
         my $stockprop_select_sql .= ', "' . join ('","', @$stockprop_view) . '"';
         my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop;";
+
+	print STDERR "STOCKPROP_QUERY = $stockprop_query\n";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
     };
@@ -650,6 +659,8 @@ sub _refresh_materialized_stockprop {
         FROM crosstab(
         'SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, jsonb_object_agg(stockprop.value, stockprop.rank) FROM public.stockprop JOIN public.stock USING(stock_id) JOIN public.cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) GROUP BY (stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id) ORDER by stockprop.stock_id ASC',
         'SELECT type_id FROM (VALUES ";
+
+	print STDERR "STOCKPROP REFRESH QUERY: $stockprop_refresh_q\n";
         my @stockprop_ids_sql;
         foreach (@stock_props) {
             push @stockprop_ids_sql, "(''".SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_property')->cvterm_id()."'')";
