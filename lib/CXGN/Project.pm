@@ -2262,15 +2262,15 @@ sub delete_field_layout {
     my $cxgn_project_type = $self->get_cxgn_project_type()->{cxgn_project_type};
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
-        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+        return 'This field trial has been linked to genotyping trials already, and cannot be deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
-        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+        return 'This genotyping trial has been linked to field trials already, and cannot be deleted.';
     }
 
     if ($cxgn_project_type ne 'analysis_project') {
         if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
-            return 'This field trial has been linked to crossing experiments already, and cannot be easily deleted.';
+            return 'This field trial has been linked to crossing experiments already, and cannot be deleted.';
         }
     }
 
@@ -2404,15 +2404,15 @@ sub delete_metadata {
     my $cxgn_project_type = $self->get_cxgn_project_type()->{cxgn_project_type};
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
-        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+        return 'This field trial has been linked to genotyping trials already, and cannot be deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
-        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+        return 'This genotyping trial has been linked to field trials already, and cannot be deleted.';
     }
 
     if ($cxgn_project_type ne 'analysis_project') {
         if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
-            return 'This field trial has been linked to crossing experiments already, and cannot be easily deleted.';
+            return 'This field trial has been linked to crossing experiments already, and cannot be deleted.';
         }
     }
 
@@ -2592,10 +2592,10 @@ sub delete_project_entry {
     }
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
-        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+        return 'This field trial has been linked to genotyping trials already, and cannot be deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
-        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+        return 'This genotyping trial has been linked to field trials already, and cannot be deleted.';
     }
 
     my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {

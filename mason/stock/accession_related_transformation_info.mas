@@ -78,7 +78,7 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'searching' : false,
         'dom': 'rtip',
-        'ordering': false,
+        'order': false,
         'paging': false,
         'info': false,
     });
@@ -86,6 +86,7 @@ jQuery(document).ready(function(){
     const related_transformants_table = jQuery('#related_transformants_table').DataTable({
         'ajax': '/ajax/transformation/related_transformants/'+stock_id,
         'autoWidth': false,
+        'order': false,
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.related_transformant_id+"/view'>"+row.related_transformant_name+"</a>"; } },
         ],
@@ -114,6 +115,7 @@ jQuery(document).ready(function(){
     const control_transformants_table = jQuery('#control_transformants_table').DataTable({
         'ajax': '/ajax/transformation/control_transformants/'+stock_id,
         'autoWidth': false,
+        'order': false,
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.control_transformant_id+"/view'>"+row.control_transformant_name+"</a>"; } },
         ],
