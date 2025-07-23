@@ -387,7 +387,13 @@ sub design_info_view {
         $design_info_html .= "<dt>Number of reps</dt><dd>".scalar(keys %rep_hash)."</dd>";
     }
 
-    $design_info_html .= "<dt>Treatments:</dt><dd><div id='trial_design_confirm_treatments' >$treatment_info_string</div></dd>";
+    if ($treatment_info_string) {
+        $design_info_html .= "<dt>Treatments:</dt><dd><div id='trial_design_confirm_treatments' >$treatment_info_string</div></dd>";
+    } else {
+        $design_info_html .= "<dt>Treatments:</dt><dd><div id='trial_design_confirm_treatments' >None added. Treatments and management regimes can be added on the trial detail page.</div></dd>";
+    }
+
+    
 
     $design_info_html .= "</dl>";
 

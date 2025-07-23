@@ -731,7 +731,7 @@ $design_types => ()
 
                     <b>Treatments:</b>
                     <ul>
-                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). The value for each plot should be 1 if the treatment was applied or empty.)</li>
+                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). The name of the column should be in the form <i>treatment_name|treatment_id</i>, such as <i>light intensity|TREATMENT:00000001</i>. Consult the treatment search page for treatment names and IDs.)</li>
                     </ul>
 
                     <hr />
@@ -839,7 +839,7 @@ $design_types => ()
 
                     <b>Treatments:</b>
                     <ul>
-                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty if not applied.)</li>
+                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). The name of the column should be in the form <i>treatment_name|treatment_id</i>, such as <i>light intensity|TREATMENT:00000001</i>. Consult the treatment search page for treatment names and IDs.)</li>
                     </ul>
 
                     <hr />

@@ -7,7 +7,7 @@ $trial_id
 
 <div id="trial_treatments_html">
 </div>
-<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatment</button>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatments</button>
 
 <script>
 

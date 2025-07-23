@@ -6,95 +6,100 @@
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTrialDesignTreatmentsDialog">Add Treatment to Design</h4>
+                <h4 class="modal-title" id="addTrialDesignTreatmentsDialog">Upload Treatments to Design</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <form class="form-horizontal" role="form">
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="trial_upload_treatments_spreadsheet_info_format">Spreadsheet format</a>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_treatments_dialog_form" name="upload_treatments_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Treatment Name: </label>
-                            <div class="col-sm-8">
-                                <input class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="e.g. Fertilizer01_20N40P50K or Weeding01_Manual"/>
+                            <label class="col-sm-6 control-label">Upload File (.xls or .xlsx): </label>
+                            <div class="col-sm-6" >
+                                <input type="file" name="trial_upload_treatments_file" id="trial_upload_treatments_file" encoding="multipart/form-data" />
                             </div>
                         </div>
-                       <!-- <div class="form-group">
-                            <label class="col-sm-4 control-label">Treatment Description: </label>
-                            <div class="col-sm-8">
-                                <input class="form-control" id="new_treatment_description" name="new_treatment_description" type="text" placeholder="e.g. Fertilizer Brand Sprayed with 20N40P50K"/>
-                            </div>
-                        </div> 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Treatment Type: </label>
-                            
-                        </div>
-                       <div class="form-group">
-                            <label class="col-sm-4 control-label">Treatment Year: </label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="new_treatment_year" name="new_treatment_year" type="text"></select>
-                            </div>
-                        </div>-->
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Application Date: </label>
-                            <div class="col-sm-8">
-                                <input class="form-control" id="new_treatment_date" name="new_treatment_date" title="planting_date" type="text"/>
+                            <label class="col-sm-6 control-label">Subplots, Plants, and Tissue Samples <br>Inherit Treatment(s) From Plots: </label>
+                            <div class="col-sm-6" >
+                                <input name="upload_treatments_inherit_treatments" id="upload_treatments_inherit_treatments" type="checkbox" checked disabled/>
                             </div>
                         </div>
-                        <!-- <div class="form-group">
-                            <label class="col-sm-4 control-label">Applied To: </label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="new_treatment_unit" name="new_treatment_unit">
-                                    <option value='plot'>Plots</option>
-                                    <option value='plant'>Plants</option>
-                                    <option value='subplot'>Subplots</option>
-                                </select>
-                            </div>
-                        </div> -->
-                    </form>
+                    </form><br/>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" id="new_trial_add_treatments_continue" >Continue</button>
+                <button type="button" class="btn btn-info" id="new_trial_add_treatments_submit" >Submit</button> <!-- used to be continue -->
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="trial_design_add_treatment_select" name="trial_design_add_treatment_select" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignTreatmentSelectDialog">
-    <div class="modal-dialog modal-xl" role="document">
+<div class="modal fade" id="upload_treatments_spreadsheet_info_dialog" name="upload_treatments_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTreatmentsInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTrialDesignTreatmentSelectDialog">Add Treatment to Design</h4>
+                <h4 class="modal-title" id="uploadTreatmentsInfoDialog">Upload Template Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <div id="trial_design_add_treatment_select_html"></div>
+                    <b>This is for recording treatments in a project.</b>
+                    <br/>
+                    <b>Treatments may be uploaded in an Excel spreadsheet (.xls or .xlsx)</b>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>plot_name OR subplot_name OR plant_name OR tissue_sample_name</td>
+                                <td>treatment_name|treatment_id</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <br/>
+                    - plot_name OR subplot_name OR plant_name OR tissue_sample_name (must exist in the database already)
+                    <br>
+                    At whatever level the treatment is applied, it will propagate downward to child stocks.
+                    <br />
+                    - treatment_name|treatment_id
+                    <br>
+                    For example, a hypothetical treatment titled "light intensity" would be expressed as <i>light intensity|TREATMENT:0000001</i>. There may be one or more of this column to represent multiple treatments.
+
+                    <br>
+                    <b>Optional fields:</b>
+                    <br>
+                    - timestamp
+                    <br>
+                    The timestamp represents the application date of the treatment, and is optional. The timestamp should be in the format <i>YYYY-MM-DD HH:MM:SS-0000</i> or <i>YYYY-MM-DD HH:MM:SS+0000</i>. The treatment can also be applied multiple times to the same stock by using different timestamps. 
+
                 </div>
             </div>
             <div class="modal-footer">
-                Apply Treatments to Plants and Subplots and Tissue Samples (if available): <input type="checkbox" id="new_trial_add_treatments_apply_to_plants" checked disabled /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <button type="button" class="btn btn-info" id="new_trial_add_treatments_submit" >Continue</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_upload_treatments_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-jQuery(document).ready(function(){
-    get_select_box('years', 'new_treatment_year', {'auto_generate': 1 });
-    var treatment_date_element = jQuery("#new_treatment_date");
-    set_daterangepicker_default (treatment_date_element);
-    jQuery('input[title="planting_date"]').daterangepicker(
-        {
-            "singleDatePicker": true,
-            "showDropdowns": true,
-            "autoUpdateInput": false,
-        },
-        function(start){
-            treatment_date_element.val(start.format('MM/DD/YYYY'));
-        }
-    );
+jQuery(document).ready(function () {
+    jQuery('#trial_upload_treatments_spreadsheet_info_format').click( function () {
+        jQuery('#upload_treatments_spreadsheet_info_dialog').modal("show");
+    });
 });
 </script>

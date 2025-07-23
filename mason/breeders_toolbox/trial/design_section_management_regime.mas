@@ -7,13 +7,13 @@ $user_can_modify => undef
 <div class="well well-sm">
     This is a test. Something like a table will go here. 
 
-    <table id="field_management_regime_table">
+    <table id="management_regime_table">
     </table>
 
     <br>
     
 % if ($user_can_modify) {
-    <button id="edit_management_regime" class="btn btn-sm btn-primary">Add field management factor</button>
+    <button id="edit_management_regime" class="btn btn-sm btn-primary">Add management factor</button>
 % }
 
     

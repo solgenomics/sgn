@@ -26,7 +26,7 @@ $user_can_modify => undef
 
 % }
 
-  <&| /page/info_section.mas, id => "field_management_regime", title=> 'Field Management Regime', subtitle => '<div class="col-sm-4"><div id="field_management_factors"></div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>
+  <&| /page/info_section.mas, id => "management_regime", title=> 'Management Regime', subtitle => '<div class="col-sm-4"><div id="management_factors">How this trial was managed</div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
       <& /breeders_toolbox/trial/design_section_management_regime.mas, trial_id => $trial_id,management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
 

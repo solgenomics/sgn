@@ -891,7 +891,6 @@ rect.bordered {
 
                                 <br/>
                                 <center>
-                                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Treatment(s) to Design</button>
                                 <button type="button" class="btn btn-lg btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm (Saves Trial In Database)</button>
                                 </center>
 
