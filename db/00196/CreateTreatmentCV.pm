@@ -3,11 +3,11 @@
 
 =head1 NAME
 
-AddFieldManagementRegimeProjectProp.pm
+CreateTreatmentCV.pm
 
 =head1 SYNOPSIS
 
-mx-run AddFieldManagementRegimeProjectProp [options] -H hostname -D dbname -u username [-F]
+mx-run CreateTreatmentCV [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddFieldManagementRegimeProjectProp;
+package CreateTreatmentCV;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
@@ -38,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 use Bio::Chado::Schema;
 
 has '+description' => ( default => <<'' );
-Adds a projectprop to store field management data. Replaces field management factors, which were deprecated and separated into treatments and field management regimes.
+Creates a controlled vocabulary for treatments. Paired with an ontology that tracks treatments like traits. 
 
 has '+prereq' => (
     default => sub {
@@ -58,23 +58,23 @@ sub patch {
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
         
     print STDERR "INSERTING CV TERMS...\n";
+
+    my $check_treatment_cv_exists = "SELECT * FROM cv WHERE name='treatment'";
     
-    my $terms = { 
-        project_property => 
-            [
-             "field_management_regime",
-            ],
-    };
-    
-    foreach my $t (sort keys %$terms){
-        foreach (@{$terms->{$t}}){
-            $schema->resultset("Cv::Cvterm")->create_with(
-                {
-                    name => $_,
-                    cv => $t
-                });
-        }
+    my $h = $schema->storage->dbh()->prepare($check_treatment_cv_exists);
+    $h->execute();
+
+    my $row = $h->fetchrow_array();
+
+    if (defined($row)) {
+        print STDERR "Patch already run\n";
+    } else {
+        my $insert_treatment_cv = "INSERT INTO cv (name, definition) 
+        VALUES ('treatment', 'Experimental treatments applied to some of the stocks in a project. Distinct from management factors/management regimes.');";
+
+        $schema->storage->dbh()->do($insert_treatment_cv);
     }
+
     print STDERR "Patch complete\n";
 }
 
