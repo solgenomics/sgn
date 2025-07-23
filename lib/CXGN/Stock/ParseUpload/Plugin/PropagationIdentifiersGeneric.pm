@@ -19,10 +19,14 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'propagation_group_identifier', 'propagation_identifier'],
-        optional_columns => [ 'rootstock'],
+        optional_columns => [ 'rootstock', 'status', 'status_date', 'status_note', 'status_updated_by', 'inventory_identifier'],
         column_aliases => {
             'propagation_group_identifier' => ['propagation group identifier'],
             'propagation_identifier' => ['propagation identifier'],
+            'status_date' => ['status date'],
+            'status_note' => ['status note'],
+            'status_updated_by' => ['status updated by'],
+            'inventory_identifier' => ['inventory identifier'],
         }
     );
 
@@ -48,9 +52,18 @@ sub _validate_with_plugin {
         return;
     }
 
+    my %supported_status_types;
+    $supported_status_types{'Inventoried'} = 1;
+    $supported_status_types{'Distributed'} = 1;
+    $supported_status_types{'Planted in Trial'} = 1;
+    $supported_status_types{'Dead'} = 1;
+    $supported_status_types{'Disposed'} = 1;
+
     my $seen_propagation_group_identifiers = $parsed_values->{'propagation_group_identifier'};
     my $seen_propagation_identifiers = $parsed_values->{'propagation_identifier'};
     my $seen_rootstocks = $parsed_values->{'rootstock'};
+    my $seen_statuses = $parsed_values->{'status'};
+    my $seen_inventory_identifiers = $parsed_values->{'inventory_identifier'};
 
     my $propagation_group_id_validator = CXGN::List::Validate->new();
     my @propagation_group_ids_missing = @{$propagation_group_id_validator->validate($schema,'propagation_groups', $seen_propagation_group_identifiers)->{'missing'}};
@@ -85,6 +98,23 @@ sub _validate_with_plugin {
         }
     }
 
+    if (scalar(@$seen_statuses) > 0) {
+        foreach my $type (@$seen_statuses) {
+            if (!exists $supported_status_types{$type}) {
+                push @error_messages, "Status type not supported: $type. Status type should be 'Inventoried', 'Distributed', 'Planted in Trial', 'Dead', 'Disposed'";
+            }
+        }
+    }
+
+    if (scalar(@$seen_inventory_identifiers) > 0) {
+        my $inventory_rs = $schema->resultset("Stock::Stock")->search({
+            'uniquename' => { -in => $seen_inventory_identifiers }
+        });
+        while (my $r=$inventory_rs->next){
+            push @error_messages, "Inventory Identifier already exists in database: ".$r->uniquename;
+        }
+    }
+
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
@@ -105,7 +135,13 @@ sub _parse_with_plugin {
     my $propagation_identifier_info = {};
 
     foreach my $row (@$parsed_data) {
-        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}} = $row->{'rootstock'};
+        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'rootstock'} = $row->{'rootstock'};
+        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status'} = $row->{'status'};
+        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_date'} = $row->{'status_date'};
+        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_note'} = $row->{'status_note'};
+        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_updated_by'} = $row->{'status_updated_by'};
+        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'inventory_identifier'} = $row->{'inventory_identifier'};
+
     }
 
     $self->_set_parsed_data($propagation_identifier_info);
