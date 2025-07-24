@@ -100,20 +100,24 @@ sub _validate_with_plugin {
         }
     }
 
-    if (scalar(@$seen_status_types) > 0) {
-        foreach my $type (@$seen_status_types) {
-            if (!exists $supported_status_types{$type}) {
-                push @error_messages, "Status type not supported: $type. Status type should be 'In Progress', 'Inventoried', 'Distributed', 'Planted in Trial', 'Dead', 'Disposed'";
+    if ($seen_status_types) {
+        if (scalar(@$seen_status_types) > 0) {
+            foreach my $type (@$seen_status_types) {
+                if (!exists $supported_status_types{$type}) {
+                    push @error_messages, "Status type not supported: $type. Status type should be 'In Progress', 'Inventoried', 'Distributed', 'Planted in Trial', 'Dead', 'Disposed'";
+                }
             }
         }
     }
 
-    if (scalar(@$seen_inventory_identifiers) > 0) {
-        my $inventory_rs = $schema->resultset("Stock::Stock")->search({
-            'uniquename' => { -in => $seen_inventory_identifiers }
-        });
-        while (my $r=$inventory_rs->next){
-            push @error_messages, "Inventory Identifier already exists in database: ".$r->uniquename;
+    if ($seen_inventory_identifiers) {
+        if (scalar(@$seen_inventory_identifiers) > 0) {
+            my $inventory_rs = $schema->resultset("Stock::Stock")->search({
+                'uniquename' => { -in => $seen_inventory_identifiers }
+            });
+            while (my $r=$inventory_rs->next){
+                push @error_messages, "Inventory Identifier already exists in database: ".$r->uniquename;
+            }
         }
     }
 

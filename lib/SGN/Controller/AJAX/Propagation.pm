@@ -607,7 +607,9 @@ sub upload_propagation_identifiers_POST : Args(0) {
                     $status->status_type($status_type);
                     $status->update_person($status_updated_by);
                     $status->update_date($status_date);
-                    $status->update_notes($status_notes);
+                    if ($status_notes) {
+                        $status->update_notes($status_notes);
+                    }
                     $status->store();
                     if (!$status->store()){
                         $c->stash->{rest} = {error => "Error saving new propagation identifier",};
