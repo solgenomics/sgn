@@ -2514,187 +2514,182 @@
 	    return this.data;
 	  }
 
-	  shape(data){
-	    data.shape = {};
-	    // Determine what information is available for each obsUnit
-	    data.plots.forEach((ou)=>{
-	      const oup = get_oup(ou);
-	      ou._X = ou.X || oup.positionCoordinateX;
-	      ou._Y = ou.Y || oup.positionCoordinateY;
-	      try {
-	        ou._geoJSON = (this.opts.useGeoJson && oup.geoCoordinates)
-	                      || null;
-	      } catch (e) {}
-	      ou._type = "";
-	      if (!isNaN(ou._X) && !isNaN(ou._Y)){
-	        if(oup.positionCoordinateXType
-	          && oup.positionCoordinateYType){
-	          if(oup.positionCoordinateXType=="GRID_ROW" && oup.positionCoordinateYType=="GRID_COL"
-	            || oup.positionCoordinateXType=="GRID_COL" && oup.positionCoordinateYType=="GRID_ROW"){
-	            ou._row = oup.positionCoordinateYType=="GRID_ROW" ? parseInt(ou._Y) : parseInt(ou._X);
-	            ou._col = oup.positionCoordinateXType=="GRID_COL" ? parseInt(ou._X) : parseInt(ou._Y);
-	          }
-	          if(oup.positionCoordinateXType=="LONGITUDE" && oup.positionCoordinateYType=="LATITUDE"){
-	            if(!ou._geoJSON) ou._geoJSON = turf.point([ou._X,ou._Y]);
-	          }
-	        }
-	        else {
-	          if(ou._X==Math.floor(ou._X) && ou._Y==Math.floor(ou._Y)){
-	            ou._row = parseInt(ou._Y);
-	            ou._col = parseInt(ou._X);
-	          }
-	          else {
-	            try {
-	              if(!ou._geoJSON) ou._geoJSON = turf.point([ou._X,ou._Y]);
-	            } catch (e) {}
-	          }
-	        }
-	      }
-	      if(ou._geoJSON){
-	        try {
-	          ou._type = turf.getType(ou._geoJSON);
-	        }
-	        catch (err) {
-	          ou._type = "invalid";
-	        }
-	      }
-	      else {
-	        ou._type = "missing";
-	      }
-	    });
-
-	    // Separate out plots with invalid / missing geojson
-	    if ( this.opts.viewOnly ) {
-	      const plots_invalid = data.plots.filter((e) => e._type === 'invalid' || e._type === 'missing');
-	      const plots_valid = data.plots.filter((e) => e._type !== 'invalid' && e._type !== 'missing');
-	      if ( plots_valid.length === 0 ) {
-	        let html = "This trial does not have any plots with geo coordinates assigned."
-	        this.missing_plots.style("display", "block");
-	        this.missing_plots.html(html);
-	        throw NO_POLYGON_ERROR;
-	      }
-	      else if ( plots_invalid.length > 0 ) {
-	        let html = "Plots with no geo coordinates:";
-	        html += "<ul style='padding-left: 25px; margin-bottom: 0'>";
-	        plots_invalid.forEach((p) => html += `<li>${p.observationUnitName}</li>`);
-	        html += "</ul>";
-	        this.missing_plots.style("display", "block");
-	        this.missing_plots.html(html);
-	      }
-	      data.plots = plots_valid;
-	    }
-
-	    // Generate a reasonable plot layout if there is missing row/col data
-	    if( data.plots.some(plot=>isNaN(plot._row)||isNaN(plot._col)) ){
-	      var lyt_width = this.layout_width(
-	        Math.round(d3.median(data.blocks,block=>block.values.length)),
-	        data.plots.length
-	      );
-	      data.plots.forEach((plot,pos)=>{
-	        let row = Math.floor(pos/lyt_width);
-	        let col = (pos%lyt_width);
-	        if (row%2==1) col = (lyt_width-1)-col;
-	        plot._col = col;
-	        plot._row = row;
-	      });
-	    }
-
-	    // Shape Plots
-	    data.plots_shaped = false;
-	    if(data.plots.every(plot=>(plot._type=="Polygon"))){
-	      // Plot shapes already exist!
-
-	      data.plots_shaped = this.opts.useGeoJson;
-	    }
-	    else if(data.plots.every(plot=>(plot._type=="Point"||plot._type=="Polygon"))){
-	      // Create plot shapes using centroid Voronoi
-			
-			var centroids = turf.featureCollection(data.plots.map((plot, pos) => {
-				return turf.centroid(plot._geoJSON)
-			}));
-
-			if (centroids.features.length === 1) {
-				//console.log("one point using buffer");
-				const buffered = turf.buffer(centroids.features[0], 100, { units: 'centimeters' });
-				data.plots[0]._geoJSON = buffered;
-				data.plots_shaped = this.opts.useGeoJson;
+	  shape(data) {
+		data.shape = {};
+	  
+		// Determine available geometry info
+		data.plots.forEach((ou) => {
+		  const oup = get_oup(ou);
+		  ou._X = ou.X || oup.positionCoordinateX;
+		  ou._Y = ou.Y || oup.positionCoordinateY;
+		  ou._originalType = (oup.geoCoordinates && oup.geoCoordinates.geometry && oup.geoCoordinates.geometry.type) ? oup.geoCoordinates.geometry.type : "missing";
+	  
+		  try {
+			ou._geoJSON = (this.opts.useGeoJson && oup.geoCoordinates) || null;
+		  } catch (e) {}
+	  
+		  ou._type = "";
+	  
+		  if (!isNaN(ou._X) && !isNaN(ou._Y)) {
+			if (oup.positionCoordinateXType && oup.positionCoordinateYType) {
+			  if ((oup.positionCoordinateXType === "GRID_ROW" && oup.positionCoordinateYType === "GRID_COL") ||
+				  (oup.positionCoordinateXType === "GRID_COL" && oup.positionCoordinateYType === "GRID_ROW")) {
+				ou._row = oup.positionCoordinateYType === "GRID_ROW" ? parseInt(ou._Y) : parseInt(ou._X);
+				ou._col = oup.positionCoordinateXType === "GRID_COL" ? parseInt(ou._X) : parseInt(ou._Y);
+			  }
+			  if (oup.positionCoordinateXType === "LONGITUDE" && oup.positionCoordinateYType === "LATITUDE") {
+				if (!ou._geoJSON) ou._geoJSON = turf.point([ou._X, ou._Y]);
+			  }
 			} else {
-				var scale_factor = 50; //prevents rounding errors
-				var scale_origin = turf.centroid(centroids);
-				centroids = turf.transformScale(centroids,scale_factor,{origin:scale_origin});
-				var bbox = turf.envelope(centroids);
-				var area = turf.area(bbox);
-				var offset = -Math.sqrt(area/data.plots.length)/1000/2;
-				
-				var convexHull = turf.convex(centroids, {units: 'kilometers'});
-				if (convexHull) {
-					var hull = turf.polygonToLine(convexHull);
-					var crop = turf.lineToPolygon(turf.lineOffset(hull, offset, {units: 'kilometers'}));
-					var voronoiBox = turf.lineToPolygon(turf.polygonToLine(turf.envelope(crop)));
-
-					var cells = turf.voronoi(centroids,{bbox:turf.bbox(voronoiBox)});
-					var cells_cropped = turf.featureCollection(cells.features.map(cell=>turf.intersect(cell,crop)));
-					cells_cropped = turf.transformScale(cells_cropped,1/scale_factor,{origin:scale_origin});
-					data.plots.forEach((plot,i)=>{
-						plot._geoJSON = cells_cropped.features[i];
-					});
-					data.plots_shaped = this.opts.useGeoJson;
-				} else {
-					console.warn("Convex hull could not be computed, invalid points");
-				}
+			  if (ou._X == Math.floor(ou._X) && ou._Y == Math.floor(ou._Y)) {
+				ou._row = parseInt(ou._Y);
+				ou._col = parseInt(ou._X);
+			  } else {
+				try {
+				  if (!ou._geoJSON) ou._geoJSON = turf.point([ou._X, ou._Y]);
+				} catch (e) {}
+			  }
 			}
-	      
-	    }
-
-	    let plot_XY_groups = {};
-	    // group by plots with the same X/Y
-	    data.plots.forEach(plot=>{
-	      plot_XY_groups[plot._col] = plot_XY_groups[plot._col] || {};
-	      plot_XY_groups[plot._col][plot._row] = plot_XY_groups[plot._col][plot._row] || {};
-	      plot_XY_groups[plot._col][plot._row]=[plot];
-	    });
-
-	    if(!data.plots_shaped){
-	      if (!this.polygon || !turf.area(this.polygon.toGeoJSON())) {
-	        throw NO_POLYGON_ERROR;
-	      }
-	      this.geoJson = this.polygon.toGeoJSON();
-	      this.polygon.remove();
-	      this.level();
-	      const bbox = turf.bbox(this.geoJson);
-	      this.opts.defaultPos = [bbox[0], bbox[3]];
-	      let plotLength = this.opts.plotLength/1000,
-	        plotWidth = this.opts.plotWidth/1000;
-	      const cols = Object.keys(plot_XY_groups).length,
-	        rows =  Object.values(plot_XY_groups).reduce((acc, col)=>{
-	          Object.keys(col).forEach((row, i)=>{
-	            if (!row) return;
-	            acc[i] = acc[i]+1 || 1;
-	          });
-	          return acc;
-	        }, []).filter(x=>x).length;
-	      plotLength = plotLength || turf.length(turf.lineString([[bbox[0], bbox[1]], [bbox[0], bbox[3]]]))/rows;
-	      plotWidth = plotWidth || turf.length(turf.lineString([[bbox[0], bbox[1]], [bbox[2], bbox[1]]]))/cols;
-	      // Use default plot shapes/positions based on X/Y positions
-	      for (let X in plot_XY_groups) {
-	        if (plot_XY_groups.hasOwnProperty(X)) {
-	          for (let Y in plot_XY_groups[X]) {
-	            if (plot_XY_groups[X].hasOwnProperty(Y)) {
-	              X = parseInt(X);
-	              Y = parseInt(Y);
-	              let polygon = this.defaultPlot(Y-1, X-1, plotWidth, plotLength);
-	              // if for some reason plots have the same x/y, split that x/y region
-	              plot_XY_groups[X][Y].forEach((plot, i)=>{
-	                plot._geoJSON = this.splitPlot(polygon, plot_XY_groups[X][Y].length, i);
-	              });
-	            }
-	          }
-	        }
-	      }
-	    }
-
-	    return data;
+		  }
+	  
+		  if (ou._geoJSON) {
+			try {
+			  ou._type = turf.getType(ou._geoJSON);
+			} catch (err) {
+			  ou._type = "invalid";
+			}
+		  } else {
+			ou._type = "missing";
+		  }
+	  
+		});
+	  
+		// Separate types
+		const plots_missing = data.plots.filter(p => p._type === "missing" || p._type === "invalid");
+		const plots_points = data.plots.filter(p => p._type === "Point");
+		const plots_polygons = data.plots.filter(p => p._type === "Polygon");
+	  
+		// Notify on missing
+		if (this.opts.viewOnly) {
+		  if (plots_polygons.length + plots_points.length === 0) {
+			let html = "This trial does not have any plots with geo coordinates assigned.";
+			this.missing_plots.style("display", "block").html(html);
+			throw NO_POLYGON_ERROR;
+		  } else if (plots_missing.length > 0) {
+			let html = "Plots with no geo coordinates:";
+			html += "<ul style='padding-left: 25px; margin-bottom: 0'>";
+			plots_missing.forEach(p => html += `<li>${p.observationUnitName}</li>`);
+			html += "</ul>";
+			this.missing_plots.style("display", "block").html(html);
+		  }
+		}
+	  
+		//Generate row/col layout if needed
+		if (data.plots.some(plot => isNaN(plot._row) || isNaN(plot._col))) {
+		  const lyt_width = this.layout_width(
+			Math.round(d3.median(data.blocks, block => block.values.length)),
+			data.plots.length
+		  );
+		  data.plots.forEach((plot, pos) => {
+			let row = Math.floor(pos / lyt_width);
+			let col = (pos % lyt_width);
+			if (row % 2 == 1) col = (lyt_width - 1) - col;
+			plot._col = col;
+			plot._row = row;
+		  });
+		}
+	  
+		//Shape Point plots into polygons
+		if (plots_points.length > 0) {
+		  const centroids = turf.featureCollection(
+			plots_points
+			.filter(p => p._geoJSON && turf.getType(p._geoJSON) === "Point")
+			.map(p => turf.centroid(convertCoordstoNumbers(p._geoJSON)))
+		);
+		  if (centroids.features.length === 1) {
+			const buffered = turf.buffer(centroids.features[0], 100, { units: 'centimeters' });
+			plots_points[0]._geoJSON = buffered;
+		  } else {
+			const scale_factor = 50;
+			const scale_origin = turf.centroid(centroids);
+			const scaled = turf.transformScale(centroids, scale_factor, { origin: scale_origin });
+			const convexHull = turf.convex(scaled);
+	  
+			if (convexHull) {
+			  const offset = -Math.sqrt(turf.area(turf.envelope(scaled)) / plots_points.length) / 1000 / 2;
+			  const hull = turf.polygonToLine(convexHull);
+			  const crop = turf.lineToPolygon(turf.lineOffset(hull, offset, { units: 'kilometers' }));
+			  const voronoiBox = turf.lineToPolygon(turf.polygonToLine(turf.envelope(crop)));
+			  const cells = turf.voronoi(scaled, { bbox: turf.bbox(voronoiBox) });
+			  const cropped = turf.featureCollection(cells.features.map(cell => turf.intersect(cell, crop)));
+			  const unscaled = turf.transformScale(cropped, 1 / scale_factor, { origin: scale_origin });
+	  
+			  plots_points.forEach((plot, i) => {
+				plot._geoJSON = unscaled.features[i];
+			  });
+			} else {
+			  console.warn("Convex hull could not be computed for points.");
+			}
+		  }
+		}
+	  
+		// Set shaped flag
+		data.plots_shaped = (plots_polygons.length + plots_points.length > 0);
+	  
+		// Layout-based fallback if nothing shaped
+		if (!data.plots_shaped) {
+		  if (!this.polygon || !turf.area(this.polygon.toGeoJSON())) {
+			throw NO_POLYGON_ERROR;
+		  }
+		  this.geoJson = this.polygon.toGeoJSON();
+		  this.polygon.remove();
+		  this.level();
+		  const bbox = turf.bbox(this.geoJson);
+		  this.opts.defaultPos = [bbox[0], bbox[3]];
+		  let plotLength = this.opts.plotLength / 1000,
+			  plotWidth = this.opts.plotWidth / 1000;
+	  
+		  // Group by X/Y
+		  let plot_XY_groups = {};
+		  data.plots.forEach(plot => {
+			plot_XY_groups[plot._col] = plot_XY_groups[plot._col] || {};
+			plot_XY_groups[plot._col][plot._row] = plot_XY_groups[plot._col][plot._row] || [];
+			plot_XY_groups[plot._col][plot._row].push(plot);
+		  });
+	  
+		  const cols = Object.keys(plot_XY_groups).length;
+		  const rows = Object.values(plot_XY_groups).reduce((acc, col) => {
+			Object.keys(col).forEach((row, i) => {
+			  if (!row) return;
+			  acc[i] = acc[i] + 1 || 1;
+			});
+			return acc;
+		  }, []).filter(x => x).length;
+	  
+		  plotLength = plotLength || turf.length(turf.lineString([[bbox[0], bbox[1]], [bbox[0], bbox[3]]])) / rows;
+		  plotWidth = plotWidth || turf.length(turf.lineString([[bbox[0], bbox[1]], [bbox[2], bbox[1]]])) / cols;
+	  
+		  for (let X in plot_XY_groups) {
+			if (plot_XY_groups.hasOwnProperty(X)) {
+			  for (let Y in plot_XY_groups[X]) {
+				if (plot_XY_groups[X].hasOwnProperty(Y)) {
+				  X = parseInt(X);
+				  Y = parseInt(Y);
+				  let polygon = this.defaultPlot(Y - 1, X - 1, plotWidth, plotLength);
+				  plot_XY_groups[X][Y].forEach((plot, i) => {
+					plot._geoJSON = this.splitPlot(polygon, plot_XY_groups[X][Y].length, i);
+				  });
+				}
+			  }
+			}
+		  }
+		}
+	  
+		// Final plots
+		data.plots = [...plots_polygons, ...plots_points]; // omit missing
+		return data;
 	  }
+	  
 
 	  fitBounds(feature) {
 	    let bbox = turf.bbox(feature);
@@ -2836,9 +2831,11 @@
 
 			let params = {};
 			this.plots.features.forEach((plot)=>{
+				if (plot._originalType === "Polygon") {
 					params[plot.properties.observationUnitDbId] = {
 					observationUnitPosition: {geoCoordinates: plot, observationLevel:{levelName: this.opts.brapi_levelName }}
 					};
+				}
 			});
 
 			return new Promise((resolve, reject)=> {
