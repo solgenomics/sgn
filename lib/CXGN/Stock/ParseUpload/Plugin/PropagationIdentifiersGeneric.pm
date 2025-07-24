@@ -19,10 +19,11 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'propagation_group_identifier', 'propagation_identifier'],
-        optional_columns => [ 'rootstock', 'status', 'status_date', 'status_notes', 'status_updated_by', 'inventory_identifier'],
+        optional_columns => [ 'rootstock', 'status_type', 'status_date', 'status_notes', 'status_updated_by', 'inventory_identifier'],
         column_aliases => {
             'propagation_group_identifier' => ['propagation group identifier'],
             'propagation_identifier' => ['propagation identifier'],
+            'status_type' => ['status type'],
             'status_date' => ['status date'],
             'status_notes' => ['status notes'],
             'status_updated_by' => ['status updated by'],
@@ -53,6 +54,7 @@ sub _validate_with_plugin {
     }
 
     my %supported_status_types;
+    $supported_status_types{'In Progress'} = 1;
     $supported_status_types{'Inventoried'} = 1;
     $supported_status_types{'Distributed'} = 1;
     $supported_status_types{'Planted in Trial'} = 1;
@@ -62,7 +64,7 @@ sub _validate_with_plugin {
     my $seen_propagation_group_identifiers = $parsed_values->{'propagation_group_identifier'};
     my $seen_propagation_identifiers = $parsed_values->{'propagation_identifier'};
     my $seen_rootstocks = $parsed_values->{'rootstock'};
-    my $seen_statuses = $parsed_values->{'status'};
+    my $seen_status_types = $parsed_values->{'status_type'};
     my $seen_inventory_identifiers = $parsed_values->{'inventory_identifier'};
 
     my $propagation_group_id_validator = CXGN::List::Validate->new();
@@ -98,10 +100,10 @@ sub _validate_with_plugin {
         }
     }
 
-    if (scalar(@$seen_statuses) > 0) {
-        foreach my $type (@$seen_statuses) {
+    if (scalar(@$seen_status_types) > 0) {
+        foreach my $type (@$seen_status_types) {
             if (!exists $supported_status_types{$type}) {
-                push @error_messages, "Status type not supported: $type. Status type should be 'Inventoried', 'Distributed', 'Planted in Trial', 'Dead', 'Disposed'";
+                push @error_messages, "Status type not supported: $type. Status type should be 'In Progress', 'Inventoried', 'Distributed', 'Planted in Trial', 'Dead', 'Disposed'";
             }
         }
     }
@@ -136,7 +138,7 @@ sub _parse_with_plugin {
 
     foreach my $row (@$parsed_data) {
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'rootstock'} = $row->{'rootstock'};
-        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status'} = $row->{'status'};
+        $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_type'} = $row->{'status_type'};
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_date'} = $row->{'status_date'};
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_notes'} = $row->{'status_notes'};
         $propagation_identifier_info->{$row->{'propagation_group_identifier'}}->{$row->{'propagation_identifier'}}->{'status_updated_by'} = $row->{'status_updated_by'};

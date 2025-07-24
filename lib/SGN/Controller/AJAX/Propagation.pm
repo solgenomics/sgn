@@ -47,8 +47,6 @@ sub add_propagation_project_POST :Args(0){
     my $project_description = $c->req->param('project_description');
     $project_name =~ s/^\s+|\s+$//g;
 
-    print STDERR "PROJECT NAME =".Dumper($project_name)."\n";
-
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
@@ -428,7 +426,7 @@ sub add_propagation_identifier_POST :Args(0){
         my $add = $add_propagation_identifier->add_propagation_identifier();
         $propagation_stock_id = $add->{propagation_stock_id};
     };
-    print STDERR "PROPAGATION STOCK ID =".Dumper($propagation_stock_id)."\n";
+
     if ($@) {
         $c->stash->{rest} = { success => 0, error => $@ };
         print STDERR "An error condition occurred, was not able to create propagation identifier. ($@).\n";
@@ -541,7 +539,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
 
     $parser->load_plugin('PropagationIdentifiersGeneric');
     $parsed_data = $parser->parse();
-    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
+
     if (!$parsed_data){
         my $return_error = '';
         my $parse_errors;
@@ -566,7 +564,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
             my $propagation_id_info = $parsed_data->{$group_id};
             foreach my $propagation_identifier (sort keys %$propagation_id_info) {
                 my $rootstock_name = $propagation_id_info->{$propagation_identifier}->{'rootstock'};
-                my $status = $propagation_id_info->{$propagation_identifier}->{'status'};
+                my $status_type = $propagation_id_info->{$propagation_identifier}->{'status_type'};
                 my $status_date = $propagation_id_info->{$propagation_identifier}->{'status_date'};
                 my $status_notes = $propagation_id_info->{$propagation_identifier}->{'status_notes'};
                 my $status_updated_by = $propagation_id_info->{$propagation_identifier}->{'status_updated_by'};
@@ -590,8 +588,8 @@ sub upload_propagation_identifiers_POST : Args(0) {
                     return;
                 }
 
-                if (!$status) {
-                    $status = 'In Progress';
+                if (!$status_type) {
+                    $status_type = 'In Progress';
                 }
                 if (!$status_date) {
                     $status_date = $update_date;
@@ -606,18 +604,17 @@ sub upload_propagation_identifiers_POST : Args(0) {
                         parent_id => $propagation_stock_id,
                     });
 
-                    $status->status_type($status);
+                    $status->status_type($status_type);
                     $status->update_person($status_updated_by);
                     $status->update_date($status_date);
                     $status->update_notes($status_notes);
                     $status->store();
-
                     if (!$status->store()){
                         $c->stash->{rest} = {error => "Error saving new propagation identifier",};
                         return;
                     }
 
-                    if (($status eq 'Inventoried') && $inventory_identifier) {
+                    if (($status_type eq 'Inventoried') && $inventory_identifier) {
                         my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
                             chado_schema => $schema,
                             phenome_schema => $phenome_schema,
@@ -639,7 +636,6 @@ sub upload_propagation_identifiers_POST : Args(0) {
             }
         }
     }
-
 
     $c->stash->{rest} = {success => "1",};
 }
@@ -730,7 +726,6 @@ sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_prop
     my @propagations;
     foreach my $r (@$result){
         my ($propagation_stock_id, $propagation_name, $accession_stock_id, $accession_name, $rootstock_stock_id, $rootstock_name, $status) =@$r;
-#        print STDERR "STATUS 2 =".Dumper($status)."\n";
 
         my $status_info = decode_json $status;
         my $status_type = $status_info->{status_type};
@@ -841,7 +836,7 @@ sub update_propagation_status_POST : Args(0) {
 
         my $add = $add_inventory_identifier->add();
         $inventory_stock_id = $add->{inventory_stock_id};
-        print STDERR "INVENTORY STOCK ID =".Dumper($inventory_stock_id)."\n";
+
         if (!$inventory_stock_id) {
             $c->stash->{rest} = {error => "Error saving Inventory Identifier!",};
             return;
