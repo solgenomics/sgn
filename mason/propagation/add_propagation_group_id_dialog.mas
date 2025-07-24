@@ -53,7 +53,6 @@ $date
                                     <option value="Seedlot">Seedlot</option>
                                     <option value="Plot">Plot</option>
                                     <option value="Plant">Plant</option>
-                                    <option value="Subplot">Subplot</option>
                                     <option value="Tissue Sample">Tissue Sample</option>
                                     <option value="New">New</option>
                                 </select>

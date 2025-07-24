@@ -100,6 +100,11 @@
                                 <td>propagation_group_identifier</td>
                                 <td>propagation_identifier</td>
                                 <td>rootstock</td>
+                                <td>status_type</td>
+                                <td>status_date</td>
+                                <td>status_notes</td>
+                                <td>status_updated_by</td>
+                                <td>inventory_identifier</td>
                             </tr>
                         </tbody>
                     </table>
@@ -112,7 +117,12 @@
 
                     <b>Optional fields:</b>
                     <ul>
-                        <li>rootstock (must exist in the database)</li>
+                        <li>rootstock (rootstock accession must exist in the database)</li>
+                        <li>status_type (must be one of the following:'In Progress', 'Inventoried', 'Distributed', 'Planted in Trial', 'Dead', 'Disposed')</li>
+                        <li>status_date (must be in the <b>YYYY-MM-DD</b> format)</li>
+                        <li>status_notes</li>
+                        <li>status_updated_by (person name)</li>
+                        <li>inventory_identifier (must not exist in the database and must be globally unique. If any propagation_identifier has Inventoried status type, the propagation identifier and the derived inventory identifier can be uploaded at the same time)</li>
                     </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Propagation Identifiers", optional_column => 1 &>

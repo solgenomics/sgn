@@ -65,6 +65,7 @@ sub _validate_with_plugin {
     my $seen_propagation_identifiers = $parsed_values->{'propagation_identifier'};
     my $seen_rootstocks = $parsed_values->{'rootstock'};
     my $seen_status_types = $parsed_values->{'status_type'};
+    my $seen_status_dates = $parsed_values->{'status_date'};
     my $seen_inventory_identifiers = $parsed_values->{'inventory_identifier'};
 
     my $propagation_group_id_validator = CXGN::List::Validate->new();
@@ -104,8 +105,16 @@ sub _validate_with_plugin {
         if (scalar(@$seen_status_types) > 0) {
             foreach my $type (@$seen_status_types) {
                 if (!exists $supported_status_types{$type}) {
-                    push @error_messages, "Status type not supported: $type. Status type should be 'In Progress', 'Inventoried', 'Distributed', 'Planted in Trial', 'Dead', 'Disposed'";
+                    push @error_messages, "Status type not supported: $type. Status type must be 'In Progress', 'Inventoried', 'Distributed', 'Planted in Trial', 'Dead', 'Disposed'";
                 }
+            }
+        }
+    }
+
+    if ($seen_status_dates) {
+        foreach my $status_date (@$seen_status_dates)  {
+            if (!($status_date =~ m/(\d{4})\-(\d{2})\-(\d{2})/)) {
+                push @error_messages, "$status_date is not a valid date. Dates must be YYYY-MM-DD";
             }
         }
     }
