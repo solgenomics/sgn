@@ -137,9 +137,36 @@ jQuery(document).ready(function($) {
             appendTo : propagation_group_id_dialog
         });
 
-        jQuery("#propagation_source_name").autocomplete({
-            source: '/ajax/stock/stock_autocomplete',
-            appendTo : propagation_group_id_dialog
+        jQuery("#propagation_material_source_type").change(function() {
+            let source_type = jQuery('#propagation_material_source_type').val();
+            if (source_type === 'Seedlot') {
+                jQuery("#propagation_source_name").autocomplete({
+                    source: '/ajax/stock/seedlot_name_autocomplete',
+                    appendTo : propagation_group_id_dialog
+                });
+            }
+
+            if (source_type === 'Plot') {
+                jQuery("#propagation_source_name").autocomplete({
+                    source: '/ajax/stock/plot_autocomplete',
+                    appendTo : propagation_group_id_dialog
+                });
+            }
+
+            if (source_type === 'Plant') {
+                jQuery("#propagation_source_name").autocomplete({
+                    source: '/ajax/stock/plant_autocomplete',
+                    appendTo : propagation_group_id_dialog
+                });
+            }
+
+            if (source_type === 'Tissue Sample') {
+                jQuery("#propagation_source_name").autocomplete({
+                    source: '/ajax/stock/tissue_sample_autocomplete',
+                    appendTo : propagation_group_id_dialog
+                });
+            }
+
         });
 
         jQuery("#rootstock_accession_name").autocomplete({
