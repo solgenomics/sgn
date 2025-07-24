@@ -108,7 +108,7 @@ sub add_transformant {
         $vector_construct = $schema->resultset("Stock::StockRelationship")->find ({
             object_id => $transformation_stock_id,
             type_id => $vector_construct_of_cvterm->cvterm_id(),
-            });
+        });
 
         foreach my $name (@transformant_names) {
             my $accession_stock = $schema->resultset("Stock::Stock")->create({
@@ -139,7 +139,7 @@ sub add_transformant {
             });
 
             $accession_stock->create_stockprops({$transgenic_cvterm->name() => 1});
-            
+
         }
     };
 
@@ -150,18 +150,17 @@ sub add_transformant {
     };
 
     if ($transaction_error) {
-        print STDERR "Transaction1 error adding transformants: $transaction_error\n";
-        return;
+        return { error => $transaction_error };
+    } else {
+        foreach my $stock_id (@added_stock_ids) {
+            $phenome_schema->resultset("StockOwner")->find_or_create({
+    			stock_id     => $stock_id,
+    			sp_person_id =>  $owner_id,
+    	    });
+        }
     }
 
-    foreach my $stock_id (@added_stock_ids) {
-        $phenome_schema->resultset("StockOwner")->find_or_create({
-			stock_id     => $stock_id,
-			sp_person_id =>  $owner_id,
-	    });
-    }
-
-    return { success=>1};
+    return { success => 1};
 
 }
 
