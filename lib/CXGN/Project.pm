@@ -29,6 +29,7 @@ use Moose;
 
 use Data::Dumper;
 use Try::Tiny;
+use List::MoreUtils qw(uniq);
 use CXGN::Trial::Folder;
 use CXGN::Stock;
 use CXGN::Trial::TrialLayout;
@@ -2549,7 +2550,7 @@ sub _delete_field_layout_experiment {
     return { success => 1 };
 }
 
-sub _delete_management_factors_experiments {
+sub _delete_management_factors_experiments { #TODO: REFACTOR
     my $self = shift;
     my $management_factor_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $management_factors = $self->get_treatments;
@@ -3231,7 +3232,7 @@ sub create_plant_entities {
         my %treatment_experiments;
         my %treatment_plots;
         if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
+            $treatments = $self->get_treatments(); #TODO: REFACTOR
             foreach (@$treatments){
 
                 my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
@@ -3361,7 +3362,7 @@ sub save_plant_entries {
         my %treatment_experiments;
         my %treatment_plots;
         if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
+            $treatments = $self->get_treatments(); #TODO: REFACTOR
             foreach (@$treatments){
 
                 my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
@@ -3502,7 +3503,7 @@ sub create_plant_subplot_entities {
         my %treatment_experiments;
         my %treatment_plots;
         if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
+            $treatments = $self->get_treatments(); #TODO REFACTOR
             foreach (@$treatments){
 
                 my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
@@ -3663,7 +3664,7 @@ sub save_plant_subplot_entries {
         my %treatment_experiments;
         my %treatment_plots;
         if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
+            $treatments = $self->get_treatments(); #TODO REFACTOR
             foreach (@$treatments){
 
                 my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
@@ -3980,7 +3981,7 @@ sub create_tissue_samples {
         my %treatment_plots;
         my %treatment_subplots;
         if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
+            $treatments = $self->get_treatments(); #TODO REFACTOR
             foreach (@$treatments){
 
                 my $rs = $chado_schema->resultset('Project::Projectprop')->update_or_create({
@@ -4265,7 +4266,7 @@ sub create_subplot_entities {
         my %treatment_experiments;
         my %treatment_plots;
         if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
+            $treatments = $self->get_treatments(); #TODO REFACTOR
             foreach (@$treatments){
 
                 my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
@@ -4378,7 +4379,7 @@ sub save_subplot_entries {
         my %treatment_experiments;
         my %treatment_plots;
         if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments();
+            $treatments = $self->get_treatments(); #TODO REFACTOR
             foreach (@$treatments){
 
                 my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
@@ -5103,9 +5104,9 @@ sub get_controls_by_plot {
 
 =head2 get_treatments
 
- Usage:        $plants = $t->get_treatments();
+ Usage:        $treatment_summary = $t->get_treatments();
  Desc:         retrieves the treatments that are part of this trial
- Ret:          an array ref containing from project table [ treatment_name, treatment_id ]
+ Ret:          an array ref containing from project table [ treatment_id, treatment_name, treatment_count, num_levels ]
  Args:
  Side Effects:
  Example:
@@ -5114,16 +5115,32 @@ sub get_controls_by_plot {
 
 sub get_treatments {
     my $self = shift;
-    my @plants;
-    my $treatment_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "trial_treatment_relationship", "project_relationship")->cvterm_id();
 
-    my $treatment_rs = $self->bcs_schema->resultset("Project::ProjectRelationship")->search({ 'me.type_id'=>$treatment_rel_cvterm_id, object_project_id=>$self->get_trial_id()})->search_related('subject_project');
+    my $all_traits = $self->get_traits_assayed(); #[$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
 
-    my @treatments;
-    while(my $rs = $treatment_rs->next()) {
-        push @treatments, [$rs->project_id, $rs->name];
+    my @treatment_traits = grep {$_->[1] =~ /TREATMENT/} @{$all_traits};
+
+    #need to use get_phenotypes for trait...
+    my @return_data;
+
+    foreach my $treatment (@treatment_traits) {
+        my @treatment_phenotypes = @{$self->get_phenotypes_for_trait($treatment->[1])};
+        my @trait_levels = uniq @treatment_phenotypes;
+        push @return_data, [$treatment->[0], $treatment->[1], $treatment->[3], scalar(@trait_levels)];
     }
-    return \@treatments;
+
+    # my @plants;
+    # my $treatment_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "trial_treatment_relationship", "project_relationship")->cvterm_id();
+
+    # my $treatment_rs = $self->bcs_schema->resultset("Project::ProjectRelationship")->search({ 'me.type_id'=>$treatment_rel_cvterm_id, object_project_id=>$self->get_trial_id()})->search_related('subject_project');
+
+    # my @treatments;
+    # while(my $rs = $treatment_rs->next()) {
+    #     push @treatments, [$rs->project_id, $rs->name];
+    # }
+    # return \@treatments;
+
+    return \@return_data;
 }
 
 =head2 get_trial_contacts

@@ -64,7 +64,7 @@
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>plot_name OR subplot_name OR plant_name OR tissue_sample_name</td>
+                                <td>plot_name OR subplot_name OR plant_name OR tissue_sample_name OR observationunit_name</td>
                                 <td>treatment_name|treatment_id</td>
                             </tr>
                         </tbody>
@@ -72,7 +72,7 @@
 
                     <b>Required fields:</b>
                     <br/>
-                    - plot_name OR subplot_name OR plant_name OR tissue_sample_name (must exist in the database already)
+                    - plot_name OR subplot_name OR plant_name OR tissue_sample_name OR observationunit_name (must exist in the database already)
                     <br>
                     At whatever level the treatment is applied, it will propagate downward to child stocks.
                     <br />
@@ -85,7 +85,7 @@
                     <br>
                     - timestamp
                     <br>
-                    The timestamp represents the application date of the treatment, and is optional. The timestamp should be in the format <i>YYYY-MM-DD HH:MM:SS-0000</i> or <i>YYYY-MM-DD HH:MM:SS+0000</i>. The treatment can also be applied multiple times to the same stock by using different timestamps. 
+                    The timestamp represents the application date of the treatment, and is optional. It is <b>NOT</b> given as a separate column, but in the form <i>trait_value, timestamp</i>. The timestamp should be in the format <i>YYYY-MM-DD HH:MM:SS-0000</i> or <i>YYYY-MM-DD HH:MM:SS+0000</i>. The treatment can also be applied multiple times to the same stock by using different timestamps in different rows. 
 
                 </div>
             </div>
