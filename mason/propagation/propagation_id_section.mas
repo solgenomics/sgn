@@ -68,6 +68,7 @@ jQuery(document).ready(function(){
     const propagation_ids_table = jQuery('#propagation_ids_table').DataTable({
         'ajax': '/ajax/propagation/active_propagation_ids_in_group/'+propagation_group_stock_id,
         'autoWidth': false,
+        'order': false,
         'columns': [
             { title: "Propagation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.propagation_stock_id+"/view'>"+row.propagation_name+"</a>"; } },
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_stock_id+"/view'>"+row.accession_name+"</a>"; } },

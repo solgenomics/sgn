@@ -22,6 +22,7 @@ use DateTime;
 use JSON;
 use JSON::Any;
 use List::MoreUtils qw /any /;
+use Sort::Key::Natural qw(natkeysort);
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -651,11 +652,11 @@ sub get_propagation_groups_in_project :Path('/ajax/propagation/propagation_group
     my $dbh = $c->dbc->dbh;
 
     my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, project_id=>$project_id});
-
     my $result = $propagation_obj->get_propagation_groups_in_project();
-#    print STDERR "RESULT =".Dumper($result)."\n";
+    my @sorted_names = natkeysort {($_->[1])} @$result;
+
     my @propagations;
-    foreach my $r (@$result){
+    foreach my $r (@sorted_names){
         my $propagation_group_link = qq{<a href="/propagation_group/$r->[0]">$r->[1]</a>};
         my $description = $r->[2];
         my $material_type = $r->[3];
@@ -685,10 +686,11 @@ sub get_active_propagation_ids_in_group :Path('/ajax/propagation/active_propagat
     my $dbh = $c->dbc->dbh;
 
     my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_group_stock_id=>$propagation_group_stock_id});
-
     my $result = $propagation_obj->get_propagation_ids_in_group();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
+
     my @propagations;
-    foreach my $r (@$result){
+    foreach my $r (@sorted_names){
         my ($propagation_stock_id, $propagation_name, $accession_stock_id, $accession_name, $rootstock_stock_id, $rootstock_name, $status) =@$r;
         my $status_info = decode_json $status;
         my $status_type = $status_info->{status_type};
@@ -723,10 +725,11 @@ sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_prop
     my $dbh = $c->dbc->dbh;
 
     my $propagation_obj = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_group_stock_id=>$propagation_group_stock_id});
-
     my $result = $propagation_obj->get_propagation_ids_in_group();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
+
     my @propagations;
-    foreach my $r (@$result){
+    foreach my $r (@sorted_names){
         my ($propagation_stock_id, $propagation_name, $accession_stock_id, $accession_name, $rootstock_stock_id, $rootstock_name, $status) =@$r;
 
         my $status_info = decode_json $status;
