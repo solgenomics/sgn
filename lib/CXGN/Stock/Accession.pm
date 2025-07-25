@@ -15,7 +15,7 @@ Code structure copied from CXGN::Stock::Seedlot, with inheritance from CXGN::Sto
 =head1 AUTHOR
 
 
-=head1 ACCESSORS & METHODS 
+=head1 ACCESSORS & METHODS
 
 =cut
 
@@ -454,13 +454,13 @@ sub store {
             $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
         }
     }
-    $self->_remove_parent_relationship('female_parent');
     if ($self->mother_accession) {
+        $self->_remove_parent_relationship('female_parent');
         my $return = $self->_store_parent_relationship('female_parent', $self->mother_accession, 'biparental');
         # TODO: delete accession if error and return error
     }
-    $self->_remove_parent_relationship('male_parent');
     if ($self->father_accession) {
+        $self->_remove_parent_relationship('male_parent');
         my $return = $self->_store_parent_relationship('male_parent', $self->father_accession, 'biparental');
         # TODO: delete accession if error and return error
     }
@@ -541,4 +541,3 @@ no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
-
