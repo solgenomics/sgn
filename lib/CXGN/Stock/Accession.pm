@@ -526,7 +526,7 @@ sub store {
                 $cvterm_id = $new_term->cvterm_id();
             }
 
-            $self->_update_stockprop($key, $value);
+            if ($value) { $self->_update_stockprop($key, $value); }
         }
     }
 
