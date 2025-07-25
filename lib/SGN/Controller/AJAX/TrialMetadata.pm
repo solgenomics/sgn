@@ -2318,7 +2318,7 @@ sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
     $c->stash->{rest} = { treatments => $data };
 }
 
-sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
+sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) { #TODO REFACTOR
     my $self = shift;
     my $c = shift;
 
@@ -2362,7 +2362,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     }
 }
 
-sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(0) {
+sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(0) { #TODO REFACTOR
     my $self = shift;
     my $c = shift;
     my $treatment_id = $c->req->param('treatment_id');
@@ -3087,7 +3087,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
 
 }
 
-sub edit_management_factor_details : Chained('trial') PathPart('edit_management_factor_details') Args(0) {
+sub edit_management_factor_details : Chained('trial') PathPart('edit_management_factor_details') Args(0) { #TODO REFACTOR
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;

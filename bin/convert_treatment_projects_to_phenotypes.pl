@@ -47,3 +47,11 @@ our ($opt_H, $opt_D, $opt_U, $opt_P);
 
 getopts('H:D:U:P')
     or pod2usage();
+
+my $dbh = CXGN::DB::InsertDBH->new({
+	 dbname => $opt_D,
+	 dbhost => $opt_H,
+	 dbargs => {AutoCommit => 1,
+		    RaiseError => 1},
+});
+
