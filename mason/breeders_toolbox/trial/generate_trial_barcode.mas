@@ -6,6 +6,11 @@ $identifier => ''
 $trial_stock_type => undef
 </%args>
 
+<style>
+#legacy_barcode_btn {
+    margin-top: 20px;
+}
+</style>
 
  <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js'] &>
 
@@ -233,6 +238,34 @@ $trial_stock_type => undef
     </div>
 </div>
 
+<div class="modal fade" id="barcode_design_option_dialog" name="barcode_design_option_dialog" tabindex="-1" role="dialog" aria-labelledby="generateTrialBarcodeDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="barcodeDesignOptionDialog">Generate Barcode Label</h4>
+            </div>
+            <div class="modal-body">
+            <div class="container-fluid">
+                    <center>
+                    <button type="button" class="btn btn-primary" name="custom_barcode_trial_link" id="label_designer_link">Go To Label Designer (Recommended)</button>
+                <p id="legacy_barcode_btn">
+                    <button type="button" class="btn" name="generate_trial_barcode_link" id="generate_trial_barcode_link">Use Legacy Barcode Generator</button>
+                </p>
+                    <center>
+            </div>
+            <script>
+            jQuery(document).ready(function() {
+                jQuery('#label_designer_link').click(function() {
+                    var trialId = "<% $trial_id %>";
+                    location.href = '/tools/label_designer?source_type=field_trials&source_id=' + encodeURIComponent(trialId);
+                });    
+            });
+            </script>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="generate_trial_barcode_button_dialog" name="generate_trial_barcode_button_dialog" tabindex="-1" role="dialog" aria-labelledby="generateTrialBarcodeButtonDialog">
     <div class="modal-dialog modal-lg" role="document">

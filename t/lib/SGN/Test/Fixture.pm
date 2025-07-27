@@ -196,6 +196,11 @@ sub get_db_stats {
     $rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( {}, { columns => [ { 'cvterm_id_max' => { max => 'cvterm_id' }} ] } );
     $stats->{cvterms} = $rs->get_column('cvterm_id_max')->first();
 
+    # count cvtermprops
+    #
+    $rs = $self->bcs_schema()->resultset('Cv::Cvtermprop')->search( {}, { columns => [ { 'cvtermprop_id_max' => { max => 'cvtermprop_id' }} ] } );
+    $stats->{cvtermprops} = $rs->get_column('cvtermprop_id_max')->first();
+    
     # count users
     #
     $rs = $self->people_schema()->resultset('SpPerson')->search( {}, { columns => [ { 'sp_person_id_max' => { max => 'sp_person_id' }} ] } );
@@ -318,7 +323,8 @@ sub clean_up_db {
 
     if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
 
-    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images');
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'cvtermprops', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images');
+
     foreach my $table (@deletion_order) {
 	    print STDERR "CLEANING $table...\n";
 	    my $count = $stats->{$table} - $self->dbstats_start()->{$table};
@@ -359,6 +365,10 @@ sub delete_table_entries {
 	$rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( { cvterm_id => { '>' => $previous_max_id }} );
     }
 
+    if ($table eq "cvtermprops") {
+	$rs = $self->bcs_schema()->resultset('Cv::Cvtermprop')->search( { cvtermprop_id => { '>' => $previous_max_id }} );
+    }
+    
     if ($table eq "people") { 
 	$rs = $self->people_schema()->resultset('SpPerson')->search( { sp_person_id => { '>' => $previous_max_id } } );
     }
