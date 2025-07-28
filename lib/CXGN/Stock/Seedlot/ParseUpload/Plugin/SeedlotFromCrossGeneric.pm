@@ -68,9 +68,9 @@ sub _validate_with_plugin {
             $duplicated_seedlot_names{$seedlot_name}++;
         }
 
-        if (!$amount || $amount eq '') {
+        if (!defined $amount || $amount eq '') {
             $amount = 'NA';
-        } elsif (!$weight || $weight eq '') {
+        } elsif (!defined $weight || $weight eq '') {
             $weight = 'NA';
         }
 
@@ -169,9 +169,9 @@ sub _parse_with_plugin {
         $box_name = $row->{'box_name'};
         $quality = $row->{'quality'};
 
-        if (!$amount || $amount eq '') {
+        if (!defined $amount || $amount eq '') {
             $amount = 'NA';
-        } elsif (!$weight || $weight eq '') {
+        } elsif (!defined $weight || $weight eq '') {
             $weight = 'NA';
         }
 
