@@ -445,6 +445,7 @@ sub verify {
     my $traits_validation = $trait_validator->validate($schema,'traits',\@trait_list);
     my @traits_missing = @{$traits_validation->{'missing'}};
     my @traits_wrong_ids = @{$traits_validation->{'wrong_ids'}};
+    my @traits_not_variables = @{$traits_validation->{'not_variables'}};
     my $error_message = '';
     my $warning_message = '';
 
@@ -458,8 +459,18 @@ sub verify {
         # Display matches of traits with the wrong id
         if ( scalar(@traits_wrong_ids) > 0 ) {
             $error_message .= "<br /><br /><strong>Possible Trait Matches:</strong>";
+            $error_message .= "<br /><br />The following traits have names and ontology identifiers that do not match in this database.  The following suggestions have the correct ontology identifier for the name used in your data.";
             foreach my $m (@traits_wrong_ids) {
                 $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />should be<br />" . $m->{'matching_term'};
+            }
+        }
+
+        # Display traits that are not variables
+        if ( scalar(@traits_not_variables) > 0 ) {
+            $error_message .= "<br /><br /><strong>Traits That Are Not Ontology Variables:</strong>";
+            $error_message .= "<br /><br />The following traits are not ontology variables (they do not have associated method and scale information).  Use the Search &gt; Traits page to find the proper Trait Name and Trait ID to use.  The following suggestions include related ontology variables to the terms used in your data.";
+            foreach my $m (@traits_not_variables) {
+                $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />could be<br />" . $m->{'matching_term'};
             }
         }
 
