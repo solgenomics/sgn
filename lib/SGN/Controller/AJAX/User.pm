@@ -5,6 +5,7 @@ use Moose;
 use IO::File;
 use Data::Dumper;
 use HTML::Entities;
+use JSON;
 use CXGN::People::Roles;
 use CXGN::BreedingProgram;
 
@@ -710,5 +711,55 @@ ername.";}
     }
 }
 
+sub user_prefs : Path('/ajax/user/preferences') : ActionClass('REST') { }
+
+sub user_prefs_GET : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $key = shift;
+
+    if ( !$c->user() ) {
+        $c->stash->{rest} = { error => "Need to be logged in to use feature." };
+        return;
+    }
+
+    my $sp_person_id = $c->user()->get_sp_person_id();
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $p = $people_schema->resultset("SpPerson")->find({sp_person_id => $sp_person_id });
+    my $prefs = $p->user_prefs() || '{}';
+    my $prefs_json = decode_json($prefs);
+
+    if ( defined $key && $key ne '' ) {
+        $c->stash->{rest}->{$key} = $prefs_json->{$key} || '';
+    }
+    else {
+        $c->stash->{rest} = $prefs_json || {};
+    }
+}
+
+sub user_prefs_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $body = $c->req->body_data();
+
+    if ( !$c->user() ) {
+        $c->stash->{rest} = { error => "Need to be logged in to use feature." };
+        return;
+    }
+
+    my $sp_person_id = $c->user()->get_sp_person_id();
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $p = $people_schema->resultset("SpPerson")->find({sp_person_id => $sp_person_id });
+    my $prefs = $p->user_prefs() || '{}';
+    my $prefs_json = decode_json($prefs);
+
+    foreach my $key (keys %$body) {
+        my $value = $body->{$key};
+        $prefs_json->{$key} = $value;
+    }
+    $p->update({ user_prefs => encode_json($prefs_json) });
+
+    $c->stash->{rest} = $prefs_json;
+}
 
 1;
