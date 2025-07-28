@@ -2313,7 +2313,8 @@ sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
 
     my $trial = $c->stash->{trial};
 
-    my $data = $trial->get_treatments();
+    # my $data = $trial->get_treatments
+    my $data = $trial->get_treatment_projects();
 
     $c->stash->{rest} = { treatments => $data };
 }

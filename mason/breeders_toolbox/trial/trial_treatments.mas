@@ -3,7 +3,7 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ CXGN.BreedersToolbox.UploadPhenotype ] &>
+<& /util/import_javascript.mas, classes => [ "CXGN.BreedersToolbox.UploadPhenotype" ] &>
 
 <div id="trial_treatments_html">
 </div>

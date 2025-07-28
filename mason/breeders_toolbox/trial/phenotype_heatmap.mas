@@ -1287,7 +1287,7 @@ jQuery(document).ready( function() {
                 traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
                 traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
                 traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
-                traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='Treatments & Assayed Traits'>";
                 Object.keys(variables).sort().forEach((name) => {
                     traits_assayed_html = traits_assayed_html + `<option value='${variables[name]}'>${name}</option>`;
                 });
