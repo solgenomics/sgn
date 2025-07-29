@@ -79,7 +79,7 @@ sub parse_genbank {
 
     my $feature_table = [];
     
-    my $sio = Bio::SeqIO->new( -fh => $file, -format=>'genbank');
+    my $sio = Bio::SeqIO->new( -file => $file, -format=>'genbank');
     my $s = $sio->next_seq();
     my @commands = ();
     my @features = $s -> get_SeqFeatures();
