@@ -3088,60 +3088,53 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
 
 }
 
+sub get_management_regime : Chained('trial') PathPart('get_management_regime') Args(0) { #TODO
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+}
+
 sub edit_management_factor_details : Chained('trial') PathPart('edit_management_factor_details') Args(0) { #TODO REFACTOR
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-    my $treatment_date = $c->req->param("treatment_date");
-    my $treatment_name = $c->req->param("treatment_name");
-    my $treatment_description = $c->req->param("treatment_description");
-    my $treatment_type = $c->req->param("treatment_type");
-    my $treatment_year = $c->req->param("treatment_year");
+    my $management_factor_schedule = $c->req->param("schedule");
+    my $management_factor_description = $c->req->param("description");
+    my $management_factor_type = $c->req->param("type");
+    my $action = $c->req->param("action");
 
     if (my $error = $self->privileges_denied($c)) {
         $c->stash->{rest} = { error => $error };
         return;
     }
 
-    if (!$treatment_name) {
-        $c->stash->{rest} = { error => 'No treatment name given!' };
+    if (!$management_factor_schedule) {
+        $c->stash->{rest} = { error => 'No schedule given!' };
         return;
     }
 
-    if (!$treatment_description) {
-        $c->stash->{rest} = { error => 'No treatment description given!' };
+    if (!$management_factor_description) {
+        $c->stash->{rest} = { error => 'No description given!' };
         return;
     }
-    if (!$treatment_date) {
-        $c->stash->{rest} = { error => 'No treatment date given!' };
+    if (!$management_factor_type) {
+        $c->stash->{rest} = { error => 'No type given!' };
         return;
     }
-    if (!$treatment_type) {
-        $c->stash->{rest} = { error => 'No treatment type given!' };
-        return;
-    }
-    if (!$treatment_year) {
-        $c->stash->{rest} = { error => 'No treatment year given!' };
+    if (!$action) {
+        $c->stash->{rest} = { error => 'Server error! Somebody tried sending bad data.' };
         return;
     }
 
     my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
-    my $trial_name = $t->get_name();
 
-    if ($trial_name ne $treatment_name) {
-        my $trial_rs = $schema->resultset('Project::Project')->search({name => $treatment_name});
-        if ($trial_rs->count() > 0) {
-            $c->stash->{rest} = { error => 'Please use a different treatment name! That name is already in use.' };
-            return;
-        }
+    if ($action eq "add") {
+        # same as below but adding a new json key
+    } elsif ($action eq "remove") {
+        # get the management regime and remove the part that needs to be removed, set resulting management regime
     }
-
-    $t->set_name($treatment_name);
-    $t->set_management_factor_date($treatment_date);
-    $t->set_management_factor_type($treatment_type);
-    $t->set_description($treatment_description);
-    $t->set_year($treatment_year);
 
     $c->stash->{rest} = { success => 1 };
 }

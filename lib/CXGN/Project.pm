@@ -2573,6 +2573,16 @@ sub _delete_management_factors_experiments { #TODO: REFACTOR
     return { success => 1 };
 }
 
+sub set_management_factor {#TODO
+    my $self = shift;
+    my $schema = $self->schema();
+}
+
+sub get_management_regime {
+    my $self = shift;
+    my $schema = $self->schema();
+}
+
 =head2 function delete_project_entry()
 
  Usage:

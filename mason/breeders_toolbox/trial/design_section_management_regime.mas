@@ -5,7 +5,6 @@ $user_can_modify => undef
 </%args>
 
 <div class="well well-sm">
-    This is a test. Something like a table will go here. 
 
     <table id="management_regime_table">
     </table>
@@ -23,6 +22,37 @@ $user_can_modify => undef
 jQuery(document).ready( function() {
     jQuery('#edit_management_regime').click(function() {
         jQuery('#trial_design_add_management_factor').modal("show");
+    });
+
+    jQuery('#new_trial_add_management_factors_submit').click(function() {
+        var new_management_factor_description = jQuery('#new_management_factor_description').text();
+        var new_management_factor_type = jQuery('#new_management_factor_type').value();
+        var new_management_factor_schedule = jQuery('#new_management_factor_schedule').text();
+
+        jQuery.ajax({
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            url: '/ajax/breeders/trial/'+<% $trial_id %>+'/edit_management_factor_details',
+            data: {
+                description : new_management_factor_description,
+                schedule : new_management_factor_schedule,
+                type : new_management_factor_type,
+                action : 'add'
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert("An error occurred submitting new management factor." + response.error)
+            }
+        });
     });
 });
 </script>

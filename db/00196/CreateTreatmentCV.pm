@@ -59,7 +59,7 @@ sub patch {
         
     print STDERR "INSERTING CV TERMS...\n";
 
-    my $check_treatment_cv_exists = "SELECT * FROM cv WHERE name='treatment'";
+    my $check_treatment_cv_exists = "SELECT cv_id FROM cv WHERE name='treatment'";
     
     my $h = $schema->storage->dbh()->prepare($check_treatment_cv_exists);
     $h->execute();
@@ -73,6 +73,15 @@ sub patch {
         VALUES ('treatment', 'Experimental treatments applied to some of the stocks in a project. Distinct from management factors/management regimes.');";
 
         $schema->storage->dbh()->do($insert_treatment_cv);
+
+        my $h = $schema->storage->dbh()->prepare($check_treatment_cv_exists);
+        $h->execute();
+
+        my $treatment_cv_id = $h->fetchrow_array();
+
+        # need to create the treatment_ontology cvterm as well, of cv composable_cvtypes
+
+        my $insert_treatment_cvprop = "INSERT INTO cvprop ()";
     }
 
     print STDERR "Patch complete\n";
