@@ -35,17 +35,78 @@ $transformation_id
     </div>
 </div>
 
+<div class="modal fade" id="obsolete_accessions_in_bulk_message_dialog" name="obsolete_accessions_in_bulk_message_dialog" tabindex="-1" role="dialog" aria-labelledby="obsoleteAccessionsInBulkMessageDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="obsoleteAccessionsInBulkMessageDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Success!
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_obsolete_accessions_in_bulk_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
 jQuery(document).ready(function(){
 
-const transformation_stock_id = "<%$transformation_id%>";
-const transformants_table = jQuery('#select_transformants_table').DataTable({
-    'ajax': '/ajax/transformation/set_obsolete_accession_dialog/'+transformation_stock_id,
-    'autoWidth': false,
-    'order': false,
-});
+    const transformation_stock_id = "<%$transformation_id%>";
+    const transformants_table = jQuery('#select_transformants_table').DataTable({
+        'ajax': '/ajax/transformation/set_obsolete_accession_dialog/'+transformation_stock_id,
+        'autoWidth': false,
+        'order': false,
+    });
+
+    jQuery('#obsolete_accessions_submit').click(function(){
+        let selected_accessions = [];
+        let accession_string;
+        jQuery('input[name="checked_transformants"]:checked').each(function() {
+            selected_accessions.push(jQuery(this).val());
+        });
+
+        if (selected_accessions.length == 0){
+            alert('Please select accessions that you would like to obsolete');
+        } else {
+            accession_ids_string = JSON.stringify(selected_accessions)
+            jQuery.ajax({
+                url: '/stock/bulk_obsolete',
+                data : {
+                    'stock_ids' : accession_ids_string,
+                },
+                beforeSend: function(response){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery('#working_modal').modal('hide');
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    if (response.success == 1) {
+                        jQuery('#obsolete_accessions_in_bulk_dialog').modal('hide');
+                        jQuery('#obsolete_accessions_in_bulk_message_dialog').modal('show');
+                    }
+                },
+                error: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    alert("Error obsoleting accessions.");
+                }
+            });
+        }
+
+    });
 
 });
 

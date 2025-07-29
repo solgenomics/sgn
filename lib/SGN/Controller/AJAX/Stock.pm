@@ -2064,7 +2064,7 @@ sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
 
     my $plot;
     my $plot_contents;
-    
+
     eval {
         $plot = CXGN::Stock::Plot->new({schema => $schema, stock_id=>$plot_id});
 
