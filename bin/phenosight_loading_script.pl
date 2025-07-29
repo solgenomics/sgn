@@ -189,8 +189,8 @@ while (my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 #print STDERR @trial_names;
 
 # Get list of directories - this CR path will be obtained from sgn_local.conf
-
-my @CR_exp_dirs = glob("$basepath/CropReporter/Data/*"); 
+# Note: don't use basepath here; need to include parameter to point to the 'data dir'
+my @CR_exp_dirs = glob("/home/production/CropReporter/Data/*"); 
 
 #print "@CR_exp_dirs\n";
 
@@ -214,15 +214,15 @@ my $coderef = sub {
                 $PS2_present = 1;
                 my $trial_saved = 0;
                 ## Check Exp_folder name to see if present as trial in DB
-#                foreach (@trial_names) {
-#                    if ($exp_name eq $_) {
-#                        print STDERR "$exp_name matches $_, check next one;\n";
-#                        $trial_saved = 1;
-#                        last;
-#                    } else {
-#                        print STDERR "$exp_name does not match $_, move to the next;\n";
-#                    }
-#                }
+                # foreach (@trial_names) {
+                #     if ($exp_name eq $_) {
+                #         print STDERR "$exp_name matches $_, check next one;\n";
+                #         $trial_saved = 1;
+                #         last;
+                #     } else {
+                #         print STDERR "$exp_name does not match $_, move to the next;\n";
+                #     }
+                # }
                 ### Move on to save the trial if not present:
                 if ($trial_saved == 0) {
                     print STDERR "No trial match for $exp_name; proceed to parse and load\n";
@@ -266,13 +266,13 @@ my $coderef = sub {
 
                     # Set up the trial design (hash of plot hashes)
 
-                    my $plot_ids = $values->{'PhenoTray.ID'};
+                    my $plot_numbers = $values->{'PhenoTray.ID'};
                     my @plot_uniquenames;
-                    foreach my $plot_number (@$plot_ids) {
+                    foreach my $plot_number (@$plot_numbers) {
                         my $current_plot_name = _create_plot_name($exp_name, $plot_number);
                         push @plot_uniquenames, $current_plot_name;
                     }
-                    print STDERR "@$plot_ids are the plots;\n";
+#                    print STDERR "@$plot_ids are the plots;\n";
                     print STDERR "@plot_uniquenames are the plots;\n";
 
                     
@@ -304,13 +304,12 @@ my $coderef = sub {
                     # First, need to create/extract the design details:
                     my %design_details;
                     for my $row (@$data) {
-                        my $row_id = $row->{'PhenoTray.ID'};
                         my $accession_name = "accessionPS1";
                         my $plot_number = $row->{'PhenoTray.ID'};
                         my $plot_name = _create_plot_name($exp_name, $plot_number);
                         my $block_number = 1;
 
-                        my $key = $row_id;
+                        my $key = $plot_name;
                         $design_details{$key}->{plot_name} = $plot_name;
                         $design_details{$key}->{stock_name} = $accession_name;
                         $design_details{$key}->{plot_number} = $plot_number;
@@ -368,6 +367,8 @@ my $coderef = sub {
 #                    my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 #                    my $current_save = $trial_create->save_trial();
 
+                    my $bs = CXGN::BreederSearch->new({ dbh=>$dbh, dbname=>$dbname });
+                    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'all_but_genoview', 'concurrent', $basepath);
 
 
                     # try {
@@ -450,11 +451,11 @@ my $coderef = sub {
                         #print STDERR "Array of single trait in $exp_name:" . "\n"; 
                         #print STDERR Dumper($multiple_measures_hash{$key}->{'qN'});
                         #print STDERR "Print structure for a given plot in $exp_name:" . "\n"; 
-                        #print STDERR Dumper($multiple_measures_hash{$key});
+                        #print STDERR Dumper($multiple_measures_hash{key});
 
                     }
-                    #print STDERR "Print entire hash for $exp_name:" . "\n"; 
-                    #print STDERR Dumper(%multiple_measures_hash);
+                    print STDERR "Print entire hash for $exp_name:" . "\n"; 
+                    print STDERR Dumper(\%multiple_measures_hash);
                     my $time = DateTime->now();
                     my $timestamp = $time->ymd()."_".$time->hms();
                     my %phenotype_metadata;
@@ -463,7 +464,12 @@ my $coderef = sub {
                     $phenotype_metadata{'operator'} = $username;
                     $phenotype_metadata{'date'} = $timestamp;
 
-
+#                    my @test_plot_ids = qw(53531 53530 53532 53527 53528 53529);
+#                    $plot_ids = \@test_plot_ids;
+                    print STDERR "Plot IDs:";
+#                    print STDERR Dumper($plot_ids);
+                    print STDERR "Design Details:";
+                    print STDERR Dumper($design_details);
 
                     ##### Once trial is uploaded, need to upload phenotypes
                     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
@@ -479,7 +485,7 @@ my $coderef = sub {
                         user_id=>$sp_person_id,
                     #     # # need to develop plots list from phenosight data file
                         # Do these need to be uniquenames actually?
-                        stock_list=>$plot_ids,
+                        stock_list=>\@plot_uniquenames,
                     # #     # # need to develop trait list from headers in the phenosight data file
                         trait_list=>\@full_traits,
                         values_hash=>\%multiple_measures_hash,
@@ -497,13 +503,13 @@ my $coderef = sub {
                     print STDERR "Print verification for $exp_name:" . "\n"; 
                     print STDERR Dumper($verified_warning, $verified_error);
 
-#                    my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
-#                    if ($stored_phenotype_error) {
-#                        die $stored_phenotype_error."\n";
-#                    }
+                   my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+                   if ($stored_phenotype_error) {
+                       die $stored_phenotype_error."\n";
+                   }
 
-#                    print STDERR "Print storage message for $exp_name:" . "\n"; 
-#                    print STDERR Dumper($stored_phenotype_error, $stored_phenotype_success);
+                   print STDERR "Print storage message for $exp_name:" . "\n"; 
+                   print STDERR Dumper($stored_phenotype_error, $stored_phenotype_success);
 
 
 
