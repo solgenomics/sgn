@@ -1441,6 +1441,28 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 }
 
 
+sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_accession_dialog') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformation_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+    my $result = $transformation_obj->transformants();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
+
+    my @transformants;
+    foreach my $r (@sorted_names){
+        push @transformants, ["<input type='checkbox' name='checked_transformants' value='$r->[0]'>", $r->[1]]
+    }
+
+    $c->stash->{rest} = { data => \@transformants };
+
+}
+
+
+
 
 ###
 1;#
