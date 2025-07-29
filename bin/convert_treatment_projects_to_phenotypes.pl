@@ -76,7 +76,7 @@ my $all_trials_q = "SELECT trial.project_id AS trial_id, trial.name as trial_nam
    GROUP BY trial.project_id, trial.name;";
 
 my $update_new_treatment_sql = "UPDATE cvterm 
-	SET definition \'Legacy treatment from BreedBase before sgn-416.0 release. Binary value for treatment was/was not applied.\'
+	SET definition = \'Legacy treatment from BreedBase before sgn-416.0 release. Binary value for treatment was/was not applied.\'
 	WHERE cvterm_id IN (SELECT unnest(string_to_array(?, ',')::int[]));";
 
 my $h = $schema->storage->dbh->prepare($all_trials_q);
@@ -142,7 +142,7 @@ $h = $schema->storage->dbh->prepare($update_new_treatment_sql);
 $h->execute(join(",", @new_treatment_cvterms));
 
 if ($opt_t) {
-	print STDERR "Test mode. Changes not committed.\n"
+	print STDERR "Test mode. Changes not committed.\n";
 	$schema->txn_rollback();
 } else {
 	$schema->txn_commit();
