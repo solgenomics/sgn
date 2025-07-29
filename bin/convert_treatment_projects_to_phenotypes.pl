@@ -24,6 +24,10 @@ The user executing this action (postgres by default)
 
 The database password.
 
+=item -t
+
+Test mode. Changes not committed.
+
 =back
 
 =head1 AUTHOR
@@ -43,15 +47,17 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Phenotype;
 
-our ($opt_H, $opt_D, $opt_U, $opt_P);
+our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_t);
 
-getopts('H:D:U:P')
+getopts('H:D:U:P:t')
     or pod2usage();
 
 my $dbh = CXGN::DB::InsertDBH->new({
 	 dbname => $opt_D,
 	 dbhost => $opt_H,
-	 dbargs => {AutoCommit => 1,
+	#  dbuser => $opt_U,
+	#  dbpass => $opt_P,
+	 dbargs => {AutoCommit => 0,
 		    RaiseError => 1},
 });
 
@@ -87,12 +93,14 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 	foreach my $treatment_trial (@{$treatment_trials}) {
 		my $treatment_trial_name = $treatment_trial->[1];
 		my $treatment_trial_id = $treatment_trial->[0];
-		$treatment_trial = CXGN::Project->new({
+		print STDERR "Found a treatment trial with ID $treatment_trial_id \n";
+		$treatment_trial = CXGN::Trial->new({
 			bcs_schema => $schema,
-			project_id => $treatment_trial->[0]
+			trial_id => $treatment_trial->[0]
 		});
 		my $observation_units = $treatment_trial->get_plots();
 		my $treatment_name = $treatment_trial_name =~ s/$trial_name(_)//r;
+		$treatment_name =~ s/_/ /g;
 		my $new_treatment_id;
 		eval {
 			$new_treatment_id = $schema->resultset("Cv::Cvterm")->create_with({
@@ -105,15 +113,20 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 			die "An error occurred trying to create a new treatment! $@\n";
 		}
 		push @new_treatment_cvterms, $new_treatment_id;
+		my $trial_date = $trial->get_create_date();
 		foreach my $obs_unit (@{$observation_units}){
+			my $stock_name = $obs_unit->[1];
 			eval {
 				my $phenotype = CXGN::Phenotype->new({
 					schema => $schema,
 					cvterm_id => $new_treatment_id,
 					value => 1,
-					stock_id => $obs_unit->[1],
-					observationunit_id => $obs_unit->[1],
-					nd_experiment_id => $trial->get_nd_experiment_id()
+					stock_id => $obs_unit->[0],
+					observationunit_id => $obs_unit->[0],
+					uniquename => "Stock: $stock_name, trait: $treatment_name date: $trial_date operator = $opt_U",
+					collect_date => $trial_date,
+					operator => $opt_U,
+					nd_experiment_id => $trial->get_nd_experiment_id()->{nd_experiment_id}
 				});
 				$phenotype->store();
 			};
@@ -121,9 +134,19 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 				die "An error occurred trying to store new phenotype! $@\n";
 			}
 		}
-		$trial->remove_treatment_project($treatment);
+		$trial->remove_treatment_project($treatment_trial_id);
 	}
 }
 
 $h = $schema->storage->dbh->prepare($update_new_treatment_sql);
 $h->execute(join(",", @new_treatment_cvterms));
+
+if ($opt_t) {
+	print STDERR "Test mode. Changes not committed.\n"
+	$schema->txn_rollback();
+} else {
+	$schema->txn_commit();
+}
+
+print STDERR "Done!\n";
+1;
