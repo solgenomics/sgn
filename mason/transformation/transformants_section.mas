@@ -20,12 +20,14 @@ $transformation_id
                         </&>
                     </div>
                 </div>
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="obsolete_accessions_in_bulk_link">Obsolete Accessions in Bulk</button>
             </div>
         </div>
     </div>
 </&>
 
 <& /transformation/obsolete_stock_dialog.mas &>
+<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id &>
 
 
 <script>
@@ -59,6 +61,10 @@ jQuery(document).ready(function(){
                 });
             }
         }
+    });
+
+    jQuery('#obsolete_accessions_in_bulk_link').click(function() {
+        jQuery("#obsolete_accessions_in_bulk_dialog").modal("show");
     });
 
 });
