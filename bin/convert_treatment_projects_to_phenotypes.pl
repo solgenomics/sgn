@@ -89,6 +89,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		bcs_schema => $schema,
 		trial_id => $trial_id
 	});
+	my $parent_observation_units = $trial->get_plots();
 	my $treatment_trials = $trial->get_treatment_projects();
 	foreach my $treatment_trial (@{$treatment_trials}) {
 		my $treatment_trial_name = $treatment_trial->[1];
@@ -99,6 +100,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 			trial_id => $treatment_trial->[0]
 		});
 		my $observation_units = $treatment_trial->get_plots();
+		my %observation_units_lookup = map {$_->[0] => 1} @{$observation_units};
 		my $treatment_name = $treatment_trial_name =~ s/$trial_name(_)//r;
 		$treatment_name =~ s/_/ /g;
 		my $new_treatment_id;
@@ -114,13 +116,13 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		}
 		push @new_treatment_cvterms, $new_treatment_id;
 		my $trial_date = $trial->get_create_date();
-		foreach my $obs_unit (@{$observation_units}){
+		foreach my $obs_unit (@{$parent_observation_units}){
 			my $stock_name = $obs_unit->[1];
 			eval {
 				my $phenotype = CXGN::Phenotype->new({
 					schema => $schema,
 					cvterm_id => $new_treatment_id,
-					value => 1,
+					value => exists($observation_units_lookup{$obs_unit->[0]}) ? 1 : 0,
 					stock_id => $obs_unit->[0],
 					observationunit_id => $obs_unit->[0],
 					uniquename => "Stock: $stock_name, trait: $treatment_name date: $trial_date operator = $opt_U",

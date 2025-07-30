@@ -60,7 +60,7 @@ sub patch {
     print STDERR "INSERTING CV TERMS...\n";
     
     my $terms = { 
-        project_property => 
+        'project_property' => 
             [
              "management_regime",
             ],

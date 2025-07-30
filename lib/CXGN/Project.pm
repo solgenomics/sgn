@@ -2550,7 +2550,7 @@ sub _delete_field_layout_experiment {
     return { success => 1 };
 }
 
-sub _delete_management_factors_experiments { #TODO: REFACTOR
+sub _delete_management_factors_experiments { # deprecated
     my $self = shift;
     my $management_factor_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $management_factors = $self->get_treatments;
@@ -2573,14 +2573,54 @@ sub _delete_management_factors_experiments { #TODO: REFACTOR
     return { success => 1 };
 }
 
-sub set_management_factor {#TODO
+sub add_management_factor {
     my $self = shift;
-    my $schema = $self->schema();
+    my $management_factor = shift;
+    my $schema = $self->bcs_schema();
+    my $management_regime_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'management_regime', 'project_property')->cvterm_id();
+    my $mf_rs = $schema->resultset("Project::Projectprop")->find({
+        project_id => $self->project_id(),
+        type_id => $management_regime_type_id
+    });
+
+    if ($mf_rs) {
+        my $management_regime = decode_json($mf_rs->value());
+        push @{$management_regime}, $management_factor;
+        $management_regime = encode_json($management_regime);
+        $mf_rs->update({
+            value => $management_regime
+        });
+    } else {
+        $schema->resultset("Project::Projectprop")->create({
+            project_id => $self->project_id,
+            value => encode_json([$management_factor]),
+            type_id => $management_regime_type_id
+        });
+    }
 }
 
 sub get_management_regime {
     my $self = shift;
-    my $schema = $self->schema();
+    my $schema = $self->bcs_schema();
+    my $management_regime_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'management_regime', 'project_property')->cvterm_id();
+    my $mf_rs = $schema->resultset("Project::Projectprop")->find({
+        project_id => $self->project_id(),
+        type_id => $management_regime_type_id
+    });
+    if ($mf_rs) {
+        my $management_regime = decode_json($mf_rs->value);
+        return $management_regime;
+    } else {
+        return "";
+    }
+}
+
+sub remove_management_factor {
+    my $self = shift;
+    my $management_factor = shift;
+    my $schema = $self->bcs_schema();
+    my $management_regime_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'management_regime', 'project_property')->cvterm_id();
+    #TODO...
 }
 
 =head2 function delete_project_entry()

@@ -4,9 +4,11 @@ $management_factor_types => (),
 $user_can_modify => undef
 </%args>
 
+<& /util/import_javascript.mas, classes => [ "jquery", "jquery.dataTables", 'jquery.dataTables-buttons-min'] &>
+
 <div class="well well-sm">
 
-    <table id="management_regime_table">
+    <table id="management_regime_table" style="width:100%;">
     </table>
 
     <br>
@@ -25,9 +27,9 @@ jQuery(document).ready( function() {
     });
 
     jQuery('#new_trial_add_management_factors_submit').click(function() {
-        var new_management_factor_description = jQuery('#new_management_factor_description').text();
-        var new_management_factor_type = jQuery('#new_management_factor_type').value();
-        var new_management_factor_schedule = jQuery('#new_management_factor_schedule').text();
+        var new_management_factor_description = jQuery('#new_management_factor_description').val();
+        var new_management_factor_type = jQuery('#new_management_factor_type').val();
+        var new_management_factor_schedule = jQuery('#new_management_factor_schedule').val();
 
         jQuery.ajax({
             beforeSend: function() {
@@ -45,7 +47,8 @@ jQuery(document).ready( function() {
                 if (response.error) {
                     alert(response.error);
                 } else {
-
+                    alert("Management factor submitted");
+                    reload_managment_regime_table();
                 }
             },
             error: function(response) {
@@ -54,5 +57,63 @@ jQuery(document).ready( function() {
             }
         });
     });
+
+    load_management_regime_table();
+
+    async function load_management_regime_table() {
+        try {
+            let response = await fetch('/ajax/breeders/trial/' + <% $trial_id %> + '/get_management_regime');
+
+            if (!response.ok) {
+                throw new Error("Bad network response");
+            }
+
+            let result = await response.json();
+
+            if (result.error) {
+                alert("Error retrieving management regime.");
+                console.log(result.error);
+                return;
+            } 
+            jQuery('#management_regime_table').DataTable({
+            data: JSON.parse(result.data),
+                columns: [
+                    { data: 'description', title: 'Description' },
+                    { data: 'type', title: 'Type' },
+                    { data: 'schedule', title: 'Schedule' }
+                ]
+            });
+
+        } catch (error) {
+            alert("Error retrieving management regime.");
+            console.log(error);
+        }
+    }
+
+    async function reload_managment_regime_table() {
+        try {
+            let response = await fetch('/ajax/breeders/trial/' + <% $trial_id %> + '/get_management_regime');
+
+            if (!response.ok) {
+                throw new Error("Bad network response");
+            }
+
+            let result = await response.json();
+
+            if (result.error) {
+                alert("Error retrieving management regime.");
+                console.log(result.error);
+                return;
+            } else {
+                let table = jQuery('#management_regime_table').DataTable();
+                table.clear();
+                table.rows.add(JSON.parse(result.data));
+                table.draw();
+            }
+        } catch (error) {
+            alert("Error retrieving management regime.");
+            console.log(error);
+        }
+    }
 });
 </script>

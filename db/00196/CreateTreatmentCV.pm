@@ -79,9 +79,29 @@ sub patch {
 
         my $treatment_cv_id = $h->fetchrow_array();
 
-        # need to create the treatment_ontology cvterm as well, of cv composable_cvtypes
+        my $terms = { 
+        'composable_cvtypes' => 
+            [
+             "treatment_ontology",
+            ],
+        };
 
-        my $insert_treatment_cvprop = "INSERT INTO cvprop ()";
+        my $treatment_ontology_cvterm_id;
+
+        foreach my $t (sort keys %$terms){
+            foreach (@{$terms->{$t}}){
+                $treatment_ontology_cvterm_id = $schema->resultset("Cv::Cvterm")->create_with(
+                    {
+                        name => $_,
+                        cv => $t
+                    })->cvterm_id();
+            }
+        }
+
+        $schema->resultset("Cv::Cvprop")->create({
+            cv_id   => $treatment_cv_id,
+            type_id => $treatment_ontology_cvterm_id
+        });
     }
 
     print STDERR "Patch complete\n";

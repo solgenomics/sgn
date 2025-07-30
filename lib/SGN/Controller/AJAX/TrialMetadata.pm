@@ -3093,6 +3093,8 @@ sub get_management_regime : Chained('trial') PathPart('get_management_regime') A
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    $c->stash->{rest} = {data => encode_json($t->get_management_regime()), success => 1};
 }
 
 sub edit_management_factor_details : Chained('trial') PathPart('edit_management_factor_details') Args(0) { #TODO REFACTOR
@@ -3130,13 +3132,24 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
 
     my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
 
-    if ($action eq "add") {
-        # same as below but adding a new json key
-    } elsif ($action eq "remove") {
-        # get the management regime and remove the part that needs to be removed, set resulting management regime
-    }
+    my $management_factor = {
+        description => $management_factor_description,
+        schedule => $management_factor_schedule,
+        type => $management_factor_type
+    };
 
-    $c->stash->{rest} = { success => 1 };
+    eval {
+        if ($action eq "add") {
+            $t->add_management_factor($management_factor);
+        } elsif ($action eq "remove") {
+            $t->remove_management_factor($management_factor);
+        }
+    };
+    if ($@) {
+        $c->stash->{rest} = {error => "Error editing management regime. $@"};
+    } else {
+        $c->stash->{rest} = { success => 1 };
+    }
 }
 
 sub privileges_denied {
