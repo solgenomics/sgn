@@ -2765,34 +2765,33 @@ sub stock_obsolete_in_bulk_GET {
         $c->detach();
     }
 
-    my $stock_name_string = $c->req->param('stock_name_string');
+    my $stock_name_string = $c->req->param('stock_names');
     my $stock_name_array = decode_json $stock_name_string;
-    print STDERR "STOCK NAME ARRAY =".Dumper($stock_name_array)."\n";
-
     my $is_obsolete = '1';
-#    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
-#    if ($stock) {
-
-#        try {
-#            my $stock = CXGN::Stock->new({
-#                schema=>$schema,
-#                stock_id=>$stock_id,
-#                is_saving=>1,
-#                sp_person_id => $c->user()->get_object()->get_sp_person_id(),
-#                user_name => $c->user()->get_object()->get_username(),
-#                modification_note => $is_obsolete ? "Obsolete at ".localtime : "Un-Obsolete at ".localtime,
-#                is_obsolete => $is_obsolete,
-#                obsolete_note => $obsolete_note,
-#            });
-#            my $saved_stock_id = $stock->store();
-#            $c->stash->{rest} = { success => 1 };
-#        } catch {
-#            $c->stash->{rest} = { error => "Failed: $_" }
-#        };
-#    } else {
-#	    $c->stash->{rest} = { error => "Not a valid stock $stock_id " };
-#	}
+    foreach my $stock_name (@$stock_name_array) {
+        my $stock = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name });
+        if ($stock) {
+            my $stock_id = $stock->stock_id();
+            try {
+                my $stock_obj = CXGN::Stock->new({
+                    schema=>$schema,
+                    stock_id=>$stock_id,
+                    is_saving=>1,
+                    sp_person_id => $c->user()->get_object()->get_sp_person_id(),
+                    user_name => $c->user()->get_object()->get_username(),
+                    modification_note => "Obsolete at ".localtime,
+                    is_obsolete => $is_obsolete,
+                });
+                my $saved_stock_id = $stock_obj->store();
+                $c->stash->{rest} = { success => 1 };
+            } catch {
+                $c->stash->{rest} = { error => "Failed: $_" }
+            };
+        } else {
+            $c->stash->{rest} = { error => "Not a valid stock: $stock_name" };
+        }
+    }
 
 }
 
