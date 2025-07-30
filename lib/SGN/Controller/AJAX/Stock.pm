@@ -2749,4 +2749,52 @@ sub set_display_image_POST : Args(0) {
 
 }
 
+
+sub stock_obsolete_in_bulk : Path('/stock/obsolete_in_bulk') : ActionClass('REST') { }
+
+sub stock_obsolete_in_bulk_GET {
+    my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to obsolete stocks" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "Cannot obsolete stocks. You are not a curator." };
+        $c->detach();
+    }
+
+    my $stock_name_string = $c->req->param('stock_name_string');
+    my $stock_name_array = decode_json $stock_name_string;
+    print STDERR "STOCK NAME ARRAY =".Dumper($stock_name_array)."\n";
+
+    my $is_obsolete = '1';
+#    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+
+#    if ($stock) {
+
+#        try {
+#            my $stock = CXGN::Stock->new({
+#                schema=>$schema,
+#                stock_id=>$stock_id,
+#                is_saving=>1,
+#                sp_person_id => $c->user()->get_object()->get_sp_person_id(),
+#                user_name => $c->user()->get_object()->get_username(),
+#                modification_note => $is_obsolete ? "Obsolete at ".localtime : "Un-Obsolete at ".localtime,
+#                is_obsolete => $is_obsolete,
+#                obsolete_note => $obsolete_note,
+#            });
+#            my $saved_stock_id = $stock->store();
+#            $c->stash->{rest} = { success => 1 };
+#        } catch {
+#            $c->stash->{rest} = { error => "Failed: $_" }
+#        };
+#    } else {
+#	    $c->stash->{rest} = { error => "Not a valid stock $stock_id " };
+#	}
+
+}
+
+
 1;

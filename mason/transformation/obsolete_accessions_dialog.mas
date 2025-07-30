@@ -29,7 +29,7 @@ $transformation_id
             </div>
             <div class="modal-footer">
                 <button id="absolete_accessions_dismiss_button_2" name="obsolete_accessions_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="obsolete_accessions_submit">Obsolete</button>
+                <button type="button" class="btn btn-primary" id="obsolete_stocks_submit">Obsolete</button>
             </div>
         </div>
     </div>
@@ -69,21 +69,28 @@ jQuery(document).ready(function(){
         'order': false,
     });
 
-    jQuery('#obsolete_accessions_submit').click(function(){
-        let selected_accessions = [];
-        let accession_string;
-        jQuery('input[name="checked_transformants"]:checked').each(function() {
-            selected_accessions.push(jQuery(this).val());
+    jQuery('#obsolete_stocks_submit').click(function(){
+        let selected_stocks = [];
+        let formatted_stock_names;
+        let stock_name_string;
+        jQuery('input[name="checked_stocks"]:checked').each(function() {
+            selected_stocks.push(jQuery(this).val());
         });
 
-        if (selected_accessions.length == 0){
+        if (selected_stocks.length == 0){
             alert('Please select accessions that you would like to obsolete');
         } else {
-            accession_ids_string = JSON.stringify(selected_accessions)
+            stock_name_string = JSON.stringify(selected_stocks);
+            formatted_stock_names = selected_stocks.join('\n');
+        }
+
+        const confirmation = confirm('Are you sure you want to obsolete these accessions:' + "\n" + formatted_stock_names);
+
+        if (confirmation) {
             jQuery.ajax({
-                url: '/stock/bulk_obsolete',
+                url: '/stock/obsolete_in_bulk',
                 data : {
-                    'stock_ids' : accession_ids_string,
+                    'stock_names' : stock_name_string,
                 },
                 beforeSend: function(response){
                     jQuery('#working_modal').modal('show');
@@ -110,7 +117,7 @@ jQuery(document).ready(function(){
 
     jQuery("[name='obsolete_accessions_dismiss_button']").click(function() {
         jQuery('#obsolete_accessions_in_bulk_dialog').modal('hide');
-        jQuery("[name='checked_transformants']").prop('checked', false);
+        jQuery("[name='checked_stocks']").prop('checked', false);
     });
 
     jQuery('#dismiss_obsolete_accessions_in_bulk_message_dialog').click(function() {
