@@ -108,6 +108,16 @@ jQuery(document).ready(function(){
 
     });
 
+    jQuery("[name='obsolete_accessions_dismiss_button']").click(function() {
+        jQuery('#obsolete_accessions_in_bulk_dialog').modal('hide');
+        jQuery("[name='checked_transformants']").prop('checked', false);
+    });
+
+    jQuery('#dismiss_obsolete_accessions_in_bulk_message_dialog').click(function() {
+        jQuery('#obsolete_accessions_in_bulk_message_dialog').modal('hide');
+        location.reload();
+    });
+
 });
 
 
