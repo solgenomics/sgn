@@ -1454,7 +1454,7 @@ sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_acce
 
     my @transformants;
     foreach my $r (@sorted_names){
-        push @transformants, ["<input type='checkbox' name='checked_transformants' value='$r->[0]'>", $r->[1]]
+        push @transformants, ["<input type='checkbox' name='checked_stocks' value='$r->[1]'>", $r->[1]];
     }
 
     $c->stash->{rest} = { data => \@transformants };
