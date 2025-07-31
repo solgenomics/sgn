@@ -102,12 +102,13 @@ jQuery(document).ready( function() {
                         }
                     },
                     {
-                        title: 'Delete',
+                        title: 'Actions',
                         data: null,
                         orderable: false,
                         render: function (data, type, row, meta) {
                             let row_json = JSON.stringify(row).replace(/"/g, '&quot;');
-                            return `<button class="btn btn-danger delete_management_factor_btn" data-row="${row_json}"><span class="glyphicon glyphicon-trash"></span></button>`;
+                            return `<button class="btn btn-danger delete_management_factor_btn" data-row="${row_json}"><span class="glyphicon glyphicon-trash"></span></button>
+                            <button class="btn btn-success edit_management_factor_btn" data-row="${row_json}"><span class="glyphicon glyphicon-pencil"></span></button>`;
                         }
                     }
                 ]
@@ -166,7 +167,6 @@ jQuery(document).ready( function() {
                     alert(response.error);
                     console.log(response.error);
                 } else {
-                    alert("Management factor deleted");
                     reload_managment_regime_table();
                 }
             },
