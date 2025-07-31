@@ -2579,7 +2579,7 @@ sub add_management_factor {
     my $schema = $self->bcs_schema();
     my $management_regime_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'management_regime', 'project_property')->cvterm_id();
     my $mf_rs = $schema->resultset("Project::Projectprop")->find({
-        project_id => $self->project_id(),
+        project_id => $self->get_trial_id(),
         type_id => $management_regime_type_id
     });
 
@@ -2592,7 +2592,7 @@ sub add_management_factor {
         });
     } else {
         $schema->resultset("Project::Projectprop")->create({
-            project_id => $self->project_id,
+            project_id => $self->project_id(),
             value => encode_json([$management_factor]),
             type_id => $management_regime_type_id
         });
@@ -2604,11 +2604,12 @@ sub get_management_regime {
     my $schema = $self->bcs_schema();
     my $management_regime_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'management_regime', 'project_property')->cvterm_id();
     my $mf_rs = $schema->resultset("Project::Projectprop")->find({
-        project_id => $self->project_id(),
+        project_id => $self->get_trial_id(),
         type_id => $management_regime_type_id
     });
+
     if ($mf_rs) {
-        my $management_regime = decode_json($mf_rs->value);
+        my $management_regime = decode_json($mf_rs->value());
         return $management_regime;
     } else {
         return "";
@@ -2620,7 +2621,25 @@ sub remove_management_factor {
     my $management_factor = shift;
     my $schema = $self->bcs_schema();
     my $management_regime_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'management_regime', 'project_property')->cvterm_id();
-    #TODO...
+    my $mf_rs = $schema->resultset("Project::Projectprop")->find({
+        project_id => $self->get_trial_id(),
+        type_id => $management_regime_type_id
+    });
+
+    if ($mf_rs) {
+        my $management_regime = decode_json($mf_rs->value());
+        $management_regime = [grep {
+            !($_->{type} eq $management_factor->{type} &&
+            $_->{schedule} eq $management_factor->{schedule} && 
+            $_->{description} eq $management_factor->{description})
+        } @{$management_regime}]; 
+        $management_regime = encode_json($management_regime);
+        $mf_rs->update({
+            value => $management_regime
+        });
+    } else {
+        die "No management regime to edit.";
+    }
 }
 
 =head2 function delete_project_entry()

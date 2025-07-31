@@ -3092,8 +3092,9 @@ sub get_management_regime : Chained('trial') PathPart('get_management_regime') A
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $trial_id = $c->stash->{trial_id};
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $t = CXGN::Project->new( { bcs_schema => $schema, trial_id => $trial_id });
     $c->stash->{rest} = {data => encode_json($t->get_management_regime()), success => 1};
 }
 
@@ -3101,6 +3102,7 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $trial_id = $c->stash->{trial_id};
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $management_factor_schedule = $c->req->param("schedule");
     my $management_factor_description = $c->req->param("description");
@@ -3130,7 +3132,7 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
         return;
     }
 
-    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $t = CXGN::Project->new( { bcs_schema => $schema, trial_id => $trial_id });
 
     my $management_factor = {
         description => $management_factor_description,

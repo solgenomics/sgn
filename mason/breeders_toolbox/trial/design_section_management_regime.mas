@@ -80,7 +80,16 @@ jQuery(document).ready( function() {
                 columns: [
                     { data: 'description', title: 'Description' },
                     { data: 'type', title: 'Type' },
-                    { data: 'schedule', title: 'Schedule' }
+                    { data: 'schedule', title: 'Schedule' },
+                    {
+                        title: 'Delete',
+                        data: null,
+                        orderable: false,
+                        render: function (data, type, row, meta) {
+                            let row_json = JSON.stringify(row).replace(/"/g, '&quot;');
+                            return `<button class="btn btn-danger delete_management_factor_btn" data-row="${row_json}"><span class="glyphicon glyphicon-trash"></span></button>`;
+                        }
+                    }
                 ]
             });
 
@@ -115,5 +124,36 @@ jQuery(document).ready( function() {
             console.log(error);
         }
     }
+
+    jQuery('#management_regime_table').on('click','.delete_management_factor_btn', function() {
+        let row_json = jQuery(this).attr('data-row');
+        row_data = JSON.parse(row_json);
+        jQuery.ajax({
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            url: '/ajax/breeders/trial/'+<% $trial_id %>+'/edit_management_factor_details',
+            data: {
+                description : row_data.description,
+                schedule : row_data.schedule,
+                type : row_data.type,
+                action : 'remove'
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                    console.log(response.error);
+                } else {
+                    alert("Management factor deleted");
+                    reload_managment_regime_table();
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert("An error occurred deleting management factor." + response.error)
+            }
+        });
+    });
 });
 </script>
