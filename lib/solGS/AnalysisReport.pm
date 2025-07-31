@@ -514,10 +514,7 @@ sub check_pca_analysis {
 sub check_cluster_analysis {
     my ( $self, $output_details ) = @_;
 
-    print "Checking cluster analysis output details..." . Dumper($output_details);
-
     foreach my $k ( keys %{$output_details} ) {
-        print STDERR "Checking cluster analysis for K $k\n";
         if ( $k =~ /cluster/) {
             my $result_file = $output_details->{$k}->{result_file};
             if ($result_file) {
