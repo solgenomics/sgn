@@ -2784,7 +2784,6 @@ sub stock_obsolete_in_bulk_GET {
                     is_obsolete => $is_obsolete,
                 });
                 my $saved_stock_id = $stock_obj->store();
-                $c->stash->{rest} = { success => 1 };
             } catch {
                 $c->stash->{rest} = { error => "Failed: $_" }
             };
@@ -2793,6 +2792,7 @@ sub stock_obsolete_in_bulk_GET {
         }
     }
 
+    $c->stash->{rest} = { success => 1 };
 }
 
 
