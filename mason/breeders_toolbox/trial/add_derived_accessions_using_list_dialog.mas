@@ -14,12 +14,14 @@
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" name="add_derived_accessions_form" id="add_derived_accessions_form">
                         <div class="form-group">
-                            <label class="control-label col-sm-6">Select a List of Plants:</label>
-                            <div class="col-sm-6" >
+                            <label class="control-label col-sm-4">Select a List of Plants:</label>
+                            <div class="col-sm-8" >
                                 <div class="input-group">
-                                    <select class="form-control" id="derived_accessions_plant_list_select"></select>
+                                    <select class="form-control" id="plant_to_accession_list_select"></select>
                                 </div>
                             </div>
+                        </div>
+                        <div id ="derived_accessions_form_div">
                         </div>
                     </form>
                 </div>
@@ -80,13 +82,29 @@
 
 jQuery(document).ready(function(){
 
-    jQuery('#add_derived_accessions').click( function(){
+    jQuery('#add_derived_accessions_button').click( function(){
         jQuery('#add_derived_accessions_using_list_dialog').modal('show');
     });
 
-    var lo = new CXGN.List();
+    let lo = new CXGN.List();
+    jQuery('#plant_to_accession_list_select').html(lo.listSelect('plant_to_accession_list_select', ['plants'], 'Select a list', undefined, undefined));
 
-    jQuery('#derived_accessions_plant_list_select').html(lo.listSelect('derived_accessions_plant_list_select', ['plants'], 'Select a list', undefined, undefined));
+    let plant_list_id;
+    jQuery("#plant_to_accession_list_select").change(function() {
+        plant_list_id = jQuery('#plant_to_accession_list_select').val();
+        if (plant_list_id){
+            let plant_list_validation = 1;
+            plant_list_validation = lo.legacy_validate(plant_list_id, 'plants', true);
+            if (plant_list_validation != 1) {
+                alert("The plant list did not pass validation. Names in the list must be uniquenames in the database");
+                return;
+            } else {
+                alert('test');
+                add_derived_accessions_form();
+            }
+        }
+    })
+
 
 
 });
