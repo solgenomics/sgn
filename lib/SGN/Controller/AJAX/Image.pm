@@ -26,6 +26,9 @@ Lukas Mueller <lam87@cornell.edu>
 package SGN::Controller::AJAX::Image;
 
 use Moose;
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS);
+use File::Temp qw(tempdir);
+use File::Basename qw(basename);
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -221,6 +224,61 @@ sub add_image_locus_display_order_POST {
     else { 
 	$c->stash->{rest} = { success => 1 };
     }
+}
+
+sub verify_exif : Path('/ajax/image/verify_exif') : Args(0) : ActionClass('REST') { }
+
+sub verify_exif_POST {
+    my ($self, $c) = @_;
+
+    my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
+    my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+    my @results;
+
+    foreach my $upload (@uploads) {
+        my $filename = $upload->filename;
+        my $file_path = $upload->tempname;
+
+        if ($filename =~ /\.zip$/i) {
+            my $tempdir = tempdir(CLEANUP => 1);
+            my $zip = Archive::Zip->new();
+
+            unless ($zip->read($file_path) == AZ_OK) {
+                push @results, { filename => $filename, status => "error", error => "Failed to read zip file" };
+                next;
+            }
+
+            foreach my $member ($zip->members) {
+                next if $member->isDirectory;
+                my $member_name = $member->fileName;
+
+                # skip non-image files
+                next unless $member_name =~ /\.(jpg|jpeg|png)$/i;
+
+                my $out_path = File::Spec->catfile($tempdir, basename($member_name));
+                unless ($member->extractToFileNamed($out_path) == AZ_OK) {
+                    push @results, { filename => $member_name, status => "error", error => "Failed to extract $member_name" };
+                    next;
+                }
+
+                my $meta = CXGN::Image->extract_exif_info_class($out_path);
+                if ($meta) {
+                    push @results, { filename => basename($member_name), exif => $meta, status => "success" };
+                } else {
+                    push @results, { filename => basename($member_name), exif => undef, status => "no_exif" };
+                }
+            }
+        } else {
+            my $meta = CXGN::Image->extract_exif_info_class($file_path);
+            if ($meta) {
+                push @results, { filename => $filename, exif => $meta, status => "success" };
+            } else {
+                push @results, { filename => $filename, exif => undef, status => "no_exif" };
+            }
+        }
+    }
+
+    $c->stash->{rest} = { images => \@results };
 }
 
  sub image_metadata_store {
