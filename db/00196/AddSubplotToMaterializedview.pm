@@ -216,29 +216,47 @@ SELECT cvterm.cvterm_id AS trait_component_id,
 ALTER VIEW trait_components OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.traits CASCADE;
-CREATE VIEW public.traits AS
-  SELECT cvterm.cvterm_id AS trait_id,
-  (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
-    FROM cv
-    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'trait_ontology'))
-    JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
-      JOIN dbxref USING(dbxref_id)
-    JOIN db ON(dbxref.db_id = db.db_id)
-    LEFT JOIN cvterm_relationship is_variable ON cvterm.cvterm_id = is_variable.subject_id AND is_variable.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF')
-    WHERE is_variable.subject_id IS NOT NULL
-    GROUP BY 1,2
-  UNION
-  SELECT cvterm.cvterm_id AS trait_id,
-  (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
-  FROM cv
-    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'composed_trait_ontology'))
-    JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
+CREATE OR REPLACE VIEW public.traits AS
+SELECT 
+    cvterm.cvterm_id AS trait_id,
+    (((cvterm.name || '|') || db.name) || ':' || dbxref.accession) AS trait_name
+FROM 
+    cvterm
     JOIN dbxref USING(dbxref_id)
     JOIN db ON(dbxref.db_id = db.db_id)
-    LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
-    WHERE is_subject.subject_id IS NOT NULL
-    GROUP BY 1,2 ORDER BY 2;
-    ALTER VIEW traits OWNER TO web_usr;
+    LEFT JOIN cvterm_relationship is_variable 
+        ON cvterm.cvterm_id = is_variable.subject_id 
+        AND is_variable.type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF')
+WHERE 
+    cvterm.cvterm_id IN (
+        SELECT cvterm_id 
+        FROM cvprop 
+        WHERE type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'trait_ontology')
+    )
+    AND is_variable.subject_id IS NOT NULL
+
+UNION
+
+SELECT 
+    cvterm.cvterm_id AS trait_id,
+    (((cvterm.name || '|') || db.name) || ':' || dbxref.accession) AS trait_name
+FROM 
+    cvterm
+    JOIN dbxref USING(dbxref_id)
+    JOIN db ON(dbxref.db_id = db.db_id)
+    LEFT JOIN cvterm_relationship is_subject 
+        ON cvterm.cvterm_id = is_subject.subject_id
+WHERE 
+    cvterm.cvterm_id IN (
+        SELECT cvterm_id 
+        FROM cvprop 
+        WHERE type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'composed_trait_ontology')
+    )
+    AND is_subject.subject_id IS NOT NULL
+ORDER BY 2;
+
+ALTER VIEW public.traits OWNER TO web_usr;
+
 
 DROP VIEW IF EXISTS public.trials CASCADE;
 CREATE VIEW public.trials AS
@@ -465,12 +483,22 @@ SELECT public.stock.stock_id AS plot_id,
   GROUP BY public.stock.stock_id, public.materialized_phenoview.trait_id;
 ALTER VIEW plotsXtraits OWNER TO web_usr;
 
+DROP VIEW IF EXISTS public.subplotsXtraits CASCADE;
+CREATE VIEW public.subplotsXtraits AS
+select sr.object_id as subplot_id, p.cvalue_id as trait_id from stock_relationship sr 
+    join nd_experiment_stock nes on nes.stock_id = sr.object_id
+    join nd_experiment_phenotype nep on nep.nd_experiment_id = nes.nd_experiment_id 
+    join phenotype p on p.phenotype_id = nep.phenotype_id 
+    where sr.type_id = (select cvterm_id from cvterm where name = 'subplot_of')
+    group by 1,2;
+ALTER VIEW subplotsXtraits OWNER TO web_usr;
+
 DROP VIEW IF EXISTS public.traitsXtrials CASCADE;
 CREATE VIEW public.traitsXtrials AS
-SELECT public.materialized_phenoview.trait_id,
-    public.materialized_phenoview.trial_id
-   FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.trait_id, public.materialized_phenoview.trial_id;
+select  p.cvalue_id as trait_id, nep.project_id as trial_id from nd_experiment_project nep 
+join nd_experiment_phenotype nep2 on nep2.nd_experiment_id = nep.nd_experiment_id 
+join phenotype p on p.phenotype_id = nep2.phenotype_id
+GROUP BY 1,2;
 ALTER VIEW traitsXtrials OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.traitsXtrial_designs CASCADE;
