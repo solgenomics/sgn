@@ -445,6 +445,7 @@ sub verify {
     my $traits_validation = $trait_validator->validate($schema,'traits',\@trait_list);
     my @traits_missing = @{$traits_validation->{'missing'}};
     my @traits_wrong_ids = @{$traits_validation->{'wrong_ids'}};
+    my @traits_not_variables = @{$traits_validation->{'not_variables'}};
     my $error_message = '';
     my $warning_message = '';
 
@@ -458,8 +459,18 @@ sub verify {
         # Display matches of traits with the wrong id
         if ( scalar(@traits_wrong_ids) > 0 ) {
             $error_message .= "<br /><br /><strong>Possible Trait Matches:</strong>";
+            $error_message .= "<br /><br />The following traits have names and ontology identifiers that do not match in this database.  The following suggestions have the correct ontology identifier for the name used in your data.";
             foreach my $m (@traits_wrong_ids) {
                 $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />should be<br />" . $m->{'matching_term'};
+            }
+        }
+
+        # Display traits that are not variables
+        if ( scalar(@traits_not_variables) > 0 ) {
+            $error_message .= "<br /><br /><strong>Traits That Are Not Ontology Variables:</strong>";
+            $error_message .= "<br /><br />The following traits are not ontology variables (they do not have associated method and scale information).  Use the Search &gt; Traits page to find the proper Trait Name and Trait ID to use.  The following suggestions include related ontology variables to the terms used in your data.";
+            foreach my $m (@traits_not_variables) {
+                $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />could be<br />" . $m->{'matching_term'};
             }
         }
 
@@ -537,13 +548,13 @@ sub verify {
                 # print STDERR "Trait name = $trait_name\n";
                 foreach my $value_array (@$measurements_array) {
                     # print STDERR "Value array = ".Dumper($value_array)."\n";
-                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array);
+                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array, 1); 
                     $error_message .= $errors;
                     $warning_message .= $warnings;
                 }
              }
             else {
-                ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $measurements_array);
+                ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $measurements_array, 0);
                 $error_message .= $errors;
                 $warning_message .= $warnings;
             }
@@ -558,7 +569,7 @@ sub verify {
 
 =head2 check_measurement()
 
-   Params: $plot_name, $trait_name, $values
+   Params: $plot_name, $trait_name, $values, $file_contains_multiple_values
    The values parameter may be:
     * a arrayref. In that case, the array is assumed to contain: a trait value, a timestamp
     * a hashref. In that case, the values represent high dimensional data (not checked by this function)
@@ -595,7 +606,8 @@ sub check_measurement {
     my $plot_name = shift;
     my $trait_name = shift;
     my $value_array = shift;
-
+    my $file_contains_multiple_values = shift;
+    
     my $error_message = "";
     my $warning_message = "";
 
@@ -620,7 +632,7 @@ sub check_measurement {
         $trait_value = $value_array;
     }
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
-    if ( defined($trait_value) && $trait_name ne "notes" ) {
+    if ( $trait_name ne "notes" ) {
         #print STDERR "TRAIT NAME = ".Dumper( $trait_name)."\n";
         my $trait_cvterm = $self->trait_objs->{$trait_name};
         my $trait_cvterm_id = $trait_cvterm->cvterm_id();
@@ -766,7 +778,10 @@ sub check_measurement {
         #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
         #check if the plot_name, trait_name combination already exists in database.
         elsif ($repeat_type eq "single") {
-
+	    if ($file_contains_multiple_values) {
+		$warning_message .= "Multiple values present in file for single repeat_type term $trait_name\n";
+	    }
+	    
             print STDERR "Processing this trait with value $trait_value as a single repeat type trait with overwrite_values set to ".$self->overwrite_values()."...\n";
             if (exists($self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id})) {
                 my $prev = $self->unique_value_trait_stock->{$trait_value, $trait_cvterm_id, $stock_id};
@@ -792,7 +807,7 @@ sub check_measurement {
 
         #check if the plot_name, trait_name, timestamp combination already exists in same file.
         if (exists($self->check_file_stock_trait_duplicates->{$trait_cvterm_id, $stock_id, $timestamp})) {
-            $warning_message .= "<small>$plot_name has a duplicate value ($trait_value) for trait $trait_name in your file</small><hr>";
+            $warning_message .= "<small>$plot_name has a duplicate value for trait $trait_name in your file</small><hr>";
         }
         $self->check_file_stock_trait_duplicates()->{$trait_cvterm_id, $stock_id, $timestamp} = 1;
     }

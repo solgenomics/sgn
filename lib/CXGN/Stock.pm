@@ -1646,7 +1646,7 @@ sub _store_population_relationship {
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
 
-    my @populations = split /\|/, $self->population_name();
+    my @populations = split(/\|/, $self->population_name());
 
     foreach my $population_name (@populations) {
 
@@ -2181,7 +2181,6 @@ sub hard_delete {
     $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
 }
-
 
 ###__PACKAGE__->meta->make_immutable;
 

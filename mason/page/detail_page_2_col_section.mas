@@ -230,7 +230,8 @@ $field_headers => ()
 				&>
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/tools/correlation/analysis.mas,
-                                    corr_pop_id => $trial_id
+                                    corr_pop_id => $trial_id,
+                                    corr_pop_name => $trial_name
                                 &>
 
                                 <& /solgs/tools/anova/analysis.mas,
@@ -271,6 +272,9 @@ $field_headers => ()
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
 % }
 % } #End trial_analysis_tools
+% if ($info_section_id eq 'trial_nirs_section'){
+                                <& /breeders_toolbox/trial/trial_nirs_data.mas, trial_id => $trial_id &>
+% } #End trial nirs data
 % if ($info_section_id eq 'trial_weather_data'){
                                 <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
 % } #End trial_weather_data
@@ -284,9 +288,15 @@ $field_headers => ()
                                 <&| /page/info_section.mas, title => 'Field Trial to Genotyping Plate Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                                 </&>
+                                <&| /page/info_section.mas, title => 'Field Trial to Crossing Experiment Linkage', id => 'crossing_experiment_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                    <& /breeders_toolbox/trial/crossing_experiment_from_field_trial_linkage.mas, trial_id => $trial_id &>
+                                </&>
+
+                                <!--
                                 <&| /page/info_section.mas, title => 'Field Trial to Crossing Experiment Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                                 </&>
+                                -->
 %} #End trial_linkage_section
 % if ($info_section_id eq 'trial_deletion_section'){
                                 <&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
@@ -510,6 +520,10 @@ $field_headers => ()
 % if ($info_section_id eq 'crossing_trial_from_field_trial_section'){
                                 <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
 % } #End crossing_trial_from_field_trial_section
+
+% if ($info_section_id eq 'crossing_experiment_and_trial_linkage_section'){
+                                <& /breeders_toolbox/cross/crossing_experiment_and_trial_linkage.mas, trial_id => $trial_id  &>
+% } #End crossing_experiment_and_trial_linkage_section
 
 % if ($info_section_id eq 'marker_set_summary_section'){
                                 <& /breeders_toolbox/markers/marker_set_summary.mas &>

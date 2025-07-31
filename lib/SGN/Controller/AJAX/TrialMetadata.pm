@@ -31,6 +31,7 @@ use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Genotype::DownloadFactory;
 use POSIX qw | !qsort !bsearch |;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
 use CXGN::BreedersToolbox::SoilData;
@@ -870,6 +871,9 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         my $parsed_entries = $parsed_data->{data};
         foreach (@$parsed_entries){
             $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
@@ -979,6 +983,9 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         my $parsed_entries = $parsed_data->{data};
         foreach (@$parsed_entries){
             $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
@@ -1199,6 +1206,9 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
             $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
         $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
@@ -1309,6 +1319,9 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
             $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
         $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id);
@@ -1529,6 +1542,9 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
             $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
         $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
@@ -1639,6 +1655,9 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
             $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+            if ($_->{row_num} && $_->{col_num}) {
+                push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
+            }
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
         $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id);
@@ -1841,7 +1860,8 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     unlink $upload_tempfile;
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('TrialPlotGPSCoordinatesXLS');
-    my $parsed_data = $parser->parse();
+    my $coord_type = $c->req->param('upload_gps_coordinate_type');
+    my $parsed_data = $parser->parse({ coord_type => $coord_type });
     #print STDERR Dumper $parsed_data;
 
     if (!$parsed_data) {
@@ -1873,26 +1893,45 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>\@plot_stock_ids}});
         while (my $plot=$plots_rs->next){
             my $coords = $plot_stock_ids_hash{$plot->stock_id};
-            my $geo_json = {
-                "type"=> "Feature",
-                "geometry"=> {
-                    "type"=> "Polygon",
-                    "coordinates"=> [
-                        [
-                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
-                            [$coords->{WGS84_bottom_right_x}, $coords->{WGS84_bottom_right_y}],
-                            [$coords->{WGS84_top_right_x}, $coords->{WGS84_top_right_y}],
-                            [$coords->{WGS84_top_left_x}, $coords->{WGS84_top_left_y}],
-                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+            my $geo_json;
+
+            if ($coord_type eq 'polygon') {
+                $geo_json = {
+                    "type"=> "Feature",
+                    "geometry"=> {
+                        "type"=> "Polygon",
+                        "coordinates"=> [
+                            [
+                                [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+                                [$coords->{WGS84_bottom_right_x}, $coords->{WGS84_bottom_right_y}],
+                                [$coords->{WGS84_top_right_x}, $coords->{WGS84_top_right_y}],
+                                [$coords->{WGS84_top_left_x}, $coords->{WGS84_top_left_y}],
+                                [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+                            ]
                         ]
-                    ]
-                },
-                "properties"=> {
-                    "format"=> "WGS84",
-                }
-            };
+                    },
+                    "properties"=> {
+                        "format"=> "WGS84",
+                    }
+                };    
+            } elsif ($coord_type eq 'point') {
+                $geo_json = {
+                    "type"=> "Feature",
+                    "geometry"=> {
+                        "type"=> "Point",
+                        "coordinates"=> [
+                            
+                            $coords->{WGS84_x}, $coords->{WGS84_y},
+                            
+                        ]
+                    },
+                    "properties"=> {
+                        "format"=> "WGS84",
+                    }
+                }; 
+            }
+            
             my $geno_json_string = encode_json $geo_json;
-            #print STDERR $geno_json_string."\n";
             my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
             $previous_plot_gps_rs->delete_all();
             $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
@@ -2343,6 +2382,34 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     }
 }
 
+sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $treatment_id = $c->req->param('treatment_id');
+
+    if (!($c->user()->check_roles('curator'))) {
+        $c->stash->{rest} = { error => 'You do not have the privileges to remove a treatment from this trial.'};
+        return;
+    }
+    my $trial = $c->stash->{trial};
+    my $trial_id = $c->stash->{trial_id};
+
+    my $result;
+    eval {
+        $result = $trial->remove_treatment($treatment_id);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred while removing the treatment: $@" };
+        return;
+    }
+    if ($result->{error}) {
+        $c->stash->{rest} = { error => $result->{error} };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1, message => "Treatment removed from trial." };
+}
+
 sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2667,17 +2734,22 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
         uniquename => $new_accession
     });
     $accession_rs = $accession_rs->next();
-    my $accession_id = $accession_rs->stock_id;
+    my $new_accession_id = $accession_rs->stock_id;
+    my $old_accession_rs = $schema->resultset("Stock::Stock")->search({
+        uniquename => $old_accession
+    });
+    $old_accession_rs = $old_accession_rs->next();
+    my $old_accession_id = $old_accession_rs->stock_id;
 
     print "Calling Replace Function...............\n";
-    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $accession_id, $plot_of_type_id);
+    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $new_accession_id, $plot_of_type_id);
     if ($replace_return_error) {
         $c->stash->{rest} = { error => $replace_return_error };
         return;
     }
 
     if ($new_plot_name) {
-        my $replace_plot_name_return_error = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $new_plot_name);
+        my $replace_plot_name_return_error = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $old_plot_name, $new_plot_name);
         if ($replace_plot_name_return_error) {
             $c->stash->{rest} = { error => $replace_plot_name_return_error };
             return;
@@ -2829,6 +2901,9 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     my $plant_owner_username = $c->user->get_object->get_username;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $include_plant_coordinates = $c->req->param('include_plant_coordinates');
+    my $num_rows = $c->req->param('rows_per_plot');
+    my $num_cols = $c->req->param('cols_per_plot');
     my $plants_with_treatments;
     if($inherits_plot_treatments eq '1'){
         $plants_with_treatments = 1;
@@ -2847,7 +2922,25 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments, $user_id)) {
+    my @plant_entity_params = ($plants_per_plot, $plants_with_treatments, $user_id, $plant_owner_username);
+
+    if ($include_plant_coordinates) {
+
+        if (!$num_rows || !$num_cols || $num_rows * $num_cols == 0) {
+            $c->stash->{rest} = { error => "To include plant coordinate data, rows and columns must be specified." };
+            return;
+        }
+
+        if ($num_rows * $num_cols < $plants_per_plot) {
+            $c->stash->{rest} = { error => "You cannot have more plants than available spaces. Decrease plants per plot or increase rows or columns." };
+            return;
+        }
+
+        push @plant_entity_params, $num_rows;
+        push @plant_entity_params, $num_cols;
+    }
+
+    if ($t->create_plant_entities(@plant_entity_params)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
@@ -2869,6 +2962,9 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     my $plant_owner_username = $c->user->get_object->get_username;
     my $plants_per_subplot = $c->req->param("plants_per_subplot") || 8;
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $include_plant_coordinates = $c->req->param('include_plant_coordinates');
+    my $num_rows = $c->req->param('rows_per_plot');
+    my $num_cols = $c->req->param('cols_per_plot');
     my $plants_with_treatments;
     if($inherits_plot_treatments eq '1'){
         $plants_with_treatments = 1;
@@ -2887,7 +2983,25 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_subplot_entities($plants_per_subplot, $plants_with_treatments, $user_id)) {
+    my @subplot_plant_entity_params = ($plants_per_subplot, $plants_with_treatments, $user_id, $plant_owner_username);
+
+    if ($include_plant_coordinates) {
+
+        if (!$num_rows || !$num_cols || $num_rows * $num_cols == 0) {
+            $c->stash->{rest} = { error => "To include plant coordinate data, rows and columns must be specified." };
+            return;
+        }
+
+        if ($num_rows * $num_cols < $plants_per_subplot) {
+            $c->stash->{rest} = { error => "You cannot have more plants than available spaces. Decrease plants per subplot or increase rows or columns." };
+            return;
+        }
+
+        push @subplot_plant_entity_params, $num_rows;
+        push @subplot_plant_entity_params, $num_cols;
+    }
+
+    if ($t->create_plant_subplot_entities(@subplot_plant_entity_params)) {
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -3037,7 +3151,7 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
     if ($trial_name ne $treatment_name) {
         my $trial_rs = $schema->resultset('Project::Project')->search({name => $treatment_name});
         if ($trial_rs->count() > 0) {
-            $c->stash->{rest} = { error => 'Please use a different management factor name! That name is already in use.' };
+            $c->stash->{rest} = { error => 'Please use a different treatment name! That name is already in use.' };
             return;
         }
     }
@@ -3838,6 +3952,54 @@ sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_
     my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trials_source_of_crossing_trial();
 
     $c->stash->{rest} = {success => 1, crossing_trials_from_field_trial => $crossing_trials_from_field_trial, field_trials_source_of_crossing_trial => $field_trials_source_of_crossing_trial};
+}
+
+sub field_trial_sources_of_parents : Chained('trial') PathPart('field_trial_sources_of_parents') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trial_sources_of_crossing_experiment();
+    my @source_trials;
+    if ($field_trials_source_of_crossing_trial) {
+        foreach my $trial (@$field_trials_source_of_crossing_trial) {
+            push @source_trials, [qq{<a href="/breeders/trial/$trial->[0]">$trial->[1]</a>}];
+        }
+    }
+    $c->stash->{rest} = { data => \@source_trials };
+}
+
+sub field_trials_for_evaluating_crosses : Chained('trial') PathPart('field_trials_for_evaluating_crosses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $field_trials_for_evaluating_crosses = $c->stash->{trial}->get_field_trials_for_evaluating_crosses();
+    my @field_trials;
+    if ($field_trials_for_evaluating_crosses) {
+        foreach my $trial (@$field_trials_for_evaluating_crosses) {
+            push @field_trials, [qq{<a href="/breeders/trial/$trial->[0]">$trial->[1]</a>}];
+        }
+    }
+    $c->stash->{rest} = { data => \@field_trials };
+}
+
+sub crossing_experiments_from_field_trial : Chained('trial') PathPart('crossing_experiments_from_field_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $crossing_experiments_from_field_trial = $c->stash->{trial}->get_crossing_experiments_from_field_trial();
+    my @crossing_experiments;
+    if ($crossing_experiments_from_field_trial) {
+        foreach my $crossing_experiment (@$crossing_experiments_from_field_trial) {
+            push @crossing_experiments, [qq{<a href="/breeders/trial/$crossing_experiment->[0]">$crossing_experiment->[1]</a>}];
+        }
+    }
+    $c->stash->{rest} = { data => \@crossing_experiments };
 }
 
 sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(0) {
@@ -5812,7 +5974,7 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
     my $stock_entries = $trial->get_stock_entry_summary();
-    
+
     my @summary;
     foreach my $entry (@$stock_entries) {
         my ($parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$entry;

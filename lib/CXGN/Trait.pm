@@ -23,16 +23,16 @@ has 'cvterm_id' => (isa => 'Maybe[Int]',
 		    #required => 1,
     );
 
-has 'cvterm' => ( isa => 'Bio::Chado::Schema::Result::Cv::Cvterm', 
+has 'cvterm' => ( isa => 'Bio::Chado::Schema::Result::Cv::Cvterm',
 		  is => 'rw');
 
 
 has 'name' => ( isa => 'Str',
 		is => 'rw',
 		lazy => 1,
-		default => sub { 
-		    my $self = shift; 
-		    return $self->cvterm->name(); 
+		default => sub {
+		    my $self = shift;
+		    return $self->cvterm->name();
 		},
 
     );
@@ -40,13 +40,13 @@ has 'name' => ( isa => 'Str',
 has 'display_name' => (isa => 'Str',
 		       is => 'ro',
 		       lazy => 1,
-		       default => sub { 
+		       default => sub {
 			   my $self = shift;
 			   my $db = $self->db();
 			   my $name = $self->name();
 			   my $accession = $self->accession();
 			   #print STDERR $db." ".$name." ".$accession."\n";
-			   if ($db && $name && $accession ) { 
+			   if ($db && $name && $accession ) {
 			       return $name ."|".$db.":".$accession;
 			   }
 			   return "";
@@ -56,12 +56,12 @@ has 'display_name' => (isa => 'Str',
 has 'accession' => (isa => 'Str',
 		    is => 'rw',
 		    lazy => 1,
-		    default => sub { 
+		    default => sub {
 			my $self = shift;
 			my $rs = $self->bcs_schema()->resultset("Cv::Cvterm")
-			    -> search( { cvterm_id => $self->cvterm_id() }) 
+			    -> search( { cvterm_id => $self->cvterm_id() })
 			    -> search_related("dbxref");
-			if ($rs->count() ==1) { 
+			if ($rs->count() ==1) {
 			    my $accession = $rs->first()->get_column("accession");
 			    return $accession;
 			}
@@ -73,11 +73,11 @@ has 'accession' => (isa => 'Str',
 has 'term' => (isa => 'Str',
 	       is => 'ro',
 	       lazy => 1,
-	       default => sub { 
+	       default => sub {
 		   my $self = shift;
 		   my $accession = $self->accession();
 		   my $db = $self->db();
-		   if ($accession && $db) { 
+		   if ($accession && $db) {
 		       return "$db:$accession";
 		   }
 		   return "";
@@ -87,16 +87,16 @@ has 'term' => (isa => 'Str',
 has 'db'   => ( isa => 'Str',
 		is => 'rw',
 		lazy => 1,
-		default => sub { 
+		default => sub {
 		    my $self = shift;
 		    my $rs = $self->bcs_schema()->resultset("Cv::Cvterm")->search( { cvterm_id => $self->cvterm_id()})->search_related("dbxref")->search_related("db");
-		    if ($rs->count() == 1) { 
+		    if ($rs->count() == 1) {
 			my $db_name =  $rs->first()->get_column("name");
 			#print STDERR "DBNAME = $db_name\n";
 			return $db_name;
 		    }
 		    return "";
-			
+
 		}
     );
 
@@ -138,9 +138,9 @@ has 'dbxref_id' => (
 has 'definition' => (isa => 'Maybe[Str]',
 		     is => 'rw',
 		     lazy => 1,
-		     default => sub { 
+		     default => sub {
 			 my $self = shift;
-			 return $self->cvterm->definition(); 
+			 return $self->cvterm->definition();
 		     },
 
     );
@@ -184,17 +184,17 @@ has 'attribute' => (
 has 'format' => (isa => 'Str',
 		 is => 'ro',
 		 lazy => 1,
-		 default => sub { 
+		 default => sub {
 		     my $self = shift;
 
-		     my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find( 
-			 { 
-			     cvterm_id => $self->cvterm_id(), 'type.name' => 'trait_format' 
-			 }, 
-			 { join => 'type'} 
+		     my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find(
+			 {
+			     cvterm_id => $self->cvterm_id(), 'type.name' => 'trait_format'
+			 },
+			 { join => 'type'}
 			 );
-		     
-		     if ($row) { 
+
+		     if ($row) {
 			 return $row->value();
 		     }
 		     return "";
@@ -334,7 +334,7 @@ has 'method' => (
 				bcs_schema => $self->bcs_schema,
 				cvterm_id => $self->cvterm_id
 			});
-		} else { return undef;}
+		} else { return;}
 	}
 );
 
@@ -349,7 +349,7 @@ has 'scale' => (
 				bcs_schema => $self->bcs_schema,
 				cvterm_id => $self->cvterm_id
 			});
-		} else {return undef;}
+		} else {return;}
 	}
 );
 
@@ -415,7 +415,7 @@ has 'trait_attribute_id' => (
 	}
 );
 
-sub BUILD { 
+sub BUILD {
     #print STDERR "BUILDING...\n";
     my $self = shift;
     my $cvterm;
@@ -521,11 +521,18 @@ sub store {
 		$accession++;
 	}
 
-	# get cvterm_id for VARIABLE_OF
+	# get cvterm_id for VARIABLE_OF. Needs to be stored with cv_id = 'relationship'
+    my $relationship_cv = $schema->resultset("Cv::Cvt")->find( { name => 'relationship'});
+    my $rel_cv_id;
+    if ($relationship_cv) {
+        $rel_cv_id = $relationship_cv->cv_id ;
+    } else {
+        print STDERR "relationship ontology is not found in the database\n";
+    }
 	my $variable_of_cvterm = $schema->resultset("Cv::Cvterm")->find(
 		{
 			name        => 'VARIABLE_OF',
-			cv_id       => $cv_id,
+			cv_id       => $rel_cv_id,
 			is_obsolete => 0
 		},
 		{ key => 'cvterm_c1' }
@@ -549,17 +556,17 @@ sub store {
 
 		# add trait info to cvterm
 		$new_term = $schema->resultset("Cv::Cvterm")->create(
-			{ cv_id         => $cv_id,
+			{   cv_id         => $cv_id,
 				name        => $name,
 				definition  => $description,
 				dbxref_id   => $new_term_dbxref->dbxref_id(),
 				is_obsolete => $active ? 0 : 1
-			});
+            });
 
 		# set cvtermrelationship VARIABLE_OF to put terms under ontology
 		# add cvterm_relationship entry linking term to ontology root
 		my $relationship = $schema->resultset("Cv::CvtermRelationship")->create(
-			{ type_id      => $variable_of_id,
+			{   type_id      => $variable_of_id,
 				subject_id => $new_term->get_column('cvterm_id'),
 				object_id  => $root_id
 			});

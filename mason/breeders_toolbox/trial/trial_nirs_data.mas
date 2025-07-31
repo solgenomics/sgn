@@ -1,0 +1,341 @@
+
+<%args>
+$trial_id
+$stockref => undef
+</%args>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/source/legacy/d3/graphers/nirsDataLineGraph.js"></script>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables', 'd3.graphers.nirsDataLineGraph.js', 'd3.d3v4Min' ] &>
+
+<style>
+    #nirs_spectra_table tbody tr {
+        background-color: white !important;
+    }
+    #nirs_data_table {
+        margin-top: 30px;
+    }
+    #clear_graph_btn {
+        float: right;
+        margin-top: -2.5em;
+        margin-right: 1em;
+    }
+</style>
+
+<div class="well well-sm" id="nirs_analysis_plot_spectra_protocol_select">
+</div>
+
+<center>
+    <button class="btn btn-sm btn-primary" id="submit_protocol_selection">Select</button>
+</center>
+
+<div class="well mt-4" id="nirs_table_section" style="display: none;">
+    <table id="nirs_data_table" class="display" style="width:100%">
+    </table>
+</div>
+
+<div class="well mt-4" id ="multi_graph_section" style="display: none;">
+    <h4>Multiple Sample Graph</h4>
+    <button class="btn btn-sm btn-primary" id="clear_graph_btn">Clear Graph</button>
+    <div id="multi_graph_container" style="width: 110%; height: 500px;"></div>
+    
+</div>
+
+<div id="large_graph" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Sample Name: <span id="title_sample_name"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div id="large_graph_container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var trial_id = '<% $trial_id %>';
+
+jQuery(document).ready(function() {
+
+    jQuery('#trial_nirs_section_onswitch').click(function() {
+        get_select_box('high_dimensional_phenotypes_protocols','nirs_analysis_plot_spectra_protocol_select', {'checkbox_name':'nirs_analysis_plot_spectra_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol', 'trial_id': trial_id});
+    });
+
+    jQuery('#submit_protocol_selection').click(function() {
+        const selected = [];
+        const blank_data = [];
+        jQuery('input[name="nirs_analysis_plot_spectra_protocol_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if (selected.length !== 1) {
+            alert('Please select one protocol.');
+        } else {
+            const selectedProtocolId = selected[0];
+            //console.log('Selected protocol ID:', selectedProtocolId);
+            jQuery('#working_modal').modal('show');
+            Promise.all([
+                get_nirs_data(trial_id, selectedProtocolId),
+                get_nirs_protocol(selectedProtocolId)
+            ])
+            .then(([nirsDataResponse, protocolResponse]) => {
+                console.log("NIRS data:", nirsDataResponse);
+                //console.log("frequencies response:", protocolResponse);
+                const frequencies = protocolResponse.result.data[0].header_column_names;
+                //console.log('frequnecy data:', frequencies);
+                show_nirs_data(nirsDataResponse.result, frequencies);
+                update_multi_graph(blank_data);
+                jQuery('#nirs_table_section').show();
+                jQuery('#multi_graph_section').show();
+            })
+            .catch((error) => {
+                console.error('Error fetching NIRS data:', error);
+                alert('An error occurred while fetching data');
+            })
+            .finally(() => {
+                jQuery('#working_modal').modal('hide');
+            });
+        }
+    });
+
+    function get_nirs_protocol(selectedProtocolId) {
+        return jQuery.ajax({
+            'url': "/brapi/v2/nirs/" + selectedProtocolId,
+            'method': "GET"
+        });
+    }
+
+    function get_nirs_data(trial_id, selectedProtocolId) {
+        return jQuery.ajax({
+            'url': "/brapi/v2/nirs/" + selectedProtocolId + "/matrix",
+            'data': {
+                studyDbId: trial_id,
+            },
+            'method': "GET"
+        });
+    }
+
+    var multiGraphData = [];
+    let plottedSamples = new Set();
+    let samples_map = {};
+
+    function show_nirs_data(result, frequencies) {
+        var data = [];
+        samples_map = {};
+
+        result.data.forEach(item => {
+            var unique_key = item.germplasmDbId;
+            if (!samples_map[unique_key]) {
+                samples_map[unique_key] = {
+                    observationUnitName: item.observationUnitName,
+                    germplasmName: item.germplasmName,
+                    observationUnitDbId: item.observationUnitDbId,
+                    values: [],
+                    germplasmDbId: item.germplasmDbId
+                };
+            }
+
+            const pairedValues = item.row.map((value, index) => ({
+                value: parseFloat(value),
+                frequency: parseFloat(frequencies[index])
+            }));
+
+            samples_map[unique_key].values.push({
+                pairedValues
+            })
+        });
+
+        for (var unique_id in samples_map) {
+            var group = samples_map[unique_id]
+
+            var line_graph = `<div class="small-graph" data-observation="${unique_id}"></div>`;
+            var plot_button = `<button class="btn btn-sm plot-btn" data-sample="${unique_id}">Plot</button>`;
+            var accession_link = `<a href='/stock/${group.germplasmDbId}/view'>${group.germplasmName}</a>`;
+            data.push([group.observationUnitName, group.observationUnitDbId, accession_link, line_graph, plot_button]);
+        }
+
+        jQuery('#nirs_data_table').html(`
+            <thead>
+                <tr>
+                    <th>Sample Name</th>
+                    <th>Sample ID</th>
+                    <th>Accession</th>
+                    <th>Spectra Graph</th>
+                    <th>Plot on Large Graph</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `);
+        jQuery('#nirs_data_table').DataTable( {
+            'destroy': true,
+            'columns': [
+                { title: 'Sample Name' },
+                { title: 'Sample ID' },
+                { title: 'Accession' },
+                { title: 'Spectra Graph'},
+                { title: 'Plot on Large Graph'}
+            ],
+            'columnDefs': [
+                {
+                    "targets": 3,
+                    "className": "text-center",
+                }
+            ],
+            'data': data,
+            'drawCallback': function (settings) {
+                jQuery(".small-graph").each(function () {
+                    var container = jQuery(this);
+                    var sampleKey = container.data('observation');
+                    var group = samples_map[sampleKey];
+                    var small_graph_data = group.values;
+
+                    draw_small_graph(container, small_graph_data);
+                });
+                /*
+                jQuery(".plot-btn").click(function () {
+                    var sampleKey = jQuery(this).data('sample');
+                    var button = jQuery(this);
+                    var isPlotted = plottedSamples.has(sampleKey);
+
+                    if (isPlotted) {
+                        multiGraphData = multiGraphData.filter(d => d.label !== samples_map[sampleKey].observationUnitName);
+                        plottedSamples.delete(sampleKey);
+                        button.text("Plot");
+                    } else {
+                        var group = samples_map[sampleKey];
+                        var graph_data = group.values.flatMap(d => d.pairedValues);
+                        var label_sample_name = group.observationUnitName;
+
+                        multiGraphData.push({
+                            data: graph_data,
+                            label: label_sample_name
+                        });
+                        plottedSamples.add(sampleKey);
+                        button.text("Remove Plot");
+                    }
+                    update_multi_graph(multiGraphData);
+                });
+                */
+            } 
+        });
+        jQuery('#nirs_data_table tbody').on('click', '.plot-btn', function () {
+            var sampleKey = jQuery(this).data('sample');
+            var button = jQuery(this);
+            var isPlotted = plottedSamples.has(sampleKey);
+
+            if (!samples_map[sampleKey]) {
+                console.warn("Missing sampleKey in samples_map", sampleKey);
+                return;
+            }
+
+            if (isPlotted) {
+                multiGraphData = multiGraphData.filter(d => d.label !== samples_map[sampleKey].observationUnitName);
+                plottedSamples.delete(sampleKey);
+                button.text(plottedSamples.has(sampleKey) ? 'Remove Plot' : 'Plot');
+            } else {
+                var group = samples_map[sampleKey];
+                var graph_data = group.values.flatMap(d => d.pairedValues);
+                var label_sample_name = group.observationUnitName;
+
+                multiGraphData.push({
+                    data: graph_data,
+                    label: label_sample_name
+                });
+                plottedSamples.add(sampleKey);
+                button.text(plottedSamples.has(sampleKey) ? 'Remove Plot' : 'Plot');
+            }
+            update_multi_graph(multiGraphData);
+        }); 
+    }
+
+    jQuery('#clear_graph_btn').on('click', function() {
+        nirsDataLineGraph.clearGraph('#multi_graph_container');
+        multiGraphData = [];
+        plottedSamples.clear();
+
+        const table = jQuery('#nirs_data_table').DataTable();
+        table.rows().invalidate().draw(false);
+    });
+
+    function draw_small_graph(container, data) {
+        var small_graph_dim = {
+            "width": 60,
+            "height": 20,
+            "margin": { "top": 5, "right": 5, "bottom": 5, "left":5}  
+        };
+
+        var options = {
+            showXAxis: false, 
+            showYAxis: false, 
+            showDots: false, 
+            showTitle: false
+        };
+
+        const flattened_data = data.flatMap(d => d.pairedValues);
+        nirsDataLineGraph.drawLineGraph(flattened_data, container.get(0), small_graph_dim, '', '', options);
+
+        container.on('click', function() {
+            var sampleKey = container.data('observation');
+            var group = samples_map[sampleKey];
+            var graph_data = group.values;
+            var flattened_graph_data = graph_data.flatMap(d => d.pairedValues);
+            var label_sample_name = group.observationUnitName;
+            open_large_graph(flattened_graph_data, 'Spectral Value', label_sample_name);
+        });
+    }
+
+    function open_large_graph(data, trait_name, label_observation_unit_name) {
+        jQuery('#title_trait_name').text(trait_name);
+        jQuery('#large_graph_container').html('');
+        jQuery('#large_graph').modal('show');
+
+        var options = {
+            showXAxis:true, 
+            showYAxis:true, 
+            showTitle:true,
+            showDots: true
+        };
+
+        nirsDataLineGraph.drawLineGraph(
+            data,
+            "#large_graph_container",
+            null,
+            trait_name,
+            label_observation_unit_name,
+            options
+        );
+    }
+
+    function update_multi_graph(data) {
+        jQuery("#multi_graph_container").html('');
+
+        var options = {
+            showXAxis: true,
+            showYAxis: true,
+            showTitle: true,
+            showDots: true,
+            multiLine: true
+        };
+
+        nirsDataLineGraph.drawMultiLineGraph(
+            data,
+            "#multi_graph_container",
+            'Wavelength',
+            'Spectral Value',
+            '',
+            options
+        );
+    }
+
+    
+
+});
+
+    
+</script>

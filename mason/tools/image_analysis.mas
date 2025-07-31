@@ -44,12 +44,6 @@ tr.shown td.details-control {
 
 <div class="well well-sm">
     <center>
-    <h4>The Necrosis Image Analysis is explained in the paper here: <a href="https://csce.ucmss.com/cr/books/2018/LFS/CSREA2018/IPC3638.pdf">Necrosis Image Analysis</a>.</h4>
-    </center>
-</div>
-
-<div class="well well-sm">
-    <center>
     <button class="btn btn-primary" id="upload_images_link">Upload New Images</button>
     </center>
 </div>
@@ -427,15 +421,23 @@ jQuery(document).ready(function(){
             // console.log("Results are:");
             // console.log(results);
             var first = results[0];
-            let metricsData = Object.entries(first.result.analysis_info).map(( [key, value] ) => ({ key : value }));
 
-            jQuery('#metrics_table').DataTable({
-                "data": metricsData,
-                "columns": [
-                    { "data": "metric" },
-                    { "data": "value" },
-                ]
-            });
+            let metricsData = Object.entries(first.result.analysis_info)
+                .filter(([key, value]) => key != null && value != null)
+                .map(([key, value]) => ({
+                    metric: key,
+                    value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+                }));
+
+            if (metricsData.length > 0) {
+                jQuery('#metrics_table').DataTable({
+                    "data": metricsData,
+                    "columns": [
+                        { "data": "metric" },
+                        { "data": "value" },
+                    ]
+                });
+            }
 
             if (results.length > 0) {
                 jQuery.ajax({

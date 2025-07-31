@@ -1,0 +1,63 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/trials_select.mas - a template to select a trial from a list or dataset of trials
+
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$dataset_id => undef
+$dataset_name => undef
+$list_id => undef
+$combo_pops_id => undef
+$data_structure => undef
+$data_set_type => undef
+$title => undef
+
+</%args>
+
+<%perl>
+
+
+if (!$data_structure) {
+   if ($dataset_id) {
+      $data_structure = 'dataset';
+   } elsif ($list_id) {
+     $data_structure = 'list';
+   } else {
+    $data_structure = 'combined_trials';
+   }
+}
+
+
+my $url = $c->req->path;
+my $collapsed = 0;
+my $collapsible = 0;
+
+</%perl>
+
+<div id='trials_select_div' class="col-xs-12 col-sm-6 col-md-4" style="margin-top: 18px;">
+    <select id="trial_select" class="form-control">
+        <option value="" disabled selected>Select a trial</option>
+        <!-- Options will be dynamically populated -->
+    </select>
+</div>
+
+<input type="hidden" id="dataset_id" value="<% $dataset_id %>" />
+<input type="hidden" id="dataset_name" value="<% $dataset_name %>" />
+<input type="hidden" id="list_id" value="<% $list_id %>">
+<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" />
+<input type="hidden" id="data_structure" value="<% $data_structure %>" />
+<input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
+
+
+<& /util/import_javascript.mas, classes => ["solGS.trialsSelect"] &>
