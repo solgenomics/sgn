@@ -514,8 +514,11 @@ sub check_pca_analysis {
 sub check_cluster_analysis {
     my ( $self, $output_details ) = @_;
 
+    print "Checking cluster analysis output details..." . Dumper($output_details);
+
     foreach my $k ( keys %{$output_details} ) {
-        if ( $k =~ /cluster/ ) {
+        print STDERR "Checking cluster analysis for K $k\n";
+        if ( $k =~ /cluster/) {
             my $result_file = $output_details->{$k}->{result_file};
             if ($result_file) {
                 while (1) {
@@ -895,61 +898,46 @@ sub combine_populations_message {
     return $message;
 }
 
-# sub kinship_analysis_message {
-#     my ( $self, $output_details ) = @_;
-
-#     my $message;
-
-#     foreach my $k ( keys %{$output_details} ) {
-#         if ( $k =~ /kinship/ ) {
-
-#             my $output_page = $output_details->{$k}->{output_page};
-
-#             if ( $output_details->{$k}->{success} ) {
-#                 $message =
-# 'Your kinship analysis is done. You can access the result here:'
-#                   . "\n\n$output_page\n\n";
-#             }
-#             else {
-#                 no warnings 'uninitialized';
-#                 my $fail_message = $output_details->{$k}->{failure_reason};
-
-#                 $message = "The kinship analysis failed.\n";
-#                 $message .= "\nPossible causes are:\n$fail_message\n";
-#                 $message .= 'Refering page: ' . $output_page . "\n\n";
-#                 $message .=
-# "We will troubleshoot the cause and contact you when we find out more.\n\n";
-#             }
-#         }
-#     }
-
-#     return $message;
-# }
-
-
 sub generic_analysis_email_message {
     my ( $self, $output_details) = @_;
 
     my $message;
     my $analysis_type = $output_details->{analysis_type};
+    my $analysis_name = $output_details->{analysis_profile}->{analysis_name};
 
     foreach my $k ( keys %{$output_details} ) {
         if ( $k =~ /$analysis_type/ ) {
-            print "Generic output details: ", Dumper($output_details);
             my $output_page = $output_details->{$k}->{output_page};
+            my $extra_info;
 
+            my $referer = $output_details->{referer};
+            
             if ( $output_details->{$k}->{success} ) {
-                $message =
-                    "Your $analysis_type analysis is done. You can access the result here:"
-                  . "\n\n$output_page\n\n";
+                if ( $referer !~ /$analysis_type/) {
+                    my $alternative_output_page = $output_page;
+                    $output_page = $referer;
+
+                    $extra_info = 'Please run the analysis again using the same parameters to see the output.';
+                    $extra_info .= "\n\nAlternatively, if you don't remember the parameters, you can access the output here:";
+                    $extra_info .= "\n" .$alternative_output_page . "\n\n";
+                }   
+
+                $message = "Your $analysis_type analysis, $analysis_name, is done. You can access the result here:";
+                $message .= "\n$output_page\n\n";
+
+                if ($extra_info) {
+                    $message .= $extra_info;
+                }
+
             }
             else {
                 no warnings 'uninitialized';
                 my $fail_message = $output_details->{$k}->{failure_reason};
 
-                $message = "The $analysis_type analysis failed.\n";
+                $message = "The $analysis_type analysis, $analysis_name, failed.\n";
                 $message .= "\nPossible causes are:\n$fail_message\n";
-                $message .= 'Refering page: ' . $output_page . "\n\n";
+                $message .= 'Refering page: ' . $referer. "\n\n";
+                $message .= 'Output page: ' . $output_page. "\n\n";
                 $message .=
 "We will troubleshoot the cause and contact you when we find out more.\n\n";
             }
@@ -961,72 +949,6 @@ sub generic_analysis_email_message {
     return $message;
 }
 
-
-
-# sub pca_analysis_message {
-#     my ( $self, $output_details ) = @_;
-
-#     my $message;
-
-#     foreach my $k ( keys %{$output_details} ) {
-#         if ( $k =~ /pca/ ) {
-            
-#             print "PCA output details: ", Dumper($output_details);
-
-#             my $output_page = $output_details->{$k}->{output_page};
-
-#             if ( $output_details->{$k}->{success} ) {
-#                 $message = 'Your PCA is done. You can access the result here:'
-#                   . "\n\n$output_page\n\n";
-#             }
-#             else {
-#                 no warnings 'uninitialized';
-#                 my $fail_message = $output_details->{$k}->{failure_reason};
-
-#                 $message = "The PCA failed.\n";
-#                 $message .= "\nPossible causes are:\n$fail_message\n";
-#                 $message .= 'Refering page: ' . $output_page . "\n\n";
-#                 $message .=
-# "We will troubleshoot the cause and contact you when we find out more.\n\n";
-#             }
-#         }
-#     }
-
-#     return $message;
-# }
-
-
-# sub cluster_analysis_message {
-#     my ( $self, $output_details ) = @_;
-
-#     my $message;
-
-#     foreach my $k ( keys %{$output_details} ) {
-#         if ( $k =~ /cluster/ ) {
-
-#             my $output_page = $output_details->{$k}->{output_page};
-
-#             if ( $output_details->{$k}->{success} ) {
-
-#                 $message =
-#                     'Your clustering is done. You can access the result here:'
-#                   . "\n\n$output_page\n\n";
-#             }
-#             else {
-#                 no warnings 'uninitialized';
-#                 my $fail_message = $output_details->{$k}->{failure_reason};
-
-#                 $message = "The cluster analysis failed.\n";
-#                 $message .= "\nPossible causes are:\n$fail_message\n";
-#                 $message .= 'Refering page: ' . $output_page . "\n\n";
-#                 $message .=
-# "We will troubleshoot the cause and contact you when we find out more.\n\n";
-#             }
-#         }
-#     }
-
-#     return $message;
-# }
 
 sub log_analysis_status {
     my ( $self, $output_details ) = @_;
