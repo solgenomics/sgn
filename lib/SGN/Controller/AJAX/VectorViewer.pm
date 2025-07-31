@@ -27,7 +27,7 @@ sub store :Chained('vector') PathPart('store') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' )
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
 	
     if (! $c->user()) {
 	$c->stash->{rest} = { error => 'You need to be logged in with corresponding privileges to store vectors.' };
@@ -85,7 +85,7 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' )
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
 	
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $vector_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vectorviewer_data', 'stock_property')->cvterm_id();
@@ -120,7 +120,7 @@ sub import :Chained('vector') PathPart('import') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' )
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
 	
     if (! $c->user()) {
 	$c->stash->{rest} = { error => 'You need to be logged in to store vectors.' };
