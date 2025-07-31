@@ -28,6 +28,8 @@ sub store :Chained('vector') PathPart('store') Args(0) {
     my $c = shift;
 
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+    $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
 	
     if (! $c->user()) {
 	$c->stash->{rest} = { error => 'You need to be logged in with corresponding privileges to store vectors.' };
@@ -86,6 +88,8 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
     my $c = shift;
 
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+    $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
 	
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $vector_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vectorviewer_data', 'stock_property')->cvterm_id();
@@ -121,7 +125,9 @@ sub import :Chained('vector') PathPart('import') Args(0) {
     my $c = shift;
 
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-	
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+    $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
+    
     if (! $c->user()) {
 	$c->stash->{rest} = { error => 'You need to be logged in to store vectors.' };
 	return;
