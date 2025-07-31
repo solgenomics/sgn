@@ -1,0 +1,96 @@
+<%args>
+
+</%args>
+
+
+<div class="modal fade" id="add_derived_accessions_using_list_dialog" name="add_derived_accessions_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addDerivedAccessionsUsingListDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="reset" class="close" id="add_derived_accessions_using_list_dismiss_button_1" name="add_derived_accessions_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addDerivedAccessionsUsingList">Add New Accessions Derived from Plants Using a List</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" name="add_derived_accessions_form" id="add_derived_accessions_form">
+                        <div class="form-group">
+                            <label class="control-label col-sm-6">Select a List of Plants:</label>
+                            <div class="col-sm-6" >
+                                <div class="input-group">
+                                    <select class="form-control" id="derived_accessions_plant_list_select"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="derived_accessions_list_submit">Submit</button>
+                <button id="add_derived_accessions_using_list_dismiss_button_2" name="add_derived_accessions_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_derived_accessions_using_list_saved_dialog_message" name="add_derived_accessions_using_list_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addDerivedAccessionsUsingListSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addDerivedAccessionsUsingListSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The new accessions were stored successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_add_derived_accessions_using_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_derived_accessions_using_list_error_dialog" name="add_derived_accessions_using_list_error_dialog" tabindex="-1" role="dialog" aria-labelledby="addDerivedAccessionsUsingListErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addDerivedAccessionsUsingListErrorDialog">Add New Accessions Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#add_derived_accessions').click( function(){
+        jQuery('#add_derived_accessions_using_list_dialog').modal('show');
+    });
+
+    var lo = new CXGN.List();
+
+    jQuery('#derived_accessions_plant_list_select').html(lo.listSelect('derived_accessions_plant_list_select', ['plants'], 'Select a list', undefined, undefined));
+
+
+});
+
+
+
+</script>
