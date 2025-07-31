@@ -29,8 +29,10 @@ jQuery(document).ready( function() {
     jQuery('#new_trial_add_management_factors_submit').click(function() {
         var new_management_factor_description = jQuery('#new_management_factor_description').val();
         var new_management_factor_type = jQuery('#new_management_factor_type').val();
-        var new_management_factor_schedule = jQuery('#new_management_factor_schedule').val();
-
+        var new_management_factor_schedule = jQuery('#new_management_factor_schedule').val();\
+        var new_management_factor_completions = jQuery('#new_mf_completion_times_table').html();
+        new_management_factor_completions = html_table_to_json(new_management_factor_completions);
+        console.log(new_management_factor_completions);
         jQuery.ajax({
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -40,6 +42,7 @@ jQuery(document).ready( function() {
                 description : new_management_factor_description,
                 schedule : new_management_factor_schedule,
                 type : new_management_factor_type,
+                completions: new_management_factor_completions,
                 action : 'add'
             },
             success: function(response) {
@@ -81,6 +84,23 @@ jQuery(document).ready( function() {
                     { data: 'type', title: 'Type' },
                     { data: 'description', title: 'Description' },
                     { data: 'schedule', title: 'Schedule' },
+                    { 
+                        data: 'completions', 
+                        title: 'Completion records',
+                        orderable: false,
+                        render: function(data, type, row, meta) {
+                            if (Array.isArray(data)) {
+                                let html = '<table>';
+                                data.forEach(item => {
+                                    html += `<tr><td>${item}</td></tr>`;
+                                });
+                                html += '</table>';
+                                return html;
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
                     {
                         title: 'Delete',
                         data: null,
@@ -137,6 +157,7 @@ jQuery(document).ready( function() {
                 description : row_data.description,
                 schedule : row_data.schedule,
                 type : row_data.type,
+                completions: JSON.stringify(row_data.completions),
                 action : 'remove'
             },
             success: function(response) {
@@ -151,9 +172,14 @@ jQuery(document).ready( function() {
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
-                alert("An error occurred deleting management factor." + response.error)
+                alert("An error occurred deleting management factor: " + response.error);
+                console.log(response.error);
             }
         });
     });
+
+    function html_table_to_json(html_str) {
+        return JSON.stringify(html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>"));
+    }
 });
 </script>

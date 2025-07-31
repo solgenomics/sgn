@@ -109,8 +109,8 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		eval {
 			$new_treatment = $schema->resultset("Cv::Cvterm")->create_with({
 				name => $treatment_name,
-				cv => 'treatment',
-				db => 'TREATMENT',
+				cv => 'experiment_treatment',
+				db => 'EXPERIMENT_TREATMENT',
 				dbxref => '' #TODO need to keep track of this manually
 			});
 			# bio chado schema result cv cvtermrelationship -> find_or_create()

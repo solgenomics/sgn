@@ -37,6 +37,22 @@ server administrator with questions."></span>&nbsp; Management factor type:</lab
                                 <input style="width:100%;" class="form-control" id="new_management_factor_schedule" name="new_management_factor_schedule" type="text" placeholder="e.g. Twice weekly on Mondays and Thursdays starting 1 July 2025"/>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Completion records:<br>
+                            <i style="font-weight:normal;">These can be added later.</i></label>
+                            <div class="col-sm-8">
+                                <table>
+                                    <tr>
+                                        <td><button id="new_mf_dialog_add_completion_time_btn" class="btn btn-small btn-primary">Add completion time</button></td>
+                                        <td><input class="form-control" id="new_mf_new_completion_time" type="datetime-local"/></td>
+                                    </tr>
+                                </table>
+                                <br>
+                                <table id="new_mf_completion_times_table" style="width:50%">
+                                </table>
+                                <button id="new_mf_remove_most_recent_completion_time_btn" class="btn btn-small btn-danger" style="display:none;"><span class="glyphicon glyphicon-trash"></span></button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -47,3 +63,30 @@ server administrator with questions."></span>&nbsp; Management factor type:</lab
         </div>
     </div>
 </div>
+
+<script>
+jQuery(document).ready( function() {
+    jQuery('#new_mf_dialog_add_completion_time_btn').on('click',function(e) {
+        e.preventDefault();
+        let time_to_add = jQuery('#new_mf_new_completion_time').val();
+        if (time_to_add !== "" && time_to_add !== null) {
+            time_to_add = time_to_add.replace('T', ' ');
+            jQuery('#new_mf_completion_times_table').append("<tr><td>"+time_to_add+"</td></tr>");
+        }
+        jQuery('#new_mf_new_completion_time').val('');
+        jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', '');
+    });
+
+    jQuery('#new_mf_remove_most_recent_completion_time_btn').on('click',function(e) {
+        e.preventDefault();
+        let table_str = jQuery('#new_mf_completion_times_table').html();
+        let table_elems = table_str.split("</tr><tr>");
+        table_elems.pop();
+        if (table_elems.length == 0) {
+            jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', 'none');
+        }
+        table_str = table_elems.join("</tr><tr>");
+        jQuery('#new_mf_completion_times_table').html(table_str);
+    });
+});
+</script>
