@@ -37,63 +37,56 @@ sub run {
     my $self = shift;
 
     my $output_details = retrieve( $self->output_details_file );
-    $self->check_analysis_status($output_details);
+    $self->process_analysis_status($output_details);
+
+}
+
+sub process_analysis_status {
+    my ( $self, $output_details ) = @_;
+
+    $output_details = $self->check_analysis_status($output_details);
+    $self->log_analysis_status($output_details);
+    $self->email_analysis_status($output_details);
 
 }
 
 sub check_analysis_status {
     my ( $self, $output_details ) = @_;
 
-    $output_details = $self->check_success($output_details);
-    $self->log_analysis_status($output_details);
-    $self->report_status($output_details);
+    my $analysis_type = $output_details->{analysis_profile}->{analysis_type};
 
-}
-
-sub check_success {
-    my ( $self, $output_details ) = @_;
-
-    my $analysis_profile = $output_details->{analysis_profile};
-    my $type             = $analysis_profile->{analysis_type};
-
-    if ( $analysis_profile->{analysis_type} =~ /training_dataset/ ) {
+    if ( $analysis_type =~ /training_dataset/ ) {
         $output_details = $self->check_population_download($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /(training|multiple)_model/ )
+    elsif ( $analysis_type =~ /(training|multiple)_model/ )
     {
         if ( $output_details->{data_set_type} =~ /combined_populations/ ) {
-            $output_details =
-              $self->check_combined_pops_trait_modeling($output_details);
+            $output_details = $self->check_combined_pops_trait_modeling($output_details);
         }
         elsif ( $output_details->{data_set_type} =~ /single_population/ ) {
             $output_details = $self->check_trait_modeling($output_details);
         }
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /combine_populations/ ) {
-        $output_details =
-          $self->check_multi_pops_data_download($output_details);
+    elsif ( $analysis_type =~ /combine_populations/ ) {
+        $output_details = $self->check_multi_pops_data_download($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /selection_prediction/ ) {
+    elsif ( $analysis_type =~ /selection_prediction/ ) {
         my $st_type = $output_details->{data_set_type};
 
         if ( $output_details->{data_set_type} =~ /combined/ ) {
-
- # $output_details = $self->check_combined_pops_trait_modeling($output_details);
-            $output_details =
-              $self->check_selection_prediction($output_details);
+            $output_details = $self->check_selection_prediction($output_details);
         }
         elsif ( $output_details->{data_set_type} =~ /single_population/ ) {
-            $output_details =
-              $self->check_selection_prediction($output_details);
+            $output_details = $self->check_selection_prediction($output_details);
         }
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /kinship/ ) {
+    elsif ( $analysis_type =~ /kinship/ ) {
         $output_details = $self->check_kinship_analysis($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /pca/ ) {
+    elsif ( $analysis_type =~ /pca/ ) {
         $output_details = $self->check_pca_analysis($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /cluster/ ) {
+    elsif ( $analysis_type =~ /cluster/ ) {
         $output_details = $self->check_cluster_analysis($output_details);
     }
 
@@ -569,7 +562,7 @@ sub get_file {
     return $file;
 }
 
-sub report_status {
+sub email_analysis_status {
     my ( $self, $output_details ) = @_;
 
     my $args = $output_details->{analysis_profile}->{arguments};
