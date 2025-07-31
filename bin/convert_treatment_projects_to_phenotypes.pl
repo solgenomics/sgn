@@ -83,6 +83,7 @@ my $h = $schema->storage->dbh->prepare($all_trials_q);
 $h->execute();
 
 my @new_treatment_cvterms = ();
+# change this to a hash and force all lowercase
 
 while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 	my $trial = CXGN::Trial->new({
@@ -103,19 +104,23 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		my %observation_units_lookup = map {$_->[0] => 1} @{$observation_units};
 		my $treatment_name = $treatment_trial_name =~ s/$trial_name(_)//r;
 		$treatment_name =~ s/_/ /g;
+		# TODO change treatment name to lowercase, check hash for exists or not and dbxref
 		my $new_treatment_id;
 		eval {
-			$new_treatment_id = $schema->resultset("Cv::Cvterm")->create_with({
+			$new_treatment = $schema->resultset("Cv::Cvterm")->create_with({
 				name => $treatment_name,
 				cv => 'treatment',
-				db => 'TREATMENT'
-			})->cvterm_id();
+				db => 'TREATMENT',
+				dbxref => '' #TODO need to keep track of this manually
+			});
+			# bio chado schema result cv cvtermrelationship -> find_or_create()
+			# add a new cvterm relationship row. Need cvterm row of root term, new treatment ID object = root term id; subject = new treatment term; typeid = variable of from relationship cv
 		};
 		if ($@) {
 			die "An error occurred trying to create a new treatment! $@\n";
 		}
 		push @new_treatment_cvterms, $new_treatment_id;
-		my $trial_date = $trial->get_create_date();
+		my $trial_date = $trial->get_create_date() =~ s/ /_/r;
 		foreach my $obs_unit (@{$parent_observation_units}){
 			my $stock_name = $obs_unit->[1];
 			eval {

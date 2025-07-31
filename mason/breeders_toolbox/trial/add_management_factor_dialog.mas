@@ -13,6 +13,18 @@ $trial_id => undef
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" id="new_management_factor_form" name="new_management_factor_form">
+                    <div class="form-group">
+                            <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="The allowed management factor types are defined
+in the server configuration file. Contact the 
+server administrator with questions."></span>&nbsp; Management factor type:</label>
+                            <div class="col-sm-8">
+                                    <select class="form-control" id="new_management_factor_type" name="new_management_factor_type">
+%                                   foreach my $management_factor_type(@$management_factor_types){
+                                        <option value="<%$management_factor_type%>"><%$management_factor_type%></option>
+%                                   }
+                                    </select>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Management factor description:</label>
                             <div class="col-sm-8">
@@ -23,18 +35,6 @@ $trial_id => undef
                             <label class="col-sm-3 control-label">Application schedule:</label>
                             <div class="col-sm-8">
                                 <input style="width:100%;" class="form-control" id="new_management_factor_schedule" name="new_management_factor_schedule" type="text" placeholder="e.g. Twice weekly on Mondays and Thursdays starting 1 July 2025"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="The allowed management factor types are defined
-in the server configuration file. Contact the 
-server administrator with questions."></span>&nbsp; Management factor type:</label>
-                            <div class="col-sm-8">
-                                    <select class="form-control" id="new_management_factor_type" name="new_management_factor_type">
-%                                   foreach my $management_factor_type(@$management_factor_types){
-                                        <option value="<%$management_factor_type%>"><%$management_factor_type%></option>
-%                                   }
-                                    </select>
                             </div>
                         </div>
                     </form>

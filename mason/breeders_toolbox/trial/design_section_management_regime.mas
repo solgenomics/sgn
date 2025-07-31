@@ -78,8 +78,8 @@ jQuery(document).ready( function() {
             jQuery('#management_regime_table').DataTable({
             data: JSON.parse(result.data),
                 columns: [
-                    { data: 'description', title: 'Description' },
                     { data: 'type', title: 'Type' },
+                    { data: 'description', title: 'Description' },
                     { data: 'schedule', title: 'Schedule' },
                     {
                         title: 'Delete',

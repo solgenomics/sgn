@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package CreateTreatmentCV;
+package CreateExperimentTreatmentCV;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
@@ -38,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 use Bio::Chado::Schema;
 
 has '+description' => ( default => <<'' );
-Creates a controlled vocabulary for treatments. Paired with an ontology that tracks treatments like traits. 
+Creates a controlled vocabulary for experimental treatments. Paired with an ontology that tracks experimental treatments like traits. 
 
 has '+prereq' => (
     default => sub {
@@ -70,7 +70,7 @@ sub patch {
         print STDERR "Patch already run\n";
     } else {
         my $insert_treatment_cv = "INSERT INTO cv (name, definition) 
-        VALUES ('treatment', 'Experimental treatments applied to some of the stocks in a project. Distinct from management factors/management regimes.');";
+        VALUES ('experiment_treatment', 'Experimental treatments applied to some of the stocks in a project. Distinct from management factors/management regimes.');";
 
         $schema->storage->dbh()->do($insert_treatment_cv);
 
@@ -82,7 +82,7 @@ sub patch {
         my $terms = { 
         'composable_cvtypes' => 
             [
-             "treatment_ontology",
+             "experiment_treatment_ontology",
             ],
         };
 
@@ -102,6 +102,13 @@ sub patch {
             cv_id   => $treatment_cv_id,
             type_id => $treatment_ontology_cvterm_id
         });
+
+        $schema->resultset("Cv::Cvterm")->create_with({
+				name => 'EXPERIMENT_TREATMENT',
+				cv => 'experiment_treatment',
+				db => 'EXPERIMENT_TREATMENT',
+				dbxref => '0000000'
+		});
     }
 
     print STDERR "Patch complete\n";
