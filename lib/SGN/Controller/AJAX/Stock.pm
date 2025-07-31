@@ -2767,6 +2767,7 @@ sub stock_obsolete_in_bulk_GET {
 
     my $stock_name_string = $c->req->param('stock_names');
     my $stock_name_array = decode_json $stock_name_string;
+    my $obsolete_note  = $c->req->param('obsolete_note');
     my $is_obsolete = '1';
 
     foreach my $stock_name (@$stock_name_array) {
@@ -2782,6 +2783,7 @@ sub stock_obsolete_in_bulk_GET {
                     user_name => $c->user()->get_object()->get_username(),
                     modification_note => "Obsolete at ".localtime,
                     is_obsolete => $is_obsolete,
+                    obsolete_note => $obsolete_note,
                 });
                 my $saved_stock_id = $stock_obj->store();
             } catch {
