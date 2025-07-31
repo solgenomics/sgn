@@ -210,7 +210,9 @@ sub _get_obsoleted_transformants {
 
     my @obsoleted_transformants = ();
     while (my ($stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
-        push @obsoleted_transformants, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id]
+        if ($obsolete_date =~ /Obsolete/) {
+            push @obsoleted_transformants, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id];
+        }
     }
 
     $self->obsoleted_transformants(\@obsoleted_transformants);
