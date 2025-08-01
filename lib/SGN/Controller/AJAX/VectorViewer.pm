@@ -22,8 +22,10 @@ sub vector :Chained('/') PathPart('vectorviewer') CaptureArgs(1) {
     print STDERR "VECTORVIEWER for $stock_id!\n";
     $c->stash->{vector_stock_id} = $stock_id;
 }
-    
-sub store :Chained('vector') PathPart('store') Args(0) {
+
+sub store :Chained('vector') PathPart('store') ActionClass('REST') {}
+
+sub store_POST : Args(0) { 
     my $self = shift;
     my $c = shift;
 
