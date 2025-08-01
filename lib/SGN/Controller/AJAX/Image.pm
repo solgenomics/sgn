@@ -283,10 +283,20 @@ sub verify_exif_POST {
                 print STDERR "id type: " . $id_type;
                 if ($id_type eq 'plot_name') {
                     my $plot_name = $decoded->{observation_unit}->{observation_unit_db_id};
+                    my $cvterm_name = $decoded->{observation_variable}->{observation_variable_name};
                     print STDERR "plot_name: $plot_name\n";
                     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
+                    my $q = "SELECT cvterm_id FROM cvterm join dbxref USING (dbxref) JOIN db USING (dbid) WHERE db.name = ? and cvterm.name = ?";
+                    my $h = $schema->storage->dbh->prepare($q);
+                    $h->execute($c->config->{trait_ontology_db_name},  $cvterm_name);
+                    my ($cvterm_id) = $h->fetchrow_array();
+                    print STDERR "cvterm_id: $cvterm_id\n";
+
+                    if ($cvterm_id) {
+                        $decoded->{cvterm_id} = $cvterm_id;
+                    }
                     print STDERR "type_id: $type_id\n";
-                    my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $plot_name, type_id => $type_id})->stock_id();
+                    my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $plot_name })->stock_id();
                     $decoded->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
                 }
 

@@ -283,6 +283,7 @@ sub image_metadata_store {
         print STDERR "Image filename in metadata store is: $imageFileName\n";
         my $mimeType = $params->{mimeType} ? $params->{mimeType} : undef;
         my $observationUnitDbId = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
+        my $cvtermId = $params->{cvtermId} || ();
         my $descriptiveOntologyTerms_arrayref = $params->{descriptiveOntologyTerms} || ();
         my $observationDbIds_arrayref = $params->{observationDbIds} || ();
 
@@ -383,6 +384,10 @@ sub image_metadata_store {
             my $person = CXGN::People::Person->new($dbh, $user_id);
             my $user_name = $person->get_username;
             $image->associate_stock($observationUnitDbId, $user_name);
+        }
+
+        if ($cvtermId) {
+            $image->associate_cvterm($cvtermId)
         }
 
         # Clear previously associated phenotypes

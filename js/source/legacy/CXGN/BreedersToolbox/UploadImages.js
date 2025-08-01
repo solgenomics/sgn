@@ -35,9 +35,10 @@ jQuery( document ).ready( function() {
                 contentType: false,
             }).done(function(result) {
                 exifDataResult = result;
+                console.log("exif data result", result);
                 const [exifOk, verifyResult] = verifyExifData(result);
                 exifValid = exifOk;
-                //console.log("check", exifOk);
+                console.log("check", exifOk);
 
                 if (!exifOk) {
                     var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
@@ -235,6 +236,7 @@ function verifyExifData(result) {
         const hasObsUnit = exif.observation_unit && exif.observation_unit.observation_unit_db_id;
         const hasObsVar = exif.observation_variable && exif.observation_variable.observation_variable_name;
         const hasTimestamp = exif.timestamp;
+        
 
         if (hasObsUnit) {
             successMessages.push(`${imgName}: ObservationUnitDbId: ${exif.observation_unit.observation_unit_db_id}`);
@@ -272,7 +274,7 @@ function verifyExifData(result) {
 
 function parseExifData(exifData, imageFiles) {
     const fileData = {};
-    //console.log("passed exif", exifData);
+    console.log("passed exif", exifData);
     //console.log("passed image files", imageFiles);
     //console.log("exifdata.images", exifData.images);
 
@@ -281,6 +283,7 @@ function parseExifData(exifData, imageFiles) {
         const timestamp = exifData.images[i].exif.timestamp;
         const timestampWithoutExtension = timestamp.substr(0, timestamp.lastIndexOf(" "));
         const obsUnitId = exifData.images[i].exif.observation_unit.observation_unit_db_id;
+        const cvtermId = exifData.images[i].exif.cvterm_id;
         //console.log("obsUnitId", obsUnitId);
         if (obsUnitId) {
             fileData[file.name] = {
@@ -288,7 +291,8 @@ function parseExifData(exifData, imageFiles) {
                 "imageFileSize" : file.size,
                 "imageTimeStamp" : timestampWithoutExtension,
                 "mimeType" : file.type,
-                "observationUnit" : obsUnitId
+                "observationUnit" : obsUnitId,
+                "cvtermId" : cvtermId
             };
         }
 
