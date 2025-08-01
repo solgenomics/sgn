@@ -282,7 +282,7 @@ sub verify_exif_POST {
                 my $id_type = $decoded->{study}->{study_unique_id_name};
                 print STDERR "id type: " . $id_type;
                 if ($id_type eq 'plot_name') {
-                    my $plot_name = $decoded->{observatioun_unit}->{observation_unit_db_id};
+                    my $plot_name = $decoded->{observation_unit}->{observation_unit_db_id};
                     print STDERR "plot_name: $plot_name\n";
                     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
                     print STDERR "type_id: $type_id\n";
