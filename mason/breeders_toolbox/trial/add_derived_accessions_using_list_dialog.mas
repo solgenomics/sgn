@@ -135,25 +135,25 @@ jQuery(document).ready(function(){
 
     jQuery('#derived_accessions_list_submit').click(function(e){
         e.preventDefault();
-        let new_accession_data = [];
+        let derived_accession_info = [];
         const plant_list_id = jQuery('#plant_to_accession_list_select').val();
         const plant_list = lo.getList(plant_list_id);
 
         for (var i=0; i<plant_list.length; i++) {
-            let plant_name = plant_list[i];
-            let accession_name = jQuery('#new_derived_accession_name_'+ i ).val();
-            if (accession_name === '') {
-                alert("please provide new accession name for:" + plant_name);
+            let stock_name = plant_list[i];
+            let derived_accession_name = jQuery('#new_derived_accession_name_'+ i ).val();
+            if (derived_accession_name === '') {
+                alert("please provide new accession name for:" + stock_name);
                 return;
             }
-            new_accession_data.push({'plant_name':plant_name, 'accession_name':accession_name});
+            derived_accession_info.push({'stock_name':stock_name, 'derived_accession_name':derived_accession_name});
         }
 
         jQuery.ajax({
             url: '/stock/add_derived_accessions_using_list',
             method: 'POST',
             data: {
-                'new_accession_data': JSON.stringify(new_accession_data),
+                'derived_accession_info': JSON.stringify(derived_accession_info),
             },
             dataType:'json',
             beforeSend: function() {

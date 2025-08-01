@@ -43,6 +43,7 @@ use DateTime;
 use SGN::Model::Cvterm;
 use CXGN::People::Person;
 use CXGN::Stock::StockLookup;
+use CXGN::Stock::AddDerivedAccession;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2764,6 +2765,9 @@ sub add_derived_accessions_using_list_POST : Args(0) {
 
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+
     if (!$c->user()) {
         $c->stash->{rest} = { error => "Log in required for making stock obsolete." }; return;
     }
@@ -2773,8 +2777,27 @@ sub add_derived_accessions_using_list_POST : Args(0) {
         $c->detach();
     }
 
-    my $new_accession_data = decode_json $c->req->param('new_accession_data');
-    print STDERR "NEW ACCESSION DATA =".Dumper($new_accession_data)."\n";
+    my $derived_accession_info = decode_json $c->req->param('derived_accession_info');
+    print STDERR "NEW ACCESSION DATA =".Dumper($derived_accession_info)."\n";
+
+    foreach my $each_info (@$derived_accession_info) {
+        my $new_accession_stock_id;
+        my $stock_name = $each_info->{'stock_name'};
+        my $derived_accession_name = $each_info->{'derived_accession_name'};
+        my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$stock_name})->stock_id();
+
+        my $add_derived_accession = CXGN::Stock::AddDerivedAccession->new({
+            chado_schema => $schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            stock_id => $stock_id,
+            derived_accession_name => $derived_accession_name,
+        });
+
+        my $new_accession = $add_derived_accession->add_derived_accession();
+#        $new_accession_stock_id = $new_accession->{accession_stock_id};
+
+    }
 
 }
 
