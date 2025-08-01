@@ -2064,7 +2064,7 @@ sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
 
     my $plot;
     my $plot_contents;
-    
+
     eval {
         $plot = CXGN::Stock::Plot->new({schema => $schema, stock_id=>$plot_id});
 
@@ -2748,5 +2748,36 @@ sub set_display_image_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 
 }
+
+
+=head2 add_derived_accessions_using_list
+
+L<Catalyst::Action::REST> action.
+
+Add new accessions derived from another stock type
+
+=cut
+
+sub add_derived_accessions_using_list : Path('/stock/add_derived_accessions_using_list') : ActionClass('REST') { }
+
+sub add_derived_accessions_using_list_POST : Args(0) {
+
+    my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "Log in required for making stock obsolete." }; return;
+    }
+
+    if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+        $c->stash->{rest} = { error => 'Cannot add new accessions! You do not have a curator account' };
+        $c->detach();
+    }
+
+    my $new_accession_data = decode_json $c->req->param('new_accession_data');
+    print STDERR "NEW ACCESSION DATA =".Dumper($new_accession_data)."\n";
+
+}
+
+
 
 1;
