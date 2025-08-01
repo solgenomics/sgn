@@ -1,5 +1,5 @@
 <div class="text-center">
-    <p>Time to design! Start by selecting a type and field. Then click 'add' to generate your new label element in the draw area.</p>
+    <p>Time to design! Start by selecting a type and field. Then click 'Add' to generate your new label element in the draw area.</p>
     <p>Add, drag, customize, resize, and delete as many elements as you like. A barcode containing your unique identifier (plot_name, plant_name, etc) is strongly recommended.</p>
     <p><em><strong>NOTE:</strong> The property values displayed here in the design tool may not be from the same plot, list item, etc.  The longest value is displayed here to aid in the positioning and sizing of the element.  The values will be correctly associated when all of the labels are printed in the next step.</em></p>
 </div>
