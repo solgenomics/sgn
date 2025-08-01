@@ -41,7 +41,7 @@ jQuery(document).ready( function() {
             description: new_management_factor_description,
             type: new_management_factor_type,
             schedule: new_management_factor_schedule,
-            completions: JSON.parse(new_management_factor_completions)
+            completions: new_management_factor_completions
         });
 
         if (mode !== null && row_json !== null && mode == 'edit' && row_json == local_json) {
@@ -210,8 +210,7 @@ jQuery(document).ready( function() {
         row_data = JSON.parse(row_json);
 
         let completions = row_data.completions;
-        let completions_html = "<tr><td>";
-        completions_html += completions.join("</td></tr><tr><td>") + "</tr>";
+        let completions_html = json_to_html_table(completions);
 
         jQuery('#new_management_factor_description').val(row_data.description);
         jQuery('#new_management_factor_type').val(row_data.type);
@@ -255,7 +254,12 @@ jQuery(document).ready( function() {
     });
 
     function html_table_to_json(html_str) {
-        return JSON.stringify(html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>"));
+        return JSON.stringify(html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== ''));
+    }
+
+    function json_to_html_table(json) {
+        json.sort();
+        return "<tr><td>"+json.join("</td></tr><tr><td>")+"</td></tr>";
     }
 });
 </script>
