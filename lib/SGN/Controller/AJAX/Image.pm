@@ -283,8 +283,10 @@ sub verify_exif_POST {
                 print STDERR "id type: " . $id_type;
                 if ($id_type eq 'plot_name') {
                     my $plot_name = $decoded->{observatioun_unit}->{observation_unit_db_id};
+                    print STDERR "plot_name: $plot_name\n";
                     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
-                    my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ name => $plot_name, type_id => $type_id})->stock_id();
+                    print STDERR "type_id: $type_id\n";
+                    my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $plot_name, type_id => $type_id})->stock_id();
                     $decoded->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
                 }
 
