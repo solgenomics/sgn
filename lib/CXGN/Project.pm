@@ -2631,7 +2631,8 @@ sub remove_management_factor {
         $management_regime = [grep {
             !($_->{type} eq $management_factor->{type} &&
             $_->{schedule} eq $management_factor->{schedule} && 
-            $_->{description} eq $management_factor->{description})
+            $_->{description} eq $management_factor->{description} && 
+            encode_json($_->{completions}) eq encode_json($management_factor->{completions}))
         } @{$management_regime}]; 
         $management_regime = encode_json($management_regime);
         $mf_rs->update({

@@ -26,13 +26,28 @@ jQuery(document).ready( function() {
         jQuery('#trial_design_add_management_factor').modal("show");
     });
 
-    jQuery('#new_trial_add_management_factors_submit').click(function() {
+    load_management_regime_table();
+
+    jQuery('#new_trial_add_management_factors_submit').on('click',add_management_factor);
+
+    function add_management_factor(mode, row_json) {
         var new_management_factor_description = jQuery('#new_management_factor_description').val();
         var new_management_factor_type = jQuery('#new_management_factor_type').val();
-        var new_management_factor_schedule = jQuery('#new_management_factor_schedule').val();\
+        var new_management_factor_schedule = jQuery('#new_management_factor_schedule').val();
         var new_management_factor_completions = jQuery('#new_mf_completion_times_table').html();
         new_management_factor_completions = html_table_to_json(new_management_factor_completions);
-        console.log(new_management_factor_completions);
+
+        let local_json = JSON.stringify({
+            description: new_management_factor_description,
+            type: new_management_factor_type,
+            schedule: new_management_factor_schedule,
+            completions: JSON.parse(new_management_factor_completions)
+        });
+
+        if (mode !== null && row_json !== null && mode == 'edit' && row_json == local_json) {
+            return;
+        }
+
         jQuery.ajax({
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -48,10 +63,20 @@ jQuery(document).ready( function() {
             success: function(response) {
                 jQuery("#working_modal").modal("hide");
                 if (response.error) {
-                    alert(response.error);
+                    alert("Error adding management factor: "+response.error);
                 } else {
-                    alert("Management factor submitted");
+                    alert("Management factor submitted.");
+                    if (mode !== null && row_json !== null && mode == 'edit' && row_json !== local_json) {
+                        delete_management_factor(row_json);
+                    }
                     reload_managment_regime_table();
+                    jQuery('#new_management_factor_description').val('');
+                    jQuery('#new_management_factor_type').val('');
+                    jQuery('#new_management_factor_schedule').val('');
+                    jQuery('#new_mf_completion_times_table').html('');
+                    jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', 'none');
+                    jQuery('#trial_design_add_management_factor').modal("hide");
+                    jQuery(".modal-backdrop").remove();
                 }
             },
             error: function(response) {
@@ -59,9 +84,38 @@ jQuery(document).ready( function() {
                 alert("An error occurred submitting new management factor." + response.error)
             }
         });
-    });
+    }
 
-    load_management_regime_table();
+    function delete_management_factor(row_json) {
+        row_data = JSON.parse(row_json);
+        jQuery.ajax({
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            url: '/ajax/breeders/trial/'+<% $trial_id %>+'/edit_management_factor_details',
+            data: {
+                description : row_data.description,
+                schedule : row_data.schedule,
+                type : row_data.type,
+                completions: JSON.stringify(row_data.completions),
+                action : 'remove'
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                    console.log(response.error);
+                } else {
+                    reload_managment_regime_table();
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert("An error occurred deleting management factor: " + response.error);
+                console.log(response.error);
+            }
+        });
+    }
 
     async function load_management_regime_table() {
         try {
@@ -148,34 +202,56 @@ jQuery(document).ready( function() {
 
     jQuery('#management_regime_table').on('click','.delete_management_factor_btn', function() {
         let row_json = jQuery(this).attr('data-row');
+        delete_management_factor(row_json);
+    });
+
+    jQuery('#management_regime_table').on('click','.edit_management_factor_btn', function() {
+        let row_json = jQuery(this).attr('data-row');
         row_data = JSON.parse(row_json);
-        jQuery.ajax({
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            url: '/ajax/breeders/trial/'+<% $trial_id %>+'/edit_management_factor_details',
-            data: {
-                description : row_data.description,
-                schedule : row_data.schedule,
-                type : row_data.type,
-                completions: JSON.stringify(row_data.completions),
-                action : 'remove'
-            },
-            success: function(response) {
-                jQuery("#working_modal").modal("hide");
-                if (response.error) {
-                    alert(response.error);
-                    console.log(response.error);
-                } else {
-                    reload_managment_regime_table();
-                }
-            },
-            error: function(response) {
-                jQuery("#working_modal").modal("hide");
-                alert("An error occurred deleting management factor: " + response.error);
-                console.log(response.error);
-            }
+
+        let completions = row_data.completions;
+        let completions_html = "<tr><td>";
+        completions_html += completions.join("</td></tr><tr><td>") + "</tr>";
+
+        jQuery('#new_management_factor_description').val(row_data.description);
+        jQuery('#new_management_factor_type').val(row_data.type);
+        jQuery('#new_management_factor_schedule').val(row_data.schedule);
+        jQuery('#new_mf_completion_times_table').html(completions_html);
+
+        if (completions.length == 0) {
+            jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', 'none');
+        } else {
+            jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', '');
+        }
+
+        jQuery('#trial_design_add_management_factor').modal("show");
+
+        const original_submit_button = document.getElementById("new_trial_add_management_factors_submit");
+        const submit_clone = original_submit_button.cloneNode(true);
+        submit_clone.id="new_trial_edit_management_factors_submit";
+        original_submit_button.parentNode.replaceChild(submit_clone, original_submit_button);
+
+        let header_close = document.getElementById("new_trial_add_management_factor_header_close_btn");
+        let footer_close = document.getElementById("new_trial_add_management_factor_footer_close_btn");
+        header_close.addEventListener('click',close_temp_behavior);
+        footer_close.addEventListener('click',close_temp_behavior);
+
+        jQuery('#new_trial_edit_management_factors_submit').click(function() {
+            add_management_factor('edit', row_json);
+            header_close.removeEventListener('click', close_temp_behavior);
+            footer_close.removeEventListener('click', close_temp_behavior);
+            submit_clone.parentNode.replaceChild(original_submit_button, submit_clone);
         });
+        function close_temp_behavior() {
+            jQuery('#new_management_factor_description').val('');
+            jQuery('#new_management_factor_type').val('');
+            jQuery('#new_management_factor_schedule').val('');
+            jQuery('#new_mf_completion_times_table').html('');
+            jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', 'none');
+            submit_clone.parentNode.replaceChild(original_submit_button, submit_clone);
+            header_close.removeEventListener('click', close_temp_behavior);
+            footer_close.removeEventListener('click', close_temp_behavior);
+        }
     });
 
     function html_table_to_json(html_str) {

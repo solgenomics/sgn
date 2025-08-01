@@ -7,7 +7,7 @@ $trial_id => undef
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" id="new_trial_add_management_factor_header_close_btn" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addTrialDesignManagementFactorsDialog">Add Management Factor to Trial</h4>
             </div>
             <div class="modal-body">
@@ -58,7 +58,7 @@ server administrator with questions."></span>&nbsp; Management factor type:</lab
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-info" id="new_trial_add_management_factors_submit" >Submit</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" id="new_trial_add_management_factor_footer_close_btn" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
