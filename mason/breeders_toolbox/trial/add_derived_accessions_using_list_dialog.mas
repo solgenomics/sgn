@@ -2,59 +2,72 @@
 
 </%args>
 
-
 <div class="modal fade" id="add_derived_accessions_using_list_dialog" name="add_derived_accessions_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addDerivedAccessionsUsingListDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content ">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="reset" class="close" id="add_derived_accessions_using_list_dismiss_button_1" name="add_derived_accessions_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="addDerivedAccessionsUsingList">Add New Accessions Derived from Plants Using a List</h4></center>
+                <center><h4 class="modal-title" id="addDerivedAccessions">Add New Accessions Derived from Plants Using a List</h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <form class="form-horizontal" role="form" name="add_derived_accessions_form" id="add_derived_accessions_form">
-                        <div class="form-group">
-                            <label class="control-label col-sm-4">Select a List of Plants:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <select class="form-control" id="plant_to_accession_list_select"></select>
+                    <&| /util/workflow.mas, id=> "add_derived_accessions_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Add Derived Accessions" &>
+                            <p>..... </p>
+                            <ul>
+                                <li>.....</li>
+                                <li><b>.....</b></li>
+                            </ul>
+                            <hr>
+                            <center>
+                                <button id="next_step_add_new_intro" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <form class="form-horizontal" role="form" name="add_derived_accessions_form" id="add_derived_accessions_form">
+                            <&| /util/workflow.mas:step, title=> "Add New Derived Accessions" &>
+                                <& /page/page_title.mas, title=>"Enter information about the accessions" &>
+                                <br/>
+                                <br/>
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-4">Select a List of Plants:</label>
+                                        <div class="col-sm-8" >
+                                            <div class="input-group">
+                                                <select class="form-control" id="plant_to_accession_list_select"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id ="derived_accessions_form_div">
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div id ="derived_accessions_form_div">
-                        </div>
-                    </form>
+                                <br/>
+                                <div id="form_footer" style="display:none" >
+                                    <center>
+                                        <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="derived_accessions_list_submit" id="derived_accessions_list_submit">Submit</button>
+                                    </center>
+                                </div>
+                            </&>
+                        </form>
+
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your new accessions were stored" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                New derived accessions were added successfully
+                            </p>
+                            <br/>
+                        </&>
+                    </&><!-- End of workflow -->
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="derived_accessions_list_submit">Submit</button>
                 <button id="add_derived_accessions_using_list_dismiss_button_2" name="add_derived_accessions_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="add_derived_accessions_using_list_saved_dialog_message" name="add_derived_accessions_using_list_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addDerivedAccessionsUsingListSavedDialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addDerivedAccessionsUsingListSavedDialog">Success</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The new accessions were stored successfully.
-                    </p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="dismiss_add_derived_accessions_using_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="modal fade" id="add_derived_accessions_using_list_error_dialog" name="add_derived_accessions_using_list_error_dialog" tabindex="-1" role="dialog" aria-labelledby="addDerivedAccessionsUsingListErrorDialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -99,12 +112,26 @@ jQuery(document).ready(function(){
                 alert("The plant list did not pass validation. Names in the list must be uniquenames in the database");
                 return;
             } else {
-                alert('test');
-                add_derived_accessions_form();
+                add_derived_accessions_form(plant_list_id);
             }
         }
     })
 
+    function add_derived_accessions_form (plant_list_id) {
+        const plant_list = lo.getList(plant_list_id);
+
+        var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>Plant Name</th><th>Accession Name</th></tr></thead><tbody>';
+        for (var i=0; i<plant_list.length; i++){
+            html = html + '<tr><td>' + plant_list[i] + '</td><td><input class="form-control"  name ="new_derived_accession_name" id="new_derived_accession_name_'+ i +'" value="" placeholder="Required"/></td></tr>';
+        };
+
+        html = html + '</tbody></table>';
+
+        jQuery('#derived_accessions_form_div').html(html);
+
+        jQuery('#form_footer').show();
+
+    };
 
 
 });
