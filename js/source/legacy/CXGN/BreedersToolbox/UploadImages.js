@@ -288,7 +288,7 @@ function parseExifData(exifData, imageFiles) {
                 "imageFileSize" : file.size,
                 "imageTimeStamp" : timestampWithoutExtension,
                 "mimeType" : file.type,
-                "observationUnit" : "38873"
+                "observationUnit" : obsUnitId
             };
         }
 
