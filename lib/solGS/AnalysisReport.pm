@@ -634,8 +634,7 @@ sub email_addresses {
 sub email_body {
     my ( $self, $output_details ) = @_;
 
-    my $analysis_profile = $output_details->{analysis_profile};
-    my $analysis_type    = $analysis_profile->{analysis_type};
+    my $analysis_type = $output_details->{analysis_profile}->{analysis_type};
 
     my $msg;
 
@@ -654,15 +653,6 @@ sub email_body {
     elsif ( $analysis_type =~ /selection_prediction/ ) {
         $msg = $self->selection_prediction_message($output_details);
     }
-    # elsif ( $analysis_type =~ /kinship/ ) {
-    #     $msg = $self->generic_analysis_email_message($output_details, 'kinship');
-    # }
-    # elsif ( $analysis_type =~ /pca/ ) {
-    #     $msg = $self->generic_analysis_email_message($output_details, 'pca');
-    # }
-    # elsif ( $analysis_type =~ /cluster/ ) {
-    #     $msg = $self->generic_analysis_email_message($output_details, 'cluster');
-    # }
     else {
         $msg = $self->generic_analysis_email_message($output_details);
     }
