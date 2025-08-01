@@ -29,6 +29,9 @@ use Moose;
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS);
 use File::Temp qw(tempdir);
 use File::Basename qw(basename);
+use JSON;
+use SGN::Model::Cvterm;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -230,6 +233,8 @@ sub verify_exif : Path('/ajax/image/verify_exif') : Args(0) : ActionClass('REST'
 
 sub verify_exif_POST {
     my ($self, $c) = @_;
+    my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
 
     my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
     my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
@@ -271,9 +276,22 @@ sub verify_exif_POST {
         } else {
             my $meta = CXGN::Image->extract_exif_info_class($file_path);
             if ($meta) {
-                push @results, { filename => $filename, exif => $meta, status => "success" };
+                print STDERR "meta: " . Dumper($meta);
+                my $decoded = decode_json($meta);
+                print STDERR "decoded json: " . Dumper($decoded);
+                my $id_type = $decoded->{study}->{study_unique_id_name};
+                print STDERR "id type: " . $id_type;
+                if ($id_type eq 'plot_name') {
+                    my $plot_name = $decoded->{observatioun_unit}->{observation_unit_db_id};
+                    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
+                    my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ name => $plot_name, type_id => $type_id})->stock_id();
+                    $decoded->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
+                }
+
+                push @results, { filename => $filename, exif => $decoded, status => "success" };
+                
             } else {
-                push @results, { filename => $filename, exif => undef, status => "no_exif" };
+                push @results, { filename => $filename, exif => undef, status => "no_eif" };
             }
         }
     }
