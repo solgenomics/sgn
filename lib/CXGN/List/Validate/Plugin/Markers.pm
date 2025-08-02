@@ -15,10 +15,8 @@ sub validate {
     my $list = shift;
 
     my $str;
-    my $key;
     my $data;
     my $marker;
-    my $term;
     my $count;
     my $name;
     my $protocol_id;
@@ -37,10 +35,10 @@ sub validate {
     my ($type_id) = $h->fetchrow_array(); 
 
     #if protocol_id found get data from nd_protocolprop
-    foreach $term (@$list) {
+    foreach my $term (@$list) {
 	eval { $str = decode_json($term); 1; } or next;
         next unless ref($str) eq 'HASH';
-        foreach $key ( keys %$str ) {
+        foreach my $key ( keys %$str ) {
 	    if ($key eq "genotyping_protocol_id") {
 		$protocol_id = $str->{$key};
 		$q = "SELECT value from nd_protocolprop where type_id = ? AND nd_protocol_id = ?";
@@ -65,7 +63,7 @@ sub validate {
     my $q2 = "SELECT materialized_markerview.nd_protocol_id, name from materialized_markerview, nd_protocol where materialized_markerview.nd_protocol_id = nd_protocol.nd_protocol_id and marker_name = ?";
     my $h2 = $schema->storage->dbh()->prepare($q2);
 
-    foreach $term (@$list) {
+    foreach my $term (@$list) {
         eval {$str = decode_json $term;};
         if ($@) {			#simple list
 	    $h->execute($term);
@@ -75,7 +73,7 @@ sub validate {
 	    }
 	} else {			#json list
 	    next unless ref($str) eq 'HASH';
-	    foreach $key ( keys %$str ) {
+	    foreach my $key ( keys %$str ) {
 	        if ($key eq "marker_name") {
 		    $marker = $str->{$key};
 		    $found = 0;
@@ -92,7 +90,6 @@ sub validate {
 		    while (@row = $h2->fetchrow_array()) {
 		        ($protocol_id_all, $name) = @row;
 			if ($protocol_id_all != $protocol_id ) {
-			   next if $protocol_id_all == $protocol_id;
 			   push @{ $other_protocols{$marker} }, $name;
 		        } 
                     }
