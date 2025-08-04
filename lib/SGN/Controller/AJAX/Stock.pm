@@ -2764,7 +2764,6 @@ sub add_derived_accessions_using_list : Path('/stock/add_derived_accessions_usin
 sub add_derived_accessions_using_list_POST : Args(0) {
 
     my ( $self, $c ) = @_;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
 
@@ -2776,6 +2775,9 @@ sub add_derived_accessions_using_list_POST : Args(0) {
         $c->stash->{rest} = { error => 'Cannot add new accessions! You do not have a curator account' };
         $c->detach();
     }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
     my $derived_accession_info = decode_json $c->req->param('derived_accession_info');
     print STDERR "NEW ACCESSION DATA =".Dumper($derived_accession_info)."\n";
@@ -2792,12 +2794,18 @@ sub add_derived_accessions_using_list_POST : Args(0) {
             dbh => $dbh,
             stock_id => $stock_id,
             derived_accession_name => $derived_accession_name,
+            owner_id => $user_id,
         });
 
         my $new_accession = $add_derived_accession->add_derived_accession();
 #        $new_accession_stock_id = $new_accession->{accession_stock_id};
 
     }
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = { success => 1 };
 
 }
 

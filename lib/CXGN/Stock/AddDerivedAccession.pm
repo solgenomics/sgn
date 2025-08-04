@@ -54,6 +54,7 @@ has 'description' => (
 has 'owner_id' => (
     isa => 'Int',
     is => 'rw',
+    required => 1,
 );
 
 
@@ -111,15 +112,15 @@ sub add_derived_accession {
         if ($stock_type == $accession_cvterm_id) {
             $pedigree_object_id = $stock_id;
         } elsif ($stock_type == $plant_cvterm_id) {
-            my $accession_plant_relationship = $schema->resultset("Stock::Stock")->find ({
+            my $stock_plant_relationship = $schema->resultset("Stock::StockRelationship")->find ({
                 subject_id => $stock_id,
                 type_id => $plant_of_cvterm_id,
             });
 
-            $pedigree_object_id = $accession_plant_relationship->object_id();
+            $pedigree_object_id = $stock_plant_relationship->object_id();
 
         } elsif ($stock_type == $tissue_sample_cvterm_id) {
-            my $accession_tissue_sample_relationship = $schema->resultset("Stock::Stock")->find ({
+            my $accession_tissue_sample_relationship = $schema->resultset("Stock::StockRelationship")->find ({
                 subject_id => $stock_id,
                 type_id => $tissue_sample_of_cvterm_id,
             });
@@ -128,7 +129,7 @@ sub add_derived_accession {
         }
 
 
-        my $female_parent_relationship = $schema->resultset("Stock::Stock")->find ({
+        my $female_parent_relationship = $schema->resultset("Stock::StockRelationship")->find ({
             object_id => $pedigree_object_id,
             type_id => $female_parent_cvterm_id,
         });
@@ -138,7 +139,7 @@ sub add_derived_accession {
             $cross_type = $female_parent_relationship->value();
         }
 
-        my $male_parent_relationship = $schema->resultset("Stock::Stock")->find ({
+        my $male_parent_relationship = $schema->resultset("Stock::StockRelationship")->find ({
             object_id => $pedigree_object_id,
             type_id => $male_parent_cvterm_id,
         });
@@ -156,6 +157,7 @@ sub add_derived_accession {
         });
 
         $derived_accession_stock_id = $derived_accession_stock->stock_id();
+        print STDERR "DERIVED ACCESSION STOCK ID =".Dumper($derived_accession_stock_id)."\n";
 
         if ($female_stock_id) {
             $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
@@ -168,7 +170,7 @@ sub add_derived_accession {
 
         if ($male_stock_id) {
             $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
-                type_id => $male_stock_id,
+                type_id => $male_parent_cvterm_id,
                 object_id => $derived_accession_stock_id,
                 subject_id => $male_stock_id,
             });
@@ -194,8 +196,6 @@ sub add_derived_accession {
     }
 
         return { success=>1, derived_accession_stock_id=>$derived_accession_stock_id };
-        return { success=>1,};
-
 
 }
 
