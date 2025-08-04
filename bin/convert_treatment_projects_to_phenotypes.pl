@@ -79,11 +79,40 @@ my $update_new_treatment_sql = "UPDATE cvterm
 	SET definition = \'Legacy treatment from BreedBase before sgn-416.0 release. Binary value for treatment was/was not applied.\'
 	WHERE cvterm_id IN (SELECT unnest(string_to_array(?, ',')::int[]));";
 
+my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+my $rel_cv_id;
+if ($relationship_cv) {
+	$rel_cv_id = $relationship_cv->cv_id ;
+} else {
+	die "No relationship ontology in DB.\n";
+}
+my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF'  , cv_id => $rel_cv_id });
+my $variable_id;
+if ($variable_relationship) {
+	$variable_id = $variable_relationship->cvterm_id();
+}
+
+my $experiment_treatment_cv = $schema->resultset("Cv::Cv")->find({ name => 'experiment_treatment'});
+my $experiment_treatment_cv_id;
+if ($experiment_treatment_cv) {
+	$experiment_treatment_cv_id = $experiment_treatment_cv->cv_id ;
+} else {
+	die "DB patch has not been run - no experiment_treatment CV found.\n";
+}
+my $experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'EXPERIMENT_TREATMENT'  , cv_id => $experiment_treatment_cv_id });
+my $experiment_treatment_root_id;
+if ($experiment_treatment) {
+	$experiment_treatment_root_id = $experiment_treatment->cvterm_id();
+} else {
+	die "No EXPERIMENT_TREATMENT root term. Has DB patch been run?\n";
+}
+
+
 my $h = $schema->storage->dbh->prepare($all_trials_q);
 $h->execute();
 
-my @new_treatment_cvterms = ();
-# change this to a hash and force all lowercase
+my %new_treatment_cvterms = ();
+my $dbxref_id = 0;
 
 while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 	my $trial = CXGN::Trial->new({
@@ -104,29 +133,39 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		my %observation_units_lookup = map {$_->[0] => 1} @{$observation_units};
 		my $treatment_name = $treatment_trial_name =~ s/$trial_name(_)//r;
 		$treatment_name =~ s/_/ /g;
-		# TODO change treatment name to lowercase, check hash for exists or not and dbxref
-		my $new_treatment_id;
-		eval {
-			$new_treatment = $schema->resultset("Cv::Cvterm")->create_with({
-				name => $treatment_name,
-				cv => 'experiment_treatment',
-				db => 'EXPERIMENT_TREATMENT',
-				dbxref => '' #TODO need to keep track of this manually
-			});
-			# bio chado schema result cv cvtermrelationship -> find_or_create()
-			# add a new cvterm relationship row. Need cvterm row of root term, new treatment ID object = root term id; subject = new treatment term; typeid = variable of from relationship cv
-		};
-		if ($@) {
-			die "An error occurred trying to create a new treatment! $@\n";
+		$treatment_name = lc($treatment_name);
+		my $treatment_id;
+		if (!exists($new_treatment_cvterms{$treatment_name})) {
+			$dbxref_id++;
+			my $zeroes = "0" x (7-length($dbxref_id));
+			eval {
+				$treatment_id = $schema->resultset("Cv::Cvterm")->create_with({
+					name => $treatment_name,
+					cv => 'experiment_treatment',
+					db => 'EXPERIMENT_TREATMENT',
+					dbxref => "$zeroes"."$dbxref_id"
+				})->cvterm_id();
+				$new_treatment_cvterms{$treatment_name} = $treatment_id;
+				my $variable_of_id = 
+				$schema->resultset("Cv::CvtermRelationship")->find_or_create({
+					object_id => $experiment_treatment_root_id,
+					subject_id => $treatment_id,
+					type_id => $variable_id
+				});
+			};
+			if ($@) {
+				die "An error occurred trying to create a new treatment! $@\n";
+			}
+		} else {
+			$treatment_id = $new_treatment_cvterms{$treatment_name};
 		}
-		push @new_treatment_cvterms, $new_treatment_id;
 		my $trial_date = $trial->get_create_date() =~ s/ /_/r;
 		foreach my $obs_unit (@{$parent_observation_units}){
 			my $stock_name = $obs_unit->[1];
 			eval {
 				my $phenotype = CXGN::Phenotype->new({
 					schema => $schema,
-					cvterm_id => $new_treatment_id,
+					cvterm_id => $treatment_id,
 					value => exists($observation_units_lookup{$obs_unit->[0]}) ? 1 : 0,
 					stock_id => $obs_unit->[0],
 					observationunit_id => $obs_unit->[0],
@@ -146,7 +185,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 }
 
 $h = $schema->storage->dbh->prepare($update_new_treatment_sql);
-$h->execute(join(",", @new_treatment_cvterms));
+$h->execute(join(",", values(%new_treatment_cvterms)));
 
 if ($opt_t) {
 	print STDERR "Test mode. Changes not committed.\n";

@@ -107,7 +107,7 @@
 
 jQuery(document).ready(function () {
 
-    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology']) });
+    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology', 'experiment_treatment_ontology']) });
 
     jQuery('[data-toggle="tooltip"]').tooltip();
 
