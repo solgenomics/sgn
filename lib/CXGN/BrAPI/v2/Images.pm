@@ -386,6 +386,7 @@ sub image_metadata_store {
             $image->associate_stock($observationUnitDbId, $user_name);
         }
 
+        # Associate cvterm from trait in EXIF data.
         if ($cvtermId) {
             $image->associate_cvterm($cvtermId)
         }

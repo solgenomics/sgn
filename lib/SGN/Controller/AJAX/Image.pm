@@ -26,7 +26,6 @@ Lukas Mueller <lam87@cornell.edu>
 package SGN::Controller::AJAX::Image;
 
 use Moose;
-use Archive::Zip qw( :ERROR_CODES :CONSTANTS);
 use File::Temp qw(tempdir);
 use File::Basename qw(basename);
 use JSON;
@@ -243,68 +242,34 @@ sub verify_exif_POST {
     foreach my $upload (@uploads) {
         my $filename = $upload->filename;
         my $file_path = $upload->tempname;
+ 
+        my $meta = CXGN::Image->extract_exif_info_class($file_path);
+        if ($meta) {
+            my $decoded_json = decode_json($meta);
+            my $id_type = $decoded_json->{study}->{study_unique_id_name};
 
-        if ($filename =~ /\.zip$/i) {
-            my $tempdir = tempdir(CLEANUP => 1);
-            my $zip = Archive::Zip->new();
-
-            unless ($zip->read($file_path) == AZ_OK) {
-                push @results, { filename => $filename, status => "error", error => "Failed to read zip file" };
-                next;
+            if ($id_type ne 'ObservationUnitDbId') {
+                # Replace observation unit name with id if there is only is stock name 
+                my $stock_name = $decoded_json->{observation_unit}->{observation_unit_db_id};
+                my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name })->stock_id();
+                $decoded_json->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
             }
 
-            foreach my $member ($zip->members) {
-                next if $member->isDirectory;
-                my $member_name = $member->fileName;
+            # Get cvterm_id of recorded trait
+            my $cvterm_name = $decoded_json->{observation_variable}->{observation_variable_name};
+            my $q = "SELECT cvterm_id FROM cvterm join dbxref USING (dbxref_id) JOIN db USING (db_id) WHERE db.name = ? AND cvterm.name = ?";
+            my $h = $schema->storage->dbh->prepare($q);
+            $h->execute($c->config->{trait_ontology_db_name},  $cvterm_name);
+            my ($cvterm_id) = $h->fetchrow_array();
 
-                # skip non-image files
-                next unless $member_name =~ /\.(jpg|jpeg|png)$/i;
-
-                my $out_path = File::Spec->catfile($tempdir, basename($member_name));
-                unless ($member->extractToFileNamed($out_path) == AZ_OK) {
-                    push @results, { filename => $member_name, status => "error", error => "Failed to extract $member_name" };
-                    next;
-                }
-
-                my $meta = CXGN::Image->extract_exif_info_class($out_path);
-                if ($meta) {
-                    push @results, { filename => basename($member_name), exif => $meta, status => "success" };
-                } else {
-                    push @results, { filename => basename($member_name), exif => undef, status => "no_exif" };
-                }
+            if ($cvterm_id) {
+                $decoded_json->{cvterm_id} = $cvterm_id;
             }
+
+            push @results, { filename => $filename, exif => $decoded_json, status => "success" };
+            
         } else {
-            my $meta = CXGN::Image->extract_exif_info_class($file_path);
-            if ($meta) {
-                print STDERR "meta: " . Dumper($meta);
-                my $decoded = decode_json($meta);
-                print STDERR "decoded json: " . Dumper($decoded);
-                my $id_type = $decoded->{study}->{study_unique_id_name};
-                print STDERR "id type: " . $id_type;
-                if ($id_type eq 'plot_name') {
-                    my $plot_name = $decoded->{observation_unit}->{observation_unit_db_id};
-                    my $cvterm_name = $decoded->{observation_variable}->{observation_variable_name};
-                    print STDERR "plot_name: $plot_name\n";
-                    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
-                    my $q = "SELECT cvterm_id FROM cvterm join dbxref USING (dbxref) JOIN db USING (dbid) WHERE db.name = ? and cvterm.name = ?";
-                    my $h = $schema->storage->dbh->prepare($q);
-                    $h->execute($c->config->{trait_ontology_db_name},  $cvterm_name);
-                    my ($cvterm_id) = $h->fetchrow_array();
-                    print STDERR "cvterm_id: $cvterm_id\n";
-
-                    if ($cvterm_id) {
-                        $decoded->{cvterm_id} = $cvterm_id;
-                    }
-                    print STDERR "type_id: $type_id\n";
-                    my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $plot_name })->stock_id();
-                    $decoded->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
-                }
-
-                push @results, { filename => $filename, exif => $decoded, status => "success" };
-                
-            } else {
-                push @results, { filename => $filename, exif => undef, status => "no_eif" };
-            }
+            push @results, { filename => $filename, exif => undef, status => "no_eif" };
         }
     }
 

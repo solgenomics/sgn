@@ -35,8 +35,8 @@ jQuery( document ).ready( function() {
                 contentType: false,
             }).done(function(result) {
                 exifDataResult = result;
-                console.log("exif data result", result);
-                const [exifOk, verifyResult] = verifyExifData(result);
+                //console.log("exif data result", result);
+                const exifOk = verifyExifData(result);
                 exifValid = exifOk;
                 console.log("check", exifOk);
 
@@ -54,7 +54,6 @@ jQuery( document ).ready( function() {
                     jQuery('#working_modal').modal("hide");
                 });    
                 }
-                //verifyExifData(result);
                 jQuery('#working_modal').modal("hide");
             }).fail(function() {
                 reportVerifyResult({ "error": ["Error ocurred during EXIF verification."]});
@@ -226,6 +225,7 @@ function verifyExifData(result) {
     const successMessages =[];
     const errorMessages = [];
     const missingExifCount = [];
+    const finalSuccessMessage = [];
     //console.log(result);
     //console.log("image data", result.images[0].exif);
 
@@ -237,7 +237,6 @@ function verifyExifData(result) {
         const hasObsVar = exif.observation_variable && exif.observation_variable.observation_variable_name;
         const hasTimestamp = exif.timestamp;
         
-
         if (hasObsUnit) {
             successMessages.push(`${imgName}: ObservationUnitDbId: ${exif.observation_unit.observation_unit_db_id}`);
         } else {
@@ -255,20 +254,24 @@ function verifyExifData(result) {
         } else {
             errorMessages.push(`${imgName}: Missing Timestamp`);
         }
+
+        if (errorMessages.length === 0) {
+            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated trait: ${exif.observation_variable.observation_variable_name}`);
+        }
     });
 
     if (errorMessages.length === 0) {
         jQuery('#upload_images_submit_store').attr('disabled', false);
         jQuery('#upload_images_status').html(
-            formatMessage(result.success, "success")
+            formatMessage(finalSuccessMessage, "success")
         );
-        return [true, result];
+        return [true];
     } else {
         jQuery('#upload_images_submit_store').attr('disbled', true);
         jQuery('#upload_images_status').html(
             formatMessage(errorMessages, "error")
         );
-        return [false, result];
+        return [false];
     }
 }
 
@@ -287,6 +290,7 @@ function parseExifData(exifData, imageFiles) {
         //console.log("obsUnitId", obsUnitId);
         if (obsUnitId) {
             fileData[file.name] = {
+                "imageName" : file.name,
                 "imageFileName" : file.name,
                 "imageFileSize" : file.size,
                 "imageTimeStamp" : timestampWithoutExtension,
