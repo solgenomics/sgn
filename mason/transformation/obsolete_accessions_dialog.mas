@@ -74,6 +74,8 @@ jQuery(document).ready(function(){
         'ajax': '/ajax/transformation/set_obsolete_accession_dialog/'+transformation_stock_id,
         'autoWidth': false,
         'order': false,
+        'pageLength' : 100,
+
     });
 
     jQuery('#obsolete_stocks_submit').click(function(){
