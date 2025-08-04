@@ -235,7 +235,9 @@ function verifyExifData(result) {
 
         const hasObsUnit = exif.observation_unit && exif.observation_unit.observation_unit_db_id;
         const hasObsVar = exif.observation_variable && exif.observation_variable.observation_variable_name;
+        const obsVariableName = exif.observation_variable.observation_variable_name;
         const hasTimestamp = exif.timestamp;
+        const hasCvtermId = exif.cvterm_id;
         
         if (hasObsUnit) {
             successMessages.push(`${imgName}: ObservationUnitDbId: ${exif.observation_unit.observation_unit_db_id}`);
@@ -255,8 +257,12 @@ function verifyExifData(result) {
             errorMessages.push(`${imgName}: Missing Timestamp`);
         }
 
+        if (!hasCvtermId) {
+            errorMessages.push(`${imgName} associated trait ${obsVariableName} does not exist in the database`);
+        }
+
         if (errorMessages.length === 0) {
-            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated trait: ${exif.observation_variable.observation_variable_name}`);
+            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated trait: ${obsVariableName}`);
         }
     });
 
