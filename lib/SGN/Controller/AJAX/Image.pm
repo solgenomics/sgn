@@ -247,12 +247,17 @@ sub verify_exif_POST {
         if ($meta) {
             my $decoded_json = decode_json($meta);
             my $id_type = $decoded_json->{study}->{study_unique_id_name};
+            my $stock_name;
 
             if ($id_type ne 'ObservationUnitDbId') {
                 # Replace observation unit name with id if there is only is stock name 
-                my $stock_name = $decoded_json->{observation_unit}->{observation_unit_db_id};
+                $stock_name = $decoded_json->{observation_unit}->{observation_unit_db_id};
                 my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name })->stock_id();
                 $decoded_json->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
+            } else {
+                my $stock_id = $decoded_json->{observation_unit}->{observation_unit_db_id};
+                my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+                $stock_name = $stock->get_name();
             }
 
             # Get cvterm_id of recorded trait
@@ -261,6 +266,8 @@ sub verify_exif_POST {
             my $h = $schema->storage->dbh->prepare($q);
             $h->execute($c->config->{trait_ontology_db_name},  $cvterm_name);
             my ($cvterm_id) = $h->fetchrow_array();
+
+            $decoded_json->{stock_name} = $stock_name;
 
             if ($cvterm_id) {
                 $decoded_json->{cvterm_id} = $cvterm_id;
