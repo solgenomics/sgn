@@ -105,6 +105,9 @@ sub add_derived_accession {
         my $organism_id = $original_stock->organism_id();
 
         my $pedigree_object_id;
+        my $cross_type;
+        my $female_stock_id;
+        my $male_stock_id;
         if ($stock_type == $accession_cvterm_id) {
             $pedigree_object_id = $stock_id;
         } elsif ($stock_type == $plant_cvterm_id) {
@@ -131,8 +134,8 @@ sub add_derived_accession {
         });
 
         if ($female_parent_relationship) {
-            my $female_stock_id = $female_parent_relationship->subject_id();
-            my $cross_type = $female_parent_relationship->value();
+            $female_stock_id = $female_parent_relationship->subject_id();
+            $cross_type = $female_parent_relationship->value();
         }
 
         my $male_parent_relationship = $schema->resultset("Stock::Stock")->find ({
@@ -141,11 +144,35 @@ sub add_derived_accession {
         });
 
         if ($male_parent_relationship) {
-            my $male_stock_id = $male_parent_relationship->subject_id();
+            $male_stock_id = $male_parent_relationship->subject_id();
         }
 
 
+        my $derived_accession_stock = $schema->resultset("Stock::Stock")->create({
+            organism_id => $organism_id,
+            name => $derived_accession_name,
+            uniquename => $derived_accession_name,
+            type_id => $accession_cvterm_id,
+        });
 
+        $derived_accession_stock_id = $derived_accession_stock->stock_id();
+
+        if ($female_stock_id) {
+            $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
+                type_id => $female_parent_cvterm_id,
+                object_id => $derived_accession_stock_id,
+                subject_id => $female_stock_id,
+                value => $cross_type,
+			});
+        }
+
+        if ($male_stock_id) {
+            $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
+                type_id => $male_stock_id,
+                object_id => $derived_accession_stock_id,
+                subject_id => $male_stock_id,
+            });
+        }
 
     };
 
@@ -157,15 +184,16 @@ sub add_derived_accession {
         $transaction_error =  $_;
     };
 
-#    if ($transaction_error){
-#        return { error=>$transaction_error };
-#    } else {
-#        $phenome_schema->resultset("StockOwner")->find_or_create({
-#            stock_id => $transformation_stock_id,
-#            sp_person_id =>  $owner_id,
-#        });
+    if ($transaction_error){
+        return { error=>$transaction_error };
+    } else {
+        $phenome_schema->resultset("StockOwner")->find_or_create({
+            stock_id => $derived_accession_stock_id,
+            sp_person_id =>  $owner_id,
+        });
+    }
 
-#        return { success=>1, transformation_id=>$transformation_stock_id };
+        return { success=>1, derived_accession_stock_id=>$derived_accession_stock_id };
         return { success=>1,};
 
 
