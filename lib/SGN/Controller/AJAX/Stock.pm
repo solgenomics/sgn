@@ -2755,14 +2755,20 @@ sub stock_obsolete_in_bulk : Path('/stock/obsolete_in_bulk') : ActionClass('REST
 sub stock_obsolete_in_bulk_GET {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $program_name = $c->req->param('program_name');
 
     if (!$c->user()){
         $c->stash->{rest} = { error => "You must be logged in to obsolete stocks" };
         $c->detach();
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "Cannot obsolete stocks. You are not a curator." };
-        $c->detach();
+
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to obsolete stocks." };
+        return;
     }
 
     my $stock_name_string = $c->req->param('stock_names');

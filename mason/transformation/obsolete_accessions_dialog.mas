@@ -1,5 +1,6 @@
 <%args>
 $transformation_id
+$program_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -75,7 +76,6 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'order': false,
         'pageLength' : 100,
-
     });
 
     jQuery('#obsolete_stocks_submit').click(function(){
@@ -103,6 +103,7 @@ jQuery(document).ready(function(){
                 data : {
                     'stock_names' : stock_name_string,
                     'obsolete_note': obsolete_note,
+                    'program_name': '<%$program_name%>',
                 },
                 beforeSend: function(response){
                     jQuery('#working_modal').modal('show');

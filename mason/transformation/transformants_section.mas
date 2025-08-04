@@ -1,5 +1,6 @@
 <%args>
 $transformation_id
+$program_name
 </%args>
 
 
@@ -27,7 +28,7 @@ $transformation_id
 </&>
 
 <& /transformation/obsolete_stock_dialog.mas &>
-<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id &>
+<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name &>
 
 
 <script>
