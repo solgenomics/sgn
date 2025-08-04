@@ -459,8 +459,8 @@ my $coderef = sub {
                     my $time = DateTime->now();
                     my $timestamp = $time->ymd()."_".$time->hms();
                     my %phenotype_metadata;
-                    $phenotype_metadata{'archived_file'} = 'none';
-                    $phenotype_metadata{'archived_file_type'} = 'phenosight_data';
+                    #$phenotype_metadata{'archived_file'} = 'none';
+                    #$phenotype_metadata{'archived_file_type'} = 'phenosight_data';
                     $phenotype_metadata{'operator'} = $username;
                     $phenotype_metadata{'date'} = $timestamp;
 
