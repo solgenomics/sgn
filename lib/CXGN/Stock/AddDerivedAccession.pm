@@ -154,6 +154,7 @@ sub add_derived_accession {
             name => $derived_accession_name,
             uniquename => $derived_accession_name,
             type_id => $accession_cvterm_id,
+            description => $description,
         });
 
         $derived_accession_stock_id = $derived_accession_stock->stock_id();

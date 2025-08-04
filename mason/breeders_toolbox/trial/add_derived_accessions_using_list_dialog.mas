@@ -120,9 +120,9 @@ jQuery(document).ready(function(){
     function add_derived_accessions_form (plant_list_id) {
         const plant_list = lo.getList(plant_list_id);
 
-        var html = '<table class="table table-bordered" id="amount_info_table"><thead><tr><th>Plant Name</th><th>Accession Name</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" id="accession_info_table"><thead><tr><th>Plant Name</th><th>Accession Name</th><th>Description</th></tr></thead><tbody>';
         for (var i=0; i<plant_list.length; i++){
-            html = html + '<tr><td>' + plant_list[i] + '</td><td><input class="form-control"  name ="new_derived_accession_name" id="new_derived_accession_name_'+ i +'" value="" placeholder="Required"/></td></tr>';
+            html = html + '<tr><td>' + plant_list[i] + '</td><td><input class="form-control"  name ="new_derived_accession_name" id="new_derived_accession_name_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="accession_description" id="accession_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
         };
 
         html = html + '</tbody></table>';
@@ -142,11 +142,12 @@ jQuery(document).ready(function(){
         for (var i=0; i<plant_list.length; i++) {
             let stock_name = plant_list[i];
             let derived_accession_name = jQuery('#new_derived_accession_name_'+ i ).val();
+            let accession_description = jQuery('#accession_description_'+ i ).val();
             if (derived_accession_name === '') {
                 alert("please provide new accession name for:" + stock_name);
                 return;
             }
-            derived_accession_info.push({'stock_name':stock_name, 'derived_accession_name':derived_accession_name});
+            derived_accession_info.push({'stock_name':stock_name, 'derived_accession_name':derived_accession_name, 'accession_description':accession_description});
         }
 
         jQuery.ajax({

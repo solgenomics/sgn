@@ -2786,6 +2786,7 @@ sub add_derived_accessions_using_list_POST : Args(0) {
         my $new_accession_stock_id;
         my $stock_name = $each_info->{'stock_name'};
         my $derived_accession_name = $each_info->{'derived_accession_name'};
+        my $accession_description = $each_info->{'accession_description'};
         my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$stock_name})->stock_id();
 
         my $add_derived_accession = CXGN::Stock::AddDerivedAccession->new({
@@ -2794,6 +2795,7 @@ sub add_derived_accessions_using_list_POST : Args(0) {
             dbh => $dbh,
             stock_id => $stock_id,
             derived_accession_name => $derived_accession_name,
+            description => $accession_description,
             owner_id => $user_id,
         });
 
