@@ -2599,7 +2599,8 @@
 		  });
 		}
 	  
-		//Shape Point plots into polygons
+		/*
+		//Shape Point plots into polygons (We want to display single points without creating a polygon)
 		if (plots_points.length > 0) {
 		  const centroids = turf.featureCollection(
 			plots_points
@@ -2632,7 +2633,8 @@
 			}
 		  }
 		}
-	  
+	  	*/
+
 		// Set shaped flag
 		data.plots_shaped = (plots_polygons.length + plots_points.length > 0);
 	  
