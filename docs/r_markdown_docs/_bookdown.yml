@@ -20,6 +20,7 @@ rmd_files: [
   "managing_tissue_samples.Rmd",
   "managing_observation_variables.Rmd",
   "managing_image_data.Rmd",
+  "managing_phenotyping_image_data.Rmd",
   "managing_vcf_data.Rmd",
   "managing_spectral_data.Rmd",
   "managing_sequence_metadata.Rmd",
