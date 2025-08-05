@@ -41,6 +41,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Stock::Plot;
 use DateTime;
 use Cwd;
 use File::Temp qw/tempfile/;

@@ -5,7 +5,7 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/documents/inc/datatables/custom_datatable_select_styles.css'] &>
 
-<& /page/page_title.mas, title => "Trait & Treatment Search" &>
+<& /page/page_title.mas, title => "Trait Search" &>
 
     <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
         <div id="trait_search_form" class="form-horizontal well">
@@ -107,7 +107,7 @@
 
 jQuery(document).ready(function () {
 
-    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology', 'experiment_treatment_ontology']) });
+    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology']) });
 
     jQuery('[data-toggle="tooltip"]').tooltip();
 
