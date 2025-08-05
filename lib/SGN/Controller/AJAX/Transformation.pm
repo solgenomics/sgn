@@ -1470,7 +1470,7 @@ sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_acce
             $is_in_trial = 1;
         }
         if ($is_in_trial) {
-            push @transformants, ['Cannot Obsolete', $r->[1]];
+            push @transformants, ['Used in a trial, cannot obsolete', $r->[1]];
         } else {
             push @transformants, ["<input type='checkbox' name='checked_stocks' value='$r->[1]'>", $r->[1]];
         }

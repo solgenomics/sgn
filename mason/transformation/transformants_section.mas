@@ -48,7 +48,7 @@ jQuery(document).ready(function(){
             { title: "Obsolete Accession", "data": null, "render": function ( data, type, row ) {
                 if (can_obsolete) {
                     if (row.is_in_trial){
-                        return 'Cannot Obsolete';
+                        return 'Used in a trial, cannot obsolete';
                     } else {
                         return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>";
                     }
