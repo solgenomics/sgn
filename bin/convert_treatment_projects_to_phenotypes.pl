@@ -1,10 +1,10 @@
 =head1 NAME
 
-convert_treatment_projects_to_phenotypes.pl - a script to take deprecated treatment/field_management_factor projects and turn them into treatment observations. Treatment projects will be deleted, and any treatments that are seen will be added to the treatment ontology.
+convert_treatment_projects_to_phenotypes.pl - a script to take deprecated treatment/field_management_factor projects and turn them into treatment observations. Treatment projects will be deleted, and any treatments that are seen will be added to the experiment_treatment ontology.
 
 =head1 SYNOPSIS
 
-perl convert_treatment_projects_to_phenotypes.pl -H dbhost -D dbname -U user -P password
+perl convert_treatment_projects_to_phenotypes.pl -H dbhost -D dbname -U user -P password -e username -t
 
 =over 4
 
@@ -24,6 +24,10 @@ The user executing this action (postgres by default)
 
 The database password.
 
+=item -e
+
+The signing user. Must be a user in the database.
+
 =item -t
 
 Test mode. Changes not committed.
@@ -41,28 +45,53 @@ use strict;
 use Getopt::Std;
 use Pod::Usage;
 use Bio::Chado::Schema;
+use CXGN::Metadata::Schema;
+use CXGN::Phenome::Schema;
+use CXGN::People::Person;
 use CXGN::DB::InsertDBH;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
-use CXGN::Phenotype;
+use CXGN::Phenotypes::StorePhenotypes;
+use DateTime;
+use Cwd;
+use File::Temp qw/tempfile/;
 
-our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_t);
+our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_e, $opt_t);
 
-getopts('H:D:U:P:t')
+getopts('H:D:U:P:e:t')
     or pod2usage();
 
 my $dbh = CXGN::DB::InsertDBH->new({
-	 dbname => $opt_D,
-	 dbhost => $opt_H,
-	#  dbuser => $opt_U,
-	#  dbpass => $opt_P,
-	 dbargs => {AutoCommit => 0,
-		    RaiseError => 1},
+	dbname => $opt_D,
+	dbhost => $opt_H,
+	dbuser => $opt_U,
+	dbpass => $opt_P,
+	dbargs => {
+		AutoCommit => 0,
+		RaiseError => 1
+	},
 });
 
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
+my $metadata_schema = CXGN::Metadata::Schema->connect( 
+        sub { $dbh->get_actual_dbh() }, 
+        { on_connect_do => ['SET search_path TO public,metadata;'] }
+    );
+my $phenome_schema = CXGN::Phenome::Schema->connect( 
+	sub { $dbh->get_actual_dbh() },
+	{ on_connect_do => ['SET search_path TO public,phenome;'] }
+);
+my $site_basedir = getcwd()."/..";
+my $temp_basedir_key = `cat $site_basedir/sgn.conf $site_basedir/sgn_local.conf | grep tempfiles_subdir`;
+my (undef, $temp_basedir) = split(/\s+/, $temp_basedir_key);
+$temp_basedir = "$site_basedir/$temp_basedir";
+if (! -d "$temp_basedir/delete_nd_experiment_ids/"){
+	mkdir("$temp_basedir/delete_nd_experiment_ids/");
+}
+my $signing_user_id = CXGN::People::Person->get_person_by_username($dbh, $opt_e); #not the db user, but the name attached as operator of new phenotypes
 
+#definition of trials view
 my $all_trials_q = "SELECT trial.project_id AS trial_id, trial.name as trial_name                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
     FROM (((project breeding_program                                                                                                                                                                                                                                                  
       JOIN project_relationship ON (((breeding_program.project_id = project_relationship.object_project_id) AND (project_relationship.type_id = ( SELECT cvterm.cvterm_id                                                                                                             
@@ -75,6 +104,7 @@ my $all_trials_q = "SELECT trial.project_id AS trial_id, trial.name as trial_nam
            WHERE (((cvterm.name)::text = 'cross'::text) OR ((cvterm.name)::text = 'trial_folder'::text) OR ((cvterm.name)::text = 'folder_for_trials'::text) OR ((cvterm.name)::text = 'folder_for_crosses'::text) OR ((cvterm.name)::text = 'folder_for_genotyping_trials'::text)))))
    GROUP BY trial.project_id, trial.name;";
 
+#Give a description to all new treatment cvterms
 my $update_new_treatment_sql = "UPDATE cvterm 
 	SET definition = \'Legacy treatment from BreedBase before sgn-416.0 release. Binary value for treatment was/was not applied.\'
 	WHERE cvterm_id IN (SELECT unnest(string_to_array(?, ',')::int[]));";
@@ -99,7 +129,7 @@ if ($experiment_treatment_cv) {
 } else {
 	die "DB patch has not been run - no experiment_treatment CV found.\n";
 }
-my $experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'EXPERIMENT_TREATMENT'  , cv_id => $experiment_treatment_cv_id });
+my $experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'Experimental treatment ontology'  , cv_id => $experiment_treatment_cv_id });
 my $experiment_treatment_root_id;
 if ($experiment_treatment) {
 	$experiment_treatment_root_id = $experiment_treatment->cvterm_id();
@@ -112,30 +142,51 @@ my $h = $schema->storage->dbh->prepare($all_trials_q);
 $h->execute();
 
 my %new_treatment_cvterms = ();
+my %new_treatment_full_names = ();
 my $dbxref_id = 0;
 
 while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
+
 	my $trial = CXGN::Trial->new({
 		bcs_schema => $schema,
 		trial_id => $trial_id
 	});
-	my $parent_observation_units = $trial->get_plots();
+	my $parent_observation_units = $trial->get_plots(); #get all plots
+	my @parent_plot_names = map {$_->[1]} @{$parent_observation_units}; #just plot names
 	my $treatment_trials = $trial->get_treatment_projects();
+	my @this_trial_treatments = (); # holds the full names of all treatments of this trial
+	my $treatment_values_hash = {};
+
+	my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+	my $has_treatments = 0;
+
 	foreach my $treatment_trial (@{$treatment_trials}) {
+
+		$has_treatments = 1;
+
 		my $treatment_trial_name = $treatment_trial->[1];
 		my $treatment_trial_id = $treatment_trial->[0];
+
 		print STDERR "Found a treatment trial with ID $treatment_trial_id \n";
+
 		$treatment_trial = CXGN::Trial->new({
 			bcs_schema => $schema,
 			trial_id => $treatment_trial->[0]
 		});
+
 		my $observation_units = $treatment_trial->get_plots();
 		my %observation_units_lookup = map {$_->[0] => 1} @{$observation_units};
+
 		my $treatment_name = $treatment_trial_name =~ s/$trial_name(_)//r;
 		$treatment_name =~ s/_/ /g;
-		$treatment_name = lc($treatment_name);
+		$treatment_name = lc($treatment_name); #enforce no underscores and all lowercase
+
 		my $treatment_id;
-		if (!exists($new_treatment_cvterms{$treatment_name})) {
+		my $treatment_full_name;
+
+		if (!exists($new_treatment_cvterms{$treatment_name})) { #if this is a new treatment name, make new db entries and get cvterm ids
 			$dbxref_id++;
 			my $zeroes = "0" x (7-length($dbxref_id));
 			eval {
@@ -145,8 +196,12 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 					db => 'EXPERIMENT_TREATMENT',
 					dbxref => "$zeroes"."$dbxref_id"
 				})->cvterm_id();
+
 				$new_treatment_cvterms{$treatment_name} = $treatment_id;
-				my $variable_of_id = 
+				$treatment_full_name = "$treatment_name|EXPERIMENT_TREATMENT:$zeroes"."$dbxref_id";
+				$new_treatment_full_names{$treatment_name} = $treatment_full_name;
+				push @this_trial_treatments, $treatment_full_name;
+
 				$schema->resultset("Cv::CvtermRelationship")->find_or_create({
 					object_id => $experiment_treatment_root_id,
 					subject_id => $treatment_id,
@@ -156,31 +211,67 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 			if ($@) {
 				die "An error occurred trying to create a new treatment! $@\n";
 			}
-		} else {
+		} else { #if not new treatment, get the treatment cvterm_id and full names
 			$treatment_id = $new_treatment_cvterms{$treatment_name};
+			$treatment_full_name = $new_treatment_full_names{$treatment_name};
+			push @this_trial_treatments, $treatment_full_name;
 		}
-		my $trial_date = $trial->get_create_date() =~ s/ /_/r;
-		foreach my $obs_unit (@{$parent_observation_units}){
+
+		foreach my $obs_unit (@{$parent_observation_units}){ #Construct the phenotype values hash
 			my $stock_name = $obs_unit->[1];
-			eval {
-				my $phenotype = CXGN::Phenotype->new({
-					schema => $schema,
-					cvterm_id => $treatment_id,
-					value => exists($observation_units_lookup{$obs_unit->[0]}) ? 1 : 0,
-					stock_id => $obs_unit->[0],
-					observationunit_id => $obs_unit->[0],
-					uniquename => "Stock: $stock_name, trait: $treatment_name date: $trial_date operator = $opt_U",
-					collect_date => $trial_date,
-					operator => $opt_U,
-					nd_experiment_id => $trial->get_nd_experiment_id()->{nd_experiment_id}
-				});
-				$phenotype->store();
-			};
-			if ($@) {
-				die "An error occurred trying to store new phenotype! $@\n";
-			}
+			$treatment_values_hash->{$stock_name}->{$treatment_full_name} = [
+				exists($observation_units_lookup{$obs_unit->[0]}) ? 1 : 0,
+				$timestamp,
+				$opt_e,
+				'',
+				''
+			];
 		}
-		$trial->remove_treatment_project($treatment_trial_id);
+
+		$trial->remove_treatment_project($treatment_trial_id); # delete the treatment trial;
+	}
+
+	if ($has_treatments) {
+		my $phenotype_metadata = { #make phenotype metadata
+			archived_file => 'none',
+			archived_file_type => 'treatment project conversion patch',
+			operator => $opt_e,
+			date => $timestamp
+		};
+
+		my (undef, $tempfile) = tempfile("$temp_basedir/delete_nd_experiment_ids/fileXXXX"); #tempfile
+
+		my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+			basepath => $temp_basedir,
+			dbhost => $opt_H,
+			dbname => $opt_D,
+			dbuser => $opt_U,
+			dbpass => $opt_P,
+			temp_file_nd_experiment_id => $tempfile,
+			bcs_schema => $schema,
+			metadata_schema => $metadata_schema,
+			phenome_schema => $phenome_schema,
+			user_id => $signing_user_id,
+			stock_list => \@parent_plot_names,
+			trait_list => \@this_trial_treatments,
+			values_hash => $treatment_values_hash,
+			metadata_hash => $phenotype_metadata
+		});
+
+		my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+		if ($verified_warning) {
+		warn $verified_warning;
+		}
+		if ($verified_error) {
+			die $verified_error;
+		}
+
+		my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+		if ($stored_phenotype_error) {
+			die "An error occurred converting treatments: $stored_phenotype_error\n";
+		}
 	}
 }
 
