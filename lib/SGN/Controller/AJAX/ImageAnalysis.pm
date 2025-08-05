@@ -306,7 +306,7 @@ sub image_analysis_group_POST : Args(0) {
         $trait = $results_ref->{'result'}->{'trait'};
         $value = $results_ref->{'result'}->{'value'};
 
-        if ($trait && $value) {
+        if ($trait && $value) {  # we have a single analysis
             print STDERR "Working on $trait for $uniquename. Saving the details \n";
 
 	    my $analyzed_link = dirname($results_ref->{'result'}->{'image_link'})."/small.jpg";
@@ -321,17 +321,30 @@ sub image_analysis_group_POST : Args(0) {
                         value => $value + 0
                 };
         }
-        else { # if no result returned for an image, include it with error details.
+        elsif (exists($results_ref->{results}) && ref($results_ref->{results}) eq "HASH")  { # multiple results are returned, for several sub-images
+	    foreach my $sample (keys %{$results_ref->{results}}) {
+		push @{$grouped_results{$sample}{$trait}}, {
+		    stock_id => $results_ref->{stock_id},
+		    collector => $results_ref->{image_username},
+		    original_link => $results_ref->{result}->{original_name},
+		    analyzed_link => dirname($results_ref->{results}->{$sample}->{image_link})."/small.jpg",
+		    image_name => $results_ref->{image_original_filename}."_$sample_".$results_ref->{image_file_ext},
+		    trait_id => $results_ref->{result}->{trait_id},
+		    value => $results_ref->{results}->{$sample}->{trait_value},
+		    status => 'create',
+		};
+	    }    
+	} else { # if no result returned for an image, include it with error details.
             print STDERR "No usable analysis data in this results_ref \n";
             push @{$grouped_results{$uniquename}{$trait}}, {
-                        stock_id => $results_ref->{'stock_id'},
-                        collector => $results_ref->{'image_username'},
-                        original_link => $results_ref->{'result'}->{'original_image'},
-                        analyzed_link => 'Error: ' . $results_ref->{'result'}->{'error'},
-                        image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
-                        trait_id => $results_ref->{'result'}->{'trait_id'},
-                        value => 'NA'
-                };
+		stock_id => $results_ref->{'stock_id'},
+		collector => $results_ref->{'image_username'},
+		original_link => $results_ref->{'result'}->{'original_image'},
+		analyzed_link => 'Error: ' . $results_ref->{'result'}->{'error'},
+		image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
+		trait_id => $results_ref->{'result'}->{'trait_id'},
+		value => 'NA'
+	    };
         }
 
         $next_results_ref = $sorted_result[$i+1];
