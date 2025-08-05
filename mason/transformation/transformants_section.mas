@@ -1,6 +1,7 @@
 <%args>
 $transformation_id
 $program_name
+$can_obsolete
 </%args>
 
 
@@ -21,7 +22,9 @@ $program_name
                         </&>
                     </div>
                 </div>
+% if($can_obsolete) {
                 <button class="btn btn-sm btn-primary" style="margin:3px" id="obsolete_accessions_in_bulk_link">Obsolete Accessions in Bulk</button>
+% }
             </div>
         </div>
     </div>
@@ -34,8 +37,8 @@ $program_name
 <script>
 
 jQuery(document).ready(function(){
-
     const transformation_stock_id = "<%$transformation_id%>";
+    const can_obsolete = "<%$can_obsolete%>";
     const transformants_table = jQuery('#transformants_table').DataTable({
         'ajax': '/ajax/transformation/transformants/'+transformation_stock_id,
         'autoWidth': false,
@@ -43,10 +46,14 @@ jQuery(document).ready(function(){
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
             { title: "Obsolete Accession", "data": null, "render": function ( data, type, row ) {
-                if (row.is_in_trial){
-                    return 'Cannot Obsolete'
+                if (can_obsolete) {
+                    if (row.is_in_trial){
+                        return 'Cannot Obsolete';
+                    } else {
+                        return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>";
+                    }
                 } else {
-                    return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>";
+                    return '';
                 }
             }},
         ],
