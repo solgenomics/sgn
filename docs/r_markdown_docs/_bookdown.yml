@@ -25,7 +25,8 @@ rmd_files: [
   "managing_spectral_data.Rmd",
   "managing_sequence_metadata.Rmd",
   "managing_outliers_in_dataset.Rmd",
-  "data_analysis_tools.Rmd"
+  "data_analysis_tools.Rmd",
+  "vector_viewer.Rmd"
   ]
 book_filename: BreedbaseManual
 output_dir: ../
