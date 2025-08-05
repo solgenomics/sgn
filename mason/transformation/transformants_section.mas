@@ -42,7 +42,13 @@ jQuery(document).ready(function(){
         'order': false,
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
+            { title: "Obsolete Accession", "data": null, "render": function ( data, type, row ) {
+                if (row.is_in_trial){
+                    return 'Cannot Obsolete'
+                } else {
+                    return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>";
+                }
+            }},
         ],
 
         "fnInitComplete": function(oSettings, json) {
