@@ -1,0 +1,10 @@
+<%args>
+</%args>
+
+<div style="text-align: center; margin: 2em 0">
+   <h1 style="margin-bottom: 1em">Access denied</h1>
+
+   <div>
+     You do not have sufficient permissions to view this page. 
+   </div>
+</div>

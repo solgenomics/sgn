@@ -1,0 +1,143 @@
+<%args>
+</%args>
+
+<div style="text-align: center; margin: 2em 0">
+   <h2 style="margin-bottom: 1em">Design new experimental treatments</h2>
+   <h4>Experimental treatments are applied to the stocks of a trial. Subplots, plants, and tissue samples inherit their treatments from their parent stocks.</h4>
+
+   <h4> Check the <a href='/search/treatments'>treatment search page</a> to see if your treatment has already been made before designing new treatments.</h4>
+
+    <br>
+
+   <div class="container-fluid">
+        <form class="form-horizontal" role="form" method="post" id="new_treatment_design_form" name="new_treatment_design_form">
+        <div class="form-group">
+                <label class="col-sm-3 control-label"> New treatment name: </label>
+                <div class="col-sm-8">
+                    <input style="width:60%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="Special characters not allowed."/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Definition:</label>
+                <div class="col-sm-8">
+                    <input style="width:60%;" class="form-control" id="new_treatment_definition" name="new_treatment_definition" type="text"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Comment:</label>
+                <div class="col-sm-8">
+                    <input style="width:60%;" class="form-control" id="new_treatment_comment" name="new_treatment_comment" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Treatment format:</label>
+                <div class="col-sm-8">
+                    <select style="width:60%;" class="form-control" id="new_treatment_format_select" name="new_treatment_format_select" type="select">
+                        <option value="numeric" selected>Numeric</option>
+                        <option value="qualitative">Qualitative (categorical)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_default_value_container">
+                <label class="col-sm-3 control-label">Default value:</label>
+                <div class="col-sm-8">
+                    <input style="width:60%;" class="form-control" id="new_treatment_default_value" name="new_treatment_default_value" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_minimum_value_container">
+                <label class="col-sm-3 control-label">Minimum value:</label>
+                <div class="col-sm-8">
+                    <input style="width:60%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_maximum_value_container">
+                <label class="col-sm-3 control-label">Maximum value:</label>
+                <div class="col-sm-8">
+                    <input style="width:60%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_default_category_container" style="display:none;">
+                <label class="col-sm-3 control-label">Default category:</label>
+                <div class="col-sm-8">
+                    <input style="width:60%;" class="form-control" id="new_treatment_default_category" name="new_treatment_default_category" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_add_categories_container" style="display:none;">
+                <label class="col-sm-3 control-label">Add categories:</label>
+                <div class="col-sm-8">
+                    <table style="width:60%;">
+                        <tr>
+                            <td><input style="width:100%;" class="form-control" id="new_treatment_add_category" name="new_treatment_add_category" type="text" placeholder="(Optional)"/></td>
+                            <td><button id="new_treatment_add_category_btn" class="btn btn-small btn-success">+</button></td>
+                        </tr>
+                    </table>
+                    <table id="new_treatment_categories" style="width:30%;">
+                    </table>
+                    <button id="new_treatment_remove_category_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    jQuery(document).ready(function () {
+        jQuery('#new_treatment_format_select').on('change', function () {
+            let treatment_type = jQuery(this).val();
+            if (treatment_type === 'numeric') {
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_minimum_value_container').show();
+                jQuery('#new_treatment_maximum_value_container').show();
+                jQuery('#new_treatment_default_category_container').hide();
+                jQuery('#new_treatment_add_categories_container').hide();
+            } else if (treatment_type === 'qualitative') {
+                jQuery('#new_treatment_default_value_container').hide();
+                jQuery('#new_treatment_minimum_value_container').hide();
+                jQuery('#new_treatment_maximum_value_container').hide();
+                jQuery('#new_treatment_default_category_container').show();
+                jQuery('#new_treatment_add_categories_container').show();
+            }
+        });
+
+        jQuery('#new_treatment_add_category_btn').on('click',function(e) {
+            e.preventDefault();
+            let new_category = jQuery('#new_treatment_add_category').val();
+
+            if (new_category !== null && new_category !== "" && new_category.trim() !== "" ) {
+                let table_str = jQuery('#new_treatment_categories').html();
+                let table_elems = [];
+                if (table_str && table_str.trim() !== "") {
+                    table_elems = JSON.parse(html_table_to_json(table_str));
+                }
+                table_elems.push(new_category);
+                console.log(table_elems);
+                table_str = json_to_html_table(table_elems);
+                jQuery('#new_treatment_categories').html(table_str);
+                if (table_elems.length > 0) {
+                    jQuery('#new_treatment_remove_category_btn').css('display', '');
+                }
+            }
+            jQuery('#new_treatment_add_category').val('');
+        });
+
+        jQuery('#new_treatment_remove_category_btn').on('click',function(e) {
+            e.preventDefault();
+            let table_str = jQuery('#new_treatment_categories').html();
+            let table_elems = JSON.parse(html_table_to_json(table_str));
+            table_elems.pop();
+            if (table_elems.length == 0) {
+                jQuery('#new_treatment_remove_category_btn').css('display', 'none');
+            }
+            table_str = json_to_html_table(table_elems);
+            jQuery('#new_treatment_categories').html(table_str);
+        });
+
+        function html_table_to_json(html_str) {
+            return JSON.stringify(html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== ''));
+        }
+
+        function json_to_html_table(json) {
+            return "<tr><td>"+json.join("</td></tr><tr><td>")+"</td></tr>";
+        }
+    });
+</script>
