@@ -34,6 +34,10 @@ Row labels are expected to be unique file names, column header for the associate
 
 a dirname that contains image filenames or subdirectories named after database accessions, containing one or more images (see option -d) .
 
+=item -I
+
+the filesnames contain the stock_id up to the first underscore
+
 =item -u
 
 use name - from sgn_people.sp_person. 
@@ -92,8 +96,8 @@ use Getopt::Std;
 use CXGN::Tools::File::Spreadsheet;
 use File::Glob qw | bsd_glob |;
 
-our ($opt_H, $opt_D, $opt_t, $opt_i, $opt_u, $opt_r, $opt_d, $opt_e, $opt_m, $opt_b, $opt_P, $opt_y);
-getopts('H:D:u:i:e:f:tdr:m:b:P:y');
+our ($opt_H, $opt_D, $opt_t, $opt_i, $opt_I, $opt_u, $opt_r, $opt_d, $opt_e, $opt_m, $opt_b, $opt_P, $opt_y);
+getopts('H:D:u:i:e:f:tdr:m:b:P:yI');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
@@ -103,6 +107,7 @@ my $sp_person=$opt_u;
 my $db_image_dir = $opt_b;
 my $chado_table = $opt_r;
 my $ext = $opt_e || 'jpg';
+my $stock_id_to_first_underscore = $opt_I;
 
 print STDERR "LOAD IMAGES STARTING... $dbhost $dbname $dbpass $dirname\n";
 
@@ -241,112 +246,117 @@ foreach my $file (@files) {
     eval {
 	chomp($file);
 	@sub_files = ($file);
-	@sub_files =  bsd_glob "$file/*"; # if $opt_d;
+	@sub_files =  bsd_glob "$file/*"  if $opt_d;
 
 	print STDERR "FILES FOR $file: ".Dumper(\@sub_files)."\n";
 
 	my $object =  basename($file, ".$ext" );
+	my $stock;
+	my $stock_id;
 
-#	if (!$plot) { die "File $file has no object name in it!"; }
-	my $stock = $schema->resultset("Stock::Stock")->find( {
-	    stock_id => $name2id{ lc($object) }  } );
 	foreach my $filename (@sub_files) {
-	 
-	    chomp $filename;
-	 
-	    print STDERR "FILENAME NOW: $filename\n";
-	    my $image_base = basename($filename);
+
 	    my ($object_name, $description, $extension);
-	    if ($opt_m) {
-		$object_name = $name_map{$object . "." . $ext } ;
-	    }
-	    
-	    print STDERR "OBJECT = $object...\n";
-#	    if ($image_base =~ /(.*?)\_(.*?)(\..*?)?$/) { 
-	    if ($image_base =~ m/(.*)(\.$ext)/i) { 
-		$extension = $2;
-		$image_base = $1;
-	    }
-	    if ($image_base =~ m/(.*)\_(.*)/)  { 
-		$object_name = $1;
-		$description = $2;
 
+	    if ($stock_id_to_first_underscore) {
+		
+		my $image_base = basename($filename);
+		print STDERR "IMAGE BASE: $image_base\n";
+		$image_base =~ s/^(\d+?)\_.*$/$1/g;
+		$stock_id = $image_base;
+		
+		print STDERR "EXTRACTED STOCK ID $stock_id.\n";
+		
+		# check if stock with stock_id actually exists
+		#
+		$stock = $schema->resultset("Stock::Stock")->find(
+		    {
+			stock_id => $stock_id 
+		    } );
+		if (!$stock) { die "STOCK WITH STOCK_ID $stock_id DOES NOT EXIST IN THE DATABASE! PLEASE REVIEW YOUR INPUT\n"; }		
 	    }
-	    else { 
-		$object_name = $image_base;
-	    }
-	    print STDERR "Object: $object OBJECT NAME: $object_name DESCRPTION: $description EXTENSIO: $extension\n";
-
-
-	    print STDOUT "Processing file $file...\n";
-	    print STDOUT "Loading $object_name, image $filename\n";
-	    print STDERR "Loading $object_name, image $filename\n";
-	    my $image_id; # this will be set later, depending if the image is new or not
-	    if (! -e $filename) { 
-		warn "The specified file $filename does not exist! Skipping...\n";
-	    	next();
-	    }
-
-	    if (!exists($name2id{lc($object)})) { 
-		message ("$object does not exist in the database...\n");
-	    }
-
 	    else {
-		print STDERR "Adding $filename...\n";
-		if (exists($image_hash{$filename})) { 
-		    print STDERR "$filename is already loaded into the database...\n";
-		    $image_id = $image_hash{$filename}->get_image_id();
-		    $connections{$image_id."-".$name2id{lc($object)}}++;
-		    if ($connections{$image_id."-".$name2id{lc($object)}} > 1) { 
-			print STDERR "The connection between $object and image $filename has already been made. Skipping...\n";
-		    }
-		    elsif ($image_hash{$filename}) { 
-			print STDERR qq  { Associating $chado_table $name2id{lc($object)} with already loaded image $filename...\n };
-		    }
+		$stock = $schema->resultset("Stock::Stock")->find(
+		    {
+			stock_id => $name2id{ lc($object) }
+		    } );
+		$stock_id = $stock->stock_id();
+	    }
+
+	    if (! $opt_I) { 
+		chomp $filename;
+		
+		print STDERR "FILENAME NOW: $filename\n";
+		my $image_base = basename($filename);
+
+
+
+
+
+		
+		if ($opt_m) {
+		    $object_name = $name_map{$object . "." . $ext } ;
+		}
+		
+		print STDERR "OBJECT = $object...\n";
+		#	    if ($image_base =~ /(.*?)\_(.*?)(\..*?)?$/) { 
+		if ($image_base =~ m/(.*)(\.$ext)/i) { 
+		    $extension = $2;
+		    $image_base = $1;
+		}
+		if ($image_base =~ m/(.*)\_(.*)/)  { 
+		    $object_name = $1;
+		    $description = $2;
+		    
 		}
 		else { 
-		    print STDERR qq { Generating new image object for image $filename and associating it with $chado_table $object, id $name2id{lc($object) } ...\n };
-
-		    if ($opt_t)  { 
-			print STDOUT qq { Would associate file $filename to $chado_table $object_name, id $name2id{lc($object)}\n };
-			$new_image_count++;
+		    $object_name = $image_base;
+		}
+		print STDERR "Object: $object OBJECT NAME: $object_name DESCRPTION: $description EXTENSIO: $extension\n";
+		
+		
+		print STDOUT "Processing file $file...\n";
+		print STDOUT "Loading $object_name, image $filename\n";
+		print STDERR "Loading $object_name, image $filename\n";
+		my $image_id; # this will be set later, depending if the image is new or not
+		if (! -e $filename) { 
+		    warn "The specified file $filename does not exist! Skipping...\n";
+		    next();
+		}
+	    }	
+	    my $image_id;
+	    print STDERR "Adding $filename...\n";
+	    if (exists($image_hash{$filename})) { 
+		print STDERR "$filename is already loaded into the database...\n";
+		$image_id = $image_hash{$filename}->get_image_id();
+		$connections{$image_id."-".$stock_id}++;
+		if ($connections{$image_id."-".$stock_id} > 1) { 
+		    print STDERR "The connection between $object and image $filename has already been made. Skipping...\n";
+		}
+		elsif ($image_hash{$filename}) { 
+		    print STDERR qq  { Associating $chado_table $stock_id with already loaded image $filename...\n };
+		}
+	    }
+	    else { 
+		print STDERR qq { Generating new image object for image $filename and associating it with $chado_table $object, id $stock_id ...\n };
+		
+		if ($opt_t)  { 
+		    print STDOUT qq { Would associate file $filename to $chado_table $object_name, id $stock_id\n };
+		    $new_image_count++;
+		}
+		else { 
+		    if ($opt_t) {
+			print STDERR "WOULD STORE IMAGE ($object) FROM FILENAME $filename AND ASSOCIATE WITH $stock_id\n";
 		    }
-		    else { 
-			# my $image = CXGN::Image->new(dbh=>$dbh, image_dir=>$db_image_dir);   
-			# $image_hash{$filename}=$image;
-
-			# my $error;
-			# ($image_id, $error) = $image->process_image("$filename", $chado_table , $name2id{lc($object)}, 1);
-
-			# print STDERR "IMAGE ID $image_id, ERROR: $error\n";
-
-			# if ($error eq "ok") { 
-			#     $image->set_description("$description");
-			#     $image->set_name(basename($filename , ".$ext"));
-			#     $image->set_sp_person_id($sp_person_id);
-			#     $image->set_obsolete("f");
-			#     $image_id = $image->store();
-			#     #link the image with the BCS object 
-			#     $new_image_count++;
-			#     my $image_subpath = $image->image_subpath();
-			#     print STDERR "FINAL IMAGE PATH = $db_image_dir/$image_subpath\n";
-			#}
-
-			if ($image_id = store_image($dbh, $db_image_dir, \%image_hash, \%name2id, $chado_table, $object, $filename, $description, $sp_person_id, $new_image_count)) {
+		    else {
+			if ($image_id = store_image($dbh, $db_image_dir, \%image_hash, $stock_id, $chado_table, $object, $filename, $description, $sp_person_id, $new_image_count)) {
 			    $new_image_count++;
 			}
 		    }
 		}
-		if ($image_id) { link_image($image_id, $name2id{lc($object)}, $metadata_id); }
 	    }
-
-
+	    if ($image_id && $stock_id && !$opt_t) { link_image($image_id, $stock_id, $metadata_id); }
 	    
-	    # print STDERR "Connecting image $filename and id $image_id with stock ".$stock->stock_id()."\n";
-            # #store the image_id - stock_id link
-	    # my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?)";
-            # my $sth  = $dbh->prepare($q);
-            # $sth->execute($stock->stock_id, $image_id, $metadata_id);
 	}
     };
     if ($@) {
@@ -362,7 +372,7 @@ sub store_image {
     my $dbh = shift;
     my $db_image_dir = shift;
     my $image_hash = shift;
-    my $name2id = shift;
+    my $stock_id = shift;
     my $chado_table = shift;
     my $object = shift;
     my $filename = shift;
@@ -374,7 +384,7 @@ sub store_image {
     my $image = CXGN::Image->new(dbh=>$dbh, image_dir=>$db_image_dir);   
     $image_hash->{$filename}=$image;
     
-    my ($image_id, $error) = $image->process_image("$filename", $chado_table , $name2id->{lc($object)}, 1);
+    my ($image_id, $error) = $image->process_image("$filename", $chado_table , $stock_id, 1);
     
     print STDERR "IMAGE ID $image_id, ERROR: $error\n";
 
