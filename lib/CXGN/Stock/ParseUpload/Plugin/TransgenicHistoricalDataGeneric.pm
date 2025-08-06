@@ -66,7 +66,7 @@ sub _validate_with_plugin {
     if ($is_existing_accessions) {
         if (scalar(@$is_existing_accessions) > 0) {
             my $accession_validator = CXGN::List::Validate->new();
-            my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames', $seen_accession_names)->{'missing'}};
+            my @accessions_missing = @{$accession_validator->validate($schema,'not_obsoleted_and_obsoleted_accessions', $seen_accession_names)->{'missing'}};
             if (scalar(@accessions_missing) > 0) {
                 push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
             }
