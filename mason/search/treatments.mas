@@ -1,0 +1,227 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/documents/inc/datatables/custom_datatable_select_styles.css'] &>
+
+<& /page/page_title.mas, title => "Treatment Search" &>
+
+    <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+        <div id="treatment_search_form" class="form-horizontal well">
+            <!--<div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Select Ontology Name(s): </label>
+                <div class="col-sm-9" >
+                    <div id="treatment_search_ontology_select"></div>
+                </div>
+            </div> -->
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Search Treatment Name: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="treatment_search_name" placeholder="Search any treatment name or piece of name"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Search Definition: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="treatment_search_definition" placeholder="Search any word or piece of definition"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Subset Treatments: </label>
+                <div class="col-sm-9" >
+                    <div id="treatment_search_list_select">
+                        [LOADING...]
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <center>
+            <button class="btn btn-primary" id="submit_treatment_search" />Search</button>
+        </center>
+    </&>
+
+    <&| /page/info_section.mas, title => 'Results', collapsible=>1, collapsed=>0 &>
+
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+
+                    <table id="treatment_search_results" width="100%" class="table table-hover table-striped">
+                    <thead>
+                      <tr>
+                        <th>Select</th>
+                        <th>Copy Name|ID</th>
+                        <th>Treatment ID</th>
+                        <th>Treatment Name</th>
+                        <th>Definition</th>
+                        <th>Treatment&nbsp;Usage</th>
+                      </tr>
+                    </thead>
+                    </table>
+
+                    <button type="button" class="selectAll-dt">Select All</button>
+                    <button type="button" class="deselectAll-dt">Deselect All</button>
+
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+
+                    <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the treatment names currently selected in the search results table to a new or exisiting list</i>'&>
+                    <br>
+                    <p><em><span id="treatment_result_count">0</span> treatment(s) selected.</em></p>
+                    <div style="text-align:right" id="treatments_to_list_menu"></div>
+                    <div id="treatment_result_names" style="display: none;"></div>
+                    </&>
+
+                </div>
+            </div>
+        </div>
+    </&>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    //get_select_box('trait_variable_ontologies', 'treatment_search_ontology_select', { 'name' : 'treatment_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['experiment_treatment_ontology']) });
+
+    jQuery('[data-toggle="tooltip"]').tooltip();
+
+    var lo = new CXGN.List();
+    jQuery('#treatment_search_list_select').html(lo.listSelect('treatment_search_list_select', [ 'treatments' ], 'Leave blank to see all treatments', undefined, undefined));
+
+    jQuery(document).on('change', '#treatment_search_list_select', function(){
+        _draw_treatment_search_result_table();
+    });
+
+    jQuery('#submit_treatment_search').click(function(){
+        _draw_treatment_search_result_table();
+    });
+
+    jQuery('#treatment_search_form').keypress(function(e){
+        var code = e.keyCode || e.which;
+        if( code == 13 ) {
+             jQuery('#submit_treatment_search').click();
+        }
+    });
+
+    parseArgs();
+
+    var treatment_table;
+    _draw_treatment_search_result_table();
+
+    function _draw_treatment_search_result_table (){
+        // var selectedontologies = [];
+        // jQuery(document).find('input[name="treatment_search_ontology_select_id"]:checked').each(function (i, ob) {
+        //     selectedontologies.push(jQuery(ob).val());
+        // });
+
+        treatment_table = jQuery('#treatment_search_results').DataTable({
+            'destroy': true,
+            'searching' : false,
+            'ordering'  : false,
+            'processing': true,
+            'serverSide': true,
+            'lengthMenu': [10,20,50],
+            'columnDefs': [ {
+                'orderable': false,
+                'className': 'select-checkbox',
+                'targets':   0
+            } ],
+            'select': {
+                'style':    'multi',
+                'selector': 'td:not(:nth-child(2))',
+            },
+            'ajax': {
+                'url': '/ajax/search/treatments',
+                'data': function(d) {
+                    d.treatment_search_list_id  = jQuery('#treatment_search_list_select_list_select').val();
+                    d.treatment_any_name  = jQuery('#treatment_search_name').val();
+                    d.treatment_definition  = jQuery('#treatment_search_definition').val();
+                    //d.ontology_db_id = selectedontologies;
+                }
+            },
+            "order": [[ 1, "asc" ]]
+        });
+    }
+
+   jQuery('.selectAll-dt').click(function(){
+     treatment_table.rows().select();
+     return false;
+   });
+   jQuery('.deselectAll-dt').click(function(){
+     treatment_table.rows().deselect();
+     return false;
+   });
+   var selection_changed = function () {
+     var selected_rows = treatment_table.rows({'selected':true});
+     jQuery("#treatment_result_count").text(selected_rows.count());
+     //console.log(selected_rows.data());
+
+     var name_links = selected_rows.data().map(function(row){
+         return [row[6], row[7]];
+         treatment_table.rows().deselect();
+     });
+
+     var names = [];
+     for (var i = 0; i < name_links.length; i++) { //extract and combine treatment name and id from anchor tags
+       names.push(name_links[i][0] + '|' + name_links[i][1] + '\n');
+     }
+
+     jQuery('#treatment_result_names').html(names);
+     addToListMenu('treatments_to_list_menu', 'treatment_result_names', {
+       listType: 'traits'
+     });
+   };
+   treatment_table.on( 'deselect', selection_changed);
+   treatment_table.on( 'select', selection_changed);
+
+});
+
+
+/**
+ * Parse query params sent to the page
+ * - name = treatment name to search on
+ */
+function parseArgs() {
+    const params = new URLSearchParams(window.location.search);
+    if ( params.has('name') ) {
+        jQuery("#treatment_search_name").val(params.get('name'));
+    }
+}
+
+/**
+ * Copy the specifed treatment information to the user's clipboard
+ * - name = treatment name
+ * - accession = treatment accession term
+ * - id = treatment cvterm id
+ */
+async function copy(name, accession, id) {
+    try {
+        await navigator.clipboard.writeText([name, accession].join('|'));
+        jQuery(".btn-" + id).removeClass("btn-info").addClass("btn-success").html("<span class='glyphicon glyphicon-ok'></span>");
+    }
+    catch (err) {
+        jQuery(".btn-" + id).removeClass("btn-info").addClass("btn-danger").html("<span class='glyphicon glyphicon-remove'></span>");
+    }
+    finally {
+        setTimeout(() => {
+            jQuery(".btn-" + id).removeClass("btn-success btn-danger").addClass("btn-info").html("<span class='glyphicon glyphicon-copy'></span>");
+        }, 2500)
+    }
+    return false;
+}
+
+</script>
+
+
+<style type="text/css">
+    #treatment_search_results td:nth-child(2) {
+        vertical-align: middle;
+    }
+</style>
