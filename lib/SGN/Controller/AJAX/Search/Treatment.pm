@@ -65,8 +65,8 @@ sub search : Path('/ajax/search/treatments') Args(0) {
     }
 
     my $definitions;
-    if ($params->{trait_definition}){
-        push @$definitions, $params->{trait_definition};
+    if ($params->{treatment_definition}){
+        push @$definitions, $params->{treatment_definition};
     }
 
     my $trait_search = CXGN::Trait::Search->new({
