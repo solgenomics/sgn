@@ -652,8 +652,8 @@ sub check_measurement {
             }
         }
 
-        #check that trait value is valid for trait name
-        if (exists($self->check_trait_format()->{$trait_cvterm_id})) {
+        #check that trait value is valid for trait name (but only if we have a trait_value)
+        if ((defined($trait_value) && $trait_value ne '') && exists($self->check_trait_format()->{$trait_cvterm_id})) { 
             # print STDERR "Trait minimum value checks if it exists: " . $self->check_trait_min_value->{$trait_cvterm_id} . "\n";
             if ($self->check_trait_format()->{$trait_cvterm_id} eq 'numeric') {
                 my $trait_format_checked = looks_like_number($trait_value);
