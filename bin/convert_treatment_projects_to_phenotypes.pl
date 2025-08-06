@@ -49,6 +49,7 @@ use CXGN::Metadata::Schema;
 use CXGN::Phenome::Schema;
 use CXGN::People::Person;
 use CXGN::DB::InsertDBH;
+use CXGN::Stock::Plot;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
@@ -58,6 +59,10 @@ use Cwd;
 use File::Temp qw/tempfile/;
 
 our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_e, $opt_t);
+
+if (!$opt_U){
+	$opt_U = "postgres";
+}
 
 getopts('H:D:U:P:e:t')
     or pod2usage();
@@ -127,7 +132,7 @@ my $experiment_treatment_cv_id;
 if ($experiment_treatment_cv) {
 	$experiment_treatment_cv_id = $experiment_treatment_cv->cv_id ;
 } else {
-	die "DB patch has not been run - no experiment_treatment CV found.\n";
+	die "No experiment_treatment CV found. Has DB patch been run?\n";
 }
 my $experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'Experimental treatment ontology'  , cv_id => $experiment_treatment_cv_id });
 my $experiment_treatment_root_id;
@@ -151,11 +156,15 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		bcs_schema => $schema,
 		trial_id => $trial_id
 	});
-	my $parent_observation_units = $trial->get_plots(); #get all plots
-	my @parent_plot_names = map {$_->[1]} @{$parent_observation_units}; #just plot names
+
 	my $treatment_trials = $trial->get_treatment_projects();
+
+	next if !$treatment_trials; #skip if there are no treatment trials. Don't waste time getting plots or anything.
+
+	my $parent_observation_units = $trial->get_plots(); #get all plots
 	my @this_trial_treatments = (); # holds the full names of all treatments of this trial
 	my $treatment_values_hash = {};
+	my @phenotype_store_stock_list = ();
 
 	my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
@@ -218,14 +227,40 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		}
 
 		foreach my $obs_unit (@{$parent_observation_units}){ #Construct the phenotype values hash
-			my $stock_name = $obs_unit->[1];
-			$treatment_values_hash->{$stock_name}->{$treatment_full_name} = [
-				exists($observation_units_lookup{$obs_unit->[0]}) ? 1 : 0,
-				$timestamp,
-				$opt_e,
-				'',
-				''
-			];
+			my $plot_name = $obs_unit->[1];
+			my $plot_id = $obs_unit->[0];
+			my $treatment_val = exists($observation_units_lookup{$plot_id}) ? 1 : 0;
+
+			my $plot = CXGN::Stock::Plot->new({
+				schema => $schema,
+				stock_id => $plot_id
+			});
+
+			my $add_child_stocks_to_treatment_values_hash;
+			$add_child_stocks_to_treatment_values_hash = sub  { #recurse through the plot and apply treatment to child stocks (but not accessions)
+				my $treatment_values_hash = shift;
+				my $stock = shift;
+				my $stock_name = shift;
+
+				if ($stock->{type} eq 'accession') {
+					return;
+				} else {
+					$treatment_values_hash->{$stock_name}->{$treatment_full_name} = [
+						$treatment_val,
+						$timestamp,
+						$opt_e,
+						'',
+						''
+					];
+					push @phenotype_store_stock_list, $stock_name;
+					foreach my $child_stock_name (keys(%{$stock->{has}})) {
+						$add_child_stocks_to_treatment_values_hash->($treatment_values_hash, $stock->{has}->{$child_stock_name}, $child_stock_name);
+					}
+				} 
+			};
+
+			my $plot_contents = $plot->get_plot_contents();
+			$add_child_stocks_to_treatment_values_hash->($treatment_values_hash, $plot_contents, $plot_name);
 		}
 
 		$trial->remove_treatment_project($treatment_trial_id); # delete the treatment trial;
@@ -252,7 +287,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 			metadata_schema => $metadata_schema,
 			phenome_schema => $phenome_schema,
 			user_id => $signing_user_id,
-			stock_list => \@parent_plot_names,
+			stock_list => \@phenotype_store_stock_list,
 			trait_list => \@this_trial_treatments,
 			values_hash => $treatment_values_hash,
 			metadata_hash => $phenotype_metadata
@@ -285,5 +320,4 @@ if ($opt_t) {
 	$schema->txn_commit();
 }
 
-print STDERR "Done!\n";
 1;
