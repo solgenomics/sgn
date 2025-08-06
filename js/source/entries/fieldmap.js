@@ -689,7 +689,7 @@ export function init() {
                         btnClick(image_ids);
                     });
                     jQuery("#hm_edit_plot_information").html(
-                        "<b>Selected Plot Information: </b>"
+                        //"<b>Selected Plot Information: </b>"
                     );
                     jQuery("#hm_plot_name").html(replace_plot_name);
                     jQuery("#hm_plot_number").html(replace_plot_number);

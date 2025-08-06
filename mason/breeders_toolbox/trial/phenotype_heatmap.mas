@@ -558,7 +558,12 @@ $has_plant_entries => undef
                         <label class="col-sm-3 control-label">Enter New Accession: </label>
                         <div class="col-sm-9" >
                           <input class="form-control" id="hm_accession" name="hm_accession"></input>
-                        <p><i>Warning: subplots, plants, and tissue samples will be updated but will keep their original names unless a new plot name is specified. The new plot name will replace the old plot name in subplots, plants, and tissue samples if possible.</i></p>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <div class="col-sm-9" >
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible.</i></p>
                         </div>
                       </div>
 
