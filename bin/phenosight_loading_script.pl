@@ -214,15 +214,15 @@ my $coderef = sub {
                 $PS2_present = 1;
                 my $trial_saved = 0;
                 ## Check Exp_folder name to see if present as trial in DB
-                # foreach (@trial_names) {
-                #     if ($exp_name eq $_) {
-                #         print STDERR "$exp_name matches $_, check next one;\n";
-                #         $trial_saved = 1;
-                #         last;
-                #     } else {
-                #         print STDERR "$exp_name does not match $_, move to the next;\n";
-                #     }
-                # }
+                foreach (@trial_names) {
+                    if ($exp_name eq $_) {
+                        print STDERR "$exp_name matches $_, check next one;\n";
+                        $trial_saved = 1;
+                        last;
+                    } else {
+                        print STDERR "$exp_name does not match $_, move to the next;\n";
+                    }
+                }
                 ### Move on to save the trial if not present:
                 if ($trial_saved == 0) {
                     print STDERR "No trial match for $exp_name; proceed to parse and load\n";
@@ -362,40 +362,37 @@ my $coderef = sub {
                     # #     $trial_info_hash{transplanting_date} = $trial_design->{'transplanting_date'};
                     # # }
 
+                    my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
+                    my $current_save = $trial_create->save_trial();
 
+                    try {
+                         $trial_create->save_trial();
+                    } catch {
+                        print STDERR "ERROR SAVING TRIAL!\n";
+                    };
+                    if ($current_save->{error}){
+                        $chado_schema->txn_rollback();
+                        finish($current_save->{'error'});
+                    } elsif ($current_save->{'trial_id'}) {
+                        my $trial_id = $current_save->{'trial_id'};
+                        my $time = DateTime->now();
+                        my $timestamp = $time->ymd();
+                        my $calendar_funcs = CXGN::Calendar->new({});
+                        my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+                        my $upload_date = $calendar_funcs->display_start_date($formatted_date);
 
-#                    my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
-#                    my $current_save = $trial_create->save_trial();
+                        my %trial_activity;
+                        $trial_activity{'Trial Uploaded'}{'user_id'} = $sp_person_id;
+                        $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+
+                        my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
+                        $trial_activity_obj->trial_activities(\%trial_activity);
+                        $trial_activity_obj->parent_id($trial_id);
+                        my $activity_prop_id = $trial_activity_obj->store();
+                    }
 
                     my $bs = CXGN::BreederSearch->new({ dbh=>$dbh, dbname=>$dbname });
                     my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'all_but_genoview', 'concurrent', $basepath);
-
-
-                    # try {
-                    #     $trial_create->save_trial();
-                    # } catch {
-                    #     print STDERR "ERROR SAVING TRIAL!\n";
-                    # };
-                    # if ($current_save->{error}){
-                    #      $chado_schema->txn_rollback();
-                    #      finish($current_save->{'error'});
-                    # } elsif ($current_save->{'trial_id'}) {
-                    #      my $trial_id = $current_save->{'trial_id'};
-                    #     my $time = DateTime->now();
-                    #     my $timestamp = $time->ymd();
-                    #     my $calendar_funcs = CXGN::Calendar->new({});
-                    #     my $formatted_date = $calendar_funcs->check_value_format($timestamp);
-                    #     my $upload_date = $calendar_funcs->display_start_date($formatted_date);
-
-                    #     my %trial_activity;
-                    #     $trial_activity{'Trial Uploaded'}{'user_id'} = $sp_person_id;
-                    #     $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
-
-                    #     my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
-                    #     $trial_activity_obj->trial_activities(\%trial_activity);
-                    #     $trial_activity_obj->parent_id($trial_id);
-                    #     my $activity_prop_id = $trial_activity_obj->store();
-                    # }
 
                     #my %parsed_data = %{$parsed->{'data'}};
                     # my %values = %{$parsed->{'values'}};                   
@@ -568,7 +565,7 @@ sub finish {
 sub _create_plot_name {
   my $trial_name = shift;
   my $plot_number = shift;
-  return $trial_name . "-PLOT_" . $plot_number;
+  return $trial_name . "-TRAY_" . $plot_number;
 }
 
 1;
