@@ -3108,6 +3108,8 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
     my $management_factor_description = $c->req->param("description");
     my $management_factor_type = $c->req->param("type");
     my $management_factor_completions = decode_json($c->req->param("completions")); #optional
+    my $start_date = $c->req->param("start_date");
+    my $end_date = $c->req->param("end_date");
     my $action = $c->req->param("action");
 
     if (my $error = $self->privileges_denied($c)) {
@@ -3139,7 +3141,9 @@ sub edit_management_factor_details : Chained('trial') PathPart('edit_management_
         description => $management_factor_description,
         schedule => $management_factor_schedule,
         type => $management_factor_type,
-        completions => $management_factor_completions
+        completions => $management_factor_completions,
+        start_date => $start_date,
+        end_date => $end_date
     };
 
     eval {

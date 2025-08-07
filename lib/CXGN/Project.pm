@@ -2632,7 +2632,9 @@ sub remove_management_factor {
             !($_->{type} eq $management_factor->{type} &&
             $_->{schedule} eq $management_factor->{schedule} && 
             $_->{description} eq $management_factor->{description} && 
-            encode_json($_->{completions}) eq encode_json($management_factor->{completions}))
+            encode_json($_->{completions}) eq encode_json($management_factor->{completions}) &&
+            $_->{start_date} eq $management_factor->{start_date} && 
+            $_->{end_date} eq $management_factor->{end_date})
         } @{$management_regime}]; 
         $management_regime = encode_json($management_regime);
         $mf_rs->update({

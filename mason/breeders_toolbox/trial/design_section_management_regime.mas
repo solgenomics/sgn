@@ -34,6 +34,8 @@ jQuery(document).ready( function() {
         var new_management_factor_description = jQuery('#new_management_factor_description').val();
         var new_management_factor_type = jQuery('#new_management_factor_type').val();
         var new_management_factor_schedule = jQuery('#new_management_factor_schedule').val();
+        var new_management_factor_start_date = jQuery('#new_management_factor_start_date').val();
+        var new_management_factor_end_date = jQuery('#new_management_factor_end_date').val();
         var new_management_factor_completions = jQuery('#new_mf_completion_times_table').html();
         new_management_factor_completions = html_table_to_json(new_management_factor_completions);
 
@@ -41,7 +43,9 @@ jQuery(document).ready( function() {
             description: new_management_factor_description,
             type: new_management_factor_type,
             schedule: new_management_factor_schedule,
-            completions: new_management_factor_completions
+            completions: new_management_factor_completions,
+            start_date: new_management_factor_start_date,
+            end_dated: new_management_factor_end_date
         });
 
         if (mode !== null && row_json !== null && mode == 'edit' && row_json == local_json) {
@@ -58,6 +62,8 @@ jQuery(document).ready( function() {
                 schedule : new_management_factor_schedule,
                 type : new_management_factor_type,
                 completions: new_management_factor_completions,
+                start_date : new_management_factor_start_date,
+                end_date : new_management_factor_end_date,
                 action : 'add'
             },
             success: function(response) {
@@ -97,6 +103,8 @@ jQuery(document).ready( function() {
                 description : row_data.description,
                 schedule : row_data.schedule,
                 type : row_data.type,
+                start_date : row_data.start_date,
+                end_date : row_data.end_date,
                 completions: JSON.stringify(row_data.completions),
                 action : 'remove'
             },
@@ -138,6 +146,8 @@ jQuery(document).ready( function() {
                     { data: 'type', title: 'Type' },
                     { data: 'description', title: 'Description' },
                     { data: 'schedule', title: 'Schedule' },
+                    { data: 'start_date', title: 'Start Date'},
+                    { data: 'end_date', title: 'End Date'},
                     { 
                         data: 'completions', 
                         title: 'Completion records',
@@ -215,6 +225,8 @@ jQuery(document).ready( function() {
         jQuery('#new_management_factor_description').val(row_data.description);
         jQuery('#new_management_factor_type').val(row_data.type);
         jQuery('#new_management_factor_schedule').val(row_data.schedule);
+        jQuery('#new_management_factor_start_date').val(row_data.start_date);
+        jQuery('#new_management_factor_end_date').val(row_data.end_date);
         jQuery('#new_mf_completion_times_table').html(completions_html);
 
         if (completions.length == 0) {
@@ -245,6 +257,8 @@ jQuery(document).ready( function() {
             jQuery('#new_management_factor_description').val('');
             jQuery('#new_management_factor_type').val('');
             jQuery('#new_management_factor_schedule').val('');
+            jQuery('#new_management_factor_start_date').val('');
+            jQuery('#new_management_factor_end_date').val('');
             jQuery('#new_mf_completion_times_table').html('');
             jQuery('#new_mf_remove_most_recent_completion_time_btn').css('display', 'none');
             submit_clone.parentNode.replaceChild(original_submit_button, submit_clone);
