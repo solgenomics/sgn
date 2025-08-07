@@ -6,6 +6,7 @@ import { WizardDownloads } from "../modules/wizard-downloads.js";
 const initialtypes = [
     "accessions",
     "organisms",
+    "tissue_sample",
     "breeding_programs",
     "genotyping_protocols",
     "genotyping_projects",
@@ -27,6 +28,7 @@ const types = {
     "genotyping_projects": "Genotyping Projects",
     "locations": "Locations",
     "plots": "Plots",
+    "subplots": "Subplots",
     "plants": "Plants",
     "tissue_sample": "Tissue Samples",
     "seedlots": "Seedlots",
