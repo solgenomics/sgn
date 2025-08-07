@@ -548,7 +548,9 @@ sub verify {
                 # print STDERR "Trait name = $trait_name\n";
                 foreach my $value_array (@$measurements_array) {
                     # print STDERR "Value array = ".Dumper($value_array)."\n";
-                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array, 1); 
+		    my $multiple_values = 0;
+		    if (scalar(@$measurements_array) > 1) { $multiple_values = 1; } 
+                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array, $multiple_values); 
                     $error_message .= $errors;
                     $warning_message .= $warnings;
                 }
@@ -778,7 +780,7 @@ sub check_measurement {
         #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
         #check if the plot_name, trait_name combination already exists in database.
         elsif ($repeat_type eq "single") {
-	    if ($file_contains_multiple_values) {
+	    if ($file_contains_multiple_values  && (defined($trait_value) && $trait_value ne '')) {
 		$warning_message .= "Multiple values present in file for single repeat_type term $trait_name\n";
 	    }
 	    
