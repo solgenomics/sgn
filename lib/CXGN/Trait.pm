@@ -454,7 +454,7 @@ sub store {
 	my $context = SGN::Context->new;
 	my $cv_name = $context->get_conf('trait_ontology_cv_name');
 	my $cvterm_name = $context->get_conf('trait_ontology_cvterm_name');
-	my $ontology_name = $context->get_conf('trait_ontology_db_name');
+	my $ontology_name = $context->get_conf('trait_ontology_db_name'); #this is the only config key that actually gets used elsewhere
 
 	# Get trait attributes cvterm ids
 	my $trait_entity_id = $self->trait_entity_id;

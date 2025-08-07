@@ -93,7 +93,7 @@ jQuery(document).ready(function () {
     jQuery('[data-toggle="tooltip"]').tooltip();
 
     var lo = new CXGN.List();
-    jQuery('#treatment_search_list_select').html(lo.listSelect('treatment_search_list_select', [ 'treatments' ], 'Leave blank to see all treatments', undefined, undefined));
+    jQuery('#treatment_search_list_select').html(lo.listSelect('treatment_search_list_select', [ 'traits' ], 'Leave blank to see all treatments', undefined, undefined));
 
     jQuery(document).on('change', '#treatment_search_list_select', function(){
         _draw_treatment_search_result_table();
