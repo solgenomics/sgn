@@ -464,7 +464,7 @@ $(document).ready(function() {
 <!-- start of code for cross and family download -->
 
 <div class="well well-sm">
-    <form id="download_cross_family" action="/search/download_cross_family" method="POST">
+    <form id="download_cross_family" action="/breeders/download_cross_family_of_progenies" method="POST">
         <table class="table"  cellpadding="10">
             <thead>
                 <tr><td colspan="2"><h4>Download Cross and Family </h4><p>Select parameters:</p></tr>
