@@ -41,13 +41,12 @@ sub store {
     my $schema = $self->bcs_schema();
 
     my $name = $self->name() || die "No name found.\n";
-    $name = _trim($name);
     my $definition = $self->definition() || die "No definition found.\n";
     my $format = $self->format() || die "No format found.\n";
-    my $default_value = $self->default_value();
-    my $minimum = $self->minimum();
-    my $maximum = $self->maximum();
-    my $categories = $self->categories();
+    my $default_value = $self->default_value() ne "" ? $self->default_value() : undef;
+    my $minimum = $self->minimum() ne "" ? $self->minimum() : undef;
+    my $maximum = $self->maximum() ne "" ? $self->maximum() : undef;
+    my $categories = $self->categories() ne "" ? $self->categories() : undef;
 
     my $trait_property_cv_id = $schema->resultset("Cv::Cv")->find({name => 'trait_property'})->cv_id();
 
@@ -84,7 +83,7 @@ sub store {
         "$categories_cvterm_id" => $categories
     );
 
-    my $get_db_accessions_sql = "SELECT accession FROM dbxref JOIN db USING db_id WHERE db.name='EXPERIMENT_TREATMENT';";
+    my $get_db_accessions_sql = "SELECT accession FROM dbxref JOIN db USING (db_id) WHERE db.name='EXPERIMENT_TREATMENT';";
 
     my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
     my $rel_cv_id;
@@ -114,7 +113,7 @@ sub store {
         die "No EXPERIMENT_TREATMENT root term. Has DB patch been run?\n";
     }
 
-    my $h = $self->schema->storage->dbh->prepare($get_db_accessions_sql);
+    my $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
     $h->execute();
 
     my @accessions;
@@ -165,8 +164,6 @@ sub store {
 
     $schema->txn_do($coderef);
 
-    $self->cvterm_id($new_treatment_id);
-    $self->cvterm($name);
     return $new_treatment;
 }
 

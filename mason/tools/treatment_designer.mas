@@ -14,52 +14,46 @@
         <div class="form-group">
                 <label class="col-sm-3 control-label"> New treatment name: </label>
                 <div class="col-sm-8">
-                    <input style="width:60%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="Special characters not allowed."/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="Special characters not allowed."/>
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label">Definition:</label>
                 <div class="col-sm-8">
-                    <input style="width:60%;" class="form-control" id="new_treatment_definition" name="new_treatment_definition" type="text"/>
+                    <textarea style="width:70%;" class="form-control" id="new_treatment_definition" name="new_treatment_definition"></textarea>
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label">Treatment format:</label>
                 <div class="col-sm-8">
-                    <select style="width:60%;" class="form-control" id="new_treatment_format_select" name="new_treatment_format_select" type="select">
+                    <select style="width:70%;" class="form-control" id="new_treatment_format_select" name="new_treatment_format_select" type="select">
                         <option value="numeric" selected>Numeric</option>
                         <option value="qualitative">Qualitative (categorical)</option>
                     </select>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_default_value_container">
-                <label class="col-sm-3 control-label">Default value:</label>
+                <label class="col-sm-3 control-label" id="new_treatment_default_value_label">Default value:</label>
                 <div class="col-sm-8">
-                    <input style="width:60%;" class="form-control" id="new_treatment_default_value" name="new_treatment_default_value" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_default_value" name="new_treatment_default_value" type="text" placeholder="(Optional)"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_minimum_value_container">
                 <label class="col-sm-3 control-label">Minimum value:</label>
                 <div class="col-sm-8">
-                    <input style="width:60%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_maximum_value_container">
                 <label class="col-sm-3 control-label">Maximum value:</label>
                 <div class="col-sm-8">
-                    <input style="width:60%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
-                </div>
-            </div>
-            <div class="form-group" id="new_treatment_default_category_container" style="display:none;">
-                <label class="col-sm-3 control-label">Default category:</label>
-                <div class="col-sm-8">
-                    <input style="width:60%;" class="form-control" id="new_treatment_default_category" name="new_treatment_default_category" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_add_categories_container" style="display:none;">
                 <label class="col-sm-3 control-label">Add categories:</label>
                 <div class="col-sm-8">
-                    <table style="width:60%;">
+                    <table style="width:70%;">
                         <tr>
                             <td><input style="width:100%;" class="form-control" id="new_treatment_add_category" name="new_treatment_add_category" type="text" placeholder="(Optional)"/></td>
                             <td><button id="new_treatment_add_category_btn" class="btn btn-small btn-success">+</button></td>
@@ -71,28 +65,66 @@
                 </div>
             </div>
         </form>
+        <button class="btn btn-primary" id="new_treatment_submit_btn">Submit</button>
     </div>
 </div>
 
 <script>
     jQuery(document).ready(function () {
 
+        jQuery('#new_treatment_submit_btn').on('click', function () {
 
+            jQuery('#working_modal').modal("show");
+
+            let name = jQuery('#new_treatment_name').val();
+            let definition = jQuery('#new_treatment_definition').val();
+            let format = jQuery('#new_treatment_format_select').val();
+            let default_value = jQuery('#new_treatment_default_value').val();
+            let minimum = jQuery('#new_treatment_minimum').val();
+            let maximum = jQuery('#new_treatment_maximum').val();
+            let categories = JSON.parse(html_table_to_json(jQuery('#new_treatment_categories').html())).join(' ');
+
+            jQuery.ajax({
+                url: '/ajax/treatment/create',
+                data : {
+                    definition : definition,
+                    name : name,
+                    format : format,
+                    default_value : default_value,
+                    minimum : minimum,
+                    maximum : maximum,
+                    categories : categories
+                },
+                success: function(response) { 
+                    jQuery('#working_modal').modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        alert("New treatment saved.");
+                    }
+                },
+                error: function(response) { 
+                    jQuery('#working_modal').modal("hide");
+                    console.log(response);
+                    alert("An error occurred, check console.");
+                }
+            });
+        });
 
         jQuery('#new_treatment_format_select').on('change', function () {
             let treatment_type = jQuery(this).val();
             if (treatment_type === 'numeric') {
-                jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_minimum_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
-                jQuery('#new_treatment_default_category_container').hide();
                 jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value').val('');
             } else if (treatment_type === 'qualitative') {
-                jQuery('#new_treatment_default_value_container').hide();
                 jQuery('#new_treatment_minimum_value_container').hide();
                 jQuery('#new_treatment_maximum_value_container').hide();
-                jQuery('#new_treatment_default_category_container').show();
                 jQuery('#new_treatment_add_categories_container').show();
+                jQuery('#new_treatment_default_value_label').html("Default category:");
+                jQuery('#new_treatment_default_value').val('');
             }
         });
 

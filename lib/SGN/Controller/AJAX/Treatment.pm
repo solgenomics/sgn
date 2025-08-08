@@ -37,7 +37,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     $name =~ s/^\s+//;
     $name =~ s/\s+$//;
     $name =~ s/_/ /g;
-    $name =~ s/\P{Alpha}//g;
+    $name =~ s/[^\p{Alpha} ]//g;
     $name = lc($name);
 
     $definition =~ s/^\s+//;
@@ -88,16 +88,28 @@ sub create_treatment :Path('/ajax/treatment/create') {
             $new_treatment = CXGN::Trait::Treatment->new({
                 bcs_schema => $schema,
                 definition => $definition,
+                name => $name,
                 format => $format,
-                minimum => $minimum ? $minimum : undef,
-                maximum => $maximum ? $maximum : undef,
-                default_value => $default_value ? $default_value : undef
+                minimum => $minimum ne "" ? $minimum : undef,
+                maximum => $maximum ne "" ? $maximum : undef,
+                default_value => $default_value ne "" ? $default_value : undef
+            });
+        } elsif ($format eq "qualitative") {
+            $new_treatment = CXGN::Trait::Treatment->new({
+                bcs_schema => $schema,
+                name => $name,
+                definition => $definition,
+                format => $format,
+                categories => $categories ne "" ? $categories : undef,
+                default_value => $default_value ne "" ? $default_value : undef
             });
         }
+        $new_treatment->store();
     };
 
     if ($@) {
         $c->stash->{rest} = {error => "An error occurred trying to create treatment: $@"};
+        return;
     }
 
     $c->stash->{rest} = {success => 1};
