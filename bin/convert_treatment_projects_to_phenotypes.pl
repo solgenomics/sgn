@@ -146,8 +146,8 @@ if ($experiment_treatment) {
 my $h = $schema->storage->dbh->prepare($all_trials_q);
 $h->execute();
 
-my %new_treatment_cvterms = ();
-my %new_treatment_full_names = ();
+my %new_treatment_cvterms = (); # name => cvterm_id
+my %new_treatment_full_names = (); # name => full name (with ontology)
 my $dbxref_id = 0;
 
 while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
@@ -190,6 +190,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 
 		my $treatment_name = $treatment_trial_name =~ s/$trial_name(_)//r;
 		$treatment_name =~ s/_/ /g;
+		$treatment_name =~ s/[^\p{Alpha} ]//g;
 		$treatment_name = lc($treatment_name); #enforce no underscores and all lowercase
 
 		my $treatment_id;
