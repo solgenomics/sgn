@@ -50,6 +50,7 @@ use Archive::Tar;
 use CXGN::Stock::ObsoletedStocks;
 use CXGN::People::Person;
 use CXGN::BreedersToolbox::Accessions;
+use CXGN::Cross;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -2106,7 +2107,18 @@ sub download_cross_family_of_progenies : Path('/breeders/download_cross_family_o
     my $progeny_list = SGN::Controller::AJAX::List->retrieve_list($c, $progeny_list_id);
     my @progeny_names = map { $_->[1] } @$progeny_list;
 
+    foreach my $progeny(sort@progeny_names) {
+        my $progeny_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $progeny });
+        my $progeny_id = $progeny_rs->stock_id;
+        print STDERR "PROGENY NAME =".Dumper($progeny)."\n";
+        print STDERR "PROGENY ID =".Dumper($progeny_id)."\n";
+        my $cross_obj = CXGN::Cross->new({schema=>$schema, progeny_id=>$progeny_id});
+        my $data = $cross_obj->get_progeny_cross_family_info();
 
+    }
+
+    my $results;
+    my @row;
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_cross_family_XXXXX", UNLINK => 0);
 
