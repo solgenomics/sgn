@@ -268,5 +268,6 @@ $latest_trial_activity => undef
                 </td>
             </tr>
         </table>
+        <& /breeders_toolbox/trial/trial_details_d2s_integration.mas, trial_id => $trial_id &>
     </div>
 </div>
