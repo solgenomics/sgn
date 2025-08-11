@@ -2313,10 +2313,41 @@ sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
 
     my $trial = $c->stash->{trial};
 
-    # my $data = $trial->get_treatments
-    my $data = $trial->get_treatment_projects();
+    my $data;
 
-    $c->stash->{rest} = { treatments => $data };
+    eval {
+        $data = $trial->get_treatments();
+    };
+
+    if ($@) {
+        $c->stash->{rest} = {error => $@};
+    }
+
+    $c->stash->{rest} = { data => encode_json($data)};
+}
+
+sub treatment_raw_data : Chained('trial') PathPart('treatment_raw_data') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $treatment_id = $c->req->param('treatment_id');
+    my $stock_type = $c->req->param('stock_type');
+
+    my $trial = $c->stash->{trial};
+
+    my $data;
+
+    # eval {
+    #     $data = $trial->get_treatment_raw_data($treatment_id, $stock_type);
+    # };
+
+    # if ($@) {
+    #     $c->stash->{rest} = {error => $@};
+    # }
+
+    $c->stash->{rest} = { data => encode_json($data)};
 }
 
 sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) { #TODO REFACTOR
@@ -3088,7 +3119,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
 
 }
 
-sub get_management_regime : Chained('trial') PathPart('get_management_regime') Args(0) { #TODO
+sub get_management_regime : Chained('trial') PathPart('get_management_regime') Args(0) {
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -3098,7 +3129,7 @@ sub get_management_regime : Chained('trial') PathPart('get_management_regime') A
     $c->stash->{rest} = {data => encode_json($t->get_management_regime()), success => 1};
 }
 
-sub edit_management_factor_details : Chained('trial') PathPart('edit_management_factor_details') Args(0) { #TODO REFACTOR
+sub edit_management_factor_details : Chained('trial') PathPart('edit_management_factor_details') Args(0) {
     my $self = shift;
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;

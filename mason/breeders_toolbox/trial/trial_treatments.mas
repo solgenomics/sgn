@@ -5,9 +5,25 @@ $trial_id
 
 <& /util/import_javascript.mas, classes => [ "CXGN.BreedersToolbox.UploadPhenotype" ] &>
 
-<div id="trial_treatments_html">
-</div>
 <button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatments</button>
+<div id="trial_treatments_html">
+    <br>
+    <table id="trial_treatments_table">
+    </table>
+    <br>
+    <select id="trial_treatment_to_stock_select">
+    </select>
+    <select id="trial_treatment_level_applied_select">
+        <option value="plot">Plot</option>
+        <option value="subplot">Subplot</option>
+        <option value="plant">Plant</option>
+        <option value="tissue_sample">Tissue Sample</option>
+    </select>
+    <button class="btn btn-sm btn-primary" id="treatments_get_raw_data_btn">Get treatment data</button>
+    <br>
+    <table id="trial_treatments_raw_data">
+    </table>
+</div>
 
 <script>
 
@@ -15,50 +31,40 @@ jQuery(document).ready(function () {
 
     jQuery('#trial_treatments_onswitch').one("click", function() {
 
-        jQuery.ajax ( {
+        jQuery.ajax ({
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/treatments',
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response){
-                //console.log(response);
                 jQuery("#working_modal").modal("hide");
-                var trial_treatments_html = "<table class='table table-hover table-condensed table-bordered' id='trial_treatments_table_html'><thead><tr><th>Name</th><th></th></tr></thead><tbody>";
-                for (i=0; i<response.treatments.length; i++) {
-                    trial_treatments_html = trial_treatments_html + "<tr><td><a href='/breeders/trial/" + response.treatments[i][0] +"'>"+ response.treatments[i][1] + "</a></td><td><button class='btn btn-danger btn-xs remove-treatment-btn' data-treatment-id='" + response.treatments[i][0] + "'>Remove</button></td></tr>";
-                }
-                trial_treatments_html = trial_treatments_html + "</tbody></table>";
-            
-                jQuery('#trial_treatments_html').empty();
-                jQuery('#trial_treatments_html').append(trial_treatments_html);
-                enable_treatments_datatable('trial_treatments_table_html');
-
-                jQuery('.remove-treatment-btn').click(function(){
-                    var treatment_id = jQuery(this).data('treatment-id');
-                    if (confirm("Are you sure you want to remove this treatment from the trial?")) {
-                        jQuery.ajax({
-                            url:'/ajax/breeders/trial/'+<% $trial_id %>+'/remove_treatment/',
-                            type: 'POST',
-                            data: { treatment_id: treatment_id },
-                            beforeSend: function() {
-                                jQuery("#working_modal").modal("show");
-                            },
-                            success: function(response){
-                                jQuery("#working_modal").modal("hide");
-                                if(response.success){
-                                    alert("Treatment removed.");
-                                    location.reload();
-                                } else {
-                                    alert("Error removing treatment: " + response.error);
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    let seen_treatments = {};
+                    jQuery('#trial_treatments_table').DataTable({
+                        data: JSON.parse(response.data),
+                        columns: [
+                            {
+                                data : 'trait_name', 
+                                title : 'Treatment',
+                                orderable : false,
+                                render : function(data, type, row, meta) {
+                                    
+                                    if (!(row.trait_id in seen_treatments)) {
+                                        jQuery('#trial_treatment_to_stock_select').append('<option value="'+row.trait_id+'">'+data+'</option>');
+                                        seen_treatments[row.trait_id] = 1;
+                                    }
+                                    
+                                    let html = '<a href="/cvterm/'+row.trait_id+'/view/">'+data+'</a>';
+                                    return html;
                                 }
                             },
-                            error: function(){
-                                jQuery("#working_modal").modal("hide");
-                                alert("Error removing treatment.");
-                            }
-                        })
-                    }
-                })
+                            {data : 'count', title : 'Total Stock Count'},
+                            {data : 'levels', title : 'Number of Levels'}
+                        ]
+                    });
+                }
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
@@ -67,6 +73,41 @@ jQuery(document).ready(function () {
         });
 
     });
+
+    jQuery('#treatments_get_raw_data_btn').click(function() {
+        jQuery('#working_modal').modal("show");
+        let trial_id = "" + <% $trial_id %> + "";
+        let treatment_id = jQuery('#trial_treatment_to_stock_select').val();
+        let stock_type = jQuery('#trial_treatment_level_applied_select').val();
+        jQuery.ajax({
+    	   	url: "/brapi/v2/search/observations/",
+		    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ treatment_id ], observationLevel: [ stock_type ]},
+		    method: "POST"
+        }).then((result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))
+        .then((result) => {
+            jQuery('#working_modal').modal("hide");
+            jQuery('#trial_treatments_raw_data').DataTable().clear().destroy();
+            jQuery('#trial_treatments_raw_data').DataTable({
+                data : result.result.data,
+                columns : [
+                    {
+                        data : 'observationUnitName',
+                        title : 'Stock',
+                        orderable : true,
+                        render : function(data, type, row, meta) {
+                            let html = '<a href="/stock/'+row.observationUnitDbId+'/view/">'+data+'</a>';
+                            return html;
+                        }
+                    },
+                    {data : 'value', title : 'Treatment Value'}
+                ]
+            });
+        }).catch((error) => {
+            jQuery('#working_modal').modal("hide"); 
+            console.log(error);
+        });
+    });
+
 
     jQuery('#trial_detail_page_add_treatment').click(function(){
         jQuery('#trial_design_add_treatments').modal('show');
@@ -84,6 +125,14 @@ jQuery(document).ready(function () {
         }
     });
 
+    function fetch_raw_observation_data_table(searchResultsDbId) {
+       	return jQuery.ajax( {
+       		url: "/brapi/v2/search/observations/"+searchResultsDbId,
+	    	data: { pageSize: 10000 },
+	    	method: "GET"
+	    });     
+    }
+
     jQuery('#new_trial_add_treatments_submit').click(function(){
         var apply_to_plants;
         if(jQuery('#upload_treatments_inherit_treatments').is(":checked")){
@@ -98,12 +147,14 @@ jQuery(document).ready(function () {
         );
         
     });
-});
 
-function enable_treatments_datatable(table_id) {
-    jQuery('#'+table_id).DataTable({
-        paging: false
+    jQuery('#trial_treatments_raw_data').DataTable({
+        'destroy': true,
+        'columns': [
+            { title: 'Stock' },
+            { title: 'Treatment value' },
+        ]
     });
-}
+});
 
 </script>

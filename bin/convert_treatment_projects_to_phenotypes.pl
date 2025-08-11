@@ -297,7 +297,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 
 		if ($verified_warning) {
-		warn $verified_warning;
+			warn $verified_warning;
 		}
 		if ($verified_error) {
 			die $verified_error;

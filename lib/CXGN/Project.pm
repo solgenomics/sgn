@@ -5190,30 +5190,45 @@ sub get_treatments {
 
     my $all_traits = $self->get_traits_assayed(); #[$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
 
-    my @treatment_traits = grep {$_->[1] =~ /TREATMENT/} @{$all_traits};
+    my @treatment_traits = grep {$_->[1] =~ /EXPERIMENT_TREATMENT/} @{$all_traits};
 
     #need to use get_phenotypes for trait...
     my @return_data;
 
     foreach my $treatment (@treatment_traits) {
-        my @treatment_phenotypes = @{$self->get_phenotypes_for_trait($treatment->[1])};
+        my @treatment_phenotypes = $self->get_phenotypes_for_trait($treatment->[0]);
         my @trait_levels = uniq @treatment_phenotypes;
-        push @return_data, [$treatment->[0], $treatment->[1], $treatment->[3], scalar(@trait_levels)];
+        push @return_data, {
+            trait_id => $treatment->[0], 
+            trait_name => $treatment->[1], 
+            count => $treatment->[3], 
+            levels => scalar(@trait_levels)
+        };
     }
-
-    # my @plants;
-    # my $treatment_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "trial_treatment_relationship", "project_relationship")->cvterm_id();
-
-    # my $treatment_rs = $self->bcs_schema->resultset("Project::ProjectRelationship")->search({ 'me.type_id'=>$treatment_rel_cvterm_id, object_project_id=>$self->get_trial_id()})->search_related('subject_project');
-
-    # my @treatments;
-    # while(my $rs = $treatment_rs->next()) {
-    #     push @treatments, [$rs->project_id, $rs->name];
-    # }
-    # return \@treatments;
 
     return \@return_data;
 }
+
+# =head2 get_treatment_raw_data($treatment_id, $stock_type)
+
+#  Usage:        $treatment_summary = $t->get_treatment_raw_data();
+#  Desc:         Wrapper for get_phenotypes_for_trait
+#  Ret:          
+#  Args:
+#  Side Effects:
+#  Example:
+
+# =cut
+
+# sub get_treatment_raw_data {
+#     my $self = shift;
+#     my $treatment_id = shift;
+#     my $stock_type = shift;
+
+#     my @return_data = $self->get_phenotypes_for_trait($treatment_id, $stock_type);
+
+#     return \@return_data;
+# }
 
 =head2 get_treatment_projects
 

@@ -35,7 +35,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" id="new_trial_add_treatments_submit" >Submit</button> <!-- used to be continue -->
+                <button type="button" class="btn btn-info" id="new_trial_add_treatments_submit" >Submit</button> 
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>

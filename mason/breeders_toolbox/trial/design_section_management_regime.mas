@@ -141,7 +141,7 @@ jQuery(document).ready( function() {
                 return;
             } 
             jQuery('#management_regime_table').DataTable({
-            data: JSON.parse(result.data),
+                data: JSON.parse(result.data),
                 columns: [
                     { data: 'type', title: 'Type' },
                     { data: 'description', title: 'Description' },
