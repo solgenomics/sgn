@@ -86,12 +86,6 @@ has 'parent_type' => (isa => 'Str',
     required => 0,
 );
 
-has 'progeny_id' => (isa => 'Int',
-    is => 'rw',
-    required => 0,
-);
-
-
 sub BUILD {
     my $self = shift;
     my $args = shift;
@@ -1714,7 +1708,7 @@ sub get_plots_of_plants_used_in_crossing_experiment {
 
 =head2 get_progeny_cross_family_info
 
- Usage:         CXGN::Cross->get_progeny_cross_family_info(schema=>$schema, progeny_id=>$progeny_id);
+ Usage:         CXGN::Cross->get_progeny_cross_family_info($schema, $progeny_id);
  Desc:          Class method
  Ret:
  Args:
@@ -1725,9 +1719,8 @@ sub get_plots_of_plants_used_in_crossing_experiment {
 
 sub get_progeny_cross_family_info {
     my $self = shift;
-    my $schema = $self->schema;
-    my $progeny_stock_id = $self->progeny_id;
-    print STDERR "PROGENY ID =".Dumper($progeny_stock_id)."\n";
+    my $schema = shift;
+    my $progeny_stock_id = shift;
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
@@ -1735,22 +1728,22 @@ sub get_progeny_cross_family_info {
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
     my $offspring_of_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
     my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
-    my $family_stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property');
+    my $family_stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property')->cvterm_id();
     my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
 
     my $q ="SELECT stock.stock_id, stock.uniquename, female_accession.stock_id, female_accession.uniquename, male_accession.stock_id, male_accession.uniquename,
-        female_relationship.value, cross.stock_id, cross.uniquename, family.stock_id, family.uniquename, family_type.value, project.project_id, project.name
+        female_relationship.value, cross_unique_id.stock_id, cross_unique_id.uniquename, family_name.stock_id, family_name.uniquename, stockprop.value, project.project_id, project.name
         FROM stock
         LEFT JOIN stock_relationship AS female_relationship ON (stock.stock_id = female_relationship.object_id) AND female_relationship.type_id = ?
         LEFT JOIN stock AS female_accession ON (female_relationship.subject_id = female_accession.stock_id) AND female_accession.type_id = ?
         LEFT JOIN stock_relationship AS male_relationship ON (stock.stock_id = male_relationship.object_id) AND male_relationship.type_id = ?
         LEFT JOIN stock AS male_accession ON (male_relationship.subject_id = male_accession.stock_id) AND male_accession.type_id = ?
-        LEFT JOIN stock_relationship AS cross_relationship ON (stock.stock_id = cross_relationship.subject_id) AND cross_relationship = ?
-        LEFT JOIN stock AS cross ON (cross_relationship.object_id = cross.stock_id) AND cross.type_id = ?
-        LEFT JOIN stock_relationship AS cross_family_relationship ON (cross_family_relationship.subject_id = cross.stock_id) AND cross_family_relationship.type_id = ?
-        LEFT JOIN stock AS family ON (cross_family_relationship.object_id = family.stock_id) AND family.type_id = ?
-        LEFT JOIN stockprop AS family_type ON (family_type.stock_id = family.stock_id) AND family_type.type_id = ?
-        LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross.stock_id) AND nd_experiment_stock.type_id = ?
+        LEFT JOIN stock_relationship AS cross_relationship ON (stock.stock_id = cross_relationship.subject_id) AND cross_relationship.type_id = ?
+        LEFT JOIN stock AS cross_unique_id ON (cross_relationship.object_id = cross_unique_id.stock_id) AND cross_unique_id.type_id = ?
+        LEFT JOIN stock_relationship AS cross_family_relationship ON (cross_family_relationship.subject_id = cross_unique_id.stock_id) AND cross_family_relationship.type_id = ?
+        LEFT JOIN stock AS family_name ON (cross_family_relationship.object_id = family_name.stock_id) AND family_name.type_id = ?
+        LEFT JOIN stockprop ON (stockprop.stock_id = family_name.stock_id) AND stockprop.type_id = ?
+        LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross_unique_id.stock_id) AND nd_experiment_stock.type_id = ?
         LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         LEFT JOIN project ON (nd_experiment_project.project_id = project.project_id)
         WHERE stock.stock_id = ?";
@@ -1759,10 +1752,9 @@ sub get_progeny_cross_family_info {
         $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $accession_type_id, $offspring_of_type_id, $cross_type_id, $cross_member_of_type_id, $family_type_id, $family_stockprop_type_id, $cross_experiment_type_id, $progeny_stock_id);
 
         my @progeny_cross_family_info = ();
-        while(my ($progeny_id, $progeny_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $cross_id, $cross_name, $family_id, $family_name, $family_type, $crossing_experiment_id, $crossing_experiment_name ) = $h->fetchrow_array()){
-            push @progeny_cross_family_info, [$progeny_id, $progeny_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $cross_id, $cross_name, $family_id, $family_name, $family_type, $crossing_experiment_id, $crossing_experiment_name ]
+        while(my ($progeny_id, $progeny_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $cross_id, $cross_name, $family_id, $family_name, $family_type, $project_id, $project_name) = $h->fetchrow_array()){
+            push @progeny_cross_family_info, [$progeny_id, $progeny_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $cross_id, $cross_name, $family_id, $family_name, $family_type, $project_id, $project_name]
         }
-        print STDERR "PROGENY INFO =".Dumper(\@progeny_cross_family_info)."\n";
         return \@progeny_cross_family_info;
 
 }

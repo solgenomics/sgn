@@ -2107,21 +2107,25 @@ sub download_cross_family_of_progenies : Path('/breeders/download_cross_family_o
     my $progeny_list = SGN::Controller::AJAX::List->retrieve_list($c, $progeny_list_id);
     my @progeny_names = map { $_->[1] } @$progeny_list;
 
+    my @download_rows;
     foreach my $progeny(sort@progeny_names) {
         my $progeny_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $progeny });
         my $progeny_id = $progeny_rs->stock_id;
-        print STDERR "PROGENY NAME =".Dumper($progeny)."\n";
-        print STDERR "PROGENY ID =".Dumper($progeny_id)."\n";
-        my $cross_obj = CXGN::Cross->new({schema=>$schema, progeny_id=>$progeny_id});
-        my $data = $cross_obj->get_progeny_cross_family_info();
 
+        my $info = CXGN::Cross->get_progeny_cross_family_info($schema, $progeny_id);
+        my $progeny_name = $info->[0]->[1];
+        my $female_parent_name = $info->[0]->[3];
+        my $male_parent_name = $info->[0]->[5];
+        my $cross_type = $info->[0]->[6];
+        my $cross_unique_id = $info->[0]->[8];
+        my $family_name = $info->[0]->[10];
+        my $family_type = $info->[0]->[11];
+        my $crossing_experiment = $info->[0]->[13];
+        push @download_rows, [$progeny_name, $female_parent_name, $male_parent_name, $cross_type, $cross_unique_id, $family_name, $family_type, $crossing_experiment];
     }
 
-    my $results;
-    my @row;
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_cross_family_XXXXX", UNLINK => 0);
-
     # Create and Return XLSX file
     if ( $file_format eq ".xlsx" ) {
         my $file_path = $tempfile . ".xlsx";
@@ -2132,15 +2136,13 @@ sub download_cross_family_of_progenies : Path('/breeders/download_cross_family_o
         my $worksheet = $workbook->add_worksheet();
 
         # Write header
-        my @header = ("accession_name", "female_parent", "male_parent", "cross_type", "cross_unique_id", "family_name");
+        my @header = ("Accession Name", "Female Parent", "Male Parent", "Cross Type", "Cross Unique ID", "Family Name", "Family Type", "Crossing Experiment");
         $worksheet->write_row(0, 0, \@header);
 
         # Write each event
         my $row_count = 1;
-        foreach my $result (@$results) {
-
-
-            $worksheet->write_row($row_count, 0, \@row);
+        foreach my $row (@download_rows) {
+            $worksheet->write_row($row_count, 0, $row);
             $row_count++;
         }
         $workbook->close();
