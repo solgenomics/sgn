@@ -105,12 +105,12 @@ sub upload_phenotype_verify_POST : Args(1) {
 
 sub upload_phenotype_store :  Path('/ajax/phenotype/upload_store') : ActionClass('REST') { }
 sub upload_phenotype_store_POST : Args(1) {
-    my ($self, $c, $file_type) = @_;
+    my ($self, $c, $file_type, $is_treatment) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $is_treatment, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
