@@ -1,11 +1,15 @@
 
 <%args>
 $trial_id
+$user_can_modify
 </%args>
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
-<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatments</button>
+% if ($user_can_modify) {
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatments</button>
+% }
+
 <div id="trial_treatments_html">
     <br>
     <table id="trial_treatments_table">
@@ -42,36 +46,61 @@ jQuery(document).ready(function () {
                     alert(response.error);
                 } else {
                     let seen_treatments = {};
-                    jQuery('#trial_treatments_table').DataTable({
-                        data: JSON.parse(response.data),
-                        columns: [
-                            {
-                                data : 'trait_name', 
-                                title : 'Treatment',
-                                orderable : false,
-                                render : function(data, type, row, meta) {
-                                    
-                                    if (!(row.trait_id in seen_treatments)) {
-                                        jQuery('#trial_treatment_to_stock_select').append('<option value="'+row.trait_id+'">'+data+'</option>');
-                                        seen_treatments[row.trait_id] = 1;
+                    if (""+<% $user_can_modify %>+"") {
+                        jQuery('#trial_treatments_table').DataTable({
+                            data: JSON.parse(response.data),
+                            columns: [
+                                {
+                                    data : 'trait_name', 
+                                    title : 'Treatment',
+                                    orderable : false,
+                                    render : function(data, type, row, meta) {
+                                        
+                                        if (!(row.trait_id in seen_treatments)) {
+                                            jQuery('#trial_treatment_to_stock_select').append('<option value="'+row.trait_id+'">'+data+'</option>');
+                                            seen_treatments[row.trait_id] = 1;
+                                        }
+                                        
+                                        let html = '<a href="/cvterm/'+row.trait_id+'/view/">'+data+'</a>';
+                                        return html;
                                     }
-                                    
-                                    let html = '<a href="/cvterm/'+row.trait_id+'/view/">'+data+'</a>';
-                                    return html;
+                                },
+                                {data : 'count', title : 'Total Stock Count'},
+                                {
+                                    data : 'trait_id',
+                                    title : 'Remove treatment',
+                                    orderable : false,
+                                    render : function(data, type, row, meta) {
+                                        let html = `<button class="btn btn-small btn-danger treatment-delete-btn" id="delete_treatment_${data}"><span class="glyphicon glyphicon-trash"></span></button>`;
+                                        return html;
+                                    }
                                 }
-                            },
-                            {data : 'count', title : 'Total Stock Count'},
-                            {
-                                data : 'trait_id',
-                                title : 'Remove treatment',
-                                orderable : false,
-                                render : function(data, type, row, meta) {
-                                    let html = `<button class="btn btn-small btn-danger treatment-delete-btn" id="delete_treatment_${data}"><span class="glyphicon glyphicon-trash"></span></button>`;
-                                    return html;
-                                }
-                            }
-                        ]
-                    });
+                            ]
+                        });
+                    } else {
+                        jQuery('#trial_treatments_table').DataTable({
+                            data: JSON.parse(response.data),
+                            columns: [
+                                {
+                                    data : 'trait_name', 
+                                    title : 'Treatment',
+                                    orderable : false,
+                                    render : function(data, type, row, meta) {
+                                        
+                                        if (!(row.trait_id in seen_treatments)) {
+                                            jQuery('#trial_treatment_to_stock_select').append('<option value="'+row.trait_id+'">'+data+'</option>');
+                                            seen_treatments[row.trait_id] = 1;
+                                        }
+                                        
+                                        let html = '<a href="/cvterm/'+row.trait_id+'/view/">'+data+'</a>';
+                                        return html;
+                                    }
+                                },
+                                {data : 'count', title : 'Total Stock Count'},
+                            ]
+                        });
+                    }
+                    
                 }
             },
             error: function(response){

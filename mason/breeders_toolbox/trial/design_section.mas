@@ -125,7 +125,7 @@ $user_can_modify => undef
     </&>
 
     <&| /page/info_section.mas, id => "trial_treatments", title=>"Treatments",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
-        <& /breeders_toolbox/trial/trial_treatments.mas, trial_id => $trial_id &>
+        <& /breeders_toolbox/trial/trial_treatments.mas, trial_id => $trial_id, user_can_modify => $user_can_modify &>
     </&>
 
     <&| /page/info_section.mas, id=>"trial_entry_numbers", title=>"Entry Numbers", is_subsection=>1, collapsible=>1, collapsed=>1 &>

@@ -201,8 +201,9 @@ sub _prep_upload {
 	my @error_status;
 
 	my $user = $c->user();
-	if (!$user) {
-		push @error_status, 'Must be logged in to upload phenotypes!';
+
+	if (!$user) {# only checks for login, ask whether this needs to be changed...
+		push @error_status, 'You do not have permission to upload data to this trial!';
 		return (\@success_status, \@error_status);
 	}
 

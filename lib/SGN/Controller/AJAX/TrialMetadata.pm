@@ -2326,7 +2326,7 @@ sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
     $c->stash->{rest} = { data => encode_json($data)};
 }
 
-sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) { #TODO REFACTOR
+sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) { # DEPRECATED, TREATMENTS ADDED BY PHENO UPLOAD
     my $self = shift;
     my $c = shift;
 
