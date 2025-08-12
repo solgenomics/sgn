@@ -467,7 +467,7 @@ $(document).ready(function() {
     <form id="download_cross_family" action="/breeders/download_cross_family_of_progenies" method="POST">
         <table class="table"  cellpadding="10">
             <thead>
-                <tr><td colspan="2"><h4>Download Cross and Family </h4><p>Select parameters:</p></tr>
+                <tr><td colspan="2"><h4>Download Crosses and Families of Progenies </h4><p>Select parameters:</p></tr>
                 <tr>
                     <th>Accessions</th>
                     <th>Format</th>
