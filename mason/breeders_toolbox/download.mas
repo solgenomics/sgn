@@ -461,6 +461,68 @@ $(document).ready(function() {
 
 <!-- end of code for pedigree download -->
 
+<!-- start of code for cross and family download -->
+
+<div class="well well-sm">
+    <form id="download_cross_family" action="/breeders/download_cross_family_of_progenies" method="POST">
+        <table class="table"  cellpadding="10">
+            <thead>
+                <tr><td colspan="2"><h4>Download Crosses and Families of Progenies </h4><p>Select parameters:</p></tr>
+                <tr>
+                    <th>Accessions</th>
+                    <th>Format</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div id="progeny_list"></div>
+                    </td>
+                    <td>
+                        <select class="form-control" id="cross_family_file_format" name="file_format">
+                            <option value=".xlsx">XLSX</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" type="button" id="cross_family">Download</button>
+                        <input type="hidden" id="progeny_list_id" name="list_id" />
+                        <input type="hidden" id="cross_family_download_token" name="list_download_token" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+</div>
+
+
+<script>
+$(document).ready(function() {
+    const lo = new CXGN.List();
+    jQuery('#progeny_list').html(lo.listSelect('progeny_list', [ 'accessions' ], 'select', undefined, undefined));
+    jQuery('#cross_family').click(function() {
+        const progeny_list_id = $('#progeny_list_list_select').val();
+        if (!progeny_list_id) {
+            alert("You need to select an accession list!");
+            return;
+        }
+        else {
+            lo.validate(progeny_list_id, 'accessions', true).then((r) => {
+                if (r.missing.length > 0) {
+                   alert("The accession list did not pass validation. Please correct the list and try again");
+                }
+                else {
+                    jQuery("#progeny_list_id").val(seedlot_list_id);
+                    jQuery('#download_cross_family').submit();
+                }
+            });
+        }
+    });
+});
+
+</script>
+
+<!-- end of code for cross and family download -->
 
 
 <!-- start of code for seedlot details download -->
