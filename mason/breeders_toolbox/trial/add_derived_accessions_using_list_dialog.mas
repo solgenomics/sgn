@@ -136,6 +136,7 @@ jQuery(document).ready(function(){
     jQuery('#derived_accessions_list_submit').click(function(e){
         e.preventDefault();
         let derived_accession_info = [];
+        let all_new_names = [];
         const plant_list_id = jQuery('#plant_to_accession_list_select').val();
         const plant_list = lo.getList(plant_list_id);
 
@@ -148,6 +149,7 @@ jQuery(document).ready(function(){
                 return;
             }
             derived_accession_info.push({'stock_name':stock_name, 'derived_accession_name':derived_accession_name, 'accession_description':accession_description});
+            all_new_names.push(derived_accession_name);
         }
 
         jQuery.ajax({
@@ -155,6 +157,7 @@ jQuery(document).ready(function(){
             method: 'POST',
             data: {
                 'derived_accession_info': JSON.stringify(derived_accession_info),
+                'all_new_names': JSON.stringify(all_new_names),
             },
             dataType:'json',
             beforeSend: function() {

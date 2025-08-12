@@ -100,24 +100,25 @@ sub add_derived_accession {
         my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
         my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
         my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+        my $derived_from_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_from', 'stock_relationship')->cvterm_id();
 
         my $original_stock = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $stock_id});
         my $stock_type = $original_stock->type_id();
         my $organism_id = $original_stock->organism_id();
 
-        my $pedigree_object_id;
+        my $original_accession_stock_id;
         my $cross_type;
         my $female_stock_id;
         my $male_stock_id;
         if ($stock_type == $accession_cvterm_id) {
-            $pedigree_object_id = $stock_id;
+            $original_accession_stock_id = $stock_id;
         } elsif ($stock_type == $plant_cvterm_id) {
             my $stock_plant_relationship = $schema->resultset("Stock::StockRelationship")->find ({
                 subject_id => $stock_id,
                 type_id => $plant_of_cvterm_id,
             });
 
-            $pedigree_object_id = $stock_plant_relationship->object_id();
+            $original_accession_stock_id = $stock_plant_relationship->object_id();
 
         } elsif ($stock_type == $tissue_sample_cvterm_id) {
             my $accession_tissue_sample_relationship = $schema->resultset("Stock::StockRelationship")->find ({
@@ -125,12 +126,11 @@ sub add_derived_accession {
                 type_id => $tissue_sample_of_cvterm_id,
             });
 
-            $pedigree_object_id = $accession_tissue_sample_relationship->object_id();
+            $original_accession_stock_id = $accession_tissue_sample_relationship->object_id();
         }
 
-
         my $female_parent_relationship = $schema->resultset("Stock::StockRelationship")->find ({
-            object_id => $pedigree_object_id,
+            object_id => $original_accession_stock_id,
             type_id => $female_parent_cvterm_id,
         });
 
@@ -140,7 +140,7 @@ sub add_derived_accession {
         }
 
         my $male_parent_relationship = $schema->resultset("Stock::StockRelationship")->find ({
-            object_id => $pedigree_object_id,
+            object_id => $original_accession_stock_id,
             type_id => $male_parent_cvterm_id,
         });
 
@@ -160,21 +160,29 @@ sub add_derived_accession {
         $derived_accession_stock_id = $derived_accession_stock->stock_id();
         print STDERR "DERIVED ACCESSION STOCK ID =".Dumper($derived_accession_stock_id)."\n";
 
-        if ($female_stock_id) {
+        if ($derived_accession_stock_id) {
             $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
-                type_id => $female_parent_cvterm_id,
-                object_id => $derived_accession_stock_id,
-                subject_id => $female_stock_id,
-                value => $cross_type,
+                type_id => $derived_from_cvterm_id,
+                object_id => $original_accession_stock_id,
+                subject_id => $derived_accession_stock_id,
 			});
-        }
 
-        if ($male_stock_id) {
-            $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
-                type_id => $male_parent_cvterm_id,
-                object_id => $derived_accession_stock_id,
-                subject_id => $male_stock_id,
-            });
+            if ($female_stock_id) {
+                $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
+                    type_id => $female_parent_cvterm_id,
+                    object_id => $derived_accession_stock_id,
+                    subject_id => $female_stock_id,
+                    value => $cross_type,
+                });
+            }
+
+            if ($male_stock_id) {
+                $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
+                    type_id => $male_parent_cvterm_id,
+                    object_id => $derived_accession_stock_id,
+                    subject_id => $male_stock_id,
+                });
+            }            
         }
 
     };

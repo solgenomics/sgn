@@ -2780,7 +2780,22 @@ sub add_derived_accessions_using_list_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
     my $derived_accession_info = decode_json $c->req->param('derived_accession_info');
-    print STDERR "NEW ACCESSION DATA =".Dumper($derived_accession_info)."\n";
+
+    my $all_new_names = decode_json $c->req->param('all_new_names');
+    my @error_messages;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => $all_new_names }
+    });
+    while (my $r=$rs->next){
+        push @error_messages, "Accession name already exists in database: ".$r->uniquename;
+    }
+
+    if (scalar(@error_messages) >= 1) {
+        my $error_string = join("\n", @error_messages);
+        $c->stash->{rest} = { error => $error_string };
+        return;
+    }
 
     foreach my $each_info (@$derived_accession_info) {
         my $new_accession_stock_id;
