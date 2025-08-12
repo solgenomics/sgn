@@ -40,7 +40,7 @@ has 'derived_accession_name' => (
     required => 1,
 );
 
-has 'stock_id' => (
+has 'original_stock_id' => (
     isa => 'Int',
     is => 'rw',
     required => 1,
@@ -77,13 +77,13 @@ sub add_derived_accession {
     my $phenome_schema = $self->get_phenome_schema();
     my $derived_accession_name = $self->get_derived_accession_name();
     my $description = $self->get_description();
-    my $stock_id = $self->get_stock_id();
+    my $original_stock_id = $self->get_original_stock_id();
     my $owner_id = $self->get_owner_id();
     my $derived_accession_stock_id;
     my %return;
 
     print STDERR "DERIVED ACCESSION NAME =".Dumper($derived_accession_name)."\n";
-    print STDERR "STOCK ID =".Dumper($stock_id)."\n";
+    print STDERR "STOCK ID =".Dumper($original_stock_id)."\n";
 
 
     if ($self->existing_accession_name()){
@@ -101,8 +101,9 @@ sub add_derived_accession {
         my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
         my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
         my $derived_from_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_from', 'stock_relationship')->cvterm_id();
+        my $derived_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_accession', 'stock_property');
 
-        my $original_stock = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $stock_id});
+        my $original_stock = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $original_stock_id});
         my $stock_type = $original_stock->type_id();
         my $organism_id = $original_stock->organism_id();
 
@@ -111,10 +112,10 @@ sub add_derived_accession {
         my $female_stock_id;
         my $male_stock_id;
         if ($stock_type == $accession_cvterm_id) {
-            $original_accession_stock_id = $stock_id;
+            $original_accession_stock_id = $original_stock_id;
         } elsif ($stock_type == $plant_cvterm_id) {
             my $stock_plant_relationship = $schema->resultset("Stock::StockRelationship")->find ({
-                subject_id => $stock_id,
+                subject_id => $original_stock_id,
                 type_id => $plant_of_cvterm_id,
             });
 
@@ -122,7 +123,7 @@ sub add_derived_accession {
 
         } elsif ($stock_type == $tissue_sample_cvterm_id) {
             my $accession_tissue_sample_relationship = $schema->resultset("Stock::StockRelationship")->find ({
-                subject_id => $stock_id,
+                subject_id => $original_stock_id,
                 type_id => $tissue_sample_of_cvterm_id,
             });
 
@@ -163,9 +164,12 @@ sub add_derived_accession {
         if ($derived_accession_stock_id) {
             $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
                 type_id => $derived_from_cvterm_id,
-                object_id => $original_accession_stock_id,
+                object_id => $original_stock_id,
                 subject_id => $derived_accession_stock_id,
+                value => $stock_type
 			});
+
+            $derived_accession_stock->create_stockprops({$derived_accession_cvterm->name() => 1});
 
             if ($female_stock_id) {
                 $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
@@ -182,7 +186,7 @@ sub add_derived_accession {
                     object_id => $derived_accession_stock_id,
                     subject_id => $male_stock_id,
                 });
-            }            
+            }
         }
 
     };
