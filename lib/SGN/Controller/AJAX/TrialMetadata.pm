@@ -2326,30 +2326,6 @@ sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
     $c->stash->{rest} = { data => encode_json($data)};
 }
 
-sub treatment_raw_data : Chained('trial') PathPart('treatment_raw_data') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-
-    my $treatment_id = $c->req->param('treatment_id');
-    my $stock_type = $c->req->param('stock_type');
-
-    my $trial = $c->stash->{trial};
-
-    my $data;
-
-    # eval {
-    #     $data = $trial->get_treatment_raw_data($treatment_id, $stock_type);
-    # };
-
-    # if ($@) {
-    #     $c->stash->{rest} = {error => $@};
-    # }
-
-    $c->stash->{rest} = { data => encode_json($data)};
-}
-
 sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) { #TODO REFACTOR
     my $self = shift;
     my $c = shift;

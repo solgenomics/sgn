@@ -5197,38 +5197,17 @@ sub get_treatments {
 
     foreach my $treatment (@treatment_traits) {
         my @treatment_phenotypes = $self->get_phenotypes_for_trait($treatment->[0]);
-        my @trait_levels = uniq @treatment_phenotypes;
+        # my @trait_levels = uniq @treatment_phenotypes;
         push @return_data, {
             trait_id => $treatment->[0], 
             trait_name => $treatment->[1], 
-            count => $treatment->[3], 
-            levels => scalar(@trait_levels)
+            count => $treatment->[3]#, 
+            # levels => scalar(@trait_levels)
         };
     }
 
     return \@return_data;
 }
-
-# =head2 get_treatment_raw_data($treatment_id, $stock_type)
-
-#  Usage:        $treatment_summary = $t->get_treatment_raw_data();
-#  Desc:         Wrapper for get_phenotypes_for_trait
-#  Ret:          
-#  Args:
-#  Side Effects:
-#  Example:
-
-# =cut
-
-# sub get_treatment_raw_data {
-#     my $self = shift;
-#     my $treatment_id = shift;
-#     my $stock_type = shift;
-
-#     my @return_data = $self->get_phenotypes_for_trait($treatment_id, $stock_type);
-
-#     return \@return_data;
-# }
 
 =head2 get_treatment_projects
 

@@ -3,7 +3,7 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ "CXGN.BreedersToolbox.UploadPhenotype" ] &>
+<& /util/import_javascript.mas, classes => [ ] &>
 
 <button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatments</button>
 <div id="trial_treatments_html">
@@ -61,7 +61,15 @@ jQuery(document).ready(function () {
                                 }
                             },
                             {data : 'count', title : 'Total Stock Count'},
-                            {data : 'levels', title : 'Number of Levels'}
+                            {
+                                data : 'trait_id',
+                                title : 'Remove treatment',
+                                orderable : false,
+                                render : function(data, type, row, meta) {
+                                    let html = `<button class="btn btn-small btn-danger treatment-delete-btn" id="delete_treatment_${data}"><span class="glyphicon glyphicon-trash"></span></button>`;
+                                    return html;
+                                }
+                            }
                         ]
                     });
                 }
@@ -100,6 +108,9 @@ jQuery(document).ready(function () {
                         }
                     },
                     {data : 'value', title : 'Treatment Value'}
+                ],
+                columnDefs : [
+                    {targets : 0, width : "50%"}
                 ]
             });
         }).catch((error) => {
@@ -110,7 +121,7 @@ jQuery(document).ready(function () {
 
 
     jQuery('#trial_detail_page_add_treatment').click(function(){
-        jQuery('#trial_design_add_treatments').modal('show');
+        jQuery('#upload_treatment_spreadsheet_dialog').modal('show');
     });
 
     jQuery(document).on('change', 'input[name="add_trial_treatment_select_all"]', function(){
@@ -132,21 +143,6 @@ jQuery(document).ready(function () {
 	    	method: "GET"
 	    });     
     }
-
-    jQuery('#new_trial_add_treatments_submit').click(function(){
-        var apply_to_plants;
-        if(jQuery('#upload_treatments_inherit_treatments').is(":checked")){
-            apply_to_plants = 1;
-        }
-
-        storeData(
-            "#upload_treatments_dialog_form",
-            "#trial_upload_treatments_file",
-            "/ajax/phenotype/upload_store/spreadsheet",
-            "spreadsheet"
-        );
-        
-    });
 
     jQuery('#trial_treatments_raw_data').DataTable({
         'destroy': true,
