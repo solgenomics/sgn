@@ -2375,6 +2375,11 @@ sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(
     my $c = shift;
     my $treatment_id = $c->req->param('treatment_id');
 
+    if (!$treatment_id) {
+        $c->stash->{rest} = {errpr => "You need to supply a valid treatment id."};
+        return;
+    }
+
     if (!($c->user()->check_roles('curator'))) {
         $c->stash->{rest} = { error => 'You do not have the privileges to remove a treatment from this trial.'};
         return;
@@ -2382,16 +2387,9 @@ sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(
     my $trial = $c->stash->{trial};
     my $trial_id = $c->stash->{trial_id};
 
-    my $result;
-    eval {
-        $result = $trial->remove_treatment($treatment_id);
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => "An error occurred while removing the treatment: $@" };
-        return;
-    }
-    if ($result->{error}) {
-        $c->stash->{rest} = { error => $result->{error} };
+    my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, undef,  [], [$treatment_id] );
+    if ($delete_trait_return_error) {
+        $c->stash->{rest} = { error => $delete_trait_return_error };
         return;
     }
 

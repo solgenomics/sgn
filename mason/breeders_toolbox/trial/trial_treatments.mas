@@ -33,8 +33,7 @@ $user_can_modify
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_treatments_onswitch').one("click", function() {
-
+    function get_trial_overview_data() {
         jQuery.ajax ({
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/treatments',
             beforeSend: function() {
@@ -108,7 +107,10 @@ jQuery(document).ready(function () {
                 alert("Error retrieving treatments.");
             }
         });
+    }
 
+    jQuery('#trial_treatments_onswitch').one("click", function() {
+        get_trial_overview_data();
     });
 
     jQuery('#treatments_get_raw_data_btn').click(function() {
@@ -179,6 +181,40 @@ jQuery(document).ready(function () {
             { title: 'Stock' },
             { title: 'Treatment value' },
         ]
+    });
+
+    jQuery(document).on('click', '.treatment-delete-btn',function() {
+
+        let this_id = jQuery(this).attr('id');
+        let splits = this_id.split('_');
+        let treatment_id = splits[2];
+
+        if (confirm("Delete treatment data from all stocks?")) {
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/remove_treatment',
+                data : {
+                    'treatment_id' : treatment_id
+                },
+                beforeSend: function() {
+                    jQuery('#working_modal').modal("show");
+                },
+                success : function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        alert("Treatment data removed.");
+                        window.location.reload();
+                    }
+                },
+                error : function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    console.log(response);
+                    alert("An error occurred deleting treatment data.");
+                }
+            });
+        }
+        
     });
 });
 
