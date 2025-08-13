@@ -67,6 +67,7 @@ use CXGN::People::Person;
 use CXGN::Chado::Publication;
 use CXGN::Cview::Map::SGN::Genotype;
 use CXGN::Cview::MapOverviews;
+use SGN::Image;
 
 my $trial_stock_type => undef;
 my $stock = $stockref->{stock};
@@ -110,6 +111,17 @@ my $this_page = "/stock/$stock_id/view";
 my $image_ids =  $stockref->{image_ids} || [] ;
 my $related_image_ids =  $stockref->{related_image_ids} || [] ;
 my $stockprops = $stockref->{props};
+
+my @valid_image_ids;
+foreach my $image (@$image_ids) {
+    my $image_id = $image->[0];
+    my $image_obj = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+    if ($image_obj->get_md5sum()) {
+        push(@valid_image_ids, $image)
+    }
+}
+$image_ids = \@valid_image_ids;
+
 
 
 #my $pedigree= ['pedigree', 'male parent', 'female parent'];
