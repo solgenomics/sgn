@@ -49,7 +49,6 @@ use CXGN::Metadata::Schema;
 use CXGN::Phenome::Schema;
 use CXGN::People::Person;
 use CXGN::DB::InsertDBH;
-use CXGN::Stock::Plot;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
@@ -232,7 +231,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 			my $plot_id = $obs_unit->[0];
 			my $treatment_val = exists($observation_units_lookup{$plot_id}) ? 1 : 0;
 
-			my $plot = CXGN::Stock::Plot->new({
+			my $plot = CXGN::Stock->new({
 				schema => $schema,
 				stock_id => $plot_id
 			});
@@ -260,7 +259,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 				} 
 			};
 
-			my $plot_contents = $plot->get_plot_contents();
+			my $plot_contents = $plot->get_child_stocks();
 			$add_child_stocks_to_treatment_values_hash->($treatment_values_hash, $plot_contents, $plot_name);
 		}
 

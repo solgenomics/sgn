@@ -702,7 +702,7 @@ export function init() {
                     jQuery('#hm_plot_structure_container').hide();
 
                     new jQuery.ajax({
-                        url: '/stock/get_plot_contents/'+replace_plot_id,
+                        url: '/stock/get_child_stocks/'+replace_plot_id,
                         success: function (response) {
                             jQuery("#working_modal").modal("hide");
                             if (response.error) {
@@ -836,18 +836,19 @@ export function init() {
                                 let display_layout = false;
                                 let structure;
                                 for (let key in plot_structure["has"]) {
-                                    if (plot_structure["has"][key]["type"] == "subplot") {
+                                    console.log(key);
+                                    if (plot_structure["has"][key]["type"] === "subplot") {
                                         for (let subkey in plot_structure["has"][key]["has"]) {
                                             if (plot_structure["has"][key]["has"][subkey]["type"] == "plant") {
                                                 structure = "plot:subplot:plant";
-                                                if (plot_structure["has"][key]["has"][subkey]["attributes"]?.["row_number"]["value"] > 0) {
+                                                if (plot_structure["has"][key]["has"][subkey]["attributes"]?.["row_number"]?.["value"] > 0) {
                                                     display_layout = true;
                                                 }
                                             }
                                         }
-                                    } else if (plot_structure["has"][key]["type"] == "plant") {
+                                    } else if (plot_structure["has"][key]["type"] === "plant") {
                                         structure = "plot:plant";
-                                        if (plot_structure["has"][key]["attributes"]?.["row_number"]["value"] > 0) {
+                                        if (plot_structure["has"][key]["attributes"]?.["row_number"]?.["value"] > 0) {
                                             display_layout = true;
                                         }
                                     } else {

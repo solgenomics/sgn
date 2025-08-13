@@ -66,7 +66,7 @@ $user_can_modify => undef
             <button class="btn btn-default" id="upload_subplot_entries_button">Upload subplot entries using subplot_name</button>
             <button class="btn btn-default" id="upload_subplot_entries_with_index_number_button">Upload subplot entries using subplot index number</button>
             <button class="btn btn-default" id="trial_upload_subplots_with_num_subplots_button">Upload subplot entries using number of subplots per plot</button>
-% } elsif ($has_plant_entries) {
+% } elsif ($has_plant_entries && !$has_subplot_entries) {
             <p>Subplots cannot be added to trials that already contain plant entries.</p>
 % } else {
             <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
@@ -86,7 +86,7 @@ $user_can_modify => undef
            <button class="btn btn-default" id="upload_plant_entries_button">Upload plant entries using plant_name</button>
            <button class="btn btn-default" id="upload_plant_entries_with_index_number_button">Upload plant entries using plant index number</button>
            <button class="btn btn-default" id="trial_upload_plants_with_num_plants_button">Upload plant entries using number of plants per plot</button>
-% } elsif ($has_subplot_entries ) {
+% } elsif (!$has_plant_entries && $has_subplot_entries ) {
            <br /><br />
            <p><strong>Add Plants to Subplots:</strong></p>
            <button class="btn btn-default" id="create_plant_entries_subplots_button">Add plant entries</button>

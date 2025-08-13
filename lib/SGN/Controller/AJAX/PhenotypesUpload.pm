@@ -370,7 +370,7 @@ sub _prep_upload {
     my %parsed_data;
     my @plots;
     my @traits;
-    if (scalar(@error_status) == 0) {
+    if (scalar(@error_status) == 0) { #TODO: check for treatment and propagate values to child stocks
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};

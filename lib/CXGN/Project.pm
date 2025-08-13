@@ -3300,30 +3300,6 @@ sub create_plant_entities {
         # my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
         #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
-        my $treatments;
-        my %treatment_experiments;
-        my %treatment_plots;
-        if ($inherits_plot_treatments){
-            $treatments = $self->get_treatments(); #TODO: REFACTOR
-            foreach (@$treatments){
-
-                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                    type_id => $has_plants_cvterm,
-                    value => $plants_per_plot,
-                    project_id => $_->[0],
-                });
-
-                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $treatment_cvterm })->single();
-                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
-
-                my $treatment_trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
-                my $plots = $treatment_trial->get_plots();
-                foreach my $plot (@$plots){
-                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
-                }
-            }
-        }
-
         my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
             type_id => $has_plants_cvterm,
             value => $plants_per_plot,
@@ -3354,6 +3330,10 @@ sub create_plant_entities {
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
+            my $treatments; #get rid of this!!
+            my %treatment_plots;
+            my %treatment_experiments;
+
             foreach my $plant_index_number (1..$plants_per_plot) {
                 my $plant_name = $parent_plot_name."_plant_$plant_index_number";
                 #print STDERR "... ... creating plant $plant_name...\n";
@@ -3371,6 +3351,11 @@ sub create_plant_entities {
                 $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username);
             }
         }
+
+        # my $treatments = $self->get_treatments(); #TODO: REFACTOR
+        # foreach my $treatment (@{$treatments}) {
+
+        # }
 
         $layout->generate_and_cache_layout();
     };
@@ -5178,7 +5163,7 @@ sub get_controls_by_plot {
 
  Usage:        $treatment_summary = $t->get_treatments();
  Desc:         retrieves the treatments that are part of this trial
- Ret:          an array ref containing [ treatment_id, treatment_name, treatment_count, num_levels ]
+ Ret:          an array ref containing [ treatment_id, treatment_name, treatment_count ]
  Args:
  Side Effects:
  Example:
@@ -5192,24 +5177,21 @@ sub get_treatments {
 
     my @treatment_traits = grep {$_->[1] =~ /EXPERIMENT_TREATMENT/} @{$all_traits};
 
-    #need to use get_phenotypes for trait...
     my @return_data;
 
     foreach my $treatment (@treatment_traits) {
         my @treatment_phenotypes = $self->get_phenotypes_for_trait($treatment->[0]);
-        # my @trait_levels = uniq @treatment_phenotypes;
         push @return_data, {
             trait_id => $treatment->[0], 
             trait_name => $treatment->[1], 
-            count => $treatment->[3]#, 
-            # levels => scalar(@trait_levels)
+            count => $treatment->[3]
         };
     }
 
     return \@return_data;
 }
 
-=head2 get_treatment_projects
+=head2 get_treatment_projects (DEPRECATED)
 
  Usage:        DEPRECATED $treatment_summary = $t->get_treatment_projects();
  Desc:         DEPRECATED retrieves the treatments that are part of this trial
