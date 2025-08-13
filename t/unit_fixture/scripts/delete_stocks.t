@@ -42,5 +42,6 @@ ok( grep( /Stock test_accession1 cannot be deleted because it is associated with
 ok( grep( /Could not find stock non_existent_stock of type accession/, @lines), "could not find stock test");
 ok( grep( /Successfully deleted stock deletion_candidate/, @lines), "successfully deleted test");
 
+$f->clean_up_db();
 
 done_testing();
