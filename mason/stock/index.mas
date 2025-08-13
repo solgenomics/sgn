@@ -122,8 +122,6 @@ foreach my $image (@$image_ids) {
 }
 $image_ids = \@valid_image_ids;
 
-
-
 #my $pedigree= ['pedigree', 'male parent', 'female parent'];
 # get pedigree of stock
 #my $stock_pedigree = $stockref->{stock_pedigree};
