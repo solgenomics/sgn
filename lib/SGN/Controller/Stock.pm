@@ -273,6 +273,30 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         $is_a_transgenic_line = $transgenic_stockprop_rs->value();
     }
 
+    my $is_a_derived_accession;
+    my $original_stock_link;
+    if ($stock_type eq 'accession') {
+        my $derived_accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_accession', 'stock_property')->cvterm_id;
+        my $derived_from_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_from', 'stock_relationship')->cvterm_id();
+        my $derived_accession_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $derived_accession_type_id});
+        if ($derived_accession_stockprop_rs) {
+            $is_a_derived_accession = $derived_accession_stockprop_rs->value();
+            if ($is_a_derived_accession) {
+                my $derived_accession_relationship = $schema->resultset('Stock::StockRelationship')->find({
+                    type_id => $derived_from_type_id,
+                    subject_id => $stock_id,
+                });
+
+                my $original_stock_id = $derived_accession_relationship->object_id();
+                my $original_stock_rs = $schema->resultset('Stock::Stock')->find({
+                    stock_id => $original_stock_id,
+                });
+                my $original_stock_name = $original_stock_rs->uniquename();
+                $original_stock_link = qq{<a href="/stock/$original_stock_id/view">$original_stock_name</a>},
+            }
+        }
+    }
+
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 	################
 	$c->stash(
@@ -311,6 +335,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 		editable_vector_props   => $editable_vectorprops,
         is_obsolete   => $obsolete,
         is_a_transgenic_line => $is_a_transgenic_line,
+        is_a_derived_accession => $is_a_derived_accession,
+        original_stock_link => $original_stock_link,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),

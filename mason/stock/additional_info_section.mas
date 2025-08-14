@@ -11,7 +11,19 @@ $new_locus_link => ''
 $locus_add_uri
 $allele_div
 $is_owner
+$is_a_derived_accession
+$original_stock_link
 </%args>
+
+% if($is_a_derived_accession) {
+    <div class="panel panel-default">
+        <div class="panel-body panel-body-sm">
+            <b>Derived from: </b>
+            <br/>
+            <% $original_stock_link %>
+        </div>
+    </div>
+% }
 
 <div class="panel panel-default">
     <div class="panel-body panel-body-sm">
