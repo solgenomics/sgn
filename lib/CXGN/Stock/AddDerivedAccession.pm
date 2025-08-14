@@ -169,7 +169,8 @@ sub add_derived_accession {
                 value => $stock_type
 			});
 
-            $derived_accession_stock->create_stockprops({$derived_accession_cvterm->name() => 1});
+            $derived_accession_stock->create_stockprops({$derived_accession_cvterm->name() => 'is_a_derived_accession'});
+            $original_stock->create_stockprops({$derived_accession_cvterm->name() => 'has_a_derived_accession'});
 
             if ($female_stock_id) {
                 $derived_accession_stock->find_or_create_related('stock_relationship_objects', {

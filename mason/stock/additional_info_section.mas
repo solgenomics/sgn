@@ -11,16 +11,20 @@ $new_locus_link => ''
 $locus_add_uri
 $allele_div
 $is_owner
-$is_a_derived_accession
-$original_stock_link
+$derived_accession_relationship
+$related_stock_link
 </%args>
 
-% if($is_a_derived_accession) {
+% if ($derived_accession_relationship) {
     <div class="panel panel-default">
         <div class="panel-body panel-body-sm">
-            <b>Derived from: </b>
+% if ($derived_accession_relationship eq 'is_a_derived_accession') {
+        <b>Derived from: </b>
+% } elsif ($derived_accession_relationship eq 'has_a_derived_accession') {
+        <b>Converted to: </b>
+% }
             <br/>
-            <% $original_stock_link %>
+            <% $related_stock_link %>
         </div>
     </div>
 % }
