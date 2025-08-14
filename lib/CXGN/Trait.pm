@@ -203,7 +203,7 @@ has 'format' => (isa => 'Str',
 
 has 'default_value' => (
 	isa => 'Str',
-	is => 'ro',
+	is => 'rw',
 	lazy => 1,
 	default => sub {
 		my $self = shift;
@@ -221,7 +221,7 @@ has 'default_value' => (
 
 has 'minimum' => (
 	isa => 'Str',
-	is => 'ro',
+	is => 'rw',
 	lazy => 1,
 	default => sub {
 		my $self = shift;
@@ -239,7 +239,7 @@ has 'minimum' => (
 
 has 'maximum' => (
 	isa => 'Str',
-	is => 'ro',
+	is => 'rw',
 	lazy => 1,
 	default => sub {
 		my $self = shift;
@@ -257,7 +257,7 @@ has 'maximum' => (
 
 has 'categories' => (
 	isa => 'Str',
-	is => 'ro',
+	is => 'rw',
 	lazy => 1,
 	default => sub {
 		my $self = shift;

@@ -858,7 +858,7 @@ export function init() {
 
                                 let hm_plot_structure_data_container = document.getElementById("hm_plot_structure_data_container");
 
-                                delete plot_structure["id"];
+                                delete plot_structure["stock_id"];
                                 delete plot_structure["type"];
                                 delete plot_structure["name"];
 

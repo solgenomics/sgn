@@ -236,31 +236,20 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 				stock_id => $plot_id
 			});
 
-			my $add_child_stocks_to_treatment_values_hash;
-			$add_child_stocks_to_treatment_values_hash = sub  { #recurse through the plot and apply treatment to child stocks (but not accessions)
-				my $treatment_values_hash = shift;
-				my $stock = shift;
-				my $stock_name = shift;
+			$treatment_values_hash->{$plot_name}->{$treatment_full_name} = [
+				$treatment_val,
+				$timestamp,
+				$opt_e,
+				'',
+				''
+			];
 
-				if ($stock->{type} eq 'accession') {
-					return;
-				} else {
-					$treatment_values_hash->{$stock_name}->{$treatment_full_name} = [
-						$treatment_val,
-						$timestamp,
-						$opt_e,
-						'',
-						''
-					];
-					push @phenotype_store_stock_list, $stock_name;
-					foreach my $child_stock_name (keys(%{$stock->{has}})) {
-						$add_child_stocks_to_treatment_values_hash->($treatment_values_hash, $stock->{has}->{$child_stock_name}, $child_stock_name);
-					}
-				} 
-			};
+			my $plot_contents = $plot->get_child_stocks_flat_list(); #treatment values are inherited by child stocks
 
-			my $plot_contents = $plot->get_child_stocks();
-			$add_child_stocks_to_treatment_values_hash->($treatment_values_hash, $plot_contents, $plot_name);
+			foreach my $child (@{$plot_contents}) {
+				next if ($child->{type} eq "accession"); #dont want to assign a phenotype to an accession, that would be bad
+				$treatment_values_hash->{$child->{name}}->{$treatment_full_name} = $treatment_values_hash->{$plot_name}->{$treatment_full_name};
+			}
 		}
 
 		$trial->remove_treatment_project($treatment_trial_id); # delete the treatment trial;

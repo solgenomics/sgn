@@ -63,7 +63,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     if (!$definition) {
         $error .= "You must supply a definition.\n";
     }
-    if ($definition && $definition !~ m/(\w+ ){4,}/) {
+    if ($definition && $definition !~ m/(\w+ ){6,}/) {
         $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the treatment and allows it to be differentiated from other treatments.\n";
     }
     if (!$format || ($format ne "numeric" && $format ne "qualitative")) {
@@ -89,11 +89,14 @@ sub create_treatment :Path('/ajax/treatment/create') {
                 bcs_schema => $schema,
                 definition => $definition,
                 name => $name,
-                format => $format,
-                minimum => $minimum ne "" ? $minimum : undef,
-                maximum => $maximum ne "" ? $maximum : undef,
-                default_value => $default_value ne "" ? $default_value : undef
+                format => $format
             });
+            if ($minimum) {
+                $new_treatment->minimum($minimum);
+            }
+            if ($maximum) {
+                $new_treatment->maximum($maximum);
+            }
         } elsif ($format eq "qualitative") {
             $new_treatment = CXGN::Trait::Treatment->new({
                 bcs_schema => $schema,
@@ -101,9 +104,16 @@ sub create_treatment :Path('/ajax/treatment/create') {
                 definition => $definition,
                 format => $format,
                 categories => $categories ne "" ? $categories : undef,
-                default_value => $default_value ne "" ? $default_value : undef
             });
+            if ($categories) {
+                $new_treatment->categories($categories);
+            }
         }
+
+        if ($default_value) {
+            $new_treatment->default_value($default_value);
+        }
+
         $new_treatment->store();
     };
 

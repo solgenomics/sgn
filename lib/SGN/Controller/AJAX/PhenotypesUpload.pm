@@ -370,12 +370,29 @@ sub _prep_upload {
     my %parsed_data;
     my @plots;
     my @traits;
+
     if (scalar(@error_status) == 0) { #TODO: check for treatment and propagate values to child stocks
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
             @traits = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
+        }
+        if ($is_treatment eq "treatment") {
+            foreach my $plot (@plots) {
+                my $plot_obj = CXGN::Stock->new({
+                    schema => $schema,
+                    uniquename => $plot
+                });
+                my $child_stocks = $plot_obj->get_child_stocks_flat_list();
+                foreach my $child (@{$child_stocks}) {
+                    next if ($child->{type} eq "accession");
+                    push @plots, $child->{name};
+                    foreach my $trait (@traits) {
+                        $parsed_data{$child->{name}}->{$trait} = $parsed_data{$plot}->{$trait};
+                    }
+                }
+            }
         }
     }
 

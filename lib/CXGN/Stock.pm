@@ -1848,7 +1848,7 @@ sub get_child_stocks {
         WHERE stock_type='tissue_sample'"; #only useful for plants, where it gives tissue samples. 
 
     my $stock_structure = {
-        id => $stock_id,
+        stock_id => $stock_id,
         type => $type,
         name => $name,
         attributes => {},
@@ -2018,14 +2018,123 @@ sub get_child_stocks {
 
 =head2 get_child_stocks_flat_list
 
-Same as get_child_stocks, but returns just a flat list and not a hierarchy. Stockprops are ommitted.
+Same as get_child_stocks, but returns just a flat listref and not a hierarchy. Stockprops are ommitted.
+Listref elements are hashrefs with structure {stock_id, name, type}. This stock is dropped in the list, 
+unlike in get_child_stocks where it remains at the top of the hierarchy.
 
 =cut
 
 sub get_child_stocks_flat_list {
     my $self = shift;
+    my $type = $self->type();
+    my $stock_id = $self->stock_id();
+    my $name = $self->uniquename();
 
-    my $child_stocks;
+    if (!$type) {
+        die "Cannot get child stocks without knowing stock type!\n";
+    }
+
+    my $plot_and_plant_q = "SELECT stock.stock_id, stock.name, 
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type, 
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship 
+        JOIN stock ON (stock.stock_id=stock_relationship.object_id) 
+        WHERE stock_relationship.subject_id=?"; #For plots, this returns accessions, subplots, and plants. For plants, this returns parent subplot and accessions. Also gives accessions for subplots.
+
+    my $subplot_q = "SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.subject_id)
+        WHERE stock_relationship.object_id=?;"; #gets parent plot and child plants
+
+    my $tissue_sample_q = "SELECT * FROM 
+        (SELECT stock.stock_id, stock.name, 
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type, 
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
+        FROM stock_relationship 
+        JOIN stock ON (stock.stock_id=stock_relationship.subject_id) 
+        WHERE stock_relationship.object_id=?) AS tissue_samples_subquery
+        WHERE stock_type='tissue_sample'"; #only useful for plants, where it gives tissue samples. 
+
+    my $stock_structure = [];
+
+    my $h;
+
+    if ($type eq "plot") {
+        $h = $self->schema()->storage()->dbh()->prepare($plot_and_plant_q);
+        $h->execute($stock_id);
+
+        my @child_stocks = ();
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            next if ($child_type eq 'accession');
+            push @{$stock_structure}, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type
+            };
+        }
+
+        my @has_plants = grep {$_->{type} eq "plant"} @{$stock_structure};
+
+        if (@has_plants) { #need to get possible tissue samples if there are plants
+            foreach my $plant (@has_plants) {
+                my $child_stock = CXGN::Stock->new({
+                    schema => $self->schema(),
+                    stock_id => $plant->{stock_id},
+                    type => $plant->{type}
+                });
+                push @{$stock_structure}, @{$child_stock->get_child_stocks_flat_list()};
+            }
+        } 
+
+    } elsif ($type eq "subplot") {
+
+        $h = $self->schema()->storage()->dbh()->prepare($subplot_q); # this will also grab parent plot, which will be filtered out
+        $h->execute($stock_id);
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            next if ($child_type eq "plot");
+            push @{$stock_structure}, {
+                stock_id => $child_stock_id,
+                name => $child_stock_name,
+                type => $child_type
+            };
+        }
+
+        my @has_plants = grep {$_->{type} eq "plant"} @{$stock_structure};
+
+        if (@has_plants) {
+            foreach my $plant (@has_plants) {
+                my $child_stock = CXGN::Stock->new({
+                    schema => $self->schema(),
+                    stock_id => $plant->{stock_id},
+                    type => $plant->{type}
+                });
+                push @{$stock_structure}, @{$child_stock->get_child_stocks_flat_list()};
+            }
+        }
+    } elsif ($type eq "plant") {
+
+        $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q); 
+        $h->execute($stock_id);
+
+        while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
+            push @{$stock_structure}, {
+                stock_id => $child_stock_id,
+                stock_name => $child_stock_name,
+                type => $child_type
+            };
+        }
+
+    } elsif ($type eq "tissue_sample") {
+        return [];
+    } elsif ($type eq "accession") {
+        return [];
+    }
+
+    return $stock_structure;
 }
 
 =head2 merge()

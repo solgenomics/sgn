@@ -2370,7 +2370,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) { #
     }
 }
 
-sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(0) { #TODO REFACTOR, use $project->delete_assayed_trait
+sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(0) { 
     my $self = shift;
     my $c = shift;
     my $treatment_id = $c->req->param('treatment_id');
