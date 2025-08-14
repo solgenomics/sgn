@@ -24,28 +24,27 @@ Script for loading completed Phenosight experiments as Breedbase trials.
 =cut
 use strict;
 use warnings;
-#use Getopt::Std;
-use Getopt::Long;
-use Try::Tiny;
-use File::Basename;
 
-use DateTime;
-use Data::Dumper;
 use CXGN::File::Parse;
 use CXGN::BreedingProgram ; # the BP object
+use CXGN::List::Validate;
 use CXGN::Metadata::Schema;
 use CXGN::Metadata::Metadbdata;
 use CXGN::Phenome::Schema;
-use SGN::Model::Cvterm; # maybe need this for the projectprop.type_id breeding_program
-use URI::FromHash 'uri';
-use JSON;
-
-
-use DateTime;
-use Pod::Usage;
 use CXGN::Trial; # add project metadata
 use CXGN::Trial::TrialCreate;
 use CXGN::TrialStatus;
+use DateTime;
+use Data::Dumper;
+use File::Basename;
+#use Getopt::Std;
+use Getopt::Long;
+use JSON;
+use Pod::Usage;
+use SGN::Model::Cvterm; # maybe need this for the projectprop.type_id breeding_program
+use Try::Tiny;
+use URI::FromHash 'uri';
+
 
 
 my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $infile, $username, $ignore_warnings);
@@ -199,6 +198,7 @@ my $curr_exp;
 my @content_curr_exp;
 
 my $PS2_path;
+
 my $coderef = sub {
     for my $exp_dir (@CR_exp_dirs) {
         @content_curr_exp = glob($exp_dir . "/*");
@@ -275,9 +275,132 @@ my $coderef = sub {
 #                    print STDERR "@$plot_ids are the plots;\n";
                     print STDERR "@plot_uniquenames are the plots;\n";
 
-                    
 
-                    #### Get the Metadata associated with this trial:
+                    # Parse the ExpDesign file for accession, species and plot
+                    my $PS2_path = $exp_dir . "/ExpDesign.tsv";
+                    my $expdesign_parser = CXGN::File::Parse->new(file => $PS2_path, type => 'tsv');
+                    my $expdesign_parsed = $expdesign_parser->parse();
+                    my $expdesign_parsed_errors = $expdesign_parsed->{errors};
+
+                    # Parser has errors, print error messages and quit
+                    if ( $expdesign_parsed_errors && scalar(@$expdesign_parsed_errors) > 0 ) {
+#                        print STDERR Dumper(@$expdesign_parsed_errors) . "\n";
+#                        print STDERR "Failed to read expdesign file." . "\n";
+                        foreach (@$expdesign_parsed_errors) {
+                            push @errors, $_;
+                        }
+                        exit();
+                    }
+
+                    my $expdesign_columns = $expdesign_parsed->{columns};
+                    my $expdesign_data = $expdesign_parsed->{data};
+                    my $expdesign_values = $expdesign_parsed->{values};
+                    print STDERR Dumper($expdesign_columns) . "\n";
+                    print STDERR Dumper($expdesign_data) . "\n"; # These are the rows w/data
+                    print STDERR Dumper($expdesign_values) . "\n";                    
+
+                    my $all_species = $expdesign_values->{'Species'};
+                    print STDERR Dumper($all_species) . "\n";                    
+
+                    foreach my $species (@$all_species) {
+                        my $organism = $chado_schema->resultset("Organism::Organism")->find( {
+                        species => $species } );
+                        #my $organism_id = $organism->organism_id();
+                        if (!$organism) {
+                            my @genus_species = split / /, $species;
+                            my $genus = $genus_species[0]; 
+                            my $q = "INSERT INTO organism (genus,species) VALUES (?,?)";
+                            my $h = $dbh->prepare($q);
+                            $h->execute($genus, $species);
+                        } else {
+                            print STDERR "Species $species already exists in the database!" . "\n";                    
+                        }
+                    }
+
+                    my $accessions = $expdesign_values->{'PlantName'};
+                    print STDERR Dumper($accessions) . "\n";                    
+                    my $accession_validator = CXGN::List::Validate->new();
+                    my @accessions_missing = @{$accession_validator->validate($chado_schema,'uniquenames',$accessions)->{'missing'}};
+
+                    if (scalar(@accessions_missing) > 0){
+                        push @errors, "The following accessions are not in the database or are not in the database as uniquenames: ".join(',',@accessions_missing);
+                    }
+                    print STDERR Dumper(@accessions_missing) . "\n";  
+
+                    my %accession_details;
+                    my %accession_species;
+                    for my $row (@$expdesign_data) {
+                        my $accession_name = $row->{'PlantName'};
+                        my $plot_number = $row->{'PhenoTrayID'};
+                        my $species_name = $row->{'Species'};
+                        $accession_details{$plot_number}->{accession} = $accession_name;
+                        $accession_details{$plot_number}->{species} = $species_name;
+                        $accession_species{$accession_name}->{species} = $species_name;
+                    }
+                    print STDERR Dumper(%accession_details) . "\n";  
+                    print STDERR Dumper(%accession_species) . "\n";  
+
+
+                    if (@accessions_missing) {
+                        foreach my $accession (@accessions_missing) {
+                            my $curr_species = $accession_species{$accession}->{species};
+                            print STDERR Dumper($curr_species) . "\n";  
+                            my $stock = CXGN::Stock::Accession->new({
+                                schema=>$chado_schema,
+                                check_name_exists=>0,
+                                #main_production_site_url=>$main_production_site_url,
+                                type=>'accession',
+                                #type_id=>$type_id,
+                                species=>$curr_species,
+                                #genus=>$_->{genus},
+                                #stock_id=>$_->{stock_id}, #For adding properties to an accessions
+                                #is_saving=>1,
+                                #name=>$_->{defaultDisplayName},
+                                uniquename=>$accession,
+                                #organization_name=>$_->{organizationName},
+                                #population_name=>$_->{populationName},
+                                #description=>$_->{description},
+                                #accessionNumber=>$_->{accessionNumber},
+                                #germplasmPUI=>$_->{germplasmPUI},
+                                #pedigree=>$_->{pedigree},
+                                #germplasmSeedSource=>$_->{germplasmSeedSource},
+                                #synonyms=>$_->{synonyms},
+                                #commonCropName=>$_->{commonCropName},
+                                #instituteCode=>$_->{instituteCode},
+                                #instituteName=>$_->{instituteName},
+                                #biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
+                                #countryOfOriginCode=>$_->{countryOfOriginCode},
+                                #typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
+                                #speciesAuthority=>$_->{speciesAuthority},
+                                #subtaxa=>$_->{subtaxa},
+                                #subtaxaAuthority=>$_->{subtaxaAuthority},
+                                #donors=>$_->{donors},
+                                #acquisitionDate=>$_->{acquisitionDate},
+                                #transgenic=>$_->{transgenic},
+                                #notes=>$_->{notes},
+                                #state=>$_->{state},
+                                #variety=>$_->{variety},
+                                #genomeStructure=>$_->{genomeStructure},
+                                #ploidyLevel=>$_->{ploidyLevel},
+                                #locationCode=>$_->{locationCode},
+                                #introgression_parent=>$_->{introgression_parent},
+                                #introgression_backcross_parent=>$_->{introgression_backcross_parent},
+                                #introgression_map_version=>$_->{introgression_map_version},
+                                #introgression_chromosome=>$_->{introgression_chromosome},
+                                #introgression_start_position_bp=>$_->{introgression_start_position_bp},
+                                #introgression_end_position_bp=>$_->{introgression_end_position_bp},
+                                #other_editable_stock_props=>$_->{other_editable_stock_props},
+                                sp_person_id => $sp_person_id,
+                                user_name => $username,
+                            #    modification_note => 'Bulk load of accession information'
+                            });
+                            my $added_stock_id = $stock->store();
+                        }
+                    }
+
+
+                     
+                    # Get the Metadata associated with this trial:
                     my @ps_exp_names;
                     my %phenosight_metadata_hash;
                     foreach my $row (@$md_data) {
@@ -304,8 +427,8 @@ my $coderef = sub {
                     # First, need to create/extract the design details:
                     my %design_details;
                     for my $row (@$data) {
-                        my $accession_name = "accessionPS1";
                         my $plot_number = $row->{'PhenoTray.ID'};
+                        my $accession_name = $accession_details{$plot_number}->{accession};
                         my $plot_name = _create_plot_name($exp_name, $plot_number);
                         my $block_number = 1;
 
