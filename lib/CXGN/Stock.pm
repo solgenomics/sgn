@@ -753,7 +753,9 @@ sub exists_in_database {
     # loading new stock - $stock_id is undef
     #
     if (defined($s) && !$stock ) {
-        return $s->stock_id;
+
+	return "Uniquename already exists in database with stock_id: ".$s->stock_id;
+    #    return $s->stock_id;
     }
 
     # updating an existing stock
@@ -2200,15 +2202,15 @@ sub hard_delete {
     # the linking tables should have cascading deletes now
     # delete sgn.stock_owner entry
     #
-   # my $q = "DELETE FROM phenome.stock_owner WHERE stock_id=?";
-    #my $h = $self->schema()->storage()->dbh()->prepare($q);
-    #$h->execute($self->stock_id());
+    my $q = "DELETE FROM phenome.stock_owner WHERE stock_id=?";
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
 
     # delete sgn.stock_image entry
     #
-    #$q = "DELETE FROM phenome.stock_image WHERE stock_id=?";
-    #$h = $self->schema()->storage()->dbh()->prepare($q);
-    #$h->execute($self->stock_id());
+    $q = "DELETE FROM phenome.stock_image WHERE stock_id=?";
+    $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
 
     # delete stock entry
     #
