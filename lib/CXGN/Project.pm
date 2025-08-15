@@ -5163,7 +5163,7 @@ sub get_controls_by_plot {
 
  Usage:        $treatment_summary = $t->get_treatments();
  Desc:         retrieves the treatments that are part of this trial
- Ret:          an array ref containing [ treatment_id, treatment_name, treatment_count ]
+ Ret:          an array ref of array refs containing [ treatment_id, treatment_name, treatment_count ]
  Args:
  Side Effects:
  Example:
