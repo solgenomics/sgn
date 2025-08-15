@@ -138,7 +138,7 @@ jQuery(document).ready(function(){
     function add_derived_accessions_form (derived_from_list_id) {
         const derived_from_list = list.getList(derived_from_list_id);
 
-        var html = '<table class="table table-bordered" id="accession_info_table"><thead><tr><th>Plant Name</th><th>Accession Name</th><th>Description</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" id="accession_info_table"><thead><tr><th>Original Name</th><th>New Accession Name</th><th>Description</th></tr></thead><tbody>';
         for (var i=0; i<derived_from_list.length; i++){
             html = html + '<tr><td>' + derived_from_list[i] + '</td><td><input class="form-control"  name ="new_derived_accession_name" id="new_derived_accession_name_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="accession_description" id="accession_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
         };
@@ -198,10 +198,15 @@ jQuery(document).ready(function(){
         });
     });
 
-
+    jQuery("[name = 'add_derived_accessions_using_list_dismiss_button']").click(function() {
+        jQuery("#add_derived_accessions_using_list_dialog").modal("hide");
+        jQuery('#derived_from_type').val('');
+        jQuery('#derived_from_list_select').val('');
+        const form_div = document.getElementById('derived_accessions_form_div');
+        form_div.innerHTML = '';
+        jQuery("#derived_accession_section").hide();
+    });
 
 });
-
-
 
 </script>
