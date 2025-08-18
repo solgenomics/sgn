@@ -136,8 +136,8 @@ if ($experiment_treatment_cv) {
 }
 my $legacy_experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'Legacy experiment treatment'  , cv_id => $experiment_treatment_cv_id });
 my $legacy_experiment_treatment_root_id;
-if ($experiment_treatment) {
-	$legacy_experiment_treatment_root_id = $experiment_treatment->cvterm_id();
+if ($legacy_experiment_treatment) {
+	$legacy_experiment_treatment_root_id = $legacy_experiment_treatment->cvterm_id();
 } else {
 	die "No EXPERIMENT_TREATMENT root term. Has DB patch been run?\n";
 }

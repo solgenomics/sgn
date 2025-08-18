@@ -142,7 +142,7 @@ sub patch {
         my $isa_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'is_a'  , cv_id => $rel_cv_id });
         my $isa_id;
         if ($isa_relationship) {
-            $isa_id = $variable_relationship->cvterm_id();
+            $isa_id = $isa_relationship->cvterm_id();
         }
 
         $schema->resultset("Cv::CvtermRelationship")->find_or_create({
