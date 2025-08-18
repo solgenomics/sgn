@@ -27,8 +27,10 @@ host name
 
 =item -m 
 
-map file. If provided links between stock names - image file name , is read from a mapping file.
-Row labels are expected to be unique file names, column header for the associated stocks is 'name' 
+map file. If provided, creates links between stocks and images.
+Row labels are expected to be unique file names, column header for the associated stocks
+are 'file name',  'name', and 'cvterm'. The cvterm column is optional. It should 
+contain the name of the cvterm, not the id. 
 
 =item -i
 
