@@ -27,6 +27,7 @@ $show_grafting_interface => ''
 <& /breeders_toolbox/upload_graft_dialogs.mas &>
 <& /breeders_toolbox/manage_populations_dialogs.mas &>
 <& /breeders_toolbox/trial/add_derived_accessions_using_list_dialog.mas &>
+<& /breeders_toolbox/accessions/upload_derived_accessions_dialog.mas &>
 
 </br>
 <button class="btn btn-default" name="add_accessions_link">Add Accessions Or Upload Accession Info</button> <button class="btn btn-default" id="upload_pedigrees_link">Upload Pedigree File</button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link">Rename Accessions</button>
@@ -34,7 +35,7 @@ $show_grafting_interface => ''
     <button class="btn btn-default" id="upload_grafts_link" >Upload Grafts</button>
 % }
 </br>
-<div class="btn-group"><button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add New Derived Accessions&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" id="add_derived_accessions_using_list_link">Using a List</a></li><li><a href="#" id="upload_derived_accession_file_link" name="upload_derived_accession_file_link">Upload a File</a></li><li></ul></div>
+<div class="btn-group"><button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add Derived Accessions&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" id="add_derived_accessions_using_list_link">Using a List</a></li><li><a href="#" id="upload_derived_accession_file_link" name="upload_derived_accession_file_link">Upload a File</a></li><li></ul></div>
 
 <div>
   </br>
