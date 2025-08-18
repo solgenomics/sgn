@@ -56,6 +56,7 @@ use CXGN::Phenotypes::StorePhenotypes;
 use DateTime;
 use Cwd;
 use File::Temp qw/tempfile/;
+use List::Util qw/max/;
 
 our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_e, $opt_t);
 
@@ -133,21 +134,33 @@ if ($experiment_treatment_cv) {
 } else {
 	die "No experiment_treatment CV found. Has DB patch been run?\n";
 }
-my $experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'Experimental treatment ontology'  , cv_id => $experiment_treatment_cv_id });
-my $experiment_treatment_root_id;
+my $legacy_experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'Legacy experiment treatment'  , cv_id => $experiment_treatment_cv_id });
+my $legacy_experiment_treatment_root_id;
 if ($experiment_treatment) {
-	$experiment_treatment_root_id = $experiment_treatment->cvterm_id();
+	$legacy_experiment_treatment_root_id = $experiment_treatment->cvterm_id();
 } else {
 	die "No EXPERIMENT_TREATMENT root term. Has DB patch been run?\n";
 }
 
+my $get_db_accessions_sql = "SELECT accession FROM dbxref JOIN db USING (db_id) WHERE db.name='EXPERIMENT_TREATMENT';";
 
-my $h = $schema->storage->dbh->prepare($all_trials_q);
+my $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
+$h->execute();
+
+my @accessions;
+
+while (my $accession = $h->fetchrow_array()) {
+	push @accessions, int($accession =~ s/^0+//r);
+}
+
+my $accession_start = max(@accessions) + 1;
+
+$h = $schema->storage->dbh->prepare($all_trials_q);
 $h->execute();
 
 my %new_treatment_cvterms = (); # name => cvterm_id
 my %new_treatment_full_names = (); # name => full name (with ontology)
-my $dbxref_id = 0;
+my $dbxref_id = $accession_start;
 
 while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 
@@ -212,7 +225,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 				push @this_trial_treatments, $treatment_full_name;
 
 				$schema->resultset("Cv::CvtermRelationship")->find_or_create({
-					object_id => $experiment_treatment_root_id,
+					object_id => $legacy_experiment_treatment_root_id,
 					subject_id => $treatment_id,
 					type_id => $variable_id
 				});
