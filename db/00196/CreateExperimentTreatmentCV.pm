@@ -151,7 +151,7 @@ sub patch {
             type_id => $isa_id
 		});
 
-        system("perl $site_basedir/bin/convert_treatment_projects_to_phenotypes.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -e $signing_user");
+        # system("perl $site_basedir/bin/convert_treatment_projects_to_phenotypes.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -e $signing_user");
 
     }
     print STDERR "Patch complete\n";
