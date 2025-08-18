@@ -86,7 +86,7 @@
 
 jQuery(document).ready(function(){
 
-    jQuery('#add_derived_accessions_button').click( function(){
+    jQuery('#add_derived_accessions_using_list_link').click( function(){
         jQuery('#add_derived_accessions_using_list_dialog').modal('show');
     });
 

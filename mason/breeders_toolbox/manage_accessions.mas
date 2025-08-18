@@ -18,20 +18,7 @@ $show_grafting_interface => ''
 
 <div class="well">
 
-<%perl>
-my $grafting_button = "";
-
-if ($show_grafting_interface) {
-
-$grafting_button = '<button class="btn btn-default" id="upload_grafts_link" >Upload Grafts</button>';
-
-}
-
-my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default" name="add_accessions_link">Add Accessions Or Upload Accession Info</button> <button class="btn btn-default" id="upload_pedigrees_link">Upload Pedigree File</button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link">Rename Accessions</button> '.$grafting_button.'</div>';
-
-</%perl>
-
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=> $subtitle  &>
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=> ""  &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
@@ -39,6 +26,15 @@ my $subtitle = '<div style="margin-bottom:-10px"><button class="btn btn-default"
 <& /breeders_toolbox/upload_accession_rename_dialog.mas &>
 <& /breeders_toolbox/upload_graft_dialogs.mas &>
 <& /breeders_toolbox/manage_populations_dialogs.mas &>
+<& /breeders_toolbox/trial/add_derived_accessions_using_list_dialog.mas &>
+
+</br>
+<button class="btn btn-default" name="add_accessions_link">Add Accessions Or Upload Accession Info</button> <button class="btn btn-default" id="upload_pedigrees_link">Upload Pedigree File</button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link">Rename Accessions</button>
+% if (<%$show_grafting_interface%>) {
+    <button class="btn btn-default" id="upload_grafts_link" >Upload Grafts</button>
+% }
+</br>
+<div class="btn-group"><button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add New Derived Accessions&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" id="add_derived_accessions_using_list_link">Using a List</a></li><li><a href="#" id="upload_derived_accession_file_link" name="upload_derived_accession_file_link">Upload a File</a></li><li></ul></div>
 
 <div>
   </br>
