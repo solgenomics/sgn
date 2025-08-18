@@ -205,13 +205,21 @@ if ($opt_m) {
     eval { 
     my $s = CXGN::Tools::File::Spreadsheet->new($map_file); #
     my @rows = $s->row_labels(); #
+    my @cols = $s->column_labels();
     my $image_id;
     foreach my $file_name (@rows) { #
     	my $stock_name = $s->value_at($file_name, 'name'); #
+	print STDERR "RETRIEVED STOCK NAME: $stock_name\n";
+	my $cvterm_name;
+	if (grep(/cvterm/, @cols)) {
+	    $cvterm_name = $s->value_at($file_name, 'cvterm');
+	    print "RETRIEVED CVTERM: $cvterm_name\n";
+	}
+	
 	$name_map{$file_name} = $stock_name;
 	if (my $image_id = store_image($dbh, $db_image_dir, \%image_hash, \%name2id, $chado_table, $stock_name, $opt_i."/".$file_name, "", $sp_person_id, $new_image_count)) {
 	    $new_image_count++;
-	    
+
 	    my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $stock_name } );
 	    if (!$stock_row) {
 		print STDERR "STOCK $stock_name NOT FOUND! PLEASE CHECK THIS ENTRY! IMAGE STORED WITHOUT LINKING.\n";
@@ -219,7 +227,16 @@ if ($opt_m) {
 	    else { 
 		print STDERR "FOUND STOCK $stock_name... associating...\n";
 		link_image($image_id, $stock_row->stock_id, $metadata_id);
+		
+		if ($cvterm_name) {
+		    print STDERR "LINKING IMAGE $image_id WITH cvterm $cvterm_name...\n";
+		    link_cvterm($image_id, $cvterm_name);
+		}
+
 	    }
+	    
+	    
+	    
 	}
     }
     };
@@ -358,6 +375,12 @@ foreach my $file (@files) {
     }
 }
 
+close(F);
+
+print STDERR "Inserted  $new_image_count images.\n";
+print STDERR "Done. \n";
+
+
 sub store_image {
     my $dbh = shift;
     my $db_image_dir = shift;
@@ -409,14 +432,27 @@ sub link_image {
     $sth->execute($stock_id, $image_id, $metadata_id);
 }
 
-#close(ERR);
-close(F);
+sub link_cvterm{
+    my $image_id = shift;
+    my $cvterm_name = shift;
 
+    my $q = "SELECT cvterm_id FROM cvterm where name = ? ";
+    my $h = $dbh->prepare($q);
 
+    $h->execute($cvterm_name);
 
+    my ($cvterm_id) = $h->fetchrow_array();
 
-print STDERR "Inserted  $new_image_count images.\n";
-print STDERR "Done. \n";
+    if ($cvterm_id && $image_id) { 
+	my $iq = "INSERT INTO metadata.md_image_cvterm (image_id, cvterm_id) values (?, ?) RETURNING md_image_cvterm_id";
+	my $ih = $dbh->prepare($iq);
+	$ih->execute($image_id, $cvterm_id);
+	
+    }
+
+    
+}
+
 
 sub usage { 
     print "Usage: load_images.pl -D dbname [ cxgn | sandbox ]  -H dbhost -t [trial mode ] -i input dir -r chado table name for the object to link with the image \n";
