@@ -6,6 +6,8 @@
   my $d2s_host = $c->config->{'d2s_host'};
 </%perl>
 
+<& /util/import_javascript.mas, classes => ["CXGN.BreedersToolbox.D2SIntegration"]&>
+
 <div id="d2s_container" style="background-color: #3D5A80; padding: 5px; border-radius: 3px; box-shadow: inset 0 2px 2px rgba(0,0,0,.2); text-align: center">
   <img src="/static/img/d2s.png" style="height: 70px; max-width: 100%; padding: 15px" />
 
@@ -17,10 +19,10 @@
   </div>
 
   <div id="d2s_link" style="display: none">
-    <a id="d2s_link_button" class="btn btn-default" style="margin: 10px; color: #3D5A80; white-space: normal !important" target="_blank">
-      <span class="glyphicon glyphicon-share" style="margin-right: 5px"></span>
-      View Data2Science Project
-    </a>
+    <div id="d2s_link_loading">
+      <span class="loader"></span>
+    </div>
+    <div id="d2s_link_found" style="display: none"></div>
     <br />
     <a id="d2s_update_api_key" style="color: #ffffff" href="#">Update your D2S API Key</a>
   </div>
@@ -35,8 +37,8 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-          <p>In order to display information from <a href="<% $d2s_host %>" target="_blank">Data2Science</a> on breedbase, 
-          you'll need to add your D2S API Key to your breedbase account.  This will allow breedbase to fetch D2S data that 
+          <p>In order to display information from <a href="<% $d2s_host %>" target="_blank">Data2Science</a> on breedbase,
+          you'll need to add your D2S API Key to your breedbase account.  This will allow breedbase to fetch D2S data that
           your D2S account has access to.</p>
           <p>To link your accounts, follow these instructions:</p>
           <ol style="line-height: 25px">
@@ -54,8 +56,6 @@
             </form>
             <button id="d2s_save_button" type="button" class="btn btn-primary" style="margin: 25px 0">Save API Key</button>
           </ol>
-
-            
         </div>
       </div>
       <div class="modal-footer">
@@ -67,43 +67,51 @@
 
 
 <script type="text/javascript">
+  var BB_TRIAL_ID = <% $trial_id %>;
+  var D2S_HOST = "<% $d2s_host %>";
+  var D2S;
 
-  // Check if the user has a D2S API key saved
-  function getApiKey() {
-    jQuery.ajax({
-      url: "/ajax/user/preferences/d2s_api_key",
-      success: (resp) => {
-        var d2s_api_key = resp?.d2s_api_key;
-        jQuery("#d2s_login").css("display", !d2s_api_key ? 'block' : 'none');
-        jQuery("#d2s_link").css("display", !!d2s_api_key ? 'block' : 'none');
+  // Display the linked projects, if there is an api key
+  // Display the login instructions, if there is no api key
+  async function displayLinks() {
+    jQuery("#d2s_login").css("display", !D2S.hasApiKey() ? 'block' : 'none');
+    jQuery("#d2s_link").css("display", D2S.hasApiKey() ? 'block' : 'none');
+
+    // Get the links, when there is an API Key set
+    if ( D2S.hasApiKey() ) {
+      const links = await D2S.getBBConnections(BB_TRIAL_ID).catch((err) => console.log(err));
+
+      // Build button links for each linked project
+      if ( links && links.length > 0 ) {
+        const html = links.map((l) => `
+          <a href="${l.url}" class="btn btn-default" style="margin: 10px; color: #3D5A80; white-space: normal !important" target="_blank">
+            <span class="glyphicon glyphicon-share" style="margin-right: 5px"></span>
+            View ${l.name}
+          </a>
+        `);
+        jQuery("#d2s_link_found").html(html.join('<br />'));
       }
-    });
+
+      // There are no linked projects...
+      else {
+        jQuery("#d2s_link_found").html("<br /><span style='color: #fff; font-style: italic;'>No linked D2S Projects for this Trial</span><br />");
+      }
+
+      // Hide the loading spinner and display the links
+      jQuery("#d2s_link_loading").css("display", 'none');
+      jQuery("#d2s_link_found").css("display", 'block');
+    }
   }
 
   // Save the user-provided API key to their breedbase user preferences
-  function saveAPIKey() {
+  async function saveApiKey() {
     var value = jQuery("#d2s_api_key").val();
     if ( !value || value === '' ) {
       return alert("Please enter a D2S API Key first");
     }
-    jQuery.ajax({
-      method: 'POST',
-      url: "/ajax/user/preferences",
-      data: { "d2s_api_key": value },
-      success: (resp) => {
-        if ( resp && resp.d2s_api_key === value ) {
-          alert("Your D2S API Key was succesfully saved");
-          getApiKey();
-          hideIntegrationInstructions();
-        }
-        else {
-          alert("Your D2S API Key was NOT saved.  Please try again later.");
-        }
-      },
-      error: () => {
-        alert("There was an error saving your API Key.  Please try again later.");
-      }
-    });
+    await D2S.saveApiKey(value).catch((err) => alert(err));
+    hideIntegrationInstructions();
+    await displayLinks();
   }
 
   // Show integration instructions
@@ -114,16 +122,39 @@
     jQuery('#d2s_integration_dialog').modal('hide');
   }
 
-  jQuery(document).ready(() => {
+  jQuery(document).ready(async () => {
+    D2S = await new D2SAPI(D2S_HOST).init();
 
-    // Check if user has stored D2S API Key
-    getApiKey();
+    // Toggle the display of the link sections
+    await displayLinks();
 
     // Show integration instructions
     jQuery('#d2s_login_button, #d2s_update_api_key').click(showIntegrationInstructions);
 
     // Save API Key
-    jQuery('#d2s_save_button').click(saveAPIKey);
-
+    jQuery('#d2s_save_button').click(saveApiKey);
   });
 </script>
+
+
+<style type="text/css">
+  .loader {
+    width: 24px;
+    height: 24px;
+    border: 4px solid #FFF;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+  }
+
+  @keyframes rotation {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
