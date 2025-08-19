@@ -614,8 +614,8 @@ for my $extension ("xls", "xlsx") {
 
     #test retrieving cross and family info using progeny name
     my $progeny_rs = $schema->resultset("Stock::Stock")->find( { uniquename => 'update_progeny3' });
-    my $progeny_id = $progeny_rs->stock_id;
-    my $info = CXGN::Cross->get_progeny_cross_family_info($schema, $progeny_id);
+    my @progeny_array = ($progeny_rs->stock_id);
+    my $info = CXGN::Cross->get_progeny_cross_family_info($schema, \@progeny_array);
     my $female_parent_name = $info->[0]->[3];
     my $male_parent_name = $info->[0]->[5];
     my $cross_type = $info->[0]->[6];
@@ -632,8 +632,8 @@ for my $extension ("xls", "xlsx") {
     is($crossing_experiment, 'test_crossingtrial2');
 
     my $progeny_rs_2 = $schema->resultset("Stock::Stock")->find( { uniquename => 'update_progeny5' });
-    my $progeny_id_2 = $progeny_rs_2->stock_id;
-    my $info_2 = CXGN::Cross->get_progeny_cross_family_info($schema, $progeny_id_2);
+    my @progeny_array_2 = ($progeny_rs_2->stock_id);
+    my $info_2 = CXGN::Cross->get_progeny_cross_family_info($schema, \@progeny_array_2);
     my $female_parent_name_2 = $info_2->[0]->[3];
     my $male_parent_name_2 = $info_2->[0]->[5];
     my $cross_type_2 = $info_2->[0]->[6];
