@@ -1720,7 +1720,7 @@ sub get_plots_of_plants_used_in_crossing_experiment {
 sub get_progeny_cross_family_info {
     my $self = shift;
     my $schema = shift;
-    my $progeny_stock_id = shift;
+    my $progeny_stock_ids = shift;
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
@@ -1730,6 +1730,10 @@ sub get_progeny_cross_family_info {
     my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
     my $family_stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property')->cvterm_id();
     my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
+
+    my @progeny_array = @$progeny_stock_ids;
+    my $placeholder = join ",",("?") x @progeny_array;
+    my $where_clause = "stock.stock_id IN ($placeholder)";
 
     my $q ="SELECT stock.stock_id, stock.uniquename, female_accession.stock_id, female_accession.uniquename, male_accession.stock_id, male_accession.uniquename,
         female_relationship.value, cross_unique_id.stock_id, cross_unique_id.uniquename, family_name.stock_id, family_name.uniquename, stockprop.value, project.project_id, project.name
@@ -1746,10 +1750,10 @@ sub get_progeny_cross_family_info {
         LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross_unique_id.stock_id) AND nd_experiment_stock.type_id = ?
         LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         LEFT JOIN project ON (nd_experiment_project.project_id = project.project_id)
-        WHERE stock.stock_id = ?";
+        WHERE $where_clause";
 
         my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $accession_type_id, $offspring_of_type_id, $cross_type_id, $cross_member_of_type_id, $family_type_id, $family_stockprop_type_id, $cross_experiment_type_id, $progeny_stock_id);
+        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $accession_type_id, $offspring_of_type_id, $cross_type_id, $cross_member_of_type_id, $family_type_id, $family_stockprop_type_id, $cross_experiment_type_id, @progeny_array);
 
         my @progeny_cross_family_info = ();
         while(my ($progeny_id, $progeny_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $cross_id, $cross_name, $family_id, $family_name, $family_type, $project_id, $project_name) = $h->fetchrow_array()){

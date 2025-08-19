@@ -51,6 +51,7 @@ use CXGN::Stock::ObsoletedStocks;
 use CXGN::People::Person;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::Cross;
+use Sort::Key::Natural qw(natkeysort);
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -2106,21 +2107,26 @@ sub download_cross_family_of_progenies : Path('/breeders/download_cross_family_o
 
     my $progeny_list = SGN::Controller::AJAX::List->retrieve_list($c, $progeny_list_id);
     my @progeny_names = map { $_->[1] } @$progeny_list;
-
-    my @download_rows;
+    my @progeny_stock_ids = ();
     foreach my $progeny(sort@progeny_names) {
         my $progeny_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $progeny });
         my $progeny_id = $progeny_rs->stock_id;
+        push @progeny_stock_ids, $progeny_id;
+    }
 
-        my $info = CXGN::Cross->get_progeny_cross_family_info($schema, $progeny_id);
-        my $progeny_name = $info->[0]->[1];
-        my $female_parent_name = $info->[0]->[3];
-        my $male_parent_name = $info->[0]->[5];
-        my $cross_type = $info->[0]->[6];
-        my $cross_unique_id = $info->[0]->[8];
-        my $family_name = $info->[0]->[10];
-        my $family_type = $info->[0]->[11];
-        my $crossing_experiment = $info->[0]->[13];
+    my @download_rows;
+    my $all_info = CXGN::Cross->get_progeny_cross_family_info($schema, \@progeny_stock_ids);
+    my @sorted_names = natkeysort {($_->[1])} @$all_info;
+
+    foreach my $info (@sorted_names) {
+        my $progeny_name = $info->[1];
+        my $female_parent_name = $info->[3];
+        my $male_parent_name = $info->[5];
+        my $cross_type = $info->[6];
+        my $cross_unique_id = $info->[8];
+        my $family_name = $info->[10];
+        my $family_type = $info->[11];
+        my $crossing_experiment = $info->[13];
         push @download_rows, [$progeny_name, $female_parent_name, $male_parent_name, $cross_type, $cross_unique_id, $family_name, $family_type, $crossing_experiment];
     }
 
