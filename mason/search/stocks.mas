@@ -10,6 +10,7 @@
   $stock_types     => undef
   $breeding_programs => undef
   $editable_stock_props => undef
+  $submitter_obsolete_privilege => undef
 </%args>
 
 <%perl>
@@ -144,7 +145,7 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     <div id="editable_stockprop_search_div"></div>
 
-% if ( $user_role eq 'curator' ) {
+% if (( $user_role eq 'curator' ) || (($user_role eq 'submitter') && $submitter_obsolete_privilege)) {
     <br /><hr /><br />
     <div class="row">
       <div class="form-group form-group-sm">
@@ -587,7 +588,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
     } else if (obsolete_stock_search_term == 'include_obsolete') {
         include_obsolete = 'true';
     }
-    
+
     stock_table = jQuery('#stock_search_results').DataTable({
         'destroy' : true,
         'searching' : false,

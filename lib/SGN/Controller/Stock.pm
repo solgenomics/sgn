@@ -53,6 +53,7 @@ has 'default_page_size' => (
 sub stock_search :Path('/search/stocks') Args(0) {
     my ($self, $c ) = @_;
     my @editable_stock_props = split ',',$c->get_conf('editable_stock_props');
+    my $submitter_obsolete_privilege = $c->config->{submitter_obsolete_privilege};
     $c->stash(
 	template => '/search/stocks.mas',
 
@@ -63,7 +64,8 @@ sub stock_search :Path('/search/stocks') Args(0) {
         onto_autocomplete_uri      => '/ajax/cvterm/autocomplete',
 	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
 	breeding_programs          => breeding_programs($self->schema),
-    editable_stock_props => \@editable_stock_props
+    editable_stock_props => \@editable_stock_props,
+    submitter_obsolete_privilege => $submitter_obsolete_privilege
 	);
 
 }
