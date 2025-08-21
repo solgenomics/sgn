@@ -17,8 +17,8 @@
                     <h5>Upload Exported Fieldbook Phenotype File in Database Format for Plots or Plants</h5>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Data Level: </label>
-                    <div class="col-sm-9" >
+                    <label class="col-sm-6 control-label">Data Level: </label>
+                    <div class="col-sm-6" >
                         <select class="form-control" id="upload_fieldbook_phenotype_data_level" name="upload_fieldbook_phenotype_data_level">
                             <option value="plots">Plots</option>
                             <option value="plants">Plants</option>
@@ -27,14 +27,14 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Fieldbook File: </label>
-                    <div class="col-sm-9" >
+                    <label class="col-sm-6 control-label">Fieldbook File: </label>
+                    <div class="col-sm-6" >
                         <input type="file" id="upload_fieldbook_phenotype_file_input" name="upload_fieldbook_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Optional: Images ZipFile (.zip): </label>
-                    <div class="col-sm-9" >
+                    <label class="col-sm-6 control-label">Optional: Images ZipFile (.zip): </label>
+                    <div class="col-sm-6" >
                         <input type="file" id="upload_fieldbook_phenotype_images_zipfile" name="upload_fieldbook_phenotype_images_zipfile" encoding="multipart/form-data" />
                     </div>
                 </div>

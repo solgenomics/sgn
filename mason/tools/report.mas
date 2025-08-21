@@ -137,7 +137,7 @@
     </form>
   </div>
   <div id="loading-message" style="display:none; color: blue; font-weight: bold; margin-top: 15px;">
-  Processing your request... Please wait.
+  Your report was submitted. You’ll receive an email when it’s ready. Feel free to navigate to other pages.
 </div>
 
 <div id="final-message" style="display:none; color: green; font-weight: bold; margin-top: 15px;">
@@ -207,12 +207,25 @@
         dataType: "json",
         success: function(response) {
           $("#loading-message").hide();
-          $("#final-message").text("Your code was successfully processed! Please check results by email.").show();
+          if (response.success) {
+            $("#final-message")
+              .css("color", "green")
+              .text(response.message || "Your report was submitted. You’ll receive an email when it’s ready.")
+              .show();
+          } else {
+            $("#final-message")
+              .css("color", "red")
+              .text("Error: " + (response.error || "Unknown error."))
+              .show();
+          }
         },
         error: function(xhr, status, error) {
           console.error("AJAX Error:", error);
           $("#loading-message").hide();
-          $("#final-message").css("color", "red").text("Error sending report: " + error).show();
+          $("#final-message")
+            .css("color", "red")
+            .text("Error sending report: " + error)
+            .show();
         }
       });
     });
