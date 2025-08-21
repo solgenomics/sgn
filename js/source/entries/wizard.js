@@ -46,13 +46,14 @@ const toValidateType = (t) => (t === "tissue_sample" ? "tissue_samples" : t);
 const toLoadType = (t) => (t === "tissue_samples" ? "tissue_sample" : t);
 
 // Allow both forms when FETCHING lists so legacy lists appear
-const fetchTypes = [...new Set([...initialtypes, "tissue_sample"])];
+const fetchTypes = [...new Set([...initialtypes, "tissue_sample", "subplots"])];
 
 function makeURL(target, id) {
   switch (target) {
     case "accessions":
     case "plants":
     case "plots":
+    case "subplot":
     case "tissue_sample":
     case "tissue_samples": // support both; URLs expect stock path
       return document.location.origin + `/stock/${id}/view`;
@@ -137,13 +138,13 @@ export function WizardSetup(main_id) {
         const ldata = list.getListData(listID);
 
         const rawType      = (ldata?.type_name ?? "").trim();
-        const validateType = toValidateType(rawType); // plural for validation/UI
-        const loadType     = toLoadType(validateType); // singular for data/URLs
+        const validateType = toValidateType(rawType);
+        const loadType     = toLoadType(validateType);
 
-        // Validation (clearer with .includes)
-        if (!initialtypes.includes(validateType)) {
+        if (!fetchTypes.includes(validateType)) {
           setTimeout(() => alert("List is not of an appropriate type."), 1);
         }
+
 
         // Build items; if transform2Ids fails, fall back to elements
         const elements = Array.isArray(ldata?.elements) ? ldata.elements : [];
