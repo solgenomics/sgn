@@ -46,7 +46,7 @@ const toValidateType = (t) => (t === "tissue_sample" ? "tissue_samples" : t);
 const toLoadType = (t) => (t === "tissue_samples" ? "tissue_sample" : t);
 
 // Allow both forms when FETCHING lists so legacy lists appear
-const fetchTypes = [...new Set([...initialtypes, "tissue_sample", "subplots"])];
+const fetchTypes = [...new Set([...initialtypes, "tissue_sample", "subplots", "plants", "plots"])];
 
 function makeURL(target, id) {
   switch (target) {
