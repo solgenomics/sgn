@@ -98,24 +98,26 @@ sub patch {
             name => 'composed_experiment_treatment'
         })->cv_id();
 
-        my $treatment_ontology_cvterm_id = $schema->resultset("Cv::Cvterm")->create_with(
+        my $treatment_ontology_cvterm_id = $schema->resultset("Cv::Cvterm")->create_with({
             name => 'experiment_treatment_ontology',
             cv => 'composable_cvtypes'
-        )->cvterm_id();
+        })->cvterm_id();
 
-        my $composed_treatment_ontology_cvterm_id = $schema->resultset("Cv::Cvterm")->create_with(
+        my $composed_treatment_ontology_cvterm_id = $schema->resultset("Cv::Cvterm")->create_with({
             name => 'composed_experiment_treatment_ontology',
             cv => 'composable_cvtypes'
-        )->cvterm_id();
+        })->cvterm_id();
 
         $schema->resultset("Cv::Cvprop")->create({
             cv_id   => $treatment_cv_id,
-            type_id => $treatment_ontology_cvterm_id
+            type_id => $treatment_ontology_cvterm_id,
+            rank => 0
         });
 
         $schema->resultset("Cv::Cvprop")->create({
             cv_id   => $composed_treatment_cv_id,
-            type_id => $composed_treatment_ontology_cvterm_id
+            type_id => $composed_treatment_ontology_cvterm_id,
+            rank => 0
         });
 
         my $experiment_treatment_root_id = $schema->resultset("Cv::Cvterm")->create_with({
@@ -151,7 +153,7 @@ sub patch {
             type_id => $isa_id
 		});
 
-        # system("perl $site_basedir/bin/convert_treatment_projects_to_phenotypes.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -e $signing_user");
+        system("perl $site_basedir/bin/convert_treatment_projects_to_phenotypes.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -e $signing_user");
 
     }
     print STDERR "Patch complete\n";

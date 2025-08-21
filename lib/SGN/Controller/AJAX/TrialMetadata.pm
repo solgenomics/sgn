@@ -14,7 +14,6 @@ use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Cross;
-
 use CXGN::Phenotypes::TrialPhenotype;
 use CXGN::Login;
 use CXGN::UploadFile;
@@ -36,6 +35,7 @@ use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
 use CXGN::BreedersToolbox::SoilData;
 use CXGN::Genotype::GenotypingProject;
+use Cwd;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -817,7 +817,7 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_plants_file');
-    my $inherits_plot_treatments = $c->req->param('upload_plants_per_plot_inherit_treatments');
+    my $inherits_plot_treatments = 1; #$c->req->param('upload_plants_per_plot_inherit_treatments');
     my $plants_per_plot = $c->req->param('upload_plants_per_plot_number');
 
     my $subdirectory = "trial_plants_upload";
@@ -866,24 +866,51 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         $c->detach();
     }
 
-    my $upload_plants_txn = sub {
-        my %plot_plant_hash;
-        my $parsed_entries = $parsed_data->{data};
-        foreach (@$parsed_entries){
-            $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
-            if ($_->{row_num} && $_->{col_num}) {
-                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
-            }
-            push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
+    my %plot_plant_hash;
+    my $parsed_entries = $parsed_data->{data};
+    foreach (@$parsed_entries){
+        $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+        if ($_->{row_num} && $_->{col_num}) {
+            push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
+        push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
+    }
+
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+
+    eval {
+        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_plants_txn);
     };
     if ($@) {
         $c->stash->{rest} = { error => $@ };
@@ -929,7 +956,7 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_plants_subplot_file');
-    my $inherits_plot_treatments = $c->req->param('upload_plants_per_subplot_inherit_treatments');
+    my $inherits_plot_treatments = 1; #$c->req->param('upload_plants_per_subplot_inherit_treatments');
     my $plants_per_subplot = $c->req->param('upload_plants_per_subplot_number');
 
     my $subdirectory = "trial_plants_upload";
@@ -978,24 +1005,50 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         $c->detach();
     }
 
-    my $upload_plants_txn = sub {
-        my %subplot_plant_hash;
-        my $parsed_entries = $parsed_data->{data};
-        foreach (@$parsed_entries){
-            $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
-            if ($_->{row_num} && $_->{col_num}) {
-                push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
-            }
-            push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
+    my %subplot_plant_hash;
+    my $parsed_entries = $parsed_data->{data};
+    foreach (@$parsed_entries){
+        $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
+        if ($_->{row_num} && $_->{col_num}) {
+            push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id);
+        push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
+    }
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+        
+    eval {
+        $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_plants_txn);
     };
     if ($@) {
         $c->stash->{rest} = { error => $@ };
@@ -1041,7 +1094,7 @@ sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0)
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_subplots_file');
-    my $inherits_plot_treatments = $c->req->param('upload_subplots_per_plot_inherit_treatments');
+    my $inherits_plot_treatments = 1; #$c->req->param('upload_subplots_per_plot_inherit_treatments');
     my $subplots_per_plot = $c->req->param('upload_subplots_per_plot_number');
 
     my $subdirectory = "trial_subplots_upload";
@@ -1097,8 +1150,38 @@ sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0)
             $plot_subplot_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
             push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
-        $t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id);
+
+        my $temp_basedir = $c->config->{tempfiles_subdir};
+        my $site_basedir = getcwd();
+        if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+            mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+        }
+        my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+        my $phenotype_store_config = {
+            basepath => "$site_basedir/$temp_basedir",
+            dbhost => $c->config->{dbhost},
+            dbuser => $c->config->{dbuser},
+            dbname => $c->config->{dbname},
+            dbpass => $c->config->{dbpass},
+            temp_file_nd_experiment_id => $tempfile,
+            user_id => $user_id,
+            metadata_hash => {
+                archived_file => 'none',
+                archived_file_type => 'new stock treatment auto inheritance',
+                operator => $user_name,
+                date => $timestamp
+            }
+        };
+
+        my $t = CXGN::Trial->new({ 
+            bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+            phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+            trial_id => $c->stash->{trial_id} 
+        });
+
+        $t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
@@ -1150,7 +1233,7 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_plants_with_index_number_file');
-    my $inherits_plot_treatments = $c->req->param('upload_plants_with_index_number_inherit_treatments');
+    my $inherits_plot_treatments = 1; #$c->req->param('upload_plants_with_index_number_inherit_treatments');
     my $plants_per_plot = $c->req->param('upload_plants_with_index_number_per_plot_number');
 
     my $subdirectory = "trial_plants_upload";
@@ -1199,25 +1282,52 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
         $c->detach();
     }
 
-    my $upload_plants_txn = sub {
-        my %plot_plant_hash;
-        my $parsed_entries = $parsed_data->{data};
-        foreach (@$parsed_entries){
-            $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
-            push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
-            push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
-            if ($_->{row_num} && $_->{col_num}) {
-                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
-            }
+    my %plot_plant_hash;
+    my $parsed_entries = $parsed_data->{data};
+    foreach (@$parsed_entries){
+        $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+        push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
+        push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+        if ($_->{row_num} && $_->{col_num}) {
+            push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
+    }
+
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+
+    eval {
+        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_plants_txn);
     };
     if ($@) {
         $c->stash->{rest} = { error => $@ };
@@ -1263,7 +1373,7 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_plants_subplot_with_index_number_file');
-    my $inherits_plot_treatments = $c->req->param('upload_plants_subplot_with_index_number_inherit_treatments');
+    my $inherits_plot_treatments = 1; #$c->req->param('upload_plants_subplot_with_index_number_inherit_treatments');
     my $plants_per_subplot = $c->req->param('upload_plants_subplot_with_index_number_per_subplot_number');
 
     my $subdirectory = "trial_plants_upload";
@@ -1312,25 +1422,52 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
         $c->detach();
     }
 
-    my $upload_plants_txn = sub {
-        my %subplot_plant_hash;
-        my $parsed_entries = $parsed_data->{data};
-        foreach (@$parsed_entries){
-            $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
-            push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
-            push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
-            if ($_->{row_num} && $_->{col_num}) {
-                push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
-            }
+    my %subplot_plant_hash;
+    my $parsed_entries = $parsed_data->{data};
+    foreach (@$parsed_entries){
+        $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
+        push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
+        push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+        if ($_->{row_num} && $_->{col_num}) {
+            push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id);
+    }
+
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+        
+    eval {
+        $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_plants_txn);
     };
     if ($@) {
         $c->stash->{rest} = { error => $@ };
@@ -1376,7 +1513,7 @@ sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_subplots_with_index_number_file');
-    my $inherits_plot_treatments = $c->req->param('upload_subplots_with_index_number_inherit_treatments');
+    my $inherits_plot_treatments = 1; #$c->req->param('upload_subplots_with_index_number_inherit_treatments');
     my $subplots_per_plot = $c->req->param('upload_subplots_with_index_number_per_plot_number');
 
     my $subdirectory = "trial_subplots_upload";
@@ -1433,8 +1570,36 @@ sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_
             push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
             push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_index_numbers}}, $_->{subplot_index_number};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
-        $t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id);
+        my $t = CXGN::Trial->new({ 
+            bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+            phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+            trial_id => $c->stash->{trial_id} 
+        });
+
+        my $temp_basedir = $c->config->{tempfiles_subdir};
+        my $site_basedir = getcwd();
+        if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+            mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+        }
+        my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+        my $phenotype_store_config = {
+            basepath => "$site_basedir/$temp_basedir",
+            dbhost => $c->config->{dbhost},
+            dbuser => $c->config->{dbuser},
+            dbname => $c->config->{dbname},
+            dbpass => $c->config->{dbpass},
+            temp_file_nd_experiment_id => $tempfile,
+            user_id => $user_id,
+            metadata_hash => {
+                archived_file => 'none',
+                archived_file_type => 'new stock treatment auto inheritance',
+                operator => $user_name,
+                date => $timestamp
+            }
+        };
+        $t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
@@ -1486,7 +1651,7 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_plants_with_number_of_plants_file');
-    my $inherits_plot_treatments = $c->req->param('upload_plants_with_num_plants_inherit_treatments');
+    my $inherits_plot_treatments = 1; #$c->req->param('upload_plants_with_num_plants_inherit_treatments');
     my $plants_per_plot = $c->req->param('upload_plants_with_num_plants_per_plot_number');
 
     my $subdirectory = "trial_plants_upload";
@@ -1535,25 +1700,51 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         $c->detach();
     }
 
-    my $upload_plants_txn = sub {
-        my %plot_plant_hash;
-        my $parsed_entries = $parsed_data->{data};
-        foreach (@$parsed_entries){
-            $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
-            push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
-            push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
-            if ($_->{row_num} && $_->{col_num}) {
-                push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
-            }
+    my %plot_plant_hash;
+    my $parsed_entries = $parsed_data->{data};
+    foreach (@$parsed_entries){
+        $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+        push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
+        push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+        if ($_->{row_num} && $_->{col_num}) {
+            push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
+    }
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+
+    eval {
+        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_plants_txn);
     };
     if ($@) {
         $c->stash->{rest} = { error => $@ };
@@ -1599,7 +1790,7 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_plants_subplot_with_number_of_plants_file');
-    my $inherits_plot_treatments = $c->req->param('upload_plants_subplot_with_num_plants_inherit_treatments');
+    my $inherits_plot_treatments = 1; #$c->req->param('upload_plants_subplot_with_num_plants_inherit_treatments');
     my $plants_per_subplot = $c->req->param('upload_plants_subplot_with_num_plants_per_subplot_number');
 
     my $subdirectory = "trial_plants_upload";
@@ -1648,25 +1839,51 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
         $c->detach();
     }
 
-    my $upload_plants_txn = sub {
-        my %subplot_plant_hash;
-        my $parsed_entries = $parsed_data->{data};
-        foreach (@$parsed_entries){
-            $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
-            push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
-            push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
-            if ($_->{row_num} && $_->{col_num}) {
-                push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
-            }
+    my %subplot_plant_hash;
+    my $parsed_entries = $parsed_data->{data};
+    foreach (@$parsed_entries){
+        $subplot_plant_hash{$_->{subplot_stock_id}}->{subplot_name} = $_->{subplot_name};
+        push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
+        push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
+        if ($_->{row_num} && $_->{col_num}) {
+            push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id);
+    }
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+        
+    };
+    eval {
+        $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_plants_txn);
     };
     if ($@) {
         $c->stash->{rest} = { error => $@ };
@@ -1712,7 +1929,7 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_subplots_with_number_of_subplots_file');
-    my $inherits_plot_treatments = $c->req->param('upload_subplots_with_num_subplots_inherit_treatments');
+    my $inherits_plot_treatments = 1; #$c->req->param('upload_subplots_with_num_subplots_inherit_treatments');
     my $subplots_per_plot = $c->req->param('upload_subplots_with_num_subplots_per_plot_number');
 
     my $subdirectory = "trial_subplots_upload";
@@ -1769,8 +1986,36 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
             push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
             push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_index_numbers}}, $_->{subplot_index_number};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
-        $t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id);
+        my $t = CXGN::Trial->new({ 
+            bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+            phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+            trial_id => $c->stash->{trial_id} 
+        });
+
+        my $temp_basedir = $c->config->{tempfiles_subdir};
+        my $site_basedir = getcwd();
+        if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+            mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+        }
+        my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+        my $phenotype_store_config = {
+            basepath => "$site_basedir/$temp_basedir",
+            dbhost => $c->config->{dbhost},
+            dbuser => $c->config->{dbuser},
+            dbname => $c->config->{dbname},
+            dbpass => $c->config->{dbpass},
+            temp_file_nd_experiment_id => $tempfile,
+            user_id => $user_id,
+            metadata_hash => {
+                archived_file => 'none',
+                archived_file_type => 'new stock treatment auto inheritance',
+                operator => $user_name,
+                date => $timestamp
+            }
+        };
+        $t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
@@ -2886,7 +3131,7 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     my $plant_owner = $c->user->get_object->get_sp_person_id;
     my $plant_owner_username = $c->user->get_object->get_username;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
-    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $inherits_plot_treatments = 1; #$c->req->param("inherits_plot_treatments");
     my $include_plant_coordinates = $c->req->param('include_plant_coordinates');
     my $num_rows = $c->req->param('rows_per_plot');
     my $num_cols = $c->req->param('cols_per_plot');
@@ -2906,9 +3151,40 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     }
 
     my $user_id = $c->user->get_object->get_sp_person_id();
-    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
+    my $user_name = $c->user->get_object->get_username();
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
 
-    my @plant_entity_params = ($plants_per_plot, $plants_with_treatments, $user_id, $plant_owner_username);
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+    my @plant_entity_params = ($plants_per_plot, $inherits_plot_treatments, $user_id, $plant_owner_username);
 
     if ($include_plant_coordinates) {
 
@@ -2924,9 +3200,15 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
 
         push @plant_entity_params, $num_rows;
         push @plant_entity_params, $num_cols;
+    } else {
+        push @plant_entity_params, undef;
+        push @plant_entity_params, undef;
     }
 
+    push @plant_entity_params, $phenotype_store_config;
+
     if ($t->create_plant_entities(@plant_entity_params)) {
+
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
@@ -2947,7 +3229,7 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     my $plant_owner = $c->user->get_object->get_sp_person_id;
     my $plant_owner_username = $c->user->get_object->get_username;
     my $plants_per_subplot = $c->req->param("plants_per_subplot") || 8;
-    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $inherits_plot_treatments = 1; #$c->req->param("inherits_plot_treatments");
     my $include_plant_coordinates = $c->req->param('include_plant_coordinates');
     my $num_rows = $c->req->param('rows_per_plot');
     my $num_cols = $c->req->param('cols_per_plot');
@@ -2967,9 +3249,40 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     }
 
     my $user_id = $c->user->get_object->get_sp_person_id();
-    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
+    my $user_name = $c->user->get_object->get_username();
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
 
-    my @subplot_plant_entity_params = ($plants_per_subplot, $plants_with_treatments, $user_id, $plant_owner_username);
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+    my @subplot_plant_entity_params = ($plants_per_subplot, $inherits_plot_treatments, $user_id, $plant_owner_username);
 
     if ($include_plant_coordinates) {
 
@@ -2985,7 +3298,12 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
 
         push @subplot_plant_entity_params, $num_rows;
         push @subplot_plant_entity_params, $num_cols;
+    } else {
+        push @subplot_plant_entity_params, undef;
+        push @subplot_plant_entity_params, undef;
     }
+
+    push @subplot_plant_entity_params, $phenotype_store_config;
 
     if ($t->create_plant_subplot_entities(@subplot_plant_entity_params)) {
 
@@ -3008,7 +3326,7 @@ sub create_subplot_entries : Chained('trial') PathPart('create_subplot_entries')
     my $subplot_owner = $c->user->get_object->get_sp_person_id;
     my $subplot_owner_username = $c->user->get_object->get_username;
     my $subplots_per_plot = $c->req->param("subplots_per_plot") || 4;
-    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $inherits_plot_treatments = 1; #$c->req->param("inherits_plot_treatments");
     my $subplots_with_treatments;
     if($inherits_plot_treatments eq '1'){
         $subplots_with_treatments = 1;
@@ -3025,9 +3343,40 @@ sub create_subplot_entries : Chained('trial') PathPart('create_subplot_entries')
     }
 
     my $user_id = $c->user->get_object->get_sp_person_id();
-    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
+    my $user_name = $c->user->get_object->get_username();
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
 
-    if ($t->create_subplot_entities($subplots_per_plot, $subplots_with_treatments, $user_id)) {
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+    if ($t->create_subplot_entities($subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -3049,7 +3398,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     my $tissue_owner_username = $c->user->get_object->get_username;
     my $tissues_per_plant = $c->req->param("tissue_samples_per_plant") || 3;
     my $tissue_names = decode_json $c->req->param("tissue_samples_names");
-    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $inherits_plot_treatments = 1; #$c->req->param("inherits_plot_treatments");
     my $use_tissue_numbers = $c->req->param("use_tissue_numbers");
     my $tissues_with_treatments;
     if($inherits_plot_treatments eq '1'){
@@ -3077,9 +3426,41 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     }
 
     my $user_id = $c->user->get_object->get_sp_person_id();
-    my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $c->stash->{trial_id} });
+    my $user_name = $c->user->get_object->get_username();
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
 
-    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $use_tissue_numbers, $user_id)) {
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $use_tissue_numbers, $user_id, $user_name, $phenotype_store_config)) {
+
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

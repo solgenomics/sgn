@@ -209,7 +209,6 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		my $treatment_full_name;
 
 		if (!exists($new_treatment_cvterms{$treatment_name})) { #if this is a new treatment name, make new db entries and get cvterm ids
-			$dbxref_id++;
 			my $zeroes = "0" x (7-length($dbxref_id));
 			eval {
 				$treatment_id = $schema->resultset("Cv::Cvterm")->create_with({
@@ -233,6 +232,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 			if ($@) {
 				die "An error occurred trying to create a new treatment! $@\n";
 			}
+			$dbxref_id++;
 		} else { #if not new treatment, get the treatment cvterm_id and full names
 			$treatment_id = $new_treatment_cvterms{$treatment_name};
 			$treatment_full_name = $new_treatment_full_names{$treatment_name};
@@ -259,9 +259,12 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 
 			my $plot_contents = $plot->get_child_stocks_flat_list(); #treatment values are inherited by child stocks
 
+			push @phenotype_store_stock_list, $plot_name;
+
 			foreach my $child (@{$plot_contents}) {
 				next if ($child->{type} eq "accession"); #dont want to assign a phenotype to an accession, that would be bad
 				$treatment_values_hash->{$child->{name}}->{$treatment_full_name} = $treatment_values_hash->{$plot_name}->{$treatment_full_name};
+				push @phenotype_store_stock_list, $child->{name};
 			}
 		}
 
