@@ -97,47 +97,13 @@ sub image_analysis_submit_POST : Args(0) {
         push @image_urls, $original_img;
         push @image_files, $image_file;
     }
-    print STDERR Dumper \@image_urls;
+    print STDERR "IMAGE URLS: ".Dumper(\@image_urls);
+    print STDERR "IMAGE FILES: ".Dumper(\@image_files);
 
     my $service_details_json = $c->config->{image_analysis_services} || '{}';
 
     my %service_details = %{decode_json($service_details_json)};
     
-    # my %service_details = (
-    #     'necrosis' => {
-    #         server_endpoint => "http://unet.mcrops.org/api/",
-    #         image_type_name => "image_analysis_necrosis_solomon_nsumba",
-    #     },
-    #     'whitefly_count' => {
-    #         server_endpoint => "http://18.216.149.204/home/api2/",
-    #         image_type_name => "image_analysis_white_fly_count_solomon_nsumba",
-    #     },
-    #     'count_contours' => {
-    #         image_type_name => "image_analysis_contours",
-    #         trait_name => "count_contours",
-    #         script => 'GetContours.py',
-    #         input_image => 'image_path',
-    #         outfile_image => 'outfile_path',
-    #         results_outfile => 'results_outfile_path',
-    #     },
-    #     'largest_contour_percent' => {
-    #         image_type_name => 'image_analysis_largest_contour',
-    #         trait_name => 'percent_largest_contour',
-    #         script => 'GetLargestContour.py',
-    #         input_image => 'image_path',
-    #         outfile_image => 'outfile_path',
-    #         results_outfile => 'results_outfile_path',
-    #     },
-    #     'count_sift' => {
-    #         image_type_name => "image_analysis_sift",
-    #         trait_name => "count_sift",
-    #         script => 'ImageProcess/CalculatePhenotypeSift.py',
-    #         input_image => 'image_paths',
-    #         outfile_image => 'outfile_paths',
-    #         results_outfile => 'results_outfile_path',
-    #     }
-    # );
-
     my $image_type_name = $service_details{$service}->{'image_type_name'};
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
@@ -181,11 +147,12 @@ sub image_analysis_submit_POST : Args(0) {
                 if (is_error($rc)) {
                     die "getstore of ".$message_hashref->{image_link}." failed with $rc";
                 }
-                print STDERR Dumper $message_hashref;
+                print STDERR "MESSAGE HASHREF: ".Dumper($message_hashref);
                 $res{'value'} = $message_hashref->{trait_value};
                 $res{'analysis_info'} = $message_hashref->{info} || {};
                 $res{'trait'} = $trait;
                 $res{'trait_id'} = $trait_details->[0]->{trait_id};
+		$res{'subanalyses'} = $message_hashref->{results};
             }
             else {
                 print STDERR Dumper $resp->status_line;
@@ -279,8 +246,8 @@ sub image_analysis_submit_POST : Args(0) {
         $it++;
     }
 
-    # print STDERR "Before grouping result is: ".Dumper($result);
-
+    print STDERR "Before grouping result is: ".Dumper($result);
+    
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
@@ -289,7 +256,7 @@ sub image_analysis_group_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $result = decode_json $c->req->param('result');
-    # print STDERR Dumper($result);
+    print STDERR "IMAGE ANALYSIS RESULTS: ".Dumper($result);
     my %grouped_results = ();
     my @table_data = ();
 
@@ -321,19 +288,24 @@ sub image_analysis_group_POST : Args(0) {
                         value => $value + 0
                 };
         }
-        elsif (exists($results_ref->{results}) && ref($results_ref->{results}) eq "HASH")  { # multiple results are returned, for several sub-images
-	    foreach my $sample (keys %{$results_ref->{results}}) {
-		push @{$grouped_results{$sample}{$trait}}, {
+        elsif (exists($results_ref->{result}->{subanalyses}) && ref($results_ref->{result}->{subanalyses}) eq "HASH")  { # multiple results are returned, for several sub-images
+	    print STDERR "MULTIPLE RESULTS DETECTED!\n";
+	    foreach my $sample (keys %{$results_ref->{result}->{subanalyses}}) {
+		
+		push @{$grouped_results{$uniquename}{$trait}}, {
 		    stock_id => $results_ref->{stock_id},
 		    collector => $results_ref->{image_username},
-		    original_link => $results_ref->{result}->{original_name},
-		    analyzed_link => dirname($results_ref->{results}->{$sample}->{image_link})."/small.jpg",
-		    image_name => $results_ref->{image_original_filename}."_$sample_".$results_ref->{image_file_ext},
-		    trait_id => $results_ref->{result}->{trait_id},
-		    value => $results_ref->{results}->{$sample}->{trait_value},
+		    original_link => $results_ref->{result}->{original_image},
+		    analyzed_link => $results_ref->{result}->{subanalyses}->{$sample}->{image_link},
+		    #image_name => dirname($results_ref->{image_original_filename}."_".$sample."_".$results_ref->{image_file_ext}),
+		    image_name => $sample,
+		    trait_name => $results_ref->{result}->{trait},
+		    value => $results_ref->{result}->{subanalyses}->{$sample}->{trait_value}+0,
 		    status => 'create',
 		};
-	    }    
+	     
+	    }
+	    print STDERR "SUBANALYSIS IMAGE RESULTS: ".Dumper(\%grouped_results);
 	} else { # if no result returned for an image, include it with error details.
             print STDERR "No usable analysis data in this results_ref \n";
             push @{$grouped_results{$uniquename}{$trait}}, {
@@ -443,21 +415,33 @@ sub _log_analysis_activity {
     my $now = DateTime->now();
 
     if ($c->config->{image_analysis_log}) {
-      my $logfile = $c->config->{image_analysis_log};
-      open (my $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
-      print $F join("\t", (
-            $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute(),
-            $c->user->get_object->get_username(),
-            $service,
-            $trait,
-            $image_ids
-            ));
-      print $F "\n";
-      close($F);
-      print STDERR "Analysis submission logged in $logfile\n";
+	my $logfile = $c->config->{image_analysis_log};
+	if (! -e $logfile) {
+	    print STDERR "No log file available, returning.\n";
+	    return;
+	}
+	print STDERR "Opening logfile $logfile...\n";
+	my $F;
+	eval { 
+	    open ( $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
+
+	};
+	if ($@) {
+	    print STDERR "Can't open logfile because of $@\n";
+	}
+	print $F join("\t", (
+			  $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute(),
+			  $c->user->get_object->get_username(),
+			  $service,
+			  $trait,
+			  $image_ids
+		      ));
+	print $F "\n";
+	close($F);
+	print STDERR "Analysis submission logged in $logfile\n";
     }
     else {
-      print STDERR "Note: set config variable image_analysis_log to obtain a log and graph of image analysis activity.\n";
+	print STDERR "Note: set config variable image_analysis_log to obtain a log and graph of image analysis activity.\n";
     }
 }
 

@@ -528,7 +528,7 @@ jQuery(document).ready(function(){
     jQuery('#image_analysis_save_results').click(function(){
 
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
-        // console.log(table_data);
+        alert(JSON.stringify(table_data));
         jQuery.ajax({
             url: '/brapi/v2/observations/',
             method: 'POST',
@@ -547,7 +547,7 @@ jQuery(document).ready(function(){
             error: function(response) {
                 // console.log(response);
                 jQuery('#working_modal').modal('hide');
-                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results.</li></ul>');
+                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results. Deets: '+response.responseText+'</li></ul>');
                 jQuery('#saveResultModal').modal('show');
             }
         });
@@ -695,7 +695,7 @@ function format ( d ) {
         if (result.startsWith("Error: ")) {
             text = result;
         } else {
-            text = '<img src="'+result+'">';
+            text = '<img src="'+result+'" width="100">';
         }
         detail_rows +=
         `<tr>
