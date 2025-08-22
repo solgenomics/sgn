@@ -9,9 +9,20 @@ perl bin/fix_tissue_sampels_plot_associations.pl -H <host> -D <dbname> file.tsv
 
 where file.tsv is a tab delimited file with the following two columns:
 
-tissue_sample - for the tissue sample uniquename
+=over 16
 
-plot_name - for the plot name to be associated with the tissue_sample
+=item tissue_sample 
+
+for the tissue sample uniquename
+
+=item plot_name
+
+for the plot name to be associated with the tissue_sample
+
+=back
+
+Checks that the tissue_sample and plot are of the correct type and not already associated with each other.
+Emits an error to STDERR and proceeds to the next entry if conditions are not met.
 
 =head1 AUTHOR
 
