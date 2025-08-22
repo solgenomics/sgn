@@ -7,8 +7,13 @@ $has_subplot_entries => undef
 $has_plant_entries => undef
 </%args>
 
+<%perl>
+  my $d2s_host = $c->config->{'d2s_host'};
+  my $d2s_tileserver = $c->config->{'d2s_tileserver'};
+</%perl>
+
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
-<& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
+<& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'CXGN.BreedersToolbox.D2SIntegration', 'brapi.BrAPIFieldmap' ] &>
 
 <style id='heatmap_stylesheet'>
     #trait_heatmap {display: inline; }
@@ -724,6 +729,8 @@ my $image_ids =  $stockref->{image_ids} || [] ;
 <script defer="defer" type="text/javascript" >
 var trial_id = '<% $trial_id %>';
 var data_level = '<% $data_level %>';
+var D2S_HOST = '<% $d2s_host %>';
+var D2S_TILESERVER = '<% $d2s_tileserver %>';
 var FieldMap = window.jsMod['fieldmap'].init();
 FieldMap.set_id(trial_id);
 
@@ -916,7 +923,7 @@ jQuery(document).ready( function() {
         });
     }
 
-    function geo_field_map_view(){
+    async function geo_field_map_view(){
 
         jQuery('#container_heatmap_geo_div').width(jQuery('#container_heatmap_geo').parent().width());
         jQuery('#container_heatmap_geo_div').height(jQuery('#container_heatmap_geo').parent().width()*0.7);
@@ -932,7 +939,11 @@ jQuery(document).ready( function() {
             }
         }
       
-        var fieldMap = new BrAPIFieldmap("#container_heatmap_geo_div", brapi_endpoint, { viewOnly: true });
+        var d2s_api;
+        if ( D2S_HOST && D2S_HOST !== '' && D2S_TILESERVER && D2S_TILESERVER !== '' ) {
+            d2s_api = await new D2SAPI({ host: D2S_HOST, tileserver: D2S_TILESERVER}).init();
+        }
+        var fieldMap = new BrAPIFieldmap("#container_heatmap_geo_div", brapi_endpoint, { viewOnly: true, d2s_api });
 
         fieldMap.brapi_endpoint = brapi_endpoint;
         fieldMap.opts.brapi_pageSize = 1000;

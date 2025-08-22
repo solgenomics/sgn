@@ -2,11 +2,16 @@
 $trial_id => undef
 </%args>
 
+<%perl>
+  my $d2s_host = $c->config->{'d2s_host'};
+  my $d2s_tileserver = $c->config->{'d2s_tileserver'};
+</%perl>
+
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
 
 <& '/util/import_javascript.mas', 
- classes => ['jquery', 'd3.d3v4Min', 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap']
+ classes => ['jquery', 'd3.d3v4Min', 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'CXGN.BreedersToolbox.D2SIntegration', 'brapi.BrAPIFieldmap']
 &>
 
 
@@ -52,21 +57,26 @@ $trial_id => undef
 <div id="map" style="width: 780px; height: 600px"></div>
 
 <script>
+    var D2S_HOST = "<% $d2s_host %>";
+    var D2S_TILESERVER = "<% $d2s_tileserver %>";
 
     jQuery('#map').width(jQuery('#map').parent().width());
     jQuery('#map').height(jQuery('#map').parent().width()*0.7);
     document.getElementById("trialList").style.display="none";
 
-    jQuery(document).ready(function() {
+    var brapi_endpoint = "/brapi/v2";
+    var auth_token;
+    var fieldMap;
+    jQuery(document).ready(async function() {
+        var d2s_api = await new D2SAPI({ host: D2S_HOST, tileserver: D2S_TILESERVER }).init();
+        fieldMap = new BrAPIFieldmap("#map", brapi_endpoint, { d2s_api });
+
         jQuery('#ranking_formula').html("<center><i>Select a trial.</i></center>");
         get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
         jQuery('#select_trial_for_selection_index').change(load);
         load();
     });
     document.getElementById("formOptions").style.display="none";
- 
-    var brapi_endpoint = "/brapi/v2";
-    var auth_token;
 
     function setupBrAPI(update=false) {
         var require_login = "<%  $c->get_conf('brapi_require_login') %>";
@@ -118,8 +128,6 @@ $trial_id => undef
                 jQuery("#btn-save-geo-coordinates").html("Save Geo coordinates");
             });
     }
-
-    var fieldMap = new BrAPIFieldmap("#map",brapi_endpoint);
 
     function getStudyId() {
         const queryString = window.location.search;

@@ -4,11 +4,12 @@
 
 <%perl>
   my $d2s_host = $c->config->{'d2s_host'};
+  my $d2s_tileserver = $c->config->{'d2s_tileserver'};
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["CXGN.BreedersToolbox.D2SIntegration"]&>
 
-<div id="d2s_container" style="background-color: #3D5A80; padding: 5px; border-radius: 3px; box-shadow: inset 0 2px 2px rgba(0,0,0,.2); text-align: center">
+<div id="d2s_container" style="display: none; background-color: #3D5A80; padding: 5px; border-radius: 3px; box-shadow: inset 0 2px 2px rgba(0,0,0,.2); text-align: center">
   <img src="/static/img/d2s.png" style="height: 70px; max-width: 100%; padding: 15px" />
 
   <div id="d2s_login" style="display: none">
@@ -69,11 +70,13 @@
 <script type="text/javascript">
   var BB_TRIAL_ID = <% $trial_id %>;
   var D2S_HOST = "<% $d2s_host %>";
+  var D2S_TILESERVER = "<% $d2s_tileserver %>";
   var D2S;
 
   // Display the linked projects, if there is an api key
   // Display the login instructions, if there is no api key
   async function displayLinks() {
+    jQuery("#d2s_container").css("display", "block");
     jQuery("#d2s_login").css("display", !D2S.hasApiKey() ? 'block' : 'none');
     jQuery("#d2s_link").css("display", D2S.hasApiKey() ? 'block' : 'none');
 
@@ -86,7 +89,7 @@
         const html = links.map((l) => `
           <a href="${l.url}" class="btn btn-default" style="margin: 10px; color: #3D5A80; white-space: normal !important" target="_blank">
             <span class="glyphicon glyphicon-share" style="margin-right: 5px"></span>
-            View ${l.name}
+            View ${l.name} (${l.flights} flights)
           </a>
         `);
         jQuery("#d2s_link_found").html(html.join('<br />'));
@@ -123,16 +126,18 @@
   }
 
   jQuery(document).ready(async () => {
-    D2S = await new D2SAPI(D2S_HOST).init();
+    if ( D2S_HOST && D2S_HOST !== "" ) {
+      D2S = await new D2SAPI({ host: D2S_HOST, tileserver: D2S_TILESERVER }).init();
 
-    // Toggle the display of the link sections
-    await displayLinks();
+      // Toggle the display of the link sections
+      await displayLinks();
 
-    // Show integration instructions
-    jQuery('#d2s_login_button, #d2s_update_api_key').click(showIntegrationInstructions);
+      // Show integration instructions
+      jQuery('#d2s_login_button, #d2s_update_api_key').click(showIntegrationInstructions);
 
-    // Save API Key
-    jQuery('#d2s_save_button').click(saveApiKey);
+      // Save API Key
+      jQuery('#d2s_save_button').click(saveApiKey);
+    }
   });
 </script>
 

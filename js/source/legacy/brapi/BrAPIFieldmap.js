@@ -2140,12 +2140,28 @@
 	      maxZoom: 28,
 	      maxNativeZoom: 19
 	    }
-	  }
+	  },
+	  d2s_api: null
 	};
 
 	class Fieldmap {
 	  constructor(map_container, brapi_endpoint, opts = {}) {
-	    this.map_container = d3.select(map_container).style("background-color", "#888");
+
+	    // Container for the leaflet map
+	    var leaflet_map_container = document.createElement('div');
+	    leaflet_map_container.setAttribute('class', 'leaflet-map-container');
+	    leaflet_map_container.setAttribute('style', 'height: 90%; background-color: #888');
+
+	    // Container for the orthomosaic selection
+	    var ortho_selection_container = document.createElement('div');
+	    ortho_selection_container.setAttribute('class', 'ortho-selection-container');
+
+	    // Add containers to the parent map container
+	    d3.select(map_container).node().appendChild(ortho_selection_container);
+	    d3.select(map_container).node().appendChild(leaflet_map_container);
+
+	    this.map_container = d3.select(leaflet_map_container);
+	    this.ortho_selection_container = d3.select(ortho_selection_container);
 	    this.brapi_endpoint = brapi_endpoint;
 
 	    // Parse Options
@@ -2270,6 +2286,95 @@
 	    this.onLoading = (loading) => {
 	      this.loading.style("display", loading ? 'block' : 'none');
 	    }
+
+      // Get any externally stored Geo Coords from D2S
+      this._coords = { by_plot: {}, by_row_col: {} };
+      this.getCoords = async (studyDbId) => {
+        if ( this.opts.d2s_api ) {
+          try {
+            const projects = await this.opts.d2s_api.getBBConnections(studyDbId) || [];
+            for ( const project of projects ) {
+              const project_coords = await this.opts.d2s_api.getCoords(project.id) || {};
+              for ( const p of project_coords ) {
+                const plot = p.properties?._parsed_plot;
+                const row = p.properties?._parsed_row;
+                const col = p.properties?._parsed_col;
+                if ( plot ) this._coords.by_plot[`plot-${plot}`] = p;
+                if ( row && col ) {
+                  if ( !this._coords.by_row_col[`row-${row}`] ) this._coords.by_row_col[`row-${row}`] = {};
+                  this._coords.by_row_col[`row-${row}`][`col-${col}`] = p;
+                }
+              }
+            }
+          }
+          catch (err) {
+            console.log(err);
+          }
+        }
+      }
+
+      // Check if there are any orthos available for this trial
+      this.getOrthos = async (studyDbId) => {
+        if ( this.opts.d2s_api ) {
+          let orthos = [];
+          try {
+            const projects = await this.opts.d2s_api.getBBConnections(studyDbId) || [];
+            for ( const project of projects ) {
+              const project_orthos = await this.opts.d2s_api.getOrthos(project.id) || [];
+              orthos = [...orthos, ...project_orthos];
+            }
+            this.displayOrthoSelection(orthos);
+          }
+          catch (err) {
+            console.log(err);
+          }
+        }
+      }
+
+      // Display select input for available orthos
+      this.displayOrthoSelection = (orthos = []) => {
+        let html = '';
+        if ( orthos && orthos.length > 0 ) {
+          html = "<div style='display: flex; align-items: baseline; gap: 25px; padding: 15px'>";
+          html += "<p><strong>View Orthomosaic Imagery</strong></p>";
+          html += `<select class='ortho-select form-control' style='width: 200px'>`;
+          html += "<option value=''>Select a Date</option>";
+
+          orthos.sort((a, b) => a.date > b.date);
+          orthos.forEach((o) => {
+            html += `<option data-attribution='${o.attribution}' value='${o.url}'>${o.date} (${o.attribution})</option>`;
+          });
+
+          html += "</select>";
+          html += "</div>";
+        }
+        this.ortho_selection_container.html(html);
+        var map = this.map;
+        jQuery(".ortho-select").on('change', function() { window.onOrthoSelection(this, map) });
+      }
+
+      // Handle the selection of an orthomosaic to display
+      window.onOrthoSelection = (e, map) => {
+        var select = jQuery(e);
+        var url = select.find(":selected").val();
+        var attribution = select.find(":selected").data("attribution");
+
+        // Remove any previous layer
+        if ( window.orthoMapLayer ) {
+          map.removeLayer(window.orthoMapLayer);
+        }
+
+        // Add a new map layer
+        if ( url && url !== '' ) {
+          window.orthoMapLayer = L.tileLayer(url, {
+            minZoom: 16,
+            maxZoom: 30,
+            attribution: attribution
+          });
+          window.orthoMapLayer.addTo(map);
+        }
+
+      }
 	  }
 
 	  removeControls() {
@@ -2278,9 +2383,11 @@
 	    this.map.removeControl(this.clearPolygonsControl);
 	  }
 
-	  load(studyDbId) {
+	  async load(studyDbId) {
 	    this.onLoading(true);
-	    this.generatePlots(studyDbId);
+	    await this.getCoords(studyDbId);
+ 	    this.generatePlots(studyDbId);
+	    this.getOrthos(studyDbId);
 	    return this.data.then(()=>{
 	      this.drawPlots();
 	      this.onLoading(false);
@@ -2506,10 +2613,6 @@
 	      const oup = get_oup(ou);
 	      ou._X = ou.X || oup.positionCoordinateX;
 	      ou._Y = ou.Y || oup.positionCoordinateY;
-	      try {
-	        ou._geoJSON = (this.opts.useGeoJson && oup.geoCoordinates)
-	                      || null;
-	      } catch (e) {}
 	      ou._type = "";
 	      if (!isNaN(ou._X) && !isNaN(ou._Y)){
 	        if(oup.positionCoordinateXType
@@ -2535,6 +2638,28 @@
 	          }
 	        }
 	      }
+        const levels = ou?.observationUnitPosition?.observationLevelRelationships || [];
+        for ( let i = 0; i < levels.length; i++ ) {
+          if ( levels[i].levelName === 'plot' ) {
+            ou._plot = parseInt(levels[i].levelCode);
+          }
+        }
+
+        // Set external geoJSON from _coords, if available
+        // Prefer matching by plot number, fallback to row and col position
+        let external_geojson;
+        if ( ou._plot && this._coords.by_plot[`plot-${ou._plot}`] ) {
+          external_geojson = this._coords.by_plot[`plot-${ou._plot}`];
+        }
+        else if ( ou._row && ou._col && this._coords.by_row_col[`row-${ou._row}`] && this._coords.by_row_col[`row-${ou._row}`][`col-${ou._col}`] ) {
+          external_geojson = this._coords.by_row_col[`row-${ou._row}`][`col-${ou._col}`];
+        }
+
+        // Use the internal geo coordinates by default or the external coordinates if available
+        try {
+          ou._geoJSON = (this.opts.useGeoJson && oup.geoCoordinates) || (this.opts.useGeoJson && external_geojson) || null;
+	      } catch (e) {}
+
 	      if(ou._geoJSON){
 	        try {
 	          ou._type = turf.getType(ou._geoJSON);
@@ -2560,8 +2685,17 @@
 	      }
 	      else if ( plots_invalid.length > 0 ) {
 	        let html = "Plots with no geo coordinates:";
-	        html += "<ul style='padding-left: 25px; margin-bottom: 0'>";
-	        plots_invalid.forEach((p) => html += `<li>${p.observationUnitName}</li>`);
+	        html += "<ul style='padding-left: 25px; margin-bottom: 0; list-style-type: disc;'>";
+	        plots_invalid.forEach((p) => {
+	          html += `<li>${p.observationUnitName}</li>`
+	          let labels = [];
+	          if ( p._plot ) labels.push({ key: 'plot', value: p._plot })
+	          if ( p._row ) labels.push({ key: 'row', value: p._row })
+	          if ( p._col ) labels.push({ key: 'col', value: p._col })
+	          if ( labels.length > 0 ) {
+	            html += ` (${labels.map((e) => `${e.key}: ${e.value}`).join(', ')})`;
+	          }
+          });
 	        html += "</ul>";
 	        this.missing_plots.style("display", "block");
 	        this.missing_plots.html(html);
@@ -2586,11 +2720,11 @@
 
 	    // Shape Plots
 	    data.plots_shaped = false;
-	    if(data.plots.every(plot=>(plot._type=="Polygon"))){
+	    if(data.plots.every(plot=>(plot._type=="Polygon"||plot._type=="MultiPolygon"))){
 	      // Plot shapes already exist!
 	      data.plots_shaped = this.opts.useGeoJson;
 	    }
-	    else if(data.plots.every(plot=>(plot._type=="Point"||plot._type=="Polygon"))){
+	    else if(data.plots.every(plot=>(plot._type=="Point"||plot._type=="Polygon"||plot._type=="MultiPolygon"))){
 	      // Create plot shapes using centroid Voronoi
 	      var centroids = turf.featureCollection(data.plots.map((plot,pos)=>{
 	        return turf.centroid(plot._geoJSON)
