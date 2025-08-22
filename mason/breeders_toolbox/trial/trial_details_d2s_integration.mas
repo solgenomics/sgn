@@ -46,7 +46,7 @@
             <li>Go to your <a href="<% $d2s_host %>/auth/profile" target="_blank">D2S Profile</a>
               <ul>
                 <li>Login to D2S with your D2S account credentials</li>
-                <li>Click the account menu in the top right corner</li>
+                <li>Click the account menu (your name) in the top right corner</li>
                 <li>Select the "Your Profile" option</li>
               </ul>
             </li>
