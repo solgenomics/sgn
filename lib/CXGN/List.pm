@@ -780,4 +780,6 @@ sub seedlot_list_details {
 
 }
 
+__PACKAGE__->meta->make_immutable;
+
 1;
