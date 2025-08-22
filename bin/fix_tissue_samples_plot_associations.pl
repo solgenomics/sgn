@@ -1,4 +1,28 @@
 
+=head1 NAME
+
+fix_tissue_samples_plot_associations.pl - a script to fix associations between tissue samples and plots, including plate wells
+
+=head1 DESCRIPTION
+
+perl bin/fix_tissue_sampels_plot_associations.pl -H <host> -D <dbname> file.tsv
+
+where file.tsv is a tab delimited file with the following two columns:
+
+tissue_sample - for the tissue sample uniquename
+
+plot_name - for the plot name to be associated with the tissue_sample
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=head1 DATE
+
+June 2025
+
+=cut
+
 use strict;
 
 use Getopt::Std;
