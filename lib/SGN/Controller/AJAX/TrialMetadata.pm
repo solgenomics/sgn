@@ -906,23 +906,18 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         }
     };
 
-    eval {
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config);
-
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial plants. ($@).\n";
-        $c->detach();
+    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)) {  
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => 1 };
     }
+
+    my $layout = $c->stash->{trial_layout};
+    $layout->generate_and_cache_layout();
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subplot') Args(0) {
@@ -1044,23 +1039,18 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         }
     };
         
-    eval {
-        $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
-
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial plants. ($@).\n";
-        $c->detach();
+    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
     }
+
+    my $layout = $c->stash->{trial_layout};
+    $layout->generate_and_cache_layout();
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0) {
@@ -1143,63 +1133,55 @@ sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0)
         $c->detach();
     }
 
-    my $upload_subplots_txn = sub {
-        my %plot_subplot_hash;
-        my $parsed_entries = $parsed_data->{data};
-        foreach (@$parsed_entries){
-            $plot_subplot_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
-            push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
-        }
-
-        my $temp_basedir = $c->config->{tempfiles_subdir};
-        my $site_basedir = getcwd();
-        if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
-            mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
-        }
-        my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
-
-        my $phenotype_store_config = {
-            basepath => "$site_basedir/$temp_basedir",
-            dbhost => $c->config->{dbhost},
-            dbuser => $c->config->{dbuser},
-            dbname => $c->config->{dbname},
-            dbpass => $c->config->{dbpass},
-            temp_file_nd_experiment_id => $tempfile,
-            user_id => $user_id,
-            metadata_hash => {
-                archived_file => 'none',
-                archived_file_type => 'new stock treatment auto inheritance',
-                operator => $user_name,
-                date => $timestamp
-            }
-        };
-
-        my $t = CXGN::Trial->new({ 
-            bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
-            phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
-            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-            trial_id => $c->stash->{trial_id} 
-        });
-
-        $t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
-
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_subplots_txn);
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial subplots. ($@).\n";
-        $c->detach();
+    my %plot_subplot_hash;
+    my $parsed_entries = $parsed_data->{data};
+    foreach (@$parsed_entries){
+        $plot_subplot_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+        push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
     }
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
+
+    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => "An error occurred uploading subplots." };
+    }
+
+    my $layout = $c->stash->{trial_layout};
+    $layout->generate_and_cache_layout();
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_plants_with_plant_index_number') Args(0) {
@@ -1323,23 +1305,18 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
         }
     };
 
-    eval {
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config);
-
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial plants. ($@).\n";
-        $c->detach();
+    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)) {
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => "An error occurred uploading plants." };
     }
+
+    my $layout = $c->stash->{trial_layout};
+    $layout->generate_and_cache_layout();
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('upload_plants_subplot_with_plant_index_number') Args(0) {
@@ -1463,23 +1440,18 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
         }
     };
         
-    eval {
-        $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
-
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial plants. ($@).\n";
-        $c->detach();
+    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
     }
+
+    my $layout = $c->stash->{trial_layout};
+    $layout->generate_and_cache_layout();
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_subplots_with_subplot_index_number') Args(0) {
@@ -1562,62 +1534,56 @@ sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_
         $c->detach();
     }
 
-    my $upload_subplots_txn = sub {
-        my %plot_subplot_hash;
-        my $parsed_entries = $parsed_data->{data};
-        foreach (@$parsed_entries){
-            $plot_subplot_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
-            push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
-            push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_index_numbers}}, $_->{subplot_index_number};
-        }
-        my $t = CXGN::Trial->new({ 
-            bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
-            phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
-            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-            trial_id => $c->stash->{trial_id} 
-        });
 
-        my $temp_basedir = $c->config->{tempfiles_subdir};
-        my $site_basedir = getcwd();
-        if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
-            mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
-        }
-        my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
-
-        my $phenotype_store_config = {
-            basepath => "$site_basedir/$temp_basedir",
-            dbhost => $c->config->{dbhost},
-            dbuser => $c->config->{dbuser},
-            dbname => $c->config->{dbname},
-            dbpass => $c->config->{dbpass},
-            temp_file_nd_experiment_id => $tempfile,
-            user_id => $user_id,
-            metadata_hash => {
-                archived_file => 'none',
-                archived_file_type => 'new stock treatment auto inheritance',
-                operator => $user_name,
-                date => $timestamp
-            }
-        };
-        $t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
-
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_subplots_txn);
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial subplots. ($@).\n";
-        $c->detach();
+    my %plot_subplot_hash;
+    my $parsed_entries = $parsed_data->{data};
+    foreach (@$parsed_entries){
+        $plot_subplot_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+        push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
+        push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_index_numbers}}, $_->{subplot_index_number};
     }
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+
+    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => "An error occurred uploading subplots." };
+    }
+
+    my $layout = $c->stash->{trial_layout};
+    $layout->generate_and_cache_layout();
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('upload_plants_with_number_of_plants') Args(0) {
@@ -1740,23 +1706,18 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         }
     };
 
-    eval {
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config);
-
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial plants. ($@).\n";
-        $c->detach();
+    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)){
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => "An error occurred uploading plants." };
     }
+
+    my $layout = $c->stash->{trial_layout};
+    $layout->generate_and_cache_layout();
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPart('upload_plants_subplot_with_number_of_plants') Args(0) {
@@ -1877,25 +1838,20 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
             operator => $user_name,
             date => $timestamp
         }
-        
     };
-    eval {
-        $t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
 
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial plants. ($@).\n";
-        $c->detach();
+    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
     }
+
+    my $layout = $c->stash->{trial_layout};
+    $layout->generate_and_cache_layout();
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('upload_subplots_with_number_of_subplots') Args(0) {
@@ -1978,62 +1934,55 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         $c->detach();
     }
 
-    my $upload_subplots_txn = sub {
-        my %plot_subplot_hash;
-        my $parsed_entries = $parsed_data->{data};
-        foreach (@$parsed_entries){
-            $plot_subplot_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
-            push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
-            push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_index_numbers}}, $_->{subplot_index_number};
-        }
-        my $t = CXGN::Trial->new({ 
-            bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
-            phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
-            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-            trial_id => $c->stash->{trial_id} 
-        });
-
-        my $temp_basedir = $c->config->{tempfiles_subdir};
-        my $site_basedir = getcwd();
-        if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
-            mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
-        }
-        my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
-
-        my $phenotype_store_config = {
-            basepath => "$site_basedir/$temp_basedir",
-            dbhost => $c->config->{dbhost},
-            dbuser => $c->config->{dbuser},
-            dbname => $c->config->{dbname},
-            dbpass => $c->config->{dbpass},
-            temp_file_nd_experiment_id => $tempfile,
-            user_id => $user_id,
-            metadata_hash => {
-                archived_file => 'none',
-                archived_file_type => 'new stock treatment auto inheritance',
-                operator => $user_name,
-                date => $timestamp
-            }
-        };
-        $t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config);
-
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_subplots_txn);
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial subplots. ($@).\n";
-        $c->detach();
+    my %plot_subplot_hash;
+    my $parsed_entries = $parsed_data->{data};
+    foreach (@$parsed_entries){
+        $plot_subplot_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+        push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
+        push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_index_numbers}}, $_->{subplot_index_number};
     }
+    my $t = CXGN::Trial->new({ 
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
+        trial_id => $c->stash->{trial_id} 
+    });
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+
+    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => "An error occurred uploading subplots." };
+    }
+
+    my $layout = $c->stash->{trial_layout};
+    $layout->generate_and_cache_layout();
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0) {

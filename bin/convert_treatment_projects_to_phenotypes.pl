@@ -268,7 +268,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 			}
 		}
 
-		$trial->remove_treatment_project($treatment_trial_id); # delete the treatment trial;
+		# $trial->remove_treatment_project($treatment_trial_id); # delete the treatment trial;
 	}
 
 	if ($has_treatments) {

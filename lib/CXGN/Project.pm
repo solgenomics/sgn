@@ -3344,7 +3344,7 @@ sub create_plant_entities {
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
-                return "The plot $plot is not yet in the database. Cannot create plant entries.";
+                die "The plot $plot is not yet in the database. Cannot create plant entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -3422,7 +3422,7 @@ sub create_plant_entities {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred converting treatments: $stored_phenotype_error\n";
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
             }
         }
     };
@@ -3513,7 +3513,7 @@ sub save_plant_entries {
 
             if (!$plot_row) {
                 print STDERR "The plot $plot_name is not found in the database\n";
-                return "The plot $plot_name is not yet in the database. Cannot create plant entries.";
+                die "The plot $plot_name is not yet in the database. Cannot create plant entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -3594,7 +3594,7 @@ sub save_plant_entries {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred converting treatments: $stored_phenotype_error\n";
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
             }
         }
 
@@ -3695,7 +3695,7 @@ sub create_plant_subplot_entities {
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
-                return "The plot $plot is not yet in the database. Cannot create plant entries.";
+                die "The plot $plot is not yet in the database. Cannot create plant entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -3709,7 +3709,7 @@ sub create_plant_subplot_entities {
                 my $subplot_row = $chado_schema->resultset("Stock::Stock")->find({ uniquename => $subplot, type_id => $subplot_cvterm });
                 if ( !$subplot_row ) {
                     print STDERR "The subplot $subplot is not found in the database\n";
-                    return "The subplot $subplot is not yet in the database. Cannot create plant entries.";
+                    die "The subplot $subplot is not yet in the database. Cannot create plant entries.";
                 }
 
                 my $parent_subplot = $subplot_row->stock_id();
@@ -3796,7 +3796,7 @@ sub create_plant_subplot_entities {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred converting treatments: $stored_phenotype_error\n";
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
             }
         }
     };
@@ -3900,7 +3900,7 @@ sub save_plant_subplot_entries {
             my $subplot_row = $chado_schema->resultset("Stock::Stock")->find( { stock_id=>$subplot_stock_id });
             if (!$subplot_row) {
                 print STDERR "The subplot $subplot_name is not found in the database\n";
-                return "The subplot $subplot_name is not yet in the database. Cannot create plant entries.";
+                die "The subplot $subplot_name is not yet in the database. Cannot create plant entries.";
             }
 
             my $plot_relationship_row = $chado_schema->resultset("Stock::StockRelationship")->find({
@@ -3909,12 +3909,12 @@ sub save_plant_subplot_entries {
             });
             if (!$plot_relationship_row) {
                 print STDERR "The subplot $subplot_name does not have a defined plot relationship in the database\n";
-                return "The subplot $subplot_name does not have a defined plot relationship in the database. Cannot create plant entries.";
+                die "The subplot $subplot_name does not have a defined plot relationship in the database. Cannot create plant entries.";
             }
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find({ stock_id => $plot_relationship_row->subject_id() });
             if (!$plot_row) {
                 print STDERR "The parent plot of subplot $subplot_name is not found in the database\n";
-                return "The parent plot of subplot $subplot_name is not yet in the database. Cannot create plant entries.";
+                die "The parent plot of subplot $subplot_name is not yet in the database. Cannot create plant entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -3925,15 +3925,16 @@ sub save_plant_subplot_entries {
             my $plant_names = $val->{plant_names};
             my $plant_index_numbers = $val->{plant_index_numbers};
             my $increment = 0;
+
             foreach my $plant_name (@$plant_names) {
                 my $given_plant_index_number = $plant_index_numbers->[$increment];
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
 
                 foreach my $treatment (@{$treatments}) {
                     my $treatment_name = $treatment->{trait_name};
-                    if (exists($subplot_pheno->{$parent_plot_name}->{$treatment_name})) {
+                    if (exists($subplot_pheno->{$subplot_name}->{$treatment_name})) {
                         $phenostore_data_hash->{$plant_name}->{$treatment_name} = [
-                            $subplot_pheno->{$parent_plot_name}->{$treatment_name},
+                            $subplot_pheno->{$subplot_name}->{$treatment_name},
                             $phenotype_store_config->{metadata_hash}->{date},
                             $phenotype_store_config->{metadata_hash}->{operator},
                             '',
@@ -3964,12 +3965,13 @@ sub save_plant_subplot_entries {
     };
 
     eval {
+
         $self->bcs_schema()->txn_do($create_plant_entities_txn);
 
         if ($inherits_plot_treatments && $treatments) {
             my @treatment_names = map {$_->{trait_name}} @{$treatments};
 
-            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({ #not right stock list...
                 basepath => $phenotype_store_config->{basepath},
                 dbhost => $phenotype_store_config->{dbhost},
                 dbname => $phenotype_store_config->{dbname},
@@ -3998,7 +4000,7 @@ sub save_plant_subplot_entries {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred converting treatments: $stored_phenotype_error\n";
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
             }
         }
     };
@@ -4243,7 +4245,7 @@ sub create_tissue_samples {
 
                 if (! $plant_row) {
                     print STDERR "The plant $plant_name is not found in the database\n";
-                    return "The plant $plant_name is not yet in the database. Cannot create tissue entries.";
+                    die "The plant $plant_name is not yet in the database. Cannot create tissue entries.";
                 }
 
                 my $parent_plant = $plant_row->stock_id();
@@ -4367,7 +4369,7 @@ sub create_tissue_samples {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred converting treatments: $stored_phenotype_error\n";
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
             }
         }
     };
@@ -4524,7 +4526,7 @@ sub create_subplot_entities {
 
             if (! $plot_row) {
                 print STDERR "The plot $plot is not found in the database\n";
-                return "The plot $plot is not yet in the database. Cannot create subplot entries.";
+                die "The plot $plot is not yet in the database. Cannot create subplot entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -4595,7 +4597,7 @@ sub create_subplot_entities {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred converting treatments: $stored_phenotype_error\n";
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
             }
         }
     };
@@ -4686,7 +4688,7 @@ sub save_subplot_entries {
 
             if (!$plot_row) {
                 print STDERR "The plot $plot_name is not found in the database\n";
-                return "The plot $plot_name is not yet in the database. Cannot create subplot entries.";
+                die "The plot $plot_name is not yet in the database. Cannot create subplot entries.";
             }
 
             my $parent_plot = $plot_row->stock_id();
@@ -4760,7 +4762,7 @@ sub save_subplot_entries {
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
             if ($stored_phenotype_error) {
-                die "An error occurred converting treatments: $stored_phenotype_error\n";
+                die "An error occurred inheriting treatments: $stored_phenotype_error\n";
             }
         }
     };
