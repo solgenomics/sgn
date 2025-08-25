@@ -18,13 +18,14 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'accession_name', 'vector_construct', 'batch_number'],
-        optional_columns => [ 'is_a_control', 'existing_accession' ],
+        optional_columns => [ 'is_a_control', 'existing_accession', 'number_of_insertions' ],
         column_aliases => {
             'accession_name' => ['accession name'],
             'vector_construct' => ['vector construct'],
             'batch_number' => ['batch number'],
             'is_a_control' => ['is a control'],
             'existing_accession' => ['existing accession'],
+            'number_of_insertions' => ['number of insertions'],
         }
     );
     my $parsed = $parser->parse();
@@ -158,7 +159,7 @@ sub _parse_with_plugin {
             $accession_type = 'new';
         }
 
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$accession_type}->{$row->{'accession_name'}}++;
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$accession_type}->{$row->{'accession_name'}}->{'number_of_insertions'} = {$row->{'number_of_insertions'}};
     }
 
     $self->_set_parsed_data($transgenic_data);
