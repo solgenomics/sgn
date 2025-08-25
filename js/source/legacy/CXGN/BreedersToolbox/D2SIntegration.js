@@ -181,23 +181,34 @@ class D2SAPI {
                 if ( flight.data_products ) {
                     for ( const dp of flight.data_products ) {
 
-                        // Only include ortho products with RGB sensor
-                        if ( dp.data_type === 'ortho' && flight.sensor === 'RGB' ) {
-                            const url = dp.url + `?API_KEY=${await this.getApiKey()}`;
-                            const layer = this.tileserver.replaceAll('{url}', url);
-
-                            // Add data product info to list of orthos
-                            orthos.push({
-                                flight: flight.id,
-                                sensor: flight.sensor,
-                                platform: flight.platform,
-                                data_product: dp.id,
-                                data_type: dp.data_type,
-                                date: flight.acquisition_date,
-                                url: layer,
-                                attribution: "Data2Science"
-                            });
+                        // Set additional params, depending on layer stats
+                        let params = [];
+                        const rasters = dp.stac_properties?.raster;
+                        if ( rasters && rasters.length === 1 ) {
+                            const min = rasters[0].stats?.minimum;
+                            const max = rasters[0].stats?.maximum;
+                            if ( min && max ) {
+                                params.push(`rescale=${min},${max}`);
+                                params.push('colormap_name=viridis');
+                            }
                         }
+
+                        // Add API Key to GeoTiff URL
+                        // Add URL to tileserver layer
+                        const url = dp.url + `?API_KEY=${await this.getApiKey()}`;
+                        const layer = this.tileserver.replaceAll('{url}', `${url}&`).replaceAll('{params}', params.join('&'));
+
+                        // Add data product info to list of orthos
+                        orthos.push({
+                            flight: flight.id,
+                            sensor: flight.sensor,
+                            platform: flight.platform,
+                            data_product: dp.id,
+                            data_type: dp.data_type,
+                            date: flight.acquisition_date,
+                            url: layer,
+                            attribution: "Data2Science"
+                        });
 
                     }
                 }

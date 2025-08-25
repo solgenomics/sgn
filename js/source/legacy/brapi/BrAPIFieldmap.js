@@ -2130,7 +2130,9 @@
 	  plotLength: 0,
 	  plotScaleFactor: 1,
 	  style: {
-	    weight: 1
+	    weight: 1.5,
+	    fillOpacity: 0.1,
+	    color: '#ffffff'
 	  },
 	  useGeoJson: true,
 	  tileLayer: {
@@ -2341,10 +2343,17 @@
           html += "<option value=''>Select a Date</option>";
 
           orthos.sort((a, b) => a.date > b.date);
+          let dl;
           orthos.forEach((o) => {
-            html += `<option data-attribution='${o.attribution}' value='${o.url}'>${o.date} (${o.attribution})</option>`;
+            if ( o.date !== dl ) {
+              if ( dl ) html += `</optgroup>`;
+              html += `<optgroup label="${o.date}">`;
+              dl = o.date;
+            }
+            html += `<option data-attribution='${o.attribution}' value='${o.url}'>${o.sensor} ${o.data_type} (${o.attribution})</option>`;
           });
 
+          html += "</optgroup>";
           html += "</select>";
           html += "</div>";
         }
