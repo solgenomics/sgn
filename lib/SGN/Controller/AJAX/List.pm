@@ -266,6 +266,7 @@ sub download_lists :Path('/list/download_multiple') Args(0) {
 
     my $zip = Archive::Zip->new();
 
+    my @combined_content;
     foreach my $list_id (@list_ids) {
         my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
         my $public = $list->check_if_public();
@@ -282,9 +283,12 @@ sub download_lists :Path('/list/download_multiple') Args(0) {
         my $name = $name_ref->{name};
 
         my $content = join "\n", map { $_->[1] } @$list;
+        push @combined_content, map { $_->[1] } @$list;
 
         $zip->addString($content, "$name.txt");
     }
+    @combined_content = uniq(sort @combined_content);
+    $zip->addString(join("\n", @combined_content), "combined_list_items.txt");
 
     my $zip_data;
     my $io = IO::Scalar->new(\$zip_data);

@@ -584,8 +584,8 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
         'processing': true,
         'serverSide': true,
         'lengthMenu': [
-          [10,20,50,100,1000,1000000000000000],
-          [10,20,50,100,1000,'All']
+          [10,20,50,100,1000,10000,1000000000000000],
+          [10,20,50,100,1000,10000,'All']
         ],
         'iDisplayLength': 10000,
         'fixedFooter' : true,
