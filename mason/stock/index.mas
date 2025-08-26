@@ -85,6 +85,7 @@ my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
 my $is_obsolete = $stockref->{is_obsolete};
 my $is_a_transgenic_line = $stockref->{is_a_transgenic_line};
+my $is_in_trial = $stockref->{is_in_trial};
 
 my @editable_stock_props = split "," , $editable_stock_props_string;
 
@@ -439,7 +440,7 @@ function jqueryStuff() {
 % if ($edit_privs && $type_name eq 'population') {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => "<h4 style='display:inline'>Delete This Stock</h4>", info_section_subtitle => 'Delete this population.', icon_class => "glyphicon glyphicon-trash", info_section_id => "population_delete_section" &>
 % } elsif ($edit_privs && $type_name ne 'population') {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, is_obsolete=> $is_obsolete, info_section_title => "<h4 style='display:inline'>" . ($is_obsolete ? "Un-Obsolete This Stock" : "Obsolete This Stock") . "</h4>", info_section_subtitle => ($is_obsolete ? "Make a stock not obsolete so that it does show in searches" : "Make a stock obsolete so that it does not show in searches"), icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, is_obsolete=> $is_obsolete, is_in_trial=> $is_in_trial, info_section_title => "<h4 style='display:inline'>" . ($is_obsolete ? "Un-Obsolete This Stock" : "Obsolete This Stock") . "</h4>", info_section_subtitle => ($is_obsolete ? "Make a stock not obsolete so that it does show in searches" : "Make a stock obsolete so that it does not show in searches"), icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
 % }
 
 </&>

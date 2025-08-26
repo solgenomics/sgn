@@ -1,6 +1,6 @@
 <div class="text-center">
-    <p>Last Step! Here you can edit additional layout settings and/or save your design.</p>
-    <p>When you are ready, click 'download' to generate your labels. If you are trying to download a very large set, you will be given the option to download your labels in batches.</p>
+    <p>Last step! Here you can edit additional layout settings and/or save your design.</p>
+    <p>When you are ready, click 'Download pdf' to generate your labels. If you are trying to download a very large set, you will be given the option to download your labels in batches.</p>
 </div>
 <div id="save-labels-display"></div>
 <div style="clear: both"></div>

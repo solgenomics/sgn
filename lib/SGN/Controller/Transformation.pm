@@ -133,6 +133,15 @@ sub transformation_page : Path('/transformation') Args(1) {
     $source_info_hash->{'plantMaterial'} = $plant_material_name;
     my $source_info_string = encode_json $source_info_hash;
 
+    my $can_obsolete;
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if ((exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator})) {
+        $can_obsolete = 1;
+    }
+
     $c->stash->{transformation_id} = $transformation_id;
     $c->stash->{transformation_name} = $transformation_name;
     $c->stash->{plant_material} = $plant_material;
@@ -158,8 +167,9 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{project_id} = $project_id;
     $c->stash->{is_a_control} = $is_a_control;
     $c->stash->{control_name} = $control_name;
-    $c->stash->{control_id} = $control_id;            
+    $c->stash->{control_id} = $control_id;
     $c->stash->{control_link} = $control_link;
+    $c->stash->{can_obsolete} = $can_obsolete;
 
     $c->stash->{template} = '/transformation/transformation.mas';
 

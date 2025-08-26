@@ -1,5 +1,7 @@
 <%args>
 $transformation_id
+$program_name
+$can_obsolete
 </%args>
 
 
@@ -20,26 +22,40 @@ $transformation_id
                         </&>
                     </div>
                 </div>
+% if($can_obsolete) {
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="obsolete_accessions_in_bulk_link">Obsolete Accessions in Bulk</button>
+% }
             </div>
         </div>
     </div>
 </&>
 
 <& /transformation/obsolete_stock_dialog.mas &>
+<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name &>
 
 
 <script>
 
 jQuery(document).ready(function(){
-
     const transformation_stock_id = "<%$transformation_id%>";
+    const can_obsolete = "<%$can_obsolete%>";
     const transformants_table = jQuery('#transformants_table').DataTable({
         'ajax': '/ajax/transformation/transformants/'+transformation_stock_id,
         'autoWidth': false,
         'order': false,
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
+            { title: "Obsolete Accession", "data": null, "render": function ( data, type, row ) {
+                if (can_obsolete) {
+                    if (row.is_in_trial){
+                        return 'Used in a trial, cannot obsolete';
+                    } else {
+                        return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>";
+                    }
+                } else {
+                    return '';
+                }
+            }},
         ],
 
         "fnInitComplete": function(oSettings, json) {
@@ -59,6 +75,10 @@ jQuery(document).ready(function(){
                 });
             }
         }
+    });
+
+    jQuery('#obsolete_accessions_in_bulk_link').click(function() {
+        jQuery("#obsolete_accessions_in_bulk_dialog").modal("show");
     });
 
 });
