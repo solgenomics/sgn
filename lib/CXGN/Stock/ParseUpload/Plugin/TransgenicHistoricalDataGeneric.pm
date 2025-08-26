@@ -159,7 +159,7 @@ sub _parse_with_plugin {
             $accession_type = 'new';
         }
 
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$accession_type}->{$row->{'accession_name'}}->{'number_of_insertions'} = {$row->{'number_of_insertions'}};
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$accession_type}->{$row->{'accession_name'}}->{'number_of_insertions'} = $row->{'number_of_insertions'};
     }
 
     $self->_set_parsed_data($transgenic_data);

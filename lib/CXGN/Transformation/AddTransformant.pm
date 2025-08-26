@@ -22,6 +22,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 has 'schema' => (
     is => 'rw',
@@ -78,7 +79,7 @@ sub add_transformant {
     my $phenome_schema = $self->get_phenome_schema();
     my $transformation_stock_id = $self->get_transformation_stock_id();
     my @transformant_names = @{$self->get_transformant_names()};
-    my $additional_transformant_info = $self->get_additonal_transformant_info();
+    my $additional_transformant_info = $self->get_additional_transformant_info();
     my $female_parent;
     my $plant_material;
     my $plant_material_stock;

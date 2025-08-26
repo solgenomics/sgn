@@ -22,6 +22,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 has 'schema' => (
     is => 'rw',
@@ -80,13 +81,8 @@ sub link_info {
                 subject_id => $accession_stock->stock_id(),
             });
 
-            my $previous_transgenic_stockprop_rs = $accession_stock->stockprops({type_id=>$transgenic_cvterm->cvterm_id});
-            if (!$previous_transgenic_stockprop_rs) {
-                $accession_stock->create_stockprops({$transgenic_cvterm->name() => 1});
-            }
-
             my $previous_number_of_insertions_stockprop_rs = $accession_stock->stockprops({type_id=>$number_of_insertions_cvterm->cvterm_id});
-            if (!$previous_transgenic_stockprop_rs) {
+            if ($previous_number_of_insertions_stockprop_rs->count < 1) {
                 my $number_of_insertions = $additional_transformant_info->{$name}->{'number_of_insertions'};
                 if ($number_of_insertions) {
                     $accession_stock->create_stockprops({$number_of_insertions_cvterm->name() => $number_of_insertions});

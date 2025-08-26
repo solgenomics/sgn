@@ -1413,6 +1413,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                             schema => $schema,
                             transformation_stock_id => $transformation_stock_id,
                             transformant_names => \@transformants,
+                            additional_transformant_info => $transformant_name_info,
                         });
 
                         my $response = $add_transformants->link_info();
