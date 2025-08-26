@@ -94,13 +94,15 @@ sub _validate_with_plugin {
                         });
 
                         if (!$vector_construct_stock) {
-                            push @error_messages, "Previously stored accession: $accession_name is not linked to any vector construct in the database";
+                            push @error_messages, "Error retrieving vector construct for previously stored accession: $accession_name!";
                         } else {
                             my $stored_vector_construct = $vector_construct_stock->uniquename();
                             if ($stored_vector_construct ne $vector_construct) {
                                 push @error_messages, "Previously stored accession: $accession_name has vector construct: $stored_vector_construct, but the vector construct in the file is $vector_construct";
                             }
                         }
+                    } else {
+                        push @error_messages, "Previously stored accession: $accession_name is not linked to any vector construct in the database";
                     }
                 }
             }
