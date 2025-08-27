@@ -2,12 +2,13 @@
 $transformation_id
 </%args>
 
-<&| /page/info_section.mas, title => 'Obsoleted Transgenic Lines (Accessions)', collapsible=>1, collapsed=>1 &>
+
+<&| /page/info_section.mas, title => 'Transgenic Lines (Accessions) Details', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div style="overflow:scroll">
-                    <table class="table table-hover table-bordered" id="obsoleted_transformants_table">
+                    <table class="table table-hover table-bordered" id="transgenic_line_details_table">
                     </table>
                 </div>
             </div>
@@ -15,24 +16,23 @@ $transformation_id
     </div>
 </&>
 
+
 <script>
 
 jQuery(document).ready(function(){
-
     const transformation_stock_id = "<%$transformation_id%>";
-
-    const obsoleted_transformants_table = jQuery('#obsoleted_transformants_table').DataTable({
-        'ajax': '/ajax/transformation/obsoleted_transformants/'+transformation_stock_id,
+    const transgenic_line_details_table = jQuery('#transgenic_line_details_table').DataTable({
+        'ajax': '/ajax/transformation/transgenic_line_details/'+transformation_stock_id,
         'autoWidth': false,
         'order': false,
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Note", "data": "obsolete_note" },
-            { title: "Date", "data": "obsolete_date" },
-            { title: "Obsoleted by", "data": "obsolete_person" },
+            { title: "Number of Insertions", "data": "number_of_insertions" },
         ],
+
     });
 
 });
+
 
 </script>
