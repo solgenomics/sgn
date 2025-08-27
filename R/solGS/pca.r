@@ -54,8 +54,8 @@ phenoData        <- c()
 
 set.seed(235)
 
-pcF <- grepl("genotype", ignore.case=TRUE, inputFiles)
-dataType <- ifelse(isTRUE(pcF[1]), 'genotype', 'phenotype')
+pcaDataFile <- grepl("genotype", ignore.case=TRUE, inputFiles)
+dataType <- ifelse(isTRUE(pcaDataFile[1]), 'genotype', 'phenotype')
 
 if (dataType == 'genotype') {
     if (length(inputFiles) > 1) {
@@ -69,9 +69,7 @@ if (dataType == 'genotype') {
                               header = TRUE,
                               na.strings = c("NA", " ", "--", "-", "."))
 
-
         if (is.null(genoData)) {
-
             filteredGenoFile <- grep("filtered_genotype_data_",
                                  genoDataFile,
                                  value = TRUE)
@@ -88,13 +86,13 @@ if (dataType == 'genotype') {
     }
 } else if (dataType == 'phenotype') {
 
-    metaFile <- grep("meta", inputFiles,  value = TRUE)
+    metaDataFile <- grep("meta", inputFiles,  value = TRUE)
     phenoFiles <- grep("phenotype_data", inputFiles,  value = TRUE)
 
     if (length(phenoFiles) > 1 ) {
 
-        phenoData <- combinePhenoData(phenoFiles, metaDataFile = metaFile)
-        phenoData <- summarizeTraits(phenoData, groupBy=c('studyDbId', 'germplasmName'))
+        phenoData <- phenoAnalysis::combinePhenoData(phenoFiles, metaDataFile = metaDataFile)
+        phenoData <- phenoAnalysis::summarizeTraits(phenoData, groupBy=c('studyDbId', 'germplasmName'))
 
         if (all(is.na(phenoData$locationName))) {
             phenoData$locationName <- 'location'
@@ -111,7 +109,7 @@ if (dataType == 'genotype') {
     } else {
         phenoDataFile <- grep("phenotype_data", inputFiles,  value = TRUE)
 
-        phenoData <- cleanAveragePhenotypes(inputFiles, metaFile)
+        phenoData <- phenoAnalysis::cleanAveragePhenotypes(inputFiles, metaDataFile)
         phenoData <- na.omit(phenoData)
     }
 
@@ -128,26 +126,16 @@ if (is.null(genoData) && is.null(phenoData)) {
 
 genoDataMissing <- c()
 if (dataType == 'genotype') {
-   # if (is.null(filteredGenoFile) == TRUE) {
-        genoData <- genoDataFilter::convertToNumeric(genoData)
-        genoData <- genoDataFilter::filterGenoData(genoData, maf=0.01)
-        genoData <- genoDataFilter::roundAlleleDosage(genoData)
+    genoData <- genoDataFilter::convertToNumeric(genoData)
+    genoData <- genoDataFilter::filterGenoData(genoData, maf=0.01)
+    genoData <- genoDataFilter::roundAlleleDosage(genoData)
 
-        message("No. of geno missing values, ", sum(is.na(genoData)) )
-        if (sum(is.na(genoData)) > 0) {
-            genoDataMissing <- c('yes')
-           # genoData <- na.roughfix(genoData)
-        }
+    message("No. of geno missing values, ", sum(is.na(genoData)) )
+    if (sum(is.na(genoData)) > 0) {
+        genoDataMissing <- c('yes')
+        # genoData <- na.roughfix(genoData)
+    }
 }
-
-
-## nCores <- detectCores()
-## message('no cores: ', nCores)
-## if (nCores > 1) {
-##   nCores <- (nCores %/% 2)
-## } else {
-##   nCores <- 1
-## }
 
 pcaData <- c()
 if (!is.null(genoData)) {
@@ -158,11 +146,11 @@ if (!is.null(genoData)) {
     phenoData <- NULL
 }
 
-
 message("No. of missing values, ", sum(is.na(pcaData)) )
 if (sum(is.na(pcaData)) > 0) {
     pcaData <- na.roughfix(pcaData)
 }
+
 pcsCnt <- ifelse(ncol(pcaData) < 10, ncol(pcaData), 10)
 pca    <- prcomp(pcaData, retx=TRUE)
 pca    <- summary(pca)
