@@ -13,6 +13,7 @@ use CXGN::List::FuzzySearch;
 use CXGN::List::Desynonymize;
 use CXGN::Cross;
 use JSON;
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
@@ -255,6 +256,51 @@ sub download_list :Path('/list/download') Args(0) {
     $c->res->content_type("text/plain");
     $c->res->header('Content-Disposition'=>"attachment; filename=$name.txt");
     $c->res->body(join "\n", map { $_->[1] }  @$list);
+}
+
+sub download_lists :Path('/list/download_multiple') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $data = decode_json $c->req->param('list_ids');
+    my @list_ids = @{ $data };
+
+    my $zip = Archive::Zip->new();
+
+    my @combined_content;
+    foreach my $list_id (@list_ids) {
+        my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+        my $public = $list->check_if_public();
+        if ($public == 0) {
+        my $error = $self->check_user($c, $list_id);
+        if ($error) {
+            $c->res->content_type("text/plain");
+            $c->res->body($error);
+            return;
+        }
+        }
+        $list = $self->retrieve_list($c, $list_id);
+        my ($name_ref) = $self->get_list_metadata($c, $list_id);
+        my $name = $name_ref->{name};
+
+        my $content = join "\n", map { $_->[1] } @$list;
+        push @combined_content, map { $_->[1] } @$list;
+
+        $zip->addString($content, "$name.txt");
+    }
+    @combined_content = uniq(sort @combined_content);
+    $zip->addString(join("\n", @combined_content), "combined_list_items.txt");
+
+    my $zip_data;
+    my $io = IO::Scalar->new(\$zip_data);
+    unless ( $zip->writeToFileHandle($io) == AZ_OK ) {
+        $c->res->status(500);
+        $c->res->body("Error creating zip file");
+        return;
+    }
+
+    $c->res->content_type('application/zip');
+    $c->res->header('Content-Disposition' => 'attachment; filename=lists.zip');
+    $c->res->body($zip_data);
 }
 
 =head2 available_lists()
