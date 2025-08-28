@@ -33,6 +33,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my $minimum = $c->req->param('minimum');
     my $maximum = $c->req->param('maximum');
     my $categories = $c->req->param('categories');
+    my $parent_term = $c->req->param('parent_term') || 'Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000';
 
     $name =~ s/^\s+//;
     $name =~ s/\s+$//;
@@ -66,8 +67,8 @@ sub create_treatment :Path('/ajax/treatment/create') {
     if ($definition && $definition !~ m/(\w+ ){6,}/) {
         $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the treatment and allows it to be differentiated from other treatments.\n";
     }
-    if (!$format || ($format ne "numeric" && $format ne "qualitative")) {
-        $error .= "Treatment format must be numeric or qualitative.\n";
+    if (!$format || ($format ne "numeric" && $format ne "qualitative" && $format ne "ontology")) {
+        $error .= "Treatment format must be numeric, qualitative, or ontology.\n";
     }
     if ($categories && $default_value && $categories !~ m/$default_value/) {
         $error .= "The default value of the treatment is not in the categories list.\n";
@@ -108,13 +109,20 @@ sub create_treatment :Path('/ajax/treatment/create') {
             if ($categories) {
                 $new_treatment->categories($categories);
             }
+        } elsif ($format eq "ontology") {
+            $new_treatment = CXGN::Trait::Treatment->new({
+                bcs_schema => $schema,
+                name => $name,
+                definition => $definition,
+                format => $format
+            });
         }
 
         if ($default_value) {
             $new_treatment->default_value($default_value);
         }
 
-        $new_treatment->store();
+        $new_treatment->store($parent_term);
     };
 
     if ($@) {

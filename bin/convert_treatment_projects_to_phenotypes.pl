@@ -139,7 +139,7 @@ my $legacy_experiment_treatment_root_id;
 if ($legacy_experiment_treatment) {
 	$legacy_experiment_treatment_root_id = $legacy_experiment_treatment->cvterm_id();
 } else {
-	die "No EXPERIMENT_TREATMENT root term. Has DB patch been run?\n";
+	die "No legacy EXPERIMENT_TREATMENT root term. Has DB patch been run?\n";
 }
 
 my $get_db_accessions_sql = "SELECT accession FROM dbxref JOIN db USING (db_id) WHERE db.name='EXPERIMENT_TREATMENT';";

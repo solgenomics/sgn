@@ -27,6 +27,7 @@ package CXGN::Trait::Treatment;
 use Moose;
 use Data::Dumper;
 use List::Util qw(max);
+use CXGN::List::Transform;
 use JSON;
 
 BEGIN {extends 'CXGN::Trait'};
@@ -38,7 +39,20 @@ sub BUILD {
 
 sub store {
     my $self = shift;
+    my $parent_term = shift;
+
     my $schema = $self->bcs_schema();
+    
+    my $lt = CXGN::List::Transform->new();
+    
+    my $transform = $lt->transform($schema, "traits_2_trait_ids", [$parent_term]);
+
+    if (@{$transform->{missing}}>0) { 
+	    die "Parent term $parent_term could not be found in the database.\n";
+    }
+
+    my @parent_id_list = @{$transform->{transform}};
+    my $parent_id = $parent_id_list[0];
 
     my $name = $self->name() || die "No name found.\n";
     my $definition = $self->definition() || die "No definition found.\n";
@@ -97,6 +111,11 @@ sub store {
     if ($variable_relationship) {
         $variable_of_id = $variable_relationship->cvterm_id();
     }
+    my $isa_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'is_a' , cv_id => $rel_cv_id });
+    my $isa_id;
+    if ($isa_relationship) {
+        $isa_id = $isa_relationship->cvterm_id();
+    }
 
     my $experiment_treatment_cv = $schema->resultset("Cv::Cv")->find({ name => 'experiment_treatment'});
     my $experiment_treatment_cv_id;
@@ -105,13 +124,13 @@ sub store {
     } else {
         die "No experiment_treatment CV found. Has DB patch been run?\n";
     }
-    my $experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'Experimental treatment ontology' , cv_id => $experiment_treatment_cv_id });
-    my $experiment_treatment_root_id;
-    if ($experiment_treatment) {
-        $experiment_treatment_root_id = $experiment_treatment->cvterm_id();
-    } else {
-        die "No EXPERIMENT_TREATMENT root term. Has DB patch been run?\n";
-    }
+    # my $experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'Experimental treatment ontology' , cv_id => $experiment_treatment_cv_id });
+    # my $experiment_treatment_root_id;
+    # if ($experiment_treatment) {
+    #     $experiment_treatment_root_id = $experiment_treatment->cvterm_id();
+    # } else {
+    #     die "No EXPERIMENT_TREATMENT root term. Has DB patch been run?\n";
+    # }
 
     my $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
     $h->execute();
@@ -136,11 +155,19 @@ sub store {
             dbxref => "$zeroes"."$accession_num"
         })->cvterm_id();
 
-        $schema->resultset("Cv::CvtermRelationship")->find_or_create({
-            object_id => $experiment_treatment_root_id,
-            subject_id => $new_treatment_id,
-            type_id => $variable_of_id
-        });
+        if ($format eq "ontology") {
+            $schema->resultset("Cv::CvtermRelationship")->find_or_create({
+                object_id => $parent_id,
+                subject_id => $new_treatment_id,
+                type_id => $isa_id
+            });
+        } else {
+            $schema->resultset("Cv::CvtermRelationship")->find_or_create({
+                object_id => $parent_id,
+                subject_id => $new_treatment_id,
+                type_id => $variable_of_id
+            });
+        }
 
         $new_treatment = $schema->resultset("Cv::Cvterm")->find({
             cv_id => $experiment_treatment_cv_id,

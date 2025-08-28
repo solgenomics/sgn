@@ -1,4 +1,5 @@
 <%args>
+    $exp_treatment_root
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
@@ -13,46 +14,47 @@
         <form class="form-horizontal" role="form" method="post" id="new_treatment_design_form" name="new_treatment_design_form">
         <div class="form-group">
                 <label class="col-sm-3 control-label"> New treatment name: </label>
-                <div class="col-sm-8">
+                <div class="col-sm-9">
                     <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="Special characters not allowed."/>
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label">Definition:</label>
-                <div class="col-sm-8">
+                <div class="col-sm-9">
                     <textarea style="width:70%;" class="form-control" id="new_treatment_definition" name="new_treatment_definition"></textarea>
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label">Treatment format:</label>
-                <div class="col-sm-8">
+                <div class="col-sm-9">
                     <select style="width:70%;" class="form-control" id="new_treatment_format_select" name="new_treatment_format_select" type="select">
                         <option value="numeric" selected>Numeric</option>
                         <option value="qualitative">Qualitative (categorical)</option>
+                        <option value="ontology">Ontology (parent to child terms)</option>
                     </select>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_default_value_container">
                 <label class="col-sm-3 control-label" id="new_treatment_default_value_label">Default value:</label>
-                <div class="col-sm-8">
+                <div class="col-sm-9">
                     <input style="width:70%;" class="form-control" id="new_treatment_default_value" name="new_treatment_default_value" type="text" placeholder="(Optional)"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_minimum_value_container">
                 <label class="col-sm-3 control-label">Minimum value:</label>
-                <div class="col-sm-8">
+                <div class="col-sm-9">
                     <input style="width:70%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_maximum_value_container">
                 <label class="col-sm-3 control-label">Maximum value:</label>
-                <div class="col-sm-8">
+                <div class="col-sm-9">
                     <input style="width:70%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_add_categories_container" style="display:none;">
                 <label class="col-sm-3 control-label">Add categories:</label>
-                <div class="col-sm-8">
+                <div class="col-sm-9">
                     <table style="width:70%;">
                         <tr>
                             <td><input style="width:100%;" class="form-control" id="new_treatment_add_category" name="new_treatment_add_category" type="text" placeholder="(Optional)"/></td>
@@ -64,10 +66,19 @@
                     <button id="new_treatment_remove_category_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
             </div>
+            <div class="form-group" id="chain_parent_term_container">
+                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Should not be a variable term. 
+Will be the treatment root term by default."></span>&nbsp;Chain to an existing term:</label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_treatment_parent_term" name="new_treatment_parent_term" type="text" placeholder="Full name, as in 'Legacy experiment treatment|EXPERIMENT_TREATMENT:0000001'"/>
+                </div>
+            </div>
         </form>
         <button class="btn btn-primary" id="new_treatment_submit_btn">Submit</button>
     </div>
 </div>
+
+<& /ontology/embedded_browser.mas, cvterm => $exp_treatment_root &>
 
 <script>
     jQuery(document).ready(function () {
@@ -83,6 +94,7 @@
             let minimum = jQuery('#new_treatment_minimum').val();
             let maximum = jQuery('#new_treatment_maximum').val();
             let categories = JSON.parse(html_table_to_json(jQuery('#new_treatment_categories').html())).join(' ');
+            let parent_term = jQuery('#new_treatment_parent_term').val();
 
             jQuery.ajax({
                 url: '/ajax/treatment/create',
@@ -93,7 +105,8 @@
                     default_value : default_value,
                     minimum : minimum,
                     maximum : maximum,
-                    categories : categories
+                    categories : categories,
+                    parent_term : parent_term
                 },
                 success: function(response) { 
                     jQuery('#working_modal').modal("hide");
@@ -102,6 +115,7 @@
                     } else {
                         alert("New treatment saved.");
                     }
+                    window.location.reload();
                 },
                 error: function(response) { 
                     jQuery('#working_modal').modal("hide");
@@ -115,16 +129,23 @@
             let treatment_type = jQuery(this).val();
             if (treatment_type === 'numeric') {
                 jQuery('#new_treatment_minimum_value_container').show();
+                jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').show();
                 jQuery('#new_treatment_add_categories_container').hide();
                 jQuery('#new_treatment_default_value_label').html("Default value:");
                 jQuery('#new_treatment_default_value').val('');
             } else if (treatment_type === 'qualitative') {
                 jQuery('#new_treatment_minimum_value_container').hide();
+                jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').hide();
                 jQuery('#new_treatment_add_categories_container').show();
                 jQuery('#new_treatment_default_value_label').html("Default category:");
                 jQuery('#new_treatment_default_value').val('');
+            } else if (treatment_type === 'ontology') {
+                jQuery('#new_treatment_minimum_value_container').hide();
+                jQuery('#new_treatment_maximum_value_container').hide();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_container').hide();
             }
         });
 
