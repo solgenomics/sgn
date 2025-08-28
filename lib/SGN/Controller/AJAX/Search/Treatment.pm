@@ -22,9 +22,11 @@ sub search : Path('/ajax/search/treatments') Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $params = $c->req->params() || {};
-    #print STDERR Dumper $params;
 
-    my $ontology_db_id;
+    my $ontology_db_ids = [];
+    if ($params->{'ontology_db_id[]'}){
+        $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
+    }
 
     my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
@@ -36,11 +38,15 @@ sub search : Path('/ajax/search/treatments') Args(0) {
         status => []
     });
 
-    my $result = $observation_variables->observation_variable_ontologies({cvprop_type_names => ['experiment_treatment_ontology']});
+    my $result = $observation_variables->observation_variable_ontologies({cvprop_type_names => ['experiment_treatment_ontology', 'composed_experiment_treatment_ontology']});
 
     my @ontos;
-    foreach my $o (@{$result->{result}->{data}}) {
-        $ontology_db_id = $o->{ontologyDbId};
+    if (scalar(@{$ontology_db_ids}) == 0) {
+        foreach my $o (@{$result->{result}->{data}}) {
+            push @ontos, $o->{ontologyDbId};
+        }
+    } else {
+        @ontos = @{$ontology_db_ids};
     }
 
     my $rows = $params->{length};
@@ -72,7 +78,7 @@ sub search : Path('/ajax/search/treatments') Args(0) {
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
 	    is_variable=>1,
-        ontology_db_id_list => [$ontology_db_id],
+        ontology_db_id_list => \@ontos,
         limit => $limit,
         offset => $offset,
         trait_name_list => $subset_treatments,
