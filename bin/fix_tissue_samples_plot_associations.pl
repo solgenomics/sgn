@@ -5,7 +5,7 @@ fix_tissue_samples_plot_associations.pl - a script to fix associations between t
 
 =head1 DESCRIPTION
 
-perl bin/fix_tissue_sampels_plot_associations.pl -H <host> -D <dbname> file.tsv
+perl bin/fix_tissue_samples_plot_associations.pl -H <host> -D <dbname> file.tsv
 
 where file.tsv is a tab delimited file with the following two columns:
 
@@ -80,7 +80,13 @@ while (<$F>) {
 
     $h->execute($tissue_sample_name);
 
-    if (my ($already_associated_plot_name, $already_associated_plot_id, $stock_rel_id, $already_associated_plot_type, $associated_tissue_sample_name, $tissue_sample_id, $tissue_sample_type) = $h->fetchrow_array()) {
+    if (my ($already_associated_plot_name,
+	$already_associated_plot_id,
+	$stock_rel_id,
+	$already_associated_plot_type,
+	$associated_tissue_sample_name,
+	$tissue_sample_id,
+	$tissue_sample_type) = $h->fetchrow_array()) {
 	
 	if ($already_associated_plot_name) {
 	    print STDERR "PLOT $already_associated_plot_name already assigned to tissue sample $tissue_sample_name. Skipping. \n";
@@ -105,8 +111,8 @@ while (<$F>) {
 	    next();
 	}
 
-	my $pq = "SELECT stock_id, cvterm.name FROM stock join cvterm on(stock.type_id=cvterm.cvterm_id) where uniquename = ?";
-	my $h = $dbh->prepare($pq);
+	my $tsq = "SELECT stock_id, cvterm.name FROM stock join cvterm on(stock.type_id=cvterm.cvterm_id) where uniquename = ?";
+	my $h = $dbh->prepare($tsq);
 	$h->execute($tissue_sample_name);
 
 	my ($tissue_sample_id, $type) = $h->fetchrow_array();
