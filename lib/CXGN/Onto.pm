@@ -8,6 +8,7 @@ use Try::Tiny;
 use Bio::Chado::Schema;
 use SGN::Model::Cvterm;
 use Sort::Naturally;
+use List::Util qw/max/;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -134,6 +135,7 @@ sub get_root_nodes {
 sub store_composed_term {
     my $self = shift;
     my $new_trait_names = shift;
+    my $type = shift || 'trait';
     #print STDERR Dumper $new_trait_names;
 
     my $schema = $self->schema();
@@ -165,25 +167,59 @@ sub store_composed_term {
             next;
         }
 
-        my $db = $schema->resultset("General::Db")->find_or_create({ name => 'COMP' });
-        my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_trait' });
+        my $db;
+        my $cv;
+        my $root_term_name;
+        my $accession;
+        my $dbname;
 
-        my $accession_query = "SELECT nextval('composed_trait_ids')";
-        my $h = $dbh->prepare($accession_query);
-        $h->execute();
-        my $accession = $h->fetchrow_array();
+        my $h;
+
+        if ($type eq 'trait') {
+            $db = $schema->resultset("General::Db")->find_or_create({ name => 'COMP' });
+            $dbname = 'COMP';
+            $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_trait' });
+            $root_term_name = 'Composed traits';
+
+            my $accession_query = "SELECT nextval('composed_trait_ids')";
+            $h = $dbh->prepare($accession_query);
+            $h->execute();
+            $accession = $h->fetchrow_array();
+        } elsif ($type eq 'experiment_treatment') {
+            $db = $schema->resultset("General::Db")->find_or_create({ name => 'COMP_EXP_TREATMENT' });
+            $dbname = 'COMP_EXP_TREATMENT';
+            $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_experiment_treatment' });
+            $root_term_name = 'Composed experimental treatment ontology';
+
+            my $get_db_accessions_sql = "SELECT accession FROM dbxref JOIN db USING (db_id) WHERE db.name='COMP_EXP_TREATMENT';";
+
+            $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
+            $h->execute();
+
+            my @accessions;
+
+            while (my $accession = $h->fetchrow_array()) {
+                push @accessions, int($accession =~ s/^0+//r);
+            }
+
+            if (scalar(@accessions) > 0) {
+                $accession = max(@accessions) + 1;
+            } else {
+                $accession = 1;
+            }
+        }
 
         my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create( {
             db_id     => $db->get_column('db_id'),
             accession => sprintf("%07d",$accession)
         });
 
-        #parent term for post-composed traits should already be in teh database.
+        #parent term for post-composed traits should already be in the database.
         #Using here create_with if for some reason the root term for the COMP ontology needs to be created
         my $parent_term= $schema->resultset("Cv::Cvterm")->create_with(
             { cv     =>$cv,
-            name   => 'Composed traits',
-            db     => $db,
+            name   => $root_term_name,
+            db     => $db
         });
 
         print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
@@ -226,7 +262,7 @@ sub store_composed_term {
             }
         }
 
-        push @new_terms, [$new_term->cvterm_id, $new_term->name().'|COMP:'.sprintf("%07d",$accession)];
+        push @new_terms, [$new_term->cvterm_id, $new_term->name()."|.$dbname:".sprintf("%07d",$accession)];
     }
 
     #Takes long on cassavabase.. instead the materialized view is refreshed automatically in a background ajax process.

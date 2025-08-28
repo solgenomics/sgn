@@ -9,12 +9,12 @@
 
     <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
         <div id="treatment_search_form" class="form-horizontal well">
-            <!--<div class="form-group form-group-sm">
+            <div class="form-group form-group-sm">
                 <label class="col-sm-3 control-label">Select Ontology Name(s): </label>
                 <div class="col-sm-9" >
                     <div id="treatment_search_ontology_select"></div>
                 </div>
-            </div> -->
+            </div>
             <div class="form-group form-group-sm">
                 <label class="col-sm-3 control-label">Search Treatment Name: </label>
                 <div class="col-sm-9" >
@@ -88,7 +88,7 @@
 
 jQuery(document).ready(function () {
 
-    //get_select_box('trait_variable_ontologies', 'treatment_search_ontology_select', { 'name' : 'treatment_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['experiment_treatment_ontology']) });
+    get_select_box('trait_variable_ontologies', 'treatment_search_ontology_select', { 'name' : 'treatment_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['experiment_treatment_ontology', 'composed_experiment_treatment_ontology']) });
 
     jQuery('[data-toggle="tooltip"]').tooltip();
 

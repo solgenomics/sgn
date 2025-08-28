@@ -45,6 +45,7 @@ function get_component_ids () {
   if (jQuery("#method_select").val()) { component_ids.push(jQuery("#method_select").val()); }
   if (jQuery("#unit_select").val()) { component_ids.push(jQuery("#unit_select").val()); }
   if (jQuery("#trait_select").val()) { component_ids.push(jQuery("#trait_select").val()); }
+  if (jQuery("#experiment_treatment_select").val()) { component_ids.push(jQuery("#experiment_treatment_select").val()); }
   if (jQuery("#tod_select").val()) { component_ids.push(jQuery("#tod_select").val()); }
   if (jQuery("#toy_select").val()) { component_ids.push(jQuery("#toy_select").val()); }
   if (jQuery("#gen_select").val()) { component_ids.push(jQuery("#gen_select").val()); }
@@ -62,7 +63,11 @@ function retrieve_matching_traits (component_ids) {
   ids["attribute_ids"] = jQuery("#attribute_select").val();
   ids["method_ids"] = jQuery("#method_select").val();
   ids["unit_ids"] = jQuery("#unit_select").val();
-  ids["trait_ids"] = jQuery("#trait_select").val();
+  if (jQuery("#trait_select").val()) {
+    ids["trait_ids"] = jQuery("#trait_select").val();
+  } else {
+    ids["trait_ids"] = jQuery("#experiment_treatment_select").val();
+  }
   ids["tod_ids"] = jQuery("#tod_select").val();
   ids["toy_ids"] = jQuery("#toy_select").val();
   ids["gen_ids"] = jQuery("#gen_select").val();

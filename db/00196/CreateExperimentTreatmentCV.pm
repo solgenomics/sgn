@@ -134,6 +134,13 @@ sub patch {
 				dbxref => '0000001'
 		})->cvterm_id();
 
+        my $composed_experiment_treatment_root_id = $schema->resultset("Cv::Cvterm")->create_with({
+				name => 'Composed experimental treatment ontology',
+				cv => 'composed_experiment_treatment',
+				db => 'COMP_EXP_TREATMENT',
+				dbxref => '0000000'
+		})->cvterm_id();
+
         my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
         my $rel_cv_id;
         if ($relationship_cv) {
