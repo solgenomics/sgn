@@ -1,9 +1,11 @@
 <%args>
 $transformation_id
+$program_name
+$can_obsolete
 </%args>
 
 
-<&| /page/info_section.mas, title => 'Transgenic Lines (Accessions) Details', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Transgenic Lines (Accessions)', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -11,25 +13,72 @@ $transformation_id
                     <table class="table table-hover table-bordered" id="transgenic_line_details_table">
                     </table>
                 </div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <&| /page/info_section.mas, title => 'Add accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding transgenic lines (accessions) to a new or exisiting list</i>'&>
+                            <br>
+                            <div id="transgenic_lines_to_new_list" style="display:none"></div>
+                            <div id="transgenic_lines_add_to_list"></div>
+                        </&>
+                    </div>
+                </div>
+% if($can_obsolete) {
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="obsolete_transgenic_lines_in_bulk_link">Obsolete Accessions in Bulk</button>
+% }
             </div>
         </div>
     </div>
 </&>
 
+<& /transformation/obsolete_stock_dialog.mas &>
+<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name &>
 
 <script>
 
 jQuery(document).ready(function(){
     const transformation_stock_id = "<%$transformation_id%>";
-    const transgenic_line_details_table = jQuery('#transgenic_line_details_table').DataTable({
+    const can_obsolete = "<%$can_obsolete%>";
+    const transgenic_lines_table = jQuery('#transgenic_line_details_table').DataTable({
         'ajax': '/ajax/transformation/transgenic_line_details/'+transformation_stock_id,
         'autoWidth': false,
         'order': false,
         'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
             { title: "Number of Insertions", "data": "number_of_insertions" },
+            { title: "Obsolete Accession", "data": null, "render": function ( data, type, row ) {
+                if (can_obsolete) {
+                    if (row.is_in_trial){
+                        return 'Used in a trial, cannot obsolete';
+                    } else {
+                        return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>";
+                    }
+                } else {
+                    return '';
+                }
+            }},
         ],
 
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#transgenic_lines_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                let html = "";
+                for(let i=0; i<json.data.length; i++){
+                    html += json.data[i].transformant_name+"\n";
+                }
+
+                jQuery("#transgenic_lines_to_new_list").html(html);
+                addToListMenu("transgenic_lines_add_to_list", "transgenic_lines_to_new_list", {
+                    selectText: true,
+                    listType: 'accessions',
+                });
+            }
+        }
+    });
+
+    jQuery('#obsolete_transgenic_lines_in_bulk_link').click(function() {
+        jQuery("#obsolete_accessions_in_bulk_dialog").modal("show");
     });
 
 });
