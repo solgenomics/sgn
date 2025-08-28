@@ -920,7 +920,7 @@ sub set_species {
 =head2 function get_image_ids()
 
   Synopsis:     my @images = $self->get_image_ids()
-  Arguments:    none
+  Arguments:    include_obselete
   Returns:      a list of image ids
   Side effects:	none
   Description:	a method for fetching all images associated with a stock
@@ -928,9 +928,15 @@ sub set_species {
 =cut
 
 sub get_image_ids {
-    my $self = shift;
+    my ($self, $include_obsolete) = @_;
     my @ids;
-    my $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
+
+    my $q;
+    if ($include_obsolete) {
+        $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
+    } else {
+        $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) JOIN metadata.md_image USING(image_id) WHERE stock_id = ? AND obsolete = 'f' ORDER BY stock_image.display_order ASC";
+    }
     my $h = $self->schema->storage->dbh()->prepare($q);
     $h->execute($self->stock_id);
     while (my ($image_id, $stock_type, $display_order) = $h->fetchrow_array()){
