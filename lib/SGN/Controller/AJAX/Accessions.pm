@@ -456,6 +456,7 @@ sub add_accession_list_POST : Args(0) {
                     introgression_start_position_bp=>$_->{introgression_start_position_bp},
                     introgression_end_position_bp=>$_->{introgression_end_position_bp},
                     other_editable_stock_props=>$_->{other_editable_stock_props},
+                    number_of_insertions=>$_->{number_of_insertions},
                     sp_person_id => $user_id,
                     user_name => $user_name,
                     modification_note => 'Bulk load of accession information'
@@ -675,7 +676,7 @@ sub population_seedlots_GET : Args(1) {
     my $result;
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
     if (($member_type eq 'plots') || ($member_type eq 'plants')) {
-        $result = $ac->get_population_source_seedlots($stock_id);        
+        $result = $ac->get_population_source_seedlots($stock_id);
     } else {
         $result = $ac->get_population_seedlots($stock_id);
     }

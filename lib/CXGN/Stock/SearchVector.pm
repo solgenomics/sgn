@@ -264,7 +264,7 @@ sub search {
     my $using_vectorprop_filter = $self->search_vectorprop || 0;
     my $limit = $self->limit;
     my $offset = $self->offset;
-        
+
     my $stock_type_name = 'vector_construct';
     my $stock_type_id;
 
@@ -490,8 +490,8 @@ sub search {
     my $records_total = 0;
     my %result_hash;
     my @result_stock_ids;
-    
-    if ($using_vectorprop_filter == 0 || ($using_vectorprop_filter = 1 && scalar(@vectorprop_filtered_stock_ids)>0 )){  
+
+    if ($using_vectorprop_filter == 0 || ($using_vectorprop_filter = 1 && scalar(@vectorprop_filtered_stock_ids)>0 )){
 
         my $rs = $schema->resultset("Stock::Stock")->search(
         $search_query,
@@ -552,14 +552,14 @@ sub search {
     }
     # Comma separated list of query placeholders for the result stock ids
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
-    
+
     # Get additional stock properties (pedigree, synonyms, donor info)
     my $stock_query = "SELECT stock_id, uniquename, organism_id, stock_synonym
         FROM materialized_stockprop
         WHERE stock_id IN ($id_ph);";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
     $sth->execute(@result_stock_ids);
-    
+
     # Add additional organism and stock properties to the result hash for each stock
     while (my @r = $sth->fetchrow_array()) {
         my $stock_id = $r[0];
@@ -625,9 +625,10 @@ sub _refresh_materialized_stockprop {
         $h->execute();
     };
     if ($@) {
-        my @stock_props = ('block', 'col_number', 'igd_synonym', 'is a control', 'location_code', 'organization', 'plant_index_number', 'subplot_index_number', 'tissue_sample_index_number', 'plot number', 'plot_geo_json', 'range', 'replicate', 'row_number', 'stock_synonym', 'T1', 'T2', 'variety',
+        my @stock_props = ('block', 'col_number', 'igd_synonym', 'is a control', 'location_code', 'organization', 'plant_index_number', 'subplot_index_number', 'tissue_sample_index_number', 'plot number', 'plot_geo_json', 'range', 'replicate', 'row_number', 'stock_synonym', 'T1', 'T2', 'variety', 'transgenic',
         'notes', 'state', 'accession number', 'PUI', 'donor', 'donor institute', 'donor PUI', 'seed source', 'institute code', 'institute name', 'biological status of accession code', 'country of origin', 'type of germplasm storage code', 'entry number', 'acquisition date', 'current_count', 'current_weight_gram', 'crossing_metadata_json', 'ploidy_level', 'genome_structure',
-        'introgression_parent', 'introgression_backcross_parent', 'introgression_map_version', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'is_blank', 'concentration', 'volume', 'extraction', 'dna_person', 'tissue_type', 'ncbi_taxonomy_id', 'seedlot_quality');
+        'introgression_parent', 'introgression_backcross_parent', 'introgression_map_version', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'is_blank', 'concentration', 'volume', 'extraction', 'dna_person', 'tissue_type', 'ncbi_taxonomy_id', 'seedlot_quality', 'SelectionMarker', 'CloningOrganism', 'CassetteName','Strain', 'InherentMarker', 'Backbone', 'VectorType', 'Gene', 'Promotors', 'Terminators', 'PlantAntibioticResistantMarker', 'BacterialResistantMarker');
+
         my %stockprop_check = map { $_ => 1 } @stock_props;
         my @additional_terms;
         foreach (@$stockprop_view) {
@@ -665,7 +666,7 @@ sub _refresh_materialized_stockprop {
                 });
                 $cvterm_id = $new_term->cvterm_id();
             }
-            
+
             $stockprop_refresh_q .= ",(''".$cvterm_id."'')";
         }
 
