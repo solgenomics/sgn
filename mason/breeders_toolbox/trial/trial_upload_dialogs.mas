@@ -731,7 +731,7 @@ $design_types => ()
 
                     <b>Treatments:</b>
                     <ul>
-                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). The name of the column should be in the form <i>treatment_name|treatment_id</i>, such as <i>light intensity|TREATMENT:00000001</i>. Consult the treatment search page for treatment names and IDs.)</li>
+                    <li>Experimental treatments are handled in much the same way as phenotypes, and can be uploaded from the trial detail page after trial creation.</li>
                     </ul>
 
                     <hr />
@@ -839,7 +839,7 @@ $design_types => ()
 
                     <b>Treatments:</b>
                     <ul>
-                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). The name of the column should be in the form <i>treatment_name|treatment_id</i>, such as <i>light intensity|TREATMENT:00000001</i>. Consult the treatment search page for treatment names and IDs.)</li>
+                    <li>Experimental treatments are handled in much the same way as phenotypes, and can be uploaded from the trial detail page after trial creation.</li>
                     </ul>
 
                     <hr />

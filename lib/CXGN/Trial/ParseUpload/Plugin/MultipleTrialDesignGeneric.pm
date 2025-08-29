@@ -11,7 +11,7 @@ use CXGN::Trial;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
-# Any additional columns that are not required or optional will be used as a treatment
+# Any additional columns that are not required or optional were formerly used as a treatment, but will now result in a warning and be ignored on upload.
 
 # VALID DESIGN TYPES
 my %valid_design_types = (
@@ -74,6 +74,11 @@ sub _validate_with_plugin {
     my $parsed_data = $parsed->{'data'};
     my $parsed_values = $parsed->{'values'};
     my $treatments = $parsed->{'additional_columns'};
+
+    # treatments as additional columns is deprecated, and those columns are ignored. 
+    if ($treatments) { 
+        push @warning_messages, "Using additional columns as treatments has been deprecated. Please upload experimental treatments from the trial detail page.";
+    }
 
     # Return file parsing errors
     if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
@@ -204,15 +209,6 @@ sub _validate_with_plugin {
         if ($entry_number && !($entry_number =~ /^\d+?$/)) {
             push @error_messages, "Row $row: entry_number <strong>$entry_number</strong> must be a positive integer.";
         }
-
-        # Treatment Values: must be either blank, 0, or 1
-        foreach my $treatment (@$treatments) {
-            my $treatment_value = $data->{$treatment};
-            if ( $treatment_value && $treatment_value ne '' && $treatment_value ne '0' && $treatment_value ne '1' ) {
-                push @error_messages, "Row $row: Treatment value for treatment <strong>$treatment</strong> should be either 1 (applied) or empty (not applied).";
-            }
-        }
-
 
         # Create maps to check for overall validation within individual trials
         my $tk = $trial_name;
@@ -494,7 +490,7 @@ sub _parse_with_plugin {
     my $parsed = $self->_get_validated_data();
     my $data = $parsed->{'data'};
     my $values = $parsed->{'values'};
-    my $treatments = $parsed->{'additional_columns'};
+    # my $treatments = $parsed->{'additional_columns'};
 
     # Get synonyms for accessions in data
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -597,13 +593,6 @@ sub _parse_with_plugin {
 
         if ($entry_number) {
             $seen_entry_numbers{$current_trial_name}->{$accession_name} = $entry_number;
-        }
-
-        foreach my $treatment_name (@$treatments){
-            my $treatment_value = $row->{$treatment_name};
-            if ( $treatment_value ) {
-                push @{$design_details{treatments}->{$treatment_name}{new_treatment_stocks}}, $plot_name;
-            }
         }
 
         if ($acc_synonyms_lookup{$accession_name}){

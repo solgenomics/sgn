@@ -114,8 +114,8 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
                         alert(response.error);
                     } else {
                         alert("New treatment saved.");
+                        window.location.reload();
                     }
-                    window.location.reload();
                 },
                 error: function(response) { 
                     jQuery('#working_modal').modal("hide");
