@@ -445,6 +445,7 @@ sub verify {
     my $traits_validation = $trait_validator->validate($schema,'traits',\@trait_list);
     my @traits_missing = @{$traits_validation->{'missing'}};
     my @traits_wrong_ids = @{$traits_validation->{'wrong_ids'}};
+    my @traits_not_variables = @{$traits_validation->{'not_variables'}};
     my $error_message = '';
     my $warning_message = '';
 
@@ -458,8 +459,18 @@ sub verify {
         # Display matches of traits with the wrong id
         if ( scalar(@traits_wrong_ids) > 0 ) {
             $error_message .= "<br /><br /><strong>Possible Trait Matches:</strong>";
+            $error_message .= "<br /><br />The following traits have names and ontology identifiers that do not match in this database.  The following suggestions have the correct ontology identifier for the name used in your data.";
             foreach my $m (@traits_wrong_ids) {
                 $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />should be<br />" . $m->{'matching_term'};
+            }
+        }
+
+        # Display traits that are not variables
+        if ( scalar(@traits_not_variables) > 0 ) {
+            $error_message .= "<br /><br /><strong>Traits That Are Not Ontology Variables:</strong>";
+            $error_message .= "<br /><br />The following traits are not ontology variables (they do not have associated method and scale information).  Use the Search &gt; Traits page to find the proper Trait Name and Trait ID to use.  The following suggestions include related ontology variables to the terms used in your data.";
+            foreach my $m (@traits_not_variables) {
+                $error_message .= "<br /><br />" . $m->{'original_term'} . "<br />could be<br />" . $m->{'matching_term'};
             }
         }
 
@@ -537,7 +548,9 @@ sub verify {
                 # print STDERR "Trait name = $trait_name\n";
                 foreach my $value_array (@$measurements_array) {
                     # print STDERR "Value array = ".Dumper($value_array)."\n";
-                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array, 1); 
+		    my $multiple_values = 0;
+		    if (scalar(@$measurements_array) > 1) { $multiple_values = 1; } 
+                    ($warnings, $errors) = $self->check_measurement($plot_name, $trait_name, $value_array, $multiple_values); 
                     $error_message .= $errors;
                     $warning_message .= $warnings;
                 }
@@ -641,8 +654,8 @@ sub check_measurement {
             }
         }
 
-        #check that trait value is valid for trait name
-        if (exists($self->check_trait_format()->{$trait_cvterm_id})) {
+        #check that trait value is valid for trait name (but only if we have a trait_value)
+        if ((defined($trait_value) && $trait_value ne '') && exists($self->check_trait_format()->{$trait_cvterm_id})) { 
             # print STDERR "Trait minimum value checks if it exists: " . $self->check_trait_min_value->{$trait_cvterm_id} . "\n";
             if ($self->check_trait_format()->{$trait_cvterm_id} eq 'numeric') {
                 my $trait_format_checked = looks_like_number($trait_value);
@@ -767,7 +780,7 @@ sub check_measurement {
         #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
         #check if the plot_name, trait_name combination already exists in database.
         elsif ($repeat_type eq "single") {
-	    if ($file_contains_multiple_values) {
+	    if ($file_contains_multiple_values  && (defined($trait_value) && $trait_value ne '')) {
 		$warning_message .= "Multiple values present in file for single repeat_type term $trait_name\n";
 	    }
 	    

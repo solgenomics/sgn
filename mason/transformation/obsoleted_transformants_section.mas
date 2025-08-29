@@ -24,7 +24,8 @@ jQuery(document).ready(function(){
     const obsoleted_transformants_table = jQuery('#obsoleted_transformants_table').DataTable({
         'ajax': '/ajax/transformation/obsoleted_transformants/'+transformation_stock_id,
         'autoWidth': false,
-        columns: [
+        'order': false,
+        'columns': [
             { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
             { title: "Note", "data": "obsolete_note" },
             { title: "Date", "data": "obsolete_date" },

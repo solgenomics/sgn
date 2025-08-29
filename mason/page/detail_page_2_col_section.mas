@@ -85,6 +85,7 @@ $pubs => undef
 $cvterm_add_uri => undef
 $referer => undef
 $is_obsolete => undef
+$is_in_trial => undef
 
 #Specific to genotyping protocol detail page
 $protocol_id => undef
@@ -402,7 +403,7 @@ $field_headers => ()
                                 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$referer &>
 % } #End stock_comments_section
 % if ($info_section_id eq 'stock_delete_section'){
-                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete &>
+                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete, is_in_trial=>$is_in_trial &>
 % } #End stock_delete_section
 % if ($info_section_id eq 'population_delete_section'){
                                 <& /stock/population_delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename &>

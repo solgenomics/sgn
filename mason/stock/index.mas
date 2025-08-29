@@ -67,6 +67,7 @@ use CXGN::People::Person;
 use CXGN::Chado::Publication;
 use CXGN::Cview::Map::SGN::Genotype;
 use CXGN::Cview::MapOverviews;
+use SGN::Image;
 
 my $trial_stock_type => undef;
 my $stock = $stockref->{stock};
@@ -85,6 +86,7 @@ my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
 my $is_obsolete = $stockref->{is_obsolete};
 my $is_a_transgenic_line = $stockref->{is_a_transgenic_line};
+my $is_in_trial = $stockref->{is_in_trial};
 
 my @editable_stock_props = split "," , $editable_stock_props_string;
 
@@ -110,6 +112,15 @@ my $image_ids =  $stockref->{image_ids} || [] ;
 my $related_image_ids =  $stockref->{related_image_ids} || [] ;
 my $stockprops = $stockref->{props};
 
+my @valid_image_ids;
+foreach my $image (@$image_ids) {
+    my $image_id = $image->[0];
+    my $image_obj = SGN::Image->new($schema->storage->dbh, $image_id, $c);
+    if ($image_obj->get_md5sum()) {
+        push(@valid_image_ids, $image)
+    }
+}
+$image_ids = \@valid_image_ids;
 
 #my $pedigree= ['pedigree', 'male parent', 'female parent'];
 # get pedigree of stock
@@ -439,7 +450,7 @@ function jqueryStuff() {
 % if ($edit_privs && $type_name eq 'population') {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, info_section_title => "<h4 style='display:inline'>Delete This Stock</h4>", info_section_subtitle => 'Delete this population.', icon_class => "glyphicon glyphicon-trash", info_section_id => "population_delete_section" &>
 % } elsif ($edit_privs && $type_name ne 'population') {
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, is_obsolete=> $is_obsolete, info_section_title => "<h4 style='display:inline'>" . ($is_obsolete ? "Un-Obsolete This Stock" : "Obsolete This Stock") . "</h4>", info_section_subtitle => ($is_obsolete ? "Make a stock not obsolete so that it does show in searches" : "Make a stock obsolete so that it does not show in searches"), icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, stock_uniquename => $uniquename, is_obsolete=> $is_obsolete, is_in_trial=> $is_in_trial, info_section_title => "<h4 style='display:inline'>" . ($is_obsolete ? "Un-Obsolete This Stock" : "Obsolete This Stock") . "</h4>", info_section_subtitle => ($is_obsolete ? "Make a stock not obsolete so that it does show in searches" : "Make a stock obsolete so that it does not show in searches"), icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
 % }
 
 </&>

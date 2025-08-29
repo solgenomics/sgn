@@ -50,6 +50,8 @@ use Archive::Tar;
 use CXGN::Stock::ObsoletedStocks;
 use CXGN::People::Person;
 use CXGN::BreedersToolbox::Accessions;
+use CXGN::Cross;
+use Sort::Key::Natural qw(natkeysort);
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -2084,6 +2086,89 @@ sub download_summary_stock_entries : Path('/breeders/download_summary_stock_entr
     $c->res->body($output);
 
 }
+
+
+# Download cross and family that each accession belongs to
+
+sub download_cross_family_of_progenies : Path('/breeders/download_cross_family_of_progenies') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+
+    my $progeny_list_id = $c->req->param("progeny_list_list_select");
+    my $file_format = $c->req->param("file_format") || ".xlsx";
+    my $dl_token = $c->req->param("cross_family_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    if ( !$progeny_list_id ) {
+        print STDERR "ERROR: No progeny list id provided to download cross and family info";
+        return;
+    }
+
+    my $progeny_list = SGN::Controller::AJAX::List->retrieve_list($c, $progeny_list_id);
+    my @progeny_names = map { $_->[1] } @$progeny_list;
+    my @progeny_stock_ids = ();
+    foreach my $progeny(sort@progeny_names) {
+        my $progeny_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $progeny });
+        my $progeny_id = $progeny_rs->stock_id;
+        push @progeny_stock_ids, $progeny_id;
+    }
+
+    my @download_rows;
+    my $all_info = CXGN::Cross->get_progeny_cross_family_info($schema, \@progeny_stock_ids);
+    my @sorted_names = natkeysort {($_->[1])} @$all_info;
+
+    foreach my $info (@sorted_names) {
+        my $progeny_name = $info->[1];
+        my $female_parent_name = $info->[3];
+        my $male_parent_name = $info->[5];
+        my $cross_type = $info->[6];
+        my $cross_unique_id = $info->[8];
+        my $family_name = $info->[10];
+        my $family_type = $info->[11];
+        my $crossing_experiment = $info->[13];
+        push @download_rows, [$progeny_name, $female_parent_name, $male_parent_name, $cross_type, $cross_unique_id, $family_name, $family_type, $crossing_experiment];
+    }
+
+    # Create tempfile
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_cross_family_XXXXX", UNLINK => 0);
+    # Create and Return XLSX file
+    if ( $file_format eq ".xlsx" ) {
+        my $file_path = $tempfile . ".xlsx";
+        my $file_name = basename($file_path);
+
+        # Get Excel worksheet
+        my $workbook = Excel::Writer::XLSX->new($file_path);
+        my $worksheet = $workbook->add_worksheet();
+
+        # Write header
+        my @header = ("Accession Name", "Female Parent", "Male Parent", "Cross Type", "Cross Unique ID", "Family Name", "Family Type", "Crossing Experiment");
+        $worksheet->write_row(0, 0, \@header);
+
+        # Write each event
+        my $row_count = 1;
+        foreach my $row (@download_rows) {
+            $worksheet->write_row($row_count, 0, $row);
+            $row_count++;
+        }
+        $workbook->close();
+
+        # Return the xls file
+        $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+        my $output = read_file($file_path);
+
+        $c->res->body($output);
+    }
+
+}
+
+
 
 #=pod
 1;

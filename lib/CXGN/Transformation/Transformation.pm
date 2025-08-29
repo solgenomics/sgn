@@ -32,12 +32,12 @@ has 'dbh' => (
 );
 
 has 'project_id' => (
-    isa => "Int",
+    isa => 'Maybe[Int]',
     is => 'rw',
 );
 
 has 'transformation_stock_id' => (
-    isa => "Int",
+    isa => 'Maybe[Int]',
     is => 'rw',
 );
 
@@ -103,7 +103,7 @@ sub get_active_transformations_in_project {
         LEFT JOIN stock_relationship AS has_control ON (has_control.object_id =transformation.stock_id) AND has_control.type_id = ?
         LEFT JOIN stock AS control on (has_control.subject_id = control.stock_id)
         LEFT JOIN stockprop AS stockprop3 ON (stockprop3.stock_id = transformation.stock_id) AND stockprop3.type_id in (?, ?)
-        WHERE nd_experiment_project.project_id = ? AND stockprop3.value IS NULL";
+        WHERE nd_experiment_project.project_id = ? AND stockprop3.value IS NULL ORDER BY transformation.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -174,7 +174,7 @@ sub _get_transformants {
     my $q = "SELECT stock.stock_id, stock.uniquename
         FROM stock_relationship
         JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
-        where stock_relationship.object_id = ? AND stock.is_obsolete = 'F' ";
+        where stock_relationship.object_id = ? AND stock.is_obsolete = 'F' ORDER BY stock.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -210,7 +210,9 @@ sub _get_obsoleted_transformants {
 
     my @obsoleted_transformants = ();
     while (my ($stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
-        push @obsoleted_transformants, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id]
+        if ($obsolete_date =~ /Obsolete/) {
+            push @obsoleted_transformants, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id];
+        }
     }
 
     $self->obsoleted_transformants(\@obsoleted_transformants);

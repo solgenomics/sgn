@@ -2054,7 +2054,8 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     unlink $upload_tempfile;
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('TrialPlotGPSCoordinatesXLS');
-    my $parsed_data = $parser->parse();
+    my $coord_type = $c->req->param('upload_gps_coordinate_type');
+    my $parsed_data = $parser->parse({ coord_type => $coord_type });
     #print STDERR Dumper $parsed_data;
 
     if (!$parsed_data) {
@@ -2086,26 +2087,45 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>\@plot_stock_ids}});
         while (my $plot=$plots_rs->next){
             my $coords = $plot_stock_ids_hash{$plot->stock_id};
-            my $geo_json = {
-                "type"=> "Feature",
-                "geometry"=> {
-                    "type"=> "Polygon",
-                    "coordinates"=> [
-                        [
-                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
-                            [$coords->{WGS84_bottom_right_x}, $coords->{WGS84_bottom_right_y}],
-                            [$coords->{WGS84_top_right_x}, $coords->{WGS84_top_right_y}],
-                            [$coords->{WGS84_top_left_x}, $coords->{WGS84_top_left_y}],
-                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+            my $geo_json;
+
+            if ($coord_type eq 'polygon') {
+                $geo_json = {
+                    "type"=> "Feature",
+                    "geometry"=> {
+                        "type"=> "Polygon",
+                        "coordinates"=> [
+                            [
+                                [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+                                [$coords->{WGS84_bottom_right_x}, $coords->{WGS84_bottom_right_y}],
+                                [$coords->{WGS84_top_right_x}, $coords->{WGS84_top_right_y}],
+                                [$coords->{WGS84_top_left_x}, $coords->{WGS84_top_left_y}],
+                                [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+                            ]
                         ]
-                    ]
-                },
-                "properties"=> {
-                    "format"=> "WGS84",
-                }
-            };
+                    },
+                    "properties"=> {
+                        "format"=> "WGS84",
+                    }
+                };    
+            } elsif ($coord_type eq 'point') {
+                $geo_json = {
+                    "type"=> "Feature",
+                    "geometry"=> {
+                        "type"=> "Point",
+                        "coordinates"=> [
+                            
+                            $coords->{WGS84_x}, $coords->{WGS84_y},
+                            
+                        ]
+                    },
+                    "properties"=> {
+                        "format"=> "WGS84",
+                    }
+                }; 
+            }
+            
             my $geno_json_string = encode_json $geo_json;
-            #print STDERR $geno_json_string."\n";
             my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
             $previous_plot_gps_rs->delete_all();
             $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
