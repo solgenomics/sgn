@@ -538,8 +538,8 @@ if (defined $image_id) {
 $resp = $ua->put("http://localhost:3010/brapi/v2/images/$image_id", Content => $data);
 $response = decode_json $resp->{_content};
 #print STDERR "\n\n" . Dumper$response;
-is_deeply($response->{result}->{observationUnitDbId} , '38843');
-my $image_timestamp = $response->{result}->{imageTimeStamp} ;
+is_deeply($response->{result}->{data}->[0]->{observationUnitDbId} , '38843');
+my $image_timestamp = $response->{result}->{data}->[0]->{imageTimeStamp} ;
 
 $mech->get_ok('http://localhost:3010/brapi/v2/images');
 $response = decode_json $mech->content;
