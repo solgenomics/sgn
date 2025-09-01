@@ -248,6 +248,7 @@ sub verify_exif_POST {
             my $decoded_json = decode_json($meta);
             my $id_type = $decoded_json->{study}->{study_unique_id_name};
             my $stock_name;
+            my $stock_exists;
 
             if ($id_type ne 'ObservationUnitDbId') {
                 # Replace observation unit name with id if there is only is stock name 
@@ -256,10 +257,16 @@ sub verify_exif_POST {
                 $decoded_json->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
             } else {
                 my $stock_id = $decoded_json->{observation_unit}->{observation_unit_db_id};
-                my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
-                $stock_name = $stock->get_name();
+                my $stock_found = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
+                #Check if stock exists in db before creating stock object
+                if ($stock_found) {
+                    my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+                    $stock_name = $stock->get_name();
+                    $stock_exists = "true";
+                } else {
+                    $stock_exists = "false";
+                }
             }
-
             # Get cvterm_id of recorded trait
             my $cvterm_name = $decoded_json->{observation_variable}->{observation_variable_name};
             my $q = "SELECT cvterm_id FROM cvterm join dbxref USING (dbxref_id) JOIN db USING (db_id) WHERE db.name = ? AND cvterm.name = ?";
@@ -268,15 +275,13 @@ sub verify_exif_POST {
             my ($cvterm_id) = $h->fetchrow_array();
 
             $decoded_json->{stock_name} = $stock_name;
-
             if ($cvterm_id) {
                 $decoded_json->{cvterm_id} = $cvterm_id;
             }
-
-            push @results, { filename => $filename, exif => $decoded_json, status => "success" };
+            push @results, { filename => $filename, exif => $decoded_json, status => "success", stock_exists => $stock_exists };
             
         } else {
-            push @results, { filename => $filename, exif => undef, status => "no_eif" };
+            push @results, { filename => $filename, exif => undef, status => "no_exif" };
         }
     }
 

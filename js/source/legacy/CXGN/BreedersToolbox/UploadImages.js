@@ -226,8 +226,16 @@ function verifyExifData(result) {
     const errorMessages = [];
     const missingExifCount = [];
     const finalSuccessMessage = [];
-    //console.log(result);
-    //console.log("image data", result.images[0].exif);
+    console.log("testing", result);
+    console.log("image data", result.images[0].exif);
+
+    if (result.images[0].exif === null) {
+        return false;
+    } 
+
+    if (result.images[0].stock_exists === "false") {
+        errorMessages.push()
+    }
 
     result.images.forEach((img, index) => {
         const imgName = img.filename || `Image ${index + 1}`;
@@ -262,12 +270,14 @@ function verifyExifData(result) {
             errorMessages.push(`${imgName} associated trait ${obsVariableName} does not exist in the database`);
         }
 
-        if (!stockName) {
-            errorMessages.push(`${imgName} Stock ${stockName} does not exist in the database`)
+        if (result.images[0].stock_exists === "false") {
+            errorMessages.push(`${imgName}: ObservationUnitDbId ${exif.observation_unit.observation_unit_db_id} does not exist in the database`);
+        } else if (!stockName) {
+            errorMessages.push(`${imgName} Stock ${stockName} does not exist in the database`);
         }
 
         if (errorMessages.length === 0) {
-            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${exif.stock_name} Associated trait: ${obsVariableName}`);
+            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${exif.stock_name} Associated trait: ${obsVariableName}. Ready to store image`);
         }
     });
 
@@ -418,7 +428,7 @@ function verifyImageFiles(fileData, unitType, transformType) {
           var errors = response.missing.map(function(name) {
               return "<b>" + name + "</b> is not a valid "+unitType;
           });
-          console.log("Errors are "+errors);
+          //console.log("Errors are "+errors);
           return { "error" : errors };
       } else {
           var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
