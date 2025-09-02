@@ -224,22 +224,22 @@ function reportVerifyResult(result) {
 function verifyExifData(result) {
     const successMessages =[];
     const errorMessages = [];
-    const missingExifCount = [];
     const finalSuccessMessage = [];
-    console.log("testing", result);
-    console.log("image data", result.images[0].exif);
-
-    if (result.images[0].exif === null) {
-        return false;
-    } 
-
-    if (result.images[0].stock_exists === "false") {
-        errorMessages.push()
-    }
+    let exifFiles = 0;
+    let nonExifFiles = 0;
+    //console.log("image data", result.images[0].exif);
 
     result.images.forEach((img, index) => {
         const imgName = img.filename || `Image ${index + 1}`;
         const exif = img.exif || {};
+
+        if (result.images[index].status === "no_exif") {
+            errorMessages.push(`${imgName} does not have EXIF data`);
+            nonExifFiles++;
+            return;
+        } else {
+            exifFiles++;
+        }
 
         const hasObsUnit = exif.observation_unit && exif.observation_unit.observation_unit_db_id;
         const hasObsVar = exif.observation_variable && exif.observation_variable.observation_variable_name;
@@ -270,7 +270,7 @@ function verifyExifData(result) {
             errorMessages.push(`${imgName} associated trait ${obsVariableName} does not exist in the database`);
         }
 
-        if (result.images[0].stock_exists === "false") {
+        if (result.images[index].stock_exists === "false") {
             errorMessages.push(`${imgName}: ObservationUnitDbId ${exif.observation_unit.observation_unit_db_id} does not exist in the database`);
         } else if (!stockName) {
             errorMessages.push(`${imgName} Stock ${stockName} does not exist in the database`);
@@ -281,19 +281,27 @@ function verifyExifData(result) {
         }
     });
 
+    let validExif;
     if (errorMessages.length === 0) {
         jQuery('#upload_images_submit_store').attr('disabled', false);
         jQuery('#upload_images_status').html(
             formatMessage(finalSuccessMessage, "success")
         );
-        return [true];
+        return true;
+    } else if (exifFiles > 0 && nonExifFiles > 0) {
+        errorMessages.push("Please load files all containing EXIF data or with the same file naming pattern");
+        validExif = errorMessages;
+    } else if (errorMessages.length > 0 && successMessages.length > 0) {
+        validExif = errorMessages;
     } else {
-        jQuery('#upload_images_submit_store').attr('disbled', true);
-        jQuery('#upload_images_status').html(
-            formatMessage(errorMessages, "error")
-        );
-        return [false];
+        return false;
     }
+
+    jQuery('#upload_images_submit_store').attr('disbled', true);
+    jQuery('#upload_images_status').html(
+        formatMessage(errorMessages, "error")
+    );
+    return validExif;
 }
 
 function parseExifData(exifData, imageFiles) {

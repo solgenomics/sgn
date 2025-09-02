@@ -249,12 +249,18 @@ sub verify_exif_POST {
             my $id_type = $decoded_json->{study}->{study_unique_id_name};
             my $stock_name;
             my $stock_exists;
+            my $stock_name_found;
 
             if ($id_type ne 'ObservationUnitDbId') {
                 # Replace observation unit name with id if there is only is stock name 
                 $stock_name = $decoded_json->{observation_unit}->{observation_unit_db_id};
-                my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name })->stock_id();
-                $decoded_json->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
+                $stock_name_found = $schema->resultset('Stock::Stock')->find({ uniquename => $stock_name});
+                if ($stock_name_found) {
+                    my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name })->stock_id();
+                    $decoded_json->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
+                } else {
+                    $stock_exists = "false";
+                }
             } else {
                 my $stock_id = $decoded_json->{observation_unit}->{observation_unit_db_id};
                 my $stock_found = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
