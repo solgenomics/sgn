@@ -1,12 +1,13 @@
-package SGN::Controller::Treatment;
+package SGN::Controller::Trait;
 
 use Moose;
-use CXGN::Cvterm;
+use Data::Dumper;
 use CXGN::Onto;
+use CXGN::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-sub treatment_design_page : Path('/treatments/design/') Args(0) {
+sub treatment_design_page : Path('/traits/design/') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -21,7 +22,7 @@ sub treatment_design_page : Path('/treatments/design/') Args(0) {
             my $ontology_obj = CXGN::Onto->new({
 			    schema => $schema
             });
-            my @root_nodes = $ontology_obj->get_root_nodes('experiment_treatment_ontology');
+            my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
 
             my $root_term_name = $root_nodes[0]->[1] =~ s/\w+:\d+ //r;
 
@@ -29,17 +30,16 @@ sub treatment_design_page : Path('/treatments/design/') Args(0) {
                 name => $root_term_name,
                 cv_id => $root_nodes[0]->[0]
             })->cvterm_id();
+
             my $cvterm = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $cvterm_id } );
             $c->stash(
-                template => '/tools/treatment_designer.mas',
-                exp_treatment_root => $cvterm
+                template => '/tools/trait_designer.mas',
+                trait_root => $cvterm
             );
         } else {
             $c->stash->{template} = '/site/error/permission_denied.mas';
         }
-
     }
-
 }
 
 1;

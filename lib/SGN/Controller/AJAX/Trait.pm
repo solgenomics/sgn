@@ -1,7 +1,7 @@
-package SGN::Controller::AJAX::Treatment;
+package SGN::Controller::AJAX::Trait;
 
 use Moose;
-use CXGN::Trait::Treatment;
+use CXGN::Trait;
 
 BEGIN {extends 'Catalyst::Controller::REST'};
 
@@ -14,7 +14,7 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON' },
 );
 
-sub create_treatment :Path('/ajax/treatment/create') {
+sub create_trait :Path('/ajax/trait/create') {
     my $self = shift;
     my $c = shift;
 
@@ -22,12 +22,12 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     if (!($c->user() && $c->user->check_roles('curator'))) {
-        $c->stash->{rest} = {error => "You do not have permission to design new treatments.\n"};
+        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
         return;
     }
 
     if (! $c->config->{allow_cvterm_edits}) {
-        $c->stash->{rest} = {error => "You do not have permission to design new treatments.\n"};
+        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
         return;
     }
 
@@ -38,7 +38,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my $minimum = $c->req->param('minimum') ? $c->req->param('minimum') : undef;
     my $maximum = $c->req->param('maximum') ? $c->req->param('maximum') : undef;
     my $categories = $c->req->param('categories') ? $c->req->param('categories') : undef;
-    my $parent_term = $c->req->param('parent_term') || 'Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000';
+    my $parent_term = $c->req->param('parent_term') ? $c->req->param('parent_term') : undef;
 
     $name =~ s/^\s+//;
     $name =~ s/\s+$//;
@@ -72,13 +72,13 @@ sub create_treatment :Path('/ajax/treatment/create') {
         $error .= "You must supply a definition.\n";
     }
     if (defined($definition) && $definition !~ m/([\w\[\]\(\).,!?;:'"-]+\s+){6,}/) {
-        $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the treatment and allows it to be differentiated from other treatments.\n";
+        $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the trait and allows it to be differentiated from other traits.\n";
     }
     if (!$format || ($format ne "numeric" && $format ne "qualitative" && $format ne "ontology")) {
-        $error .= "Treatment format must be numeric, qualitative, or ontology.\n";
+        $error .= "Trait format must be numeric, qualitative, or ontology.\n";
     }
     if (defined($categories) && defined($default_value) && $categories !~ m/$default_value/) {
-        $error .= "The default value of the treatment is not in the categories list.\n";
+        $error .= "The default value of the trait is not in the categories list.\n";
     }
     if (defined($minimum) && defined($maximum) && $maximum < $minimum) {
         $error .= "The maximum value cannot be less than the minimum value.\n";
@@ -89,24 +89,24 @@ sub create_treatment :Path('/ajax/treatment/create') {
         return;
     }
 
-    my $new_treatment;
+    my $new_trait;
 
     eval {
         if ($format eq "numeric") {
-            $new_treatment = CXGN::Trait::Treatment->new({
+            $new_trait = CXGN::Trait->new({
                 bcs_schema => $schema,
                 definition => $definition,
                 name => $name,
                 format => $format
             });
             if (defined($minimum)) {
-                $new_treatment->minimum($minimum);
+                $new_trait->minimum($minimum);
             }
             if (defined($maximum)) {
-                $new_treatment->maximum($maximum);
+                $new_trait->maximum($maximum);
             }
         } elsif ($format eq "qualitative") {
-            $new_treatment = CXGN::Trait::Treatment->new({
+            $new_trait = CXGN::Trait->new({
                 bcs_schema => $schema,
                 name => $name,
                 definition => $definition,
@@ -114,10 +114,10 @@ sub create_treatment :Path('/ajax/treatment/create') {
                 categories => $categories ne "" ? $categories : undef,
             });
             if (defined($categories)) {
-                $new_treatment->categories($categories);
+                $new_trait->categories($categories);
             }
         } elsif ($format eq "ontology") {
-            $new_treatment = CXGN::Trait::Treatment->new({
+            $new_trait = CXGN::Trait->new({
                 bcs_schema => $schema,
                 name => $name,
                 definition => $definition,
@@ -126,14 +126,60 @@ sub create_treatment :Path('/ajax/treatment/create') {
         }
 
         if (defined($default_value)) {
-            $new_treatment->default_value($default_value);
+            $new_trait->default_value($default_value);
         }
 
-        $new_treatment->store($parent_term);
+        $new_trait->interactive_store($parent_term);
     };
 
     if ($@) {
-        $c->stash->{rest} = {error => "An error occurred trying to create treatment: $@"};
+        $c->stash->{rest} = {error => "An error occurred trying to create trait: $@"};
+        return;
+    }
+
+    $c->stash->{rest} = {success => 1};
+}
+
+sub edit_trait :Path('/ajax/trait/edit') {
+    my $self = shift;
+    my $c = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    if (!($c->user() && $c->user->check_roles('curator'))) {
+        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
+        return;
+    }
+
+    if (! $c->config->{allow_cvterm_edits}) {
+        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
+        return;
+    }
+
+    my $cvterm_id = $c->req->param('cvterm_id');
+    my $dbname = $c->req->param('dbname');
+    my $new_name = $c->req->param('new_name');
+    my $new_definition = $c->req->param('new_definition');
+
+    eval {
+        my $trait = CXGN::Trait->new({
+            bcs_schema => $schema,
+            cvterm_id => $cvterm_id
+        });
+
+        if (defined($new_name)) {
+            $trait->name($new_name);
+        }
+        if (defined($new_definition)) {
+            $trait->definition($new_definition);
+        }
+
+        $trait->update();
+    };
+
+    if ($@) {
+        $c->stash->{rest} = {error => "An error occurred updating cvterm: $@"};
         return;
     }
 

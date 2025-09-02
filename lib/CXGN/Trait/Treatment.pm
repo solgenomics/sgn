@@ -13,7 +13,10 @@ though this module contains functions for the creation of treatments that are no
 =head1 SYNOPSIS
 
 my $treatment = CXGN::Trait::Treatment->new({
-
+    bcs_schema => $schema,
+    definition => $definition,
+    name => $name,
+    format => $format
 });
 
 =head1 AUTHOR

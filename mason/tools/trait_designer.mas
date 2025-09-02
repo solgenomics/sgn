@@ -1,0 +1,192 @@
+<%args>
+    $trait_root
+</%args>
+
+<div style="text-align: center; margin: 2em 0">
+   <h2 style="margin-bottom: 1em">Design new traits</h2>
+
+   <h4> Check the <a href='/search/traits'>trait search page</a> to see if your trait has already been made before designing new traits.</h4>
+
+    <br>
+
+   <div class="container-fluid">
+        <form class="form-horizontal" role="form" method="post" id="new_trait_design_form" name="new_trait_design_form">
+        <div class="form-group">
+                <label class="col-sm-3 control-label"> New trait name: </label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_trait_name" name="new_trait_name" type="text" placeholder="Special characters not allowed."/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Definition:</label>
+                <div class="col-sm-9">
+                    <textarea style="width:70%;" class="form-control" id="new_trait_definition" name="new_trait_definition"></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Trait format:</label>
+                <div class="col-sm-9">
+                    <select style="width:70%;" class="form-control" id="new_trait_format_select" name="new_trait_format_select" type="select">
+                        <option value="numeric" selected>Numeric</option>
+                        <option value="qualitative">Qualitative (categorical)</option>
+                        <option value="ontology">Ontology (parent to child terms)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="new_trait_default_value_container">
+                <label class="col-sm-3 control-label" id="new_trait_default_value_label">Default value:</label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_trait_default_value" name="new_trait_default_value" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_trait_minimum_value_container">
+                <label class="col-sm-3 control-label">Minimum value:</label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_trait_min_value" name="new_trait_min_value" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_trait_maximum_value_container">
+                <label class="col-sm-3 control-label">Maximum value:</label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_trait_min_value" name="new_trait_min_value" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_trait_add_categories_container" style="display:none;">
+                <label class="col-sm-3 control-label">Add categories:</label>
+                <div class="col-sm-9">
+                    <table style="width:70%;">
+                        <tr>
+                            <td><input style="width:100%;" class="form-control" id="new_trait_add_category" name="new_trait_add_category" type="text" placeholder="(Optional)"/></td>
+                            <td><button id="new_trait_add_category_btn" class="btn btn-small btn-success">+</button></td>
+                        </tr>
+                    </table>
+                    <table id="new_trait_categories" style="width:30%;">
+                    </table>
+                    <button id="new_trait_remove_category_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
+                </div>
+            </div>
+            <div class="form-group" id="chain_parent_term_container">
+                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Should not be a variable term. 
+Will be the trait root term by default."></span>&nbsp;Chain to an existing term:</label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_trait_parent_term" name="new_trait_parent_term" type="text" placeholder="Full name, as in 'CGIAR cassava trait ontology|CO_334:0000000'"/>
+                </div>
+            </div>
+        </form>
+        <button class="btn btn-primary" id="new_trait_submit_btn">Submit</button>
+    </div>
+</div>
+
+<& /ontology/embedded_browser.mas, cvterm => $trait_root &>
+
+<script>
+    jQuery(document).ready(function () {
+
+        jQuery('#new_trait_submit_btn').on('click', function () {
+
+            jQuery('#working_modal').modal("show");
+
+            let name = jQuery('#new_trait_name').val();
+            let definition = jQuery('#new_trait_definition').val();
+            let format = jQuery('#new_trait_format_select').val();
+            let default_value = jQuery('#new_trait_default_value').val();
+            let minimum = jQuery('#new_trait_minimum').val();
+            let maximum = jQuery('#new_trait_maximum').val();
+            let categories = JSON.parse(html_table_to_json(jQuery('#new_trait_categories').html())).join(' ');
+            let parent_term = jQuery('#new_trait_parent_term').val();
+
+            jQuery.ajax({
+                url: '/ajax/trait/create',
+                data : {
+                    definition : definition,
+                    name : name,
+                    format : format,
+                    default_value : default_value,
+                    minimum : minimum,
+                    maximum : maximum,
+                    categories : categories,
+                    parent_term : parent_term
+                },
+                success: function(response) { 
+                    jQuery('#working_modal').modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        alert("New trait saved.");
+                        window.location.reload();
+                    }
+                },
+                error: function(response) { 
+                    jQuery('#working_modal').modal("hide");
+                    console.log(response);
+                    alert("An error occurred, check console.");
+                }
+            });
+        });
+
+        jQuery('#new_trait_format_select').on('change', function () {
+            let trait_type = jQuery(this).val();
+            if (trait_type === 'numeric') {
+                jQuery('#new_trait_minimum_value_container').show();
+                jQuery('#new_trait_default_value_container').show();
+                jQuery('#new_trait_maximum_value_container').show();
+                jQuery('#new_trait_add_categories_container').hide();
+                jQuery('#new_trait_default_value_label').html("Default value:");
+                jQuery('#new_trait_default_value').val('');
+            } else if (trait_type === 'qualitative') {
+                jQuery('#new_trait_minimum_value_container').hide();
+                jQuery('#new_trait_default_value_container').show();
+                jQuery('#new_trait_maximum_value_container').hide();
+                jQuery('#new_trait_add_categories_container').show();
+                jQuery('#new_trait_default_value_label').html("Default category:");
+                jQuery('#new_trait_default_value').val('');
+            } else if (trait_type === 'ontology') {
+                jQuery('#new_trait_minimum_value_container').hide();
+                jQuery('#new_trait_maximum_value_container').hide();
+                jQuery('#new_trait_add_categories_container').hide();
+                jQuery('#new_trait_default_value_container').hide();
+            }
+        });
+
+        jQuery('#new_trait_add_category_btn').on('click',function(e) {
+            e.preventDefault();
+            let new_category = jQuery('#new_trait_add_category').val();
+
+            if (new_category !== null && new_category !== "" && new_category.trim() !== "" ) {
+                let table_str = jQuery('#new_trait_categories').html();
+                let table_elems = [];
+                if (table_str && table_str.trim() !== "") {
+                    table_elems = JSON.parse(html_table_to_json(table_str));
+                }
+                table_elems.push(new_category);
+                console.log(table_elems);
+                table_str = json_to_html_table(table_elems);
+                jQuery('#new_trait_categories').html(table_str);
+                if (table_elems.length > 0) {
+                    jQuery('#new_trait_remove_category_btn').css('display', '');
+                }
+            }
+            jQuery('#new_trait_add_category').val('');
+        });
+
+        jQuery('#new_trait_remove_category_btn').on('click',function(e) {
+            e.preventDefault();
+            let table_str = jQuery('#new_trait_categories').html();
+            let table_elems = JSON.parse(html_table_to_json(table_str));
+            table_elems.pop();
+            if (table_elems.length == 0) {
+                jQuery('#new_trait_remove_category_btn').css('display', 'none');
+            }
+            table_str = json_to_html_table(table_elems);
+            jQuery('#new_trait_categories').html(table_str);
+        });
+
+        function html_table_to_json(html_str) {
+            return JSON.stringify(html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== ''));
+        }
+
+        function json_to_html_table(json) {
+            return "<tr><td>"+json.join("</td></tr><tr><td>")+"</td></tr>";
+        }
+    });
+</script>

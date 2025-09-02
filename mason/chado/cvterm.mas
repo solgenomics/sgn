@@ -29,6 +29,7 @@ Naama Menda <nm249@cornell.edu>
 <%args>
   $cvterm
   $cvtermref
+  $allow_edits => 0
 </%args>
 
 <%once>
@@ -127,6 +128,10 @@ my $edit_privs = $curator ;
                      }
                   });
   }
+
+  function displayCvtermEditDialog() {
+    jQuery('#edit_cvterm').modal('show');
+  }
 </script>
 
 
@@ -135,6 +140,9 @@ my $edit_privs = $curator ;
 
 <&| /page/info_section.mas, title=>"Cvterm details" &>
 <table>
+% if ($allow_edits) {
+<tr><td><a href="javascript:displayCvtermEditDialog()" id="edit_cvterm_link">[Edit]</td></tr>
+% }
 <tr><td>Term id</td><td><b><% $accession %></b></td></tr>
 <tr><td>Term name</td><td><b><% $cvterm_name %></b></td></tr>
 <tr><td>Term definition</td><td><b><% $definition %></b></td></tr>
@@ -262,6 +270,39 @@ LOAD...
 </thead>
 
 </table>
+
+<div class="modal fade" id="edit_cvterm" name="edit_cvterm" tabindex="-1" role="dialog" aria-labelledby="editCvtermDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editCvtermDialog">Add Management Factor to Trial</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="edit_cvterm_form" name="edit_cvterm_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">New name:</label>
+                            <div class="col-sm-8">
+                                <input style="width:100%;" class="form-control" id="cvterm_new_name" name="cvterm_new_name" type="text" placeholder="Leave blank for name to be left unchanged"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">New definition:</label>
+                            <div class="col-sm-8">
+                                <input style="width:100%;" class="form-control" id="cvterm_new_definition" name="cvterm_new_definition" type="text" placeholder="Leave blank for definition to be left unchanged"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="cvterm_edit_submit_btn" >Submit</button>
+                <button type="button" id="cvterm_edit_close_btn" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 

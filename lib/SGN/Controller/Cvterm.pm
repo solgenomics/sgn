@@ -46,10 +46,15 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
     my $props = $self->_cvtermprops($cvterm);
     my $editable_cvterm_props = "trait_format,trait_default_value,trait_minimum,trait_maximum,trait_details,trait_categories,trait_repeat_type";
    
+    my $allow_edits = 0;
+    if ($c->config->{allow_cvterm_edits}) {
+        $allow_edits = 1;
+    }
     
     $c->stash(
 	template => '/chado/cvterm.mas',
 	cvterm   => $cvterm, #deprecate this maybe? 
+    allow_edits => $allow_edits,
 	cvtermref => {
 	    cvterm    => $bcs_cvterm,
 	    curator   => $curator,

@@ -4,12 +4,15 @@ package CXGN::Trait;
 use Moose;
 use Data::Dumper;
 use Try::Tiny;
+use List::Util qw(max);
 use JSON;
+use CXGN::Onto;
 use CXGN::BrAPI::v2::ExternalReferences;
 use CXGN::BrAPI::v2::Methods;
 use CXGN::BrAPI::v2::Scales;
 use CXGN::BrAPI::Exceptions::ConflictException;
 use CXGN::BrAPI::Exceptions::ServerException;
+use CXGN::List::Transform;
 
 ## to do: add concept of trait short name; provide alternate constructors for term, shortname, and synonyms etc.
 
@@ -752,6 +755,188 @@ sub delete_existing_synonyms {
 	$schema->resultset("Cv::Cvtermsynonym")->search(
 		{cvterm_id => $self->cvterm_id}
 	)->delete;
+}
+
+sub interactive_store {
+	my $self = shift;
+    my $parent_term = shift;
+
+    my $schema = $self->bcs_schema();
+
+	my $parent_id;
+
+    my $name = $self->name() || die "No name found.\n";
+    my $definition = $self->definition() || die "No definition found.\n";
+    my $format = $self->format() || die "No format found.\n";
+    my $default_value = $self->default_value() ne "" ? $self->default_value() : undef;
+    my $minimum = $self->minimum() ne "" ? $self->minimum() : undef;
+    my $maximum = $self->maximum() ne "" ? $self->maximum() : undef;
+    my $categories = $self->categories() ne "" ? $self->categories() : undef;
+
+    my $trait_property_cv_id = $schema->resultset("Cv::Cv")->find({name => 'trait_property'})->cv_id();
+
+    my $minimum_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
+        cv_id => $trait_property_cv_id,
+        name => 'trait_minimum'
+    })->cvterm_id();
+
+    my $maximum_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
+        cv_id => $trait_property_cv_id,
+        name => 'trait_maximum'
+    })->cvterm_id();
+
+    my $format_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
+        cv_id => $trait_property_cv_id,
+        name => 'trait_format'
+    })->cvterm_id();
+
+    my $default_value_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
+        cv_id => $trait_property_cv_id,
+        name => 'trait_default_value'
+    })->cvterm_id();
+
+    my $categories_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
+        cv_id => $trait_property_cv_id,
+        name => 'trait_categories'
+    })->cvterm_id();
+
+    my %cvtermprop_hash = (
+        "$format_cvterm_id" => $format,
+        "$default_value_cvterm_id" => $default_value,
+        "$minimum_cvterm_id" => $minimum,
+        "$maximum_cvterm_id" => $maximum,
+        "$categories_cvterm_id" => $categories
+    );
+
+	my $trait_ontology_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'trait_ontology'
+    })->cvterm_id();
+	my $trait_cv_id = $schema->resultset("Cv::Cvprop")->find({
+		type_id => $trait_ontology_cvterm_id
+	})->cv_id();
+	my $trait_ontology = $schema->resultset("Cv::Cv")->find({
+		cv_id => $trait_cv_id
+	})->name();
+
+	my $get_db_from_cv_sql = "SELECT DISTINCT(db.name) FROM cvterm 
+	JOIN dbxref USING (dbxref_id)
+	JOIN db USING (db_id)
+	WHERE cv_id=?";
+
+	my $h = $schema->storage->dbh->prepare($get_db_from_cv_sql);
+    $h->execute($trait_cv_id);
+
+	my $db_name = $h->fetchrow_array();
+
+	if ($parent_term) {
+		my $lt = CXGN::List::Transform->new();
+    
+		my $transform = $lt->transform($schema, "traits_2_trait_ids", [$parent_term]);
+
+		if (@{$transform->{missing}}>0) { 
+			die "Parent term $parent_term could not be found in the database.\n";
+		}
+
+		my @parent_id_list = @{$transform->{transform}};
+		$parent_id = $parent_id_list[0];
+	} else {
+		my $ontology_obj = CXGN::Onto->new({
+			schema => $schema
+		});
+		my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
+
+		my $root_term_name = $root_nodes[0]->[1] =~ s/\w+:\d+ //r;
+
+		$parent_id = $schema->resultset("Cv::Cvterm")->find({
+			name => $root_term_name,
+			cv_id => $root_nodes[0]->[0]
+		})->cvterm_id();
+	}
+
+    my $get_db_accessions_sql = "SELECT accession FROM dbxref JOIN db USING (db_id) WHERE db.name=?;";
+
+    my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+    my $rel_cv_id;
+    if ($relationship_cv) {
+        $rel_cv_id = $relationship_cv->cv_id ;
+    } else {
+        die "No relationship ontology in DB.\n";
+    }
+    my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF' , cv_id => $rel_cv_id });
+    my $variable_of_id;
+    if ($variable_relationship) {
+        $variable_of_id = $variable_relationship->cvterm_id();
+    }
+    my $isa_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'is_a' , cv_id => $rel_cv_id });
+    my $isa_id;
+    if ($isa_relationship) {
+        $isa_id = $isa_relationship->cvterm_id();
+    }
+
+    $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
+    $h->execute($db_name);
+
+    my @accessions;
+
+    while (my $accession = $h->fetchrow_array()) {
+        push @accessions, int($accession =~ s/^0+//r);
+    }
+
+    my $accession_num = max(@accessions) + 1;
+    my $zeroes = "0" x (7-length($accession_num));
+
+    my $new_trait_id;
+    my $new_trait;
+
+    my $coderef = sub {
+        $new_trait_id = $schema->resultset("Cv::Cvterm")->create_with({
+            name => $name,
+            cv => $trait_ontology,
+            db => $db_name,
+            dbxref => "$zeroes"."$accession_num"
+        })->cvterm_id();
+
+        if ($format eq "ontology") {
+            $schema->resultset("Cv::CvtermRelationship")->find_or_create({
+                object_id => $parent_id,
+                subject_id => $new_trait_id,
+                type_id => $isa_id
+            });
+        } else {
+            $schema->resultset("Cv::CvtermRelationship")->find_or_create({
+                object_id => $parent_id,
+                subject_id => $new_trait_id,
+                type_id => $variable_of_id
+            });
+        }
+
+        $new_trait = $schema->resultset("Cv::Cvterm")->find({
+            cv_id => $trait_cv_id,
+            cvterm_id => $new_trait_id,
+            name => $name
+        });
+        $new_trait->definition($definition);
+        $new_trait->update();
+
+        foreach my $cvtermprop (keys(%cvtermprop_hash)) {
+            if (defined($cvtermprop_hash{$cvtermprop})) {
+                $schema->resultset("Cv::Cvtermprop")->create({
+                    cvterm_id => $new_trait_id,
+                    type_id => $cvtermprop,
+                    value => $cvtermprop_hash{$cvtermprop},
+                    rank => 0
+                });
+            }
+        }
+    };
+
+    $schema->txn_do($coderef);
+
+    return $new_trait;
+}
+
+sub delete {
+ #TODO IMPLEMENT
 }
 
 sub _fetch_synonyms {
