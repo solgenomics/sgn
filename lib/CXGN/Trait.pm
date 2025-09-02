@@ -935,6 +935,23 @@ sub interactive_store {
     return $new_trait;
 }
 
+sub interactive_update {
+	my $self = shift;
+	my $schema = $self->bcs_schema();
+	my $cvterm_id = $self->cvterm_id();
+	my $definition = $self->definition();
+	my $name = $self->name();
+
+	my $coderef = sub {
+		my $update_cvterm_sql = "UPDATE cvterm SET name = ? , definition = ? WHERE cvterm_id=?";
+
+		my $h = $schema->storage->dbh->prepare($update_cvterm_sql);
+		$h->execute($name, $definition, $cvterm_id);
+	};
+
+	$schema->txn_do($coderef);
+}
+
 sub delete {
  #TODO IMPLEMENT
 }

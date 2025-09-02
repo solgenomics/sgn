@@ -148,19 +148,23 @@ sub edit_trait :Path('/ajax/trait/edit') {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     if (!($c->user() && $c->user->check_roles('curator'))) {
-        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
+        $c->stash->{rest} = {error => "You do not have permission to edit cvterms.\n"};
         return;
     }
 
     if (! $c->config->{allow_cvterm_edits}) {
-        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
+        $c->stash->{rest} = {error => "You do not have permission to edit cvterms. Check server configuration.\n"};
         return;
     }
 
-    my $cvterm_id = $c->req->param('cvterm_id');
-    my $dbname = $c->req->param('dbname');
-    my $new_name = $c->req->param('new_name');
-    my $new_definition = $c->req->param('new_definition');
+    my $cvterm_id = $c->req->param('cvterm_id') ? $c->req->param('cvterm_id') : undef;
+    my $new_name = $c->req->param('new_name') ? $c->req->param('new_name') : undef;
+    my $new_definition = $c->req->param('new_definition') ? $c->req->param('new_definition') : undef;
+
+    if (!$cvterm_id) {
+        $c->stash->{rest} = {error => "Cvterm ID missing.\n"};
+        return;
+    }
 
     eval {
         my $trait = CXGN::Trait->new({
@@ -175,7 +179,7 @@ sub edit_trait :Path('/ajax/trait/edit') {
             $trait->definition($new_definition);
         }
 
-        $trait->update();
+        $trait->interactive_update();
     };
 
     if ($@) {
