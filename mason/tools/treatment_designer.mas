@@ -1,5 +1,6 @@
 <%args>
     $exp_treatment_root
+    $db_name
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
@@ -123,6 +124,10 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
                     alert("An error occurred, check console.");
                 }
             });
+        });
+
+        jQuery('#new_treatment_parent_term').autocomplete({
+            source : '/ajax/cvterm/autocompleteslim' + "?db_name=<% $db_name %>"
         });
 
         jQuery('#new_treatment_format_select').on('change', function () {

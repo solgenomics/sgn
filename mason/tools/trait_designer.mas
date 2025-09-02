@@ -1,5 +1,6 @@
 <%args>
     $trait_root
+    $db_name
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
@@ -122,6 +123,10 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                     alert("An error occurred, check console.");
                 }
             });
+        });
+
+        jQuery('#new_trait_parent_term').autocomplete({
+            source : '/ajax/cvterm/autocompleteslim' + "?db_name=<% $db_name %>"
         });
 
         jQuery('#new_trait_format_select').on('change', function () {

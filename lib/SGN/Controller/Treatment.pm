@@ -24,6 +24,7 @@ sub treatment_design_page : Path('/treatments/design/') Args(0) {
             my @root_nodes = $ontology_obj->get_root_nodes('experiment_treatment_ontology');
 
             my $root_term_name = $root_nodes[0]->[1] =~ s/\w+:\d+ //r;
+            my $db_name = $root_nodes[0]->[1] =~ s/:.*//r;
 
             my $cvterm_id = $schema->resultset("Cv::Cvterm")->find({
                 name => $root_term_name,
@@ -32,7 +33,8 @@ sub treatment_design_page : Path('/treatments/design/') Args(0) {
             my $cvterm = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $cvterm_id } );
             $c->stash(
                 template => '/tools/treatment_designer.mas',
-                exp_treatment_root => $cvterm
+                exp_treatment_root => $cvterm,
+                db_name => $db_name
             );
         } else {
             $c->stash->{template} = '/site/error/permission_denied.mas';
