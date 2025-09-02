@@ -2596,7 +2596,7 @@ sub add_management_factor {
         });
     } else {
         $schema->resultset("Project::Projectprop")->create({
-            project_id => $self->project_id(),
+            project_id => $self->get_trial_id(),
             value => encode_json([$management_factor]),
             type_id => $management_regime_type_id
         });
