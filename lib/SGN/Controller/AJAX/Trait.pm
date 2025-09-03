@@ -190,4 +190,45 @@ sub edit_trait :Path('/ajax/trait/edit') {
     $c->stash->{rest} = {success => 1};
 }
 
+sub delete_trait :Path('/ajax/trait/delete') {
+    my $self = shift;
+    my $c = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    if (!($c->user() && $c->user->check_roles('curator'))) {
+        $c->stash->{rest} = {error => "You do not have permission to edit cvterms.\n"};
+        return;
+    }
+
+    if (! $c->config->{allow_cvterm_edits}) {
+        $c->stash->{rest} = {error => "You do not have permission to edit cvterms. Check server configuration.\n"};
+        return;
+    }
+
+    my $cvterm_id = $c->req->param('cvterm_id') ? $c->req->param('cvterm_id') : undef;
+
+    if (!$cvterm_id) {
+        $c->stash->{rest} = {error => "Cvterm ID missing.\n"};
+        return;
+    }
+
+    eval {
+        my $trait = CXGN::Trait->new({
+            bcs_schema => $schema,
+            cvterm_id => $cvterm_id
+        });
+
+        $trait->delete();
+    };
+
+    if ($@) {
+        $c->stash->{rest} = {error => "An error occurred deleting cvterm: $@"};
+        return;
+    }
+
+    $c->stash->{rest} = {success => 1};
+}
+
 1;

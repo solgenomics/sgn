@@ -953,7 +953,40 @@ sub interactive_update {
 }
 
 sub delete {
- #TODO IMPLEMENT
+	my $self = shift;
+
+	my $schema = $self->bcs_schema;
+	my $cvterm_id = $self->cvterm_id;
+	my $name = $self->name;
+
+	my $check_phenotypes_q = "SELECT COUNT(*) FROM phenotype WHERE cvalue_id=?";
+
+	my $h = $schema->storage->dbh->prepare($check_phenotypes_q);
+	$h->execute($cvterm_id);
+
+	my $phenotype_count = $h->fetchrow_array();
+
+	if ($phenotype_count > 0) {
+		die "Cannot delete cvterm $name because it has associated phenotypes. Delete these phenotypes before attempting to delete the cvterm.\n";
+	}
+
+	if (!$self->db) {
+		die "It appears this cvterm is not part of an ontology. Deleting it is likely unsafe.\n";
+	}
+
+	my $coderef = sub {
+		$schema->resultset("Cv::Cvterm")->find({
+			cvterm_id => $cvterm_id
+		})->delete();
+
+		$schema->resultset("General::Dbxref")->find({
+			dbxref_id => $self->dbxref_id
+		})->delete();
+	};
+
+	$schema->txn_do($coderef);
+
+	return;
 }
 
 sub _fetch_synonyms {

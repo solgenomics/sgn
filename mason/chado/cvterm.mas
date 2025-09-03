@@ -132,6 +132,33 @@ my $edit_privs = $curator ;
   function displayCvtermEditDialog() {
     jQuery('#edit_cvterm').modal('show');
   }
+
+  function deleteCvterm() {
+    if (confirm("Are you sure you want to delete this cvterm?")){
+      jQuery.ajax({
+        url: '/ajax/trait/delete',
+        data : {
+          cvterm_id : <% $cvterm_id %>
+        },
+        beforeSend : function() {
+          jQuery('#working_modal').modal("show");
+        },
+        success : function (response) {
+          jQuery('#working_modal').modal("hide");
+          if (response.error) {
+            alert(response.error);
+          } else {
+            alert("Cvterm deleted.");
+            window.location.reload();
+          }
+        }, 
+        error : function (error) {
+          jQuery('#working_modal').modal("hide");
+          alert("An error occurred deleting cvterm.");
+        }
+      });
+    }
+  }
 </script>
 
 
@@ -174,7 +201,7 @@ my $edit_privs = $curator ;
 <&| /page/info_section.mas, title=>"Cvterm details" &>
 <table>
 % if ($allow_edits) {
-<tr><td><a href="javascript:displayCvtermEditDialog()" id="edit_cvterm_link">[Edit]</td></tr>
+<tr><td><a href="javascript:displayCvtermEditDialog()" id="edit_cvterm_link">[Edit]</td><td><a href="javascript:deleteCvterm()" id="delete_cvterm_link" style="color:red;">[Delete]</a></td></tr>
 % }
 <tr><td>Term id</td><td><b><% $accession %></b></td></tr>
 <tr><td>Term name</td><td><b><% $cvterm_name %></b></td></tr>
