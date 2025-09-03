@@ -208,7 +208,7 @@ xMax <- xMax + 0.02
 
  # ggplot2::xlim(0, xMax)
 clustTree <- clustTree +
-    geom_tiplab(size = 4, color = "blue")
+    geom_tiplab(size = 3, color = "blue")
 
 # geom_text(aes(x = branch, label = round(branch.length, 2)))
 png(filename=plotFile, height = 950, width = 950)
