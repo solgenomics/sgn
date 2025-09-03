@@ -223,6 +223,41 @@ sub add_image_locus_display_order_POST {
     }
 }
 
+sub scan_barcode : Path('/ajax/image/scan_barcode') : Args(0) : ActionClass('REST') { }
+
+sub scan_barcode_POST {
+    my ($self, $c) = @_;
+    my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+
+    my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
+    my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+    my @results;
+    my $stock_exists;
+    my $valid_barcode;
+
+    foreach my $upload (@uploads) {
+        my $filename = $upload->filename;
+        my $file_path = $upload->tempname;
+        my $stock_id = CXGN::Image->read_barcode($file_path);
+
+        if ($stock_id) {
+            $valid_barcode = "true";
+
+            my $stock_found = $schema->resultset('Stock::Stock')->find({stock_id => $stock_id });
+            if ($stock_found) {
+                $stock_exists = "true";
+            } else {
+                $stock_exists = "false";
+            }
+        } else {
+            $valid_barcode = "false"
+        }
+        push @results, { filename => $filename, stock_id => $stock_id, stock_exists => $stock_exists, valid_barcode => $valid_barcode };
+    }
+    $c->stash->{rest} = { images => \@results };
+}
+
  sub image_metadata_store {
     my $self = shift;
     my $params = shift;
