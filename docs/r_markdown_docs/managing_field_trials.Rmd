@@ -516,7 +516,9 @@ Adding treatments is very similar to [uploading phenotypic data](#managing-pheno
 knitr::include_graphics('assets/images/trial_add_treatment_dialog.png')
 ```
 
-Just as with phenotype uploads, you can supply a spreadsheet specifying the stocks and the treatments with optional timestamps. To ensure the column headers are correct, consult the [treatment search page](#managing-observation-variables) or the ontology browser. 
+Just as with phenotype uploads, you can supply a spreadsheet specifying the stocks and the treatments with optional timestamps. To ensure the treatment column headers are correct, consult the [treatment search page](#managing-observation-variables) or the ontology browser. 
+
+Unlike phenotypic data, however, treatments are automatically applied to the child stocks of any stock receiving a treatment. That means if a plot receives a treatment, all the subplots, plants, and tissue samples in that plot receive the same treatment. 
 
 ### Adding Plant Entries To Your Trial
 
