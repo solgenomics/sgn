@@ -5,6 +5,7 @@ $trial_id => undef
 <%perl>
   my $d2s_host = $c->config->{'d2s_host'};
   my $d2s_tileserver = $c->config->{'d2s_tileserver'};
+  my $d2s_base_url = $c->config->{'d2s_base_url'};
 </%perl>
 
 
@@ -59,6 +60,7 @@ $trial_id => undef
 <script>
     var D2S_HOST = "<% $d2s_host %>";
     var D2S_TILESERVER = "<% $d2s_tileserver %>";
+    var D2S_BASE_URL = "<% $d2s_base_url %>";
 
     jQuery('#map').width(jQuery('#map').parent().width());
     jQuery('#map').height(jQuery('#map').parent().width()*0.7);
@@ -68,7 +70,7 @@ $trial_id => undef
     var auth_token;
     var fieldMap;
     jQuery(document).ready(async function() {
-        var d2s_api = await new D2SAPI({ host: D2S_HOST, tileserver: D2S_TILESERVER }).init();
+        var d2s_api = await new D2SAPI({ host: D2S_HOST, tileserver: D2S_TILESERVER, base_url: D2S_BASE_URL }).init();
         fieldMap = new BrAPIFieldmap("#map", brapi_endpoint, { d2s_api });
 
         jQuery('#ranking_formula').html("<center><i>Select a trial.</i></center>");

@@ -18,11 +18,12 @@
  * const orthos = await D2S.getOrthos(project_id);      // will return an array of objects with ortho metadata, including a URL for the configured tileserver
  */
 class D2SAPI {
-    constructor({ host, tileserver }) {
+    constructor({ host, tileserver, base_url }) {
         this.enabled = !!host && host !== "";
         this.api_host = host;
         this.api_prefix = "/api/v1";
         this.api_key;
+        this.base_url = base_url && base_url !== '' ? new URL(base_url).origin : location.origin;
         this.tileserver = tileserver;
     }
 
@@ -95,13 +96,19 @@ class D2SAPI {
         if ( links ) {
             for ( const link of links ) {
                 const project_id = link.project_id;
-                const project_details = await this.getProject(project_id);
-                rtn.push({
-                    id: project_id,
-                    url: `${this.api_host}/projects/${project_id}`,
-                    name: project_details.title,
-                    flights: project_details.flight_count || 0
-                });
+                const base_url = new URL(link.base_url).origin;
+                if ( base_url === this.base_url ) {
+                    const project_details = await this.getProject(project_id);
+                    rtn.push({
+                        id: project_id,
+                        url: `${this.api_host}/projects/${project_id}`,
+                        name: project_details.title,
+                        flights: project_details.flight_count || 0
+                    });
+                }
+                else {
+                    console.log(`Linked D2S project has a different base url: d2s=${base_url}, bb=${this.base_url}`);
+                }
             };
         }
         return rtn;

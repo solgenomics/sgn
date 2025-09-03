@@ -5,6 +5,7 @@
 <%perl>
   my $d2s_host = $c->config->{'d2s_host'};
   my $d2s_tileserver = $c->config->{'d2s_tileserver'};
+  my $d2s_base_url = $c->config->{'d2s_base_url'};
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["CXGN.BreedersToolbox.D2SIntegration"]&>
@@ -71,6 +72,7 @@
   var BB_TRIAL_ID = <% $trial_id %>;
   var D2S_HOST = "<% $d2s_host %>";
   var D2S_TILESERVER = "<% $d2s_tileserver %>";
+  var D2S_BASE_URL = "<% $d2s_base_url %>";
   var D2S;
 
   // Display the linked projects, if there is an api key
@@ -127,7 +129,7 @@
 
   jQuery(document).ready(async () => {
     if ( D2S_HOST && D2S_HOST !== "" ) {
-      D2S = await new D2SAPI({ host: D2S_HOST, tileserver: D2S_TILESERVER }).init();
+      D2S = await new D2SAPI({ host: D2S_HOST, tileserver: D2S_TILESERVER, base_url: D2S_BASE_URL }).init();
 
       // Toggle the display of the link sections
       await displayLinks();
