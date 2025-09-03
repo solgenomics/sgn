@@ -1270,14 +1270,15 @@ jQuery(document).ready(function () {
                       .runClusterAnalysis(clusterArgs)
                       .done(function (res) {
                         if (res.result == "success") {
-                          if (res.pc_scores_groups) {
-                            solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv )
-                            solGS.cluster.displayClusterOutput(res);
-                          } else {
+                          if (res.cluster_type.match(/k-means/i) && !res.pc_scores_groups) {
                             var msg = "There is no cluster groups data to plot. " + 
-                            "The R clustering script did not write cluster results to output files.";
+                            "The R clustering script did not write cluster " + 
+                            "results to output files.";
 
                             solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
+                          } else {
+                            solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv )
+                            solGS.cluster.displayClusterOutput(res);    
                           }
                         } else {
                           var msg = "Error occured running the clustering. Possibly the R script failed.";
@@ -1285,7 +1286,7 @@ jQuery(document).ready(function () {
                         }
                       })
                       .fail(function () {
-                        var msg = "Error occured running the clustering";
+                        var msg = "Error occured running the clustering.";
                         solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
                       });
                   },
