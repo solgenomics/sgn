@@ -134,7 +134,7 @@ my $edit_privs = $curator ;
   }
 
   function deleteCvterm() {
-    if (confirm("Are you sure you want to delete this cvterm?")){
+    if (confirm("Are you sure you want to delete this cvterm? Generally, this is a bad idea.")){
       jQuery.ajax({
         url: '/ajax/trait/delete',
         data : {
