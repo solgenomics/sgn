@@ -28,6 +28,7 @@
                     <div class="col-sm-9" >
                         <select class="form-control" id="upload_images_file_format" name="upload_images_file_format">
                             <option value="images">Images</option>
+                            <option value="images_with_barcodes">Images with Barcodes</option>
                             <option value="images_with_associated_phenotypes">Images with Associated Phenotypes</option>
                         </select>
                     </div>
