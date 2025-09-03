@@ -262,7 +262,7 @@ sub store_composed_term {
             }
         }
 
-        push @new_terms, [$new_term->cvterm_id, $new_term->name()."|.$dbname:".sprintf("%07d",$accession)];
+        push @new_terms, [$new_term->cvterm_id, $new_term->name()."|$dbname:".sprintf("%07d",$accession)];
     }
 
     #Takes long on cassavabase.. instead the materialized view is refreshed automatically in a background ajax process.
