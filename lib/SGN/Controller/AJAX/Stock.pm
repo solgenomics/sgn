@@ -2649,7 +2649,7 @@ sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatabl
     my @related_accessions;
 
     foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = @$r;
         push @related_accessions, {
             transformant_id => $transformant_id,
             transformant_name => $transformant_name,
@@ -2693,6 +2693,31 @@ sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datata
 
     $c->stash->{rest}={data=>\@obsoleted_accessions};
 }
+
+
+sub get_vector_transgenic_line_details:Chained('/stock/get_stock') PathPart('datatables/vector_transgenic_line_details') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_stocks->get_vector_related_accessions();
+    my @transgenic_lines;
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = @$r;
+        push @transgenic_lines, {
+            transformant_id => $transformant_id,
+            transformant_name => $transformant_name,
+            number_of_insertions => $number_of_insertions
+        };
+    }
+
+    $c->stash->{rest}={data=>\@transgenic_lines};
+}
+
 
 =head2 set_display_image
 

@@ -76,7 +76,7 @@ $can_obsolete => undef
     </div>
 </&>
 
-<& /transformation/transformants_section.mas, transformation_id => $transformation_id, program_name => $program_name, can_obsolete => $can_obsolete &>
+<& /transformation/transgenic_line_details_section.mas, transformation_id => $transformation_id, program_name => $program_name, can_obsolete => $can_obsolete  &>
 <& /transformation/obsoleted_transformants_section.mas, transformation_id => $transformation_id &>
 %if ($control_id) {
     <& /transformation/control_transformants_section.mas, control_id => $control_id &>

@@ -22,6 +22,7 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 has 'schema' => (
     is => 'rw',
@@ -41,7 +42,14 @@ has 'transformant_names' => (
     isa =>'ArrayRef[Str]',
     is => 'rw',
     predicate => 'has_transformant_names',
-    required => 1,);
+    required => 1,
+);
+
+has 'additional_transformant_info' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw',
+    predicate => 'has_additional_transformant_info',
+);
 
 
 sub link_info {
@@ -50,6 +58,7 @@ sub link_info {
     my $schema = $self->get_schema();
     my $transformation_stock_id = $self->get_transformation_stock_id();
     my @transformant_names = @{$self->get_transformant_names()};
+    my $additional_transformant_info = $self->get_additional_transformant_info();
     my $transaction_error;
     my @accession_stock_ids;
 
@@ -57,6 +66,8 @@ sub link_info {
 
         my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
         my $transformant_of_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_of', 'stock_relationship');
+        my $transgenic_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property');
+        my $number_of_insertions_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property');
 
         foreach my $name (@transformant_names) {
             my $accession_stock = $schema->resultset("Stock::Stock")->find ({
@@ -69,6 +80,15 @@ sub link_info {
                 object_id => $transformation_stock_id,
                 subject_id => $accession_stock->stock_id(),
             });
+
+            my $previous_number_of_insertions_stockprop_rs = $accession_stock->stockprops({type_id=>$number_of_insertions_cvterm->cvterm_id});
+            if ($previous_number_of_insertions_stockprop_rs->count < 1) {
+                my $number_of_insertions = $additional_transformant_info->{$name}->{'number_of_insertions'};
+                if ($number_of_insertions) {
+                    $accession_stock->create_stockprops({$number_of_insertions_cvterm->name() => $number_of_insertions});
+                }
+            }
+
         }
     };
 

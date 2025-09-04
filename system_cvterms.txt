@@ -757,6 +757,7 @@ stock_property	location_code				00052
 stock_property	member_type	For indicating member stock type in a population	tt15	00188
 stock_property	ncbi_taxonomy_id	For indicating ncbi taxonomy	2/15/2018	nm529	00091
 stock_property	notes	Found in editable_stock_props
+stock_property	number_of_insertions tt15    00197
 stock_property	organization				00052
 stock_property	PlantAntibioticResistantMarker	Vector property	4/17/2023	mrf252	00167
 stock_property	plant_index_number				00054
