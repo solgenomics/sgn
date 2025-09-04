@@ -90,6 +90,12 @@
                 <li>Image file names should consist of the observationUnitName, traitname, number, and timestamp, all joined by underscores (the default naming system used by Fieldbook App).</li>
             </ul>
             <br/>
+            <h4>Images with Barcodes:</h4>
+            <ul>
+                <li>Upload multiple selected images that contain a barcode with a stock ID.</li>
+                <li>There should only be one barcode in each image, and the associated stock must already exist in the database.</li>
+            </ul>
+            <br/>
             <h4>Images with Associated Phenotypes:</h4>
             <ul>
                 <li>The "Associated Images" format is useful for uploading a zipfile of images in association with phenotype values.</li>
