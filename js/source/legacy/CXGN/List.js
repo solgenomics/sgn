@@ -456,7 +456,7 @@ CXGN.List.prototype = {
                 list_group_select_action_html += '<div class="row">';
                 list_group_select_action_html += '<div class="col-sm-4"><p><strong>Modify Selected Lists:</strong></p></div>';
                 list_group_select_action_html += '<div class="col-sm-8">';
-                list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';
+                list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="download_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:downloadSelectedListGroup(['+selected+'])">Download</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';
                 list_group_select_action_html += '</div>';  // end column
                 list_group_select_action_html += '</div>';  // end row
 
@@ -581,7 +581,7 @@ CXGN.List.prototype = {
         html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" title="Validate list. Checks if elements exist with the selected type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
         html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea><p style="font-size:80%;text-align:right">After adding new items, you may want to consider re-validating your list.</p></td></tr></table>';
 
-        html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div></div></div>';
+        html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-4"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-4"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div><div class="col-sm-4"><center><button class="btn btn-default type="button" id="copy_items_button" value="Copy">Copy Item Names</button></center></div></div></div>';
         html += '<div class="well well-sm"><table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
         for(var n=0; n<items.length; n++) {
@@ -599,12 +599,24 @@ CXGN.List.prototype = {
 
         jQuery('#'+div+'_div').html(html);
 
-        jQuery('#list_item_dialog_datatable').DataTable({
+        var listTable = jQuery('#list_item_dialog_datatable').DataTable({
             destroy: true,
             ordering: false,
             scrollY:        '30vh',
             scrollCollapse: true,
             paging:         false,
+        });
+
+        jQuery('#copy_items_button').on('click', function () {
+            var columnData = listTable.column(0, { search: 'applied' }).data().toArray().map(function (cell) {return jQuery('<div>').html(cell).text().trim();});
+            console.log("column data", columnData);
+            var textToCopy = columnData.join('\n');
+
+            navigator.clipboard.writeText(textToCopy).then(function () {
+                alert('Item names copied');
+            }).catch(function (err) {
+                console.error('Copy failed', err);
+            });
         });
 
         }
@@ -1770,6 +1782,30 @@ function deleteSelectedListGroup(list_ids) {
         }
         lo.renderLists('list_dialog');
     }
+}
+
+function downloadSelectedListGroup(list_ids) {
+    jQuery.ajax({
+        url: '/list/download_multiple',
+        contentType: 'application/json',
+        data: { 'list_ids' : JSON.stringify(list_ids) },
+        success: function(data) {
+            const url = window.URL.createObjectURL(data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lists.zip';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        },
+        xhrFields: {
+            responseType: 'blob'
+        },
+        error: function(xhr, status, error) {
+            alert("An error occurred.");
+        }
+    })
 }
 
 function pasteTraitList(div_name) {
