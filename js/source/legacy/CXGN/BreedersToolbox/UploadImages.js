@@ -323,10 +323,14 @@ function parseBarcodeData(barcodeData, imageFiles) {
 
     for (let i = 0; i < imageFiles.length; i++) {
         const file = imageFiles[i];
-        const timestamp = undefined;
+        var timestamp = barcodeData.images[i].timestamp;
+        if (timestamp) {
+            const timestampWithoutExtension = timestamp.split(" ")[0];
+            const timestampWithDashes = timestampWithoutExtension.replace(/:/g, '-');
+            timestamp = timestampWithDashes;
+        }
+        
         const obsUnitId = barcodeData.images[i].stock_id;
-        console.log("obsunitid check: ", obsUnitId);
-
         if (obsUnitId) {
             fileData[file.name] = {
                 "imageName" : file.name,

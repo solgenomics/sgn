@@ -253,7 +253,13 @@ sub scan_barcode_POST {
         } else {
             $valid_barcode = "false"
         }
-        push @results, { filename => $filename, stock_id => $stock_id, stock_exists => $stock_exists, valid_barcode => $valid_barcode };
+
+        my $exif = CXGN::Image->extract_exif_info($file_path);
+        my $create_date;
+        if ($exif) {
+            $create_date = $exif->{"CreateDate"};
+        }
+        push @results, { filename => $filename, stock_id => $stock_id, stock_exists => $stock_exists, valid_barcode => $valid_barcode, timestamp => $create_date};
     }
     $c->stash->{rest} = { images => \@results };
 }
