@@ -235,11 +235,22 @@ sub scan_barcode_POST {
     my @results;
     my $stock_exists;
     my $valid_barcode;
+    my $multiple_codes;
 
     foreach my $upload (@uploads) {
         my $filename = $upload->filename;
         my $file_path = $upload->tempname;
-        my $stock_id = CXGN::Image->read_barcode($file_path);
+        my @barcode_data = CXGN::Image->read_barcode($file_path);
+
+        if (@barcode_data > 1) {
+            $multiple_codes = "true";
+        } elsif (@barcode_data == 1) {
+            $multiple_codes = "false";
+        } else {
+            $valid_barcode = "false"
+        }
+        
+        my $stock_id = $barcode_data[0]->{data};
 
         if ($stock_id) {
             $valid_barcode = "true";
@@ -259,7 +270,7 @@ sub scan_barcode_POST {
         if ($exif) {
             $create_date = $exif->{"CreateDate"};
         }
-        push @results, { filename => $filename, stock_id => $stock_id, stock_exists => $stock_exists, valid_barcode => $valid_barcode, timestamp => $create_date};
+        push @results, { filename => $filename, stock_id => $stock_id, stock_exists => $stock_exists, valid_barcode => $valid_barcode, timestamp => $create_date, multiple_codes => $multiple_codes };
     }
     $c->stash->{rest} = { images => \@results };
 }

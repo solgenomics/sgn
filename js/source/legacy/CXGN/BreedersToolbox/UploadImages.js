@@ -286,6 +286,10 @@ function verifyBarcodeData(result) {
 
     result.images.forEach((img, index) => {
         const imgName = img.filename || `Image ${index + 1}`;
+
+        if (result.images[index].multiple_codes === "true") {
+            errorMessages.push(`Multiple barcodes found in ${imgName}. Please make sure each image only contains one barcode`);
+        }
         
         if (result.images[index].valid_barcode === "false") {
             errorMessages.push(`Barcode not found for ${imgName}`);
@@ -294,8 +298,8 @@ function verifyBarcodeData(result) {
 
         const stockId = result.images[index].stock_id;
 
-        if (stockId) {
-            successMessages.push(`${imgName}: Barcode has valid stock ID: ${stockId}`);
+        if (result.images[index].stock_exists === "false") {
+            errorMessages.push(`Stock ID ${stockId} found in ${imgName} does not exist in the database`);
         }
 
         if (errorMessages.length === 0) {
