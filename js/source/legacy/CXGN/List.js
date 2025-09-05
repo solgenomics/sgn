@@ -1739,7 +1739,7 @@ function validateList(list_id, list_type, html_select_id) {
         jQuery('#working_modal').modal('hide');
     }).catch(function(err) {
         jQuery('#working_modal').modal('hide');
-        let msg = "There was an error validating your list.";
+        let msg = "There was an error validating your list. ";
         if ( err && err.responseText ) msg += `\n\n${err.responseText}`;
         alert(msg);
     });
@@ -1935,14 +1935,14 @@ function validate_interactive(response, type, list_id) {
     valid = response.valid;
 
     //alert("validate_interactive: "+JSON.stringify(response));
-    if (type != 'accessions' && warning.length != 0) {
+    if (warning !== undefined && type != 'accessions' && warning.length != 0) {
 	alert(warning.join(", "));
     }
     if (type == 'accessions' && valid == 1) {
 	alert("This list passed validation.");
 	return;
     }
-    else if (type != 'accessions' && missing.length == 0) {
+    else if (missing !== undefined  && type != 'accessions' && missing.length == 0) {
         alert("This list passed validation.");
         return;
     } else {
@@ -1988,7 +1988,7 @@ function validate_interactive(response, type, list_id) {
 
     	    jQuery('#wrong_case_message_div').html('');
 
-    	    if (wrong_case.length > 0) {
+    	    if (wrong_case !== undefined && wrong_case.length > 0) {
     		//alert(JSON.stringify(wrong_case));
     		jQuery('#wrong_case_table').DataTable( {
     		    destroy: true,
@@ -2010,7 +2010,7 @@ function validate_interactive(response, type, list_id) {
     		jQuery('#wrong_case_message_div').html('No mismatched cases found.');
     	    }
 
-    	    if (multiple_wrong_case.length > 0) {
+    	    if (multiple_wrong_case !== undefined && multiple_wrong_case.length > 0) {
     		//alert(JSON.stringify(multiple_wrong_case));
     		jQuery('#multiple_wrong_case_table').DataTable( {
     		    destroy: true,
