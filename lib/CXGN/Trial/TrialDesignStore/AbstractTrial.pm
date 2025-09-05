@@ -1017,105 +1017,105 @@ sub store {
             }
         }
 
-        if (exists($design{'treatments'})){
-            print STDERR "Saving treatments\n";
-            my %treatments_hash = %{$design{'treatments'}};
+#         if (exists($design{'treatments'})){ #TODO REFACTOR
+#             print STDERR "Saving treatments\n";
+#             my %treatments_hash = %{$design{'treatments'}};
 
-            foreach my $treatment_name (sort keys %treatments_hash) {
-                my $stock_names;
-                my $management_factor_type;
-                my $management_factor_year;
-                my $management_factor_date;
-                my $management_factor_description = '';
-#                my %info_hashes = %{$treatments_hash{$treatment_name}};
-                my $info_value = $treatments_hash{$treatment_name};
-                my $info_type = ref($info_value);
-                if ($info_type eq 'HASH'){
-                    my %info_hashes = %$info_value;
-                    $stock_names = $info_hashes{'new_treatment_stocks'};
-                    $management_factor_type = $info_hashes{'new_treatment_type'};
-                    $management_factor_year = $info_hashes{'new_treatment_year'};
-                    $management_factor_date = $info_hashes{'new_treatment_date'};
-                    $management_factor_description = $info_hashes{'new_treatment_description'} || 'No description';
-                } else {
-                    $stock_names = $treatments_hash{$treatment_name};
-                }
-#                print STDERR "STOCK NAMES =".Dumper($stock_names)."\n";
-                my @treatment_nd_experiment_stocks;
-                foreach (@$stock_names){
-                    my $stock_id;
-                    if (exists($new_stock_ids_hash{$_})){
-                        $stock_id = $new_stock_ids_hash{$_};
-                    } else {
-                        $stock_id = $chado_schema->resultset("Stock::Stock")->find({uniquename=>$_})->stock_id();
-                    }
-                    push @treatment_nd_experiment_stocks, { type_id => $self->get_treatment_nd_experiment_type_id, stock_id => $stock_id };
-                }
+#             foreach my $treatment_name (sort keys %treatments_hash) {
+#                 my $stock_names;
+#                 my $management_factor_type;
+#                 my $management_factor_year;
+#                 my $management_factor_date;
+#                 my $management_factor_description = '';
+# #                my %info_hashes = %{$treatments_hash{$treatment_name}};
+#                 my $info_value = $treatments_hash{$treatment_name};
+#                 my $info_type = ref($info_value);
+#                 if ($info_type eq 'HASH'){
+#                     my %info_hashes = %$info_value;
+#                     $stock_names = $info_hashes{'new_treatment_stocks'};
+#                     $management_factor_type = $info_hashes{'new_treatment_type'};
+#                     $management_factor_year = $info_hashes{'new_treatment_year'};
+#                     $management_factor_date = $info_hashes{'new_treatment_date'};
+#                     $management_factor_description = $info_hashes{'new_treatment_description'} || 'No description';
+#                 } else {
+#                     $stock_names = $treatments_hash{$treatment_name};
+#                 }
+# #                print STDERR "STOCK NAMES =".Dumper($stock_names)."\n";
+#                 my @treatment_nd_experiment_stocks;
+#                 foreach (@$stock_names){
+#                     my $stock_id;
+#                     if (exists($new_stock_ids_hash{$_})){
+#                         $stock_id = $new_stock_ids_hash{$_};
+#                     } else {
+#                         $stock_id = $chado_schema->resultset("Stock::Stock")->find({uniquename=>$_})->stock_id();
+#                     }
+#                     push @treatment_nd_experiment_stocks, { type_id => $self->get_treatment_nd_experiment_type_id, stock_id => $stock_id };
+#                 }
 
-                my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create({
-                    nd_geolocation_id => $nd_geolocation_id,
-                    type_id => $self->get_treatment_nd_experiment_type_id,
-                    nd_experiment_stocks => \@treatment_nd_experiment_stocks
-                });
+#                 my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create({
+#                     nd_geolocation_id => $nd_geolocation_id,
+#                     type_id => $self->get_treatment_nd_experiment_type_id,
+#                     nd_experiment_stocks => \@treatment_nd_experiment_stocks
+#                 });
 
-                my @treatment_project_props = (
-                    { type_id => $self->get_project_design_cvterm_id, value => 'treatment' }
-                );
+#                 my @treatment_project_props = (
+#                     { type_id => $self->get_project_design_cvterm_id, value => 'treatment' }
+#                 );
 
-                if ($self->get_new_treatment_has_plant_entries){
-                    push @treatment_project_props, { type_id => $self->get_has_plants_cvterm, value => $self->get_new_treatment_has_plant_entries };
-                }
-                if ($self->get_new_treatment_has_subplot_entries){
-                    push @treatment_project_props, { type_id => $self->get_has_subplots_cvterm, value => $self->get_new_treatment_has_subplot_entries };
-                }
-                if ($self->get_new_treatment_has_tissue_sample_entries){
-                    push @treatment_project_props, { type_id => $self->get_has_tissues_cvterm, value => $self->get_new_treatment_has_tissue_sample_entries };
-                }
-                if (defined $management_factor_type){
-                    push @treatment_project_props, { type_id => $self->get_management_factor_type_cvterm_id, value => $management_factor_type };
-                }
-                if (defined $management_factor_year){
-                    push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $management_factor_year };
-                } else {
-                    my $t = CXGN::Trial->new({
-                        bcs_schema => $chado_schema,
-                        trial_id => $self->get_trial_id
-                    });
-                    push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $t->get_year() };
-                }
+#                 if ($self->get_new_treatment_has_plant_entries){
+#                     push @treatment_project_props, { type_id => $self->get_has_plants_cvterm, value => $self->get_new_treatment_has_plant_entries };
+#                 }
+#                 if ($self->get_new_treatment_has_subplot_entries){
+#                     push @treatment_project_props, { type_id => $self->get_has_subplots_cvterm, value => $self->get_new_treatment_has_subplot_entries };
+#                 }
+#                 if ($self->get_new_treatment_has_tissue_sample_entries){
+#                     push @treatment_project_props, { type_id => $self->get_has_tissues_cvterm, value => $self->get_new_treatment_has_tissue_sample_entries };
+#                 }
+#                 if (defined $management_factor_type){
+#                     push @treatment_project_props, { type_id => $self->get_management_factor_type_cvterm_id, value => $management_factor_type };
+#                 }
+#                 if (defined $management_factor_year){
+#                     push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $management_factor_year };
+#                 } else {
+#                     my $t = CXGN::Trial->new({
+#                         bcs_schema => $chado_schema,
+#                         trial_id => $self->get_trial_id
+#                     });
+#                     push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $t->get_year() };
+#                 }
 
 
-                if (defined $management_factor_date){
-                    push @treatment_project_props, { type_id => $self->get_management_factor_date_cvterm_id, value => $management_factor_date };
-                }
+#                 if (defined $management_factor_date){
+#                     push @treatment_project_props, { type_id => $self->get_management_factor_date_cvterm_id, value => $management_factor_date };
+#                 }
 
-                my @treatment_nd_experiment_project = (
-                    { nd_experiment_id => $nd_experiment->nd_experiment_id }
-                );
+#                 my @treatment_nd_experiment_project = (
+#                     { nd_experiment_id => $nd_experiment->nd_experiment_id }
+#                 );
 
-                my @treatment_relationships = (
-                    { type_id => $self->get_trial_treatment_relationship_cvterm_id, object_project_id => $self->get_trial_id }
-                );
+#                 my @treatment_relationships = (
+#                     { type_id => $self->get_trial_treatment_relationship_cvterm_id, object_project_id => $self->get_trial_id }
+#                 );
 
-                #Create a project for each treatment_name
-                my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
-                my $treatment_project = $chado_schema->resultset('Project::Project')->create({
-                    name => $project_treatment_name,
-                    description => $management_factor_description,
-                    projectprops => \@treatment_project_props,
-                    project_relationship_subject_projects => \@treatment_relationships,
-                    nd_experiment_projects => \@treatment_nd_experiment_project
-                });
+#                 #Create a project for each treatment_name
+#                 my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
+#                 my $treatment_project = $chado_schema->resultset('Project::Project')->create({
+#                     name => $project_treatment_name,
+#                     description => $management_factor_description,
+#                     projectprops => \@treatment_project_props,
+#                     project_relationship_subject_projects => \@treatment_relationships,
+#                     nd_experiment_projects => \@treatment_nd_experiment_project
+#                 });
 
-                if ($self->get_new_treatment_date()) {
-                    my $management_factor_t = CXGN::Trial->new({
-                        bcs_schema => $chado_schema,
-                        trial_id => $treatment_project->project_id()
-                    });
-                    $management_factor_t->set_management_factor_date($self->get_new_treatment_date() );
-                }
-            }
-        }
+#                 if ($self->get_new_treatment_date()) {
+#                     my $management_factor_t = CXGN::Trial->new({
+#                         bcs_schema => $chado_schema,
+#                         trial_id => $treatment_project->project_id()
+#                     });
+#                     $management_factor_t->set_management_factor_date($self->get_new_treatment_date() );
+#                 }
+#             }
+#         }
 
         print STDERR "Design Stored ".localtime."\n";
     };

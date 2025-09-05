@@ -116,6 +116,8 @@ sub generate_experimental_design_POST : Args(0) {
     my $block_col_number=$c->req->param('col_number_per_block');
     my $col_number =$c->req->param('col_number');
 
+    my $json = JSON::XS->new();
+
     my $block_size =  $c->req->param('block_size');
     my $max_block_size =  $c->req->param('max_block_size');
     my $plot_prefix =  $c->req->param('plot_prefix');
@@ -126,7 +128,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
     my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
     my $plot_layout_format = $c->req->param('plot_layout_format');
-    my @treatments = $c->req->param('treatments[]');
+    my $treatments = $json->decode($c->req-param('treatments'));
     my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
     my $num_seed_per_plot = $c->req->param('num_seed_per_plot');
     my $westcott_check_1 = $c->req->param('westcott_check_1');
@@ -160,7 +162,7 @@ sub generate_experimental_design_POST : Args(0) {
     }
 
     if ($design_type eq 'splitplot'){
-        if (scalar(@treatments)<1){
+        if (scalar(keys(%{$treatments}))<1){
             $c->stash->{rest} = { error => "You need to provide at least one treatment for a splitplot design."};
             return;
         }
@@ -444,8 +446,8 @@ sub generate_experimental_design_POST : Args(0) {
             $trial_design->set_sub_block_sequence($no_of_sub_block_sequence);
         }
 
-        if (scalar(@treatments)>0) {
-            $trial_design->set_treatments(\@treatments);
+        if (scalar(keys(%{$treatments}))>0) {
+            $trial_design->set_treatments($treatments);
         }
         if($num_plants_per_plot){
             $trial_design->set_num_plants_per_plot($num_plants_per_plot);

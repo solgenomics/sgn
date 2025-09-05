@@ -5,13 +5,15 @@ use List::MoreUtils qw(uniq);
 use CXGN::File::Parse;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
+use CXGN::List::Transform;
 use CXGN::Stock::Seedlot;
 use CXGN::Calendar;
 use CXGN::Trial;
+use CXGN::Trait;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
-# Any additional columns that are not required or optional were formerly used as a treatment, but will now result in a warning and be ignored on upload.
+# Any additional columns that are not required or optional will be parsed as treatments. 
 
 # VALID DESIGN TYPES
 my %valid_design_types = (
@@ -76,8 +78,20 @@ sub _validate_with_plugin {
     my $treatments = $parsed->{'additional_columns'};
 
     # treatments as additional columns is deprecated, and those columns are ignored. 
-    if ($treatments) { 
-        push @warning_messages, "Using additional columns as treatments has been deprecated. Please upload experimental treatments from the trial detail page.";
+    my $trait_validator = CXGN::List::Validate->new();
+    
+    my $validate = $trait_validator->validate($schema, "traits", $treatments);
+
+    foreach my $treatment (@{$treatments}) {
+        if ($treatment !~ m/_TREATMENT:/) {
+            push @error_messages, "Column $treatment is not formatted like a treatment. Use only full, valid treatment names.\n";
+        }
+    }
+
+    if (@{$validate->{missing}}>0) { 
+        foreach my $missing (@{$validate->{missing}}) {
+            push @error_messages, "Treatment $missing does not exist in the database.\n";
+        }
     }
 
     # Return file parsing errors
@@ -127,6 +141,32 @@ sub _validate_with_plugin {
         my $num_seed_per_plot = $data->{'num_seed_per_plot'};
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
         my $entry_number = $data->{'entry_number'};
+
+        foreach my $treatment (@{$treatments}) {
+            my $lt = CXGN::List::Transform->new();
+
+            my $transform = $lt->transform($schema, 'traits_2_trait_ids', [$treatment]);
+            my @treatment_id_list = @{$transform->{transform}};
+            my $treatment_id = $treatment_id_list[0];
+
+            my $treatment_obj = CXGN::Trait->new({
+                bcs_schema => $schema, 
+                cvterm_id => $treatment_id
+            });
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
+                push @error_messages, "Row $row: value for $treatment is lower than the allowed minimum for that treatment.";
+            }
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->maximum()) && defined($data->{$treatment}) && $data->{$treatment} > $treatment_obj->maximum()) {
+                push @error_messages, "Row $row: value for $treatment is higher than the allowed maximum for that treatment.";
+            }
+            if ($treatment_obj->format() eq "qualitative" && defined($treatment_obj->categories()) && defined($data->{$treatment})) {
+                my $qual_value = $data->{$treatment};
+                my $categories = $treatment_obj->categories();
+                if ( $categories !~ m/$qual_value/) {
+                    push @error_messages, "Row $row: value for $treatment is not in the valid categories for that treatment.";
+                }
+            }
+        }
 
         # Plot Number: must be a positive number
         if (!($plot_number =~ /^\d+?$/)) {
@@ -490,7 +530,7 @@ sub _parse_with_plugin {
     my $parsed = $self->_get_validated_data();
     my $data = $parsed->{'data'};
     my $values = $parsed->{'values'};
-    # my $treatments = $parsed->{'additional_columns'};
+    my $treatments = $parsed->{'additional_columns'};
 
     # Get synonyms for accessions in data
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -629,6 +669,11 @@ sub _parse_with_plugin {
             $design_details{$key}->{seedlot_name} = $seedlot_name;
             $design_details{$key}->{num_seed_per_plot} = $num_seed_per_plot;
             $design_details{$key}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
+        }
+        foreach my $treatment (@{$treatments}) {
+            if (defined($row->{$treatment})) {
+                $design_details{'treatments'}->{$plot_name}->{$treatment} = [$row->{$treatment}];
+            }
         }
     }
 

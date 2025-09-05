@@ -205,7 +205,7 @@ has 'format' => (isa => 'Str',
     );
 
 has 'default_value' => (
-	isa => 'Str',
+	isa => 'Maybe[Str]',
 	is => 'rw',
 	lazy => 1,
 	default => sub {
@@ -218,12 +218,12 @@ has 'default_value' => (
 		if ($row) {
 			return $row->value();
 		}
-		return "";
+		return undef;
 	}
 );
 
 has 'minimum' => (
-	isa => 'Str',
+	isa => 'Maybe[Str]',
 	is => 'rw',
 	lazy => 1,
 	default => sub {
@@ -236,12 +236,12 @@ has 'minimum' => (
 		if ($row) {
 			return $row->value();
 		}
-		return "";
+		return undef;
 	}
 );
 
 has 'maximum' => (
-	isa => 'Str',
+	isa => 'Maybe[Str]',
 	is => 'rw',
 	lazy => 1,
 	default => sub {
@@ -254,12 +254,12 @@ has 'maximum' => (
 		if ($row) {
 			return $row->value();
 		}
-		return "";
+		return undef;
 	}
 );
 
 has 'categories' => (
-	isa => 'Str',
+	isa => 'Maybe[Str]',
 	is => 'rw',
 	lazy => 1,
 	default => sub {
@@ -272,7 +272,7 @@ has 'categories' => (
 		if ($row) {
 			return $row->value();
 		}
-		return "";
+		return undef;
 	}
 );
 

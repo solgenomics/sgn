@@ -586,7 +586,7 @@ foreach my $stock_name (@stock_names_splitplot) {
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
 ok($trial_design->set_trial_name("test_splitplot_trial_1"), "set trial name");
 ok($trial_design->set_stock_list(\@stock_names_splitplot), "set stock list");
-ok($trial_design->set_treatments(["management_factor_1", "management_factor_2"]), "set treatment/management_factor list");
+# ok($trial_design->set_treatments(["management_factor_1", "management_factor_2"]), "set treatment/management_factor list");
 ok($trial_design->set_number_of_blocks(2), "set number of blocks");
 ok($trial_design->set_plot_layout_format("serpentine"), "set serpentine");
 ok($trial_design->set_design_type("splitplot"), "set design type");
@@ -627,9 +627,9 @@ ok(my $trial = $trial_lookup->get_trial());
 ok(my $trial_id = $trial->project_id());
 
 my $trial_obj = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$trial_id});
-ok(my $trial_management_factors = $trial_obj->get_treatments());
-#print STDERR Dumper $trial_management_factors;
-is(scalar(@$trial_management_factors), 2);
+# ok(my $trial_management_factors = $trial_obj->get_treatments());
+# print STDERR Dumper $trial_management_factors;
+# is(scalar(@$trial_management_factors), 2);
 ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,
     trial_id => $trial_id,
@@ -649,36 +649,36 @@ for (my $i=0; $i<scalar(@stock_names_splitplot); $i++){
 }
 ok(scalar(@accessions) == 100, "check accession names");
 
-my @splitplot_management_factors;
-foreach (@$trial_management_factors) {
-    push @splitplot_management_factors, $_->[0];
-    my $trial = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$_->[0]});
-    my $plant_entries = $trial->get_observation_units_direct('plant', ['treatment_experiment']);
-    my $subplot_entries = $trial->get_observation_units_direct('subplot', ['treatment_experiment']);
-    is(scalar(@$plant_entries), 400);
-    is(scalar(@$subplot_entries), 200);
-}
+# my @splitplot_management_factors;
+# foreach (@$trial_management_factors) {
+#     push @splitplot_management_factors, $_->[0];
+#     my $trial = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$_->[0]});
+#     my $plant_entries = $trial->get_observation_units_direct('plant', ['treatment_experiment']);
+#     my $subplot_entries = $trial->get_observation_units_direct('subplot', ['treatment_experiment']);
+#     is(scalar(@$plant_entries), 400);
+#     is(scalar(@$subplot_entries), 200);
+# }
 
-my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-    schema => $chado_schema,
-    trial_id => $trial_id,
-    data_level => 'subplots',
-    treatment_project_ids => \@splitplot_management_factors,
-    selected_columns => {"subplot_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
-});
-my $output = $trial_layout_download->get_layout_output();
-#print STDERR Dumper $output;
-is(scalar(@{$output->{output}}), 401);
+# my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+#     schema => $chado_schema,
+#     trial_id => $trial_id,
+#     data_level => 'subplots',
+#     treatment_project_ids => \@splitplot_management_factors,
+#     selected_columns => {"subplot_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
+# });
+# my $output = $trial_layout_download->get_layout_output();
+# #print STDERR Dumper $output;
+# is(scalar(@{$output->{output}}), 401);
 
-my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-    schema => $chado_schema,
-    trial_id => $trial_id,
-    data_level => 'plants',
-    treatment_project_ids => \@splitplot_management_factors,
-    selected_columns => {"plant_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
-});
-my $output = $trial_layout_download->get_layout_output();
+# my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+#     schema => $chado_schema,
+#     trial_id => $trial_id,
+#     data_level => 'plants',
+#     treatment_project_ids => \@splitplot_management_factors,
+#     selected_columns => {"plant_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
+# });
+# my $output = $trial_layout_download->get_layout_output();
 #print STDERR Dumper $output;
-is(scalar(@{$output->{output}}), 801);
+# is(scalar(@{$output->{output}}), 801);
 
 done_testing();

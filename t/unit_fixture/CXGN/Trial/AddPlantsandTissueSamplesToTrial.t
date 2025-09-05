@@ -12,6 +12,9 @@ use CXGN::Trial::Download;
 use Spreadsheet::WriteExcel;
 use Spreadsheet::Read;
 use CXGN::Fieldbook::DownloadTrial;
+use File::Temp 'tempfile';
+use Cwd;
+use DateTime;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -1087,7 +1090,7 @@ for my $extension ("xls", "xlsx") {
     ], "check col2");
 
     #print STDERR Dumper $contents->[1]->{'cell'}->[3];
-    is_deeply($contents->[1]->{'cell'}->[3], [
+    is_deeply($contents->[1]->{'cell'}->[3], [ #test 40
         undef,
         'Spreadsheet format',
         'Operator',
@@ -1452,9 +1455,34 @@ for my $extension ("xls", "xlsx") {
         'fresh root weight|CO_334:0000012'
     ], "check col13");
 
-    $trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id });
-    is($trial->create_tissue_samples(['leaf', ], 1, 0), 1, 'test create tissue samples without tissue numbers');
-    is($trial->create_tissue_samples(['root', 'fruit' ], 1, 1), 1, 'test create tissue samples with tissue numbers');
+    $trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id, phenome_schema => $f->phenome_schema, metadata_schema => $f->metadata_schema});
+    my $temp_basedir = $f->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $f->config->{dbhost},
+        dbuser => $f->config->{dbuser},
+        dbname => $f->config->{dbname},
+        dbpass => $f->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => '41',
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => 'janedoe',
+            date => $timestamp
+        }
+    };
+    is($trial->create_tissue_samples(['leaf', ], 1, 0, undef, undef, $phenotype_store_config), 1, 'test create tissue samples without tissue numbers');#test 51
+    is($trial->create_tissue_samples(['root', 'fruit' ], 1, 1, undef, undef, $phenotype_store_config), 1, 'test create tissue samples with tissue numbers');#test 52
+
+    `rm $tempfile`;
 
     my $trial_with_tissues_layout = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id, experiment_type => 'field_layout' })->get_design();
     print STDERR Dumper $trial_with_tissues_layout;

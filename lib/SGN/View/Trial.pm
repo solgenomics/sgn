@@ -269,7 +269,7 @@ sub design_layout_view {
     return  "$design_result_html";
 }
 
-sub design_info_view {
+sub design_info_view { #TODO: fix treatments here
     my $design_ref = shift;
     my $design_info_ref = shift;
     my $trial_stock_type = shift;

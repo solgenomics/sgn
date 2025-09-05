@@ -15,7 +15,6 @@ sub create_design {
     my $result_matrix;
     my @plot_numbers;
     my @subplots_numbers;
-    my @treatments;
     my @stock_names;
     my @block_numbers;
     my @rep_numbers;
@@ -27,6 +26,7 @@ sub create_design {
     my $plot_layout_format;
     my @col_number_fieldmaps;
     my $treatments;
+    my @unique_treatments = ();
     my $num_plants_per_plot;
     if ($self->has_stock_list()) {
         @stock_list = @{$self->get_stock_list()};
@@ -35,7 +35,27 @@ sub create_design {
         die "No stock list specified\n";
     }
     if ($self->has_treatments()) {
-        $treatments = $self->get_treatments();
+        $treatments = $self->get_treatments(); #at this point this is a hashref of arrayrefs. Each hash key is a treatment name, and the arrays are the values of that treatment to be applied.
+        my @treatment_names = keys(%{$treatments});
+        
+        my @aggregator = ();
+        foreach my $treatment (@treatment_names) {
+            my @formatted_values = map {"{$treatment,$_}"} @{$treatments->{$treatment}};
+            if (scalar(@aggregator) == 0) { #aggregator is empty
+                @aggregator = @formatted_values;
+            } else { #aggregator is not empty
+                my @new_aggregator = ();
+                foreach my $val (@aggregator) {
+                    foreach my $new_val (@formatted_values) {
+                        push @new_aggregator, $val.$new_val
+                    }
+                }
+                @aggregator = @new_aggregator;
+            }
+        }
+
+        @unique_treatments = @aggregator;
+
     } else {
         die "treatments not specified\n";
     }
@@ -69,13 +89,14 @@ sub create_design {
         data => \@stock_list,
     });
     #print STDERR Dumper $stock_data_matrix;
-    my $treatment_data_matrix =  R::YapRI::Data::Matrix->new({
+    my $treatment_data_matrix =  R::YapRI::Data::Matrix->new({ #TODO figure out if this is right
         name => 'treatment_data_matrix',
         rown => 1,
-        coln => scalar(@$treatments),
-        data => $treatments,
+        coln => scalar(@unique_treatments),
+        data => \@unique_treatments,
     });
-    #print STDERR Dumper $treatment_data_matrix;
+    print STDERR Dumper $treatment_data_matrix;
+    sleep(30); #TODO remove this
 
     $r_block = $rbase->create_block('r_block');
     $stock_data_matrix->send_rbase($rbase, 'r_block');

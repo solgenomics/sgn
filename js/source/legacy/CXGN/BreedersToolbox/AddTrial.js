@@ -493,12 +493,24 @@ jQuery(document).ready(function ($) {
         var html = '';
         for (var i=0; i<new_count; i++){
             var display_count = i + 5;
-            html = html + '<div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Subplot '+display_count+ 'Treatment Name: </label><div class="col-sm-5" ><input class="form-control" id="create_trial_with_treatment_name_input'+display_count+'" name="create_trial_with_treatment_name_input'+display_count+'" type="text" placeholder="Optional Treatment '+display_count+'"/></div></div>';
+            html = html + '<div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Treatment '+display_count+ ': </label><div class="col-sm-5" ><input class="form-control  treatment-name-input-box" id="create_trial_with_treatment_name_input'+display_count+'" name="create_trial_with_treatment_name_input'+display_count+'" type="text" placeholder="Optional Treatment '+display_count+'"/><input class="form-control treatment-value-input-box" id="create_trial_with_treatment_value_input'+display_count+'" name="create_trial_with_treatment_value_input'+display_count+'" type="text" placeholder="treatment value"/></div></div>';
         }
         html = html + '<input type="hidden" id="create_trial_with_treatment_additional_count" value='+return_count+'><div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Add Another Treatment: </label><div class="col-sm-5" ><button class="btn btn-info btn-sm" id="create_trial_with_treatment_additional_treatment_buton">+ Treatment</button></div></div>';
         jQuery('#create_trial_with_treatment_additional_treatment').html(html);
+        apply_treatment_autocomplete();
         return false;
     });
+
+    apply_treatment_autocomplete();
+
+    function apply_treatment_autocomplete() {
+        jQuery('.treatment-name-input-box').each( function() {
+            jQuery(this).autocomplete({
+                source : '/ajax/cvterm/autocompleteslim' + "?db_name=_TREATMENT",
+                appendTo : '#add_project_dialog'
+            });
+        });
+    }
 
     var num_plants_per_plot = 0;
     var num_subplots_per_plot = 0;
@@ -618,25 +630,39 @@ jQuery(document).ready(function ($) {
             replicated_stock_list = JSON.stringify(list.getList(replicated_stock_list_id));
         }
 
-        var treatments = []
-        if (design_type == 'splitplot'){
+        var treatments = {};
+        if (design_type == 'splitplot'){//TODO refactor this for new treatments
             var count = jQuery('#create_trial_with_treatment_additional_count').val();
             if (count == 0) {
                 count = 4; //Interface starts with 4 inputs and user can add additional ones..
             }
             var int_count = parseInt(count);
             for(var i=1; i<=int_count; i++){
-                var treatment_value = jQuery('#create_trial_with_treatment_name_input'+i).val();
-                if(treatment_value != ''){
-                    treatments.push(treatment_value);
+                var treatment_name = jQuery('#create_trial_with_treatment_name_input'+i).val();
+                var treatment_value = jQuery('#create_trial_with_treatment_value_input'+i).val();
+                if(treatment_name != '' && treatment_value != ''){
+                    if (treatment_name in treatments) {
+                        treatments[treatment_name].push(treatment_value);
+                    } else {
+                        treatments[treatment_name] = [];
+                        treatments[treatment_name].push(treatment_value);
+                    }
                 }
             }
             var num_plants_per_treatment = $('#num_plants_per_treatment').val();
             num_plants_per_plot = 0;
-            if (num_plants_per_treatment){
-                num_plants_per_plot = num_plants_per_treatment*treatments.length;
+            var aggregator = 1;
+            for (treatment in treatments) {
+                var num_levels = Object.keys(treatments[treatment]).length
+                aggregator = aggregator * num_levels;
             }
-            num_subplots_per_plot = treatments.length;
+            num_subplots_per_plot = aggregator;
+            if (num_plants_per_treatment){
+                num_plants_per_plot = num_plants_per_treatment*num_subplots_per_plot;
+            } else {
+                alert("You must supply the number of plants per treatment.");
+                return;
+            }
         }
 
         var greenhouse_num_plants = [];
@@ -695,7 +721,7 @@ jQuery(document).ready(function ($) {
                 'fieldmap_col_number': fieldmap_col_number,
                 'fieldmap_row_number': fieldmap_row_number,
                 'plot_layout_format': plot_layout_format,
-                'treatments':treatments,
+                'treatments': JSON.stringify(treatments),
                 'num_plants_per_plot':num_plants_per_plot,
                 'row_in_design_number': row_in_design_number,
                 'col_in_design_number': col_in_design_number,

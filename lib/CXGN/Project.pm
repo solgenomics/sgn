@@ -5419,7 +5419,7 @@ sub get_treatments {
 
     my $all_traits = $self->get_traits_assayed(); #[$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
 
-    my @treatment_traits = grep {$_->[1] =~ /EXPERIMENT_TREATMENT/} @{$all_traits};
+    my @treatment_traits = grep {$_->[1] =~ /_TREATMENT:/} @{$all_traits};
 
     my @return_data;
 
