@@ -251,7 +251,7 @@ sub verify_exif_POST {
             my $stock_exists;
             my $stock_name_found;
 
-            if ($id_type ne 'ObservationUnitDbId') {
+            if ($id_type ne 'ObservationUnitDbId' && $id_type ne 'plot_id') {
                 # Replace observation unit name with id if there is only is stock name 
                 $stock_name = $decoded_json->{observation_unit}->{observation_unit_db_id};
                 $stock_name_found = $schema->resultset('Stock::Stock')->find({ uniquename => $stock_name});
@@ -275,6 +275,7 @@ sub verify_exif_POST {
             }
             # Get cvterm_id of recorded trait
             my $cvterm_name = $decoded_json->{observation_variable}->{observation_variable_name};
+            $cvterm_name =~ s/\|[^|]+$//;
             my $q = "SELECT cvterm_id FROM cvterm join dbxref USING (dbxref_id) JOIN db USING (db_id) WHERE db.name = ? AND cvterm.name = ?";
             my $h = $schema->storage->dbh->prepare($q);
             $h->execute($c->config->{trait_ontology_db_name},  $cvterm_name);
