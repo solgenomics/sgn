@@ -14,6 +14,6 @@ knitr::include_graphics('assets/images/image187.png')
 
 Alternatively, locations can be viewed and added via the map. Hover over an icon on the map to see the location details and trials linked to that location. Click on the map to open the new location dialog. Fill in the same information that would be used in the spreadsheet upload to add a new location. 
 
-```{r echo=FALSE, out.width=95%, fig.align='center}
+```{r echo=FALSE, out.width=95%, fig.align='center'}
 knitr::include_graphics('assets/images/location_map.png')
 ```
