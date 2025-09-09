@@ -208,7 +208,17 @@ sub parse {
 
         $units_seen{$unit_value} = 1;
         $traits_seen{$trait} = 1;
-        $data{$unit_value}->{$trait} = [$value, $timestamp, $collector, ''];
+
+        if (defined($value) && defined($timestamp)) {
+	    print STDERR "KEEPING $trait with value $value for plot $unit_value...\n";
+            push @{$data{$unit_value}->{$trait}}, [$value, $timestamp, $collector, ''];
+        }
+	else {
+	    print STDERR "PROBLEM WITH value $value or TIMESTAMP $timestamp\n";
+	}
+
+     #   $data{$unit_value}->{$trait} = [$value, $timestamp, $collector, ''];
+
     }
 
     foreach my $unit (sort keys %units_seen) {

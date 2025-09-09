@@ -1,0 +1,201 @@
+<%args>
+$trial_id
+$trial_name
+$breeding_program_name
+$default_plant_material_id => undef
+$default_plant_material_name => undef
+</%args>
+
+<div class="modal fade" id="upload_transgenic_historical_data_dialog" name="upload_transgenic_historical_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransgenicHistoricalDataDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransgenicHistoricalDialog">Upload Transgenic Data</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="transgenic_historical_data_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                        </p>
+                    </&>
+                    <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_transgenic_historical_data_form" name="upload_transgenic_historical_data_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="transgenic_historical_data_file" id="transgenic_historical_data_file" encoding="multipart/form-data" />
+                                <input name="transgenic_data_project_id" id="transgenic_data_project_id" type="hidden" value="<% $trial_id %>">
+                                <input name="transgenic_data_project_name" id="transgenic_data_project_name" type="hidden" value="<% $trial_name %>">
+                                <input name="default_plant_material_name" id="default_plant_material_name" type="hidden" value="<% $default_plant_material_name %>">
+                                <input name="project_breeding_program_name" id="project_breeding_program_name" type="hidden" value="<% $breeding_program_name %>">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_transgenic_historical_data_submit" id="upload_transgenic_historical_data_submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transgenic_data_saved_dialog_message" name="transgenic_data_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="transgenicDataSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transgenicDataSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The transgenic data were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_transgenic_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_transgenic_data_error_display" name="upload_transgenic_data_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTransgenicDataErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransgenicDataErrorDialog">Upload Transgenic Data Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transgenic_data_upload_spreadsheet_info_dialog" name="transgenic_data_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransgenicDataInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransgenicDataInfoDialog">Upload Template Information For Transgenic Historical Data</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>accession_name</td>
+                                <td>vector_construct</td>
+                                <td>batch_number</td>
+                                <td>is_a_control</td>
+                                <td>existing_accession</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                        <li>accession_name (accession name can be either new or existing transgenic accession. If you are uploading a file using existing transgenic accessions, you must indicate '1' in the 'existing_accession' column. Please check the optional fields below. <b> IMPORTANT: all accessions in the file should be the same type (either new or existing accession type).</b> )</li>
+                        <li>vector_construct (must exist in the database)</li>
+                        <li>batch_number (transgenic plants containing the same vector construct in the same batch will be grouped in an auto-generated transformation ID and will be automatically linked to control plants included in the same batch. You can have more than one batch in the same file. <b> IMPORTANT: please include all accessions from the same batch in one file.</b> )</li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li>is_a_control (if you would like to set any new accession as a control for any batch, please indicate "1" for the "is_a_control" column.)</li>
+                        <li>existing_accession (If you previously added/uploaded transgenic accessions without linking to a transformation ID and you would like to link those names to a transformation ID, please indicate "1" for the "existing_accession" column.)</li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Transgenic Historical Data", optional_column => 1 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_transgenic_data_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_transgenic_historical_data_link').click(function() {
+        const defaultPlantMaterial = "<% $default_plant_material_name %>";
+        if (defaultPlantMaterial === ''){
+            alert("Please set a default plant material for this project before uploading your data.");
+            return;
+        }
+
+        jQuery("#upload_transgenic_historical_data_dialog").modal("show");
+    });
+
+    jQuery('#upload_transgenic_data_spreadsheet_format_info').click(function(){
+        jQuery("#transgenic_data_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_transgenic_historical_data_submit").click(function(){
+        var uploadFile = jQuery("#transgenic_historical_data_file").val();
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery('#upload_transgenic_historical_data_form').attr("action", "/ajax/transformation/upload_transgenic_historical_data");
+
+        jQuery("#upload_transgenic_historical_data_form").submit();
+        jQuery("#upload_transgenic_historical_data_dialog").modal("hide");
+    });
+
+    jQuery('#upload_transgenic_historical_data_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+                jQuery("#upload_transgenic_data_error_display tbody").html('');
+                jQuery("#upload_transgenic_data_error_display tbody").append(response.error);
+                jQuery("#upload_transgenic_data_error_display").modal("show");
+                return;
+            }
+            if (response.success) {
+                jQuery('#transgenic_data_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_transgenic_data_saved_dialog").click(function(){
+        location.reload();
+    });
+
+    jQuery('#transgenic_historical_data_upload_spreadsheet_format_info').click(function() {
+        jQuery("#transgenic_data_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+
+});
+
+</script>

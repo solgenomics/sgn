@@ -425,7 +425,7 @@ sub structure_output_details {
     $referer = $base . "/" . $referer;
 
     my $output_details = {};
-
+  
     my $match_pages =
         'solgs\/traits\/all\/population\/'
       . '|solgs\/trait\/'
@@ -467,8 +467,8 @@ m/solgs\/selection\/(\d+|\w+_\d+)\/model\/|solgs\/combined\/model\/\d+\/selectio
     $output_details->{contact_page}      = $base . '/contact/form';
     $output_details->{data_set_type}     = $c->stash->{data_set_type};
     $output_details->{analysis_log_file} = $log_file;
-    $output_details->{host}              = qq | $base |;
-    $output_details->{referer}           = qq | $referer |;
+    $output_details->{host}              = $base;
+    $output_details->{referer}           = $referer;
     $output_details->{mailing_list}      = $mail_list;
 
     $c->stash->{bg_job_output_details} = $output_details;
@@ -503,8 +503,6 @@ sub structure_kinship_analysis_output {
     my $kinship_page = $base . $analysis_page;
     $analysis_data->{analysis_page} = $kinship_page;
 
-    my %output_details = ();
-
     my $trait_id = $c->stash->{trait_id};
 
     $c->controller('solGS::Files')
@@ -515,12 +513,15 @@ sub structure_kinship_analysis_output {
       ->get_kinship_coef_files( $c, $pop_id, $protocol_id, $trait_id );
     my $matrix_file = $coef_files->{matrix_file_adj};
 
-    $output_details{ 'kinship_' . $pop_id } = {
+    my %output_details = (
+      'kinship_' . $pop_id  => {
         'output_page'    => $kinship_page,
         'kinship_pop_id' => $pop_id,
         'genotype_file'  => $geno_file,
         'matrix_file'    => $matrix_file,
-    };
+    },
+    'analysis_type' => 'kinship',
+    );
 
     return \%output_details;
 }
@@ -550,7 +551,8 @@ sub structure_pca_analysis_output {
             'pca_pop_id'  => $pop_id,
             'input_file'  => $input_file,
             'scores_file' => $scores_file,
-          }
+          },
+        'analysis_type' => 'pca',
     );
 
     return \%output_details;
@@ -591,7 +593,8 @@ sub structure_cluster_analysis_output {
             'cluster_pop_id' => $pop_id,
             'input_file'     => $input_file,
             'result_file'    => $result_file,
-          }
+          },
+        'analysis_type' => 'cluster',
     );
 
     return \%output_details;

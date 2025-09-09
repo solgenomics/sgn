@@ -43,7 +43,7 @@ $trial_stock_type => undef
                     </div>
                     <div id="management_factore">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Management Factor: </label>
+                            <label class="col-sm-3 control-label">Treatment: </label>
                             <div class="col-sm-9" >
                                 <div id="create_fieldbook_treatment_<% $download_type %>">
                                 </div>
@@ -183,10 +183,10 @@ jQuery(document).ready(function() {
 
     if(jQuery("#html_select_trial_for_create_fieldbook_<% $download_type %>").length == 0) {
         get_select_box(
-            'trials', 
-            'select_trial_for_create_fieldbook_<% $download_type %>', 
-            { 
-                'name' : 'html_select_trial_for_create_fieldbook_<% $download_type %>', 
+            'trials',
+            'select_trial_for_create_fieldbook_<% $download_type %>',
+            {
+                'name' : 'html_select_trial_for_create_fieldbook_<% $download_type %>',
                 'id' : 'html_select_trial_for_create_fieldbook_<% $download_type %>',
                 'include_lists' : 1
             }
@@ -516,7 +516,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     var trial_stock_type = "<% $trial_stock_type %>";
     let trial_ids = jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val().split(',').filter((e) => !!e && e !== '');
     if ( !trial_ids || trial_ids.length < 1 ) return alert("Please select one or more trials first");
-    
+
     jQuery("#working_modal").modal("show");
     for ( let i = 0; i < trial_ids.length; i++ ) {
         let trial_id = trial_ids[i];
@@ -577,7 +577,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
 % } elsif ($download_type eq 'TrialLayout') {
 
 function show_fieldbook_treatments_<% $download_type %>(){
-    jQuery('#create_fieldbook_treatment_<% $download_type %>').html('Include All Management Factors In Download');
+    jQuery('#create_fieldbook_treatment_<% $download_type %>').html('Include All Treatments In Download');
     jQuery('#create_fieldbook_format_div_<% $download_type %>').show();
 }
 
