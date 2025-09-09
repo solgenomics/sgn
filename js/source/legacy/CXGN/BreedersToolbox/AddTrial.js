@@ -631,7 +631,7 @@ jQuery(document).ready(function ($) {
         }
 
         var treatments = {};
-        if (design_type == 'splitplot'){//TODO refactor this for new treatments
+        if (design_type == 'splitplot'){
             var count = jQuery('#create_trial_with_treatment_additional_count').val();
             if (count == 0) {
                 count = 4; //Interface starts with 4 inputs and user can add additional ones..
@@ -685,7 +685,7 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
-	var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
+	    var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
 
         $.ajax({
             type: 'POST',
@@ -2230,6 +2230,7 @@ jQuery(document).ready(function ($) {
     }
 
     function save_experimental_design(design_json) {
+        
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
         var year = jQuery('#add_project_year').val();

@@ -354,9 +354,8 @@ sub design_info_view { #TODO: fix treatments here
         }
 
         if($key eq 'treatments'){
-            while(my($k,$v) = each %{$design{$key}}){
-                my $treatment_units = join ',', @{$v};
-                $treatment_info_string .= "<b>$k:</b> $treatment_units<br/>";
+            while(my($k,$v) = each %{$design{$key}->{'treatments'}}){
+                $treatment_info_string .= " - $k<br/>";
             }
         }
     }

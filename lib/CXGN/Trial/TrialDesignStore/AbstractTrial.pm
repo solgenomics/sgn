@@ -109,54 +109,54 @@ If the stocks in the design were checked and whether the check passed. Internal 
 
 has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_has_plant_entries(), get_new_treatment_has_plant_entries()
+# =head2 set_new_treatment_has_plant_entries(), get_new_treatment_has_plant_entries()
 
-Whether this treatment has plant entries.
+# Whether this treatment has plant entries.
 
-=cut
+# =cut
 
-has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_has_subplot_entries(), get_new_treatment_has_subplot_entries()
+# =head2 set_new_treatment_has_subplot_entries(), get_new_treatment_has_subplot_entries()
 
-Whether this treatment has subplot entries.
+# Whether this treatment has subplot entries.
 
-=cut
+# =cut
 
-has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_has_tissue_sample_entries(), get_new_treatment_has_tissue_sample_entries()
+# =head2 set_new_treatment_has_tissue_sample_entries(), get_new_treatment_has_tissue_sample_entries()
 
-Whether this treatment has tissue_sample entries.
+# Whether this treatment has tissue_sample entries.
 
-=cut
+# =cut
 
-has 'new_treatment_has_tissue_sample_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_has_tissue_sample_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_date, get_new_treatment_date()
+# =head2 set_new_treatment_date, get_new_treatment_date()
 
-A new treatment date.
+# A new treatment date.
 
-=cut
+# =cut
 
-has 'new_treatment_date' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_date' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_year, get_new_treatment_year()
+# =head2 set_new_treatment_year, get_new_treatment_year()
 
-A new treatment year.
+# A new treatment year.
 
-=cut
+# =cut
 
 
-has 'new_treatment_year' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_year' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_type, get_new_treatment_type()
+# =head2 set_new_treatment_type, get_new_treatment_type()
 
-A new treatment type.
+# A new treatment type.
 
-=cut
+# =cut
 
-has 'new_treatment_type' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_type' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 
 =head2 set_operator(), get_operator()
 
@@ -280,7 +280,7 @@ has 'ncbi_taxonomy_id_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'notes_cvterm_id' => (isa => 'Int', is => 'rw');
 
-has 'treatment_nd_experiment_type_id' => (isa => 'Int', is => 'rw');
+# has 'treatment_nd_experiment_type_id' => (isa => 'Int', is => 'rw');
 
 has 'project_design_cvterm_id' => (isa => 'Int', is => 'rw');
 
@@ -290,7 +290,7 @@ has 'management_factor_date_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'management_factor_type_cvterm_id' => (isa => 'Int', is => 'rw');
 
-has 'trial_treatment_relationship_cvterm_id' => (isa => 'Int', is => 'rw');
+# has 'trial_treatment_relationship_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'has_plants_cvterm' => (isa => 'Int', is => 'rw');
 
@@ -368,7 +368,7 @@ sub BUILD {
 
     $self->set_notes_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'notes', 'stock_property')->cvterm_id());
 
-    $self->set_treatment_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id());
+    # $self->set_treatment_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id());
 
     $self->set_project_design_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property')->cvterm_id());
 
@@ -378,7 +378,7 @@ sub BUILD {
 
     $self->set_management_factor_type_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'management_factor_type', 'project_property')->cvterm_id());
 
-    $self->set_trial_treatment_relationship_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id());
+    # $self->set_trial_treatment_relationship_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id());
 
     $self->set_has_plants_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id());
 
@@ -939,7 +939,7 @@ sub store {
                     );
 
 
-                    my $plant = $stock_rs->create({
+                    my $plant = $stock_rs->find_or_create({
                         organism_id => $organism_id_checked,
                         name       => $plant_name,
                         uniquename => $plant_name,
@@ -1000,7 +1000,7 @@ sub store {
                         }
                     }
 
-                    my $subplot = $stock_rs->create({
+                    my $subplot = $stock_rs->find_or_create({
                         organism_id => $organism_id_checked,
                         name       => $subplot_name,
                         uniquename => $subplot_name,

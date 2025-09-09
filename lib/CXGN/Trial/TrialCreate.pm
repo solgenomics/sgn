@@ -461,7 +461,7 @@ sub save_trial {
     }
 
     print STDERR "NOW CALLING TRIAl DESIGN STORE...\n";
-    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({ #TODO: figure out what to do with this. It needs to go, but what goes in its place? StorePhenotypes?
+    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
         bcs_schema => $chado_schema,
         trial_id => $project->project_id(),
         trial_name => $trial_name,
@@ -472,8 +472,6 @@ sub save_trial {
         is_genotyping => $self->get_is_genotyping(),
         is_analysis => $self->get_is_analysis(),
         is_sampling_trial => $self->get_is_sampling_trial(),
-        # new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
-        # new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
         operator => $self->get_operator,
         trial_stock_type => $self->get_trial_stock_type(),
     });
@@ -491,7 +489,7 @@ sub save_trial {
 	};
     }
     if ($error) {
-	return { error => $error };
+	    return { error => $error };
     }
     return { trial_id => $project->project_id };
 }

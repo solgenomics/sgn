@@ -26,6 +26,7 @@ use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Slurp;
 use File::Spec::Functions;
+use File::Temp 'tempfile';
 use Digest::MD5;
 use List::MoreUtils qw /any /;
 use Data::Dumper;
@@ -55,6 +56,8 @@ use CXGN::File::Parse;
 use CXGN::People::Person;
 use CXGN::Tools::Run;
 use CXGN::Job;
+use Cwd;
+use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -128,7 +131,8 @@ sub generate_experimental_design_POST : Args(0) {
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
     my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
     my $plot_layout_format = $c->req->param('plot_layout_format');
-    my $treatments = $json->decode($c->req-param('treatments'));
+    my $treatments = $c->req->param('treatments') ? $c->req->param('treatments') : "";
+    $treatments = $json->decode($treatments);
     my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
     my $num_seed_per_plot = $c->req->param('num_seed_per_plot');
     my $westcott_check_1 = $c->req->param('westcott_check_1');
@@ -313,7 +317,7 @@ sub generate_experimental_design_POST : Args(0) {
         $trial_design->set_backend($c->config->{backend});
         $trial_design->set_submit_host($c->config->{cluster_host});
         $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
-	$trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
+	    $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
 	
         my $design_created = 0;
         if ($use_same_layout) {
@@ -544,7 +548,6 @@ sub save_experimental_design_POST : Args(0) {
     my $error;
 
     my $design = _parse_design_from_json($c->req->param('design_json'));
-    #print STDERR "\nDesign: " . Dumper $design;
 
     my @locations;
     my $multi_location;
@@ -703,6 +706,7 @@ sub save_experimental_design_POST : Args(0) {
         my $trial_id = $save->{'trial_id'};
         my $time = DateTime->now();
         my $timestamp = $time->ymd();
+        my $pheno_timestamp = $time->ymd()."_".$time->hms();
         my $calendar_funcs = CXGN::Calendar->new({});
         my $formatted_date = $calendar_funcs->check_value_format($timestamp);
         my $create_date = $calendar_funcs->display_start_date($formatted_date);
@@ -718,6 +722,112 @@ sub save_experimental_design_POST : Args(0) {
         if (!$activity_prop_id) {
             $c->stash->{rest} = {error => "Error saving trial activity info" };
             return;
+        }
+
+        if ($c->req->param('design_type') eq "splitplot") {
+
+            my $temp_basedir = $c->config->{tempfiles_subdir};
+            my $site_basedir = getcwd();
+            if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+                mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+            }
+            my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+            my $phenostore_data_hash = {};
+            my %phenostore_stocks = ();
+            my %phenostore_treatments = ();
+
+            my $treatment_design;
+            foreach my $design_json (@{$design}) {
+                my $design = $json->decode($design_json);
+                $treatment_design = $design->{'treatments'};
+                foreach my $unique_treatment (keys(%{$treatment_design->{'treatments'}})) {
+                    my @treatment_pairs = ($unique_treatment =~ m/\{([^{}])\}/g);
+                    my $treatments = [];
+                    foreach my $pair (@treatment_pairs) {
+                        my ($treatment, $value) = $pair =~ m/([^,]+),(.*)/;
+                        print STDERR "Treatment: $treatment Value: $value\n";
+                        $phenostore_treatments{$treatment} = 1;
+                        push @{$treatments}, {
+                            'treatment' => $treatment,
+                            'value' => $value
+                        };
+                    }
+                    my $subplots = $treatment_design->{'treatments'}->{$unique_treatment};
+                    @phenostore_stocks{@{$subplots}} = 1;
+                    foreach my $subplot (@{$subplots}) {
+                        my $plants = $treatment_design->{'plants'}->{$subplot};
+                        @phenostore_stocks{@{$plants}} = 1;
+                        foreach my $treatment (@{$treatments}) {
+                            $phenostore_data_hash->{$subplot}->{$treatment->{'treatment'}} = [
+                                $treatment->{'value'},
+                                $pheno_timestamp,
+                                $user_name,
+                                '',
+                                ''
+                            ];
+                        }
+                        foreach my $plant (@{$plants}) {
+                            foreach my $treatment (@{$treatments}) {
+                                $phenostore_data_hash->{$plant}->{$treatment->{'treatment'}} = [
+                                    $treatment->{'value'},
+                                    $pheno_timestamp,
+                                    $user_name,
+                                    '',
+                                    ''
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+
+            print STDERR Dumper \%phenostore_treatments;
+            print STDERR Dumper \%phenostore_stocks;
+
+            print STDERR "Creating StorePhenotypes object...\n";
+            sleep(30);
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $temp_basedir,
+                dbhost => $c->config->{dbhost},
+                dbuser => $c->config->{dbuser},
+                dbname => $c->config->{dbname},
+                dbpass => $c->config->{dbpass},
+                temp_file_nd_experiment_id => $tempfile,
+                bcs_schema => $chado_schema,
+                metadata_schema => $metadata_schema,
+                phenome_schema => $phenome_schema,
+                user_id => $user_id,
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => [keys(%phenostore_treatments)],
+                values_hash => $phenostore_data_hash,
+                metadata_hash =>{
+                    archived_file => 'none',
+                    archived_file_type => 'new trial design with treatments',
+                    operator => $user_name,
+                    date => $pheno_timestamp
+                }
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                print STDERR "$verified_error\n";
+                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $verified_error\n" };
+                return;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                print STDERR "$stored_phenotype_error\n";
+                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $stored_phenotype_error\n" };
+                return;
+            }
         }
     }
 

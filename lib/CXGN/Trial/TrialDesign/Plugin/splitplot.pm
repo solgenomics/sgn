@@ -2,6 +2,7 @@
 package CXGN::Trial::TrialDesign::Plugin::splitplot;
 
 use Moose::Role;
+use Data::Dumper;
 
 sub create_design { 
     my $self = shift;
@@ -95,8 +96,6 @@ sub create_design {
         coln => scalar(@unique_treatments),
         data => \@unique_treatments,
     });
-    print STDERR Dumper $treatment_data_matrix;
-    sleep(30); #TODO remove this
 
     $r_block = $rbase->create_block('r_block');
     $stock_data_matrix->send_rbase($rbase, 'r_block');
@@ -125,7 +124,8 @@ sub create_design {
     @subplots_numbers = $result_matrix->get_column("splots");
     @rep_numbers = $result_matrix->get_column("block");
     @stock_names = $result_matrix->get_column("accessions");
-    @treatments = $result_matrix->get_column("treatments");
+    my @treatments = $result_matrix->get_column("treatments");
+
     @converted_plot_numbers = @plot_numbers;
 
     my %subplot_plots;
@@ -149,33 +149,34 @@ sub create_design {
         $plot_info{'plot_number'} = $converted_plot_numbers[$i];
         push @{$subplot_plots{$converted_plot_numbers[$i]}}, $subplots_numbers[$i];
         $plot_info{'subplots_names'} = $subplot_plots{$converted_plot_numbers[$i]};
-        push @{$treatment_plots{$converted_plot_numbers[$i]}}, $treatments[$i];
-        $plot_info{'treatments'} = $treatment_plots{$converted_plot_numbers[$i]};
         $splitplot_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
     %splitplot_design = %{$self->_build_plot_names(\%splitplot_design)};
 
+    my $subplot_plant_dictionary;
     while(my($plot,$val) = each(%splitplot_design)){
         my $subplots = $val->{'subplots_names'};
-        my $treatments = $val->{'treatments'};
         my $num_plants_per_subplot = $num_plants_per_plot/scalar(@$subplots);
         my %subplot_plants_hash;
         my @plant_names;
         my $plant_index = 1;
         for(my $i=0; $i<scalar(@$subplots); $i++){
-            push @{$treatment_subplot_hash{$treatments->[$i]}}, $subplots->[$i];
+            push @{$treatment_subplot_hash{$treatments[$i]}}, $subplots->[$i];
             for(my $j=0; $j<$num_plants_per_subplot; $j++){
                 my $plant_name = $subplots->[$i]."_plant_$plant_index";
                 push @{$subplot_plants_hash{$subplots->[$i]}}, $plant_name;
-                push @{$treatment_subplot_hash{$treatments->[$i]}}, $plant_name;
                 push @plant_names, $plant_name;
                 $plant_index++;
+                $subplot_plant_dictionary->{$subplots->[$i]} = [@plant_names];
             }
         }
         $val->{plant_names} = \@plant_names;
         $val->{subplots_plant_names} = \%subplot_plants_hash;
     }
-    $splitplot_design{'treatments'} = \%treatment_subplot_hash;
+    $splitplot_design{'treatments'} = {
+        plants => $subplot_plant_dictionary,
+        treatments => \%treatment_subplot_hash
+    };
     return \%splitplot_design;
 }
 
