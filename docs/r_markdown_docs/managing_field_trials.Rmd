@@ -180,7 +180,7 @@ knitr::include_graphics('assets/images/manage_trials_upload_trial_1.png')
 The following page will allow you to pick a file for upload, including uploading multiple trials at once. On this page you can also inspect the file requirements for both single trial and multi-trial uploads.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics(c('assets/images/manage_trials_upload_trial_2.png','assets/images/manage_trial_upload_trial_template.png'))
+knitr::include_graphics(c('assets/images/manage_trials_upload_trial_2.png','assets/images/manage_trials_upload_trial_template.png'))
 ```
 
 
