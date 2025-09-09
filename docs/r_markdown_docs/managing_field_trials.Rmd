@@ -259,7 +259,7 @@ knitr::include_graphics('assets/images/manage_trials_upload_trial_7.png')
 Whether you were lucky enough to submit your trial successfully on Step 2 or if you tried many times on Step 5, once your trial has been saved in the database you will see the following screen:
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_trials_upload_trial_8s.png')
+knitr::include_graphics('assets/images/manage_trials_upload_trial_8.png')
 ```
 
 
