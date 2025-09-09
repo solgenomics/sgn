@@ -1,4 +1,27 @@
+---
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
 # Basic Website Usage
+
+Breedbase is usually hosted on the cloud and is entirely web-based, with only a browser required to access and use it. The recommended browser is Firefox. To use Breedbase, you or your project will usually need to have your own Breedbase instance. Information how you can obtain your own instance can be obtained from the Breedbase project (https://breedbase.org/).
+
+Once an instance is set up, the site needs to be configured and some metadata uploaded before you can design, run and analyze trials:
+
+-   define user accounts and their access privileges.
+
+-   add a trait ontology with the traits that you require.
+
+-   add the locations that you use in your breeding program
+
+-   add the foundational germplasm and the respective pedigree data
+
+-   "historical" trial data can be uploaded as needed. Usually more recent trials are prioritized over older trials
+
+In this chapter, we will cover how you can manage the user accounts and some basic website features such as lists and how to navigate the menus. The other topics are covered in subsequent chapters. Note that Breedbase instances are highly customizable, and that not every instance of Breedbase will have the same options in the same location. Refer to the site specific documentation, if any, for site specific information.
 
 ## Creating a User Account
 
@@ -74,52 +97,52 @@ knitr::include_graphics('assets/images/image270.png')
 
 ### Menu Options
 
-#### Search {-}
+#### Search {.unnumbered}
 
 In the Search menu, the options are:
 
-| Tab                   | Description                                                                                                                            |
-|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| Wizard                | Search different accessions and plots by location, year, trial, and trait data. Can also be used to create lists of different types.   |
-| Accession and plots   | Search accessions and plots using a variety of criteria                                                                                |
-| Trials                | Search trials by name, description, breeding program, year, location, and trial type.                                                  |
-| Markers               | Search different markers                                                                                                               |
-| Images                | Search images contained in the SGN database                                                                                            |
-| People                | Search database users                                                                                                               |
+| Tab | Description |
+|---------------|---------------------------------------------------------|
+| Wizard | Search different accessions and plots by location, year, trial, and trait data. Can also be used to create lists of different types. |
+| Accession and plots | Search accessions and plots using a variety of criteria |
+| Trials | Search trials by name, description, breeding program, year, location, and trial type. |
+| Markers | Search different markers |
+| Images | Search images contained in the SGN database |
+| People | Search database users |
 
-#### Manage {-}
+#### Manage {.unnumbered}
 
 In the Manage menu, the options are:
 
-| Tab                 | Description                                                                                        |
-|---------------------|----------------------------------------------------------------------------------------------------|
-| Breeding Programs   | View, add and delete breeding programs                                                             |
-| Locations           | View, add and delete locations                                                                     |
-| Accessions          | Manage and search different accessions                                                             |
-| Seedlots            | Manage and search different seedlots                                                               |
-| Crosses             | Create new crosses in the database                                                                 |
-| Field Trials        | Manage field trials. Create trials using different field layouts.                                  |
-| Genotyping Plates   | Manage genotyping plates. Create 96 or 384 well plates.                                            |
-| Phenotyping         | Upload phenotyping files from the Tablet Field Book application                                    |
-| Field Book App      | Manage the field book app data (download files to tablet)                                          |
-| Barcodes            | Refers to the old barcode system, mainly historical                                                |
-| Download            | Download information in the database based on lists                                                |
+| Tab | Description |
+|----------------|--------------------------------------------------------|
+| Breeding Programs | View, add and delete breeding programs |
+| Locations | View, add and delete locations |
+| Accessions | Manage and search different accessions |
+| Seedlots | Manage and search different seedlots |
+| Crosses | Create new crosses in the database |
+| Field Trials | Manage field trials. Create trials using different field layouts. |
+| Genotyping Plates | Manage genotyping plates. Create 96 or 384 well plates. |
+| Phenotyping | Upload phenotyping files from the Tablet Field Book application |
+| Field Book App | Manage the field book app data (download files to tablet) |
+| Barcodes | Refers to the old barcode system, mainly historical |
+| Download | Download information in the database based on lists |
 
-#### Analyze {-}
+#### Analyze {.unnumbered}
 
-**Clicking on the "Analyze" link will give a full menu of all analysis functions**  
+**Clicking on the "Analyze" link will give a full menu of all analysis functions**\
 In the Analyze menu, the options are:
 
-| Tab                   | Description                                                                             |
-| --------------------- | --------------------------------------------------------------------------------------- |
-| **Breeder Tools**     |                                                                                         |
-| Breeder Home          | Access breeding functionalities. Lists important and helpful links.                     |
-| Barcode Tools         | Manage, create, and download barcodes. Also access barcode tools.                       |
-| Genomic Selection     | Can search for traits, start building a GS model, and predict values based on genotypes |
-| **Sequence Analysis** |                                                                                         |
-| BLAST                 | Sequence homology search                                                                |
-| **Other**             |                                                                                         |
-| Ontology Browser      | Browse all recorded ontologies                                                          |
+| Tab | Description |
+|-----------------|-------------------------------------------------------|
+| **Breeder Tools** |  |
+| Breeder Home | Access breeding functionalities. Lists important and helpful links. |
+| Barcode Tools | Manage, create, and download barcodes. Also access barcode tools. |
+| Genomic Selection | Can search for traits, start building a GS model, and predict values based on genotypes |
+| **Sequence Analysis** |  |
+| BLAST | Sequence homology search |
+| **Other** |  |
+| Ontology Browser | Browse all recorded ontologies |
 
 ## Working with Lists {#working-with-lists}
 
@@ -185,18 +208,17 @@ knitr::include_graphics('assets/images/image71.png')
 
 This page shows all lists that have been created, including those created by using the Search Wizard. You can view and edit your lists by using “Actions” buttons.
 
-1. Clicking on the "view" icon will open a new window called "List Contents" that allows you to change the list name, the type of the list, add new items, or delete existing items.
+1.  Clicking on the "view" icon will open a new window called "List Contents" that allows you to change the list name, the type of the list, add new items, or delete existing items.
 
-2. Clicking on the “delete” icon will delete your list. **Caution: this action cannot be undone**.
+2.  Clicking on the “delete” icon will delete your list. **Caution: this action cannot be undone**.
 
-3. Clicking on the “download” icon will download the contents of your list to your computer.
+3.  Clicking on the “download” icon will download the contents of your list to your computer.
 
-4. Clicking on the “make public” icon will make your list available for other users to view and use your list.
+4.  Clicking on the “make public” icon will make your list available for other users to view and use your list.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/image297.png')
 ```
-
 
 ## User Permissions
 
@@ -208,7 +230,7 @@ knitr::include_graphics('assets/images/roles.png')
 
 Accounts are also assigned Breeding Program role(s) to grant access to the specfic breeding program(s) they work with.
 
-- The **User** role gives an account permission to view and download data throughout the database.
-- The **Submitter** role gives an account permission to design field experiments and to upload and edit data using the tools in the “Manage” section. In order to submit and manage breeding data within a given breeding program, a submitter also must have a matching Breeding Program role.
-- The **Sequencer** role gives an account permission to design genotyping experiments and submit plates to a genotyping service.
-- The **Curator** role gives an account permission to do all of the above, as well as to delete data within the database. The Curator role also enables the addition or deletion of roles for all database accounts in the 'Manage User Roles' tool.
+-   The **User** role gives an account permission to view and download data throughout the database.
+-   The **Submitter** role gives an account permission to design field experiments and to upload and edit data using the tools in the “Manage” section. In order to submit and manage breeding data within a given breeding program, a submitter also must have a matching Breeding Program role.
+-   The **Sequencer** role gives an account permission to design genotyping experiments and submit plates to a genotyping service.
+-   The **Curator** role gives an account permission to do all of the above, as well as to delete data within the database. The Curator role also enables the addition or deletion of roles for all database accounts in the 'Manage User Roles' tool.
