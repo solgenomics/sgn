@@ -742,11 +742,11 @@ sub save_experimental_design_POST : Args(0) {
                 my $design = $json->decode($design_json);
                 $treatment_design = $design->{'treatments'};
                 foreach my $unique_treatment (keys(%{$treatment_design->{'treatments'}})) {
-                    my @treatment_pairs = ($unique_treatment =~ m/\{([^{}])\}/g);
+                    sleep(1);
+                    my @treatment_pairs = ($unique_treatment =~ m/\{([^{}]+)\}/g);
                     my $treatments = [];
                     foreach my $pair (@treatment_pairs) {
                         my ($treatment, $value) = $pair =~ m/([^,]+),(.*)/;
-                        print STDERR "Treatment: $treatment Value: $value\n";
                         $phenostore_treatments{$treatment} = 1;
                         push @{$treatments}, {
                             'treatment' => $treatment,
@@ -754,11 +754,10 @@ sub save_experimental_design_POST : Args(0) {
                         };
                     }
                     my $subplots = $treatment_design->{'treatments'}->{$unique_treatment};
-                    @phenostore_stocks{@{$subplots}} = 1;
-                    foreach my $subplot (@{$subplots}) {
-                        my $plants = $treatment_design->{'plants'}->{$subplot};
-                        @phenostore_stocks{@{$plants}} = 1;
-                        foreach my $treatment (@{$treatments}) {
+                    foreach my $treatment (@{$treatments}) {
+                        foreach my $subplot (@{$subplots}) {
+                            $phenostore_stocks{$subplot} = 1;
+                            my $plants = $treatment_design->{'plants'}->{$subplot};
                             $phenostore_data_hash->{$subplot}->{$treatment->{'treatment'}} = [
                                 $treatment->{'value'},
                                 $pheno_timestamp,
@@ -766,9 +765,8 @@ sub save_experimental_design_POST : Args(0) {
                                 '',
                                 ''
                             ];
-                        }
-                        foreach my $plant (@{$plants}) {
-                            foreach my $treatment (@{$treatments}) {
+                            foreach my $plant (@{$plants}) {
+                                $phenostore_stocks{$plant} = 1;
                                 $phenostore_data_hash->{$plant}->{$treatment->{'treatment'}} = [
                                     $treatment->{'value'},
                                     $pheno_timestamp,
@@ -781,12 +779,6 @@ sub save_experimental_design_POST : Args(0) {
                     }
                 }
             }
-
-            print STDERR Dumper \%phenostore_treatments;
-            print STDERR Dumper \%phenostore_stocks;
-
-            print STDERR "Creating StorePhenotypes object...\n";
-            sleep(30);
 
             my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
                 basepath => $temp_basedir,

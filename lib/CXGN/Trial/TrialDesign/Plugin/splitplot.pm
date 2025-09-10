@@ -162,13 +162,15 @@ sub create_design {
         my $plant_index = 1;
         for(my $i=0; $i<scalar(@$subplots); $i++){
             push @{$treatment_subplot_hash{$treatments[$i]}}, $subplots->[$i];
+            my @subplot_plant_names;
             for(my $j=0; $j<$num_plants_per_subplot; $j++){
                 my $plant_name = $subplots->[$i]."_plant_$plant_index";
                 push @{$subplot_plants_hash{$subplots->[$i]}}, $plant_name;
                 push @plant_names, $plant_name;
+                push @subplot_plant_names, $plant_name;
                 $plant_index++;
-                $subplot_plant_dictionary->{$subplots->[$i]} = [@plant_names];
             }
+            $subplot_plant_dictionary->{$subplots->[$i]} = [@subplot_plant_names];
         }
         $val->{plant_names} = \@plant_names;
         $val->{subplots_plant_names} = \%subplot_plants_hash;
