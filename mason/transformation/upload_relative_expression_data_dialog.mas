@@ -1,5 +1,6 @@
 <%args>
-
+$stock_id
+$stock_uniquename
 </%args>
 
 <div class="modal fade" id="upload_relative_expression_data_dialog" name="upload_relative_expression_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadRelativeExpressionDataDialog">
@@ -35,8 +36,8 @@
                             <label class="col-sm-3 control-label">Upload File: </label>
                             <div class="col-sm-9" >
                                 <input type="file" name="relative_expression_data_file" id="relative_expression_data_file" encoding="multipart/form-data" />
-                                <input name="data_vector_id" id="data_vector_id" type="hidden" value="<%  %>">
-                                <input name="data_vector_name" id="data_vector_name" type="hidden" value="<%  %>">
+                                <input name="relative_expression_data_vector_id" id="relative_expression_data_vector_id" type="hidden" value="<% $stock_id %>">
+                                <input name="relative_expression_data_vector_name" id="relative_expression_data_vector_name" type="hidden" value="<% $stock_uniquename %>">
                             </div>
                         </div>
                     </form>

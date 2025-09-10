@@ -14,7 +14,7 @@ $stock_type => undef
     </table>
 </div>
 
-<& /transformation/upload_relative_expression_data_dialog.mas &>
+<& /transformation/upload_relative_expression_data_dialog.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
 
 <style>
     .table th {
