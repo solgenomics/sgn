@@ -71,7 +71,7 @@ sub create_trait :Path('/ajax/trait/create') {
     if (!$definition) {
         $error .= "You must supply a definition.\n";
     }
-    if (defined($definition) && $definition !~ m/([\w\[\]\(\).,!?;:'"-]+\s+){6,}/) {
+    if (defined($definition) && $definition !~ m/([^\s]+\s+){6,}/) {
         $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the trait and allows it to be differentiated from other traits.\n";
     }
     if (!$format || ($format ne "numeric" && $format ne "qualitative" && $format ne "ontology")) {
@@ -79,6 +79,9 @@ sub create_trait :Path('/ajax/trait/create') {
     }
     if (defined($categories) && defined($default_value) && $categories !~ m/$default_value/) {
         $error .= "The default value of the trait is not in the categories list.\n";
+    }
+    if (defined($default_value) && $default_value =~ m/[=\/]/) {
+        $error .= "The default value you supplied contains special characters.\n";
     }
     if (defined($minimum) && defined($maximum) && $maximum < $minimum) {
         $error .= "The maximum value cannot be less than the minimum value.\n";

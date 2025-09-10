@@ -21,7 +21,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">Definition:</label>
                 <div class="col-sm-9">
-                    <textarea style="width:70%;" class="form-control" id="new_trait_definition" name="new_trait_definition"></textarea>
+                    <textarea style="width:70%;" class="form-control" id="new_trait_definition" name="new_trait_definition" placeholder="Be sure to describe category meanings if using categorical data."></textarea>
                 </div>
             </div>
             <div class="form-group">
@@ -57,7 +57,8 @@
                 <div class="col-sm-9">
                     <table style="width:70%;">
                         <tr>
-                            <td><input style="width:100%;" class="form-control" id="new_trait_add_category" name="new_trait_add_category" type="text" placeholder="(Optional)"/></td>
+                            <td><input class="form-control" id="new_trait_add_category" name="new_trait_add_category" type="text" placeholder="Optional. No special characters."/></td>
+                            <td style="width:15%"><input  class="form-control" id="new_trait_category_ordinal" name="new_trait_category_ordinal" type="number"></td>
                             <td><button id="new_trait_add_category_btn" class="btn btn-small btn-success">+</button></td>
                         </tr>
                     </table>
@@ -93,7 +94,12 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
             let default_value = jQuery('#new_trait_default_value').val();
             let minimum = jQuery('#new_trait_minimum').val();
             let maximum = jQuery('#new_trait_maximum').val();
-            let categories = JSON.parse(html_table_to_json(jQuery('#new_trait_categories').html())).join(' ');
+            let categories = JSON.parse(html_table_to_json(jQuery('#new_trait_categories').html()));
+            let cat_list = [];
+            Object.keys(categories).sort().forEach(key => {
+                cat_list.push( key + "=" + categories[key]);
+            });
+            categories = cat_list.join('/');
             let parent_term = jQuery('#new_trait_parent_term').val();
 
             jQuery.ajax({
@@ -156,30 +162,42 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
         jQuery('#new_trait_add_category_btn').on('click',function(e) {
             e.preventDefault();
             let new_category = jQuery('#new_trait_add_category').val();
+            let new_ordinal = jQuery('#new_trait_category_ordinal').val();
+
+            if (! new_ordinal) {
+                alert("Assign an ordinal value to the new category.");
+                return;
+            }
+
+            if (new_category.includes('/') || new_category.includes('=')){
+                alert("No special characters.");
+                return;
+            }
 
             if (new_category !== null && new_category !== "" && new_category.trim() !== "" ) {
                 let table_str = jQuery('#new_trait_categories').html();
-                let table_elems = [];
+                let table_elems = {};
                 if (table_str && table_str.trim() !== "") {
                     table_elems = JSON.parse(html_table_to_json(table_str));
                 }
-                table_elems.push(new_category);
-                console.log(table_elems);
+                table_elems[new_ordinal] = new_category;
                 table_str = json_to_html_table(table_elems);
                 jQuery('#new_trait_categories').html(table_str);
-                if (table_elems.length > 0) {
+                if (Object.keys(table_elems).length > 0) {
                     jQuery('#new_trait_remove_category_btn').css('display', '');
                 }
             }
             jQuery('#new_trait_add_category').val('');
+            jQuery('#new_trait_category_ordinal').val('');
         });
 
         jQuery('#new_trait_remove_category_btn').on('click',function(e) {
             e.preventDefault();
             let table_str = jQuery('#new_trait_categories').html();
             let table_elems = JSON.parse(html_table_to_json(table_str));
-            table_elems.pop();
-            if (table_elems.length == 0) {
+            let max_key = Math.max( ... Object.keys(table_elems).map(Number));
+            delete table_elems[max_key];
+            if (Object.keys(table_elems).length == 0) {
                 jQuery('#new_trait_remove_category_btn').css('display', 'none');
             }
             table_str = json_to_html_table(table_elems);
@@ -187,11 +205,21 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
         });
 
         function html_table_to_json(html_str) {
-            return JSON.stringify(html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== ''));
+            let list = html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== '');
+            let object = Object.fromEntries(list.map(cat => {
+                    const [key, value] = cat.split("=").map(s => s.trim());
+                    return [key, value];
+                })
+            );
+            return JSON.stringify(object);
         }
 
         function json_to_html_table(json) {
-            return "<tr><td>"+json.join("</td></tr><tr><td>")+"</td></tr>";
+            let html_arr = [];
+            Object.keys(json).sort().forEach(key => {
+                html_arr.push( key + " = " + json[key]);
+            });
+            return "<tr><td>"+html_arr.join("</td></tr><tr><td>")+"</td></tr>";
         }
     });
 </script>
