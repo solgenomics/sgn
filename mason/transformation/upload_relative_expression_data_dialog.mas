@@ -1,0 +1,209 @@
+<%args>
+
+</%args>
+
+<div class="modal fade" id="upload_relative_expression_data_dialog" name="upload_relative_expression_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadRelativeExpressionDataDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadRelativeExpressionDataDialog">Upload Relative Expression Data</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="relative_expression_data_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_relative_expression_data_form" name="upload_relative_expression_data_form">
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Tissue Type: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="relative_expression_tissue_type">
+                                    <option value="">Select a tissue type</option>
+                                    <option value="leaf">leaf</option>
+                                    <option value="stem">stem</option>
+                                    <option value="root">root</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="relative_expression_data_file" id="relative_expression_data_file" encoding="multipart/form-data" />
+                                <input name="data_vector_id" id="data_vector_id" type="hidden" value="<%  %>">
+                                <input name="data_vector_name" id="data_vector_name" type="hidden" value="<%  %>">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_relative_expression_data_submit" id="upload_relative_expression_data_submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="relative_expression_data_saved_dialog_message" name="relative_expression_data_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="relativeExpressionDataSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="relativeExpressionDataSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The relative expression data were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_relative_expression_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_relative_expression_data_error_display" name="upload_relative_expression_data_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadRelativeExpressionDataErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadRelativeExpressionDataErrorDialog">Upload Relative Expression Data Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="relative_expression_data_upload_spreadsheet_info_dialog" name="relative_expression_data_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadRelativeExpressionDataInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadRelativeExpressionDataInfoDialog">Upload Template Information For Relative Expression Data</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>accession_name</td>
+                                <td>Gene A</td>
+                                <td>Gene B</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                        <li>accession_name (must exist in the database)</li>
+                        <li></li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li></li>
+                        <li></li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Relative Expression Data", optional_column => 1 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_relative_expression_data_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_relative_expression_data_link').click(function() {
+        jQuery("#upload_relative_expression_data_dialog").modal("show");
+    });
+
+    jQuery('#upload_relative_expression_data_spreadsheet_format_info').click(function(){
+        jQuery("#relative_expression_data_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_relative_expression_data_submit").click(function(){
+        const upload_file = jQuery("#relative_expression_data_file").val();
+        const tissue_type = jQuery("#relative_expression_tissue_type").val();
+
+        jQuery('#upload_relative_expression_data_form').attr("action", "/ajax/transformation/upload_relative_expression_data");
+
+        if (tissue_type === ''){
+            alert("Please select a tissue type");
+            return;
+        }
+
+        if (upload_file === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery("#relative_expression_data_form").submit();
+        jQuery("#upload_relative_expression_data_dialog").modal("hide");
+    });
+
+    jQuery('#upload_relative_expression_data_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_relative_expression_data_error_display tbody").html('');
+                jQuery("#upload_relative_expression_data_error_display tbody").append(response.error_string);
+                jQuery("#upload_relative_expression_data_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#relative_expression_data_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_relative_expression_data_saved_dialog").click(function(){
+        location.reload();
+    });
+
+    jQuery('#relative_expression_data_upload_spreadsheet_format_info').click(function() {
+        jQuery("#relative_expression_data_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+
+});
+
+</script>

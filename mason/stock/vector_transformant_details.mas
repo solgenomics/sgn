@@ -5,11 +5,16 @@ $stock_uniquename => undef
 $stock_type => undef
 </%args>
 
+<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_relative_expression_data_link">Upload Relative Expression Data</button>
+<br/>
+<br/>
+
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="vector_transgenic_line_details_table">
     </table>
 </div>
 
+<& /transformation/upload_relative_expression_data_dialog.mas &>
 
 <style>
     .table th {
