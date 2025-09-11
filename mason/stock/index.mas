@@ -222,8 +222,8 @@ if ($person_id && ($submitter || $curator || $sequencer)) { $released_variety_li
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <& /util/import_javascript.mas,
-   classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min" ],
-  entries => ["sequenced_accessions"]
+   classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min", "jquery.dataTables" ],
+  entries => ["sequenced_accessions", "vectorViewer" ]
 &>
 
 <script language="javascript">
@@ -374,7 +374,10 @@ function jqueryStuff() {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => "<h4 style='display:inline'>Additional Info</h4>", info_section_subtitle => 'View and edit additional properties such as synonyms, editors, and all types of properties.', icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_stock_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, info_section_collapsed => 0 &>
 % } else {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => "<h4 style='display:inline'>Additional Info</h4>", info_section_subtitle => 'View and edit additional properties such as synonyms, editors, and all types of properties.', icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_vector_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner, info_section_collapsed => 0 &>
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Accessions</h4>", info_section_subtitle => 'View accessions (transformants) and transformation ids related to this vector construct.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "vector_related_accessions_section", stock_uniquename => $uniquename, type_name => $type_name &>
+    
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref=> $stockref, info_section_title => "<h4 style='display:inline' >Vector Viewer</h4>", info_section_id => "vector_view", edit_privs => $edit_privs,  is_owner => $is_owner &>
+
+<& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Accessions</h4>", info_section_subtitle => 'View accessions (transformants) and transformation ids related to this vector construct.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "vector_related_accessions_section", stock_uniquename => $uniquename, type_name => $type_name &>
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Obsoleted Accessions</h4>", info_section_subtitle => 'View obsoleted accessions (transformants) related to this vector construct and metadata.', icon_class => "glyphicon glyphicon-remove", info_section_id => "vector_obsoleted_accessions_section", stock_uniquename => $uniquename, type_name => $type_name &>
 % }
 
