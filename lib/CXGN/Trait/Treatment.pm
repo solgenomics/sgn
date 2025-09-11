@@ -64,6 +64,7 @@ sub store {
     my $minimum = $self->minimum() ne "" ? $self->minimum() : undef;
     my $maximum = $self->maximum() ne "" ? $self->maximum() : undef;
     my $categories = $self->categories() ne "" ? $self->categories() : undef;
+    my $repeat_type = $self->repeat_type() ne "" ? $self->repeat_type () : undef;
 
     my $trait_property_cv_id = $schema->resultset("Cv::Cv")->find({name => 'trait_property'})->cv_id();
 
@@ -92,12 +93,18 @@ sub store {
         name => 'trait_categories'
     })->cvterm_id();
 
+    my $repeat_type_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
+        cv_id => $trait_property_cv_id,
+        name => 'trait_repeat_type'
+    })->cvterm_id();
+
     my %cvtermprop_hash = (
         "$format_cvterm_id" => $format,
         "$default_value_cvterm_id" => $default_value,
         "$minimum_cvterm_id" => $minimum,
         "$maximum_cvterm_id" => $maximum,
-        "$categories_cvterm_id" => $categories
+        "$categories_cvterm_id" => $categories,
+        "$repeat_type_cvterm_id" => $repeat_type
     );
 
     my $get_db_accessions_sql = "SELECT accession FROM dbxref JOIN db USING (db_id) WHERE db.name='EXPERIMENT_TREATMENT';";
@@ -127,13 +134,6 @@ sub store {
     } else {
         die "No experiment_treatment CV found. Has DB patch been run?\n";
     }
-    # my $experiment_treatment = $schema->resultset("Cv::Cvterm")->find({ name => 'Experimental treatment ontology' , cv_id => $experiment_treatment_cv_id });
-    # my $experiment_treatment_root_id;
-    # if ($experiment_treatment) {
-    #     $experiment_treatment_root_id = $experiment_treatment->cvterm_id();
-    # } else {
-    #     die "No EXPERIMENT_TREATMENT root term. Has DB patch been run?\n";
-    # }
 
     my $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
     $h->execute();

@@ -38,6 +38,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my $minimum = $c->req->param('minimum') ? $c->req->param('minimum') : undef;
     my $maximum = $c->req->param('maximum') ? $c->req->param('maximum') : undef;
     my $categories = $c->req->param('categories') ? $c->req->param('categories') : undef;
+    my $repeat_type = $c->req->param('repeat_type') ? $c->req->param('repeat_type') : undef;
     my $parent_term = $c->req->param('parent_term') || 'Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000';
 
     $name =~ s/^\s+//;
@@ -74,8 +75,8 @@ sub create_treatment :Path('/ajax/treatment/create') {
     if (defined($definition) && $definition !~ m/([^\s]+\s+){6,}/) {
         $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the treatment and allows it to be differentiated from other treatments.\n";
     }
-    if (!$format || ($format ne "numeric" && $format ne "qualitative" && $format ne "ontology")) {
-        $error .= "Treatment format must be numeric, qualitative, or ontology.\n";
+    if (!$format || $format !~ m/numeric|categorical|date|percent|counter|boolean|text|ontology/i) {
+        $error .= "Treatment format must be numeric, categorical, date, percent, counter, boolean, text, or ontology.\n";
     }
     if (defined($categories) && defined($default_value) && $categories !~ m/$default_value/) {
         $error .= "The default value of the treatment is not in the categories list.\n";
@@ -86,6 +87,9 @@ sub create_treatment :Path('/ajax/treatment/create') {
     if (defined($minimum) && defined($maximum) && $maximum < $minimum) {
         $error .= "The maximum value cannot be less than the minimum value.\n";
     }
+    if (defined($repeat_type) && $repeat_type ne 'single' && $repeat_type ne 'multiple' && $repeat_type ne 'time_series') {
+        $error .- "Invalid repeat type. Must be single, multiple, or time_series.\n";
+    }
 
     if ($error) {
         $c->stash->{rest} = {error => $error};
@@ -95,7 +99,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my $new_treatment;
 
     eval {
-        if ($format eq "numeric") {
+        if ($format =~ m/numeric|percent|counter|boolean|/) {
             $new_treatment = CXGN::Trait::Treatment->new({
                 bcs_schema => $schema,
                 definition => $definition,
@@ -108,7 +112,10 @@ sub create_treatment :Path('/ajax/treatment/create') {
             if (defined($maximum)) {
                 $new_treatment->maximum($maximum);
             }
-        } elsif ($format eq "qualitative") {
+            if ($repeat_type) {
+                $new_treatment->repeat_type($repeat_type);
+            }
+        } elsif ($format eq "categorical") {
             $new_treatment = CXGN::Trait::Treatment->new({
                 bcs_schema => $schema,
                 name => $name,
@@ -119,14 +126,17 @@ sub create_treatment :Path('/ajax/treatment/create') {
             if (defined($categories)) {
                 $new_treatment->categories($categories);
             }
-        } elsif ($format eq "ontology") {
+            if ($repeat_type) {
+                $new_treatment->repeat_type($repeat_type);
+            }
+        } elsif ($format eq "ontology" || $format eq "date" || $format eq "text") {
             $new_treatment = CXGN::Trait::Treatment->new({
                 bcs_schema => $schema,
                 name => $name,
                 definition => $definition,
                 format => $format
             });
-        }
+        } 
 
         if (defined($default_value)) {
             $new_treatment->default_value($default_value);

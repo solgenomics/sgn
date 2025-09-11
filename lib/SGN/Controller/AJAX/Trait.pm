@@ -38,6 +38,7 @@ sub create_trait :Path('/ajax/trait/create') {
     my $minimum = $c->req->param('minimum') ? $c->req->param('minimum') : undef;
     my $maximum = $c->req->param('maximum') ? $c->req->param('maximum') : undef;
     my $categories = $c->req->param('categories') ? $c->req->param('categories') : undef;
+    my $repeat_type = $c->req->param('repeat_type') ? $c->req->param('repeat_type') : undef;
     my $parent_term = $c->req->param('parent_term') ? $c->req->param('parent_term') : undef;
 
     $name =~ s/^\s+//;
@@ -74,8 +75,8 @@ sub create_trait :Path('/ajax/trait/create') {
     if (defined($definition) && $definition !~ m/([^\s]+\s+){6,}/) {
         $error .= "You supplied a definition, but it seems short. Please ensure the definition fully describes the trait and allows it to be differentiated from other traits.\n";
     }
-    if (!$format || ($format ne "numeric" && $format ne "qualitative" && $format ne "ontology")) {
-        $error .= "Trait format must be numeric, qualitative, or ontology.\n";
+    if (!$format || $format !~ m/numeric|categorical|date|percent|counter|boolean|text|ontology/i) {
+        $error .= "Treatment format must be numeric, categorical, date, percent, counter, boolean, text, or ontology.\n";
     }
     if (defined($categories) && defined($default_value) && $categories !~ m/$default_value/) {
         $error .= "The default value of the trait is not in the categories list.\n";
@@ -86,6 +87,9 @@ sub create_trait :Path('/ajax/trait/create') {
     if (defined($minimum) && defined($maximum) && $maximum < $minimum) {
         $error .= "The maximum value cannot be less than the minimum value.\n";
     }
+    if ($repeat_type && $repeat_type ne 'single' && $repeat_type ne 'multiple' && $repeat_type ne 'time_series') {
+        $error .- "Invalid repeat type. Must be single, multiple, or time_series.\n";
+    }
 
     if ($error) {
         $c->stash->{rest} = {error => $error};
@@ -95,7 +99,7 @@ sub create_trait :Path('/ajax/trait/create') {
     my $new_trait;
 
     eval {
-        if ($format eq "numeric") {
+        if ($format =~ m/numeric|percent|counter|boolean|/) {
             $new_trait = CXGN::Trait->new({
                 bcs_schema => $schema,
                 definition => $definition,
@@ -108,7 +112,10 @@ sub create_trait :Path('/ajax/trait/create') {
             if (defined($maximum)) {
                 $new_trait->maximum($maximum);
             }
-        } elsif ($format eq "qualitative") {
+            if ($repeat_type) {
+                $new_trait->repeat_type($repeat_type);
+            }
+        } elsif ($format eq "categorical") {
             $new_trait = CXGN::Trait->new({
                 bcs_schema => $schema,
                 name => $name,
@@ -119,7 +126,10 @@ sub create_trait :Path('/ajax/trait/create') {
             if (defined($categories)) {
                 $new_trait->categories($categories);
             }
-        } elsif ($format eq "ontology") {
+            if ($repeat_type) {
+                $new_trait->repeat_type($repeat_type);
+            }
+        } elsif ($format eq "ontology" || $format eq "date" || $format eq "text") {
             $new_trait = CXGN::Trait->new({
                 bcs_schema => $schema,
                 name => $name,

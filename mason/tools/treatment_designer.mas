@@ -22,7 +22,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">Definition:</label>
                 <div class="col-sm-9">
-                    <textarea style="width:70%;" class="form-control" id="new_treatment_definition" name="new_treatment_definition" placeholder="Be sure to describe category meanings if using categorical data."></textarea>
+                    <textarea style="width:70%;" class="form-control" id="new_treatment_definition" name="new_treatment_definition" placeholder="Make it descriptive. Be sure to describe category meanings if using categorical data."></textarea>
                 </div>
             </div>
             <div class="form-group">
@@ -30,8 +30,23 @@
                 <div class="col-sm-9">
                     <select style="width:70%;" class="form-control" id="new_treatment_format_select" name="new_treatment_format_select" type="select">
                         <option value="numeric" selected>Numeric</option>
-                        <option value="qualitative">Qualitative (categorical)</option>
+                        <option value="categorical">Categorical</option>
+                        <option value="percent">Percent</option>
+                        <option value="boolean">Boolean</option>
+                        <option value="date">Date</option>
+                        <option value="text">Text</option>
+                        <option value="counter">Counter</option>
                         <option value="ontology">Ontology (parent to child terms)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_repeat_select_container">
+                <label class="col-sm-3 control-label">Application type:</label>
+                <div class="col-sm-9">
+                    <select style="width:70%;" class="form-control" id="new_treatment_repeat_select" name="new_treatment_repeat_select" type="select">
+                        <option value="single" selected>Single application</option>
+                        <option value="multiple">Repeated application</option>
+                        <option value="time_series">Time series</option>
                     </select>
                 </div>
             </div>
@@ -50,7 +65,7 @@
             <div class="form-group" id="new_treatment_maximum_value_container">
                 <label class="col-sm-3 control-label">Maximum value:</label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_max_value" name="new_treatment_max_value" type="text" placeholder="(Optional)"/>
                 </div>
             </div>
             <div class="form-group" id="new_treatment_add_categories_container" style="display:none;">
@@ -59,7 +74,7 @@
                     <table style="width:70%;">
                         <tr>
                             <td><input class="form-control" id="new_treatment_add_category" name="new_treatment_add_category" type="text" placeholder="Optional. No special characters."/></td>
-                            <td style="width:15%"><input  class="form-control" id="new_treatment_category_ordinal" name="new_trait_category_ordinal" type="number"></td>
+                            <td style="width:25%"><input  class="form-control" id="new_treatment_category_ordinal" name="new_treatment_category_ordinal" type="number" placeholder="Ordinate"></td>
                             <td><button id="new_treatment_add_category_btn" class="btn btn-small btn-success">+</button></td>
                         </tr>
                     </table>
@@ -95,6 +110,7 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
             let default_value = jQuery('#new_treatment_default_value').val();
             let minimum = jQuery('#new_treatment_minimum').val();
             let maximum = jQuery('#new_treatment_maximum').val();
+            let repeat_type = jQuery('#new_treatment_repeat_select').val();
             let categories = JSON.parse(html_table_to_json(jQuery('#new_treatment_categories').html()));
             let cat_list = [];
             Object.keys(categories).sort().forEach(key => {
@@ -113,7 +129,8 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
                     minimum : minimum,
                     maximum : maximum,
                     categories : categories,
-                    parent_term : parent_term
+                    parent_term : parent_term,
+                    repeat_type : repeat_type
                 },
                 success: function(response) { 
                     jQuery('#working_modal').modal("hide");
@@ -145,18 +162,76 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
                 jQuery('#new_treatment_add_categories_container').hide();
                 jQuery('#new_treatment_default_value_label').html("Default value:");
                 jQuery('#new_treatment_default_value').val('');
-            } else if (treatment_type === 'qualitative') {
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
+                jQuery('#new_treatment_repeat_select_container').show();
+            } else if (treatment_type === 'categorical') {
                 jQuery('#new_treatment_minimum_value_container').hide();
                 jQuery('#new_treatment_default_value_container').show();
                 jQuery('#new_treatment_maximum_value_container').hide();
                 jQuery('#new_treatment_add_categories_container').show();
                 jQuery('#new_treatment_default_value_label').html("Default category:");
                 jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
+                jQuery('#new_treatment_repeat_select_container').show();
             } else if (treatment_type === 'ontology') {
                 jQuery('#new_treatment_minimum_value_container').hide();
                 jQuery('#new_treatment_maximum_value_container').hide();
                 jQuery('#new_treatment_add_categories_container').hide();
                 jQuery('#new_treatment_default_value_container').hide();
+                jQuery('#new_treatment_repeat_select_container').hide();
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
+            } else if (treatment_type === 'percent') { 
+                jQuery('#new_treatment_minimum_value_container').show();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_maximum_value_container').show();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('0');
+                jQuery('#new_treatment_max_value').val('100');
+                jQuery('#new_treatment_repeat_select_container').show();
+            } else if (treatment_type === 'counter') {
+                jQuery('#new_treatment_minimum_value_container').show();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_maximum_value_container').show();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('0');
+                jQuery('#new_treatment_max_value').val('');
+                jQuery('#new_treatment_repeat_select_container').show();
+            } else if (treatment_type === 'boolean') {
+                jQuery('#new_treatment_minimum_value_container').show();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_maximum_value_container').show();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('0');
+                jQuery('#new_treatment_max_value').val('1');
+                jQuery('#new_treatment_repeat_select_container').show();
+            } else if (treatment_type === 'date') {
+                jQuery('#new_treatment_minimum_value_container').hide();
+                jQuery('#new_treatment_maximum_value_container').hide();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_repeat_select_container').show();
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
+            } else if (treatment_type === 'text') {
+                jQuery('#new_treatment_minimum_value_container').hide();
+                jQuery('#new_treatment_maximum_value_container').hide();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_repeat_select_container').show();
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
             }
         });
 

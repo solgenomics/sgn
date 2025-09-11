@@ -276,6 +276,24 @@ has 'categories' => (
 	}
 );
 
+has 'repeat_type' => (
+	isa => 'Maybe[Str]',
+	is => 'rw',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find(
+			{ cvterm_id => $self->cvterm_id(), 'type.name' => 'trait_repeat_type' },
+			{ join => 'type'}
+		);
+
+		if ($row) {
+			return $row->value();
+		}
+		return undef;
+	}
+);
+
 has 'associated_plots' => ( isa => 'Str',
 			    is => 'ro',
 			    lazy => 1,
@@ -772,6 +790,7 @@ sub interactive_store {
     my $minimum = $self->minimum() ne "" ? $self->minimum() : undef;
     my $maximum = $self->maximum() ne "" ? $self->maximum() : undef;
     my $categories = $self->categories() ne "" ? $self->categories() : undef;
+	my $repeat_type = $self->repeat_type() ne "" ? $self->repeat_type () : undef;
 
     my $trait_property_cv_id = $schema->resultset("Cv::Cv")->find({name => 'trait_property'})->cv_id();
 
@@ -800,12 +819,18 @@ sub interactive_store {
         name => 'trait_categories'
     })->cvterm_id();
 
+	my $repeat_type_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
+        cv_id => $trait_property_cv_id,
+        name => 'trait_repeat_type'
+    })->cvterm_id();
+
     my %cvtermprop_hash = (
         "$format_cvterm_id" => $format,
         "$default_value_cvterm_id" => $default_value,
         "$minimum_cvterm_id" => $minimum,
         "$maximum_cvterm_id" => $maximum,
-        "$categories_cvterm_id" => $categories
+        "$categories_cvterm_id" => $categories,
+        "$repeat_type_cvterm_id" => $repeat_type
     );
 
 	my $trait_ontology_cvterm_id = $schema->resultset("Cv::Cvterm")->find({

@@ -209,21 +209,23 @@ export function init() {
         filter_heatmap(observations) {
             this.heatmap_object = {};
             for (let observation of observations) {
-                let trait_name = observation.observationVariableName;
-                if (!this.heatmap_object[trait_name]) {
-                    this.heatmap_object[trait_name] = {
-                        [observation.observationUnitDbId]: {
+                if ( ! isNaN(observation.value)) {
+                    let trait_name = observation.observationVariableName;
+                    if (!this.heatmap_object[trait_name]) {
+                        this.heatmap_object[trait_name] = {
+                            [observation.observationUnitDbId]: {
+                                val: observation.value,
+                                plot_name: observation.observationUnitName,
+                                id: observation.observationDbId,
+                            },
+                        };
+                    } else {
+                        this.heatmap_object[trait_name][observation.observationUnitDbId] = {
                             val: observation.value,
                             plot_name: observation.observationUnitName,
                             id: observation.observationDbId,
-                        },
-                    };
-                } else {
-                    this.heatmap_object[trait_name][observation.observationUnitDbId] = {
-                        val: observation.value,
-                        plot_name: observation.observationUnitName,
-                        id: observation.observationDbId,
-                    };
+                        };
+                    }
                 }
             }
         }
