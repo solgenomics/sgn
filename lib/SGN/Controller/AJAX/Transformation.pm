@@ -1594,6 +1594,18 @@ sub upload_relative_expression_data_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    my $gene_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'Gene', 'stock_property')->cvterm_id;
+    my $gene_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $vector_id, type_id => $gene_type_id});
+    my $gene_info;
+    if ($gene_stockprop_rs) {
+        $gene_info = $gene_stockprop_rs->value();
+    }
+
+    my @vector_construct_genes = ();
+    if ($gene_info) {
+        @vector_construct_genes = split(',',$gene_info);
+    }
+
     $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes);
 
     $parser->load_plugin('RelativeExpressionData');
