@@ -27,7 +27,7 @@ use DateTime;
 use List::MoreUtils qw /any /;
 use Sort::Key::Natural qw(natkeysort);
 use CXGN::Stock;
-
+use CXGN::Transformation::ParseUpload;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1605,12 +1605,12 @@ sub upload_relative_expression_data_POST : Args(0) {
     if ($gene_info) {
         @vector_construct_genes = split(',',$gene_info);
     }
-
+    print STDERR "VECTOR CONSTRUCT GENES =".Dumper(\@vector_construct_genes)."\n";
     $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes);
 
     $parser->load_plugin('RelativeExpressionData');
     $parsed_data = $parser->parse();
-    #print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
+    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
     if (!$parsed_data){
         my $return_error = '';
         my $parse_errors;

@@ -91,7 +91,7 @@ sub _parse_with_plugin {
         my $accession_name = $row->{'accession_name'};
         my $gene_name = $row->{'gene'};
         my $relative_expression = $row->{'relative_expression'};
-        $relative_expression_data{$accession_name}{$gene} = $relative_expression;
+        $relative_expression_data{$accession_name}{$gene_name} = $relative_expression;
     }
 
     $self->_set_parsed_data(\%relative_expression_data);

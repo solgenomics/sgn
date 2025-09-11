@@ -24,7 +24,7 @@ $stock_uniquename
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Tissue Type: </label>
                             <div class="col-sm-9">
-                                <select class="form-control" id="relative_expression_tissue_type">
+                                <select class="form-control" id="relative_expression_data_tissue_type">
                                     <option value="">Select a tissue type</option>
                                     <option value="leaf">leaf</option>
                                     <option value="sink leaf">sink leaf</option>
@@ -162,10 +162,9 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_relative_expression_data_submit").click(function(){
         const upload_file = jQuery("#relative_expression_data_file").val();
-        const tissue_type = jQuery("#relative_expression_tissue_type").val();
+        const tissue_type = jQuery("#relative_expression_data_tissue_type").val();
 
         jQuery('#upload_relative_expression_data_form').attr("action", "/ajax/transformation/upload_relative_expression_data");
-
         if (tissue_type === ''){
             alert("Please select a tissue type");
             return;
@@ -176,7 +175,7 @@ jQuery(document).ready(function(){
             return;
         }
 
-        jQuery("#relative_expression_data_form").submit();
+        jQuery("#upload_relative_expression_data_form").submit();
         jQuery("#upload_relative_expression_data_dialog").modal("hide");
     });
 
