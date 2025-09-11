@@ -1520,7 +1520,7 @@ sub upload_relative_expression_data_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
     my $vector_id = $c->req->param('relative_expression_data_vector_id');
     my $vector_name = $c->req->param('relative_expression_data_vector_name');
-    my $tissue_type = $c->req->param('relative_expression_data_tissue_type');
+    my $tissue_type = $c->req->param('expression_tissue_type');
     print STDERR "VECTOR NAME =".Dumper($vector_name)."\n";
     print STDERR "VECTOR ID =".Dumper($vector_id)."\n";
     print STDERR "TISSUE TYPE =".Dumper($tissue_type)."\n";

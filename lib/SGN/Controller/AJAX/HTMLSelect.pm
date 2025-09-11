@@ -915,7 +915,7 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
 
         $h = $schema->storage->dbh()->prepare($spectra_query);
         $h->execute($trial_id);
-        
+
     } else {
         my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
         FROM nd_protocol
@@ -2525,9 +2525,39 @@ sub get_control_transformation_ids_select : Path('/ajax/html/select/control_tran
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_tissue_types_select : Path('/ajax/html/select/tissue_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
 
+    my $id = $c->req->param("id") || "tissue_types_select";
+    my $name = $c->req->param("name") || "tissue_types_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @tissue_types;
 
+    if ($empty && !$default) {
+        push @tissue_types, ['', 'Please select a tissue type'];
+    }
+    push @tissue_types, ['leaf', 'leaf'];
+    push @tissue_types, ['sink leaf', 'sink leaf'];
+    push @tissue_types, ['source leaf', 'source leaf'];
+    push @tissue_types, ['petiole', 'petiole'];
+    push @tissue_types, ['stem', 'stem'];
+    push @tissue_types, ['upper stem', 'upper stem'];
+    push @tissue_types, ['middle stem', 'middle stem'];
+    push @tissue_types, ['lower stem', 'lower stem'];
+    push @tissue_types, ['storage root', 'storage root'];
+    push @tissue_types, ['fibrous root', 'fibrous root'];
 
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@tissue_types,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 
 1;
