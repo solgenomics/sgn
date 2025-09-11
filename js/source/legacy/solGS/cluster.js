@@ -221,7 +221,7 @@ solGS.cluster = {
     var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId);
     var runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
 
-    var kNum = '<input class="form-control" type="text" placeholder="3" id="' + kNumId + '"/>';
+    var kNum = '<input class="form-control" type="text" placeholder="default" id="' + kNumId + '"/>';
 
     var clusterArgs = JSON.stringify(clusterPop);
 
@@ -728,7 +728,7 @@ solGS.cluster = {
 
     var dataType = jQuery("#" + dataTypeId).val() || "genotype";
     var clusterType = jQuery("#" + clusterTypeId).val() || "k-means";
-    var kNumber = jQuery("#" + kNumId).val() || 3;
+    var kNumber = jQuery("#" + kNumId).val() || 'default';
     var selectionProp = jQuery("#" + selectionPropId).val();
 
     if (typeof kNumber === "string") {

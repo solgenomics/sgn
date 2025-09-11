@@ -165,17 +165,34 @@ if (length(sIndexFile) != 0) {
 
 kMeansOut <-fpc::kmeansruns(clusterData, runs = 10)
 kCenters <- kMeansOut$bestk
+recommendedK <- kMeansOut$bestk
 
-if (!is.na(userKNumbers)) {
+message("recommended number of clusters: ", kCenters)
+message("user defined number of clusters: ", userKNumbers)
+if (is.na(userKNumbers)) {
+    reportNotes <- paste0(reportNotes, "\n\nYou provided no cluster numbers (k): ", userKNumbers, "\n")
+    reportNotes <- paste0(reportNotes, "\n\nThe data was partitioned into ", recommendedK,
+            " clusters, the recommended number of clusters (k) for the given data ",
+            "based on the the kmeansruns algorithm (with runs=10) ",
+            "from the fpc R package.\n")
+} else {
     if (userKNumbers != 0) {
         kCenters <- as.integer(userKNumbers)
-        reportNotes <- paste0(reportNotes, "\n\nThe data was partitioned into ", userKNumbers,
-            " clusters.\n")
+        reportNotes <- paste0(reportNotes, "\n\nThe data was partitioned into ", 
+        kCenters, " clusters, the number of clusters ",
+        "(k) defined by you.\n")
+    } else {
+        stop("The number of clusters (k) should be a whole number. Provided k: ",
+            userKNumbers, "\n")
+        q("no", 1, FALSE)
     }
 }
 
-reportNotes <- paste0(reportNotes, "\n\nAccording the kmeansruns algorithm from the fpc R package, the recommended number of clusters (k) for this data set is: ",
-    kCenters, "\n\nYou can also check the Elbow plot to evaluate how many clusters may be better suited for your purpose.")
+reportNotes <- paste0(reportNotes, "\n\nAccording the kmeansruns algorithm ",
+"(with runs=10) from the fpc R package, the recommended ",
+"number of clusters (k) for this data set is: ",
+recommendedK, "\n\nYou can also check the Elbow plot to evaluate ",
+"how many clusters may be better suited for your purpose.")
 
 kMeansOut <- stats::kmeans(clusterData, centers = kCenters, nstart = 10)
 kClusters <- data.frame(kMeansOut$cluster)
