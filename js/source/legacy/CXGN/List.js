@@ -1395,17 +1395,21 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 
     var list_id = 0;
 
-    jQuery('#'+dataDiv+'_add_to_new_list').click( function() {
+    jQuery('#' + dataDiv + '_add_to_new_list').click(function () {
         var lo = new CXGN.List();
-        var new_name = jQuery('#'+dataDiv+'_new_list_name').val();
-        var type = jQuery('#'+dataDiv+'_list_type').val();
-        var addition_type = jQuery('#'+dataDiv+'_addition_type').val();
+        var new_name = jQuery('#' + dataDiv + '_new_list_name').val();
+        var type = jQuery('#' + dataDiv + '_list_type').val();
+        var addition_type = jQuery('#' + dataDiv + '_addition_type').val();
+
+        if (dataDiv === 'trial_tissue_samples_data') {
+            type = 'tissue_sample';
+        }
 
         var data = getData(dataDiv, selectText);
-        list_id = lo.newList(new_name);
+        var list_id = lo.newList(new_name);
         if (list_id > 0) {
             var elementsAdded;
-            if (addition_type == 'cross_progeny') {
+            if (addition_type === 'cross_progeny') {
                 elementsAdded = lo.addCrossProgenyToList(list_id, data);
             } else {
                 elementsAdded = lo.addToList(list_id, data);
@@ -1413,9 +1417,10 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
             if (type) {
                 lo.setListType(list_id, type);
             }
-            alert("Added "+elementsAdded+" list elements to list "+new_name+" and set type to "+type);
+            alert("Added " + elementsAdded + " list elements to list " + new_name + " and set type to " + type);
         }
     });
+
 
     jQuery('#'+dataDiv+'_button').click( function() {
         var data = getData(dataDiv, selectText);
