@@ -27,8 +27,15 @@ $stock_uniquename
                                 <select class="form-control" id="relative_expression_tissue_type">
                                     <option value="">Select a tissue type</option>
                                     <option value="leaf">leaf</option>
+                                    <option value="sink leaf">sink leaf</option>
+                                    <option value="source leaf">source leaf</option>
+                                    <option value="petiole">petiole</option>
                                     <option value="stem">stem</option>
-                                    <option value="root">root</option>
+                                    <option value="upper stem">upper stem</option>
+                                    <option value="middle stem">middle stem</option>
+                                    <option value="lower stem">lower stem</option>
+                                    <option value="storage root">storage root</option>
+                                    <option value="fibrous root">fibrous root</option>
                                 </select>
                             </div>
                         </div>

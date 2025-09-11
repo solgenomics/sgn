@@ -1522,7 +1522,7 @@ sub upload_relative_expression_data_POST : Args(0) {
     my $vector_name = $c->req->param('relative_expression_data_vector_name');
     my $tissue_type = $c->req->param('relative_expression_data_tissue_type');
     print STDERR "VECTOR NAME =".Dumper($vector_name)."\n";
-    print STDERR "VECTOR ID =".Dumper($vector_ID)."\n";
+    print STDERR "VECTOR ID =".Dumper($vector_id)."\n";
     print STDERR "TISSUE TYPE =".Dumper($tissue_type)."\n";
     my $upload = $c->req->upload('relative_expression_data_file');
     my $parser;
@@ -1594,11 +1594,9 @@ sub upload_relative_expression_data_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    #parse uploaded file with appropriate plugin
-    my @stock_props = ('relative_expression_data');
-    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes);
 
-    $parser->load_plugin('RelativeExpressionDataGeneric');
+    $parser->load_plugin('RelativeExpressionData');
     $parsed_data = $parser->parse();
     #print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
     if (!$parsed_data){
