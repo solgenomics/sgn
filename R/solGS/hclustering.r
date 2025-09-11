@@ -99,7 +99,6 @@ extractGenotype <- function(inputFiles) {
         stop("There is no genotype dataset.")
         q("no", 1, FALSE)
     } else {
-
         ##genoDataFilter::filterGenoData
         genoData <- convertToNumeric(genoData)
         genoData <- filterGenoData(genoData, maf=0.01)
@@ -194,7 +193,7 @@ if (length(sIndexFile) != 0) {
 }
 
 distMat <- clusterData %>%
-                dist(., method="euclidean")
+            dist(., method="euclidean")
 
 distMat <- round(distMat, 3)
 hClust <- distMat  %>%
@@ -202,7 +201,7 @@ hClust <- distMat  %>%
 
 distTable <- data.frame(as.matrix(distMat))
 
-clustTree <- ggtree(hClust,  layout = "circular", color = "#96CA2D")
+clustTree <- ggtree::ggtree(hClust,  layout = "circular", color = "#96CA2D")
 xMax <- ggplot_build(clustTree)$layout$panel_scales_x[[1]]$range$range[2]
 xMax <- xMax + 0.02
 
@@ -212,7 +211,7 @@ clustTree <- clustTree +
 
 # geom_text(aes(x = branch, label = round(branch.length, 2)))
 png(filename=plotFile, height = 950, width = 950)
-   print(clustTree)
+print(clustTree)
 dev.off()
 
 cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
@@ -234,8 +233,8 @@ if (length(genoFiles) > 1) {
 #        )
 # }
 
-newickF <- as.phylo(hClust)
-write.tree(phy = newickF,
+newickFormat <- ape::as.phylo(hClust)
+write.tree(phy = newickFormat,
 file = newickFile
 )
 
