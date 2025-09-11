@@ -158,9 +158,12 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     my $last_index = scalar(@new_header)-1;
 
-    #while(<$PF>) {
-	#chomp;
-	#my @f = split /\t/;
+    while(<$PF>) {
+        chomp;
+        my @f = split /\t/;
+        print $CLEAN join("\t",@f[0..$last_index]), "\n";
+    }
+    
     my $cxgn_tools_run_config = {
         backend => $c->config->{backend},
         submit_host=>$c->config->{cluster_host},
@@ -172,7 +175,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     };
     my $cmd_str = join(" ", (
         "Rscript ",
-        $c->config->{basepath} . "/R/spatial_modeling.R",
+        $c->config->{basepath} . "/R/spatial_correlation_check.R",
         $pheno_filepath.".clean",
         "'".$si_traits."'"
     ));
