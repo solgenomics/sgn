@@ -1629,7 +1629,11 @@ sub upload_relative_expression_data_POST : Args(0) {
 
     if ($parsed_data){
         eval {
-            foreach my $row (keys %$parsed_data) {
+            foreach my $transformant_name (keys %$parsed_data) {
+                my $relative_expression_info = $parsed_data->{$transformant_name};
+                print STDERR "TRANSFORMANT NAME =".Dumper($transformant_name)."\n";
+                print STDERR "EXPRESSION INFO =".Dumper($relative_expression_info)."\n";
+
 
             }
         };

@@ -25,10 +25,12 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'accession_name', 'gene', 'relative_expression' ],
-        optional_columns => [ ],
+        optional_columns => ['number_of_replicates', 'standard_deviation', 'notes'],
         column_aliases => {
             'accession_name' => ['accession name'],
             'relative_expression' => ['relative expression'],
+            'number_of_replicates' => ['number of replicates'],
+            'standard_deviation' => ['standard deviation'],
         }
     );
     my $parsed = $parser->parse();
@@ -91,7 +93,14 @@ sub _parse_with_plugin {
         my $accession_name = $row->{'accession_name'};
         my $gene_name = $row->{'gene'};
         my $relative_expression = $row->{'relative_expression'};
-        $relative_expression_data{$accession_name}{$gene_name} = $relative_expression;
+        my $number_of_replicates = $row->{'number_of_replicates'};
+        my $standard_deviation = $row->{'standard_deviation'};
+        my $notes = $row->{'notes'};
+
+        $relative_expression_data{$accession_name}{$gene_name}{'relative_expression'} = $relative_expression;
+        $relative_expression_data{$accession_name}{$gene_name}{'number_of_replicates'} = $number_of_replicates;
+        $relative_expression_data{$accession_name}{$gene_name}{'standard_deviation'} = $standard_deviation;
+        $relative_expression_data{$accession_name}{$gene_name}{'notes'} = $notes;
     }
 
     $self->_set_parsed_data(\%relative_expression_data);
