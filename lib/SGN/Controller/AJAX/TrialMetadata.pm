@@ -362,6 +362,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $start_date = $c->req->param('start_date');
     my $end_date = $c->req->param('end_date');
     my $include_dateless_items = $c->req->param('include_dateless_items');
+    my $split_by_treatments = $c->req->param('split_by_treatments');
     my $select_clause_additional = '';
     my $group_by_additional = '';
     my $order_by_additional = '';
@@ -400,7 +401,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
         $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
-        $order_by_additional = ' ,accession.uniquename DESC';
+        $order_by_additional = ' , accession.uniquename DESC';
     }
     if ($display eq 'plants_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
@@ -408,7 +409,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
-        $order_by_additional = ' ,accession.uniquename DESC';
+        $order_by_additional = ' , accession.uniquename DESC';
     }
     if ($display eq 'tissue_samples_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
@@ -416,12 +417,41 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
-        $order_by_additional = ' ,accession.uniquename DESC';
+        $order_by_additional = ' , accession.uniquename DESC';
     }
-
     if ($display eq 'analysis_instance') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
+    }
+    my $treatment_group_by = '';
+    my $treatment_select = '';
+    my $treatment_with = '';
+    my $treatment_join = '';
+    if ($split_by_treatments) {
+        $treatment_with = "WITH treatment_by_stock AS (
+            SELECT
+                nes.stock_id AS stock_id,
+                (((cv2.name::text || '|'::text)
+                || db2.name::text)
+                || ':'::text
+                || dbx2.accession::text
+                || '='::text
+                || ph2.value::text)
+                AS treatment,
+                cv2.cvterm_id AS treatment_id
+            FROM phenotype ph2
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_stock nes USING(nd_experiment_id)
+            JOIN cvterm        cv2  ON ph2.cvalue_id   = cv2.cvterm_id
+            JOIN dbxref        dbx2 ON cv2.dbxref_id   = dbx2.dbxref_id
+            JOIN db            db2  ON dbx2.db_id       = db2.db_id
+            WHERE db2.name LIKE '\%TREATMENT\%'
+            GROUP BY treatment, treatment_id, stock_id
+        ) ";
+        $treatment_join = "JOIN treatment_by_stock
+        ON treatment_by_stock.stock_id = plot.stock_id ";
+        $treatment_group_by = ", treatment_by_stock.treatment, treatment_by_stock.treatment_id ";
+        $treatment_select = ", treatment_by_stock.treatment, treatment_by_stock.treatment_id";
     }
 
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -469,32 +499,38 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     # print STDERR "date params : $date_params\n";
 
-    my $q1 = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+    my $q1 = "$treatment_with
+    SELECT
+        (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
-        count(phenotype.value),
-        to_char(avg(phenotype.value::real), 'FM999990.990'),
-        to_char(max(phenotype.value::real), 'FM999990.990'),
-        to_char(min(phenotype.value::real), 'FM999990.990'),
-        to_char(stddev(phenotype.value::real), 'FM999990.990')
+        count(phenotype.value)                             AS n_obs,
+        to_char(avg(phenotype.value::real), 'FM999990.990') AS avg_val,
+        to_char(max(phenotype.value::real), 'FM999990.990') AS max_val,
+        to_char(min(phenotype.value::real), 'FM999990.990') AS min_val,
+        to_char(stddev(phenotype.value::real), 'FM999990.990') AS sd_val
         $select_clause_additional
-        FROM cvterm
-            JOIN phenotype ON (cvterm_id=cvalue_id)
-            JOIN nd_experiment_phenotype USING(phenotype_id)
-            JOIN nd_experiment_project USING(nd_experiment_id)
-            JOIN nd_experiment_stock USING(nd_experiment_id)
-            JOIN stock as plot USING(stock_id)
-            JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
-            JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
-            JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
-        WHERE project_id=?
-            AND phenotype.value~?
-            AND stock_relationship.type_id=?
-            AND plot.type_id=?
-            AND accession.type_id=?
-            $date_params
-        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
+        $treatment_select
+        FROM phenotype
+        JOIN nd_experiment_phenotype USING(phenotype_id)
+        JOIN nd_experiment_project USING(nd_experiment_id)
+        JOIN nd_experiment_stock USING(nd_experiment_id)
+        JOIN cvterm     ON phenotype.cvalue_id = cvterm.cvterm_id
+        JOIN dbxref     ON cvterm.dbxref_id   = dbxref.dbxref_id
+        JOIN db         ON dbxref.db_id       = db.db_id
+        JOIN stock     AS plot      USING (stock_id)
+        JOIN stock_relationship  ON plot.stock_id   = stock_relationship.subject_id
+        JOIN stock     AS accession ON accession.stock_id = stock_relationship.object_id
+        $treatment_join
+        WHERE project_id                = ?
+        AND phenotype.value             ~ ?
+        AND stock_relationship.type_id  = ?
+        AND plot.type_id                = ?
+        AND accession.type_id           = ?
+        AND db.name NOT LIKE '\%TREATMENT\%'
+        $date_params
+        GROUP BY trait, cvterm.cvterm_id $group_by_additional $treatment_group_by
         ORDER BY cvterm.name ASC
-    $order_by_additional ";
+        $order_by_additional ";
         
     my $h1 = $dbh->prepare($q1);
     
@@ -505,12 +541,14 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     $h1->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     my @phenotype_data;
-    my @numeric_trait_ids;
+    my %numeric_trait_ids;
 
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h1->fetchrow_array()) {
+    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id, $treatment, $treatment_id) = $h1->fetchrow_array()) {
 	
-	push @numeric_trait_ids, $trait_id;
-	
+        next if ($trait =~ m/_TREATMENT/);
+
+        $numeric_trait_ids{$trait_id} = 1;
+
         my $cv = 0;
         if ($stddev && $average != 0) {
             $cv = ($stddev /  $average) * 100;
@@ -522,9 +560,17 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         if ($stddev) { $stddev = $round->round($stddev); }
 
         my @return_array;
-        if ($stock_name && $stock_id) {
+        if ($select_clause_additional && $stock_name && $stock_id) {
             $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
+        }
+        if ($split_by_treatments) {
+            if ($select_clause_additional) {
+                push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
+            }
+            else {
+                push @return_array, qq{<a href="/cvterm/$stock_id/view">$stock_name</a>};
+            }
         }
         my $percent_missing = '';
         if ($total_complete_number > $count){
@@ -535,6 +581,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
         push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
+        
     }
 
     # get data from the non-numeric trait ids
@@ -543,31 +590,38 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     # prevent sql statement from failing if there are no numeric traits
     #
     my $exclude_numeric_trait_ids = "";
-    if (@numeric_trait_ids) {
-	$exclude_numeric_trait_ids = " AND cvterm.cvterm_id NOT IN (".join(",", @numeric_trait_ids).")";
+    if (%numeric_trait_ids) {
+	$exclude_numeric_trait_ids = " AND cvterm.cvterm_id NOT IN (".join(",", keys(%numeric_trait_ids)).")";
     }
 
     # print STDERR "run the non-numeric query\n";
-    my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+
+        my $q = "$treatment_with
+    SELECT
+        (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
-        count(phenotype.value)
-	    $select_clause_additional
-        FROM cvterm
-            JOIN phenotype ON (cvterm_id=cvalue_id)
-            JOIN nd_experiment_phenotype USING(phenotype_id)
-            JOIN nd_experiment_project USING(nd_experiment_id)
-            JOIN nd_experiment_stock USING(nd_experiment_id)
-            JOIN stock as plot USING(stock_id)
-            JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
-            JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
-            JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
-        WHERE project_id=?
-            AND stock_relationship.type_id=?
-            AND plot.type_id=?
-            AND accession.type_id=?
-            $date_params
-	     	$exclude_numeric_trait_ids
-        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
+        count(phenotype.value) AS n_obsx
+        $select_clause_additional
+        $treatment_select
+        FROM phenotype
+        JOIN nd_experiment_phenotype USING(phenotype_id)
+        JOIN nd_experiment_project USING(nd_experiment_id)
+        JOIN nd_experiment_stock USING(nd_experiment_id)
+        JOIN cvterm     ON phenotype.cvalue_id = cvterm.cvterm_id
+        JOIN dbxref     ON cvterm.dbxref_id   = dbxref.dbxref_id
+        JOIN db         ON dbxref.db_id       = db.db_id
+        JOIN stock     AS plot      USING (stock_id)
+        JOIN stock_relationship  ON plot.stock_id   = stock_relationship.subject_id
+        JOIN stock     AS accession ON accession.stock_id = stock_relationship.object_id
+        $treatment_join
+        WHERE project_id                = ?
+        AND stock_relationship.type_id  = ?
+        AND plot.type_id                = ?
+        AND accession.type_id           = ?
+        AND db.name NOT LIKE '\%TREATMENT\%'
+        $date_params
+        $exclude_numeric_trait_ids
+        GROUP BY trait, cvterm.cvterm_id $group_by_additional $treatment_group_by
         ORDER BY cvterm.name ASC
         $order_by_additional ";
 
@@ -577,9 +631,22 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
-    while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
-	my @return_array;
-	push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
+    while (my ($trait, $trait_id, $count, $stock_name, $stock_id, $treatment, $treatment_id) = $h->fetchrow_array()) {
+        next if ($trait =~ m/_TREATMENT/);
+	    my @return_array;
+        if ($select_clause_additional && $stock_name && $stock_id) {
+            $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
+            push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
+        }
+        if ($split_by_treatments) {
+            if ($select_clause_additional) {
+                push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
+            }
+            else {
+                push @return_array, qq{<a href="/cvterm/$stock_id/view">$stock_name</a>};
+            }
+        }
+	    push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
     

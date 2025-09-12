@@ -72,10 +72,13 @@ input[type="text"] {
                     <option id = "plants_stock_option" value="plants_accession"></option>
                     <option id = "tissue_samples_stock_option" value="tissue_samples_accession"></option>
 %  }
-                </select>
+                </select>&nbsp;&nbsp;&nbsp;
+                <label for="split_by_treatments_check" style="margin-right: 10px;">Split results by treatments: </label>
+                <input type="checkbox" id="split_by_treatments_check" title="split_by_treatments_check" />
             </div>
         </div>
     </form>
+    <br>
     <div style="display:flex; align-items:center; white-space:nowrap; width:70%; margin-center: auto;">
         <label for="summary_phenotype_slider_range" style="margin-right: 10px;">Choose DateRange slider:</label>
         <div id="summary_phenotype_slider_range" style="width: 80%; margin: 10px auto;"></div>
@@ -244,6 +247,11 @@ input[type="text"] {
             console.error("the status:", xhr.status);
             console.error("the error:", error);
         });
+        jQuery("#split_by_treatments_check").change( function() {
+            var html = setup_tables(type);
+            jQuery('#pheno_summary_table_div').empty().html(html);
+            datatables_display_phenosummary(type);
+        });
 	    jQuery("#summary_start_date").change( function() {
 	        //datatables_display_phenosummary(type);
             var html = setup_tables(type);
@@ -310,6 +318,7 @@ input[type="text"] {
     function datatables_display_phenosummary(type) {
         var start_date = jQuery('#summary_start_date').val();
         var end_date = jQuery('#summary_end_date').val();
+        var split_by_treatments = jQuery('#split_by_treatments_check').prop('checked') ? 1 : 0;
 
         //alert('datatables_display_phenosummary: START: '+start_date+' END: '+end_date);
         var summary_table = jQuery('#phenotype_summary_data').DataTable( {
@@ -327,7 +336,7 @@ input[type="text"] {
             "buttons":  [
                 'pageLength','copy', 'excel', 'csv', 'pdf'
             ],
-            "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+            "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1&split_by_treatments='+split_by_treatments,
         });
 
         summary_table.clear().draw();
@@ -378,6 +387,9 @@ input[type="text"] {
                 if (response.traits_assayed[0][0]) {
                     var traits_assayed_html = "<select class='form-control' id='trial_summary_hist_dropdown'>";
                     for (i=0; i<response.traits_assayed[0].length; i++) {
+                        if (response.traits_assayed[0][i][1].includes("_TREATMENT")) {
+                            continue;
+                        }
                         traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
                     }
                     traits_assayed_html = traits_assayed_html +"</select>";
@@ -439,16 +451,21 @@ input[type="text"] {
     function setup_tables(type) {
         var html = '';
         var display = jQuery('#display_trial_phenosummary').val();
+        var split_by_treatments = jQuery('#split_by_treatments_check').prop('checked') ? 1 : 0;
+        var treatment_html = '';
+        if (split_by_treatments) {
+            treatment_html = '<th>Treatment</th>';
+        }
         if (display == 'plots' || display == 'plants' || display == 'subplots' || display == 'tissue_samples') {
-            html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+            html = html +'<table id="phenotype_summary_data" class="display"><thead><tr>'+treatment_html+'<th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
         }
         if (display == 'plots_accession' || display == 'plants_accession' || display == 'tissue_samples_accession') {
             if (type == 'family_name') {
-                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Family Name</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Family Name</th>'+treatment_html+'<th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             } else if (type == 'cross') {
-                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Cross Unique ID</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Cross Unique ID</th>'+treatment_html+'<th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             } else {
-                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th>'+treatment_html+'<th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
         }
         return html;
