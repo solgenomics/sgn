@@ -230,6 +230,8 @@ has 'tissue_sample_cvterm_id'  => (isa => 'Int', is => 'rw');
 
 has 'tissue_sample_of_cvterm_id'  => (isa => 'Int', is => 'rw');
 
+has 'tissue_sample_index_number_cvterm_id' => (isa =>'Int', is => 'rw');
+
 has 'plot_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'plot_of_cvterm_id' => (isa => 'Int', is => 'rw');
@@ -317,6 +319,8 @@ sub BUILD {
     $self->set_tissue_sample_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id());
 
     $self->set_tissue_sample_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id());
+
+    $self->set_tissue_sample_index_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_index_number', 'stock_property')->cvterm_id());
 
     $self->set_plot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id());
 
@@ -516,6 +520,10 @@ sub store {
             my $plant_names;
             if ($design{$key}->{plant_names}) {
                 $plant_names = $design{$key}->{plant_names};
+            }
+            my $tissue_sample_names;
+            if ($design{$key}->{tissue_sample_names}) {
+                $tissue_sample_names = $design{$key}->{tissue_sample_names};
             }
             my $subplot_names;
             if ($design{$key}->{subplots_names}) {
@@ -866,7 +874,7 @@ sub store {
                     nd_experiment_stocks => \@plot_nd_experiment_stocks,
                 };
                 my $plot;
-                if (! defined $plant_names || scalar $plant_names eq 0) {
+                if ((! defined $plant_names || scalar $plant_names eq 0) && (! defined $tissue_sample_names || scalar $tissue_sample_names eq 0)) {
                     $plot = $stock_rs->create($plot_params);
                 } else {
                     $plot = $stock_rs->find_or_create($plot_params);
@@ -957,6 +965,60 @@ sub store {
                 if (scalar @$plant_names > 0) {
                     my $study = $chado_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
                     $study->create_projectprops({ 'project_has_plant_entries' => 1 });
+                }
+            }
+            if ($tissue_sample_names) {
+                my $tissue_sample_index_number = 1;
+                foreach my $tissue_sample_name (@$tissue_sample_names) {
+                    my @tissue_sample_stockprops = (
+                        { type_id => $self->get_tissue_sample_index_number_cvterm_id, value => $tissue_sample_index_number },
+                        { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
+                        { type_id => $self->get_block_cvterm_id, value => $block_number },
+                        { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
+                    );
+                    if ($is_a_control) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
+                    }
+                    if ($range_number) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_range_cvterm_id, value => $range_number };
+                    }
+                    if ($row_number) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
+                    }
+                    if ($col_number) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
+                    }
+                    if ($additional_info) {
+                        push @tissue_sample_stockprops, { type_id => $additional_info_type_id, value => $additional_info };
+                    }
+
+                    my @tissue_sample_objects = (
+                        { type_id => $self->get_tissue_sample_of_cvterm_id, subject_id => $new_plot_id }
+                    );
+                    my @tissue_sample_subjects = (
+                        { type_id => $self->get_tissue_sample_of_cvterm_id, object_id => $stock_id_checked }
+                    );
+                    my @tissue_sample_nd_experiment_stocks = (
+                        { type_id => $self->get_nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
+                    );
+
+                    my $tissue_sample = $stock_rs->create({
+                        organism_id => $organism_id_checked,
+                        name => $tissue_sample_name,
+                        uniquename => $tissue_sample_name,
+                        type_id => $self->get_tissue_sample_cvterm_id,
+                        stockprops => \@tissue_sample_stockprops,
+                        stock_relationship_subjects => \@tissue_sample_subjects,
+                        stock_relationship_objects => \@tissue_sample_objects,
+                        nd_experiment_stocks => \@tissue_sample_nd_experiment_stocks,
+                    });
+                    $new_stock_ids_hash{$tissue_sample_name} = $tissue_sample->stock_id();
+                    $tissue_sample_index_number++;
+                }
+
+                if (scalar @$tissue_sample_names > 0) {
+                    my $study = $chado_schema->resultset('Project::Project')->find( { project_id => $self -> get_trial_id() });
+                    $study->create_projectprops({ 'project_has_tissue_sample_entries' => 1 });
                 }
             }
             #Create subplot entry if given. Currently this is for the splitplot trial creation.

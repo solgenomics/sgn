@@ -202,6 +202,8 @@ sub _search {
 
         my $plant;
 
+        my $tissue_sample;
+
         my $family_stock_id;
 
         my $family_name;
@@ -264,6 +266,13 @@ sub _search {
                 levelCode => $plant,
                 levelName => "plant",
                 levelOrder => _order("plant"),
+            }
+        }
+        if ($tissue_sample) {
+            push @observationLevelRelationships, {
+                levelCode => $tissue_sample,
+                levelName => "tissue_sample",
+                levelOrder => _order("tissue_sample"),
             }
         }
 
@@ -469,8 +478,8 @@ sub observationunits_update {
         my $stock = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$observation_unit_db_id});
         my $stock_type = $stock->type_id;
 
-        if (( $stock_type ne $plot_cvterm_id && $stock_type ne $plant_cvterm_id ) || ($level_name ne 'plant' && $level_name ne 'plot')){
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Only 'plot' or 'plant' allowed for observation level and observationUnitDbId."), 400);
+        if (( $stock_type ne $plot_cvterm_id && $stock_type ne $plant_cvterm_id ) || ($level_name ne 'plant' && $level_name ne 'plot' && $level_name ne 'tissue_sample')){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Only 'plot', 'plant' or 'tissue_sample' allowed for observation level and observationUnitDbId."), 400);
         }
 
         #Update: accession
@@ -685,8 +694,8 @@ sub observationunits_store {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
         }
 
-        if ($ou_level ne 'plant' && $ou_level ne 'plot') {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Only "plot" or "plant" allowed for observation level.'), 400);
+        if ($ou_level ne 'plant' && $ou_level ne 'plot' && $ou_level ne 'tissue_sample') {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Only "plot", "plant" or "tissue_sample" allowed for observation level.'), 400);
         }
 
         my $project = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $study_id });
@@ -743,6 +752,32 @@ sub observationunits_store {
                 additional_info => \%additional_info,
                 external_refs   => $observationUnit_x_ref
             };
+        } elsif ($ou_level eq 'tissue_sample') {
+            my $plot_parent_name;
+            if ($plot_parent_id) {
+                my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$plot_parent_id});
+                if ($rs->count() eq 0){
+                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Plot with id %s does not exist.', $plot_parent_id), 404);
+                }
+                $plot_parent_name = $rs->first()->uniquename();
+            } else {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('addtionalInfo.observationUnitParent for observation unit with level "tissue_sample" is required'), 404);
+            }
+
+            $plot_hash = {
+                plot_name       =>  $plot_parent_name,
+                tissue_sample_names => [ $plot_name ],                
+                stock_name => $accession_name,
+                plot_number => $plot_number,
+                block_number    => $block_number,
+                is_a_control    => $is_a_control,
+                rep_number      => $rep_number,
+                range_number    => $range_number,
+                row_number      => $row_number,
+                col_number      => $col_number,
+                additional_info => \%additional_info,
+                external_refs   => $observationUnit_x_ref
+            }
         } else {
             $plot_hash = {
                 plot_name => $plot_name,
@@ -798,7 +833,7 @@ sub observationunits_store {
                 $location_id = $row->value();
             }
             else {
-                die {error => sprintf('Erro retrieving the location of the study'), errorCode => 500};
+                die {error => sprintf('Error retrieving the location of the study'), errorCode => 500};
             }
 
             my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
