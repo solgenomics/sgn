@@ -82,7 +82,7 @@ sub store_relative_expression_data {
     my $coderef = sub {
         $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
         $vector_construct_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type');
-        $expression_data_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'expression_data', 'stock_property');
+        $expression_data_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'transgene_expression_data', 'stock_property');
         $analyzed_tissue_types_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'analyzed_tissue_types', 'stock_property');
 
 	    my $transformant_stock = $schema->resultset("Stock::Stock")->find ({
