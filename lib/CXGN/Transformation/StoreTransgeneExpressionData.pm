@@ -32,17 +32,17 @@ has 'chado_schema' => (
 		required => 1,
 );
 
-has 'transformant_stock_id' => (
-    isa =>'Int',
+has 'transformant_name' => (
+    isa =>'Str',
     is => 'rw',
-    predicate => 'has_stock_id',
+    predicate => 'has_transformant_name',
     required => 1
 );
 
-has 'vector_construct_stock_id' => (
-    isa =>'Int',
+has 'vector_construct_name' => (
+    isa =>'Str',
     is => 'rw',
-    predicate => 'has_stock_id',
+    predicate => 'has_vector_construct_name',
     required => 1
 );
 
@@ -80,44 +80,63 @@ has 'timestamp' => (
 	required => 1
 );
 
+has 'operator_id' => (
+    isa => 'Int',
+    is => 'rw',
+    predicate => 'has_operator_id',
+	required => 1
+);
+
+has 'relative_expression_data_derived_from' => (
+    isa => 'Str',
+    is => 'rw',
+    predicate => 'has_relative_expression_data_derived_from',
+);
+
 sub store_relative_expression_data {
     my $self = shift;
     my $schema = $self->get_chado_schema();
     my $transaction_error;
-	my $transformant_stock_id = $self->get_transformant_stock_id();
-	my $vector_construct_stock_id = $self->get_vector_construct_stock_id();
-	my $relative_expression_data = $self->relative_expression_data();
-	my $tissue_type = $self->tissue_type();
-	my $endogenous_control = $self->endogenous_control();
-	my $notes = $self->notes();
-	my $timestamp = $self->timestamp();
-
+	my $transformant_name = $self->get_transformant_name();
+	my $vector_construct_name = $self->get_vector_construct_name();
+	my $relative_expression_data = $self->get_relative_expression_data();
+	my $tissue_type = $self->get_tissue_type();
+	my $endogenous_control = $self->get_endogenous_control();
+	my $notes = $self->get_notes();
+	my $timestamp = $self->get_timestamp();
+	my $operator_id = $self->get_operator_id();
+	my $relative_expression_data_derived_from = $self->get_relative_expression_data_derived_from();
 
     my $coderef = sub {
-        $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
-        $vector_construct_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type');
-        $expression_data_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'transgene_expression_data', 'stock_property');
-        $analyzed_tissue_types_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'analyzed_tissue_types', 'stock_property');
-
+        my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
+        my $vector_construct_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type');
+        my $expression_data_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'transgene_expression_data', 'stock_property');
+        my $analyzed_tissue_types_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'analyzed_tissue_types', 'stock_property');
+        my $transformant_stock_id;
+		my $vector_construct_stock_id;
 	    my $transformant_stock = $schema->resultset("Stock::Stock")->find ({
-		    stock_id => $transformant_stock_id,
+		    uniquename => $transformant_name,
 		    type_id => $accession_cvterm->cvterm_id(),
 	    });
 		if (!$transformant_stock) {
             print STDERR "Transgenic line could not be found\n";
             return;
-        }
+        } else {
+            $transformant_stock_id = $transformant_stock->stock_id();
+		}
 
 		my $vector_construct_stock = $schema->resultset("Stock::Stock")->find ({
-		    stock_id => $vector_construct_stock_id,
+		    uniquename => $vector_construct_name,
 		    type_id => $vector_construct_cvterm->cvterm_id(),
 	    });
 		if (!$vector_construct_stock) {
             print STDERR "Vector construct could not be found\n";
             return;
-        }
+        } else {
+			$vector_construct_stock_id = $vector_construct_stock->stock_id();
+		}
 
-        my $expresssion_data_string;
+        my $expression_data_string;
         my $expression_data_hash = {};
         my $updated_expression_data_string;
         my $analyzed_tissue_types_string;
@@ -131,10 +150,12 @@ sub store_relative_expression_data {
             $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'relative_expression_values'} = $relative_expression_data;
             $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'endogenous_control'} = $endogenous_control;
             $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'notes'} = $notes;
+			$expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'uploaded_by'} = $operator_id;
+			$expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
 
             $updated_expression_data_string = encode_json $expression_data_hash;
             $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_string});
-        } elsif ($previous_stockprop_rs->count > 1) {
+        } elsif ($previous_expression_data_stockprop_rs->count > 1) {
             print STDERR "More than one expression data stockprop found!\n";
             return;
         } else {
@@ -146,8 +167,8 @@ sub store_relative_expression_data {
         my $previous_analyzed_tissue_types_stockprop_rs = $vector_construct_stock->stockprops({type_id=>$analyzed_tissue_types_cvterm->cvterm_id});
         if ($previous_analyzed_tissue_types_stockprop_rs->count == 1){
             $analyzed_tissue_types_string = $previous_analyzed_tissue_types_stockprop_rs->first->value();
-            $analyzed_tissue_type_hash = decode_json $analyzed_tissue_types_string;
-            $analyzed_tissue_type_hash->{$tissue_type} = 1;
+            $analyzed_tissue_types_hash = decode_json $analyzed_tissue_types_string;
+            $analyzed_tissue_types_hash->{$tissue_type} = 1;
             $updated_tissue_types_string = encode_json $analyzed_tissue_types_hash;
             $previous_analyzed_tissue_types_stockprop_rs->first->update({value=>$updated_tissue_types_string});
         } elsif ($previous_analyzed_tissue_types_stockprop_rs->count > 1) {
@@ -160,7 +181,6 @@ sub store_relative_expression_data {
         }
     };
 
-    #try to add all cross info in a transaction
     try {
         $schema->txn_do($coderef);
     } catch {

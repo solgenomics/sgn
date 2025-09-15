@@ -28,6 +28,7 @@ use List::MoreUtils qw /any /;
 use Sort::Key::Natural qw(natkeysort);
 use CXGN::Stock;
 use CXGN::Transformation::ParseUpload;
+use CXGN::Transformation::StoreTransgeneExpressionData;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1519,17 +1520,12 @@ sub upload_relative_expression_data_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $vector_id = $c->req->param('relative_expression_data_vector_id');
-    my $vector_name = $c->req->param('relative_expression_data_vector_name');
+    my $vector_construct_name = $c->req->param('relative_expression_data_vector_name');
     my $tissue_type = $c->req->param('expression_tissue_type');
     my $endogenous_control = $c->req->param('expression_endogenous_control');
     my $notes = $c->req->param('expression_notes');
-    print STDERR "VECTOR NAME =".Dumper($vector_name)."\n";
-    print STDERR "VECTOR ID =".Dumper($vector_id)."\n";
-    print STDERR "TISSUE TYPE =".Dumper($tissue_type)."\n";
-    print STDERR "ENDOGENOUS CONTROL =".Dumper($endogenous_control)."\n";
-    print STDERR "NOTES =".Dumper($notes)."\n";
-    
     my $upload = $c->req->upload('relative_expression_data_file');
+
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -1543,6 +1539,7 @@ sub upload_relative_expression_data_POST : Args(0) {
     my %parsed_data;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $upload_date = $time->ymd();
     my $user_role;
     my $user_id;
     my $user_name;
@@ -1635,11 +1632,28 @@ sub upload_relative_expression_data_POST : Args(0) {
     if ($parsed_data){
         eval {
             foreach my $transformant_name (keys %$parsed_data) {
-                my $relative_expression_info = $parsed_data->{$transformant_name};
+                my $relative_expression_data = $parsed_data->{$transformant_name};
                 print STDERR "TRANSFORMANT NAME =".Dumper($transformant_name)."\n";
-                print STDERR "EXPRESSION INFO =".Dumper($relative_expression_info)."\n";
+                print STDERR "EXPRESSION INFO =".Dumper($relative_expression_data)."\n";
+                my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
+                    chado_schema => $schema,
+                    transformant_name => $transformant_name,
+                    vector_construct_name => $vector_construct_name,
+                    tissue_type => $tissue_type,
+                    relative_expression_data => $relative_expression_data,
+                    endogenous_control => $endogenous_control,
+                    notes => $notes,
+                    timestamp => $timestamp,
+                    operator_id => $user_id,
+                    relative_expression_data_derived_from => 'provided',
+                });
 
-
+                my $store = $expression_data->store_relative_expression_data();
+#                my $store_expression_error = $store->{error};
+#                if ($store_expression_error) {
+#                    $c->stash->{rest} = { error => "Error! Cannot store expression data of transformant: $transformant_name. "};
+#                    return;
+#                }
             }
         };
 
