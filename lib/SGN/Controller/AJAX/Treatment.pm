@@ -38,6 +38,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my $minimum = $c->req->param('minimum') ? $c->req->param('minimum') : undef;
     my $maximum = $c->req->param('maximum') ? $c->req->param('maximum') : undef;
     my $categories = $c->req->param('categories') ? $c->req->param('categories') : undef;
+    my $category_details = $c->req->param('category_details') ? $c->req->param('category_details') : undef;
     my $repeat_type = $c->req->param('repeat_type') ? $c->req->param('repeat_type') : undef;
     my $parent_term = $c->req->param('parent_term') || 'Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000';
 
@@ -53,7 +54,6 @@ sub create_treatment :Path('/ajax/treatment/create') {
     $definition =~ s/\s+$//;
 
     if (defined($categories)) {
-        $categories = lc($categories);
         $categories =~ s/^\s+//;
         $categories =~ s/\s+$//;
     }
@@ -99,7 +99,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my $new_treatment;
 
     eval {
-        if ($format =~ m/numeric|percent|counter|boolean|/) {
+        if ($format =~ m/numeric|percent|counter|boolean/i) {
             $new_treatment = CXGN::Trait::Treatment->new({
                 bcs_schema => $schema,
                 definition => $definition,
@@ -121,10 +121,10 @@ sub create_treatment :Path('/ajax/treatment/create') {
                 name => $name,
                 definition => $definition,
                 format => $format,
-                categories => $categories ne "" ? $categories : undef,
             });
-            if (defined($categories)) {
+            if ($categories ne "") {
                 $new_treatment->categories($categories);
+                $new_treatment->category_details($category_details);
             }
             if ($repeat_type) {
                 $new_treatment->repeat_type($repeat_type);

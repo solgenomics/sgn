@@ -64,7 +64,8 @@ sub store {
     my $minimum = $self->minimum() ne "" ? $self->minimum() : undef;
     my $maximum = $self->maximum() ne "" ? $self->maximum() : undef;
     my $categories = $self->categories() ne "" ? $self->categories() : undef;
-    my $repeat_type = $self->repeat_type() ne "" ? $self->repeat_type () : undef;
+    my $repeat_type = $self->repeat_type() ne "" ? $self->repeat_type() : undef;
+    my $category_details = $self->category_details() ne "" ? $self->category_details() : undef;
 
     my $trait_property_cv_id = $schema->resultset("Cv::Cv")->find({name => 'trait_property'})->cv_id();
 
@@ -98,13 +99,19 @@ sub store {
         name => 'trait_repeat_type'
     })->cvterm_id();
 
+    my $category_details_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
+        cv_id => $trait_property_cv_id,
+        name => 'trait_details'
+    })->cvterm_id();
+
     my %cvtermprop_hash = (
         "$format_cvterm_id" => $format,
         "$default_value_cvterm_id" => $default_value,
         "$minimum_cvterm_id" => $minimum,
         "$maximum_cvterm_id" => $maximum,
         "$categories_cvterm_id" => $categories,
-        "$repeat_type_cvterm_id" => $repeat_type
+        "$repeat_type_cvterm_id" => $repeat_type,
+        "$category_details_cvterm_id" => $category_details
     );
 
     my $get_db_accessions_sql = "SELECT accession FROM dbxref JOIN db USING (db_id) WHERE db.name='EXPERIMENT_TREATMENT';";

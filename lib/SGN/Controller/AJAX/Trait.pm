@@ -38,6 +38,7 @@ sub create_trait :Path('/ajax/trait/create') {
     my $minimum = $c->req->param('minimum') ? $c->req->param('minimum') : undef;
     my $maximum = $c->req->param('maximum') ? $c->req->param('maximum') : undef;
     my $categories = $c->req->param('categories') ? $c->req->param('categories') : undef;
+    my $category_details = $c->req->param('category_details') ? $c->req->param('category_details') : undef;
     my $repeat_type = $c->req->param('repeat_type') ? $c->req->param('repeat_type') : undef;
     my $parent_term = $c->req->param('parent_term') ? $c->req->param('parent_term') : undef;
 
@@ -99,7 +100,7 @@ sub create_trait :Path('/ajax/trait/create') {
     my $new_trait;
 
     eval {
-        if ($format =~ m/numeric|percent|counter|boolean|/) {
+        if ($format =~ m/numeric|percent|counter|boolean/i) {
             $new_trait = CXGN::Trait->new({
                 bcs_schema => $schema,
                 definition => $definition,
@@ -120,11 +121,11 @@ sub create_trait :Path('/ajax/trait/create') {
                 bcs_schema => $schema,
                 name => $name,
                 definition => $definition,
-                format => $format,
-                categories => $categories ne "" ? $categories : undef,
+                format => $format
             });
             if (defined($categories)) {
                 $new_trait->categories($categories);
+                $new_trait->category_details($category_details);
             }
             if ($repeat_type) {
                 $new_trait->repeat_type($repeat_type);

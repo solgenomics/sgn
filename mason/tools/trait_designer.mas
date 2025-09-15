@@ -112,10 +112,13 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
             let repeat_type = jQuery('#new_trait_repeat_select').val();
             let categories = JSON.parse(html_table_to_json(jQuery('#new_trait_categories').html()));
             let cat_list = [];
+            let cat_details_list = [];
             Object.keys(categories).sort().forEach(key => {
-                cat_list.push( key + "=" + categories[key]);
+                cat_list.push( key );
+                cat_details_list.push(categories[key]);
             });
             categories = cat_list.join('/');
+            let category_details = cat_details_list.join('/');
             let parent_term = jQuery('#new_trait_parent_term').val();
 
             jQuery.ajax({
@@ -128,6 +131,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                     minimum : minimum,
                     maximum : maximum,
                     categories : categories,
+                    category_details : category_details,
                     parent_term : parent_term,
                     repeat_type : repeat_type
                 },
