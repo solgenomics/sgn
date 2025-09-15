@@ -13,7 +13,7 @@ sub treatment_design_page : Path('/treatments/design/') Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
-    if (! $c->config->{allow_cvterm_edits}) {
+    if (! $c->config->{allow_treatment_edits}) {
         $c->stash->{template} = '/site/error/permission_denied.mas';
     } else {
 

@@ -41,7 +41,7 @@ sub create_design {
         
         my @aggregator = ();
         foreach my $treatment (@treatment_names) {
-            my @formatted_values = map {"{$treatment,$_}"} @{$treatments->{$treatment}};
+            my @formatted_values = map {"{$treatment=$_}"} @{$treatments->{$treatment}};
             if (scalar(@aggregator) == 0) { #aggregator is empty
                 @aggregator = @formatted_values;
             } else { #aggregator is not empty

@@ -26,7 +26,7 @@ sub create_trait :Path('/ajax/trait/create') {
         return;
     }
 
-    if (! $c->config->{allow_cvterm_edits}) {
+    if (! $c->config->{allow_trait_edits}) {
         $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
         return;
     }
@@ -165,7 +165,7 @@ sub edit_trait :Path('/ajax/trait/edit') {
         return;
     }
 
-    if (! $c->config->{allow_cvterm_edits}) {
+    if (! $c->config->{allow_trait_edits}) {
         $c->stash->{rest} = {error => "You do not have permission to edit cvterms. Check server configuration.\n"};
         return;
     }
@@ -215,7 +215,7 @@ sub delete_trait :Path('/ajax/trait/delete') {
         return;
     }
 
-    if (! $c->config->{allow_cvterm_edits}) {
+    if (! $c->config->{allow_trait_edits}) {
         $c->stash->{rest} = {error => "You do not have permission to edit cvterms. Check server configuration.\n"};
         return;
     }

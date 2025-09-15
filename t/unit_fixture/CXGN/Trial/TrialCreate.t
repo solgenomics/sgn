@@ -8,6 +8,9 @@ use JSON::Any;
 use Data::Dumper;
 use Test::WWW::Mechanize;
 use JSON;
+use DateTime;
+use Cwd;
+use File::Temp 'tempfile';
 
 my $fix = SGN::Test::Fixture->new();
 
@@ -23,9 +26,12 @@ BEGIN {use_ok('CXGN::Genotype::StoreGenotypingProject');}
 BEGIN {use_ok('CXGN::Trial');}
 BEGIN {use_ok('CXGN::BreedersToolbox::Projects');}
 BEGIN {use_ok('CXGN::Genotype::GenotypingProject');}
+BEGIN {use_ok('CXGN::Trait::Treatment');}
+BEGIN {use_ok('CXGN::Phenotypes::StorePhenotypes');}
 
 ok(my $chado_schema = $fix->bcs_schema);
 ok(my $phenome_schema = $fix->phenome_schema);
+ok(my $metadata_schema = $fix->metadata_schema);
 ok(my $dbh = $fix->dbh);
 
 # create a location for the trial
@@ -586,7 +592,20 @@ foreach my $stock_name (@stock_names_splitplot) {
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
 ok($trial_design->set_trial_name("test_splitplot_trial_1"), "set trial name");
 ok($trial_design->set_stock_list(\@stock_names_splitplot), "set stock list");
-# ok($trial_design->set_treatments(["management_factor_1", "management_factor_2"]), "set treatment/management_factor list");
+
+# create a treatment here, then delete it at end of test
+ok(my $test_treatment = CXGN::Trait::Treatment->new({
+    bcs_schema => $chado_schema,
+    name => 'test treatment',
+    definition => 'A dummy treatment object to run fixture tests.',
+    format => 'numeric'
+}), 'create a test treatment');
+
+my $exp_treatment_root_term = 'Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000';
+
+ok($test_treatment->store($exp_treatment_root_term), 'store test treatment');
+
+ok($trial_design->set_treatments({'test treatment|EXPERIMENT_TREATMENT:0000002' => [0,1]}), "set treatment list");
 ok($trial_design->set_number_of_blocks(2), "set number of blocks");
 ok($trial_design->set_plot_layout_format("serpentine"), "set serpentine");
 ok($trial_design->set_design_type("splitplot"), "set design type");
@@ -613,11 +632,96 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_has_subplot_entries => 2,
     trial_has_plant_entries => 4,
     operator => "janedoe"
-						    }), "create trial object");
+}), "create trial object");
 
 $save = $trial_create->save_trial();
 #print STDERR "TRIAL ID = ".$save->{trial_id}."\n";
 ok($save->{'trial_id'}, "save trial");
+
+# manually save treatments
+my $phenostore_data_hash = {};
+my %phenostore_stocks = ();
+my %phenostore_treatments = ();
+
+my $time = DateTime->now();
+my $pheno_timestamp = $time->ymd()."_".$time->hms();
+
+my $temp_basedir = $fix->config->{tempfiles_subdir};
+my $site_basedir = getcwd();
+if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+    mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+}
+my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+ok(my $treatment_design = $design->{'treatments'},'retrieve treatments from design object');
+foreach my $unique_treatment (keys(%{$treatment_design->{'treatments'}})) {
+    my @treatment_pairs = ($unique_treatment =~ m/\{([^{}]+)\}/g);
+    my $treatments = [];
+    foreach my $pair (@treatment_pairs) {
+        my ($treatment, $value) = $pair =~ m/([^=]+)=(.*)/;
+        $phenostore_treatments{$treatment} = 1;
+        push @{$treatments}, {
+            'treatment' => $treatment,
+            'value' => $value
+        };
+    }
+    my $subplots = $treatment_design->{'treatments'}->{$unique_treatment};
+    foreach my $treatment (@{$treatments}) {
+        foreach my $subplot (@{$subplots}) {
+            $phenostore_stocks{$subplot} = 1;
+            my $plants = $treatment_design->{'plants'}->{$subplot};
+            $phenostore_data_hash->{$subplot}->{$treatment->{'treatment'}} = [
+                $treatment->{'value'},
+                $pheno_timestamp,
+                'janedoe',
+                '',
+                ''
+            ];
+            foreach my $plant (@{$plants}) {
+                $phenostore_stocks{$plant} = 1;
+                $phenostore_data_hash->{$plant}->{$treatment->{'treatment'}} = [
+                    $treatment->{'value'},
+                    $pheno_timestamp,
+                    'janedoe',
+                    '',
+                    ''
+                ];
+            }
+        }
+    }
+}
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+    basepath => "$temp_basedir",
+    dbhost => $fix->config->{dbhost},
+    dbuser => $fix->config->{dbuser},
+    dbname => $fix->config->{dbname},
+    dbpass => $fix->config->{dbpass},
+    temp_file_nd_experiment_id => $tempfile,
+    bcs_schema => $chado_schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    user_id => 41,
+    stock_list => [keys(%phenostore_stocks)],
+    trait_list => [keys(%phenostore_treatments)],
+    values_hash => $phenostore_data_hash,
+    metadata_hash =>{
+        archived_file => 'none',
+        archived_file_type => 'new trial design with treatments',
+        operator => 'janedoe',
+        date => $pheno_timestamp
+    }
+});
+
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+ok(!$verified_error, 'check no errors on treatment verification');
+
+my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+ok(!$stored_phenotype_error, 'check no errors on storing treatments');
+
+`rm $tempfile`;
 
 ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $chado_schema,
@@ -627,9 +731,10 @@ ok(my $trial = $trial_lookup->get_trial());
 ok(my $trial_id = $trial->project_id());
 
 my $trial_obj = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$trial_id});
-# ok(my $trial_management_factors = $trial_obj->get_treatments());
-# print STDERR Dumper $trial_management_factors;
-# is(scalar(@$trial_management_factors), 2);
+ok(my $trial_treatments = $trial_obj->get_treatments(), 'retrieve treatments from design');
+ok($trial_treatments->[0]->{trait_name} eq 'test treatment|EXPERIMENT_TREATMENT:0000002', 'test correct treatment name'); 
+ok($trial_treatments->[0]->{count} > 0, 'test treatments were saved as phenotypes');
+
 ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,
     trial_id => $trial_id,
@@ -649,36 +754,24 @@ for (my $i=0; $i<scalar(@stock_names_splitplot); $i++){
 }
 ok(scalar(@accessions) == 100, "check accession names");
 
-# my @splitplot_management_factors;
-# foreach (@$trial_management_factors) {
-#     push @splitplot_management_factors, $_->[0];
-#     my $trial = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$_->[0]});
-#     my $plant_entries = $trial->get_observation_units_direct('plant', ['treatment_experiment']);
-#     my $subplot_entries = $trial->get_observation_units_direct('subplot', ['treatment_experiment']);
-#     is(scalar(@$plant_entries), 400);
-#     is(scalar(@$subplot_entries), 200);
-# }
-
-# my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-#     schema => $chado_schema,
-#     trial_id => $trial_id,
-#     data_level => 'subplots',
-#     treatment_project_ids => \@splitplot_management_factors,
-#     selected_columns => {"subplot_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
-# });
-# my $output = $trial_layout_download->get_layout_output();
-# #print STDERR Dumper $output;
-# is(scalar(@{$output->{output}}), 401);
-
-# my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-#     schema => $chado_schema,
-#     trial_id => $trial_id,
-#     data_level => 'plants',
-#     treatment_project_ids => \@splitplot_management_factors,
-#     selected_columns => {"plant_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
-# });
-# my $output = $trial_layout_download->get_layout_output();
+my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    schema => $chado_schema,
+    trial_id => $trial_id,
+    data_level => 'subplots',
+    selected_columns => {"subplot_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
+});
+my $output = $trial_layout_download->get_layout_output();
 #print STDERR Dumper $output;
-# is(scalar(@{$output->{output}}), 801);
+is(scalar(@{$output->{output}}), 401);
+
+my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    schema => $chado_schema,
+    trial_id => $trial_id,
+    data_level => 'plants',
+    selected_columns => {"plant_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
+});
+my $output = $trial_layout_download->get_layout_output();
+#print STDERR Dumper $output;
+is(scalar(@{$output->{output}}), 801);
 
 done_testing();

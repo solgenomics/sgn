@@ -29,7 +29,8 @@ Naama Menda <nm249@cornell.edu>
 <%args>
   $cvterm
   $cvtermref
-  $allow_edits => 0
+  $allow_trait_edits => 0
+  $allow_treatment_edits => 0
 </%args>
 
 <%once>
@@ -54,6 +55,10 @@ my $comment     = '' ;#$cvterm->comment;
 my $editable_cvterm_props_string = $cvtermref->{editable_cvterm_props};
 my @editable_cvterm_props = split "," , $editable_cvterm_props_string;
 
+my $allow_edits = 0;
+if (($allow_treatment_edits && $db_name =~ m/_TREATMENT/) || ($allow_trait_edits && $db_name !~ m/_TREATMENT/) ) {
+  $allow_edits = 1;
+}
 
 my $is_obsolete = $cvterm->is_obsolete();
 my @synonyms    = $cvterm->synonyms();
@@ -200,7 +205,7 @@ my $edit_privs = $curator ;
 
 <&| /page/info_section.mas, title=>"Cvterm details" &>
 <table>
-% if ($allow_edits) {
+% if ( $allow_edits ) {
 <tr><td><a href="javascript:displayCvtermEditDialog()" id="edit_cvterm_link">[Edit]</td><td><a href="javascript:deleteCvterm()" id="delete_cvterm_link" style="color:red;">[Delete]</a></td></tr>
 % }
 <tr><td>Term id</td><td><b><% $accession %></b></td></tr>

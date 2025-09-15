@@ -742,11 +742,10 @@ sub save_experimental_design_POST : Args(0) {
                 my $design = $json->decode($design_json);
                 $treatment_design = $design->{'treatments'};
                 foreach my $unique_treatment (keys(%{$treatment_design->{'treatments'}})) {
-                    sleep(1);
                     my @treatment_pairs = ($unique_treatment =~ m/\{([^{}]+)\}/g);
                     my $treatments = [];
                     foreach my $pair (@treatment_pairs) {
-                        my ($treatment, $value) = $pair =~ m/([^,]+),(.*)/;
+                        my ($treatment, $value) = $pair =~ m/([^=]+)=(.*)/;
                         $phenostore_treatments{$treatment} = 1;
                         push @{$treatments}, {
                             'treatment' => $treatment,

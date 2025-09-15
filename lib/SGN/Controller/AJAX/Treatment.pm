@@ -26,7 +26,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
         return;
     }
 
-    if (! $c->config->{allow_cvterm_edits}) {
+    if (! $c->config->{allow_treatment_edits}) {
         $c->stash->{rest} = {error => "You do not have permission to design new treatments.\n"};
         return;
     }
