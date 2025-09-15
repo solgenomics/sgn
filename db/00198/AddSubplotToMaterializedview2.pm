@@ -31,7 +31,7 @@ it under the same terms as Perl itself.
 
 =cut
 
-package AddSubplotToMaterializedview;
+package AddSubplotToMaterializedview2;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
@@ -226,7 +226,7 @@ FROM
     JOIN db ON(dbxref.db_id = db.db_id)
     LEFT JOIN cvterm_relationship is_variable 
         ON cvterm.cvterm_id = is_variable.subject_id 
-        AND is_variable.type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF')
+        AND is_variable.type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF' and is_relationshiptype = 1)
 WHERE 
     cvterm.cvterm_id IN (
         SELECT cvterm_id 
@@ -963,15 +963,15 @@ SELECT plant.stock_id AS plant_id,
   GROUP BY plant.stock_id, plot.stock_id;
 ALTER VIEW plantsXplots OWNER TO web_usr;
 
-DROP VIEW IF EXISTS public.subplotsXplots CASCADE;
-CREATE VIEW public.subplotsXplots as
+DROP VIEW IF EXISTS public.plotsXsubplots CASCADE;
+CREATE VIEW public.plotsXsubplots as
 SELECT sr.object_id as subplot_id,
 s.stock_id AS plot_id
 from stock_relationship sr
 join stock s on s.stock_id = sr.subject_id 
 where sr.type_id = (select cvterm_id from cvterm where name = 'subplot_of')
 and s.type_id = (select cvterm_id from cvterm where name = 'plot');
-ALTER VIEW public.subplotsXplots OWNER TO web_usr;
+ALTER VIEW public.plotsXsubplots OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.plantsXsubplots CASCADE;
 CREATE VIEW public.plantsXsubplots AS
