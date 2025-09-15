@@ -2560,4 +2560,30 @@ sub get_tissue_types_select : Path('/ajax/html/select/tissue_types') Args(0) {
 }
 
 
+sub get_endogenous_controls_select : Path('/ajax/html/select/endogenous_controls') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "endogenous_controls_select";
+    my $name = $c->req->param("name") || "endogenous_controls_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @endogenous_controls;
+
+    if ($empty && !$default) {
+        push @endogenous_controls, ['', 'Please select an endogenous control'];
+    }
+    push @endogenous_controls, ['GAPDH', 'GAPDH'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@endogenous_controls,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
 1;

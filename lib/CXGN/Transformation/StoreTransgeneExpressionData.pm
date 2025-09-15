@@ -60,6 +60,19 @@ has 'relative_expression_data' => (
     required => 1
 );
 
+has 'endogenous_control' => (
+    isa =>'Str',
+    is => 'rw',
+    predicate => 'has_endogenous_control',
+    required => 1
+);
+
+has 'notes' => (
+    isa =>'Str',
+    is => 'rw',
+    predicate => 'has_notes',
+);
+
 has 'timestamp' => (
     isa => 'Str',
     is => 'rw',
@@ -75,7 +88,10 @@ sub store_relative_expression_data {
 	my $vector_construct_stock_id = $self->get_vector_construct_stock_id();
 	my $relative_expression_data = $self->relative_expression_data();
 	my $tissue_type = $self->tissue_type();
+	my $endogenous_control = $self->endogenous_control();
+	my $notes = $self->notes();
 	my $timestamp = $self->timestamp();
+
 
     my $coderef = sub {
         $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
@@ -112,7 +128,10 @@ sub store_relative_expression_data {
         if ($previous_expression_data_stockprop_rs->count == 1){
             $expression_data_string = $previous_expression_data_stockprop_rs->first->value();
             $expression_data_hash = decode_json $expression_data_string;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'} = $relative_expression_data;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'relative_expression_values'} = $relative_expression_data;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'endogenous_control'} = $endogenous_control;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'notes'} = $notes;
+
             $updated_expression_data_string = encode_json $expression_data_hash;
             $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_string});
         } elsif ($previous_stockprop_rs->count > 1) {

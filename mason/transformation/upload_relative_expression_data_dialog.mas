@@ -21,14 +21,26 @@ $stock_uniquename
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_relative_expression_data_form" name="upload_relative_expression_data_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Tissue Type: </label>
-                            <div class="col-sm-9" >
+                            <label class="col-sm-4 control-label">Tissue Type: </label>
+                            <div class="col-sm-8" >
                                 <div id="expression_tissue_type_div"></div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File: </label>
-                            <div class="col-sm-9" >
+                            <label class="col-sm-4 control-label">Endogenous Control: </label>
+                            <div class="col-sm-8" >
+                                <div id="expression_endogenous_control_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Notes:</label>
+                            <div class="col-sm-8">
+                                <textarea class="form-control" id="expression_notes" name="expression_notes" ></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <div class="col-sm-8" >
                                 <input type="file" name="relative_expression_data_file" id="relative_expression_data_file" encoding="multipart/form-data" />
                                 <input name="relative_expression_data_vector_id" id="relative_expression_data_vector_id" type="hidden" value="<% $stock_id %>">
                                 <input name="relative_expression_data_vector_name" id="relative_expression_data_vector_name" type="hidden" value="<% $stock_uniquename %>">
@@ -141,6 +153,7 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_relative_expression_data_link').click(function() {
         get_select_box('tissue_types', 'expression_tissue_type_div', { 'name' : 'expression_tissue_type', 'id' : 'expression_tissue_type' , 'empty' : 1});
+        get_select_box('endogenous_controls', 'expression_endogenous_control_div', { 'name' : 'expression_endogenous_control', 'id' : 'expression_endogenous_control' , 'empty' : 1});
         jQuery("#upload_relative_expression_data_dialog").modal("show");
     });
 
@@ -150,11 +163,17 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_relative_expression_data_submit").click(function(){
         const upload_file = jQuery("#relative_expression_data_file").val();
-        const tissue_type = jQuery("#relative_expression_data_tissue_type").val();
+        const tissue_type = jQuery("#expression_tissue_type").val();
+        const endogenous_control = jQuery("#expression_endogenous_control").val();
 
         jQuery('#upload_relative_expression_data_form').attr("action", "/ajax/transformation/upload_relative_expression_data");
         if (tissue_type === ''){
             alert("Please select a tissue type");
+            return;
+        }
+
+        if (endogenous_control === ''){
+            alert("Please select an endogenous control");
             return;
         }
 
