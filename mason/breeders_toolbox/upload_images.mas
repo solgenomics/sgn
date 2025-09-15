@@ -87,7 +87,8 @@
             <h4>Images Alone:</h4>
             <ul>
                 <li>Select multiple images directly for upload.</li>
-                <li>Image file names should consist of the observationUnitName, traitname, number, and timestamp, all joined by underscores (the default naming system used by Fieldbook App).</li>
+                <li>If the images being uploaded were taken using Fieldbook, they have EXIF data that contains the observationUnitName, traitname, and timestamp. They can be uploaded without needing to change the file name.</li>
+                <li>If images were NOT taken using Fieldbook, image file names should consist of the observationUnitName, traitname, number, and timestamp, all joined by underscores (the default naming system used by Fieldbook App).</li>
             </ul>
             <br/>
             <h4>Images with Barcodes:</h4>

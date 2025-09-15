@@ -242,6 +242,14 @@ has 'other_editable_stock_props' => (
     is => 'rw'
 );
 
+has 'number_of_insertions' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_number_of_insertions',
+);
+
+
 sub BUILD {
     my $self = shift;
 
@@ -387,6 +395,11 @@ sub _retrieve_introgression_end_position_bp {
     $self->introgression_end_position_bp($self->_retrieve_stockprop('introgression_end_position_bp'));
 }
 
+sub _retrieve_number_of_insertions {
+    my $self = shift;
+    $self->number_of_insertions($self->_retrieve_stockprop('number_of_insertions'));
+}
+
 =head2 store()
 
  Usage:        my $stock_id = $accession->store();
@@ -509,6 +522,9 @@ sub store {
     }
     if ($self->introgression_end_position_bp){
         $self->_update_stockprop('introgression_end_position_bp', $self->introgression_end_position_bp);
+    }
+    if ($self->number_of_insertions){
+        $self->_update_stockprop('number_of_insertions', $self->number_of_insertions);
     }
     if ($self->other_editable_stock_props){
         while (my ($key, $value) = each %{$self->other_editable_stock_props}) {
