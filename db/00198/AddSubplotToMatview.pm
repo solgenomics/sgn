@@ -3,12 +3,12 @@
 
 =head1 NAME
 
-AddSubplotToMaterializedview.pm
+AddSubplotToMatview.pm
 
 
 =head1 SYNOPSIS
 
-mx-run AddSubplotToMaterializedview [options] -H hostname -D dbname -u username [-F]
+mx-run AddSubplotToMatview [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -31,7 +31,7 @@ it under the same terms as Perl itself.
 
 =cut
 
-package AddSubplotToMaterializedview;
+package AddSubplotToMatview;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
