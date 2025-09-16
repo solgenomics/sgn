@@ -16,7 +16,8 @@ my $schema = $f->bcs_schema;
 
 my $mech = Test::WWW::Mechanize->new;
 
-$mech->get_ok("http://localhost:3010//tools/label_designer/retrieve_longest_fields?data_type=Field%20Trials&source_id=139&data_level=plots");
+$mech->get_ok("http://localhost:3010/tools/label_designer/retrieve_longest_fields?data_type=Field%20Trials&source_id=139&data_level=plots");
+#print STDERR Dumper($mech->content);
 my $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
@@ -37,7 +38,9 @@ my $expected_response = {
                         'plot_number' => 35667,
                         'fresh root weight|CO_334:0000012' => '15.37',
                         'accession_id' => 38926,
-                        'plot_name' => 'KASESE_TP2013_1000'
+                        'plot_name' => 'KASESE_TP2013_1000',
+                        # 'full_management_regime' => '', # don't know why, but these keys gets deleted.
+                        # 'brief_management_regime' => ''
                       },
           'reps' => {
                       '1' => 370,

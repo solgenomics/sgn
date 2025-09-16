@@ -826,7 +826,7 @@ sub get_trial_design {
                 # }
 
                 $detail_hash{'brief_management_regime'} = _format_management_regime($trial_management_regime);
-                $detail_hash{'full_management_regime'} = encode_json($trial_management_regime);
+                $detail_hash{'full_management_regime'} = $trial_management_regime ? encode_json($trial_management_regime) : '';
                 $detail_hash{'entry_number'} = $entry_numbers ? $entry_numbers->{$detail_hash{accession_id}} : undef;
                 $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
 
@@ -1109,6 +1109,10 @@ sub get_additional_list_data {
 
 sub _format_management_regime { #management regime is a list of hashes. This condenses it because it would be too large otherwise
     my $management_regime = shift;
+
+    if (!$management_regime || $management_regime eq "") {
+        return "";
+    }
 
     my @factors;
 
