@@ -982,6 +982,9 @@ sub interactive_store {
 
     $schema->txn_do($coderef);
 
+	$self->cvterm_id($new_trait_id);
+	$self->dbxref_id($new_trait->dbxref_id);
+
     return $new_trait;
 }
 

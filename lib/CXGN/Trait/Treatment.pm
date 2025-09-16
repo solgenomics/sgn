@@ -201,6 +201,9 @@ sub store {
 
     $schema->txn_do($coderef);
 
+    $self->cvterm_id($new_treatment_id);
+    $self->dbxref_id($new_treatment->dbxref_id);
+
     return $new_treatment;
 }
 

@@ -605,6 +605,8 @@ my $exp_treatment_root_term = 'Experimental treatment ontology|EXPERIMENT_TREATM
 
 ok($test_treatment->store($exp_treatment_root_term), 'store test treatment');
 
+ok(my $test_treatment_id = $test_treatment->cvterm_id(), 'retrieve treatment cvterm id');
+
 ok($trial_design->set_treatments({'test treatment|EXPERIMENT_TREATMENT:0000002' => [0,1]}), "set treatment list");
 ok($trial_design->set_number_of_blocks(2), "set number of blocks");
 ok($trial_design->set_plot_layout_format("serpentine"), "set serpentine");
@@ -773,5 +775,8 @@ my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
 my $output = $trial_layout_download->get_layout_output();
 #print STDERR Dumper $output;
 is(scalar(@{$output->{output}}), 801);
+
+eval {$test_treatment->delete()};
+ok($@ , 'Check treatment delete is blocked by existing phenotypes');
 
 done_testing();

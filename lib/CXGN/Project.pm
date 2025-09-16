@@ -5586,7 +5586,7 @@ sub suppress_plot_phenotype {
 
 =head2 delete_assayed_trait
 
-Usage:        	my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass},$tempfile_id $phenotypes_ids, [] );
+Usage:        	my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass},$tempfile_id, $phenotypes_ids, [] );
                 if ($delete_trait_return_error) {
                     $c->stash->{rest} = { error => $delete_trait_return_error };
                     return;
