@@ -2708,11 +2708,8 @@ sub get_vector_transgenic_line_details:Chained('/stock/get_stock') PathPart('dat
 
     foreach my $r (@$result){
         my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = @$r;
-        push @transgenic_lines, {
-            transformant_id => $transformant_id,
-            transformant_name => $transformant_name,
-            number_of_insertions => $number_of_insertions
-        };
+        my @row = (qq{<a href = "/stock/$transformant_id/view">$transformant_name</a>}, $number_of_insertions);
+        push @transgenic_lines, \@row;
     }
 
     $c->stash->{rest}={data=>\@transgenic_lines};

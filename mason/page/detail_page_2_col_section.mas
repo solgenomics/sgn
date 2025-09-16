@@ -85,6 +85,7 @@ $cvterm_add_uri => undef
 $referer => undef
 $is_obsolete => undef
 $is_in_trial => undef
+$vector_related_genes => undef
 
 #Specific to genotyping protocol detail page
 $protocol_id => undef
@@ -349,7 +350,7 @@ $field_headers => ()
                                 <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End vector_obsoleted_accessions_section
 % if ($info_section_id eq 'vector_transgenic_line_details_section'){
-                                <& /stock/vector_transformant_details.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+                                <& /stock/vector_transformant_details.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name, vector_related_genes => $vector_related_genes &>
 % } #End vector_transgenic_line_details_section
 % if ($info_section_id eq 'related_transformation_info_section'){
                                 <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>

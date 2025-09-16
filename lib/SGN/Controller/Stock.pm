@@ -25,6 +25,7 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Chado::Publication;
 use CXGN::Genotype::DownloadFactory;
+use CXGN::Stock::Vector;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -273,6 +274,12 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         $is_a_transgenic_line = $transgenic_stockprop_rs->value();
     }
 
+    my $vector_related_genes;
+    if ($stock_type eq 'vector_construct') {
+        my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$stock_id);
+        $vector_related_genes = $vector_construct->Gene;
+    }
+
     my $is_in_trial;
     my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
     my @trial_list = $check_trial->get_trials();
@@ -319,6 +326,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         is_obsolete   => $obsolete,
         is_a_transgenic_line => $is_a_transgenic_line,
         is_in_trial => $is_in_trial,
+        vector_related_genes => $vector_related_genes,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),

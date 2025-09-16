@@ -3,7 +3,10 @@
 $stock_id
 $stock_uniquename => undef
 $stock_type => undef
+$vector_related_genes => undef
 </%args>
+
+
 
 <button class="btn btn-sm btn-primary" style="margin:3px" id="upload_relative_expression_data_link">Upload Relative Expression Data</button>
 <br/>
@@ -11,6 +14,16 @@ $stock_type => undef
 
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="vector_transgenic_line_details_table">
+        <thead>
+            <tr>
+                <th>Accession</th>
+                <th>Number of Insertions</th>
+% my @column_header = split ',',$vector_related_genes;
+% foreach my $column_header(@column_header) {
+                <th><%$column_header. " ".'(Relative Expression)'%></th>
+%}
+            </tr>
+        </thead>
     </table>
 </div>
 
@@ -31,11 +44,6 @@ jQuery(document).ready(function(){
         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/vector_transgenic_line_details',
         'autoWidth': false,
         'ordering': false,
-        'columns': [
-            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
-            { title: "Number of Insertions", "data": "number_of_insertions" },
-         ],
-
     });
 });
 
