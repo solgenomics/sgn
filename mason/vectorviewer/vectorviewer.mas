@@ -5,24 +5,24 @@ $is_owner
 $edit_privs
 </%args>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/autofill/2.7.0/css/autoFill.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.2.3/css/buttons.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/2.1.1/css/colReorder.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/datetime/1.5.5/css/dataTables.dateTime.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/5.0.4/css/fixedColumns.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/4.0.3/css/fixedHeader.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/keytable/2.12.1/css/keyTable.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.5.1/css/rowGroup.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/rowreorder/1.5.0/css/rowReorder.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.4.3/css/scroller.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/searchbuilder/1.8.2/css/searchBuilder.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.3.3/css/searchPanes.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/3.0.1/css/select.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/staterestore/1.4.1/css/stateRestore.dataTables.min.css" />
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css" />
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/autofill/2.7.0/css/autoFill.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.2.3/css/buttons.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/2.1.1/css/colReorder.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/datetime/1.5.5/css/dataTables.dateTime.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/5.0.4/css/fixedColumns.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/4.0.3/css/fixedHeader.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/keytable/2.12.1/css/keyTable.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.5.1/css/rowGroup.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/rowreorder/1.5.0/css/rowReorder.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.4.3/css/scroller.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/searchbuilder/1.8.2/css/searchBuilder.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.3.3/css/searchPanes.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/select/3.0.1/css/select.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/staterestore/1.4.1/css/stateRestore.dataTables.min.css" /> -->
+    <!-- <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css" /> -->
 
  
 <!-- <center> -->
@@ -124,9 +124,11 @@ $edit_privs
 
 $(document).ready(function () {
 
-    alert('There we go...');
-    window.jsMod['vectorViewer'].init();
+    var stock_id = <% $stock_id %>;
+    alert('There we go... with '+stock_id);
+    window.jsMod['vectorViewer'].init(stock_id);
 
+  
     alert('Done!');
 });
 

@@ -64,8 +64,8 @@ has 'vector_length' => (isa => 'Int',
 
 =head2 parse_genbank
 
- Usage:        $vv->parse_genbank($fh)
- Desc:         parses the genbank file at $fh.
+ Usage:        $vv->parse_genbank($genbank_string)
+ Desc:         parses the genbank record in the string
  Ret:
  Args:
  Side Effects: modifies the internal drawing commands.
@@ -75,12 +75,23 @@ has 'vector_length' => (isa => 'Int',
 
 sub parse_genbank {
     my $self = shift;
-    my $file = shift;
+    my $string = shift;
 
     my $feature_table = [];
+
+    # get a string into $string somehow, with its format in $format, 
+    # say from a web form.
+
+    my $format = "genbank";
+
+    my $stringfh = IO::String->new($string); 
+    open($stringfh, "<", $string) or die "Could not open data for reading: $!";
+
+    my $seqio = Bio::SeqIO-> new(-fh     => $stringfh,
+				 -format => $format,
+	);
     
-    my $sio = Bio::SeqIO->new( -file => $file, -format=>'genbank');
-    my $s = $sio->next_seq();
+    my $s = $seqio->next_seq();
     my @commands = ();
     my @features = $s -> get_SeqFeatures();
     foreach my $f (@features) { 

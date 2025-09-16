@@ -14,8 +14,11 @@ var svg;
 var data;
 var re_sites;
 
-export function init() {
-    alert('INIT VECTORVIEWER ??');
+export function init(vector_id) {
+    console.log('INIT VECTORVIEWER ??');
+
+    alert('fetching vector info...');
+    window.jsMod['vectorViewer'].retrieveVector(vector_id);
 
 
     
@@ -25,7 +28,7 @@ export function init() {
     
     vectorLength = vector_metadata[0].vector_length_bp; // in bp
 
-    alert('checkpoint x. VectorLenght = '+ vectorLength);
+    console.log('checkpoint x. VectorLenght = '+ vectorLength);
     
     data = [
 	{ "name" : "Gene2", "color" : "yellow", "startAngle" : 1200/vectorLength * Math.PI *2, "endAngle" : 1600/vectorLength * Math.PI *2 },
@@ -34,7 +37,7 @@ export function init() {
 	{ "name" : "Gene3", "color" : "yellow", "startAngle" : 100/vectorLength * Math.PI *2, "endAngle" : 800/vectorLength * Math.PI *2 }
     ];
 
-    alert("checkpoint y");
+    console.log("checkpoint y");
 
     sequence = "";
     
@@ -45,7 +48,7 @@ export function init() {
 	[ 'Gene4', 3200, 3500, 'lightgreen', 'F' ]
     ];
 
-    alert("checkpoint z");
+    console.log("checkpoint z");
     
     table_data_RESites = [
 	['EcoRI', 1504],
@@ -63,7 +66,7 @@ export function init() {
 	['Test10', 2100]
     ];
     
-    alert('checkpoint 1');
+    console.log('checkpoint 1');
     
     // append the svg object to the body of the page
     margin = {top: 100, right: 100, bottom: 100, left: 100},
@@ -82,12 +85,12 @@ export function init() {
 	.attr("class", "mainGroup")
 	.attr("transform", "translate(" + width/2 + "," + height/2 + ")");
 
-    alert('cp 2');
+    console.log('cp 2');
     
     //attaching the function to a button
     d3.select('#update_vector').on("click", function() { updateVector(data,table_data_RESites) });
     
-    alert('cp 2.1');
+    console.log('cp 2.1');
     //zoom in and zoom out buttons
 //    $(document).ready(function () {
 	$('#zoomIn').on('click', function() {
@@ -121,7 +124,7 @@ export function init() {
 	type: "text"
     }];
     
-    alert('cp3');
+    console.log('cp3');
     var myTable = $('#vector_table').DataTable({
 	"sPaginationType": "full_numbers",
 	data: table_data,
@@ -246,14 +249,20 @@ export function init() {
 	var id = jQuery("#loadInput").val();
 	
 	alert(id);
-	
-	jQuery.ajax({
-	    url: '/vectorviewer/' + id + '/retrieve',
-	}).then(function(r) { data = r; }, function(r) { alert('A very severe error occurred! '+JSON.stringify(r)); } );
-	
+	retrieveVector(id);
+
     });
+}
+
+export function retrieveVector(id) { 
+    alert('Retrieving vector '+id);
+    jQuery.ajax({
+	url: '/vectorviewer/' + id + '/retrieve',
+    }).then(function(r) { data = r; }, function(r) { alert('A very severe error occurred! '+JSON.stringify(r)); } );
     
 }
+
+
 
 
 // drawing / updating the vector as a function
@@ -844,7 +853,7 @@ let angleInRadians = Math.atan2(-deltaY, -deltaX);
   };
 
 
-  labelLengthLabelX3 = labelLengthLabelX2 + labelLengthOffset;
+  var  labelLengthLabelX3 = labelLengthLabelX2 + labelLengthOffset;
 
 
   const lengthLabelData = [

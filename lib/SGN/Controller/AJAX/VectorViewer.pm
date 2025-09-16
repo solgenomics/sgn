@@ -89,18 +89,24 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    print STDERR "RETRIEVING VECTOR... ".$c->stash->{vector_stock_id}."\n";
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
 	
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $vector_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vectorviewer_data', 'stock_property')->cvterm_id();
-
+    my $genbank_record_term = SGN::Model::Cvterm->get_cvterm_row($schema, 'GenbankRecord', 'stock_property');
+    my $genbank_record_id;
+    if ($genbank_record_term) {
+	$genbank_record_id = $genbank_record_term->cvterm_id();
+    }
     if (! $c->user()) {
 	$c->stash->{rest} = { error => 'You need to be logged in to view vector data.' };
 	return;
     }
 
+    my $error;
     my $row = $schema->resultset("Stock::Stockprop")->find(
 	{
 	    stock_id => $c->stash->{vector_stock_id},
@@ -108,6 +114,39 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
 	});
 
     if (! defined($row)) {
+	
+	# there is no vectorviewer_data, let's check if a Genbank record was uploaded
+	#
+	if ($genbank_record_id) {
+	    
+	    my $gb_row = $schema->resultset("Stock::Stockprop")->find(
+		{
+		    stock_id => $c->stash->{vector_stock_id},
+		    type_id => $genbank_record_id,
+		});
+
+	    if ($gb_row) { 
+		my $record = $gb_row->value();
+
+		if (! $record) {
+		    $error = "No vectorviewer data or genbank record.";
+		}
+		else { 
+		    my $vv = CXGN::VectorViewer->new();
+		    $vv->parse_genbank($record);
+		    
+		    my $return =  { feature_table => $vv->feature_table(), sequence => $vv->vector_sequence(), metadata => $vv->metadata() };
+		    
+		    print STDERR "RETURN VALUE = ".Dumper($return);
+		    
+		    $c->stash->{rest} = $return;
+		    return;
+		}
+		
+	    }
+	}
+
+	
 	$c->stash->{rest} = { error => 'The vector information you are trying to access does not exist.' };
 	return;
     }
@@ -157,6 +196,7 @@ sub import :Chained('vector') PathPart('import') Args(0) {
 	
 	if (! $format || $format eq "genbank") { 
 	    $vv = CXGN::VectorViewer->new();
+
 	    $parsed = $vv->parse_genbank($data);
 	    
 	}
