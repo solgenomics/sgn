@@ -184,6 +184,8 @@ sub parse {
         return \%parse_result;
     }
 
+
+
     for my $index (0..$#file_lines) {
         my $line = $file_lines[$index];
         my $line_number = $index + 2;
@@ -206,6 +208,13 @@ sub parse {
             return \%parse_result;
         }
 
+	if ($unit_col =~ /id/i) { # convert ids to names
+	    my $rs = $c->dbic_schema('Bio::Chado::Schema')->resultset( { stock_id => $unit_value });
+	    if ($rs) {
+		$unit_value = $rs->uniquename();
+	    }
+	}
+	
         $units_seen{$unit_value} = 1;
         $traits_seen{$trait} = 1;
 
