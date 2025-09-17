@@ -50,9 +50,9 @@ $source_seedlot->accession_stock_id($test_accession_stock_id1);
 $source_seedlot->organization_name('bti');
 $source_seedlot->population_name('test seedlot pop');
 $source_seedlot->breeding_program_id($seedlot_breeding_program_id);
-my $return = $source_seedlot->store();
+my $return2 = $source_seedlot->store();
 #print STDERR Dumper $return;
-my $source_seedlot_id = $return->{seedlot_id};
+my $source_seedlot_id = $return2->{seedlot_id};
 
 print STDERR "Creating transaction 1...\n";
 my $trans = CXGN::Stock::Seedlot::Transaction->new(
@@ -144,7 +144,7 @@ is($source_seedlot_after_trans3->breeding_program_id, $source_seedlot->breeding_
 
 my @transactions;
 foreach my $t (@{$source_seedlot_after_trans3->transactions()}) {
-    ok($t->timestamp, "check timestamps saved");
+    ok(_txn_ts($t), "check timestamps saved");
     ok($t->transaction_id, "check transcation ids");
     push @transactions, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
 }
@@ -188,7 +188,7 @@ is($dest_seedlot_after_trans3->breeding_program_id, $dest_seedlot->breeding_prog
 
 my @transactions2;
 foreach my $t (@{$dest_seedlot_after_trans3->transactions()}) {
-    ok($t->timestamp, "check timestamps saved");
+    ok(_txn_ts($t), "check timestamps saved");
     ok($t->transaction_id, "check transcation ids");
     push @transactions2, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
 }
@@ -263,7 +263,7 @@ is($source_seedlot_after_trans3_delete->breeding_program_id, $source_seedlot->br
 
 my @transactions3;
 foreach my $t (@{$source_seedlot_after_trans3_delete->transactions()}) {
-    ok($t->timestamp, "check timestamps saved");
+    ok(_txn_ts($t), "check timestamps saved");
     ok($t->transaction_id, "check transaction ids");
     push @transactions3, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
 }
@@ -303,7 +303,7 @@ is($dest_seedlot_after_trans3_delete->breeding_program_id, $dest_seedlot->breedi
 
 my @transactions4;
 foreach my $t (@{$dest_seedlot_after_trans3_delete->transactions()}) {
-    ok($t->timestamp, "check timestamps saved");
+    ok(_txn_ts($t), "check timestamps saved");
     ok($t->transaction_id, "check transaction ids");
     push @transactions4, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
 }
