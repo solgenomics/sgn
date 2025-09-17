@@ -147,11 +147,11 @@ sub store_relative_expression_data {
         if ($previous_expression_data_stockprop_rs->count == 1){
             $expression_data_string = $previous_expression_data_stockprop_rs->first->value();
             $expression_data_hash = decode_json $expression_data_string;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'relative_expression_values'} = $relative_expression_data;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'endogenous_control'} = $endogenous_control;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'notes'} = $notes;
-			$expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'uploaded_by'} = $operator_id;
-			$expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'relative_expression_values'} = $relative_expression_data;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'notes'} = $notes;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
 
             $updated_expression_data_string = encode_json $expression_data_hash;
             $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_string});

@@ -20,7 +20,7 @@ $vector_related_genes => undef
                 <th>Number of Insertions</th>
 % my @column_header = split ',',$vector_related_genes;
 % foreach my $column_header(@column_header) {
-                <th><%$column_header. " ".'(Relative Expression)'%></th>
+                <th><%$column_header. " ".'(Relative)'%></th>
 %}
             </tr>
         </thead>
