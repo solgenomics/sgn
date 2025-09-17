@@ -133,7 +133,7 @@ $editable_stock_props_definitions
                 <div class="container-fluid">
                     <b>Header:</b>
                     <br>
-                    The first row (header) should contain the following:
+                    The first row (header) must contain the <b>accession_name</b> and <b>species_name</b> columns. Additional information can be included by selecting optional column(s) (see below). :
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -143,7 +143,6 @@ $editable_stock_props_definitions
                                 <td>accession_name</td>
                                 <td>species_name</td>
                                 <td>population_name</td>
-                                <td>organization_name</td>
                                 <td>synonym</td>
 				<td>description</td>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
@@ -171,7 +170,6 @@ $editable_stock_props_definitions
                     <ul>
 		    <li>description - a free text description of the stock.</li>
                     <li>population_name (a population is a grouping of accessions. If the population already exists in the database, the accession will be added to it; otherwise, a new population will be created). Multiple populations can be specified, using the pipe symbol (|) as the separator (for example, pop1|pop2|pop3)</li>
-                    <li>organization_name (the name(s) of the organization(s) which use this accession e.g. NARO,IITA)</li>
                     <li>synonym (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. e.g. accession_synonym1,accession_synonym001)</li>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
 %    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
