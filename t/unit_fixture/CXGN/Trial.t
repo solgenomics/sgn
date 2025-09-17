@@ -1020,24 +1020,28 @@ my $still_there = $f->bcs_schema->resultset('Project::Project')->find({ project_
 ok(!defined $still_there, "check that trial project row was deleted");
 
 my ($threw, $deleted_trial, $name) = (0);
+
+
 eval {
     $deleted_trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema, trial_id => $trial_id });
     $name = $deleted_trial->get_name();
-    1;
-} or do { $threw = 1; };
 
-ok(
-    $threw
-    || !$deleted_trial
-    || !$deleted_trial->can('trial_id') || !$deleted_trial->trial_id
-    || !defined $name,
-    "cannot construct or access a deleted trial"
-) or do {
-    require Data::Dumper;
-    diag "Constructor returned trial_id=" . (
-        ($deleted_trial && $deleted_trial->can('trial_id')) ? ($deleted_trial->trial_id // 'undef') : 'no method'
-    ) . ", name=" . (defined $name ? $name : 'undef');
 };
+
+ok($@, "Deletion was successful!");
+
+# ok(
+#     $threw
+#     || !$deleted_trial
+#     || !$deleted_trial->can('trial_id') || !$deleted_trial->trial_id
+#     || !defined $name,
+#     "cannot construct or access a deleted trial"
+# ) or do {
+#     require Data::Dumper;
+#     diag "Constructor returned trial_id=" . (
+#         ($deleted_trial && $deleted_trial->can('trial_id')) ? ($deleted_trial->trial_id // 'undef') : 'no method'
+#     ) . ", name=" . (defined $name ? $name : 'undef');
+# };
 
 $f->clean_up_db();
 
