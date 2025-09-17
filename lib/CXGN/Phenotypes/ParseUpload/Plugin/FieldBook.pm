@@ -210,9 +210,11 @@ sub parse {
 
 
         if ($unit_col =~ /id/i) { # convert ids to names
-            my $rs = $c->dbic_schema('Bio::Chado::Schema')->resultset( { stock_id => $unit_value });
-            if ($rs) {
-            $unit_value = $rs->uniquename();
+            my $row = $schema->resultset("Stock::Stock")->find({ stock_id => $unit_value });
+            if ($row) {
+                $unit_value = $row->uniquename();
+            } else {
+                $parse_result{'error'} = "Error: stock id $unit_value does not exist in the database."
             }
         }
 
