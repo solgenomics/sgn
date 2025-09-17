@@ -1016,15 +1016,16 @@ print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();
 print STDERR "Done.\n";
 
-my $deleted_trial;
+my $still_there = $f->bcs_schema->resultset('Project::Project')->find({ project_id => $trial_id });
+ok(!$still_there, "check that trial project row was deleted");
 
-eval { $deleted_trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema, trial_id => $trial_id }); };
-my $err = $@ // '';
-diag "Delete check error: $err" if $err;
-# Pass if either an appropriate error was thrown OR the object is absent/has no id
-ok( ($err && $err =~ qr/(?:The\s+trial\s+\Q$trial_id\E\s+does\s+not\s+exist|does\s+not\s+exist|deleted)/i)
-    || (!$deleted_trial || !$deleted_trial->trial_id),
-   "check that trial was deleted");
+my $err = '';
+eval {
+    my $deleted_trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema, trial_id => $trial_id });
+    $deleted_trial->get_name();
+    1;
+} or do { $err = $@ // '' };
+ok($err, "trial API errors when accessing a deleted trial") or diag "Expected an error after deletion but none was thrown.";
 
 $f->clean_up_db();
 
