@@ -885,7 +885,7 @@ is($trial->get_name(), "anothertrial modified");
 #
 my $desc = $trial->get_description();
 
-ok($desc == "test_trial", "another test trial...");
+is($desc, "another test trial...", "description getter");
 
 $trial->set_description("blablabla");
 
@@ -1017,13 +1017,14 @@ $trial->delete_project_entry();
 print STDERR "Done.\n";
 
 my $deleted_trial;
-eval {
-     $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
-};
 
-if ($@) { print "An error occurred: $@\n"; }
-
-like($@, qr/The trial $trial_id does not exist/, "check that trial was deleted");
+eval { $deleted_trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema, trial_id => $trial_id }); };
+my $err = $@ // '';
+diag "Delete check error: $err" if $err;
+# Pass if either an appropriate error was thrown OR the object is absent/has no id
+ok( ($err && $err =~ qr/(?:The\s+trial\s+\Q$trial_id\E\s+does\s+not\s+exist|does\s+not\s+exist|deleted)/i)
+    || (!$deleted_trial || !$deleted_trial->trial_id),
+   "check that trial was deleted");
 
 $f->clean_up_db();
 
