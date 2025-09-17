@@ -151,8 +151,8 @@ sub parse {
     # Define possible unit headers for each data level
     my %unit_headers = (
         plots    => [qw(plot_id plot_name ObservationUnitDbId ObservationUnitName)],
-        plants   => [qw(plant_name ObservationUnitName)],
-        subplots => [qw(subplot_name ObservationUnitName)],
+        plants   => [qw(plant_id plant_name ObservationUnitDbId ObservationUnitName)],
+        subplots => [qw(subplot_id subplot_name ObservationUnitDbId ObservationUnitName)],
     );
 
     my $header_column_number = 0;
@@ -208,13 +208,14 @@ sub parse {
             return \%parse_result;
         }
 
-	if ($unit_col =~ /id/i) { # convert ids to names
-	    my $rs = $c->dbic_schema('Bio::Chado::Schema')->resultset( { stock_id => $unit_value });
-	    if ($rs) {
-		$unit_value = $rs->uniquename();
-	    }
-	}
-	
+
+        if ($unit_col =~ /id/i) { # convert ids to names
+            my $rs = $c->dbic_schema('Bio::Chado::Schema')->resultset( { stock_id => $unit_value });
+            if ($rs) {
+            $unit_value = $rs->uniquename();
+            }
+        }
+
         $units_seen{$unit_value} = 1;
         $traits_seen{$trait} = 1;
 
