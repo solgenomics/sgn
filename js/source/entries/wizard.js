@@ -5,6 +5,7 @@ import { WizardDownloads } from "../modules/wizard-downloads.js";
 
 const initialtypes = [
     "accessions",
+    "accessions_ids",
     "organisms",
     "breeding_programs",
     "genotyping_protocols",
@@ -21,6 +22,7 @@ const initialtypes = [
 
 const types = {
     "accessions": "Accessions",
+    "accessions_ids": "Accessions Ids",
     "organisms": "Organisms",
     "breeding_programs": "Breeding Programs",
     "genotyping_protocols": "Genotyping Protocols",
@@ -41,6 +43,7 @@ const types = {
 function makeURL(target, id) {
     switch (target) {
         case "accessions":
+        case "accessions_ids":
         case "plants":
         case "plots":
         case "tissue_sample":
