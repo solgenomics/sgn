@@ -538,13 +538,13 @@ if (defined $image_id) {
 $resp = $ua->put("http://localhost:3010/brapi/v2/images/$image_id", Content => $data);
 $response = decode_json $resp->{_content};
 #print STDERR "\n\n" . Dumper$response;
-is_deeply($response->{result}->{observationUnitDbId} , '38843');
-my $image_timestamp = $response->{result}->{imageTimeStamp} ;
+is_deeply($response->{result}->{data}->[0]->{observationUnitDbId} , '38843');
+my $image_timestamp = $response->{result}->{data}->[0]->{imageTimeStamp} ;
 
 $mech->get_ok('http://localhost:3010/brapi/v2/images');
 $response = decode_json $mech->content;
 #print STDERR "\n\n" . Dumper$response;
-is_deeply($response, {'result' => {'data' => [{'descriptiveOntologyTerms' => [],'imageWidth' => undef,'imageLocation' => undef,'imageFileName' => 'image_0AA0231.jpg','imageFileSize' => undef,'imageURL' => 'localhost/data/images/image_files/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/medium.jpg','description' => 'picture of a tomato','copyright' => 'janedoe '.DateTime->now->year,'imageDbId' => "$image_id",'imageTimeStamp' => $image_timestamp,'mimeType' => 'image/jpeg','additionalInfo' => {'observationLevel' => 'accession','tags' => [],'observationUnitName' => 'test_accession4'},'imageHeight' => undef,'observationUnitDbId' => '38843','observationDbIds' => [],'imageName' => 'Tomato Image-x1','externalReferences' => []}]},'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Images','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Image search result constructed'}],'pagination' => {'currentPage' => 0,'totalCount' => 1,'totalPages' => 1,'pageSize' => 10}}} );
+is_deeply($response, {'result' => {'data' => [{'descriptiveOntologyTerms' => [],'imageWidth' => undef,'imageLocation' => undef,'imageFileName' => 'image_0AA0231.jpg','imageFileSize' => undef,'imageURL' => 'http://localhost:3010/data/images/image_files/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/medium.jpg','description' => 'picture of a tomato','copyright' => 'janedoe '.DateTime->now->year,'imageDbId' => "$image_id",'imageTimeStamp' => $image_timestamp,'mimeType' => 'image/jpeg','additionalInfo' => {'observationLevel' => 'accession','tags' => [],'observationUnitName' => 'test_accession4'},'imageHeight' => undef,'observationUnitDbId' => '38843','observationDbIds' => [],'imageName' => 'Tomato Image-x1','externalReferences' => []}]},'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Images','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Image search result constructed'}],'pagination' => {'currentPage' => 0,'totalCount' => 1,'totalPages' => 1,'pageSize' => 10}}} );
 
 ####### ObsverationUnits
 # Test OU plant creation

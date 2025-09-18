@@ -2182,7 +2182,7 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
                         "type"=> "Point",
                         "coordinates"=> [
                             
-                            $coords->{WGS84_x}, $coords->{WGS84_y},
+                            0.0 + $coords->{WGS84_x}, 0.0 + $coords->{WGS84_y},
                             
                         ]
                     },
