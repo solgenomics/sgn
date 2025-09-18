@@ -4,6 +4,7 @@ $stock_id
 $stock_uniquename => undef
 $stock_type => undef
 $vector_related_genes => undef
+$vector_analyzed_tissue_types => undef
 </%args>
 
 
@@ -13,10 +14,15 @@ $vector_related_genes => undef
 <br/>
 
 <form class="form-horizontal" role="form" >
-    <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
-        <div>
-            <label for="summary_start_date">Tissue Type: </label>
-            <input type="text" id="vector_analyzed_tissue_types" title="analyzed_tissue_types" />
+    <div style="display: flex; align-items: center; justify-content: center, gap: 20px;">
+        <label class="col-sm-2" for="analyzed_tissue_type">Tissue Type: </label>
+        <div class="col-sm-2">
+            <select class="form-control" id="analyzed_tissue_types_select">
+% my @tissue_types = split ',',$vector_analyzed_tissue_types;
+% foreach my $tissue_type(@tissue_types) {
+                <option value="<%$tissue_type%>"><%$tissue_type%></option>
+%}
+            </select>
         </div>
     </div>
 </form>
@@ -51,11 +57,16 @@ $vector_related_genes => undef
 
 jQuery(document).ready(function(){
 
+    let selected_tissue_type = jQuery('#analyzed_tissue_types_select').val();
+
     const transgenic_line_details_table = jQuery('#vector_transgenic_line_details_table').DataTable({
         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/vector_transgenic_line_details',
         'autoWidth': false,
         'ordering': false,
     });
+
+
+
 });
 
 

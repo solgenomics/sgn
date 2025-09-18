@@ -329,6 +329,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         is_a_transgenic_line => $is_a_transgenic_line,
         is_in_trial => $is_in_trial,
         vector_related_genes => $vector_related_genes,
+        vector_analyzed_tissue_types => $vector_analyzed_tissue_types,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),

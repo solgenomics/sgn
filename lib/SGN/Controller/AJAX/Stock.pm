@@ -2725,7 +2725,7 @@ sub get_vector_transgenic_line_details:Chained('/stock/get_stock') PathPart('dat
                 my $tissue_data = $expression_info->{$tissue};
                 foreach my $timestamp (keys %$tissue_data) {
                     my $gene_relative_expression_value;
-                    my $gene_relative_expression = $tissue_data->{$timestamp}->{'relative_expression_data'};
+                    my $gene_relative_expression = $tissue_data->{$timestamp}->{'relative_expression_data'}->{'relative_expression_values'};
                     print STDERR "EXPRESSION VALUES =".Dumper($gene_relative_expression)."\n";
                     foreach my $gene (@gene_names) {
                         $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
