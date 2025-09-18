@@ -258,7 +258,7 @@ export function retrieveVector(id) {
     alert('Retrieving vector '+id);
     jQuery.ajax({
 	url: '/vectorviewer/' + id + '/retrieve',
-    }).then(function(r) { alert(JSON.stringify(r)); table_data = r.data; updateVector(table_data, []); }, function(r) { alert('A very severe error occurred! '+JSON.stringify(r)); } );
+    }).then(function(r) { alert(JSON.stringify(r)); data = r.data; updateVector(data, []); }, function(r) { alert('A very severe error occurred! '+JSON.stringify(r)); } );
     
 }
 
