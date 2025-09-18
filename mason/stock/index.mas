@@ -222,8 +222,8 @@ if ($person_id && ($submitter || $curator || $sequencer)) { $released_variety_li
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <& /util/import_javascript.mas,
-   classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min", "jquery.dataTables" ],
-  entries => ["sequenced_accessions", "vectorViewer" ]
+   classes => ["bootstrap_min", "d3.d3v4Min", "jquery", "jqueryui", "jquery.dataTables-buttons-min", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "jquery.dataTables" ],
+  entries => ["sequenced_accessions"  ]
 &>
 
 <script language="javascript">
