@@ -39,7 +39,7 @@ my $expected_response = {
                         'fresh root weight|CO_334:0000012' => '15.37',
                         'accession_id' => 38926,
                         'plot_name' => 'KASESE_TP2013_1000',
-                        # 'full_management_regime' => '', # don't know why, but these keys gets deleted.
+                        # 'full_management_regime' => '', # don't know why, but these keys get deleted.
                         # 'brief_management_regime' => ''
                       },
           'reps' => {

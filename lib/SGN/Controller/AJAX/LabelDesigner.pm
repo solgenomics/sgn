@@ -810,21 +810,6 @@ sub get_trial_design {
                 my %detail_hash;
                 @detail_hash{@keys} = @{$outer_array[$i]};
 
-                # my @applied_treatments;
-                # foreach my $key (keys %detail_hash) { #TODO: figure out what to do with this
-                #     if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
-                #         my $treatment = $key;
-                #         $treatment =~ s/ManagementFactor://;
-                #         $treatment =~ s/$trial_name//;
-                #         $treatment =~ s/^_//;
-                #         push @applied_treatments, $treatment;
-                #         delete($detail_hash{$key});
-                #     }
-                #     elsif ( $key =~ /ManagementFactor/ ) {
-                #         delete($detail_hash{$key});
-                #     }
-                # }
-
                 $detail_hash{'brief_management_regime'} = _format_management_regime($trial_management_regime);
                 $detail_hash{'full_management_regime'} = $trial_management_regime ? encode_json($trial_management_regime) : '';
                 $detail_hash{'entry_number'} = $entry_numbers ? $entry_numbers->{$detail_hash{accession_id}} : undef;

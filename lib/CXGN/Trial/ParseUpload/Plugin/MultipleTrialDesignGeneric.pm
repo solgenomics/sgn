@@ -77,7 +77,6 @@ sub _validate_with_plugin {
     my $parsed_values = $parsed->{'values'};
     my $treatments = $parsed->{'additional_columns'};
 
-    # treatments as additional columns is deprecated, and those columns are ignored. 
     my $trait_validator = CXGN::List::Validate->new();
     
     my $validate = $trait_validator->validate($schema, "traits", $treatments);
