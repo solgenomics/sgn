@@ -1053,6 +1053,79 @@ print STDERR "Pheno for trait 70773 after data collector: ".Dumper(\@pheno_for_t
 print STDERR "EXPECTED: ".Dumper(\@pheno_for_trait_check);
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload 3' );
 
+# Test parsing and storing a fieldbook plot phenotype file with stock id
+
+my $parser = CXGN::Phenotypes::ParseUpload->new();
+my $filename = "t/data/fieldbook/fieldbook_phenotype_plot_id_file.csv";
+
+my $validate_file = $parser->validate('field book', $filename, 1, 'plots', $f->bcs_schema);
+ok($validate_file == 1, "Check if parse validate works for plot fieldbook file");
+
+my $parsed_file = $parser->parse('field book', $filename, 1, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse works for plot fieldbook file");
+
+# Debug
+print STDERR Dumper $parsed_file;
+
+# Expected structure after parsing
+is_deeply(
+    $parsed_file,
+    {
+        'data' => {
+            'test_trial21' => {
+                'abscisic acid content of leaf ug/g|CO_334:0000047' => [
+                    ['100','','','']
+                ]
+            }
+        },
+        'variables' => [
+            'abscisic acid content of leaf ug/g|CO_334:0000047'
+        ],
+        'units' => [
+            'test_trial21'
+        ]
+    },
+    "Check fieldbook plot parse"
+);
+
+my %phenotype_metadata;
+$phenotype_metadata{'archived_file'}       = $filename;
+$phenotype_metadata{'archived_file_type'}  = "fieldbook file";
+$phenotype_metadata{'operator'}            = "janedoe";
+$phenotype_metadata{'date'}                = "2025-09-10";
+
+my %parsed_data = %{$parsed_file->{'data'}};
+my @units       = @{$parsed_file->{'units'}};
+my @traits      = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath          => $f->config->{basepath},
+    dbhost            => $f->config->{dbhost},
+    dbname            => $f->config->{dbname},
+    dbuser            => $f->config->{dbuser},
+    dbpass            => $f->config->{dbpass},
+    temp_file_nd_experiment_id => $f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+    bcs_schema        => $f->bcs_schema,
+    metadata_schema   => $f->metadata_schema,
+    phenome_schema    => $f->phenome_schema,
+    user_id           => 41,
+    stock_list        => \@units,
+    trait_list        => \@traits,
+    values_hash       => \%parsed_data,
+    has_timestamps    => 1,
+    overwrite_values  => 1,
+    remove_values     => 1,
+    metadata_hash     => \%phenotype_metadata,
+    composable_validation_check_name => $f->config->{composable_validation_check_name},
+);
+
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+print STDERR "STORE FIELDBOOK FILE TEST ERROR MESSAGES : ".Dumper $verified_error;
+ok(!$verified_error, "store phenotypes verify for fieldbook file test");
+
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store phenotypes from fieldbook file works");
+
 
 done_testing();
 
