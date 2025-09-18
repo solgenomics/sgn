@@ -18,13 +18,14 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'accession_name', 'vector_construct', 'batch_number'],
-        optional_columns => [ 'is_a_control', 'existing_accession' ],
+        optional_columns => [ 'is_a_control', 'existing_accession', 'number_of_insertions' ],
         column_aliases => {
             'accession_name' => ['accession name'],
             'vector_construct' => ['vector construct'],
             'batch_number' => ['batch number'],
             'is_a_control' => ['is a control'],
             'existing_accession' => ['existing accession'],
+            'number_of_insertions' => ['number of insertions'],
         }
     );
     my $parsed = $parser->parse();
@@ -93,13 +94,15 @@ sub _validate_with_plugin {
                         });
 
                         if (!$vector_construct_stock) {
-                            push @error_messages, "Previously stored accession: $accession_name is not linked to any vector construct in the database";
+                            push @error_messages, "Error retrieving vector construct for previously stored accession: $accession_name!";
                         } else {
                             my $stored_vector_construct = $vector_construct_stock->uniquename();
                             if ($stored_vector_construct ne $vector_construct) {
                                 push @error_messages, "Previously stored accession: $accession_name has vector construct: $stored_vector_construct, but the vector construct in the file is $vector_construct";
                             }
                         }
+                    } else {
+                        push @error_messages, "Previously stored accession: $accession_name is not linked to any vector construct in the database";
                     }
                 }
             }
@@ -158,7 +161,7 @@ sub _parse_with_plugin {
             $accession_type = 'new';
         }
 
-        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$accession_type}->{$row->{'accession_name'}}++;
+        $transgenic_data->{$row->{'batch_number'}}->{$row->{'vector_construct'}}->{$type}->{$accession_type}->{$row->{'accession_name'}}->{'number_of_insertions'} = $row->{'number_of_insertions'};
     }
 
     $self->_set_parsed_data($transgenic_data);
