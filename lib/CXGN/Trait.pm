@@ -218,7 +218,7 @@ has 'default_value' => (
 		if ($row) {
 			return $row->value();
 		}
-		return undef;
+		return;
 	}
 );
 
@@ -236,7 +236,7 @@ has 'minimum' => (
 		if ($row) {
 			return $row->value();
 		}
-		return undef;
+		return;
 	}
 );
 
@@ -254,7 +254,7 @@ has 'maximum' => (
 		if ($row) {
 			return $row->value();
 		}
-		return undef;
+		return;
 	}
 );
 
@@ -272,7 +272,7 @@ has 'categories' => (
 		if ($row) {
 			return $row->value();
 		}
-		return undef;
+		return;
 	}
 );
 
@@ -290,7 +290,7 @@ has 'category_details' => (
 		if ($row) {
 			return $row->value();
 		}
-		return undef;
+		return;
 	}
 );
 
@@ -308,7 +308,7 @@ has 'repeat_type' => (
 		if ($row) {
 			return $row->value();
 		}
-		return undef;
+		return;
 	}
 );
 

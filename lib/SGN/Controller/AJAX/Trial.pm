@@ -1238,6 +1238,78 @@ sub upload_trial_file_POST : Args(0) {
         $trial_activity_obj->trial_activities(\%trial_activity);
         $trial_activity_obj->parent_id($trial_id);
         my $activity_prop_id = $trial_activity_obj->store();
+
+        # save treatments if any
+        if ($parsed_data->{'treatment_design'}) {
+            my $temp_basedir = $c->config->{tempfiles_subdir};
+            my $site_basedir = getcwd();
+            if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+                mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+            }
+            my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+            my $phenostore_data_hash = {};
+            my %phenostore_stocks = ();
+            my %phenostore_treatments = ();
+
+            my $time = DateTime->now();
+            my $pheno_timestamp = $time->ymd()."_".$time->hms();
+
+            my $treatment_design = $parsed_data->{'treatment_design'};
+            foreach my $plot (keys(%{$treatment_design})) {
+                $phenostore_stocks{$plot} = 1;
+                foreach my $treatment (keys(%{$treatment_design->{$plot}})) {
+                    $phenostore_treatments{$treatment} = 1;
+                    $phenostore_data_hash->{$plot}->{$treatment} = [
+                        $treatment_design->{$plot}->{$treatment},
+                        $pheno_timestamp,
+                        $user_name,
+                        '',''
+                    ];
+                }
+            }
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+                basepath => $temp_basedir,
+                dbhost => $c->config->{dbhost},
+                dbuser => $c->config->{dbuser},
+                dbname => $c->config->{dbname},
+                dbpass => $c->config->{dbpass},
+                temp_file_nd_experiment_id => $tempfile,
+                bcs_schema => $chado_schema,
+                metadata_schema => $metadata_schema,
+                phenome_schema => $phenome_schema,
+                user_id => $user_id,
+                stock_list => [keys(%phenostore_stocks)],
+                trait_list => [keys(%phenostore_treatments)],
+                values_hash => $phenostore_data_hash,
+                metadata_hash =>{
+                    archived_file => 'none',
+                    archived_file_type => 'new trial upload with treatments',
+                    operator => $user_name,
+                    date => $pheno_timestamp
+                }
+            });
+
+            my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+            if ($verified_warning) {
+                warn $verified_warning;
+            }
+            if ($verified_error) {
+                print STDERR "$verified_error\n";
+                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $verified_error\n" };
+                return;
+            }
+
+            my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+            if ($stored_phenotype_error) {
+                print STDERR "$stored_phenotype_error\n";
+                $c->stash->{rest} = {error => "The trial was saved, but there was an issue applying treatments: $stored_phenotype_error\n" };
+                return;
+            }
+        }
     }
 
     #print STDERR "Check 5: ".localtime()."\n";

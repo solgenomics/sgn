@@ -8,6 +8,7 @@ use CXGN::List::Validate;
 use CXGN::List::Transform;
 use CXGN::Stock::Seedlot;
 use CXGN::Trial;
+use Data::Dumper;
 
 my @REQUIRED_COLUMNS = qw|stock_name plot_number block_number|;
 # stock_name can also be accession_name, cross_unique_id, or family_name
@@ -393,6 +394,7 @@ sub _parse_with_plugin {
     # Build trial design
     my %design;
     my %seen_entry_numbers;
+    my $treatment_design;
     foreach (@$data) {
         my $r = $_;
         my $row = $r->{'_row'};
@@ -453,16 +455,18 @@ sub _parse_with_plugin {
             $design{$row}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
         }
         foreach my $treatment (@{$treatments}) {
-            if (defined($row->{$treatment})) {
-                $design{'treatments'}->{$plot_name}->{$treatment} = [$row->{$treatment}];
+            if (defined($r->{$treatment})) {
+                $treatment_design->{$plot_name}->{$treatment} = $r->{$treatment};
             }
         }
     }
 
     my %parsed_data = (
         design => \%design,
-        entry_numbers => \%seen_entry_numbers
+        entry_numbers => \%seen_entry_numbers,
+        treatment_design => $treatment_design
     );
+
     $self->_set_parsed_data(\%parsed_data);
 
     return 1;

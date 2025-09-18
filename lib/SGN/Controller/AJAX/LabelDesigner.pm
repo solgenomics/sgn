@@ -390,7 +390,7 @@ __PACKAGE__->config(
        my $source_name = $c->req->param("source_name");
        my $design_json = $c->req->param("design_json");
        # decode json
-       my $json = new JSON;
+       my $json = JSON->new;
        #my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
        my $design_params = decode_json($design_json);
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
@@ -544,14 +544,14 @@ __PACKAGE__->config(
                                    # initialize barcode objs
                                    my $barcode_object = Barcode::Code128->new();
                                    my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
-                                   open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
-                                   binmode(PNG);
+                                   open(my $PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
+                                   binmode($PNG);
 
                                    $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
                                    $barcode_object->barcode($filled_value);
                                    my $barcode = $barcode_object->gd_image();
-                                   print PNG $barcode->png();
-                                   close(PNG);
+                                   print $PNG $barcode->png();
+                                   close($PNG);
 
                                     my $image = $pdf->image_png($png_location);
                                     my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
@@ -842,7 +842,7 @@ sub get_data {
         my $match = substr($data_level, 6);
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
         my @list_data = @{$list_data};
-        my $json = new JSON;
+        my $json = JSON->new;
         #my $identifier_object = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_data[0][1]);
 	my $identifier_object = decode_json($list_data[0][1]);
         my $records = $identifier_object->{'records'};
