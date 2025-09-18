@@ -1607,12 +1607,12 @@ sub upload_relative_expression_data_POST : Args(0) {
     if ($gene_info) {
         @vector_construct_genes = split(',',$gene_info);
     }
-    print STDERR "VECTOR CONSTRUCT GENES =".Dumper(\@vector_construct_genes)."\n";
+#    print STDERR "VECTOR CONSTRUCT GENES =".Dumper(\@vector_construct_genes)."\n";
     $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes);
 
     $parser->load_plugin('RelativeExpressionData');
     $parsed_data = $parser->parse();
-    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
+#    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
     if (!$parsed_data){
         my $return_error = '';
         my $parse_errors;
@@ -1633,8 +1633,8 @@ sub upload_relative_expression_data_POST : Args(0) {
         eval {
             foreach my $transformant_name (keys %$parsed_data) {
                 my $relative_expression_data = $parsed_data->{$transformant_name};
-                print STDERR "TRANSFORMANT NAME =".Dumper($transformant_name)."\n";
-                print STDERR "EXPRESSION INFO =".Dumper($relative_expression_data)."\n";
+#                print STDERR "TRANSFORMANT NAME =".Dumper($transformant_name)."\n";
+#                print STDERR "EXPRESSION INFO =".Dumper($relative_expression_data)."\n";
                 my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
                     chado_schema => $schema,
                     transformant_name => $transformant_name,

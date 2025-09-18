@@ -275,9 +275,11 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     }
 
     my $vector_related_genes;
+    my $vector_analyzed_tissue_types;
     if ($stock_type eq 'vector_construct') {
         my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$stock_id);
         $vector_related_genes = $vector_construct->Gene;
+        $vector_analyzed_tissue_types = $vector_construct->analyzed_tissue_types;
     }
 
     my $is_in_trial;

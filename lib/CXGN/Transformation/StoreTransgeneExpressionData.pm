@@ -140,7 +140,7 @@ sub store_relative_expression_data {
         my $expression_data_hash = {};
         my $updated_expression_data_string;
         my $analyzed_tissue_types_string;
-        my $analyzed_tissue_types_hash = {};
+        my @analyzed_tissue_types_array = ();
         my $updated_tissue_types_string;
 
         my $previous_expression_data_stockprop_rs = $transformant_stock->stockprops({type_id=>$expression_data_cvterm->cvterm_id});
@@ -159,7 +159,11 @@ sub store_relative_expression_data {
             print STDERR "More than one expression data stockprop found!\n";
             return;
         } else {
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'} = $relative_expression_data;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'relative_expression_values'} = $relative_expression_data;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'notes'} = $notes;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
+            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
             $expression_data_string = encode_json $expression_data_hash;
             $transformant_stock->create_stockprops({$expression_data_cvterm->name() => $expression_data_string});
         }
@@ -167,17 +171,19 @@ sub store_relative_expression_data {
         my $previous_analyzed_tissue_types_stockprop_rs = $vector_construct_stock->stockprops({type_id=>$analyzed_tissue_types_cvterm->cvterm_id});
         if ($previous_analyzed_tissue_types_stockprop_rs->count == 1){
             $analyzed_tissue_types_string = $previous_analyzed_tissue_types_stockprop_rs->first->value();
-            $analyzed_tissue_types_hash = decode_json $analyzed_tissue_types_string;
-            $analyzed_tissue_types_hash->{$tissue_type} = 1;
-            $updated_tissue_types_string = encode_json $analyzed_tissue_types_hash;
-            $previous_analyzed_tissue_types_stockprop_rs->first->update({value=>$updated_tissue_types_string});
-        } elsif ($previous_analyzed_tissue_types_stockprop_rs->count > 1) {
+            @analyzed_tissue_types_array = split ',',$analyzed_tissue_types_string;
+            if ($tissue_type ~~ @analyzed_tissue_types_array) {
+                exit 0;
+            } else {
+                push @analyzed_tissue_types_array, $tissue_type;
+                $updated_tissue_types_string = join("," , @analyzed_tissue_types_array);
+                $previous_analyzed_tissue_types_stockprop_rs->first->update({value=>$updated_tissue_types_string});
+            }
+		} elsif ($previous_analyzed_tissue_types_stockprop_rs->count > 1) {
             print STDERR "More than one analyzed tissue types stockprop found!\n";
             return;
         } else {
-            $analyzed_tissue_types_hash->{$tissue_type} = 1;
-            $analyzed_tissue_types_string = encode_json $analyzed_tissue_types_hash;
-            $vector_construct_stock->create_stockprops({$analyzed_tissue_types_cvterm->name() => $analyzed_tissue_types_string});
+            $vector_construct_stock->create_stockprops({$analyzed_tissue_types_cvterm->name() => $tissue_type});
         }
     };
 

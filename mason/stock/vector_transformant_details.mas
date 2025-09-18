@@ -12,6 +12,17 @@ $vector_related_genes => undef
 <br/>
 <br/>
 
+<form class="form-horizontal" role="form" >
+    <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+        <div>
+            <label for="summary_start_date">Tissue Type: </label>
+            <input type="text" id="vector_analyzed_tissue_types" title="analyzed_tissue_types" />
+        </div>
+    </div>
+</form>
+<br/>
+<br/>
+
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="vector_transgenic_line_details_table">
         <thead>
