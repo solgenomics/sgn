@@ -258,7 +258,7 @@ export function retrieveVector(id) {
     alert('Retrieving vector '+id);
     jQuery.ajax({
 	url: '/vectorviewer/' + id + '/retrieve',
-    }).then(function(r) { data = r; }, function(r) { alert('A very severe error occurred! '+JSON.stringify(r)); } );
+    }).then(function(r) { alert(JSON.stringify(r)); table_data = r.data; updateVector(table_data, []); }, function(r) { alert('A very severe error occurred! '+JSON.stringify(r)); } );
     
 }
 
@@ -266,7 +266,7 @@ export function retrieveVector(id) {
 
 
 // drawing / updating the vector as a function
-export function updateVector(data, re_sites) {
+export function updateVector(table_data, re_sites) {
     
     d3.selectAll("svg").selectAll("*").remove();
     data = [];
