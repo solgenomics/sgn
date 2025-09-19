@@ -2696,58 +2696,6 @@ sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datata
 }
 
 
-sub get_vector_transgenic_line_details:Chained('/stock/get_stock') PathPart('datatables/vector_transgenic_line_details') Args(0){
-    my $self = shift;
-    my $c = shift;
-    my $stock_id = $c->stash->{stock_row}->stock_id();
-
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
-
-    my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$stock_id);
-    my $vector_related_genes = $vector_construct->Gene;
-    my @gene_names = split ',',$vector_related_genes;
-
-    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $related_stocks->get_vector_related_accessions();
-    my @transgenic_lines;
-
-    my @expression_array;
-    foreach my $r (@$result){
-        my @row = ();
-        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions, $expression_data_string) = @$r;
-        @row = (qq{<a href = "/stock/$transformant_id/view">$transformant_name</a>}, $number_of_insertions);
-        if ($expression_data_string) {
-            my $expression_info = decode_json $expression_data_string;
-            print STDERR "EXPRESSION INFO =".Dumper($expression_info)."\n";
-            foreach my $tissue (keys %$expression_info) {
-                my @expression_values = ();
-                my $tissue_data = $expression_info->{$tissue};
-                foreach my $timestamp (keys %$tissue_data) {
-                    my $gene_relative_expression_value;
-                    my $gene_relative_expression = $tissue_data->{$timestamp}->{'relative_expression_data'}->{'relative_expression_values'};
-                    print STDERR "EXPRESSION VALUES =".Dumper($gene_relative_expression)."\n";
-                    foreach my $gene (@gene_names) {
-                        $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
-                        print STDERR "EACH VALUE =".Dumper($gene_relative_expression_value)."\n";
-                        push @expression_values, $gene_relative_expression_value;
-                    }
-                }
-                push @row, @expression_values;
-            }
-        } else {
-            foreach my $gene (@gene_names) {
-                my $empty_value = '';
-                push @row, $empty_value;
-            }
-        }
-        push @transgenic_lines, \@row;
-    }
-    print STDERR "TRANSGENIC LINES =".Dumper(\@transgenic_lines)."\n";
-    $c->stash->{rest}={data=>\@transgenic_lines};
-}
-
-
 =head2 set_display_image
 
 Usage: /stock/set_display_image

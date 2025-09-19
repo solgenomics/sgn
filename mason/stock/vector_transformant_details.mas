@@ -57,15 +57,17 @@ $vector_analyzed_tissue_types => undef
 
 jQuery(document).ready(function(){
 
-    let selected_tissue_type = jQuery('#analyzed_tissue_types_select').val();
-
     const transgenic_line_details_table = jQuery('#vector_transgenic_line_details_table').DataTable({
-        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/vector_transgenic_line_details',
         'autoWidth': false,
         'ordering': false,
+        'destroy': true,
+        'ajax': { 'url':  '/ajax/transformation/vector_transgenic_line_details',
+            'data': function(d) {
+                d.stock_id = "<%$stock_id%>";
+                d.selected_tissue_type = jQuery('#analyzed_tissue_types_select').val();
+            }
+        }
     });
-
-
 
 });
 
