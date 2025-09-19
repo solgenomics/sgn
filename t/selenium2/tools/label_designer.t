@@ -6,6 +6,8 @@ use SGN::Test::Fixture;
 use Selenium::Remote::WDKeys 'KEYS';
 use Data::Dumper;
 
+use strict;
+
 my $f = SGN::Test::Fixture->new();
 
 my $t = SGN::Test::WWW::WebDriver->new();
