@@ -7,16 +7,10 @@ $vector_related_genes => undef
 $vector_analyzed_tissue_types => undef
 </%args>
 
-
-
-<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_relative_expression_data_link">Upload Relative Expression Data</button>
-<br/>
-<br/>
-
 <form class="form-horizontal" role="form" >
     <div style="display: flex; align-items: center; justify-content: center, gap: 20px;">
-        <label class="col-sm-2" for="analyzed_tissue_type">Tissue Type: </label>
-        <div class="col-sm-2">
+        <label class="col-sm-3" for="analyzed_tissue_type">Assayed Tissue Type: </label>
+        <div class="col-sm-3">
             <select class="form-control" id="analyzed_tissue_types_select">
 % my @tissue_types = split ',',$vector_analyzed_tissue_types;
 % foreach my $tissue_type(@tissue_types) {
@@ -83,7 +77,6 @@ jQuery(document).ready(function(){
             }
         });
 
-        transgenic_line_details_table.clear().draw();
     }
 
 });
