@@ -228,7 +228,37 @@ sub get_stock_entry_summary {
 
 =cut
 
-sub remove_treatment {
+sub remove_treatment { #TODO REFACTOR
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $treatment_id =shift;
+
+    my $trial_id = $self->get_trial_id();
+
+    my $treatment_rs = $schema->resultset('Project::Project')->find({ project_id => $treatment_id });
+    if (!$treatment_rs) {
+        return { error => "Treatment not found" };
+    }
+
+    eval {
+        $treatment_rs->delete();
+    };
+
+    return { success => 1 };
+}
+
+=head2 remove_treatment_project
+
+ Usage:        my $trial_object->remove_treatment_project($treatment_id);
+ Desc:         removes the selected treatment from this trial
+ Ret:
+ Args:         $treatment_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub remove_treatment_project {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $treatment_id =shift;

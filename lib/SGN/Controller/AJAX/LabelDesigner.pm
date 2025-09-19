@@ -390,7 +390,7 @@ __PACKAGE__->config(
        my $source_name = $c->req->param("source_name");
        my $design_json = $c->req->param("design_json");
        # decode json
-       my $json = new JSON;
+       my $json = JSON->new;
        #my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
        my $design_params = decode_json($design_json);
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
@@ -544,14 +544,14 @@ __PACKAGE__->config(
                                    # initialize barcode objs
                                    my $barcode_object = Barcode::Code128->new();
                                    my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
-                                   open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
-                                   binmode(PNG);
+                                   open(my $PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
+                                   binmode($PNG);
 
                                    $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
                                    $barcode_object->barcode($filled_value);
                                    my $barcode = $barcode_object->gd_image();
-                                   print PNG $barcode->png();
-                                   close(PNG);
+                                   print $PNG $barcode->png();
+                                   close($PNG);
 
                                     my $image = $pdf->image_png($png_location);
                                     my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
@@ -577,14 +577,23 @@ __PACKAGE__->config(
                            }
                            else { #Text
 
-                                my $font = $pdf->corefont($element{'font'}); # Add a built-in font to the PDF
-                                # Add text to the page
-                                my $adjusted_size = $element{'size'} / $conversion_factor; # scale to 72 pts per inch
-                                $text->font($font, $adjusted_size);
-                                my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
-                                my $elementy = $elementy - ($height/4); # adjust for img position starting at bottom
-                                $text->translate($elementx, $elementy);
-                                $text->text_center($filled_value);
+                                my $font = $pdf->corefont($element{'font'});
+                                my $adjusted_size = $element{'size'} / $conversion_factor;
+                                my $height = $element{'height'} / $conversion_factor;
+                                my $line_spacing = $adjusted_size * 1.2; # padding between lines
+
+                                my @lines = split(/\n/, $filled_value); # Split multiline text
+
+                                # Adjust starting y-position to center the block vertically
+                                my $total_text_height = scalar(@lines) * $line_spacing;
+                                my $start_y = $elementy; 
+
+                                foreach my $line (@lines) {
+                                    $text->font($font, $adjusted_size);
+                                    $text->translate($elementx, $start_y);
+                                    $text->text_center($line);
+                                    $start_y -= $line_spacing;
+                                }
                            }
                        }
 
@@ -774,14 +783,16 @@ sub get_trial_design {
         my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
         my $entry_numbers = $trial->get_entry_numbers();
 
-        my $treatments = $trial->get_treatments();
-        my @treatment_ids = map { $_->[0] } @{$treatments};
+        my $trial_management_regime = $trial->get_management_regime();
+
+        # my $treatments = $trial->get_treatments();
+        # my @treatment_ids = map { $_->{trait_id} } @{$treatments};
         # print STDERR "treatment ids are @treatment_ids\n";
         my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
             schema => $schema,
             trial_id => $trial_id,
             data_level => $type,
-            treatment_project_ids => \@treatment_ids,
+            # treatment_ids => \@treatment_ids,
             selected_columns => $selected_columns{$type},
             selected_trait_ids => [],
             use_synonyms => 'false',
@@ -799,21 +810,8 @@ sub get_trial_design {
                 my %detail_hash;
                 @detail_hash{@keys} = @{$outer_array[$i]};
 
-                my @applied_treatments;
-                foreach my $key (keys %detail_hash) {
-                    if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
-                        my $treatment = $key;
-                        $treatment =~ s/ManagementFactor://;
-                        $treatment =~ s/$trial_name//;
-                        $treatment =~ s/^_//;
-                        push @applied_treatments, $treatment;
-                        delete($detail_hash{$key});
-                    }
-                    elsif ( $key =~ /ManagementFactor/ ) {
-                        delete($detail_hash{$key});
-                    }
-                }
-                $detail_hash{'management_factor'} = join(",", @applied_treatments);
+                $detail_hash{'brief_management_regime'} = _format_management_regime($trial_management_regime);
+                $detail_hash{'full_management_regime'} = $trial_management_regime ? encode_json($trial_management_regime) : '';
                 $detail_hash{'entry_number'} = $entry_numbers ? $entry_numbers->{$detail_hash{accession_id}} : undef;
                 $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
 
@@ -844,7 +842,7 @@ sub get_data {
         my $match = substr($data_level, 6);
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
         my @list_data = @{$list_data};
-        my $json = new JSON;
+        my $json = JSON->new;
         #my $identifier_object = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_data[0][1]);
 	my $identifier_object = decode_json($list_data[0][1]);
         my $records = $identifier_object->{'records'};
@@ -1092,6 +1090,25 @@ sub get_additional_list_data {
     }
 
     return \%fields;
+}
+
+sub _format_management_regime { #management regime is a list of hashes. This condenses it because it would be too large otherwise
+    my $management_regime = shift;
+
+    if (!$management_regime || $management_regime eq "") {
+        return "";
+    }
+
+    my @factors;
+
+    foreach my $factor (@{$management_regime}) {
+        my $factor_text = "";
+        $factor_text .= "Mgmt factor type: ".$factor->{type}."\n";
+        $factor_text .= "Description: ".$factor->{description}."\n";
+        $factor_text .= "Schedule: ".$factor->{schedule}."\n";
+        push @factors, $factor_text;
+    }
+    return join("\n", @factors);
 }
 
 #########

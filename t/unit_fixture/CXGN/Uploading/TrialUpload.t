@@ -22,8 +22,20 @@ use LWP::UserAgent;
 use JSON;
 use Spreadsheet::Read;
 use Text::CSV;
+use CXGN::Trait::Treatment;
 
 my $f = SGN::Test::Fixture->new();
+
+ok(my $test_treatment = CXGN::Trait::Treatment->new({
+	bcs_schema => $f->bcs_schema,
+	name => 'test treatment',
+	definition => 'A dummy treatment object to run fixture tests.',
+	format => 'numeric'
+}), 'create a test treatment');
+
+my $exp_treatment_root_term = 'Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000';
+
+ok($test_treatment->store($exp_treatment_root_term), 'store test treatment');
 
 for my $extension ("xls", "xlsx", "csv") {
 
@@ -1228,29 +1240,29 @@ for my $extension ("xls", "xlsx", "csv") {
 		'test_genotype_upload_coordinate_trial1,D,01,tomato,"Solanum lycopersicum",18DNA00001_D01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB Facility Identifier: NA"'
 	]);
 
+	#treatment name will be test treatment|EXPERIMENT_TREATMENT:0000002
 
 	#Upload trial with Treatments
-
-	my $file_name_with_managementfactors = "t/data/trial/trial_layout_example_with_management_factor.$extension";
+	my $file_name_with_treatment = "t/data/trial/trial_layout_example_with_treatment.$extension";
 
 	#Test archive upload file
 	my $uploader = CXGN::UploadFile->new({
-		tempfile         => $file_name_with_managementfactors,
+		tempfile         => $file_name_with_treatment,
 		subdirectory     => 'temp_trial_upload',
 		archive_path     => '/tmp',
-		archive_filename => "trial_layout_example_with_management_factor.$extension",
+		archive_filename => "trial_layout_example_with_treatment.$extension",
 		timestamp        => $timestamp,
 		user_id          => 41, #janedoe in fixture
 		user_role        => 'curator'
 	});
 
 	## Store uploaded temporary file in archive
-	my $management_factor_archived_filename_with_path = $uploader->archive();
-	my $md5_management_factor = $uploader->get_md5($management_factor_archived_filename_with_path);
-	ok($management_factor_archived_filename_with_path);
-	ok($md5_management_factor);
+	my $treatment_archived_filename_with_path = $uploader->archive();
+	my $md5_treatment = $uploader->get_md5($treatment_archived_filename_with_path);
+	ok($treatment_archived_filename_with_path);
+	ok($md5_treatment);
 
-	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $management_factor_archived_filename_with_path);
+	$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $treatment_archived_filename_with_path);
 	$parser->load_plugin('TrialGeneric');
 	$rtn = $parser->parse();
 	$parsed_data = $rtn->{'design'};
@@ -1259,7 +1271,7 @@ for my $extension ("xls", "xlsx", "csv") {
 
 	#print STDERR Dumper $parsed_data;
 
-	my $parsed_data_check_with_management_factor = {
+	my $parsed_data_check_with_treatment = {
 		'8'          => {
 			'plot_number'  => '7',
 			'col_number'   => '2',
@@ -1269,7 +1281,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'stock_name'   => 'test_accession4',
 			'row_number'   => '3',
 			'range_number' => '2',
-			'plot_name'    => 'trial_management_factor_plot_name7'
+			'plot_name'    => 'trial_treatment_plot_name7'
 		},
 		'6'          => {
 			'col_number'   => '2',
@@ -1280,7 +1292,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'stock_name'   => 'test_accession3',
 			'row_number'   => '1',
 			'range_number' => '2',
-			'plot_name'    => 'trial_management_factor_plot_name5'
+			'plot_name'    => 'trial_treatment_plot_name5'
 		},
 		'4'          => {
 			'block_number' => '1',
@@ -1288,7 +1300,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_number'  => '3',
 			'col_number'   => '1',
 			'range_number' => '1',
-			'plot_name'    => 'trial_management_factor_plot_name3',
+			'plot_name'    => 'trial_treatment_plot_name3',
 			'row_number'   => '3',
 			'stock_name'   => 'test_accession2',
 			'is_a_control' => 0
@@ -1297,7 +1309,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'stock_name'   => 'test_accession2',
 			'is_a_control' => 0,
 			'row_number'   => '4',
-			'plot_name'    => 'trial_management_factor_plot_name4',
+			'plot_name'    => 'trial_treatment_plot_name4',
 			'range_number' => '1',
 			'col_number'   => '1',
 			'plot_number'  => '4',
@@ -1311,7 +1323,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'col_number'   => '2',
 			'row_number'   => '4',
 			'range_number' => '2',
-			'plot_name'    => 'trial_management_factor_plot_name8',
+			'plot_name'    => 'trial_treatment_plot_name8',
 			'stock_name'   => 'test_accession4',
 			'is_a_control' => 0
 		},
@@ -1322,12 +1334,12 @@ for my $extension ("xls", "xlsx", "csv") {
 			'col_number'   => '1',
 			'is_a_control' => 0,
 			'stock_name'   => 'test_accession1',
-			'plot_name'    => 'trial_management_factor_plot_name1',
+			'plot_name'    => 'trial_treatment_plot_name1',
 			'range_number' => '1',
 			'row_number'   => '1'
 		},
 		'3'          => {
-			'plot_name'    => 'trial_management_factor_plot_name2',
+			'plot_name'    => 'trial_treatment_plot_name2',
 			'range_number' => '1',
 			'row_number'   => '2',
 			'stock_name'   => 'test_accession1',
@@ -1338,28 +1350,19 @@ for my $extension ("xls", "xlsx", "csv") {
 			'rep_number'   => '2'
 		},
 		'treatments' => {
-			'manage_factor2' => {
+			'test treatment|EXPERIMENT_TREATMENT:0000002' => {
 				'new_treatment_stocks' => [
-					'trial_management_factor_plot_name3',
-					'trial_management_factor_plot_name4',
-					'trial_management_factor_plot_name5'
-				]
-			},
-			'fert_factor1'   => {
-				'new_treatment_stocks' => [
-					'trial_management_factor_plot_name1',
-					'trial_management_factor_plot_name2',
-					'trial_management_factor_plot_name3',
-					'trial_management_factor_plot_name6',
-					'trial_management_factor_plot_name7',
-					'trial_management_factor_plot_name8'
+					'trial_treatment_plot_name1',
+					'trial_treatment_plot_name2',
+					'trial_treatment_plot_name3',
+					'trial_treatment_plot_name4'
 				]
 			}
 		},
 		'7'          => {
 			'row_number'   => '2',
 			'range_number' => '2',
-			'plot_name'    => 'trial_management_factor_plot_name6',
+			'plot_name'    => 'trial_treatment_plot_name6',
 			'stock_name'   => 'test_accession3',
 			'is_a_control' => 0,
 			'plot_number'  => '6',
@@ -1369,50 +1372,39 @@ for my $extension ("xls", "xlsx", "csv") {
 		}
 	};
 
-	is_deeply($parsed_data, $parsed_data_check_with_management_factor, 'check trial excel parse data');
+	is_deeply($parsed_data, $parsed_data_check_with_treatment, 'check trial excel parse data');
 
-	my $trial_create_with_management_factor = CXGN::Trial::TrialCreate
-		->new({
+	my $trial_create_with_treatment = CXGN::Trial::TrialCreate->new({
 		chado_schema      => $c->bcs_schema(),
 		dbh               => $c->dbh(),
 		trial_year        => "2016",
 		trial_description => "Trial Upload Test with Treatments",
 		trial_location    => "test_location",
-		trial_name        => "Trial_upload_test_with_management_factor",
+		trial_name        => "Trial_upload_test_with_treatment",
 		design_type       => "RCBD",
 		design            => $parsed_data,
 		program           => "test",
-		upload_trial_file => $management_factor_archived_filename_with_path,
+		upload_trial_file => $treatment_archived_filename_with_path,
 		operator          => "janedoe",
 		owner_id          => 41
 	});
 
-	my $save_with_management_factor = $trial_create_with_management_factor->save_trial();
+	my $save_with_treatment = $trial_create_with_treatment->save_trial();
 
-	ok($save_with_management_factor->{'trial_id'}, "check that trial_create worked with treatment");
-	my $project_name_with_management_factor = $c->bcs_schema()->resultset('Project::Project')->find({ project_id => $save_with_management_factor->{'trial_id'} })->name();
-	ok($project_name_with_management_factor == "Trial_upload_test_with_management_factor", "check that trial_create really worked");
+	ok($save_with_treatment->{'trial_id'}, "check that trial_create worked with treatment");
+	my $project_name_with_treatment = $c->bcs_schema()->resultset('Project::Project')->find({ project_id => $save_with_treatment->{'trial_id'} })->name();
+	ok($project_name_with_treatment == "Trial_upload_test_with_treatment", "check that trial_create really worked");
 
-	my $trial_with_management_factor = CXGN::Trial->new({ bcs_schema => $c->bcs_schema, trial_id => $save_with_management_factor->{'trial_id'} });
-	my $management_factors = $trial_with_management_factor->get_treatments();
-	#print STDERR Dumper $management_factors;
-	is(scalar(@$management_factors), 2);
+	# my $trial_with_treatment = CXGN::Trial->new({ bcs_schema => $c->bcs_schema, trial_id => $save_with_treatment->{'trial_id'} });
+	# my $treatments = $trial_with_treatment->get_treatments();
+	# is(scalar(@$treatments), 1);
 
-	my $trial_management_factor1 = CXGN::Trial->new({ bcs_schema => $c->bcs_schema, trial_id => $management_factors->[0]->[0] });
-	my $management_factor_name1 = $trial_management_factor1->name();
-	#print STDERR Dumper $management_factor_name1;
-	is($management_factor_name1, "Trial_upload_test_with_management_factor_fert_factor1");
-	my $management_factor_plots1 = $trial_management_factor1->get_plots();
-	#print STDERR Dumper $management_factor_plots1;
-	is(scalar(@$management_factor_plots1), 6);
-
-	my $trial_management_factor2 = CXGN::Trial->new({ bcs_schema => $c->bcs_schema, trial_id => $management_factors->[1]->[0] });
-	my $management_factor_name2 = $trial_management_factor2->name();
-	#print STDERR Dumper $management_factor_name2;
-	is($management_factor_name2, "Trial_upload_test_with_management_factor_manage_factor2");
-	my $management_factor_plots2 = $trial_management_factor2->get_plots();
-	#print STDERR Dumper $management_factor_plots2;
-	is(scalar(@$management_factor_plots2), 3);
+	# my $treatment_name1 = $treatments->[0]->{trait_name};
+	# is($treatment_name1, "test treatment|EXPERIMENT_TREATMENT:0000002");
+	# my $treatment_count1 = $treatments->[0]->{count};
+	# is($treatment_count1, 4);
+	# these tests don't work because treatments are stored separately after the trial design is stored. This functionality is tested elsewhere (in TrialCreate.t) and does not need to be tested here.
+	# Checking that the trial design contained the treatment info is sufficient. 
 
 	#test deleting genotyping project with genotyping plate
 	my $schema = $f->bcs_schema();

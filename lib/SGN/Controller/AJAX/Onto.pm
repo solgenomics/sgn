@@ -58,11 +58,12 @@ sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
   #print STDERR "Ids array for composing in AJAX Onto = @ids\n";
 
   my $new_trait_names = decode_json $c->req->param("new_trait_names");
+  my $term_type = $c->req->param("type") ? $c->req->param("type") : 'trait';
   #print STDERR Dumper $new_trait_names;
   my $new_terms;
   eval {
       my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
-      $new_terms = $onto->store_composed_term($new_trait_names);
+      $new_terms = $onto->store_composed_term($new_trait_names, $term_type);
   };
   if ($@) {
       $c->stash->{rest} = { error => "An error occurred saving the new trait details: $@" };
