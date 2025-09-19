@@ -29,8 +29,8 @@ $vector_analyzed_tissue_types => undef
 <br/>
 <br/>
 
-<div style="overflow:scroll">
-    <table class="table table-hover table-bordered" id="vector_transgenic_line_details_table">
+<div style="overflow:scroll" id="vector_transgenic_line_details_div">
+    <table class="table table-hover table-bordered display" id="vector_transgenic_line_details_table">
         <thead>
             <tr>
                 <th>Accession</th>
@@ -57,17 +57,34 @@ $vector_analyzed_tissue_types => undef
 
 jQuery(document).ready(function(){
 
-    const transgenic_line_details_table = jQuery('#vector_transgenic_line_details_table').DataTable({
-        'autoWidth': false,
-        'ordering': false,
-        'destroy': true,
-        'ajax': { 'url':  '/ajax/transformation/vector_transgenic_line_details',
-            'data': function(d) {
-                d.stock_id = "<%$stock_id%>";
-                d.selected_tissue_type = jQuery('#analyzed_tissue_types_select').val();
-            }
-        }
+    let stock_id = "<%$stock_id%>";
+    let tissue_type;
+
+    jQuery('#vector_transgenic_line_details_section_onswitch').click( function() {
+        tissue_type = jQuery('#analyzed_tissue_types_select').val();
+        display_vector_transgenic_line_details(stock_id, tissue_type);
     });
+
+    jQuery('#analyzed_tissue_types_select').change( function() {
+        tissue_type = jQuery('#analyzed_tissue_types_select').val();
+        display_vector_transgenic_line_details(stock_id, tissue_type);
+    });
+
+    function display_vector_transgenic_line_details(stock_id, tissue_type) {
+        var transgenic_line_details_table = jQuery('#vector_transgenic_line_details_table').DataTable({
+            'autoWidth': false,
+            'ordering': false,
+            'destroy': true,
+            'ajax': { 'url':  '/ajax/transformation/vector_transgenic_line_details',
+                'data': function(d) {
+                    d.stock_id = stock_id;
+                    d.selected_tissue_type = tissue_type;
+                }
+            }
+        });
+
+        transgenic_line_details_table.clear().draw();
+    }
 
 });
 
