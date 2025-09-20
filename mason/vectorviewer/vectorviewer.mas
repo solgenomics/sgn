@@ -88,6 +88,7 @@ $edit_privs
 <br />
 <br />
 
+<button id="add_feature_button">Add feature</button><br />
 <table id="vector_table" width="80%" class="display table table-hover table-striped">
 <thead><td>Name</td><td>Start Coord</td><td>End Coord</td><td>Color</td><td>Orientation</td></thead></table>
 <br />
@@ -96,8 +97,19 @@ $edit_privs
 
 <!-- Add a svg area, empty -->
 
-<table id="vector_table2" width="20%" class="display table table-hover table-striped">
+<button id="add_restriction_site_button">Add restriction site</button>
+
+<table id="re_sites_table" width="20%" class="display table table-hover table-striped">
 <thead><td>RE Site</td><td>Cut Coord</td></thead></table>
+</table>
+
+<table id="metadata_table" width="20%" class="display table table-hover table-striped">
+<thead><td>Vector Name</td><td>Vector length</td></thead>
+</table>
+
+<table id="sequence_table" width="80%" class="display table table-hover table-striped">
+<thead><td>sequence</td></thead>
+</table>
 
 <br />
 <br />
@@ -121,8 +133,37 @@ $edit_privs
 
 </div>
 
-<script>
+<div class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add a feature</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>
+	Name: <input type="text" id="feature_name">
+Start coord: <input type="text" id="feature_start_coord"></p>
+End coord: <input type="text" id="feature_end_coord">
+Color: <select>
+          <option>red</option>
+	  <option>blue</option>
+	  <option>green</option>
+	  <option>grey</option>
+	  </select>
+	  
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Add</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<script>
 
 jQuery(document).ready(function () {
 

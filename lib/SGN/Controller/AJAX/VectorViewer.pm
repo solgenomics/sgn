@@ -117,6 +117,8 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
 	
 	# there is no vectorviewer_data, let's check if a Genbank record was uploaded
 	#
+	print STDERR "NO vector data available, checking genbank record...\n";
+	
 	if ($genbank_record_id) {
 	    
 	    my $gb_row = $schema->resultset("Stock::Stockprop")->find(
@@ -125,17 +127,20 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
 		    type_id => $genbank_record_id,
 		});
 
-	    if ($gb_row) { 
+	    if ($gb_row) {
+
+		print STDERR "Genkrecord found...\n";
 		my $record = $gb_row->value();
 
 		if (! $record) {
 		    $error = "No vectorviewer data or genbank record.";
 		}
-		else { 
+		else {
+		    print STDERR "Parsing genbank record ($record)...\n";
 		    my $vv = CXGN::VectorViewer->new();
 		    $vv->parse_genbank($record);
-		    
-		    my $return =  { feature_table => $vv->feature_table(), sequence => $vv->vector_sequence(), metadata => $vv->metadata() };
+
+		    my $return =  { re_sites => $vv->re_sites(), features => $vv->features(), sequence => $vv->sequence(), metadata => $vv->metadata() };
 		    
 		    print STDERR "RETURN VALUE = ".Dumper($return);
 		    
@@ -205,9 +210,9 @@ sub import :Chained('vector') PathPart('import') Args(0) {
 	    return;
 	}
 	
-	my $re = $vv->restriction_analysis($data);
+	#my $re = $vv->restriction_analysis($data);
 	
-	$c->stash->{rest} = { sequence => $sequence, restriction_enzymes => $re, features => $parsed, metadata => $metadata };
+	$c->stash->{rest} = { sequence => $sequence, re_sites => $vv->re_sites(), features => $parsed, metadata => $metadata };
     }
     else { $c->stash->{rest} = { error => "You do not have the privileges to import vector data." };
 	   

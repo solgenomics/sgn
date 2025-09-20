@@ -12,15 +12,15 @@ For data input, a genbank record can be used using the parse_genbank() function.
 
 All data is stored in object properties, including:
 
-   feature_table: the features with columns name, start_coord, end_coord, direction
+   features: the features with columns name, start_coord, end_coord, direction
 
    restriction_table: restriction_enzyme_name, coord
 
-   vector_sequence: the full sequence of the vector
+   sequence: the full sequence of the vector
 
    vector_length: the length of the vector, in case sequence is not provided. Should match sequence length otherwise
 
-   vector_name: the name of the vector
+   name: the name of the vector
 
 
 =head1 AUTHOR
@@ -38,27 +38,33 @@ package CXGN::VectorViewer;
 
 use Moose;
 
+use Data::Dumper;
+use IO::String;
 use Bio::SeqIO;
 use Bio::Restriction::Analysis;
 
-has 'feature_table' => ( isa => 'ArrayRef',
+has 'features' => ( isa => 'Maybe[ArrayRef]',
 			 is => 'rw',
     );
 
-has 'restriction_table' => ( isa => 'ArrayRef',
+has 're_sites' => ( isa => 'Maybe[ArrayRef]',
 			     is => 'rw',
     );
 
-has 'vector_name' => ( isa => 'Str',
+has 'name' => ( isa => 'Maybe[Str]',
 			   is => 'rw',
     );
 
-has 'vector_sequence' => ( isa => 'Str',
+has 'sequence' => ( isa => 'Maybe[Str]',
 			   is => 'rw',
     );
 
 has 'vector_length' => (isa => 'Int',
 			is => 'rw',
+    );
+
+has 'metadata' => (isa => 'Maybe[HashRef]',
+		   is => 'rw',
     );
 
 
@@ -77,23 +83,30 @@ sub parse_genbank {
     my $self = shift;
     my $string = shift;
 
-    my $feature_table = [];
-
+    
+    my $features = [];
+    
     # get a string into $string somehow, with its format in $format, 
     # say from a web form.
-
+    
     my $format = "genbank";
 
-    my $stringfh = IO::String->new($string); 
-    open($stringfh, "<", $string) or die "Could not open data for reading: $!";
 
-    my $seqio = Bio::SeqIO-> new(-fh     => $stringfh,
-				 -format => $format,
-	);
+    my $stringfh = IO::String->new($string); 
+    
+    my $seqio = Bio::SeqIO -> new(
+	-fh     => $stringfh,
+	-format => $format, );
+
     
     my $s = $seqio->next_seq();
+
+    print STDERR "ID: ".$s->id();
+    print STDERR "SEQUENCE : ".$s->seq();
+    
     my @commands = ();
     my @features = $s -> get_SeqFeatures();
+    
     foreach my $f (@features) { 
 	my $dir = "F";
 	if ($f->strand() != 1) { $dir = "R"; }
@@ -102,16 +115,24 @@ sub parse_genbank {
 	    foreach my $tag ($f->all_tags()) { 
 		($name) = $f->each_tag_value("gene");
 	    }
-
-	    push @$feature_table, [ "FEATURE",  $name, $f->start(), $f->end(), $dir ];
+	    
+	    push @$features, [ $name, $f->start(), $f->end(), "red", $dir ];
 	}
 	else {
 	    print STDERR "IGNORING TAG: ".$f->primary_tag()."\n";
 	}
-
     }
-    $self->feature_table($feature_table);
-    $self->vector_sequence($s->seq());
+
+    print STDERR "ADDING VECTOR NAME ".$s->id()." and length ".length($s->seq())."\n";
+    
+    my $metadata = { 'name' => $s->id(), 'vector_length' => length($s->seq()) };
+
+    my @restriction_sites = $self->restriction_analysis("popular6bp", $s->seq());
+
+    $self->re_sites(\@restriction_sites);
+    $self->metadata($metadata);
+    $self->features($features);
+    $self->sequence($s->seq());
 }
 
 =head2 restriction_analysis
@@ -135,8 +156,11 @@ sub parse_genbank {
 sub restriction_analysis {
     my $self = shift;
     my $ra_type = shift;
+    my $seq = shift;
 
-    my $seq = Bio::Seq->new( -seq=>$self->get_sequence());
+    my @restriction_sites;
+    
+    my $seq = Bio::Seq->new( -seq => $seq, -alphabet => "dna");
     $seq->is_circular(1);
     if (!$seq->is_circular()) { die "It is not circular!"; }
     my $ra = Bio::Restriction::Analysis->new($seq);
@@ -159,13 +183,20 @@ sub restriction_analysis {
 		next();
 	    }
 	}
-		
+
+	my @coords;
 	my @fragments = $ra ->fragment_maps($c->name());
-	foreach my $f (@fragments) { 
-	    $self->add_command( "FEATURE",  $c->name(), $f->{start}, $f->{end}, "F", "gray");
-	}
+
+	print STDERR "FRAGMENTS FOR $enzyme: ".Dumper(\@fragments);
 	
+	for (my $i=0; $i < @fragments; $i++) {
+	    #push @restriction_sites, { name => $enzyme, cutCoord => $fragments[$i]->{start} };
+	    push @restriction_sites, [ $enzyme, $fragments[$i]->{start} ];
+	 }
+
+	print STDERR "RESTRICTION SITES: ".Dumper(@restriction_sites);
     }
+    return @restriction_sites;
 }
 
 
