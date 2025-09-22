@@ -139,11 +139,11 @@ sub store_relative_expression_data {
         my $expression_data_json;
         my $expression_data_hash = {};
         my $updated_expression_data_json;
-        my $assay_metadata_string;
+        my $assay_metadata_json;
         my @tissue_types_array = ();
-		my @assay_dates_assay = ();
+        my @assay_dates_array = ();
         my $updated_assay_metadata = {};
-		my $updated_assay_metadata_json;
+        my $updated_assay_metadata_json;
 
         my $previous_expression_data_stockprop_rs = $transformant_stock->stockprops({type_id=>$expression_data_cvterm->cvterm_id});
         if ($previous_expression_data_stockprop_rs->count == 1){
@@ -172,37 +172,37 @@ sub store_relative_expression_data {
 
         my $previous_assay_metadata_stockprop_rs = $vector_construct_stock->stockprops({type_id=>$assay_metadata_cvterm->cvterm_id});
         if ($previous_assay_metadata_stockprop_rs->count == 1){
-            $assay_metadata_string = $previous_assay_metadata_stockprop_rs->first->value();
-			$assay_metada_hash = decode_json $assay_metadata_string;
-			my $assay_tissue_types = $assay_metadata_hash->{'assay_tissue_types'};
-			@tissue_types_array = @$assay_tissue_types;
-			if ($tissue_type ~~ @tissue_types) {
-				exit 0;
-			} else {
-				push @tissue_types_array, $tissue_type;
-			}
+            $assay_metadata_json = $previous_assay_metadata_stockprop_rs->first->value();
+            my $assay_metadata_hash = decode_json $assay_metadata_json;
+            my $assay_tissue_types = $assay_metadata_hash->{'assay_tissue_types'};
+            @tissue_types_array = @$assay_tissue_types;
+            if ($tissue_type ~~ @tissue_types_array) {
+                exit 0;
+            } else {
+                push @tissue_types_array, $tissue_type;
+            }
 
-			my $assay_dates = $assay_metadata_hash->{'assay_dates'};
-			@assay_dates_array = @$assay_dates;
-			if ($assay_date ~~ @assay_dates_array) {
-				exit 0;
-			} else {
-				push @assay_dates_array, $assay_dates;
-			}
+            my $assay_dates = $assay_metadata_hash->{'assay_dates'};
+            @assay_dates_array = @$assay_dates;
+            if ($assay_date ~~ @assay_dates_array) {
+                exit 0;
+            } else {
+                push @assay_dates_array, $assay_dates;
+            }
 
-			$updated_assay_metadata->{'assay_tissue_types'} = \@tissue_type_array;
-			$updated_assay_metadata->{'assay_dates'} = \@assay_date_array;
-			$updated_assay_metadata_json = encode_json $updated_assay_metadata;
-			$previous_assay_metadata_stockprop_rs->first->update({value=>$updated_assay_metadata_json});
-		} elsif ($previous_assay_metadata_stockprop_rs->count > 1) {
+            $updated_assay_metadata->{'assay_tissue_types'} = \@tissue_types_array;
+            $updated_assay_metadata->{'assay_dates'} = \@assay_dates_array;
+            $updated_assay_metadata_json = encode_json $updated_assay_metadata;
+            $previous_assay_metadata_stockprop_rs->first->update({value=>$updated_assay_metadata_json});
+        } elsif ($previous_assay_metadata_stockprop_rs->count > 1) {
             print STDERR "More than one assay metadata stockprop found!\n";
             return;
         } else {
-			@tissue_types_array = ($tissue_type);
-			@assay_dates_array = ($assay_date);
-			$updated_assay_metadata->{'assay_tissue_types'} = \@tissue_type_array;
-			$updated_assay_metadata->{'assay_dates'} = \@assay_date_array;
-			$updated_assay_metadata_json = encode_json $updated_assay_metadata;
+            @tissue_types_array = ($tissue_type);
+            @assay_dates_array = ($assay_date);
+            $updated_assay_metadata->{'assay_tissue_types'} = \@tissue_types_array;
+            $updated_assay_metadata->{'assay_dates'} = \@assay_dates_array;
+            $updated_assay_metadata_json = encode_json $updated_assay_metadata;
 
             $vector_construct_stock->create_stockprops({$assay_metadata_cvterm->name() => $updated_assay_metadata_json});
         }
