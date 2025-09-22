@@ -158,49 +158,63 @@ sub store {
     my $new_treatment;
 
     my $coderef = sub {
-        $new_treatment_id = $schema->resultset("Cv::Cvterm")->create_with({
-            name => $name,
-            cv => 'experiment_treatment',
-            db => 'EXPERIMENT_TREATMENT',
-            dbxref => "$zeroes"."$accession_num"
-        })->cvterm_id();
+        eval {
+            $new_treatment_id = $schema->resultset("Cv::Cvterm")->create_with({
+                name => $name,
+                cv => 'experiment_treatment',
+                db => 'EXPERIMENT_TREATMENT',
+                dbxref => "$zeroes"."$accession_num"
+            })->cvterm_id();
 
-        if ($format eq "ontology") {
-            $schema->resultset("Cv::CvtermRelationship")->find_or_create({
-                object_id => $parent_id,
-                subject_id => $new_treatment_id,
-                type_id => $isa_id
-            });
-        } else {
-            $schema->resultset("Cv::CvtermRelationship")->find_or_create({
-                object_id => $parent_id,
-                subject_id => $new_treatment_id,
-                type_id => $variable_of_id
-            });
-        }
-
-        $new_treatment = $schema->resultset("Cv::Cvterm")->find({
-            cv_id => $experiment_treatment_cv_id,
-            cvterm_id => $new_treatment_id,
-            name => $name
-        });
-        $new_treatment->definition($definition);
-        $new_treatment->update();
-
-        foreach my $cvtermprop (keys(%cvtermprop_hash)) {
-            if (defined($cvtermprop_hash{$cvtermprop})) {
-                $schema->resultset("Cv::Cvtermprop")->create({
-                    cvterm_id => $new_treatment_id,
-                    type_id => $cvtermprop,
-                    value => $cvtermprop_hash{$cvtermprop},
-                    rank => 0
+            if ($format eq "ontology") {
+                $schema->resultset("Cv::CvtermRelationship")->find_or_create({
+                    object_id => $parent_id,
+                    subject_id => $new_treatment_id,
+                    type_id => $isa_id
+                });
+            } else {
+                $schema->resultset("Cv::CvtermRelationship")->find_or_create({
+                    object_id => $parent_id,
+                    subject_id => $new_treatment_id,
+                    type_id => $variable_of_id
                 });
             }
+
+            $new_treatment = $schema->resultset("Cv::Cvterm")->find({
+                cv_id => $experiment_treatment_cv_id,
+                cvterm_id => $new_treatment_id,
+                name => $name
+            });
+            $new_treatment->definition($definition);
+            $new_treatment->update();
+
+            foreach my $cvtermprop (keys(%cvtermprop_hash)) {
+                if (defined($cvtermprop_hash{$cvtermprop})) {
+                    $schema->resultset("Cv::Cvtermprop")->find_or_create({
+                        cvterm_id => $new_treatment_id,
+                        type_id => $cvtermprop,
+                        value => $cvtermprop_hash{$cvtermprop},
+                        rank => 0
+                    });
+                }
+            }
+        };
+        if ($@) {
+            $schema->txn_rollback();
+            die "An error occurred! $@";
+        } else {
+            $schema->txn_commit();
         }
     };
 
-    $schema->txn_do($coderef);
-
+    eval {
+        $schema->txn_do($coderef);
+    };
+    if ($@) {
+        die "An error occurred saving treatment: $@\n";
+    }
+    
+    $self->cvterm($new_treatment);
     $self->cvterm_id($new_treatment_id);
     $self->dbxref_id($new_treatment->dbxref_id);
 

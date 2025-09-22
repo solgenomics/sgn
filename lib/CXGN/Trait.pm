@@ -939,49 +939,63 @@ sub interactive_store {
     my $new_trait;
 
     my $coderef = sub {
-        $new_trait_id = $schema->resultset("Cv::Cvterm")->create_with({
-            name => $name,
-            cv => $trait_ontology,
-            db => $db_name,
-            dbxref => "$zeroes"."$accession_num"
-        })->cvterm_id();
+		eval {
+			$new_trait_id = $schema->resultset("Cv::Cvterm")->create_with({
+				name => $name,
+				cv => $trait_ontology,
+				db => $db_name,
+				dbxref => "$zeroes"."$accession_num"
+			})->cvterm_id();
 
-        if ($format eq "ontology") {
-            $schema->resultset("Cv::CvtermRelationship")->find_or_create({
-                object_id => $parent_id,
-                subject_id => $new_trait_id,
-                type_id => $isa_id
-            });
-        } else {
-            $schema->resultset("Cv::CvtermRelationship")->find_or_create({
-                object_id => $parent_id,
-                subject_id => $new_trait_id,
-                type_id => $variable_of_id
-            });
-        }
+			if ($format eq "ontology") {
+				$schema->resultset("Cv::CvtermRelationship")->find_or_create({
+					object_id => $parent_id,
+					subject_id => $new_trait_id,
+					type_id => $isa_id
+				});
+			} else {
+				$schema->resultset("Cv::CvtermRelationship")->find_or_create({
+					object_id => $parent_id,
+					subject_id => $new_trait_id,
+					type_id => $variable_of_id
+				});
+			}
 
-        $new_trait = $schema->resultset("Cv::Cvterm")->find({
-            cv_id => $trait_cv_id,
-            cvterm_id => $new_trait_id,
-            name => $name
-        });
-        $new_trait->definition($definition);
-        $new_trait->update();
+			$new_trait = $schema->resultset("Cv::Cvterm")->find({
+				cv_id => $trait_cv_id,
+				cvterm_id => $new_trait_id,
+				name => $name
+			});
+			$new_trait->definition($definition);
+			$new_trait->update();
 
-        foreach my $cvtermprop (keys(%cvtermprop_hash)) {
-            if (defined($cvtermprop_hash{$cvtermprop})) {
-                $schema->resultset("Cv::Cvtermprop")->create({
-                    cvterm_id => $new_trait_id,
-                    type_id => $cvtermprop,
-                    value => $cvtermprop_hash{$cvtermprop},
-                    rank => 0
-                });
-            }
-        }
+			foreach my $cvtermprop (keys(%cvtermprop_hash)) {
+				if (defined($cvtermprop_hash{$cvtermprop})) {
+					$schema->resultset("Cv::Cvtermprop")->find_or_create({
+						cvterm_id => $new_trait_id,
+						type_id => $cvtermprop,
+						value => $cvtermprop_hash{$cvtermprop},
+						rank => 0
+					});
+				}
+			}
+		};
+        if ($@) {
+			$schema->txn_rollback();
+			die "An error occurred! $@";
+		} else {
+			$schema->txn_commit();
+		}
     };
 
-    $schema->txn_do($coderef);
+    eval {
+        $schema->txn_do($coderef);
+    };
+    if ($@) {
+        die "An error occurred saving trait: $@\n";
+    }
 
+	$self->cvterm($new_trait);
 	$self->cvterm_id($new_trait_id);
 	$self->dbxref_id($new_trait->dbxref_id);
 
@@ -1039,7 +1053,7 @@ sub delete {
 
 	$schema->txn_do($coderef);
 
-	return;
+	return 1;
 }
 
 sub _fetch_synonyms {

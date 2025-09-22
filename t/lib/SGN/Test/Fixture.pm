@@ -321,7 +321,7 @@ sub clean_up_db {
 
     my $stats = $self->get_db_stats();
 
-    if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
+    if (! defined($self->dbstats_start())) { print STDERR "Can't clean up because dbstats were not run at the beginning of the test!\n"; }
 
     my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'cvtermprops', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images');
 
