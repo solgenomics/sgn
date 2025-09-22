@@ -77,7 +77,7 @@ export function init(vector_id) {
 	type: "string-utf8"
     }];
 
-    alert('formatting vector table');
+//    alert('formatting vector table');
     var myTable = jQuery('#vector_table').DataTable({
 	"sPaginationType": "full_numbers",
 	data: table_data,
@@ -113,7 +113,7 @@ export function init(vector_id) {
 	type: "num",
     }];
 
-    alert('formatting re sites table');
+    //alert('formatting re sites table');
     var myTable2 = jQuery('#re_sites_table').DataTable({
 	"sPaginationType": "full_numbers",
 	data: [ [ ] ],
@@ -140,7 +140,7 @@ export function init(vector_id) {
 	//]
     });
     
-    alert('done');
+    //alert('done');
       
     //If this isn't here, the dialog appears when we dont want it to
     jQuery("#saveDialog").dialog({
@@ -196,6 +196,10 @@ export function init(vector_id) {
 
     });
 
+
+    
+    
+    
     //alert('Retrieving vector '+vector_id);
     jQuery.ajax({
 	url: '/vectorviewer/' + vector_id + '/retrieve',
@@ -209,22 +213,74 @@ export function init(vector_id) {
 		alert('An error occurred! '+JSON.stringify(r));
 		
 	    } );
+
+    jQuery('#add_feature_data_button').click( function() {
+	alert('clicked add feature data!');
+	var feature_name = jQuery('#feature_name').val();
+	var start_coord = jQuery('#feature_start_coord').val();
+	var end_coord = jQuery('#feature_end_coord').val();
+	var feature_color = jQuery('#feature_color_select option:selected').text();
+	var orientation = jQuery('#feature_orientation_select option:selected').text();
+	 var row = [ feature_name, start_coord, end_coord, feature_color, orientation ];
+	 alert(JSON.stringify(row));
+	 featureDataTableAddRow(row);
+     });
     
     
 }
 
 export function updateFeatureDataTable(table_data) {
     alert('TABLE DATA: '+JSON.stringify(table_data));
+
+    for (var i=0; i < table_data.length; i++) {
+	table_data[i][5] = '<button>Edit</button>&nbsp;<button href=\"javascript:delete_feature_table_row('+i+')\">Delete</button>';
+    }
+    
     jQuery('#vector_table').DataTable({
 	destroy: true,
 	data: table_data
     });
 
+   
 }
+
+export function delete_feature_table_row(row_no) {
+    alert('delete_feature_table_row!');
+    var yes = confirm('Delete row '+row_no+'?');
+    // if (yes) {
+    // 	alert('Deleting it.');
+    // 	var data = getFeatureDataFromDataTable();
+	
+    // 	data.splice(row_no, 1);
+	
+    // 	updateFeatureDataTable(data);
+    // }
+
+}
+
+export function featureDataTableAddRow(row) {
+    var data = getFeatureDataFromDataTable();
+
+    data.push(row);
+
+    updateFeatureDataTable(data);
+
+}
+
+export function getFeatureDataFromDataTable() {
+    alert('getFeatureDataFromDataTable');
+    var data = jQuery('#vector_table').DataTable().rows().data().toArray();
+    delete(data.context);
+    delete(data.selector);
+    delete(data.ajax);
+
+    return data;
+}
+
 
 export function updateREsitesDataTable(re_sites) {
     alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
-    jQuery('#re_sites_table').dataTable({
+    jQuery('#re_sites_table').DataTable({
 	destroy: true,
 	data: re_sites
     });
@@ -241,9 +297,9 @@ export function updateVector(metadata, table_data, re_sites_list) {
 
     
     
-    alert('metadata: '+JSON.stringify(metadata));
-    alert('table_data: '+JSON.stringify(table_data));
-    alert('re_sites_list: '+JSON.stringify(re_sites_list));
+//    alert('metadata: '+JSON.stringify(metadata));
+//    alert('table_data: '+JSON.stringify(table_data));
+//    alert('re_sites_list: '+JSON.stringify(re_sites_list));
 //    alert('vector length: '+vectorLength);
     d3.selectAll("svg").selectAll("*").remove();
     data = [];

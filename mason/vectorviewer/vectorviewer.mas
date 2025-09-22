@@ -88,16 +88,17 @@ $edit_privs
 <br />
 <br />
 
-<button id="add_feature_button">Add feature</button><br />
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_feature_dialog">Add Feature</button>
+<!-- button id="add_feature_button">Add feature</button><br / -->
 <table id="vector_table" width="80%" class="display table table-hover table-striped">
-<thead><td>Name</td><td>Start Coord</td><td>End Coord</td><td>Color</td><td>Orientation</td></thead></table>
+<thead><td>Name</td><td>Start Coord</td><td>End Coord</td><td>Color</td><td>Orientation</td><td>Action</td></thead></table>
 <br />
 <br />
 <br />
 
 <!-- Add a svg area, empty -->
 
-<button id="add_restriction_site_button">Add restriction site</button>
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_re_dialog">Add restriction enzyme site</button>
 
 <table id="re_sites_table" width="20%" class="display table table-hover table-striped">
 <thead><td>RE Site</td><td>Cut Coord</td></thead></table>
@@ -133,7 +134,7 @@ $edit_privs
 
 </div>
 
-<div class="modal" tabindex="-1" role="dialog">
+<div id="add_feature_dialog" class="modal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -143,17 +144,54 @@ $edit_privs
         </button>
       </div>
       <div class="modal-body">
-        <p>
-	Name: <input type="text" id="feature_name">
-Start coord: <input type="text" id="feature_start_coord"></p>
-End coord: <input type="text" id="feature_end_coord">
-Color: <select>
-          <option>red</option>
-	  <option>blue</option>
-	  <option>green</option>
-	  <option>grey</option>
-	  </select>
-	  
+        <table>
+	<tr><td>Name</td><td>Start coord</td><td>End coord</td><td>Color</td><td>Orientation</td></tr>
+	<tr><td width="200"><input type="text" id="feature_name" class="form-control" /></td>
+	  <td width="200" ><input type="text" id="feature_start_coord" class="form-control" /></td>
+	  <td width="200"><input type="text" id="feature_end_coord" class="form-control"></td>
+	  <td width="200">
+	    <select id="feature_color_select" class="form-control">
+              <option>red</option>
+	      <option>blue</option>
+	      <option>green</option>
+	      <option>grey</option>
+	    </select>
+	  </td>
+	  <td width="50">
+	    <select id="feature_orientation_select" class="form-control">
+	      <option>F</option>
+	      <option>R</option>
+	    </select>
+	  </td>
+	</tr>
+	</table>
+	
+      </div>
+      <div class="modal-footer">
+        <button id="add_feature_data_button" type="button" class="btn btn-primary">Add Feature</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="add_re_dialog" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add a restriction enzyme site</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+	<table>
+	  <tr><td>Name</td><td>Cut coord</td></tr>
+	  <tr><td width="200"><input type="text" id="re_site_name" class="form-control" /></td>
+	    <td width="200" ><input type="text" id="re_site_cut_coord" class="form-control" /></td>
+	  </tr>
+	</table>
+	
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary">Add</button>
