@@ -67,17 +67,17 @@ has 'endogenous_control' => (
     required => 1
 );
 
+has 'assay_date' => (
+    isa =>'Str',
+    is => 'rw',
+    predicate => 'assay_date',
+    required => 1
+);
+
 has 'notes' => (
     isa =>'Str',
     is => 'rw',
     predicate => 'has_notes',
-);
-
-has 'timestamp' => (
-    isa => 'Str',
-    is => 'rw',
-    predicate => 'has_timestamp',
-	required => 1
 );
 
 has 'operator_id' => (
@@ -101,9 +101,9 @@ sub store_relative_expression_data {
 	my $vector_construct_name = $self->get_vector_construct_name();
 	my $relative_expression_data = $self->get_relative_expression_data();
 	my $tissue_type = $self->get_tissue_type();
+	my $assay_date = $self->get_assay_date();
 	my $endogenous_control = $self->get_endogenous_control();
 	my $notes = $self->get_notes();
-	my $timestamp = $self->get_timestamp();
 	my $operator_id = $self->get_operator_id();
 	my $relative_expression_data_derived_from = $self->get_relative_expression_data_derived_from();
 
@@ -111,7 +111,7 @@ sub store_relative_expression_data {
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
         my $vector_construct_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type');
         my $expression_data_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'transgene_expression_data', 'stock_property');
-        my $analyzed_tissue_types_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'analyzed_tissue_types', 'stock_property');
+        my $assay_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'assay_metadata', 'stock_property');
         my $transformant_stock_id;
 		my $vector_construct_stock_id;
 	    my $transformant_stock = $schema->resultset("Stock::Stock")->find ({
@@ -136,54 +136,75 @@ sub store_relative_expression_data {
 			$vector_construct_stock_id = $vector_construct_stock->stock_id();
 		}
 
-        my $expression_data_string;
+        my $expression_data_json;
         my $expression_data_hash = {};
-        my $updated_expression_data_string;
-        my $analyzed_tissue_types_string;
-        my @analyzed_tissue_types_array = ();
-        my $updated_tissue_types_string;
+        my $updated_expression_data_json;
+        my $assay_metadata_string;
+        my @tissue_types_array = ();
+		my @assay_dates_assay = ();
+        my $updated_assay_metadata = {};
+		my $updated_assay_metadata_json;
 
         my $previous_expression_data_stockprop_rs = $transformant_stock->stockprops({type_id=>$expression_data_cvterm->cvterm_id});
         if ($previous_expression_data_stockprop_rs->count == 1){
-            $expression_data_string = $previous_expression_data_stockprop_rs->first->value();
-            $expression_data_hash = decode_json $expression_data_string;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'relative_expression_values'} = $relative_expression_data;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'notes'} = $notes;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
+            $expression_data_json = $previous_expression_data_stockprop_rs->first->value();
+            $expression_data_hash = decode_json $expression_data_json;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'relative_expression_values'} = $relative_expression_data;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'notes'} = $notes;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
 
-            $updated_expression_data_string = encode_json $expression_data_hash;
-            $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_string});
+            $updated_expression_data_json = encode_json $expression_data_hash;
+            $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_json});
         } elsif ($previous_expression_data_stockprop_rs->count > 1) {
             print STDERR "More than one expression data stockprop found!\n";
             return;
         } else {
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'relative_expression_values'} = $relative_expression_data;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'notes'} = $notes;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
-            $expression_data_hash->{$tissue_type}->{$timestamp}->{'relative_expression_data'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
-            $expression_data_string = encode_json $expression_data_hash;
-            $transformant_stock->create_stockprops({$expression_data_cvterm->name() => $expression_data_string});
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'relative_expression_values'} = $relative_expression_data;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'notes'} = $notes;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
+            $expression_data_json = encode_json $expression_data_hash;
+            $transformant_stock->create_stockprops({$expression_data_cvterm->name() => $expression_data_json});
         }
 
-        my $previous_analyzed_tissue_types_stockprop_rs = $vector_construct_stock->stockprops({type_id=>$analyzed_tissue_types_cvterm->cvterm_id});
-        if ($previous_analyzed_tissue_types_stockprop_rs->count == 1){
-            $analyzed_tissue_types_string = $previous_analyzed_tissue_types_stockprop_rs->first->value();
-            @analyzed_tissue_types_array = split ',',$analyzed_tissue_types_string;
-            if ($tissue_type ~~ @analyzed_tissue_types_array) {
-                exit 0;
-            } else {
-                push @analyzed_tissue_types_array, $tissue_type;
-                $updated_tissue_types_string = join("," , @analyzed_tissue_types_array);
-                $previous_analyzed_tissue_types_stockprop_rs->first->update({value=>$updated_tissue_types_string});
-            }
-		} elsif ($previous_analyzed_tissue_types_stockprop_rs->count > 1) {
-            print STDERR "More than one analyzed tissue types stockprop found!\n";
+        my $previous_assay_metadata_stockprop_rs = $vector_construct_stock->stockprops({type_id=>$assay_metadata_cvterm->cvterm_id});
+        if ($previous_assay_metadata_stockprop_rs->count == 1){
+            $assay_metadata_string = $previous_assay_metadata_stockprop_rs->first->value();
+			$assay_metada_hash = decode_json $assay_metadata_string;
+			my $assay_tissue_types = $assay_metadata_hash->{'assay_tissue_types'};
+			@tissue_types_array = @$assay_tissue_types;
+			if ($tissue_type ~~ @tissue_types) {
+				exit 0;
+			} else {
+				push @tissue_types_array, $tissue_type;
+			}
+
+			my $assay_dates = $assay_metadata_hash->{'assay_dates'};
+			@assay_dates_array = @$assay_dates;
+			if ($assay_date ~~ @assay_dates_array) {
+				exit 0;
+			} else {
+				push @assay_dates_array, $assay_dates;
+			}
+
+			$updated_assay_metadata->{'assay_tissue_types'} = \@tissue_type_array;
+			$updated_assay_metadata->{'assay_dates'} = \@assay_date_array;
+			$updated_assay_metadata_json = encode_json $updated_assay_metadata;
+			$previous_assay_metadata_stockprop_rs->first->update({value=>$updated_assay_metadata_json});
+		} elsif ($previous_assay_metadata_stockprop_rs->count > 1) {
+            print STDERR "More than one assay metadata stockprop found!\n";
             return;
         } else {
-            $vector_construct_stock->create_stockprops({$analyzed_tissue_types_cvterm->name() => $tissue_type});
+			@tissue_types_array = ($tissue_type);
+			@assay_dates_array = ($assay_date);
+			$updated_assay_metadata->{'assay_tissue_types'} = \@tissue_type_array;
+			$updated_assay_metadata->{'assay_dates'} = \@assay_date_array;
+			$updated_assay_metadata_json = encode_json $updated_assay_metadata;
+
+            $vector_construct_stock->create_stockprops({$assay_metadata_cvterm->name() => $updated_assay_metadata_json});
         }
     };
 

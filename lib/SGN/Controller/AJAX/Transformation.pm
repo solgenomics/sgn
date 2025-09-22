@@ -1524,6 +1524,7 @@ sub upload_relative_expression_data_POST : Args(0) {
     my $tissue_type = $c->req->param('expression_tissue_type');
     my $endogenous_control = $c->req->param('expression_endogenous_control');
     my $notes = $c->req->param('expression_notes');
+    my $assay_date = $c->req->param('assay_date');
     my $upload = $c->req->upload('relative_expression_data_file');
 
     my $parser;
@@ -1642,8 +1643,8 @@ sub upload_relative_expression_data_POST : Args(0) {
                     tissue_type => $tissue_type,
                     relative_expression_data => $relative_expression_data,
                     endogenous_control => $endogenous_control,
+                    assay_date => $assay_date,
                     notes => $notes,
-                    timestamp => $timestamp,
                     operator_id => $user_id,
                     relative_expression_data_derived_from => 'provided',
                 });

@@ -12,7 +12,7 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds 'transgene_expression_data' and 'analyzed_tissue_types' stock_property cvterms
+This patch adds 'transgene_expression_data' and 'assay_metadata' stock_property cvterms
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -38,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'transgene_expression_data' and 'analyzed_tissue_types' stock_property cvterms
+This patch adds the 'transgene_expression_data' and 'assay_metadata' stock_property cvterms
 
 has '+prereq' => (
 	default => sub {
@@ -62,7 +62,7 @@ sub patch {
 	my $terms = {
         'stock_property' => [
             'transgene_expression_data',
-            'analyzed_tissue_types',
+            'assay_metadata',
         ]
     };
 
