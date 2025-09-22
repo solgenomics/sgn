@@ -126,11 +126,11 @@ has 'other_editable_stock_props' => (
     is => 'rw'
 );
 
-has 'analyzed_tissue_types' => (
+has 'assay_metadata' => (
     isa => 'Maybe[Str]',
     is => 'rw',
     lazy     => 1,
-    builder  => '_retrieve_analyzed_tissue_types',
+    builder  => '_retrieve_assay_metadata',
 );
 
 
@@ -195,9 +195,9 @@ sub _retrieve_BacterialResistantMarker {
     $self->BacterialResistantMarker($self->_retrieve_stockprop('BacterialResistantMarker'));
 }
 
-sub _retrieve_analyzed_tissue_types {
+sub _retrieve_assay_metadata {
     my $self = shift;
-    $self->analyzed_tissue_types($self->_retrieve_stockprop('analyzed_tissue_types'));
+    $self->assay_metadata($self->_retrieve_stockprop('assay_metadata'));
 }
 
 
