@@ -42,6 +42,7 @@ use Array::Utils qw(:all);
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Transformation::Transformation;
 use Sort::Naturally;
+use CXGN::Stock::Vector;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -2581,6 +2582,42 @@ sub get_endogenous_controls_select : Path('/ajax/html/select/endogenous_controls
         id => $id,
         choices => \@endogenous_controls,
         selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
+sub get_assay_dates_select : Path('/ajax/html/select/assay_dates') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "assay_dates_select";
+    my $name = $c->req->param("name") || "assay_dates_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $vector_stock_id = $c->req->param("vector_stock_id") || "";
+    my $tissue_type = $c->req->param("assay_tissue_type") || "";
+    my @assay_dates;
+
+    if ($empty) {
+        push @assay_dates, ['', 'Please select a date'];
+    }
+
+    my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_stock_id);
+    my $vector_assay_metadata = $vector_construct->assay_metadata;
+    my $metadata = decode_json $vector_assay_metadata;
+    my $dates = $metadata->{$tissue_type};
+    my @dates_array = keys (%$dates);
+
+    foreach my $date (@dates_array) {
+        push @assay_dates, [$date, $date];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@assay_dates,
     );
     $c->stash->{rest} = { select => $html };
 }

@@ -7,9 +7,9 @@ $vector_related_genes => undef
 $vector_analyzed_tissue_types => undef
 </%args>
 
-<form class="form-horizontal" role="form" >
-    <div style="display: flex; align-items: center; justify-content: center, gap: 20px;">
-        <label class="col-sm-3" for="analyzed_tissue_type">Assayed Tissue Type: </label>
+<form class="form-horizontal" >
+    <div class="form-group">
+        <label class="col-sm-3" for="analyzed_tissue_type">Tissue Type: </label>
         <div class="col-sm-3">
             <select class="form-control" id="analyzed_tissue_types_select">
 % my @tissue_types = split ',',$vector_analyzed_tissue_types;
@@ -19,8 +19,14 @@ $vector_analyzed_tissue_types => undef
             </select>
         </div>
     </div>
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Assay Date: </label>
+        <div class="col-sm-3" >
+            <div id="assay_date_select_div">
+            </div>
+        </div>
+    </div><br/>
 </form>
-<br/>
 <br/>
 
 <div style="overflow:scroll" id="vector_transgenic_line_details_div">
@@ -56,11 +62,14 @@ jQuery(document).ready(function(){
 
     jQuery('#vector_transgenic_line_details_section_onswitch').click( function() {
         tissue_type = jQuery('#analyzed_tissue_types_select').val();
+        get_select_box('assay_dates', 'assay_date_select_div', { 'name' : 'tissue_assay_date', 'id' : 'tissue_assay_date', 'vector_stock_id': stock_id, 'assay_tissue_type': tissue_type});
+
         display_vector_transgenic_line_details(stock_id, tissue_type);
     });
 
     jQuery('#analyzed_tissue_types_select').change( function() {
         tissue_type = jQuery('#analyzed_tissue_types_select').val();
+        get_select_box('assay_dates', 'assay_date_select_div', { 'name' : 'tissue_assay_date', 'id' : 'tissue_assay_date', 'vector_stock_id': stock_id, 'assay_tissue_type': tissue_type });
         display_vector_transgenic_line_details(stock_id, tissue_type);
     });
 
