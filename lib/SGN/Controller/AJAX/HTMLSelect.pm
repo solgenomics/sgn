@@ -44,6 +44,7 @@ use CXGN::Transformation::Transformation;
 use Sort::Naturally;
 use CXGN::Stock::Vector;
 
+
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
@@ -2607,10 +2608,11 @@ sub get_assay_dates_select : Path('/ajax/html/select/assay_dates') Args(0) {
     my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_stock_id);
     my $vector_assay_metadata = $vector_construct->assay_metadata;
     my $metadata = decode_json $vector_assay_metadata;
-    my $dates = $metadata->{$tissue_type};
-    my @dates_array = keys (%$dates);
+    my $date_info = $metadata->{$tissue_type};
+    my @dates_array = keys (%$date_info);
+    my @sorted_dates = sort {$b <=> $a} @dates_array;
 
-    foreach my $date (@dates_array) {
+    foreach my $date (@sorted_dates) {
         push @assay_dates, [$date, $date];
     }
 

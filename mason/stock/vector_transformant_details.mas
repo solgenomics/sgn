@@ -9,7 +9,7 @@ $vector_analyzed_tissue_types => undef
 
 <form class="form-horizontal" >
     <div class="form-group">
-        <label class="col-sm-3" for="analyzed_tissue_type">Tissue Type: </label>
+        <label class="col-sm-2" for="analyzed_tissue_type">Tissue Type: </label>
         <div class="col-sm-3">
             <select class="form-control" id="analyzed_tissue_types_select">
 % my @tissue_types = split ',',$vector_analyzed_tissue_types;
@@ -20,7 +20,7 @@ $vector_analyzed_tissue_types => undef
         </div>
     </div>
     <div class="form-group">
-        <label class="col-sm-3 control-label">Assay Date: </label>
+        <label class="col-sm-2 control-label">Assay Date: </label>
         <div class="col-sm-3" >
             <div id="assay_date_select_div">
             </div>
