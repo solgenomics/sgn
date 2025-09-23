@@ -91,7 +91,7 @@ $edit_privs
 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_feature_dialog">Add Feature</button>
 <!-- button id="add_feature_button">Add feature</button><br / -->
 <table id="vector_table" width="80%" class="display table table-hover table-striped">
-<thead><td>Name</td><td>Start Coord</td><td>End Coord</td><td>Color</td><td>Orientation</td><td>Action</td></thead></table>
+<thead><tr><td>Name</td><td>Start Coord</td><td>End Coord</td><td>Color</td><td>Orientation</td><td>Actions</td></tr></thead></table>
 <br />
 <br />
 <br />
@@ -100,12 +100,12 @@ $edit_privs
 
 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_re_dialog">Add restriction enzyme site</button>
 
-<table id="re_sites_table" width="20%" class="display table table-hover table-striped">
-<thead><td>RE Site</td><td>Cut Coord</td></thead></table>
+<table id="re_sites_table" width="60%" class="display table table-hover table-striped">
+<thead><tr><td>RE Site</td><td>Cut Coord</td><td>Actions</td></tr></thead></table>
 </table>
 
-<table id="metadata_table" width="20%" class="display table table-hover table-striped">
-<thead><td>Vector Name</td><td>Vector length</td></thead>
+<table id="metadata_table" width="40%" class="display table table-hover table-striped">
+<thead><tr><td>Vector Name</td><td>Vector length</td><td>Actions</td></tr></thead>
 </table>
 
 <table id="sequence_table" width="80%" class="display table table-hover table-striped">
@@ -194,7 +194,7 @@ $edit_privs
 	
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary">Add</button>
+        <button id="add_restriction_site_button" type="button" class="btn btn-primary">Add</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>

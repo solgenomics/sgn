@@ -17,15 +17,16 @@ var data = [];
 var re_sites = new Array();
 
 export function init(vector_id) {
+
     console.log('INIT VECTORVIEWER ??');
   
     sequence = "";
     
     // append the svg object to the body of the page
     margin = {top: 100, right: 100, bottom: 100, left: 100},
-	width = 1000 - margin.left - margin.right,
-	height = 1000 - margin.top - margin.bottom,
-	radius = Math.min(width, height) / 4;
+    width = 1000 - margin.left - margin.right,
+    height = 1000 - margin.top - margin.bottom,
+    radius = Math.min(width, height) / 4;
     
     svgWidth = width + margin.left + margin.right;
     svgHeight = height + margin.top + margin.bottom;
@@ -49,14 +50,24 @@ export function init(vector_id) {
 	jQuery('#zoomIn').on('click', function() {
 	    radius *= 1.2;
 	    svgWidth *= 1.2;
-	    svgHeight *= 1.2;  
-	    updateVector(metadata, data, table_data_RESites);  
+	    svgHeight *= 1.2;
+
+	    var table_data = getFeatureDataFromDataTable();
+	    var re_sites_table = getREsiteDataFromDataTable();
+	    var metadata = getMetadataFromDataTable();
+	    
+	    updateVector(metadata, table_data, re_sites_table);  
 	});
 	jQuery('#zoomOut').on('click', function() {
 	    radius /= 1.2;
 	    svgWidth /= 1.2;
-	    svgHeight /= 1.2;  
-	    updateVector(metadata, data, table_data_RESites);  
+	    svgHeight /= 1.2;
+	    
+	    var table_data = getFeatureDataFromDataTable();
+	    var re_sites_table = getREsitesDataFromDataTable();
+	    var metadata = getMetadataFromDataTable();
+	    
+	    updateVector(metadata, data, re_sites_table);  
 	});
   // });
     
@@ -196,96 +207,178 @@ export function init(vector_id) {
 
     });
 
-
-    
-    
-    
     //alert('Retrieving vector '+vector_id);
     jQuery.ajax({
 	url: '/vectorviewer/' + vector_id + '/retrieve',
     }).then(function(r) {
-	//alert("RETURN DATA: "+JSON.stringify(r));
+	alert("RETURN DATA: "+JSON.stringify(r));
 	updateFeatureDataTable(r.features);
 	updateREsitesDataTable(r.re_sites);
+	updateMetadataDataTable(r.metadata);
+	if (r.sequence) { updateSequenceDataTable(r.sequence); } 
 	updateVector(r.metadata, r.features, r.re_sites);
     },
 	    function(r) {
 		alert('An error occurred! '+JSON.stringify(r));
 		
 	    } );
-
+    
     jQuery('#add_feature_data_button').click( function() {
-	alert('clicked add feature data!');
+	//alert('clicked add feature data!');
+
 	var feature_name = jQuery('#feature_name').val();
 	var start_coord = jQuery('#feature_start_coord').val();
 	var end_coord = jQuery('#feature_end_coord').val();
 	var feature_color = jQuery('#feature_color_select option:selected').text();
 	var orientation = jQuery('#feature_orientation_select option:selected').text();
-	 var row = [ feature_name, start_coord, end_coord, feature_color, orientation ];
-	 alert(JSON.stringify(row));
-	 featureDataTableAddRow(row);
-     });
-    
-    
+	var row = [ feature_name, start_coord, end_coord, feature_color, orientation ];
+	
+	//alert(JSON.stringify(row));
+	featureDataTableAddRow(row);
+    });
+
+    jQuery('#add_restriction_site_button').click( function() {
+	alert('clicked add restriction site!');
+
+	var feature_name = jQuery('#restriction_site_name').val();
+	var start_coord = jQuery('#restriction_site_coord').val();
+
+	var row = [ feature_name, start_coord ];
+
+	re_site_datatable_add_row(row);
+    });
 }
 
+
+
 export function updateFeatureDataTable(table_data) {
-    alert('TABLE DATA: '+JSON.stringify(table_data));
+    //alert('TABLE DATA: '+JSON.stringify(table_data));
 
     for (var i=0; i < table_data.length; i++) {
-	table_data[i][5] = '<button>Edit</button>&nbsp;<button href=\"javascript:delete_feature_table_row('+i+')\">Delete</button>';
+	table_data[i][5] = '<button>Edit</button>&nbsp;<button onclick="delete_feature_table_row('+i+')">Delete</button>';
     }
     
     jQuery('#vector_table').DataTable({
 	destroy: true,
 	data: table_data
     });
-
-   
-}
-
-export function delete_feature_table_row(row_no) {
-    alert('delete_feature_table_row!');
-    var yes = confirm('Delete row '+row_no+'?');
-    // if (yes) {
-    // 	alert('Deleting it.');
-    // 	var data = getFeatureDataFromDataTable();
-	
-    // 	data.splice(row_no, 1);
-	
-    // 	updateFeatureDataTable(data);
-    // }
-
 }
 
 export function featureDataTableAddRow(row) {
+
     var data = getFeatureDataFromDataTable();
 
     data.push(row);
 
     updateFeatureDataTable(data);
-
 }
 
+export function re_site_datatable_add_row(row){
+
+    var data = getREsitesDataFromDataTable();
+    data.push(row);
+    updateREsitesDataTable(data);
+}
+
+export function delete_feature_table_row(row_no) {
+    //alert('delete_feature_table_row!');
+    var yes = confirm('Delete row '+row_no+'?');
+    if (yes) {
+	alert('Deleting it.');
+	var data = getFeatureDataFromDataTable();
+    
+	data.splice(row_no, 1);
+    
+	updateFeatureDataTable(data);
+    }
+}
+
+
 export function getFeatureDataFromDataTable() {
-    alert('getFeatureDataFromDataTable');
+    //alert('getFeatureDataFromDataTable');
     var data = jQuery('#vector_table').DataTable().rows().data().toArray();
     delete(data.context);
     delete(data.selector);
     delete(data.ajax);
 
+    for (let i = 0; i < data.length; i++) {
+	data[i].splice(5, 1); // Remove 1 element starting from columnIndex
+    }
+
     return data;
 }
 
+export function getREsiteDataFromDataTable() {
+    //alert('getREsiteDataFromDataTable');
+    var data = jQuery('#re_sites_table').DataTable().rows().data().toArray();
+    delete(data.context);
+    delete(data.selector);
+    delete(data.ajax);
 
+    //remove actions column
+    for (let i = 0; i < data.length; i++) {
+	data[i].splice(2, 1); // Remove 1 element starting from columnIndex
+    }
+
+    
+    return data;
+}
+
+export function getMetadataFromDataTable() {
+    var data = jQuery('#metadata_table').DataTable().rows().data().toArray();
+    delete(data.context);
+    delete(data.selector);
+    delete(data.ajax);
+
+    //remove actions column
+    for (let i = 0; i < data.length; i++) {
+	data[i].splice(2, 1); // Remove 1 element starting from columnIndex
+    }
+    
+    return data;
+}
+    
 export function updateREsitesDataTable(re_sites) {
     alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
+    for (var i=0; i < re_sites.length; i++) {
+	re_sites[i][2] = '<button>Edit</button>&nbsp;<button onclick="delete_feature_table_row('+i+')">Delete</button>';
+    }
+
     jQuery('#re_sites_table').DataTable({
 	destroy: true,
 	data: re_sites
     });
 }
 	
+export function updateMetadataDataTable(metadata) {
+
+    var row = new Array();
+    row.push(metadata.name);
+    row.push(metadata.vector_length);
+    row.push('<button>Edit</button>');
+
+    var data = new Array();
+    data.push(row);
+    
+    jQuery('#metadata_table').DataTable({
+	destroy: true,
+	data: data
+    });
+}
+
+export function updateSequenceDataTable(sequence) {
+
+    var seq_array = new Array();
+    for(var i=0; i<sequence.length; i++) {
+	seq_array.push(sequence.substring(i * 60, i * 60+60));
+    }
+    var formatted_seq = seq_array.join("<br />");
+    var data = [ [ formatted_seq ] ];
+    jQuery('#sequence_table').DataTable({
+	destroy: true,
+	data: data
+    });
+}
 
 // drawing / updating the vector as a function
 export function updateVector(metadata, table_data, re_sites_list) {
