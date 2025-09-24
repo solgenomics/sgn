@@ -58,7 +58,8 @@ $vector_analyzed_tissue_types => undef
 jQuery(document).ready(function(){
 
     let stock_id = "<%$stock_id%>";
-    let tissue_type;
+    let tissue_type = '';
+    let assay_date = '';
 
     jQuery('#vector_transgenic_line_details_section_onswitch').click( function() {
         tissue_type = jQuery('#analyzed_tissue_types_select').val();
@@ -73,6 +74,12 @@ jQuery(document).ready(function(){
         display_vector_transgenic_line_details(stock_id, tissue_type);
     });
 
+    jQuery('#assay_date_select_div').change( function() {
+        assay_date = jQuery('#tissue_assay_date').val();
+        display_vector_transgenic_line_details(stock_id, tissue_type, assay_date);
+    });
+
+
     function display_vector_transgenic_line_details(stock_id, tissue_type) {
         var transgenic_line_details_table = jQuery('#vector_transgenic_line_details_table').DataTable({
             'autoWidth': false,
@@ -82,6 +89,7 @@ jQuery(document).ready(function(){
                 'data': function(d) {
                     d.stock_id = stock_id;
                     d.selected_tissue_type = tissue_type;
+                    d.selected_assay_date = assay_date;
                 }
             }
         });

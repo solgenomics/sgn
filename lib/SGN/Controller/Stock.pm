@@ -284,7 +284,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         $vector_related_genes = $vector_construct->Gene;
         my $vector_assay_metadata = $vector_construct->assay_metadata;
         my $metadata_hash = decode_json $vector_assay_metadata;
-        my @assay_tissue_types = keys (%$metadata_hash);
+        my @assay_tissue_types = sort keys (%$metadata_hash);
         $vector_analyzed_tissue_types = join(",",@assay_tissue_types);
     }
 

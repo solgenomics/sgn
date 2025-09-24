@@ -43,6 +43,7 @@ use CXGN::Genotype::GenotypingProject;
 use CXGN::Transformation::Transformation;
 use Sort::Naturally;
 use CXGN::Stock::Vector;
+use Time::Piece;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -2609,9 +2610,8 @@ sub get_assay_dates_select : Path('/ajax/html/select/assay_dates') Args(0) {
     my $vector_assay_metadata = $vector_construct->assay_metadata;
     my $metadata = decode_json $vector_assay_metadata;
     my $date_info = $metadata->{$tissue_type};
-    my @dates_array = keys (%$date_info);
-    my @sorted_dates = sort {$b <=> $a} @dates_array;
-
+    my @dates = keys (%$date_info);
+    my @sorted_dates = sort {Time::Piece->strptime($b, '%Y-%m-%d') <=> Time::Piece->strptime($a, '%Y-%m-%d')} @dates;
     foreach my $date (@sorted_dates) {
         push @assay_dates, [$date, $date];
     }

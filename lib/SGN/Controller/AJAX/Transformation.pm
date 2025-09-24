@@ -29,6 +29,7 @@ use Sort::Key::Natural qw(natkeysort);
 use CXGN::Stock;
 use CXGN::Transformation::ParseUpload;
 use CXGN::Transformation::StoreTransgeneExpressionData;
+use Time::Piece;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1665,7 +1666,6 @@ sub upload_relative_expression_data_POST : Args(0) {
         }
     }
 
-
     $c->stash->{rest} = {success => "1",};
 }
 
@@ -1674,6 +1674,7 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
     my $c = shift;
     my $stock_id = $c->req->param('stock_id');
     my $selected_tissue_type = $c->req->param('selected_tissue_type');
+    my $selected_assay_date = $c->req->param('selected_assay_date');
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
@@ -1686,6 +1687,15 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
     my $result = $related_stocks->get_vector_related_accessions();
     my @transgenic_lines;
 
+    if (!$selected_assay_date) {
+        my $vector_assay_metadata = $vector_construct->assay_metadata;
+        my $metadata = decode_json $vector_assay_metadata;
+        my $date_info = $metadata->{$selected_tissue_type};
+        my @dates = keys (%$date_info);
+        my @sorted_dates = sort {Time::Piece->strptime($b, '%Y-%m-%d') <=> Time::Piece->strptime($a, '%Y-%m-%d')} @dates;
+        $selected_assay_date = $sorted_dates[0];
+    }
+
     my @expression_array;
     foreach my $r (@$result){
         my @row = ();
@@ -1693,18 +1703,14 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
         @row = (qq{<a href = "/stock/$transformant_id/view">$transformant_name</a>}, $number_of_insertions);
         if ($expression_data_string) {
             my $expression_info = decode_json $expression_data_string;
-            print STDERR "EXPRESSION INFO =".Dumper($expression_info)."\n";
-            my $tissue_data = $expression_info->{$selected_tissue_type};
+            my $tissue_date_data = $expression_info->{$selected_tissue_type}->{$selected_assay_date};
             my @expression_values = ();
-            foreach my $timestamp (keys %$tissue_data) {
-                my $gene_relative_expression_value;
-                my $gene_relative_expression = $tissue_data->{$timestamp}->{'relative_expression_data'}->{'relative_expression_values'};
-                print STDERR "EXPRESSION VALUES =".Dumper($gene_relative_expression)."\n";
-                foreach my $gene (@gene_names) {
-                    $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
-                    print STDERR "EACH VALUE =".Dumper($gene_relative_expression_value)."\n";
-                    push @expression_values, $gene_relative_expression_value;
-                }
+            my $gene_relative_expression = $tissue_date_data->{'relative_expression_data'}->{'relative_expression_values'};
+
+            foreach my $gene (@gene_names) {
+                my $gene_relative_expression_value = '';
+                $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
+                push @expression_values, $gene_relative_expression_value;
             }
             push @row, @expression_values;
         } else {
