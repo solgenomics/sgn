@@ -39,6 +39,9 @@ $vector_analyzed_tissue_types => undef
 % foreach my $column_header(@column_header) {
                 <th><%$column_header. " ".'(Relative)'%></th>
 %}
+                <th>qPCR Tissue Type</th>
+                <th>qPCR Assay Date</th>
+
             </tr>
         </thead>
     </table>
@@ -80,7 +83,7 @@ jQuery(document).ready(function(){
     });
 
 
-    function display_vector_transgenic_line_details(stock_id, tissue_type) {
+    function display_vector_transgenic_line_details(stock_id, tissue_type, assay_date) {
         var transgenic_line_details_table = jQuery('#vector_transgenic_line_details_table').DataTable({
             'autoWidth': false,
             'ordering': false,

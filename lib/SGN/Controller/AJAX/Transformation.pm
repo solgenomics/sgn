@@ -1672,12 +1672,12 @@ sub upload_relative_expression_data_POST : Args(0) {
 sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transgenic_line_details') :Args(0) {
     my $self = shift;
     my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+
     my $stock_id = $c->req->param('stock_id');
     my $selected_tissue_type = $c->req->param('selected_tissue_type');
     my $selected_assay_date = $c->req->param('selected_assay_date');
-
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
 
     my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$stock_id);
     my $vector_related_genes = $vector_construct->Gene;
@@ -1712,12 +1712,13 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
                 $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
                 push @expression_values, $gene_relative_expression_value;
             }
-            push @row, @expression_values;
+            push @row, @expression_values, $selected_tissue_type, $selected_assay_date;
         } else {
             foreach my $gene (@gene_names) {
                 my $empty_value = '';
                 push @row, $empty_value;
             }
+            push @row, ('', '');
         }
         push @transgenic_lines, \@row;
     }
