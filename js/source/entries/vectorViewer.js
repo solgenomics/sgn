@@ -44,38 +44,29 @@ export function init(vector_id) {
     //attaching the function to a button
     d3.select('#update_vector').on("click", function() { updateVector(metadata, table_data, re_sites) });
     
-    console.log('cp 2.1');
-    //zoom in and zoom out buttons
-//    $(document).ready(function () {
-	jQuery('#zoomIn').on('click', function() {
-	    radius *= 1.2;
-	    svgWidth *= 1.2;
-	    svgHeight *= 1.2;
 
-//	    alert('get feature data');
-	    var table_data = getFeatureDataFromDataTable();
-//	    alert('get REsites data');
-	    var re_sites_table = getREsitesDataFromDataTable();
-//	    alert('RESITES: '+JSON.stringify(re_sites_table));
-//	    alert('get Metadata');
-	    var metadata = getMetadataFromDataTable();
+    jQuery('#zoomIn').on('click', function() {
+	radius *= 1.2;
+	svgWidth *= 1.2;
+	svgHeight *= 1.2;
+	
+	var table_data = getFeatureDataFromDataTable();
+	var re_sites_table = getREsitesDataFromDataTable();
+	var metadata = getMetadataFromDataTable();
 	    
-//	    alert(JSON.stringify(table_data) + ' '+ JSON.stringify(re_sites_table) + ' '+ JSON.stringify(metadata));
-	    
-	    updateVector(metadata, table_data, re_sites_table);  
-	});
-	jQuery('#zoomOut').on('click', function() {
-	    radius /= 1.2;
-	    svgWidth /= 1.2;
-	    svgHeight /= 1.2;
-	    
-	    var table_data = getFeatureDataFromDataTable();
-	    var re_sites_table = getREsitesDataFromDataTable();
-	    var metadata = getMetadataFromDataTable();
-	    
-	    updateVector(metadata, data, re_sites_table);  
-	});
-  // });
+	updateVector(metadata, table_data, re_sites_table);  
+    });
+    jQuery('#zoomOut').on('click', function() {
+	radius /= 1.2;
+	svgWidth /= 1.2;
+	svgHeight /= 1.2;
+	
+	var table_data = getFeatureDataFromDataTable();
+	var re_sites_table = getREsitesDataFromDataTable();
+	var metadata = getMetadataFromDataTable();
+	
+	updateVector(metadata, data, re_sites_table);  
+    });
     
     var columnDefs = [{
 	title: "Feature Name",
@@ -92,70 +83,76 @@ export function init(vector_id) {
     }, {
 	title: "Orientation",
 	type: "string-utf8"
-    }];
+    }, {
+        title: "Actions",
+        type: "string-utf8"
+    }
+		     ];
 
 //    alert('formatting vector table');
-    var myTable = jQuery('#vector_table').DataTable({
-	"sPaginationType": "full_numbers",
-	data: table_data,
-	columns: columnDefs,
-	dom: 'Bfrtip',        // Needs button container
-	select: 'single',
-	responsive: true,
-	altEditor: true,     // Enable altEditor
-	buttons: [
-        //     {
-	// 	text: 'Add',
-	// 	name: 'add'        // do not change name
-        //     },
-        //     {
-	// 	extend: 'selected', // Bind to Selected row
-	// 	text: 'Edit',
-	// 	name: 'edit'        // do not change name
-        //     },
-        //     {
-	// 	extend: 'selected', // Bind to Selected row
-	// 	text: 'Delete',
-	// 	name: 'delete'      // do not change name
-        //     }
-	]
-    });
+//     var myTable = jQuery('#vector_table').DataTable({
+// 	"sPaginationType": "full_numbers",
+// 	data: table_data,
+// //	columns: columnDefs,
+// 	dom: 'Bfrtip',        // Needs button container
+// 	select: 'single',
+// 	responsive: true,
+// 	altEditor: true,     // Enable altEditor
+// 	buttons: [
+//         //     {
+// 	// 	text: 'Add',
+// 	// 	name: 'add'        // do not change name
+//         //     },
+//         //     {
+// 	// 	extend: 'selected', // Bind to Selected row
+// 	// 	text: 'Edit',
+// 	// 	name: 'edit'        // do not change name
+//         //     },
+//         //     {
+// 	// 	extend: 'selected', // Bind to Selected row
+// 	// 	text: 'Delete',
+// 	// 	name: 'delete'      // do not change name
+//         //     }
+// 	]
+//     });
     
-    //RE sites table
-    var columnDefs2 = [{
-	title: "Restriction Enzyme Site",
-	type: "string-utf8"
-    }, {
-	title: "Cut Coord",
-	type: "num",
-    }];
+//     //RE sites table
+//     var columnDefs2 = [{
+// 	title: "Restriction Enzyme Site",
+// 	type: "string-utf8"
+//     }, {
+// 	title: "Cut Coord",
+// 	type: "num",
+//     }, {
+//         title: "Actions",
+//         type: "string-utf8"  }];
 
-    //alert('formatting re sites table');
-    var myTable2 = jQuery('#re_sites_table').DataTable({
-	"sPaginationType": "full_numbers",
-	data: [ [ ] ],
-	columns: columnDefs2,
-	//dom: 'Bfrtip',        // Needs button container
-	select: 'single',
-	responsive: true,
-	//altEditor: true,     // Enable altEditor
-	//buttons: [
-        //     {
-	// 	text: 'Add',
-	// 	name: 'add'        // do not change name
-        //     },
-        //     {
-	// 	extend: 'selected', // Bind to Selected row
-	// 	text: 'Edit',
-	// 	name: 'edit'        // do not change name
-        //     },
-        //     {
-	// 	extend: 'selected', // Bind to Selected row
-	// 	text: 'Delete',
-	// 	name: 'delete'      // do not change name
-        //     }
-	//]
-    });
+//     //alert('formatting re sites table');
+//     var myTable2 = jQuery('#re_sites_table').DataTable({
+// 	"sPaginationType": "full_numbers",
+// 	data: [ [ ] ],
+// //	columns: columnDefs2,
+// 	//dom: 'Bfrtip',        // Needs button container
+// 	select: 'single',
+// 	responsive: true,
+// 	//altEditor: true,     // Enable altEditor
+// 	//buttons: [
+//         //     {
+// 	// 	text: 'Add',
+// 	// 	name: 'add'        // do not change name
+//         //     },
+//         //     {
+// 	// 	extend: 'selected', // Bind to Selected row
+// 	// 	text: 'Edit',
+// 	// 	name: 'edit'        // do not change name
+//         //     },
+//         //     {
+// 	// 	extend: 'selected', // Bind to Selected row
+// 	// 	text: 'Delete',
+// 	// 	name: 'delete'      // do not change name
+//         //     }
+// 	//]
+//     });
     
     //alert('done');
       
@@ -355,6 +352,7 @@ export function updateREsitesDataTable(re_sites) {
 	destroy: true,
 	data: re_sites
     });
+
 }
 	
 export function updateMetadataDataTable(metadata) {
@@ -582,7 +580,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 		      : (geneOuterRadius - geneInnerRadius) / 2 + 0.05*radius)
 		.attr("stroke", "darkgray")
 		.attr("font-family", "arial")
-		.style("font-size", 0.15 * radius)
+		.style("font-size", 0.60 * (geneOuterRadius - geneInnerRadius))
 		.append("textPath")
 		.attr("text-anchor", "middle")
 		.attr("startOffset", "50%")

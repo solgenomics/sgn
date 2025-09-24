@@ -116,7 +116,7 @@ sub parse_genbank {
 		($name) = $f->each_tag_value("gene");
 	    }
 	    
-	    push @$features, [ $name, $f->start(), $f->end(), "red", $dir ];
+	    push @$features, [ $name, $f->start(), $f->end(), "lightblue", $dir ];
 	}
 	else {
 	    print STDERR "IGNORING TAG: ".$f->primary_tag()."\n";

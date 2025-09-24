@@ -206,9 +206,9 @@ $edit_privs
 jQuery(document).ready(function () {
 
     var stock_id = <% $stock_id %>;
-    alert('There we go... with '+stock_id);
+// alert('There we go... with '+stock_id);
     window.jsMod['vectorViewer'].init(stock_id);
-    alert('Done!');
+//    alert('Done!');
 
 });
 
