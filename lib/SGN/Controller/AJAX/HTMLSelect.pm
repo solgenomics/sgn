@@ -2608,12 +2608,14 @@ sub get_assay_dates_select : Path('/ajax/html/select/assay_dates') Args(0) {
 
     my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_stock_id);
     my $vector_assay_metadata = $vector_construct->assay_metadata;
-    my $metadata = decode_json $vector_assay_metadata;
-    my $date_info = $metadata->{$tissue_type};
-    my @dates = keys (%$date_info);
-    my @sorted_dates = sort {Time::Piece->strptime($b, '%Y-%m-%d') <=> Time::Piece->strptime($a, '%Y-%m-%d')} @dates;
-    foreach my $date (@sorted_dates) {
-        push @assay_dates, [$date, $date];
+    if ($vector_assay_metadata) {
+        my $metadata = decode_json $vector_assay_metadata;
+        my $date_info = $metadata->{$tissue_type};
+        my @dates = keys (%$date_info);
+        my @sorted_dates = sort {Time::Piece->strptime($b, '%Y-%m-%d') <=> Time::Piece->strptime($a, '%Y-%m-%d')} @dates;
+        foreach my $date (@sorted_dates) {
+            push @assay_dates, [$date, $date];
+        }
     }
 
     my $html = simple_selectbox_html(

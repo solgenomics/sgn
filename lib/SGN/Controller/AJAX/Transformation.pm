@@ -1689,11 +1689,13 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
 
     if (!$selected_assay_date) {
         my $vector_assay_metadata = $vector_construct->assay_metadata;
-        my $metadata = decode_json $vector_assay_metadata;
-        my $date_info = $metadata->{$selected_tissue_type};
-        my @dates = keys (%$date_info);
-        my @sorted_dates = sort {Time::Piece->strptime($b, '%Y-%m-%d') <=> Time::Piece->strptime($a, '%Y-%m-%d')} @dates;
-        $selected_assay_date = $sorted_dates[0];
+        if ($vector_assay_metadata) {
+            my $metadata = decode_json $vector_assay_metadata;
+            my $date_info = $metadata->{$selected_tissue_type};
+            my @dates = keys (%$date_info);
+            my @sorted_dates = sort {Time::Piece->strptime($b, '%Y-%m-%d') <=> Time::Piece->strptime($a, '%Y-%m-%d')} @dates;
+            $selected_assay_date = $sorted_dates[0];
+        }
     }
 
     my @expression_array;
