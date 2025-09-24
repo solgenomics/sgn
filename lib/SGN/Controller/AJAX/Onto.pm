@@ -32,6 +32,8 @@ use CXGN::Chado::Cvterm;
 use CXGN::Onto;
 use Data::Dumper;
 use JSON;
+use CXGN::Job;
+use Cwd;
 
 use namespace::autoclean;
 
@@ -42,6 +44,73 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON' },
    );
+
+=head2 download_obo
+
+Dumps a DB as a .obo file. Accepts db.name as an argument
+
+=cut
+
+sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $db_name = shift;
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+
+    my $temp_basedir = $c->config->{cluster_shared_tempdir};
+
+    if (! -d "$temp_basedir/obo_downloads") {
+        `mkdir $temp_basedir/obo_downloads`;
+    }
+
+    my $outdir = "$temp_basedir/obo_downloads";
+
+    my $cmd = "perl ./bin/download_obo.pl -i $db_name -H $dbhost -D $dbname -U $dbuser -P $dbpass -o $outdir";
+
+    print STDERR "Dumping OBO file at $outdir/$db_name.breedbase.obo\n";
+
+    my $obo_downloader;
+
+    eval {
+
+        $obo_downloader = CXGN::Job->new({
+            people_schema => $people_schema, 
+            schema => $schema,
+            sp_person_id => $sp_person_id,
+            cmd => $cmd,
+            finish_logfile => $c->config->{job_finish_log},
+            name => "$db_name ontology download",
+            job_type => 'download',
+            submit_page => $c->req->path
+        });
+
+        $obo_downloader->submit();
+
+    };
+
+    if ($@) {
+        $c->stash->rest = {error => "An error occurred starting the download: $@"};
+        return;
+    }
+
+    $obo_downloader->wait();
+
+    $c->res->content_type('application/octet-stream');
+    $c->res->header('Content-Disposition' => "attachment; filename=\"$db_name.obo\"");
+    $c->res->body(do {
+        open my $f, '<', "$outdir/$db_name.breedbase.obo" or die "Can't open file: $!";
+        local $/; #this slurps a file I think
+        <$f>;
+    });
+}
 
 =head2 compose_trait
 

@@ -95,6 +95,9 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
     </div>
 </div>
 
+<button id="download_ontology_btn" class="btn btn-primary">Download Treatment Ontology</button>
+<br>
+<br>
 <& /ontology/embedded_browser.mas, cvterm => $exp_treatment_root &>
 
 <script>
@@ -282,6 +285,30 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
             }
             table_str = json_to_html_table(table_elems);
             jQuery('#new_treatment_categories').html(table_str);
+        });
+
+        jQuery('#download_ontology_btn').click(function() {
+
+            jQuery('#working_modal').modal("show");
+
+            fetch("/ajax/onto/download_obo/<% $db_name %>")
+                .then(response => response.blob())
+                .then(blob => {
+                    jQuery('#working_modal').modal("hide");
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "<% $db_name %>.txt";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    jQuery('#working_modal').modal("hide");
+                    alert("An error occurred: " + error);
+                    console.error('Download failed:', error)
+                });
         });
 
         function html_table_to_json(html_str) {

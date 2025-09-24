@@ -1402,17 +1402,6 @@ for my $extension ("xls", "xlsx", "csv") {
 	my $project_name_with_treatment = $f->bcs_schema()->resultset('Project::Project')->find({ project_id => $save_with_treatment->{'trial_id'} })->name();
 	ok($project_name_with_treatment == "Trial_upload_test_with_treatment", "check that trial_create really worked");
 
-	# my $trial_with_treatment = CXGN::Trial->new({ bcs_schema => $f->bcs_schema, trial_id => $save_with_treatment->{'trial_id'} });
-	# my $treatments = $trial_with_treatment->get_treatments();
-	# is(scalar(@$treatments), 1);
-
-	# my $treatment_name1 = $treatments->[0]->{trait_name};
-	# is($treatment_name1, "test treatment|EXPERIMENT_TREATMENT:0000002");
-	# my $treatment_count1 = $treatments->[0]->{count};
-	# is($treatment_count1, 4);
-	# these tests don't work because treatments are stored separately after the trial design is stored. This functionality is tested elsewhere (in TrialCreate.t) and does not need to be tested here.
-	# Checking that the trial design contained the treatment info is sufficient. 
-
 	#test deleting genotyping project with genotyping plate
 	my $schema = $f->bcs_schema();
 	my $before_deleting_genotyping_project = $schema->resultset("Project::Project")->search({})->count();
