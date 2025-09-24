@@ -52,9 +52,15 @@ export function init(vector_id) {
 	    svgWidth *= 1.2;
 	    svgHeight *= 1.2;
 
+//	    alert('get feature data');
 	    var table_data = getFeatureDataFromDataTable();
-	    var re_sites_table = getREsiteDataFromDataTable();
+//	    alert('get REsites data');
+	    var re_sites_table = getREsitesDataFromDataTable();
+//	    alert('RESITES: '+JSON.stringify(re_sites_table));
+//	    alert('get Metadata');
 	    var metadata = getMetadataFromDataTable();
+	    
+//	    alert(JSON.stringify(table_data) + ' '+ JSON.stringify(re_sites_table) + ' '+ JSON.stringify(metadata));
 	    
 	    updateVector(metadata, table_data, re_sites_table);  
 	});
@@ -211,12 +217,13 @@ export function init(vector_id) {
     jQuery.ajax({
 	url: '/vectorviewer/' + vector_id + '/retrieve',
     }).then(function(r) {
-	alert("RETURN DATA: "+JSON.stringify(r));
+//	alert("RETURN DATA: "+JSON.stringify(r));
 	updateFeatureDataTable(r.features);
 	updateREsitesDataTable(r.re_sites);
 	updateMetadataDataTable(r.metadata);
 	if (r.sequence) { updateSequenceDataTable(r.sequence); } 
-	updateVector(r.metadata, r.features, r.re_sites);
+	//	updateVector(r.metadata, r.features, r.re_sites);
+	updateVector();
     },
 	    function(r) {
 		alert('An error occurred! '+JSON.stringify(r));
@@ -238,7 +245,7 @@ export function init(vector_id) {
     });
 
     jQuery('#add_restriction_site_button').click( function() {
-	alert('clicked add restriction site!');
+//	alert('clicked add restriction site!');
 
 	var feature_name = jQuery('#restriction_site_name').val();
 	var start_coord = jQuery('#restriction_site_coord').val();
@@ -276,6 +283,7 @@ export function featureDataTableAddRow(row) {
 export function re_site_datatable_add_row(row){
 
     var data = getREsitesDataFromDataTable();
+//    alert('RE Sites data now: '+JSON.stringify(data));
     data.push(row);
     updateREsitesDataTable(data);
 }
@@ -284,7 +292,7 @@ export function delete_feature_table_row(row_no) {
     //alert('delete_feature_table_row!');
     var yes = confirm('Delete row '+row_no+'?');
     if (yes) {
-	alert('Deleting it.');
+//	alert('Deleting it.');
 	var data = getFeatureDataFromDataTable();
     
 	data.splice(row_no, 1);
@@ -308,19 +316,18 @@ export function getFeatureDataFromDataTable() {
     return data;
 }
 
-export function getREsiteDataFromDataTable() {
-    //alert('getREsiteDataFromDataTable');
+export function getREsitesDataFromDataTable() {
+//    alert('getREsitesDataFromDataTable');
     var data = jQuery('#re_sites_table').DataTable().rows().data().toArray();
     delete(data.context);
     delete(data.selector);
     delete(data.ajax);
-
+//    alert('BEFORE: '+JSON.stringify(data));
     //remove actions column
     for (let i = 0; i < data.length; i++) {
 	data[i].splice(2, 1); // Remove 1 element starting from columnIndex
     }
-
-    
+//    alert('AFTER: '+JSON.stringify(data));
     return data;
 }
 
@@ -339,7 +346,7 @@ export function getMetadataFromDataTable() {
 }
     
 export function updateREsitesDataTable(re_sites) {
-    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
+//    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
     for (var i=0; i < re_sites.length; i++) {
 	re_sites[i][2] = '<button>Edit</button>&nbsp;<button onclick="delete_feature_table_row('+i+')">Delete</button>';
     }
@@ -381,15 +388,19 @@ export function updateSequenceDataTable(sequence) {
 }
 
 // drawing / updating the vector as a function
-export function updateVector(metadata, table_data, re_sites_list) {
+//export function updateVector(metadata, table_data, re_sites_list) {
+export function updateVector() { 
 
   //   alert('METADATA HERE: '+JSON.stringify(metadata));
 
-    vectorLength = parseInt(metadata.vector_length); // in bp
-    vectorName = metadata.name;
+    var metadata = getMetadataFromDataTable();
+    var table_data = getFeatureDataFromDataTable();
+    var re_sites_list = getREsitesDataFromDataTable();
 
     
-    
+    vectorLength = parseInt(metadata[0][1]); // in bp
+    vectorName = metadata[0][0];
+
 //    alert('metadata: '+JSON.stringify(metadata));
 //    alert('table_data: '+JSON.stringify(table_data));
 //    alert('re_sites_list: '+JSON.stringify(re_sites_list));
@@ -441,6 +452,8 @@ export function updateVector(metadata, table_data, re_sites_list) {
 
     /////// note the re_sites array should have the correct format?
     //Anoter for each loop, this time for the RE sites
+
+    re_sites = new Array();
     for (var i = 0; i < re_sites_list.length; i++) {
      	var name = re_sites_list[i][0];
      	var cutCoord = re_sites_list[i][1];
@@ -463,7 +476,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
     const centerTranslationWidth = svgWidth/2;
     const centerTranslationHeight = svgHeight/2;
     
-    //d3.select("body").selectAll("svg").selectAll("*").remove();
+    d3.select("body").selectAll("svg").selectAll("*").remove();
     
     var vectorLengthLabelG = d3.select("body").select("svg").append("g").attr("class", "labelLengthGroup").attr("transform", "translate(" + centerTranslationWidth + "," + centerTranslationHeight + ")");
     const vectorLengthLabel = vectorLengthLabelG.append("path")
@@ -474,7 +487,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	  .style("display", "none");
 
 
-    const vectorLength = metadata.vector_length; // Ths will need to be different
+    const vectorLength = metadata[0][1];
     
     var backbonearcgen = d3.arc()
 	.outerRadius(radius + (.05 * radius))
@@ -502,6 +515,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	.innerRadius(geneInnerRadius);
     
     var vectorGeneBlockG = d3.select("body").select("svg").append("g").attr("class", "vectorGeneBlock").attr("transform", "translate(" + centerTranslationWidth + "," + centerTranslationHeight + ")");
+
     
     data.forEach(function(d, i) {
 	vectorGeneBlockG
@@ -743,7 +757,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
             .attr("x", 0)
             .attr("dy", "0em")
             .attr("font-size", 0.1 * radius)
-            .text("Name: " + d.name);
+            .text("Name: " + d[0]);
 	
         d3.select(this)
             .append("tspan")
@@ -751,7 +765,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
             .attr("x", 0)
             .attr("dy", "1.2em")
             .attr("font-size", 0.1 * radius)
-            .text("Length (bp): " + d.vector_length);
+            .text("Length (bp): " + d[1]);
     });
     
     //// Paths for labeling RE sites
@@ -787,7 +801,8 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	}
     });
     
-
+//    alert('rightLabels: '+JSON.stringify(rightLabels));
+    
 
     spaceLabelsWithCollisionAvoidance(leftLabels, "left");
     spaceLabelsWithCollisionAvoidance(rightLabels, "right");
@@ -813,8 +828,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	
 	const vectorLabelStartPointX = circleRadius * Math.cos(site._angle); 
 	const vectorLabelStartPointY = circleRadius * Math.sin(site._angle);
-	
-	
+
 	if ( vectorLabelStartPointX > 0) {
 	    RELabelOffset = (.75 * radius);
 	} else {
