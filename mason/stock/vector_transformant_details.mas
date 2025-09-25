@@ -47,7 +47,7 @@ $vector_analyzed_tissue_types => undef
     </table>
 </div>
 
-<& /transformation/upload_relative_expression_data_dialog.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
+<& /transformation/upload_qPCR_data_dialog.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
 
 <style>
     .table th {

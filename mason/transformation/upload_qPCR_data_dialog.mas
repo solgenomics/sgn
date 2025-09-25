@@ -79,7 +79,7 @@ $stock_uniquename
                             <div class="form-group">
                                 <label class="col-sm-4 control-label">Upload File (CT): </label>
                                 <div class="col-sm-8" >
-                                    <input type="file" name="CT_qPCR_file" id="CT_qPCR_file" encoding="multipart/form-data" />
+                                    <input type="file" name="CT_qPCR_data_file" id="CT_qPCR_data_file" encoding="multipart/form-data" />
                                 </div>
                             </div>
                         </div>
@@ -221,7 +221,7 @@ jQuery(document).ready(function(){
         const assay_date = jQuery("#assay_date").val();
         const qPCR_data_type = jQuery("#qPCR_data_type").val();
 
-        jQuery('#upload_relative_expression_data_form').attr("action", "/ajax/transformation/upload_relative_expression_data");
+        jQuery('#upload_qPCR_data_form').attr("action", "/ajax/transformation/upload_qPCR_data");
         if (tissue_type === ''){
             alert("Please select a tissue type");
             return;
@@ -239,11 +239,6 @@ jQuery(document).ready(function(){
 
         if (qPCR_data_type === ''){
             alert("Please select a data type");
-            return;
-        }
-
-        if (upload_file === ''){
-            alert("Please select a file");
             return;
         }
 

@@ -93,7 +93,7 @@ has 'relative_expression_data_derived_from' => (
     predicate => 'has_relative_expression_data_derived_from',
 );
 
-sub store_relative_expression_data {
+sub store_normalized_qPCR_data {
     my $self = shift;
     my $schema = $self->get_chado_schema();
     my $transaction_error;
