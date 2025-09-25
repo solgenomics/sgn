@@ -1537,7 +1537,7 @@ sub upload_qPCR_data_POST : Args(0) {
         $plugin_type = 'CTqPCRdata';
     } elsif ($normalized_upload) {
         $upload = $normalized_upload;
-        $plugin_type = 'RelativeExpressionData';
+        $plugin_type = 'NormalizedqPCRData';
     }
 
     my $parser;
@@ -1647,8 +1647,8 @@ sub upload_qPCR_data_POST : Args(0) {
         eval {
             foreach my $transformant_name (keys %$parsed_data) {
                 my $relative_expression_data = $parsed_data->{$transformant_name};
-#                print STDERR "TRANSFORMANT NAME =".Dumper($transformant_name)."\n";
-#                print STDERR "EXPRESSION INFO =".Dumper($relative_expression_data)."\n";
+                print STDERR "TRANSFORMANT NAME =".Dumper($transformant_name)."\n";
+                print STDERR "EXPRESSION INFO =".Dumper($relative_expression_data)."\n";
                 if ($normalized_upload) {
                     my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
                         chado_schema => $schema,

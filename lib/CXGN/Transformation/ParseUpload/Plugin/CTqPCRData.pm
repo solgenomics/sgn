@@ -1,4 +1,4 @@
-package CXGN::Transformation::ParseUpload::Plugin::NormalizedqPCRData;
+package CXGN::Transformation::ParseUpload::Plugin::CTqPCRData;
 
 use Moose::Role;
 use CXGN::File::Parse;
@@ -14,23 +14,24 @@ sub _validate_with_plugin {
     my $schema = $self->get_chado_schema();
 
     my $genes = $self->get_vector_construct_genes();
-    my %vector_construct_genes;
+    my $endogenous_control = $self->get_endogenous_control();
+
+    my %valid_genes;
     foreach my $gene (@$genes) {
-        $vector_construct_genes{$gene} = 1;
+        $valid_genes{$gene} = 1;
     }
+    $valid_genes{$endogenous_control} = 1;
 
     my @error_messages;
     my %errors;
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'accession_name', 'gene', 'relative_expression' ],
-        optional_columns => ['number_of_replicates', 'standard_deviation'],
+        required_columns => [ 'accession_name', 'replicate_number', 'gene', 'Cq' ],
         column_aliases => {
             'accession_name' => ['accession name'],
-            'relative_expression' => ['relative expression'],
-            'number_of_replicates' => ['number of replicates'],
-            'standard_deviation' => ['standard deviation'],
+            'replicate_number' => ['replicate number'],
+            'Cq' => ['Ct', 'CQ', CT],
         }
     );
     my $parsed = $parser->parse();
@@ -65,7 +66,7 @@ sub _validate_with_plugin {
     }
 
     foreach my $gene_name (@$seen_genes) {
-        if (!exists $vector_construct_genes{$gene_name}) {
+        if (!exists $valid_genes{$gene_name}) {
             push @error_messages, "Gene not in this vector construct: $gene_name.";
         }
     }
@@ -86,22 +87,20 @@ sub _parse_with_plugin {
     my $schema = $self->get_chado_schema();
     my $parsed = $self->_parsed_data();
     my $parsed_data = $parsed->{data};
-    my %relative_expression_data;
+    my %Cq_qPCR_data;
 
     foreach my $row (@$parsed_data) {
         my $row_number = $row->{'_row'};
         my $accession_name = $row->{'accession_name'};
+        my $replicate_number = $row->{'replicate_number'};
         my $gene_name = $row->{'gene'};
-        my $relative_expression = $row->{'relative_expression'};
-        my $number_of_replicates = $row->{'number_of_replicates'};
-        my $standard_deviation = $row->{'standard_deviation'};
+        my $Cq_value = $row->{'Cq'};
 
-        $relative_expression_data{$accession_name}{$gene_name}{'relative_expression'} = $relative_expression;
-        $relative_expression_data{$accession_name}{$gene_name}{'number_of_replicates'} = $number_of_replicates;
-        $relative_expression_data{$accession_name}{$gene_name}{'standard_deviation'} = $standard_deviation;
+
+        $Cq_qPCR_data{$accession_name}{$replicate_number}{$gene_name} = $Cq_value;
     }
 
-    $self->_set_parsed_data(\%relative_expression_data);
+    $self->_set_parsed_data(\%Cq_qPCR_data);
 
     return 1;
 }

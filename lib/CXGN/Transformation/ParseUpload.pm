@@ -40,6 +40,11 @@ has 'vector_construct_genes' => (
     required => 0,
 );
 
+has 'endogenous_control' => (
+    isa => 'Str',
+    is => 'ro',
+    required => 0,
+);
 
 sub parse {
     my $self = shift;
