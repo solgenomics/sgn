@@ -3,33 +3,26 @@ $stock_id
 $stock_uniquename
 </%args>
 
-<div class="modal fade" id="upload_relative_expression_data_dialog" name="upload_relative_expression_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadRelativeExpressionDataDialog">
+<div class="modal fade" id="upload_qPCR_data_dialog" name="upload_qPCR_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadqPCRDataDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadRelativeExpressionDataDialog">Upload Relative Expression Data</h4>
+                <h4 class="modal-title" id="uploadqPCRDataDialog">Upload qPCR Data</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
-                        <p>
-                            <b>File format information</b>
-                            <br>
-                            <a id="relative_expression_data_upload_spreadsheet_format_info">Spreadsheet Format</a>
-                        </p>
-                    </&>
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_relative_expression_data_form" name="upload_relative_expression_data_form">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_qPCR_data_form" name="upload_qPCR_data_form">
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Tissue Type: </label>
                             <div class="col-sm-8" >
-                                <div id="expression_tissue_type_div"></div>
+                                <div id="qPCR_tissue_type_div"></div>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Endogenous Control: </label>
                             <div class="col-sm-8" >
-                                <div id="expression_endogenous_control_div"></div>
+                                <div id="qPCR_endogenous_control_div"></div>
                             </div>
                         </div>
                         <div class="form-group">
@@ -41,15 +34,53 @@ $stock_uniquename
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Notes:</label>
                             <div class="col-sm-8">
-                                <textarea class="form-control" id="expression_notes" name="expression_notes" ></textarea>
+                                <textarea class="form-control" id="qPCR_notes" name="qPCR_notes" ></textarea>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File: </label>
-                            <div class="col-sm-8" >
-                                <input type="file" name="relative_expression_data_file" id="relative_expression_data_file" encoding="multipart/form-data" />
-                                <input name="relative_expression_data_vector_id" id="relative_expression_data_vector_id" type="hidden" value="<% $stock_id %>">
-                                <input name="relative_expression_data_vector_name" id="relative_expression_data_vector_name" type="hidden" value="<% $stock_uniquename %>">
+                            <label class="col-sm-4 control-label">Data Type: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="qPCR_data_type_options">
+                                    <option value="">Please select a data type</option>
+                                    <option value="CT_values">CT values</option>
+                                    <option value="normalized_values">normalized values</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="normalized_values_section" style="display:none">
+                            <center>
+                                <&| /page/explanation.mas, title=>'Template Information' &>
+                                    <p>
+                                        <b>File format information</b>
+                                        <br>
+                                        <a id="normalized_values_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                                    </p>
+                                </&>
+                            </center>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Upload File (normalized): </label>
+                                <div class="col-sm-8" >
+                                    <input type="file" name="normalized_qPCR_data_file" id="normalized_qPCR_data_file" encoding="multipart/form-data" />
+                                    <input name="qPCR_data_vector_id" id="qPCR_data_vector_id" type="hidden" value="<% $stock_id %>">
+                                    <input name="qPCR_data_vector_name" id="qPCR_data_vector_name" type="hidden" value="<% $stock_uniquename %>">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="CT_values_section" style="display:none">
+                            <center>
+                                <&| /page/explanation.mas, title=>'Template Information' &>
+                                    <p>
+                                        <b>File format information</b>
+                                        <br>
+                                        <a id="CT_values_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                                    </p>
+                                </&>
+                            </center>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Upload File (CT): </label>
+                                <div class="col-sm-8" >
+                                    <input type="file" name="CT_qPCR_file" id="CT_qPCR_file" encoding="multipart/form-data" />
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -57,40 +88,40 @@ $stock_uniquename
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_relative_expression_data_submit" id="upload_relative_expression_data_submit">Upload</button>
+                <button type="button" class="btn btn-primary" name="upload_qPCR_data_submit" id="upload_qPCR_data_submit">Upload</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="relative_expression_data_saved_dialog_message" name="relative_expression_data_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="relativeExpressionDataSavedDialog">
+<div class="modal fade" id="qPCR_data_saved_dialog_message" name="qPCR_data_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="qPCRDataSavedDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="relativeExpressionDataSavedDialog">Success</h4>
+                <h4 class="modal-title" id="qPCRDataSavedDialog">Success</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The relative expression data were saved successfully.
+                        The qPCR data were saved successfully.
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_relative_expression_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_qPCR_data_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="upload_relative_expression_data_error_display" name="upload_relative_expression_data_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadRelativeExpressionDataErrorDialog">
+<div class="modal fade" id="upload_qPCR_data_error_display" name="upload_qPCR_data_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadqPCRDataErrorDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadRelativeExpressionDataErrorDialog">Upload Relative Expression Data Error</h4>
+                <h4 class="modal-title" id="uploadqPCRDataErrorDialog">Upload Relative Expression Data Error</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -106,12 +137,12 @@ $stock_uniquename
     </div>
 </div>
 
-<div class="modal fade" id="relative_expression_data_upload_spreadsheet_info_dialog" name="relative_expression_data_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadRelativeExpressionDataInfoDialog">
+<div class="modal fade" id="CT_qPCR_data_upload_spreadsheet_info_dialog" name="CT_qPCR_data_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCTqPCRDataInfoDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadRelativeExpressionDataInfoDialog">Upload Template Information For Relative Expression Data</h4>
+                <h4 class="modal-title" id="uploadCTqPCRDataInfoDialog">Upload Template Information For qPCR Data (CT values)</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -143,7 +174,7 @@ $stock_uniquename
                         <li></li>
                     </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "Relative Expression Data", optional_column => 1 &>
+                <& /help/file_upload_type.mas, type => "qPCR Data", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_relative_expression_data_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -157,21 +188,38 @@ $stock_uniquename
 
 jQuery(document).ready(function(){
 
-    jQuery('#upload_relative_expression_data_link').click(function() {
-        get_select_box('tissue_types', 'expression_tissue_type_div', { 'name' : 'expression_tissue_type', 'id' : 'expression_tissue_type' , 'empty' : 1});
-        get_select_box('endogenous_controls', 'expression_endogenous_control_div', { 'name' : 'expression_endogenous_control', 'id' : 'expression_endogenous_control' , 'empty' : 1});
-        jQuery("#upload_relative_expression_data_dialog").modal("show");
+    jQuery('#upload_qPCR_data_link').click(function() {
+        get_select_box('tissue_types', 'qPCR_tissue_type_div', { 'name' : 'qPCR_tissue_type', 'id' : 'qPCR_tissue_type' , 'empty' : 1});
+        get_select_box('endogenous_controls', 'qPCR_endogenous_control_div', { 'name' : 'qPCR_endogenous_control', 'id' : 'qPCR_endogenous_control' , 'empty' : 1});
+        jQuery("#upload_qPCR_data_dialog").modal("show");
     });
 
-    jQuery('#upload_relative_expression_data_spreadsheet_format_info').click(function(){
-        jQuery("#relative_expression_data_upload_spreadsheet_info_dialog").modal("show");
+    jQuery('#qPCR_data_type_options').change(function() {
+        const data_type = jQuery('#qPCR_data_type_options').val();
+        if (data_type == 'CT_values') {
+            jQuery("#CT_values_section").modal("show");
+            jQuery("#normalized_values_section").modal("hide");
+        } else if (data_type == 'normalized_values') {
+            jQuery("#normalized_values_section").modal("show");
+            jQuery("#CT_values_section").modal("hide");
+        } else {
+            jQuery("#normalized_values_section").modal("hide");
+            jQuery("#CT_values_section").modal("hide");
+        }
     });
 
-    jQuery("#upload_relative_expression_data_submit").click(function(){
-        const upload_file = jQuery("#relative_expression_data_file").val();
-        const tissue_type = jQuery("#expression_tissue_type").val();
-        const endogenous_control = jQuery("#expression_endogenous_control").val();
+    jQuery('#upload_CT_qPCT_data_spreadsheet_format_info').click(function(){
+        jQuery("#CT_qPCR_data_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_qPCR_data_submit").click(function(){
+        const CT_upload_file = jQuery("#CT_qPCR_data_file").val();
+        const normalized_upload_file = jQuery("#normalized_qPCR_data_file").val();
+
+        const tissue_type = jQuery("#qPCR_tissue_type").val();
+        const endogenous_control = jQuery("#qPCR_endogenous_control").val();
         const assay_date = jQuery("#assay_date").val();
+        const qPCR_data_type = jQuery("#qPCR_data_type").val();
 
         jQuery('#upload_relative_expression_data_form').attr("action", "/ajax/transformation/upload_relative_expression_data");
         if (tissue_type === ''){
@@ -189,16 +237,31 @@ jQuery(document).ready(function(){
             return;
         }
 
+        if (qPCR_data_type === ''){
+            alert("Please select a data type");
+            return;
+        }
+
         if (upload_file === ''){
             alert("Please select a file");
             return;
         }
 
-        jQuery("#upload_relative_expression_data_form").submit();
-        jQuery("#upload_relative_expression_data_dialog").modal("hide");
+        if ((CT_upload_file === '') && (normalized_upload_file === '')){
+            alert("Please select a file");
+            return;
+        }
+
+        if (CT_upload_file && normalized_upload_file){
+            alert("Please select either a CT qPCR or normalized qPCR data file, not both");
+            return;
+        }
+
+        jQuery("#upload_qPCR_data_form").submit();
+        jQuery("#upload_qPCR_data_dialog").modal("hide");
     });
 
-    jQuery('#upload_relative_expression_data_form').iframePostForm({
+    jQuery('#upload_qPCR_data_form').iframePostForm({
         json: true,
         post: function(){
             jQuery("#working_modal").modal("show");
@@ -206,9 +269,9 @@ jQuery(document).ready(function(){
         complete: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error_string) {
-                jQuery("#upload_relative_expression_data_error_display tbody").html('');
-                jQuery("#upload_relative_expression_data_error_display tbody").append(response.error_string);
-                jQuery("#upload_relative_expression_data_error_display").modal("show");
+                jQuery("#upload_qPCR_data_error_display tbody").html('');
+                jQuery("#upload_qPCR_data_error_display tbody").append(response.error_string);
+                jQuery("#upload_qPCR_data_error_display").modal("show");
                 return;
             }
             if (response.error) {
@@ -216,17 +279,17 @@ jQuery(document).ready(function(){
                 return;
             }
             if (response.success) {
-                jQuery('#relative_expression_data_saved_dialog_message').modal("show");
+                jQuery('#qPCR_data_saved_dialog_message').modal("show");
             }
         }
     });
 
-    jQuery("#dismiss_relative_expression_data_saved_dialog").click(function(){
+    jQuery("#dismiss_qPCR_data_saved_dialog").click(function(){
         location.reload();
     });
 
-    jQuery('#relative_expression_data_upload_spreadsheet_format_info').click(function() {
-        jQuery("#relative_expression_data_upload_spreadsheet_info_dialog").modal("show");
+    jQuery('#normalized_qPCR_data_upload_spreadsheet_format_info').click(function() {
+        jQuery("#normalized_qPCR_data_upload_spreadsheet_info_dialog").modal("show");
     });
 
 
