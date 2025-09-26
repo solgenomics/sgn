@@ -40,6 +40,7 @@ use CXGN::Metadata::Schema;
 use CXGN::Phenome::Schema;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
+use Excel::Writer::XLSX;
 
 our %opt;
 getopts('H:D:U:P:o:f:s:e:', \%opt);
@@ -65,9 +66,7 @@ my $dbh = DBI->connect(
     { AutoCommit => 0, RaiseError => 1 }
 );
 
-my $schema           = Bio::Chado::Schema->connect(sub { $dbh });
-my $metadata_schema  = CXGN::Metadata::Schema->connect(sub { $dbh });
-my $phenome_schema   = CXGN::Phenome::Schema->connect(sub { $dbh });
+my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
 my $rs = $schema->resultset("Project::Project")->search(
     {
@@ -106,99 +105,152 @@ foreach my $trial_id (@trial_ids) {
     my $test_type             = $t->get_design_type();
 
     next unless defined $year;
-    next if $test_type eq "Analise";
+    next if !defined($test_type) || $test_type eq "Analise";
 
     $trial_cols{$trial_id} = [ $year, $breeding_program_name, $trial_name, $location_name ];
 
     my $traits = $t->get_traits_assayed();
     my @trait_names = map { $_->[0] } @$traits;
 
-    my $data = $t->get_stock_phenotypes_for_traits(
-        \@trait_names, 'all', ['plot_of', 'plant_of'], 'accession', 'subject'
-    );
+    print("Running project $trial_name \n");
 
-    $trial_data{$trial_id} = $data;
-}
+    my $sth = $dbh->prepare(qq{
+        SELECT
+            acc.uniquename AS accession_name,
+            plot.uniquename AS plot_name,
+            trait.name AS trait_name,
+            ph.value AS observed_value
+        FROM nd_experiment e
+        JOIN nd_experiment_project ep ON (e.nd_experiment_id = ep.nd_experiment_id)
+        JOIN nd_experiment_phenotype nep ON (nep.nd_experiment_id = ep.nd_experiment_id)
+        JOIN phenotype ph ON (nep.phenotype_id = ph.phenotype_id)
+        JOIN cvterm trait ON (ph.cvalue_id = trait.cvterm_id)
+        JOIN nd_experiment_stock nes ON (e.nd_experiment_id = nes.nd_experiment_id)
+        JOIN stock plot ON (nes.stock_id = plot.stock_id)
+        LEFT JOIN stock_relationship rel ON (plot.stock_id = rel.object_id)
+        LEFT JOIN stock acc ON (rel.subject_id = acc.stock_id)
+        WHERE ep.project_id = ?
+    });
+    $sth->execute($trial_id);
 
-my (%obs, %traits);
-foreach my $trial_id (keys %trial_data) {
-    foreach my $line (@{$trial_data{$trial_id}}) {
-        $obs{$trial_id}->{$line->[9]}->{$line->[1]}->{$line->[3]} = $line->[7];
-        $traits{$line->[3]}++;
+    my @data;
+    while (my ($accession, $plot, $trait, $value) = $sth->fetchrow_array) {
+        $accession //= 'Unknown';
+        push @data, [ $accession, $plot, $trait, $value ];
     }
+
+    $trial_data{$trial_id} = \@data;
 }
+
 
 my $minimum_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name => 'trait_minimum' })->cvterm_id;
 my $maximum_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name => 'trait_maximum' })->cvterm_id;
 
+my @trial_ids = keys %trial_data;
+my $total = scalar(@trial_ids);
+my $counter = 0;
+
 my @qc_issues;
-foreach my $trial_id (keys %obs) {
+foreach my $trial_id (@trial_ids) {
+
+    $counter++;
+    print("Getting data from trial_id=$trial_id  counter: $counter/$total\n");
+
     my ($year, $breeding_program_name, $trial_name, $location_name) = @{$trial_cols{$trial_id}};
     my $create_date = $trial_create_dates{$trial_id} || 'NULL';
 
-    foreach my $accession (keys %{$obs{$trial_id}}) {
-        foreach my $plot (keys %{$obs{$trial_id}->{$accession}}) {
-            foreach my $trait_original (keys %{$obs{$trial_id}->{$accession}->{$plot}}) {
-                my $trait_name = $trait_original;
-                $trait_name =~ s/\|.*//;
+    foreach my $row (@{$trial_data{$trial_id}}) {
+        my ($accession, $plot, $trait_name, $observed_value) = @$row;
 
-                my $trait_cvterm = $schema->resultset("Cv::Cvterm")->find({ name => $trait_name });
-                next unless $trait_cvterm;
-                my $trait_id = $trait_cvterm->cvterm_id;
+        my $trait_cvterm = $schema->resultset("Cv::Cvterm")->find({ name => $trait_name });
+        next unless $trait_cvterm;
+        my $trait_id = $trait_cvterm->cvterm_id;
 
-                my $min_value_rs = $schema->resultset("Cv::Cvtermprop")->search({
-                    'cvterm_id' => $trait_id,
-                    'type_id'   => $minimum_cvterm_id
-                });
-                my $min_value = $min_value_rs->first ? $min_value_rs->first->value : undef;
+        my $min_value_rs = $schema->resultset("Cv::Cvtermprop")->search({
+            'cvterm_id' => $trait_id,
+            'type_id'   => $minimum_cvterm_id
+        });
+        my $min_value = $min_value_rs->first ? $min_value_rs->first->value : undef;
 
-                my $max_value_rs = $schema->resultset("Cv::Cvtermprop")->search({
-                    'cvterm_id' => $trait_id,
-                    'type_id'   => $maximum_cvterm_id
-                });
-                my $max_value = $max_value_rs->first ? $max_value_rs->first->value : undef;
+        my $max_value_rs = $schema->resultset("Cv::Cvtermprop")->search({
+            'cvterm_id' => $trait_id,
+            'type_id'   => $maximum_cvterm_id
+        });
+        my $max_value = $max_value_rs->first ? $max_value_rs->first->value : undef;
 
-                next unless defined $min_value && defined $max_value;
+        next unless defined $min_value && defined $max_value;
+        next if $min_value eq $max_value;
 
-                my $observed_value = $obs{$trial_id}->{$accession}->{$plot}->{$trait_original};
-                my $qc_type;
+        my $qc_type;
 
-                if (defined $observed_value && $observed_value < $min_value) {
-                    $qc_type = "below minimum";
-                }
-                elsif (defined $observed_value && $observed_value > $max_value) {
-                    $qc_type = "above maximum";
-                }
+        if (defined $observed_value && $observed_value !~ /^-?\d+(\.\d+)?$/) {
+            $qc_type = "invalid numeric format";
+        }
+        elsif (defined $observed_value && $observed_value < $min_value) {
+            $qc_type = "below minimum";
+        }
+        elsif (defined $observed_value && $observed_value > $max_value) {
+            $qc_type = "above maximum";
+        }
 
-                if ($qc_type) {
-                    push @qc_issues, {
-                        year                   => $year,
-                        breeding_program_name => $breeding_program_name,
-                        trial_name            => $trial_name,
-                        trial_location        => $location_name,
-                        create_date           => $create_date,
-                        accession             => $accession,
-                        plot                  => $plot,
-                        trait_name            => $trait_name,
-                        observed              => $observed_value,
-                        minimum               => $min_value,
-                        maximum               => $max_value,
-                        type                  => $qc_type
-                    };
-                }
-            }
+        if ($qc_type) {
+            push @qc_issues, {
+                year                  => $year,
+                breeding_program_name => $breeding_program_name,
+                trial_name            => $trial_name,
+                trial_location        => $location_name,
+                create_date           => $create_date,
+                accession             => $accession,
+                plot                  => $plot,
+                trait_name            => $trait_name,
+                observed              => $observed_value,
+                minimum               => $min_value,
+                maximum               => $max_value,
+                type                  => $qc_type
+            };
         }
     }
 }
 
-my $json = encode_json(\@qc_issues), "\n";
-print $json;
+# Create an Excel workbook
+my $excel_file_path = $out_directory . $filename . '.xlsx';
 
-my $json_file_path = $out_directory . $filename;
-print("File saved in $json_file_path \n\n");
+my $workbook  = Excel::Writer::XLSX->new($excel_file_path)
+    or die "Could not create Excel file $excel_file_path: $!";
 
-open(my $fh, '>', $json_file_path) or die "Could not write to $json_file_path: $!";
-print $fh $json;
-close($fh);
+my $worksheet = $workbook->add_worksheet('Phenotype QC');
+
+# Write header row
+my @columns = qw(
+    year
+    breeding_program_name
+    trial_name
+    trial_location
+    create_date
+    accession
+    plot
+    trait_name
+    observed
+    minimum
+    maximum
+    type
+);
+my $col_index = 0;
+for my $col_name (@columns) {
+    $worksheet->write(0, $col_index++, $col_name);
+}
+
+# Write data rows
+my $row_index = 1;
+for my $record (@qc_issues) {
+    $col_index = 0;
+    for my $col_name (@columns) {
+        $worksheet->write($row_index, $col_index++, $record->{$col_name});
+    }
+    $row_index++;
+}
+
+print "Excel file saved in $excel_file_path\n\n";
 
 $dbh->disconnect();
+exit(0);

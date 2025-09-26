@@ -813,7 +813,12 @@ export function init() {
                                                 if (col == 0) {// row header
                                                     table_elems.push("<th style=\"border:none;text-align:left; vertical-align:middle;padding-right:5px;\">"+row+"</th>");
                                                 } else {// normal plant
-                                                    table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
+                                                    let coord = "" + row + "," + col + "";
+                                                    if (coord in coord_dictionary) {
+                                                        table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
+                                                    } else {
+                                                        table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">empty space</td>");
+                                                    }
                                                 }
                                             }
                                         }

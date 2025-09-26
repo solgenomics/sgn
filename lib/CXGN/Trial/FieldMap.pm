@@ -7,6 +7,7 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
+use CXGN::Stock::Plot;
 #use List::Util 'max';
 use List::MoreUtils qw | :all !before !after |;
 use Bio::Chado::Schema;
@@ -381,27 +382,78 @@ sub substitute_accession_fieldmap {
 sub replace_plot_accession_fieldMap {
     my $self = shift;
     my $plot_id = shift;
-    my $accession_id = shift;
+    my $old_accession_id = shift;
+    my $new_accession_id = shift;
     my $plot_of_type_id = shift;
     my $error;
     my $schema = $self->bcs_schema;
     my $dbh = $self->bcs_schema->storage->dbh;
 
-    my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search(
-    {
+    my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search({
         subject_id => $plot_id,
+        # object_id => $old_accession_id,   #in future updates, this line may be uncommented to allow for multiple accessions per plot and swapping only one at a time
         type_id => $plot_of_type_id
     });
 
     if ($stockprop_rs->count == 1) {
         $stockprop_rs->update({
-            object_id => $accession_id,
+            object_id => $new_accession_id,
         });
     }
     elsif ($stockprop_rs->count > 1) {
         $error = "There should only be one accession linked to the plot via plot_of\n";
     } else {
         $error = "Plot entry does not exist in database.\n";
+    }
+
+    my $plot = CXGN::Stock::Plot->new({
+        schema => $schema,
+        stock_id => $plot_id
+    });
+
+    my @plants = @{$plot->plants()};
+    my @subplots = @{$plot->subplots()};
+    my @tissue_samples = @{$plot->get_tissue_samples()};
+
+    foreach my $plant (@plants) {
+        my $plant_id = $plant->{id};
+        my $plant_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
+            subject_id => $plant_id,
+            object_id => $old_accession_id
+        });
+        if ($plant_accession_rs->count == 1) {
+            $plant_accession_rs->update({
+                object_id => $new_accession_id
+            });
+        } else {    
+            $error = "Strange: plant with id $plant_id has either no accession or multiple accessions.\n";
+        }
+    }
+
+    foreach my $subplot (@subplots) {
+        my $subplot_id = $subplot->{id};
+        my $subplot_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
+            subject_id => $subplot_id,
+            object_id => $old_accession_id
+        });
+        $subplot_accession_rs->update({
+            object_id => $new_accession_id
+        });
+    }
+
+    foreach my $tissue_sample (@tissue_samples) {
+        my $ts_id = $tissue_sample->{id};
+        my $ts_accession_rs = $schema->resultset("Stock::StockRelationship")->search({
+            subject_id => $ts_id,
+            object_id => $old_accession_id
+        });
+        if ($ts_accession_rs->count == 1) {
+            $ts_accession_rs->update({
+                object_id => $new_accession_id
+            });
+        } else {    
+            $error = "Strange: tissue sample with id $ts_id has either no accession or multiple accessions.\n";
+        }
     }
 
     $self->_regenerate_trial_layout_cache();
@@ -413,6 +465,7 @@ sub replace_plot_accession_fieldMap {
 sub replace_plot_name_fieldMap {
     my $self = shift;
     my $plot_id = shift;
+    my $old_plot_name = shift;
     my $new_plot_name = shift;
     my $error;
     my $schema = $self->bcs_schema;
@@ -434,7 +487,54 @@ sub replace_plot_name_fieldMap {
             uniquename => $new_plot_name,
         });
     }
+
+    my $plot = CXGN::Stock::Plot->new({
+        schema => $schema,
+        stock_id => $plot_id
+    });
+
+    my @plants = @{$plot->plants()};
+    my @subplots = @{$plot->subplots()};
+    my @tissue_samples = @{$plot->get_tissue_samples()};
+
+    foreach my $plant (@plants) {
+        my $plant_id = $plant->{id};
+        my $plant_rs = $schema->resultset("Stock::Stock")->search({
+            stock_id => $plant_id,
+        });
+        my $new_name = $plant->{name} =~ s/$old_plot_name/$new_plot_name/r;
+        $plant_rs->update({
+            name => $new_name,
+            uniquename => $new_name
+        });
+    }
+
+    foreach my $subplot (@subplots) {
+        my $subplot_id = $subplot->{id};
+        my $subplot_rs = $schema->resultset("Stock::Stock")->search({
+            stock_id => $subplot_id,
+        });
+        my $new_name = $subplot->{name} =~ s/$old_plot_name/$new_plot_name/r;
+        $subplot_rs->update({
+            name => $new_name,
+            uniquename => $new_name
+        });
+    }
+
+    foreach my $tissue_sample (@tissue_samples) {
+        my $ts_id = $tissue_sample->{id};
+        my $ts_rs = $schema->resultset("Stock::Stock")->search({
+            stock_id => $ts_id,
+        });
+        my $new_name = $tissue_sample->{name} =~ s/$old_plot_name/$new_plot_name/r;
+        $ts_rs->update({
+            name => $new_name,
+            uniquename => $new_name
+        });
+    }
+
     $self->_regenerate_trial_layout_cache();
+
     return $error;
 }
 
@@ -457,18 +557,28 @@ sub replace_trial_stock_fieldMap {
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross', 'stock_type' )->cvterm_id();
     my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
     my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
     my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
     my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 
-    my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN (?,?,?) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
+    my $h_update = $dbh->prepare("UPDATE stock_relationship SET object_id=? 
+    WHERE stock_relationship_id IN 
+        (SELECT stock_relationship.stock_relationship_id FROM stock AS accession 
+        JOIN stock_relationship ON (accession.stock_id = stock_relationship.object_id) 
+        JOIN stock AS plot ON (plot.stock_id = stock_relationship.subject_id) 
+        JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) 
+        JOIN nd_experiment USING(nd_experiment_id) 
+        JOIN nd_experiment_project USING(nd_experiment_id) 
+        JOIN project USING(project_id) 
+        WHERE accession.type_id =? AND stock_relationship.type_id IN (?,?,?,?) AND project.project_id =? AND nd_experiment.type_id=?) AND object_id=?;");
     if ($trial_stock_type eq 'family_name') {
-        $h_update->execute($new_stock_id,$family_name_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+        $h_update->execute($new_stock_id,$family_name_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$tissue_sample_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
     }
     elsif ($trial_stock_type eq 'cross') {
-        $h_update->execute($new_stock_id,$cross_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+        $h_update->execute($new_stock_id,$cross_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$tissue_sample_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
     }
     else {
-        $h_update->execute($new_stock_id,$accession_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+        $h_update->execute($new_stock_id,$accession_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$tissue_sample_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
     }
 
     $self->_regenerate_trial_layout_cache();
