@@ -171,8 +171,7 @@ When both required_columns and optional_columns are included in the constructor,
     - an array of the column headers in the file that are neither required nor optional
 
 For example, the trial upload template can specify the required columns (such as trial_name, plot_number, etc),
-and the optional columns (such as planting_date, harvest_date, etc).  Any of the 'additional_columns' will
-be treated as treatments.
+and the optional columns (such as planting_date, harvest_date, etc).  Any of the 'additional_columns' will result in a warning.
 
 =head1 PLUGINS
 
