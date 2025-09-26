@@ -53,11 +53,16 @@ has 'tissue_type' => (
     required => 1
 );
 
+has 'CT_expression_data' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw',
+    predicate => 'has_CT_expression_data',
+);
+
 has 'relative_expression_data' => (
     isa => 'Maybe[HashRef]',
     is => 'rw',
     predicate => 'has_relative_expression_data',
-    required => 1
 );
 
 has 'endogenous_control' => (
@@ -87,25 +92,22 @@ has 'operator_id' => (
 	required => 1
 );
 
-has 'relative_expression_data_derived_from' => (
-    isa => 'Str',
-    is => 'rw',
-    predicate => 'has_relative_expression_data_derived_from',
-);
 
-sub store_normalized_qPCR_data {
+sub store_qPCR_data {
     my $self = shift;
     my $schema = $self->get_chado_schema();
     my $transaction_error;
 	my $transformant_name = $self->get_transformant_name();
 	my $vector_construct_name = $self->get_vector_construct_name();
+	my $CT_expression_data = $self->get_CT_expression_data();
 	my $relative_expression_data = $self->get_relative_expression_data();
 	my $tissue_type = $self->get_tissue_type();
 	my $assay_date = $self->get_assay_date();
 	my $endogenous_control = $self->get_endogenous_control();
 	my $notes = $self->get_notes();
 	my $operator_id = $self->get_operator_id();
-	my $relative_expression_data_derived_from = $self->get_relative_expression_data_derived_from();
+
+	my $relative_expression_data_derived_from;
 
     my $coderef = sub {
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
@@ -156,11 +158,18 @@ sub store_normalized_qPCR_data {
             print STDERR "More than one expression data stockprop found!\n";
             return;
         } else {
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'relative_expression_values'} = $relative_expression_data;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'notes'} = $notes;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
+            if ($CT_expression_data) {
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'}->{'CT_values'} = $CT_expression_data;
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'}->{'endogenous_control'} = $endogenous_control;
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'}->{'notes'} = $notes;
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'}->{'uploaded_by'} = $operator_id;
+            } elsif ($relative_expression_data) {
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'normalized_values'} = $relative_expression_data;
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'notes'} = $notes;
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'normalized_values_derived_from'} = 'provided';
+            }
             $expression_data_json = encode_json $expression_data_hash;
             $transformant_stock->create_stockprops({$expression_data_cvterm->name() => $expression_data_json});
         }

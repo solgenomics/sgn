@@ -1526,23 +1526,27 @@ sub upload_qPCR_data_POST : Args(0) {
     my $endogenous_control = $c->req->param('qPCR_endogenous_control');
     my $notes = $c->req->param('qPCR_notes');
     my $assay_date = $c->req->param('assay_date');
-    my $data_type = $c->req->param('qPCR_data_type');
     my $upload;
     my $plugin_type;
     my $CT_upload = $c->req->upload('CT_qPCR_data_file');
     my $normalized_upload = $c->req->upload('normalized_qPCR_data_file');
-    print STDERR "DATA TYPE =".Dumper($data_type)."\n";
+    print STDERR "CT UPLOAD =".Dumper($CT_upload)."\n";
+    print STDERR "NORMALIZED UPLOAD =".Dumper($normalized_upload)."\n";
+    
     if ($CT_upload) {
         $upload = $CT_upload;
-        $plugin_type = 'CTqPCRdata';
+        $plugin_type = 'CTqPCRData';
     } elsif ($normalized_upload) {
         $upload = $normalized_upload;
         $plugin_type = 'NormalizedqPCRData';
     }
+    print STDERR "PLUGIN TYPE =".Dumper($plugin_type)."\n";
 
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
+    print STDERR "ORIGINAL NAME = =".Dumper($upload_original_name)."\n";
+
     my $upload_tempfile = $upload->tempname;
     my $subdirectory = "qPCR_data_upload";
     my $archived_filename_with_path;
@@ -1622,7 +1626,7 @@ sub upload_qPCR_data_POST : Args(0) {
         @vector_construct_genes = split(',',$gene_info);
     }
 #    print STDERR "VECTOR CONSTRUCT GENES =".Dumper(\@vector_construct_genes)."\n";
-    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes);
+    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes, endogenous_control => $endogenous_control);
 
     $parser->load_plugin($plugin_type);
     $parsed_data = $parser->parse();
@@ -1646,25 +1650,30 @@ sub upload_qPCR_data_POST : Args(0) {
     if ($parsed_data){
         eval {
             foreach my $transformant_name (keys %$parsed_data) {
-                my $relative_expression_data = $parsed_data->{$transformant_name};
-                print STDERR "TRANSFORMANT NAME =".Dumper($transformant_name)."\n";
-                print STDERR "EXPRESSION INFO =".Dumper($relative_expression_data)."\n";
-                if ($normalized_upload) {
-                    my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
-                        chado_schema => $schema,
-                        transformant_name => $transformant_name,
-                        vector_construct_name => $vector_construct_name,
-                        tissue_type => $tissue_type,
-                        relative_expression_data => $relative_expression_data,
-                        endogenous_control => $endogenous_control,
-                        assay_date => $assay_date,
-                        notes => $notes,
-                        operator_id => $user_id,
-                        relative_expression_data_derived_from => 'provided',
-                    });
-
-                    my $store = $expression_data->store_normalized_qPCR_data();
+                my $CT_expression_data;
+                my $relative_expression_data;
+                if ($CT_upload) {
+                    $CT_expression_data = $parsed_data->{$transformant_name};
+                } elsif ($normalized_upload) {
+                    $relative_expression_data = $parsed_data->{$transformant_name};
                 }
+                print STDERR "CT UPLOAD =".Dumper($CT_expression_data)."\n";
+                print STDERR "RELATIVE UPLOAD =".Dumper($relative_expression_data)."\n";
+
+                my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
+                    chado_schema => $schema,
+                    transformant_name => $transformant_name,
+                    vector_construct_name => $vector_construct_name,
+                    tissue_type => $tissue_type,
+                    CT_expression_data => $CT_expression_data,
+                    relative_expression_data => $relative_expression_data,
+                    endogenous_control => $endogenous_control,
+                    assay_date => $assay_date,
+                    notes => $notes,
+                    operator_id => $user_id,
+                });
+
+                my $store = $expression_data->store_qPCR_data();
 #                my $store_expression_error = $store->{error};
 #                if ($store_expression_error) {
 #                    $c->stash->{rest} = { error => "Error! Cannot store expression data of transformant: $transformant_name. "};

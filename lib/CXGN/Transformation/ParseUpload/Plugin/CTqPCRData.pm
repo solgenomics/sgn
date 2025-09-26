@@ -14,12 +14,11 @@ sub _validate_with_plugin {
     my $schema = $self->get_chado_schema();
 
     my $genes = $self->get_vector_construct_genes();
-    my $endogenous_control = $self->get_endogenous_control();
-
     my %valid_genes;
     foreach my $gene (@$genes) {
         $valid_genes{$gene} = 1;
     }
+    my $endogenous_control = $self->get_endogenous_control();
     $valid_genes{$endogenous_control} = 1;
 
     my @error_messages;
@@ -31,7 +30,7 @@ sub _validate_with_plugin {
         column_aliases => {
             'accession_name' => ['accession name'],
             'replicate_number' => ['replicate number'],
-            'Cq' => ['Ct', 'CQ', CT],
+            'Cq' => ['Ct', 'CQ', 'CT'],
         }
     );
     my $parsed = $parser->parse();

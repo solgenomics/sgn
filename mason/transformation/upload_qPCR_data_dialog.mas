@@ -40,7 +40,7 @@ $stock_uniquename
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Data Type: </label>
                             <div class="col-sm-8">
-                                <select class="form-control" id="qPCR_data_type_options">
+                                <select class="form-control" id="qPCR_data_type_option">
                                     <option value="">Please select a data type</option>
                                     <option value="CT_values">CT values</option>
                                     <option value="normalized_values">normalized values</option>
@@ -194,8 +194,8 @@ jQuery(document).ready(function(){
         jQuery("#upload_qPCR_data_dialog").modal("show");
     });
 
-    jQuery('#qPCR_data_type_options').change(function() {
-        const data_type = jQuery('#qPCR_data_type_options').val();
+    jQuery('#qPCR_data_type_option').change(function() {
+        const data_type = jQuery('#qPCR_data_type_option').val();
         if (data_type == 'CT_values') {
             jQuery("#CT_values_section").modal("show");
             jQuery("#normalized_values_section").modal("hide");
