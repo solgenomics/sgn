@@ -779,4 +779,6 @@ is(scalar(@{$output->{output}}), 801);
 eval {$test_treatment->delete()};
 ok($@ , 'Check treatment delete is blocked by existing phenotypes');
 
+$fix->clean_up_db();
+
 done_testing();
