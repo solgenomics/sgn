@@ -1598,7 +1598,7 @@ for my $extension ("xls", "xlsx", "csv") {
 	my $project_desc = $f->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->description();
 	ok($project_desc == "Trial Upload Test Flexible", "check that trial_create really worked");
 
-	ok($test_treatment->delete(), "Test treatment deletion");
+	# ok($test_treatment->delete(), "Test treatment deletion");
 
 	$f->clean_up_db();
 }

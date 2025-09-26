@@ -14,6 +14,8 @@ use File::Temp 'tempfile';
 
 my $fix = SGN::Test::Fixture->new();
 
+$fix->get_db_stats();
+
 is(ref($fix->config()), "HASH", 'hashref check');
 
 BEGIN {use_ok('CXGN::Trial::TrialCreate');}
@@ -779,6 +781,15 @@ is(scalar(@{$output->{output}}), 801);
 eval {$test_treatment->delete()};
 ok($@ , 'Check treatment delete is blocked by existing phenotypes');
 
-$fix->clean_up_db();
+my $delete_error = $trial_obj->delete_assayed_trait($fix->config->{basepath},$fix->config->{dbhost}, $fix->config->{dbname}, $fix->config->{dbuser}, $fix->config->{dbpass},undef, [], [$test_treatment_id] );
+
+sleep(15);
+
+ok(! $delete_error);
+
+eval {$test_treatment->delete()};
+ok(! $@ , 'Check treatment delete');
+
+# $fix->clean_up_db();
 
 done_testing();
