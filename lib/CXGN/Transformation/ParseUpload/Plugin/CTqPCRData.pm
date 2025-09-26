@@ -86,6 +86,7 @@ sub _parse_with_plugin {
     my $schema = $self->get_chado_schema();
     my $parsed = $self->_parsed_data();
     my $parsed_data = $parsed->{data};
+    my $endogenous_control = $self->get_endogenous_control();
     my %Cq_qPCR_data;
 
     foreach my $row (@$parsed_data) {
@@ -94,9 +95,11 @@ sub _parse_with_plugin {
         my $replicate_number = $row->{'replicate_number'};
         my $gene_name = $row->{'gene'};
         my $Cq_value = $row->{'Cq'};
-
-
-        $Cq_qPCR_data{$accession_name}{$replicate_number}{$gene_name} = $Cq_value;
+        if ($gene_name eq $endogenous_control) {
+            $Cq_qPCR_data{$accession_name}{$replicate_number}{'endogenous_control'}{$gene_name} = $Cq_value;
+        } else {
+            $Cq_qPCR_data{$accession_name}{$replicate_number}{'target'}{$gene_name} = $Cq_value;
+        }
     }
 
     $self->_set_parsed_data(\%Cq_qPCR_data);

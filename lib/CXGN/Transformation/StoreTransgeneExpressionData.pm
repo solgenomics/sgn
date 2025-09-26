@@ -108,6 +108,10 @@ sub store_qPCR_data {
 	my $operator_id = $self->get_operator_id();
 
 	my $relative_expression_data_derived_from;
+	if ($CT_expression_data) {
+        my $normalized_data = _CASS_normalized_values($CT_expression_data, $endogenous_control);
+    }
+	exit;
 
     my $coderef = sub {
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
@@ -206,6 +210,33 @@ sub store_qPCR_data {
 
     return 1;
 }
+
+sub _CASS_normalized_values {
+    my $CT_data = shift;
+	my $endogenous_control = shift;
+	my @replicates = keys %$CT_data;
+	my $number_of_replicates = scalar @replicates;
+	my %two_power_CT_hash;
+	my %normalized_values_hash;
+
+    foreach my $rep (keys %$CT_data) {
+        my $CT_values = $CT_data->{$rep};
+        my $endogenouse_control_CT = $CT_values->{'endogenous_control'}->{$endogenous_control};
+        my $two_power_control = 2**$endogenouse_control_CT;
+        my $target_CT_values = $CT_values->{'target'};
+        foreach my $gene (keys %$target_CT_values) {
+            my $normalized_value;
+            my $CT = $target_CT_values->{$gene};
+            my $two_power_target = 2**$CT;
+            $normalized_values_hash{$gene}{$rep} = $two_power_control / $two_power_target;
+        }
+	}
+
+
+    my $normalized_data;
+    return $normalized_data;
+}
+
 
 
 #######
