@@ -107,22 +107,72 @@ sub parse_genbank {
     my @commands = ();
     my @features = $s -> get_SeqFeatures();
     
-    foreach my $f (@features) { 
+    foreach my $f (@features) {
+	print STDERR "FEATURE OBJECT TYPE: ".ref($f)."\n";
+	if (ref($f) eq "ARRAY") {
+	    print STDERR Dumper($f);
+	    next;
+	}
 	my $dir = "F";
-	if ($f->strand() != 1) { $dir = "R"; }
+	if ($f->can('strand')) { 
+	    if ($f->strand() != 1) { $dir = "R"; }
+	}
 	my $name;
-	if ($f->primary_tag() eq "gene") {
+	if ( ($f->primary_tag() eq "gene")) { 
 	    foreach my $tag ($f->all_tags()) { 
 		($name) = $f->each_tag_value("gene");
 	    }
 	    
+	    
 	    push @$features, [ $name, $f->start(), $f->end(), "lightblue", $dir ];
 	}
+	elsif ( $f->primary_tag() eq "repeat_region") {
+	    foreach my $tag ($f->all_tags()) {
+		my ($name) = $f->each_tag_value("standard_name");
+		
+		push @$features, [ $name, $f->start(), $f->end(), "red", "" ];
+	    }
+	}
+	elsif ( $f->primary_tag() eq "CDS") {
+	    foreach my $tag ($f->all_tags()) {
+		($name) = $f->each_tag_value("standard_name");
+	    }
+	    push @$features, [ $name, $f->start(), $f->end(), "lightgreen", $dir ];
+	}
+	elsif ($f->primary_tag() eq "regulatory") {
+	    foreach my $tag ($f->all_tags()) {
+		($name) = $f->each_tag_value("standard_name");
+	    }
+	    push @$features, [ $name, $f->start(), $f->end(), "blue", "" ];
+	}
+	
 	else {
-	    print STDERR "IGNORING TAG: ".$f->primary_tag()."\n";
+	    print STDERR "Processing primary tag: ".$f->primary_tag()." TAGS: ".join(",", $f->get_all_tags())."\n";
+	    
+	    my @all_tags = $f->get_all_tags();
+	    if (grep /note/, @all_tags) { 
+		my @notes = $f->get_tag_values('note');
+		
+		# parse the different note fields according to geneious
+		# naming conventions
+		#
+		foreach my $n (@notes) {
+		    print STDERR "NOTES: $n\n";
+		    if ($n eq "Geneious type: CDS+Stopp") {
+			print STDERR "Adding Geneious type: CDS+Stopp\n";
+			my @standard_names = $f->get_tag_values('standard_name');
+			if (exists($standard_names[0])) {
+			    print STDERR "Adding $standard_names[0]...\n";
+			    push @$features, [$standard_names[0], $f->start(), $f->end(), "pink", "F" ];
+			}
+		    }
+		}
+		
+	    }
+	    
 	}
     }
-
+    
     print STDERR "ADDING VECTOR NAME ".$s->id()." and length ".length($s->seq())."\n";
     
     my $metadata = { 'name' => $s->id(), 'vector_length' => length($s->seq()) };
@@ -187,14 +237,14 @@ sub restriction_analysis {
 	my @coords;
 	my @fragments = $ra ->fragment_maps($c->name());
 
-	print STDERR "FRAGMENTS FOR $enzyme: ".Dumper(\@fragments);
+#	print STDERR "FRAGMENTS FOR $enzyme: ".Dumper(\@fragments);
 	
 	for (my $i=0; $i < @fragments; $i++) {
 	    #push @restriction_sites, { name => $enzyme, cutCoord => $fragments[$i]->{start} };
 	    push @restriction_sites, [ $enzyme, $fragments[$i]->{start} ];
 	 }
 
-	print STDERR "RESTRICTION SITES: ".Dumper(@restriction_sites);
+	#print STDERR "RESTRICTION SITES: ".Dumper(@restriction_sites);
     }
     return @restriction_sites;
 }
