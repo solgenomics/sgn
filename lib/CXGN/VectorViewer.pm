@@ -106,8 +106,37 @@ sub parse_genbank {
     
     my @commands = ();
     my @features = $s -> get_SeqFeatures();
+
+
+
     
     foreach my $f (@features) {
+
+
+	
+	print STDERR "Processing primary tag: ".$f->primary_tag()." TAGS: ".join(",", $f->get_all_tags())."\n";
+	
+	my @all_tags = $f->get_all_tags();
+	if (grep /note/, @all_tags) { 
+	    my @notes = $f->get_tag_values('note');
+	    
+	    # parse the different note fields according to geneious
+	    # naming conventions
+	    #
+	    foreach my $n (@notes) {
+		print STDERR "NOTES: $n\n";
+		if ($n eq "Geneious type: CDS+Stopp") {
+		    print STDERR "Adding Geneious type: CDS+Stopp\n";
+		    my @standard_names = $f->get_tag_values('standard_name');
+		    if (exists($standard_names[0])) {
+			print STDERR "Adding $standard_names[0]...\n";
+			push @$features, [$standard_names[0], $f->start(), $f->end(), "pink", "F" ];
+		    }
+		}
+	    }
+	    
+	}
+    
 	print STDERR "FEATURE OBJECT TYPE: ".ref($f)."\n";
 	if (ref($f) eq "ARRAY") {
 	    print STDERR Dumper($f);
@@ -120,56 +149,42 @@ sub parse_genbank {
 	my $name;
 	if ( ($f->primary_tag() eq "gene")) { 
 	    foreach my $tag ($f->all_tags()) { 
-		($name) = $f->each_tag_value("gene");
+	   	($name) = $f->each_tag_value("gene");
 	    }
 	    
-	    
-	    push @$features, [ $name, $f->start(), $f->end(), "lightblue", $dir ];
+	    if ($name) {
+		push @$features, [ $name, $f->start(), $f->end(), "lightblue", $dir ];
+	    }
 	}
 	elsif ( $f->primary_tag() eq "repeat_region") {
 	    foreach my $tag ($f->all_tags()) {
-		my ($name) = $f->each_tag_value("standard_name");
-		
-		push @$features, [ $name, $f->start(), $f->end(), "red", "" ];
+		my $name = "";
+		if ($tag eq "standard_name") { 
+		    ($name) = $f->each_tag_value("standard_name");
+		}
+		if ($name) {
+		    push @$features, [ $name, $f->start(), $f->end(), "red", "" ];
+		}
 	    }
 	}
 	elsif ( $f->primary_tag() eq "CDS") {
 	    foreach my $tag ($f->all_tags()) {
-		($name) = $f->each_tag_value("standard_name");
+		my $name;
+		if ($tag eq "standard_name") { 
+		    ($name) = $f->each_tag_value("standard_name");
+		}
+	    
+		if ($name) { push @$features, [ $name, $f->start(), $f->end(), "lightgreen", $dir ]; }
 	    }
-	    push @$features, [ $name, $f->start(), $f->end(), "lightgreen", $dir ];
+		
 	}
 	elsif ($f->primary_tag() eq "regulatory") {
 	    foreach my $tag ($f->all_tags()) {
-		($name) = $f->each_tag_value("standard_name");
+		if ($tag eq "standard_name") { 
+		    ($name) = $f->each_tag_value("standard_name");
+		}
 	    }
 	    push @$features, [ $name, $f->start(), $f->end(), "blue", "" ];
-	}
-	
-	else {
-	    print STDERR "Processing primary tag: ".$f->primary_tag()." TAGS: ".join(",", $f->get_all_tags())."\n";
-	    
-	    my @all_tags = $f->get_all_tags();
-	    if (grep /note/, @all_tags) { 
-		my @notes = $f->get_tag_values('note');
-		
-		# parse the different note fields according to geneious
-		# naming conventions
-		#
-		foreach my $n (@notes) {
-		    print STDERR "NOTES: $n\n";
-		    if ($n eq "Geneious type: CDS+Stopp") {
-			print STDERR "Adding Geneious type: CDS+Stopp\n";
-			my @standard_names = $f->get_tag_values('standard_name');
-			if (exists($standard_names[0])) {
-			    print STDERR "Adding $standard_names[0]...\n";
-			    push @$features, [$standard_names[0], $f->start(), $f->end(), "pink", "F" ];
-			}
-		    }
-		}
-		
-	    }
-	    
 	}
     }
     

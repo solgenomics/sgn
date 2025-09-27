@@ -181,7 +181,7 @@ sub validate_design {
     while (my ($trial_layout_json) = $sth->fetchrow_array()) {
         my $trial_layout_json = decode_json($trial_layout_json);
         foreach my $key (keys %{$trial_layout_json}) {
-            if (defined %seen_plot_numbers{$key}) {
+            if (defined $seen_plot_numbers{$key}) {
                 $error .= "Plot number '$key' already exists in the database for that study. Plot number must be unique.";
             }
         }

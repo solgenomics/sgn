@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::VectorViewer;
 
 use Moose;
 use Data::Dumper;
+use File::Spec;
 use JSON::Any;
 use SGN::Model::Cvterm;
 use CXGN::VectorViewer;
@@ -140,17 +141,51 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
 		    my $vv = CXGN::VectorViewer->new();
 		    $vv->parse_genbank($record);
 
-		    my $return =  { re_sites => $vv->re_sites(), features => $vv->features(), sequence => $vv->sequence(), metadata => $vv->metadata() };
+		    my $data =  { re_sites => $vv->re_sites(), features => $vv->features(), sequence => $vv->sequence(), metadata => $vv->metadata() };
 		    
-		    print STDERR "RETURN VALUE = ".Dumper($return);
+		    print STDERR "RETURN VALUE = ".Dumper($data);
 		    
-		    $c->stash->{rest} = $return;
+		    $c->stash->{rest} = $data;
 		    return;
 		}
 		
 	    }
 	}
 
+	print STDERR "No GenbankRecord stockprop found, trying uploaded files...\n";
+	my $vector = CXGN::Stock->new( { schema => $schema, stock_id => $c->stash->{vector_stock_id} });
+
+	my $file_data = $vector->get_additional_uploaded_files();
+
+	print STDERR "FILEDATA = ".Dumper($file_data);
+	my $files = $file_data->{files};
+	
+	foreach my $f (@$files) {
+	    my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = @$f;
+	    print STDERR "FILE: ".Dumper($f);
+	    
+	    my $record = "";
+	    if ($basename =~ /\.gb$/) {
+		print STDERR "FOUND GENBANK RECORD FILE!\n";
+		my $filename = File::Spec->catdir($dirname, $basename);
+		open(my $F, "<", $filename) || die "Can't open file $filename for genbank data";
+
+		
+		while(<$F>) {
+		    $record .= $_;
+		}
+	    }
+	    
+	    my $vv = CXGN::VectorViewer->new();
+	    $vv->parse_genbank($record);
+	    
+	    my $data =  { re_sites => $vv->re_sites(), features => $vv->features(), sequence => $vv->sequence(), metadata => $vv->metadata() };
+	    
+	    print STDERR "RETURN VALUE = ".Dumper($data);
+	    
+	    $c->stash->{rest} = $data;
+	    return;
+	}
 	
 	$c->stash->{rest} = { error => 'The vector information you are trying to access does not exist.' };
 	return;
