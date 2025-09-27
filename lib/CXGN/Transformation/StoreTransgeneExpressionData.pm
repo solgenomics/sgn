@@ -111,15 +111,19 @@ sub store_qPCR_data {
 	my $tissue_type = $self->get_tissue_type();
 	my $assay_date = $self->get_assay_date();
 	my $endogenous_control = $self->get_endogenous_control();
+	my $normalization_method = $self->get_normalization_method();
 	my $notes = $self->get_notes();
 	my $operator_id = $self->get_operator_id();
 	my $relative_expression_data_derived_from;
 	if ($relative_expression_data) {
         $relative_expression_data_derived_from = 'provided';
 	}
-	if ($CT_expression_data) {
-        my $normalized_data = _CASS_normalized_values($CT_expression_data, $endogenous_control);
-		print STDERR "NORMALIZED DATA =".Dumper($normalized_data)."\n";
+    if ($CT_expression_data) {
+        if ($normalization_method eq "CASS") {
+            $relative_expression_data_derived_from = 'using CASS normalization method';
+            my $normalized_data = _CASS_normalized_values($CT_expression_data, $endogenous_control);
+            print STDERR "NORMALIZED DATA =".Dumper($normalized_data)."\n";
+        }
     }
 	exit;
 

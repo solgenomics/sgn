@@ -1524,6 +1524,7 @@ sub upload_qPCR_data_POST : Args(0) {
     my $vector_construct_name = $c->req->param('qPCR_data_vector_name');
     my $tissue_type = $c->req->param('qPCR_tissue_type');
     my $endogenous_control = $c->req->param('qPCR_endogenous_control');
+    my $normalization_method = $c->req->param('qPCR_normalization_method');
     my $notes = $c->req->param('qPCR_notes');
     my $assay_date = $c->req->param('assay_date');
     my $upload;
@@ -1532,7 +1533,7 @@ sub upload_qPCR_data_POST : Args(0) {
     my $normalized_upload = $c->req->upload('normalized_qPCR_data_file');
     print STDERR "CT UPLOAD =".Dumper($CT_upload)."\n";
     print STDERR "NORMALIZED UPLOAD =".Dumper($normalized_upload)."\n";
-    
+
     if ($CT_upload) {
         $upload = $CT_upload;
         $plugin_type = 'CTqPCRData';
@@ -1668,6 +1669,7 @@ sub upload_qPCR_data_POST : Args(0) {
                     CT_expression_data => $CT_expression_data,
                     relative_expression_data => $relative_expression_data,
                     endogenous_control => $endogenous_control,
+                    normalization_method => $normalization_method,
                     assay_date => $assay_date,
                     notes => $notes,
                     operator_id => $user_id,

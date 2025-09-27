@@ -2627,4 +2627,28 @@ sub get_assay_dates_select : Path('/ajax/html/select/assay_dates') Args(0) {
 }
 
 
+sub get_qPCR_normalization_methods_select : Path('/ajax/html/select/qPCR_normalization_methods') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "qPCR_normalization_methods_select";
+    my $name = $c->req->param("name") || "qPCR_normalization_methods_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @qPCR_normalization_methods;
+
+    if ($empty && !$default) {
+        push @qPCR_normalization_methods, ['', 'Please select a method'];
+    }
+    push @qPCR_normalization_methods, ['CASS', 'CASS'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@qPCR_normalization_methods,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 1;
