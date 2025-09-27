@@ -42,7 +42,7 @@ export function init(vector_id) {
     console.log('cp 2');
     
     //attaching the function to a button
-    d3.select('#update_vector').on("click", function() { updateVector(metadata, table_data, re_sites) });
+    d3.select('#update_vector').on("click", function() { updateVector() });
     
 
     jQuery('#zoomIn').on('click', function() {
@@ -54,7 +54,7 @@ export function init(vector_id) {
 	var re_sites_table = getREsitesDataFromDataTable();
 	var metadata = getMetadataFromDataTable();
 	    
-	updateVector(metadata, table_data, re_sites_table);  
+	updateVector();  
     });
     jQuery('#zoomOut').on('click', function() {
 	radius /= 1.2;
@@ -65,7 +65,7 @@ export function init(vector_id) {
 	var re_sites_table = getREsitesDataFromDataTable();
 	var metadata = getMetadataFromDataTable();
 	
-	updateVector(metadata, data, re_sites_table);  
+	updateVector();  
     });
     
     var columnDefs = [{
@@ -395,7 +395,7 @@ export function updateVector() {
     var table_data = getFeatureDataFromDataTable();
     var re_sites_list = getREsitesDataFromDataTable();
 
-    
+    alert('TABLE DATA HERE '+JSON.stringify(table_data));
     vectorLength = parseInt(metadata[0][1]); // in bp
     vectorName = metadata[0][0];
 
@@ -410,15 +410,15 @@ export function updateVector() {
     for (var i = 0; i < table_data.length; i++) {
 	
 	//setting up the orientation
-	var orientation = '>';
-	if (
-	    (table_data[i][2] / vectorLength * Math.PI * 2 > Math.PI / 2) &&
-		(table_data[i][1] / vectorLength * Math.PI * 2 < Math.PI * 1.5)
-	) {
-	    orientation = (table_data[i][4] === 'R') ? ">" : "<";
-	} else {
-	    if (table_data[i][4] === 'R') orientation = '<';
-	}
+	// var orientation = '>';
+	// if (
+	//     (table_data[i][2] / vectorLength * Math.PI * 2 > Math.PI / 2) &&
+	// 	(table_data[i][1] / vectorLength * Math.PI * 2 < Math.PI * 1.5)
+	// ) {
+	//     orientation = (table_data[i][4] === 'R') ? ">" : "<";
+	// } else {
+	//     if (table_data[i][4] === 'R') orientation = '<';
+	// }
 	
 	//defining a variable that is used to draw vectors that wrap around 0 -- if they do, you need to add 2 pi to the end angle otherwise it draws the arc the wrong direction
 	
@@ -464,7 +464,7 @@ export function updateVector() {
     };
     
     //Calling the function with all the parameters
-    draw_vector("vector_div", metadata, data, radius, re_sites, data, svgWidth, svgHeight);
+    draw_vector("vector_div", metadata, data, radius, re_sites, table_data, svgWidth, svgHeight);
 }
 
 
@@ -590,7 +590,8 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	    console.log(`Label for gene ${i}:`, d.name);
 	    
 	});
-    
+
+    alert('table data now '+JSON.stringify(table_data));
     data.forEach(function(d,i) {
 	// Label the Beginning of each gene
 
@@ -604,13 +605,26 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	    directionLabelStartAngle = d.endAngle + 1.5 * Math.PI;
 	    directionLabelFlip = 0;
 	    directionLabelOffset = (50 / vectorLength) * 2 * Math.PI;
-	} else {
+	}
+	else if (table_data[i][4] === 'F')  {
 	    directionLabelStartAngle = d.startAngle + 1.5 * Math.PI;
 	    directionLabelFlip = 0;
 	    directionLabelOffset = -(50 / vectorLength) * 2 * Math.PI;
-	    
+	}
+	else {
+	    directionLabelStartAngle = d.startAngle * Math.PI;
+	    directionLabelFlip = 0;
+	    directionLabelOffset = 0;
 	}
 	
+	// else if (table_data[i][4] === undefined) {
+	//     directionLabelStartAngle = d.startAngle;
+	//     directionLabelFlip = 0;
+	//     directionLabelOffset = (50 / vectorLength) * 2 * Math.PI;
+	// }
+	// else {
+	//     alert('unknown orientation '+table_data[i][4]);
+	// }
 	var directionLabelBackStartX = geneOuterRadius * Math.cos(directionLabelStartAngle + directionLabelFlip);
 	var directionLabelBackStartY = geneOuterRadius * Math.sin(directionLabelStartAngle + directionLabelFlip);
 	
@@ -650,11 +664,16 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	    directionLabelStartAngleEnd = d.startAngle + 1.5 * Math.PI;
 	    directionLabelFlipEnd = (50 / vectorLength) * 2 * Math.PI;
 	    directionLabelOffsetEnd = 0;
-	} else {
+	} else if (table_data[i][4] === 'F') {
 	    directionLabelStartAngleEnd = d.endAngle + 1.5 * Math.PI;
 	    directionLabelFlipEnd = -(50 / vectorLength) * 2 * Math.PI;
 	    directionLabelOffsetEnd = 0;
 	    
+	}
+	else {  // for features without direction
+	    directionLabelStartAngle = d.startAngle * Math.PI;
+	    directionLabelFlip = 0;
+	    directionLabelOffset = 0;
 	}
 	
 	var directionLabelBackStartXEnd = geneOuterRadius * Math.cos(directionLabelStartAngleEnd + directionLabelFlipEnd);
