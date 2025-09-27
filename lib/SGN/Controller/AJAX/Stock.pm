@@ -2551,13 +2551,14 @@ sub get_accession_additional_file_uploaded :Chained('/stock/get_stock') PathPart
         $c->detach();
     }
 
+    print STDERR "AJAX/Stock: retrieve additional files...\n";
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $stock_id = $c->stash->{stock_row}->stock_id();
     my $stock = CXGN::Stock->new({schema=>$schema,stock_id=>$stock_id});
+    print STDERR "Calling backend function...\n";
     my $data = $stock->get_additional_uploaded_files();
-    
-    return $data;
 
+    $c->stash->{rest} = $data;
 }
 
 sub obsolete_trial_additional_file_uploaded :Chained('/stock/get_stock') PathPart('obsolete_uploaded_additional_file') Args(1) {

@@ -1112,7 +1112,7 @@ sub obsolete_uploaded_file {
     join metadata.md_files using(metadata_id)
     where md_metadata.obsolete=0 and md_files.file_id=? and md_metadata.create_person_id=?";
 
-    my $dbh = $self->bcs_schema->storage()->dbh();
+    my $dbh = $self->schema->storage()->dbh();
     my $h = $dbh->prepare($q);
 
     $h->execute($file_id, $user_id);
@@ -1141,6 +1141,10 @@ sub obsolete_uploaded_file {
 
 =head2 get_additional_uploaded_files()
 
+Returns a list of lists of the form: [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype]
+
+Obsoleted entries are not retrieved.
+
 =cut
 
 sub get_additional_uploaded_files {
@@ -1156,7 +1160,7 @@ sub get_additional_uploaded_files {
     LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
     WHERE stock_id=? and m.obsolete = 0 and metadata.md_files.filetype='accession_additional_file_upload' ORDER BY file_id ASC";
 
-    my $h = $self->bcs_schema()->storage()->dbh()->prepare($q);
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
 
     while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
