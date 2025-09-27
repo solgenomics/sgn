@@ -24,6 +24,7 @@ use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
+use Statistics::Descriptive;
 
 has 'chado_schema' => (
 	    is       => 'rw',
@@ -63,6 +64,12 @@ has 'relative_expression_data' => (
     isa => 'Maybe[HashRef]',
     is => 'rw',
     predicate => 'has_relative_expression_data',
+);
+
+has 'normalization_method' => (
+    isa =>'Str',
+    is => 'rw',
+    predicate => 'has_normalization_method',
 );
 
 has 'endogenous_control' => (
@@ -106,10 +113,13 @@ sub store_qPCR_data {
 	my $endogenous_control = $self->get_endogenous_control();
 	my $notes = $self->get_notes();
 	my $operator_id = $self->get_operator_id();
-
 	my $relative_expression_data_derived_from;
+	if ($relative_expression_data) {
+        $relative_expression_data_derived_from = 'provided';
+	}
 	if ($CT_expression_data) {
         my $normalized_data = _CASS_normalized_values($CT_expression_data, $endogenous_control);
+		print STDERR "NORMALIZED DATA =".Dumper($normalized_data)."\n";
     }
 	exit;
 
@@ -216,8 +226,8 @@ sub _CASS_normalized_values {
 	my $endogenous_control = shift;
 	my @replicates = keys %$CT_data;
 	my $number_of_replicates = scalar @replicates;
-	my %two_power_CT_hash;
 	my %normalized_values_hash;
+	my %normalized_data;
 
     foreach my $rep (keys %$CT_data) {
         my $CT_values = $CT_data->{$rep};
@@ -232,9 +242,21 @@ sub _CASS_normalized_values {
         }
 	}
 
+    foreach my $gene_name ( keys %normalized_values_hash) {
+        my @all_normalized_values = ();
+        my $all_rep_hash = $normalized_values_hash{$gene_name};
+        @all_normalized_values = values %$all_rep_hash;
+        my $stat = Statistics::Descriptive::Full->new();
+        $stat->add_data(@all_normalized_values);
 
-    my $normalized_data;
-    return $normalized_data;
+        my $mean_value =  sprintf("%.6f", $stat->mean());
+        my $stddev_value = sprintf("%.6f", $stat->standard_deviation());
+        $normalized_data{$gene_name}{'relative_expression'} = $mean_value;
+        $normalized_data{$gene_name}{'number_of_replicates'} = $number_of_replicates;
+        $normalized_data{$gene_name}{'standard_deviation'} = $stddev_value;
+    }
+
+    return \%normalized_data;
 }
 
 
