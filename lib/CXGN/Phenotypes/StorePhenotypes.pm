@@ -669,7 +669,7 @@ sub check_measurement {
                 # print STDERR "the trait minimum: Trait Minimum for trait $trait_name: ", (defined $trait_min ? $trait_min : undef), "\n";
                 # print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
 
-                if (defined $trait_min && $trait_value < $trait_min) {
+                if (defined $trait_min && $trait_value ne '' && $trait_value < $trait_min) {
                     $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, $trait_min.</small><hr>";
                 } else {
                     # print STDERR "the trait min and trait value : No minimum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id).\n";
