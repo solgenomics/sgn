@@ -169,23 +169,37 @@ export function init(vector_id) {
     
     //Making data that can be stored
     jQuery("#dialogSaveButton").click(function () {
-	var id = jQuery("#saveInput").val();
+	var table_data = getFeatureDataFromDataTable();
+	var re_sites_table = getREsitesDataFromDataTable();
+	var metadata = getMetadataFromDataTable();
+	var sequence = getSequenceDataFromDataTable();
+	
+	//	var id = jQuery("#saveInput").val();
+
+	alert(JSON.stringify(metadata) + " AND " + JSON.stringify(table_data) + " AND "+ JSON.stringify(re_sites_table) + " AND "+ sequence);
+	
 	var data = { 
 	    'metadata' : metadata, 
 	    'features' : table_data,
-	    'restriction_enzymes' : table_data_RESites,
-	    'sequence' : sequence
+	    're_sites' : re_sites_table,
+	    'sequence' : ""
 	};
+
+	alert("NOW STRINGIFIED: "+ JSON.stringify(data) );
 	
-	console.log(id);
-	console.log(JSON.stringify(data));
+	var string_data = JSON.stringify(data);
+	console.log(vector_id);
+	console.log('Data as string: '+string_data);
 	
 	//This is the link where the data should be stored
 	jQuery.ajax({
-	    url: '/vectorviewer/' + id + '/store',
-	    'data': data,
+	    url: '/vectorviewer/' + vector_id + '/store?data='+string_data,
 	    'method' : "POST"
-	});
+	}).then(
+	    function() {  alert('Sequence successfully saved!');},
+	    function() { alert('An error occurred while trying to save the vector data.');
+		       }
+	);
 	
     });
     
@@ -208,11 +222,11 @@ export function init(vector_id) {
 	retrieveVector(id);
     });
 
-//    alert('Retrieving vector '+vector_id);
+    alert('Retrieving vector '+vector_id);
     jQuery.ajax({
 	url: '/vectorviewer/' + vector_id + '/retrieve',
     }).then(function(r) {
-//	alert("RETURN DATA: "+JSON.stringify(r));
+	alert("RETRIEVED DATA: "+JSON.stringify(r));
 	updateFeatureDataTable(r.features);
 	updateREsitesDataTable(r.re_sites);
 	updateMetadataDataTable(r.metadata);
@@ -317,7 +331,6 @@ export function delete_feature_table_row(row_no) {
     }
 }
 
-
 export function getFeatureDataFromDataTable() {
 //    alert('getFeatureDataFromDataTable');
     
@@ -366,6 +379,17 @@ export function getMetadataFromDataTable() {
 //    alert('getMetadataFromDataTable return data: '+JSON.stringify(table_data));
     return table_data;
 }
+
+export function getSequenceDataFromDataTable() {
+    var table_data = jQuery('#sequence_table').DataTable().rows().data().toArray();
+    delete(table_data.context);
+    delete(table_data.selector);
+    delete(table_data.ajax);
+
+    alert('getSequenceDataFromDataTable '+JSON.stringify(table_data));
+    
+
+}
     
 export function updateREsitesDataTable(re_sites) {
 //    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
@@ -382,8 +406,8 @@ export function updateREsitesDataTable(re_sites) {
 export function updateMetadataDataTable(metadata) {
 
     var row = new Array();
-    row.push(metadata[0]);
-    row.push(metadata[1]);
+    row.push(metadata[0][0]);
+    row.push(metadata[0][1]);
     row.push('<button>Edit</button>');
 
     var data = new Array();
@@ -391,7 +415,10 @@ export function updateMetadataDataTable(metadata) {
     
     jQuery('#metadata_table').DataTable({
 	destroy: true,
-	data: data
+	data: data,
+	"bLengthChange" : false,
+	"bFilter" : false,
+	"bInfo" : false
     });
 }
 

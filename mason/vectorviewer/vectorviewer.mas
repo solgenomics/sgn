@@ -28,10 +28,10 @@ $edit_privs
 <!-- <center> -->
 <div style="text-align: center;">
     <!DOCTYPE html>
-<h1>Vector Viewer</h1>
+<!-- h1>Vector Viewer</h1  -->
 
 <!-- Add a bit of text -->
-<p>Go wild!</p>
+<!-- p>Go wild!</p -->
 
 <!-- Add a svg shape. Note that the 'target' class is attributed to the circle -->
 <!-- svg> 
@@ -77,9 +77,9 @@ $edit_privs
 <br />
 <!-- <button id="saveButton" style="btn"> Save Vector </button> -->
 <!-- <button id="loadButton" style="btn"> Load Vector </button> -->
-<button id="saveVector" style="btn"> Save Vector </button>
-<button id="loadVector" style="btn"> Load Vector </button>
-<button id="update_vector" style="btn">Update/Reset</button>
+<button id="saveVector" style="btn">Save changes</button>
+<!-- button id="loadVector" style="btn"> Load Vector </button -->
+<button id="update_vector" style="btn">Update View</button>
 <button id="zoomIn" style="btn"> + </button>
 <button id="zoomOut" style="btn"> - </button>
 
@@ -88,21 +88,31 @@ $edit_privs
 <br />
 <br />
 
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_feature_dialog">Add Feature</button>
+<table width="100%"><tr><td>
+
+<h4>Feature list</h4>
+
 <!-- button id="add_feature_button">Add feature</button><br / -->
-<table id="vector_table" width="80%" class="display table table-hover table-striped">
+<table id="vector_table" width="100%" class="display table table-hover table-striped">
 <thead><tr><td>No.</td><td>Feature</td><td>Start</td><td>End</td><td>Color</td><td>Orientation</td><td>Actions</td></tr></thead></table>
+<br />
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_feature_dialog">Add Feature</button>
 <br />
 <br />
 <br />
 
 <!-- Add a svg area, empty -->
+</td><td width="160px">&nbsp;</td><td>
 
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_re_dialog">Add restriction enzyme site</button>
+<h4>Restriction enzyme list</h4>
 
-<table id="re_sites_table" width="60%" class="display table table-hover table-striped">
+
+<table id="re_sites_table" width="100%" class="display table table-hover table-striped">
 <thead><tr><td>RE Site</td><td>Cut Coord</td><td>Actions</td></tr></thead></table>
-</table>
+
+<br /><br />
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_re_dialog">Add restriction enzyme site</button>
+</td></tr></table>
 
 <table id="metadata_table" width="40%" class="display table table-hover table-striped">
 <thead><tr><td>Vector Name</td><td>Vector length</td><td>Actions</td></tr></thead>
@@ -120,10 +130,11 @@ $edit_privs
 
 <div id="saveDialog" title="Save Vector!">
 
-<input id="saveInput" ></input>
+<!-- input id="saveInput" ></input -->
+To save edits, please click on the Save button.
 
-<button id="dialogSaveButton"> Save </button>
-
+<button id="dialogSaveButton">Save</button>
+<button id="dialogSaveCancelButton">Cancel</button>
 </div>
 
 <div id="loadDialog" title="Load Vector">

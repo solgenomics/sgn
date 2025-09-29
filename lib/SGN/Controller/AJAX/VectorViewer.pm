@@ -46,6 +46,9 @@ sub store_POST : Args(0) {
     }
     
     my $data = $c->req->param('data');
+
+    
+    print STDERR "VECTOR DATA RECEIVED TO STORE: ".Dumper($data);
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $vector_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vectorviewer_data', 'stock_property')->cvterm_id();
     my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
@@ -197,7 +200,7 @@ sub retrieve :Chained('vector') PathPart('retrieve') Args(0) {
 
     my $json_obj = JSON::Any->decode($data);
 
-    $c->stash->{rest} = { data => $json_obj };
+    $c->stash->{rest} = $json_obj;
 }
 
 

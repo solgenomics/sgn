@@ -51,16 +51,8 @@ has 're_sites' => ( isa => 'Maybe[ArrayRef]',
 			     is => 'rw',
     );
 
-has 'name' => ( isa => 'Maybe[Str]',
-			   is => 'rw',
-    );
-
 has 'sequence' => ( isa => 'Maybe[Str]',
 			   is => 'rw',
-    );
-
-has 'vector_length' => (isa => 'Int',
-			is => 'rw',
     );
 
 has 'metadata' => (isa => 'Maybe[ArrayRef]',
