@@ -208,21 +208,21 @@ export function init(vector_id) {
 	retrieveVector(id);
     });
 
-    alert('Retrieving vector '+vector_id);
+//    alert('Retrieving vector '+vector_id);
     jQuery.ajax({
 	url: '/vectorviewer/' + vector_id + '/retrieve',
     }).then(function(r) {
-	alert("RETURN DATA: "+JSON.stringify(r));
+//	alert("RETURN DATA: "+JSON.stringify(r));
 	updateFeatureDataTable(r.features);
 	updateREsitesDataTable(r.re_sites);
 	updateMetadataDataTable(r.metadata);
 	if (r.sequence) { updateSequenceDataTable(r.sequence); } 
 
-	alert("NOW HERE!");
+//	alert("NOW HERE!");
 	metadata = r.metadata;
 	var feature_table = r.features;
 	re_sites_table = r.re_sites;
-	alert("GOING TO UPDATE VECTOR!");
+//	alert("GOING TO UPDATE VECTOR!");
 	updateVector(); //metadata, feature_table, re_sites_table);
     },
 	    function(r) {
@@ -319,7 +319,7 @@ export function delete_feature_table_row(row_no) {
 
 
 export function getFeatureDataFromDataTable() {
-    alert('getFeatureDataFromDataTable');
+//    alert('getFeatureDataFromDataTable');
     
     var table_hash_rows = jQuery('#vector_table').DataTable().rows().data().toArray();
 
@@ -332,13 +332,13 @@ export function getFeatureDataFromDataTable() {
 //    delete(table_data.ajax);
 //    delete(table_data.no);
 
-    alert('TABLE DATA = '+JSON.stringify(table_data));
+//    alert('TABLE DATA = '+JSON.stringify(table_data));
 
     return table_data;
 }
 
 export function getREsitesDataFromDataTable() {
-    alert('getREsitesDataFromDataTable');
+  //  alert('getREsitesDataFromDataTable');
     var table_data = jQuery('#re_sites_table').DataTable().rows().data().toArray();
     delete(table_data.context);
     delete(table_data.selector);
@@ -363,16 +363,16 @@ export function getMetadataFromDataTable() {
 	table_data[i].splice(2, 1); // Remove 1 element starting from columnIndex
     }
 
-    alert('getMetadataFromDataTable return data: '+JSON.stringify(table_data));
-    return table_data[0];
+//    alert('getMetadataFromDataTable return data: '+JSON.stringify(table_data));
+    return table_data;
 }
     
 export function updateREsitesDataTable(re_sites) {
-    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
+//    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
     for (var i=0; i < re_sites.length; i++) {
 	re_sites[i][2] = '<button>Edit</button>&nbsp;<button onclick="delete_feature_table_row('+i+')">Delete</button>';
     }
-
+    
     jQuery('#re_sites_table').DataTable({
 	destroy: true,
 	data: re_sites
@@ -413,18 +413,18 @@ export function updateSequenceDataTable(sequence) {
 //export function updateVector(metadata, table_data, re_sites) {
 export function updateVector(metadata, feature_table, re_sites_table) { 
     
-   alert('METADATA HERE: '+JSON.stringify(metadata));
+ //  alert('METADATA HERE: '+JSON.stringify(metadata));
 
     var metadata = getMetadataFromDataTable();
     var feature_table = getFeatureDataFromDataTable();
     var re_sites_table = getREsitesDataFromDataTable();
 
-    alert('TABLE DATA HERE '+JSON.stringify(feature_table));
-    alert('METADATA HERE: '+JSON.stringify(metadata));
+//    alert('TABLE DATA HERE '+JSON.stringify(feature_table));
+//    alert('METADATA HERE: '+JSON.stringify(metadata));
 
-    alert('metadata: '+JSON.stringify(metadata));
-    alert('feature_table: '+JSON.stringify(feature_table));
-    alert('re_sites_table: '+JSON.stringify(re_sites_table));
+//    alert('metadata: '+JSON.stringify(metadata));
+//    alert('feature_table: '+JSON.stringify(feature_table));
+//    alert('re_sites_table: '+JSON.stringify(re_sites_table));
 //    alert('vector length: '+vectorLength);
     d3.selectAll("svg").selectAll("*").remove();
     var data = [];
@@ -439,16 +439,15 @@ export function updateVector(metadata, feature_table, re_sites_table) {
     draw_vector("vector_div", metadata, radius, re_sites_table, feature_table, svgWidth, svgHeight);
 }
 
-
-
 export function draw_vector(vector_div, metadata, radius, re_sites_table, feature_table, svgWidth, svgHeight) { 
 
     const centerTranslationWidth = svgWidth/2;
     const centerTranslationHeight = svgHeight/2;
 
-    var vectorLength = parseInt(metadata[1]); // in bp
-    var vectorName = metadata[0];
+    var vectorLength = parseInt(metadata[0][1]); // in bp
+    var vectorName = metadata[0][0];
 
+//    alert('vectorLength='+vectorLength+' vectorName='+vectorName);
     var data = new Array();
     
     for (var i = 0; i < feature_table.length; i++) {	
@@ -620,7 +619,7 @@ export function draw_vector(vector_div, metadata, radius, re_sites_table, featur
 	});
 
 //    alert('table data now '+JSON.stringify(feature_table));
-    alert('data now: '+JSON.stringify(data));
+//    alert('data now: '+JSON.stringify(data));
     
     data.forEach(function(d,i) {
 	// Label the Beginning of each gene
@@ -792,7 +791,7 @@ export function draw_vector(vector_div, metadata, radius, re_sites_table, featur
 	.attr("y", 0);
     
     vectorNameElement.each(function(d) {
-
+//        alert('D = '+JSON.stringify(d));
         d3.select(this)
             .append("tspan")
             .attr("class", "vectorName")
