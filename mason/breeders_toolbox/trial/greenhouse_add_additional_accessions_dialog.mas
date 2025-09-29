@@ -48,8 +48,7 @@ $trial_id
                         </div>
                     </div>
                     </br>
-                    </br>
-                    <div id="additional_accessions_footer" style="display:none" >
+                    <div id="additional_accessions_footer" style="display:none">
                         <div class="modal-footer">
                             <button class="btn btn-primary" id="add_additional_accessions_submit" name="add_additional_accessions_submit">Add Accessions</button>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -123,10 +122,9 @@ jQuery(document).ready(function(){
 
     jQuery('#additional_accession_list_select').html(lo.listSelect('additional_accession_list_select', ['accessions'], 'Select a list', undefined, undefined));
 
-    let accession_list_id = '';
+    var accession_list_id = '';
     jQuery("#additional_accession_list_select").change(function() {
         accession_list_id = jQuery('#additional_accession_list_select').val();
-        alert(accession_list_id);
         if (accession_list_id){
             let accession_validation = 1;
             accession_validation = lo.legacy_validate(accession_list_id, 'uniquenames', true);
@@ -135,9 +133,23 @@ jQuery(document).ready(function(){
                 return;
             } else {
                 additional_accessions_form(accession_list_id);
+                jQuery('#additional_accessions_footer').show();
             }
         }
     })
+
+    function additional_accessions_form (accession_list_id) {
+        var accession_list = lo.getList(accession_list_id);
+
+        var html = '<table class="table table-bordered" id="additional_accessions_table"><thead><tr><th>Accession Name</th><th>Number of Plants</th></tr></thead><tbody>';
+        for(var i=0; i<accession_list.length; i++){
+            html = html + '<tr><td>' + accession_list[i] + '</td><td><input class="form-control" name ="accession_plant_number" id="accession_plant_number_'+ i +'" value="" placeholder=""/></td></tr>';
+        };
+        html = html + '</tbody></table>';
+
+        jQuery('#additional_accessions_form_div').html(html);
+
+    };
 
 
 
