@@ -3,17 +3,20 @@
 $stock_id
 $stock_uniquename
 $is_obsolete
+$is_in_trial
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.Stock' ] &>
 
-% if ($is_obsolete) { 
+% if ($is_obsolete) {
     <button class="btn btn-primary" id="stock_detail_page_unobsolete_stock">Un-Obsolete This Stock</button>
-% } else {
+% } elsif (!$is_in_trial) {
     <button class="btn btn-primary" id="stock_detail_page_obsolete_stock">Obsolete This Stock</button>
-% }
+% } elsif ($is_in_trial) {
+%print "This stock is used in a trial, cannot obsolete";
+%}
 
-<& /transformation/obsolete_stock_dialog.mas &>
+
 
 <script>
 

@@ -26,6 +26,7 @@ use CXGN::Transformation::LinkTransformationInfo;
 use DateTime;
 use List::MoreUtils qw /any /;
 use Sort::Key::Natural qw(natkeysort);
+use CXGN::Stock;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -703,9 +704,17 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
     my @transformants;
     foreach my $r (@sorted_names){
         my ($stock_id, $stock_name) =@$r;
+        my $is_in_trial;
+        my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $stock_id );
+        my @trial_list = $check_trial->get_trials();
+        if (scalar(@trial_list) > 0) {
+            $is_in_trial = 1;
+        }
+
         push @transformants, {
             transformant_id => $stock_id,
             transformant_name => $stock_name,
+            is_in_trial => $is_in_trial,
         };
     }
 
@@ -1390,6 +1399,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                             transformation_stock_id => $transformation_stock_id,
                             transformant_names => \@transformants,
                             owner_id => $user_id,
+                            additional_transformant_info => $transformant_name_info,
                         });
 
                         my $response = $add_transformants->add_transformant();
@@ -1403,6 +1413,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                             schema => $schema,
                             transformation_stock_id => $transformation_stock_id,
                             transformant_names => \@transformants,
+                            additional_transformant_info => $transformant_name_info,
                         });
 
                         my $response = $add_transformants->link_info();
@@ -1437,6 +1448,64 @@ sub upload_transgenic_historical_data_POST : Args(0) {
     }
 
     $c->stash->{rest} = {success => "1",};
+
+}
+
+
+sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_accession_dialog') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformation_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+    my $result = $transformation_obj->transformants();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
+
+    my @transformants;
+    foreach my $r (@sorted_names){
+        my $is_in_trial;
+        my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $r->[0] );
+        my @trial_list = $check_trial->get_trials();
+        if (scalar(@trial_list) > 0) {
+            $is_in_trial = 1;
+        }
+        if ($is_in_trial) {
+            push @transformants, ['Used in a trial, cannot obsolete', $r->[1]];
+        } else {
+            push @transformants, ["<input type='checkbox' name='checked_stocks' value='$r->[1]'>", $r->[1]];
+        }
+    }
+
+    $c->stash->{rest} = { data => \@transformants };
+
+}
+
+
+sub get_transgenic_line_details :Path('/ajax/transformation/transgenic_line_details') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformation_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+    my $result = $transformation_obj->get_transformant_details();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
+
+    my @transformant_details;
+    foreach my $r (@sorted_names){
+        my ($stock_id, $stock_name, $number_of_insertions) =@$r;
+
+        push @transformant_details, {
+            transformant_id => $stock_id,
+            transformant_name => $stock_name,
+            number_of_insertions => $number_of_insertions,
+        };
+    }
+
+    $c->stash->{rest} = { data => \@transformant_details };
 
 }
 
