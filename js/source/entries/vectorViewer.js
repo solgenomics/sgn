@@ -5,16 +5,16 @@ import "../legacy/jquery/dataTables.js";
 import "../legacy/jquery/dataTables-buttons-min.js";
 
 var metadata;
-var vectorLength;
+//var vectorLength;
 var vectorName;
 var sequence;
 var table_data = [];
-var table_data_RESites = [];
+//var table_data_RESites = [];
 var svgWidth, svgHeight;
 var margin, width, height, radius;
 var svg;
-var data = [];
-var re_sites = new Array();
+//var data = [];
+var re_sites_table = new Array();
 
 export function init(vector_id) {
 
@@ -194,7 +194,6 @@ export function init(vector_id) {
 	autoOpen: false
     });
     
-    
     //when someone clicks load the dialog is opened
     jQuery("#loadVector").click(function () {
 	jQuery('#loadDialog').dialog('open');
@@ -207,24 +206,27 @@ export function init(vector_id) {
 	
 	console.log(id);
 	retrieveVector(id);
-
     });
 
-    //alert('Retrieving vector '+vector_id);
+    alert('Retrieving vector '+vector_id);
     jQuery.ajax({
 	url: '/vectorviewer/' + vector_id + '/retrieve',
     }).then(function(r) {
-//	alert("RETURN DATA: "+JSON.stringify(r));
+	alert("RETURN DATA: "+JSON.stringify(r));
 	updateFeatureDataTable(r.features);
 	updateREsitesDataTable(r.re_sites);
 	updateMetadataDataTable(r.metadata);
 	if (r.sequence) { updateSequenceDataTable(r.sequence); } 
-	//	updateVector(r.metadata, r.features, r.re_sites);
-	updateVector();
+
+	alert("NOW HERE!");
+	metadata = r.metadata;
+	var feature_table = r.features;
+	re_sites_table = r.re_sites;
+	alert("GOING TO UPDATE VECTOR!");
+	updateVector(); //metadata, feature_table, re_sites_table);
     },
 	    function(r) {
 		alert('An error occurred! '+JSON.stringify(r));
-		
 	    } );
     
     jQuery('#add_feature_data_button').click( function() {
@@ -236,6 +238,7 @@ export function init(vector_id) {
 	var feature_color = jQuery('#feature_color_select option:selected').text();
 	var orientation = jQuery('#feature_orientation_select option:selected').text();
 	var row = [ feature_name, start_coord, end_coord, feature_color, orientation ];
+
 	
 	//alert(JSON.stringify(row));
 	featureDataTableAddRow(row);
@@ -258,17 +261,33 @@ export function init(vector_id) {
 export function updateFeatureDataTable(table_data) {
     //alert('TABLE DATA: '+JSON.stringify(table_data));
 
+    var formatted = new Array();
     for (var i=0; i < table_data.length; i++) {
-	table_data[i][5] = '<button>Edit</button>&nbsp;<button onclick="delete_feature_table_row('+i+')">Delete</button>';
+	formatted.push( { no : i, feature : table_data[i][0], start : table_data[i][1], end : table_data[i][2], color: table_data[i][3], orientation: table_data[i][4] });
     }
     
     jQuery('#vector_table').DataTable({
+	data: formatted,
 	destroy: true,
-	data: table_data
+	columns: [
+	    { title: 'No.', data : 'no' },
+	    { title: 'Feature', data : 'feature' }, //data: table_data[0] },
+	    { title: 'Start', data: 'start' },
+	    { title: 'End', data: 'end' },
+	    { title: 'Color', data: 'color' },
+	    { title: 'Orientation', data: 'orientation' },
+	    { data: null,
+	      render: function(data, type, row) {
+//		  alert('ROW: '+JSON.stringify(row));
+		  return '<button onclick="edit_feature_table_row('+row.no+');">Edit</button>&nbsp;<button onclick="delete_feature_table_row('+row.no+'); ">Delete</button>';
+	      },
+	      title: "Actions",
+	    }
+	]
     });
 }
 
-export function featureDataTableAddRow(row) {
+function featureDataTableAddRow(row) {
 
     var data = getFeatureDataFromDataTable();
 
@@ -300,50 +319,56 @@ export function delete_feature_table_row(row_no) {
 
 
 export function getFeatureDataFromDataTable() {
-    //alert('getFeatureDataFromDataTable');
-    var data = jQuery('#vector_table').DataTable().rows().data().toArray();
-    delete(data.context);
-    delete(data.selector);
-    delete(data.ajax);
+    alert('getFeatureDataFromDataTable');
+    
+    var table_hash_rows = jQuery('#vector_table').DataTable().rows().data().toArray();
 
-    for (let i = 0; i < data.length; i++) {
-	data[i].splice(5, 1); // Remove 1 element starting from columnIndex
+    var table_data = new Array();
+    for (var i=0; i<table_hash_rows.length; i++) {
+	table_data.push( [ table_hash_rows[i].feature, table_hash_rows[i].start, table_hash_rows[i].end, table_hash_rows[i].color, table_hash_rows[i].orientation ]);
     }
+//    delete(table_data.context);
+//    delete(table_data.selector);
+//    delete(table_data.ajax);
+//    delete(table_data.no);
 
-    return data;
+    alert('TABLE DATA = '+JSON.stringify(table_data));
+
+    return table_data;
 }
 
 export function getREsitesDataFromDataTable() {
-//    alert('getREsitesDataFromDataTable');
-    var data = jQuery('#re_sites_table').DataTable().rows().data().toArray();
-    delete(data.context);
-    delete(data.selector);
-    delete(data.ajax);
+    alert('getREsitesDataFromDataTable');
+    var table_data = jQuery('#re_sites_table').DataTable().rows().data().toArray();
+    delete(table_data.context);
+    delete(table_data.selector);
+    delete(table_data.ajax);
 //    alert('BEFORE: '+JSON.stringify(data));
     //remove actions column
-    for (let i = 0; i < data.length; i++) {
-	data[i].splice(2, 1); // Remove 1 element starting from columnIndex
+    for (let i = 0; i < table_data.length; i++) {
+	table_data[i].splice(2, 1); // Remove 1 element starting from columnIndex
     }
 //    alert('AFTER: '+JSON.stringify(data));
-    return data;
+    return table_data;
 }
 
 export function getMetadataFromDataTable() {
-    var data = jQuery('#metadata_table').DataTable().rows().data().toArray();
-    delete(data.context);
-    delete(data.selector);
-    delete(data.ajax);
-
-    //remove actions column
-    for (let i = 0; i < data.length; i++) {
-	data[i].splice(2, 1); // Remove 1 element starting from columnIndex
-    }
+    var table_data = jQuery('#metadata_table').DataTable().rows().data().toArray();
+    delete(table_data.context);
+    delete(table_data.selector);
+    delete(table_data.ajax);
     
-    return data;
+    //remove actions column
+    for (let i = 0; i < table_data.length; i++) {
+	table_data[i].splice(2, 1); // Remove 1 element starting from columnIndex
+    }
+
+    alert('getMetadataFromDataTable return data: '+JSON.stringify(table_data));
+    return table_data[0];
 }
     
 export function updateREsitesDataTable(re_sites) {
-//    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
+    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
     for (var i=0; i < re_sites.length; i++) {
 	re_sites[i][2] = '<button>Edit</button>&nbsp;<button onclick="delete_feature_table_row('+i+')">Delete</button>';
     }
@@ -352,14 +377,13 @@ export function updateREsitesDataTable(re_sites) {
 	destroy: true,
 	data: re_sites
     });
-
 }
 	
 export function updateMetadataDataTable(metadata) {
 
     var row = new Array();
-    row.push(metadata.name);
-    row.push(metadata.vector_length);
+    row.push(metadata[0]);
+    row.push(metadata[1]);
     row.push('<button>Edit</button>');
 
     var data = new Array();
@@ -374,105 +398,111 @@ export function updateMetadataDataTable(metadata) {
 export function updateSequenceDataTable(sequence) {
 
     var seq_array = new Array();
-    for(var i=0; i<sequence.length; i++) {
-	seq_array.push(sequence.substring(i * 60, i * 60+60));
-    }
-    var formatted_seq = seq_array.join("<br />");
-    var data = [ [ formatted_seq ] ];
-    jQuery('#sequence_table').DataTable({
-	destroy: true,
-	data: data
-    });
+//    for(var i=0; i<sequence.length; i++) {
+//	seq_array.push(sequence.substring(i * 60, i * 60+60));
+//    }
+//    var formatted_seq = seq_array.join("<br />");
+//    var data = [ [ formatted_seq ] ];
+//    jQuery('#sequence_table').DataTable({
+//	destroy: true,
+//	data: data
+//    });
 }
 
 // drawing / updating the vector as a function
-//export function updateVector(metadata, table_data, re_sites_list) {
-export function updateVector() { 
-
-  //   alert('METADATA HERE: '+JSON.stringify(metadata));
+//export function updateVector(metadata, table_data, re_sites) {
+export function updateVector(metadata, feature_table, re_sites_table) { 
+    
+   alert('METADATA HERE: '+JSON.stringify(metadata));
 
     var metadata = getMetadataFromDataTable();
-    var table_data = getFeatureDataFromDataTable();
-    var re_sites_list = getREsitesDataFromDataTable();
+    var feature_table = getFeatureDataFromDataTable();
+    var re_sites_table = getREsitesDataFromDataTable();
 
-    alert('TABLE DATA HERE '+JSON.stringify(table_data));
-    vectorLength = parseInt(metadata[0][1]); // in bp
-    vectorName = metadata[0][0];
+    alert('TABLE DATA HERE '+JSON.stringify(feature_table));
+    alert('METADATA HERE: '+JSON.stringify(metadata));
 
-//    alert('metadata: '+JSON.stringify(metadata));
-//    alert('table_data: '+JSON.stringify(table_data));
-//    alert('re_sites_list: '+JSON.stringify(re_sites_list));
+    alert('metadata: '+JSON.stringify(metadata));
+    alert('feature_table: '+JSON.stringify(feature_table));
+    alert('re_sites_table: '+JSON.stringify(re_sites_table));
 //    alert('vector length: '+vectorLength);
     d3.selectAll("svg").selectAll("*").remove();
-    data = [];
-    
-    //Doing a function that happens for each table_data index
-    for (var i = 0; i < table_data.length; i++) {
+    var data = [];
+
+//    alert('starting to draw...');
 	
+    d3.select("svg")
+	.attr("width", svgWidth)
+	.attr("height", svgHeight);
+    
+    //Calling the function with all the parameters
+    draw_vector("vector_div", metadata, radius, re_sites_table, feature_table, svgWidth, svgHeight);
+}
+
+
+
+export function draw_vector(vector_div, metadata, radius, re_sites_table, feature_table, svgWidth, svgHeight) { 
+
+    const centerTranslationWidth = svgWidth/2;
+    const centerTranslationHeight = svgHeight/2;
+
+    var vectorLength = parseInt(metadata[1]); // in bp
+    var vectorName = metadata[0];
+
+    var data = new Array();
+    
+    for (var i = 0; i < feature_table.length; i++) {	
 	//setting up the orientation
 	// var orientation = '>';
 	// if (
-	//     (table_data[i][2] / vectorLength * Math.PI * 2 > Math.PI / 2) &&
-	// 	(table_data[i][1] / vectorLength * Math.PI * 2 < Math.PI * 1.5)
+	//     (feature_table[i][2] / vectorLength * Math.PI * 2 > Math.PI / 2) &&
+	// 	(feature_table[i][1] / vectorLength * Math.PI * 2 < Math.PI * 1.5)
 	// ) {
-	//     orientation = (table_data[i][4] === 'R') ? ">" : "<";
+	//     orientation = (feature_table[i][4] === 'R') ? ">" : "<";
 	// } else {
-	//     if (table_data[i][4] === 'R') orientation = '<';
+	//     if (feature_table[i][4] === 'R') orientation = '<';
 	// }
 	
 	//defining a variable that is used to draw vectors that wrap around 0 -- if they do, you need to add 2 pi to the end angle otherwise it draws the arc the wrong direction
 	
 	var wrapAround = 0;
-
-	if (parseInt(table_data[i][1]) > parseInt(table_data[i][2])) {
-	    console.log('1 '+table_data[i][1]+' 2 '+table_data[i][2]);
+	
+	if (parseInt(feature_table[i][1]) > parseInt(feature_table[i][2])) {
+	    console.log('1 '+feature_table[i][1]+' 2 '+feature_table[i][2]);
 	    var wrapAround = 2 * Math.PI;
-	    console.log('wraparound for '+JSON.stringify(table_data[i]));
+	    console.log('wraparound for '+JSON.stringify(feature_table[i]));
 	}
-
+	
 	console.log('Wraparound is '+wrapAround);
-	
-	//Convert the data from table_data into a useable form inside the "data" dataset
+
+//	alert('VectorLength = '+vectorLength);
+	//Convert the data from feature_table into a useable form inside the "data" dataset
 	data.push({
-	    name: table_data[i][0],
-	    startAngle: parseInt(table_data[i][1]) / vectorLength * Math.PI * 2,
-	    endAngle: parseInt(table_data[i][2]) / vectorLength * Math.PI * 2 + wrapAround,
-	    color: table_data[i][3]
+	    name: feature_table[i][0],
+	    startAngle: parseInt(feature_table[i][1]) / vectorLength * Math.PI * 2,
+	    endAngle: parseInt(feature_table[i][2]) / vectorLength * Math.PI * 2 + wrapAround,
+	    color: feature_table[i][3]
 	});
-	
-//	alert('DATA NOW: '+JSON.stringify(data));
-	
-	d3.select("svg")
-	    .attr("width", svgWidth)
-	    .attr("height", svgHeight);
-	
     }
 
+    
+//    alert("NOW HERE 2 with data = "+JSON.stringify(data));
     /////// note the re_sites array should have the correct format?
     //Anoter for each loop, this time for the RE sites
 
-    re_sites = new Array();
-    for (var i = 0; i < re_sites_list.length; i++) {
-     	var name = re_sites_list[i][0];
-     	var cutCoord = re_sites_list[i][1];
+    var re_sites = new Array();
+    for (var i = 0; i < re_sites_table.length; i++) {
+     	var name = re_sites_table[i][0];
+     	var cutCoord = re_sites_table[i][1];
 	
-	//Convert the data from table_data_RESites into a useable form inside the "re_sites" dataset
+	//Convert the data from feature_table_RESites into a useable form inside the "re_sites" dataset
 	re_sites.push({
 	    name: name,
 	    cutCoord: cutCoord
 	});
     };
-    
-    //Calling the function with all the parameters
-    draw_vector("vector_div", metadata, data, radius, re_sites, table_data, svgWidth, svgHeight);
-}
 
-
-
-export function draw_vector(vector_div, metadata, data, radius, re_sites, table_data, svgWidth, svgHeight) { 
-
-    const centerTranslationWidth = svgWidth/2;
-    const centerTranslationHeight = svgHeight/2;
+//    alert('RE SITES NOW: '+JSON.stringify(re_sites));
     
     d3.select("body").selectAll("svg").selectAll("*").remove();
     
@@ -485,7 +515,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	  .style("display", "none");
 
 
-    const vectorLength = metadata[0][1];
+    //vectorLength = metadata[1];
     
     var backbonearcgen = d3.arc()
 	.outerRadius(radius + (.05 * radius))
@@ -513,7 +543,6 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	.innerRadius(geneInnerRadius);
     
     var vectorGeneBlockG = d3.select("body").select("svg").append("g").attr("class", "vectorGeneBlock").attr("transform", "translate(" + centerTranslationWidth + "," + centerTranslationHeight + ")");
-
     
     data.forEach(function(d, i) {
 	vectorGeneBlockG
@@ -526,7 +555,6 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	    .attr("id", function(d,i) { return "featureClass_"+i; }) //Unique id for each slice
 	    .attr("fill", function(d,i) { return d.color; }  );
     });
-
 
     d3.selectAll(".featureClass")
 	.each(function(d, i) {
@@ -591,7 +619,9 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	    
 	});
 
-    alert('table data now '+JSON.stringify(table_data));
+//    alert('table data now '+JSON.stringify(feature_table));
+    alert('data now: '+JSON.stringify(data));
+    
     data.forEach(function(d,i) {
 	// Label the Beginning of each gene
 
@@ -601,12 +631,12 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	var directionLabelFlip = 0;
 	var directionLabelStartAngle = d.endAngle + 1.5 * Math.PI;
 	
-	if (table_data[i][4] === 'R') {
+	if (feature_table[i][4] === 'R') {
 	    directionLabelStartAngle = d.endAngle + 1.5 * Math.PI;
 	    directionLabelFlip = 0;
 	    directionLabelOffset = (50 / vectorLength) * 2 * Math.PI;
 	}
-	else if (table_data[i][4] === 'F')  {
+	else if (feature_table[i][4] === 'F')  {
 	    directionLabelStartAngle = d.startAngle + 1.5 * Math.PI;
 	    directionLabelFlip = 0;
 	    directionLabelOffset = -(50 / vectorLength) * 2 * Math.PI;
@@ -617,13 +647,13 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	    directionLabelOffset = 0;
 	}
 	
-	// else if (table_data[i][4] === undefined) {
+	// else if (feature_table[i][4] === undefined) {
 	//     directionLabelStartAngle = d.startAngle;
 	//     directionLabelFlip = 0;
 	//     directionLabelOffset = (50 / vectorLength) * 2 * Math.PI;
 	// }
 	// else {
-	//     alert('unknown orientation '+table_data[i][4]);
+	//     alert('unknown orientation '+feature_table[i][4]);
 	// }
 	var directionLabelBackStartX = geneOuterRadius * Math.cos(directionLabelStartAngle + directionLabelFlip);
 	var directionLabelBackStartY = geneOuterRadius * Math.sin(directionLabelStartAngle + directionLabelFlip);
@@ -660,11 +690,11 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	var directionLabelFlipEnd = 0;
 	var directionLabelStartAngleEnd = d.endAngle + 1.5 * Math.PI;
 	
-	if (table_data[i][4] === 'R') {
+	if (feature_table[i][4] === 'R') {
 	    directionLabelStartAngleEnd = d.startAngle + 1.5 * Math.PI;
 	    directionLabelFlipEnd = (50 / vectorLength) * 2 * Math.PI;
 	    directionLabelOffsetEnd = 0;
-	} else if (table_data[i][4] === 'F') {
+	} else if (feature_table[i][4] === 'F') {
 	    directionLabelStartAngleEnd = d.endAngle + 1.5 * Math.PI;
 	    directionLabelFlipEnd = -(50 / vectorLength) * 2 * Math.PI;
 	    directionLabelOffsetEnd = 0;
@@ -710,11 +740,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	    .attr("stroke", "gray")
 	    .attr("stroke-width", "1")
 	    .attr("fill", "gray");
-	
-	
-	
-	
-	
+		
 	//// Create invisible arc path for the label
 	//d3.select("body").select("svg")
 	//  .append("g")
@@ -744,7 +770,6 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
     });
 //}
 //});
-
 
     //Highlight Group placed here for layering reasons
     const clickHighlightG = d3.select("svg").append("g")
@@ -922,8 +947,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
         };
 	
 	vectorLabelTextREElement.lower();
-	vectorLabelREGroup.lower();
-	
+	vectorLabelREGroup.lower();	
     }); 
     
     // Arc that displays where you are on the vector (in BP)
@@ -939,8 +963,7 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
 	.attr("strokewidth", (.15 * radius))
 	.style("pointer-events", "all");
     //  .on("mousemove", handleMouseMove);
-    
-    
+
 //    alert('X15');
     const valueText =   vectorLengthLabelG.append("text")
 	  .attr("x", circleCenter.x)
@@ -952,106 +975,93 @@ export function draw_vector(vector_div, metadata, data, radius, re_sites, table_
     const valueTextRotatingLabel = vectorLengthLabelG.append("text")
 	  .style("fill", "black")
 	  .style("font-size", 0.1 * radius);
-    
-    
+
+
     mouseOverEventArc
 	.on("mousemove", function () {
-	    
+    
 	    const [mouseX, mouseY] = d3.mouse(this);
-	    
+
 	    const deltaX = mouseX - circleCenter.x;
 	    const deltaY = mouseY - circleCenter.y;
-	    
-	    
+
+
 	    let angleInRadians = Math.atan2(-deltaY, -deltaX);
-	    
+
 	    angleInRadians -= Math.PI / 2;  
 	    if (angleInRadians < 0) {
 		angleInRadians += 2*Math.PI
 	    }
-	    
+
 	    const arcLengthDisplay = angleInRadians * circleRadius; // Arc length = angle (in radians) * radius
-	    
+
 	    const circumference = 2 * Math.PI * circleRadius; // Calculate the circle's circumference
-	    
+
 	    const valueLength = Math.round((arcLengthDisplay / circumference) * (vectorLength - 1)) + 1;
-	    
+
 	    valueText.text("Location: "+valueLength);
-	    
-	    
+
 	    var halfPi = 1/2 * Math.PI;
-	    
-	    
+
 	    var extraLengthForLengthLabel = 40;
 	    var labelLengthLabelX2 = (circleRadius + extraLengthForLengthLabel) * Math.cos(angleInRadians - halfPi);
 	    var labelLengthLabelY2 = (circleRadius + extraLengthForLengthLabel) * Math.sin(angleInRadians - halfPi);
 	    var labelLengthOffset = 40;
-	    
-	    
+
 	    if (labelLengthLabelX2 >= 0) {
 		labelLengthOffset = (.2 * radius);
 	    } else {
 		labelLengthOffset = (-.2 * radius);
 	    };
-	    
-	    
+
 	    var  labelLengthLabelX3 = labelLengthLabelX2 + labelLengthOffset;
-	    
-	    
+
 	    const lengthLabelData = [
 		{x: circleRadius * Math.cos(angleInRadians - halfPi), y: circleRadius * Math.sin(angleInRadians - halfPi)},
 		{x: labelLengthLabelX2, y: labelLengthLabelY2},
 		{x: labelLengthLabelX3, y: labelLengthLabelY2}
 	    ]; 
-	    
-	    
+
 	    const lengthLabelLine = d3.line()
 		  .x(function (d) {return d.x})
 		  .y(function (d) {return d.y});
-	    
+
 	    vectorLengthLabel
 		.datum(lengthLabelData)
 		.attr("d", lengthLabelLine)
 		.style("display", "block");
-	    
+
 	    var rotatingLabelLengthOffset = (.2 * radius);
-	    
+
 	    if (labelLengthLabelX2 >= 0) {
 		rotatingLabelLengthOffset = (-.175 * radius);
 	    } else {
 		rotatingLabelLengthOffset = (.175 * radius);
 	    };
-	    
-	    
+
 	    valueTextRotatingLabel
 		.attr("x", labelLengthLabelX3 + rotatingLabelLengthOffset)
 		.attr("y", labelLengthLabelY2 - (.01 * radius));
-	    
+
 	    valueTextRotatingLabel.text(valueLength).attr("font-weight", "bold");
-	    
-	    
+
 	    if (labelLengthLabelX3 >= 0) {
 		valueTextRotatingLabel.attr("text-anchor", "start");
 	    } else {
 		valueTextRotatingLabel.attr("text-anchor", "end");
 	    };
-	    
-	    
+
 	})
 	.on("mouseout", function () {
 	    vectorLengthLabel.style("display", "none");
 	    valueText.text("");
 	    valueTextRotatingLabel.text("");
 	});
-    
-    
-    
-    
+
     d3.select(".labelLengthGroup").each(function() {
 	this.parentNode.appendChild(this); // moves it to bottom of <svg> = top visually
     });
-    
-    
+
     ///var buttonG = d3.select("svg").append("g").attr("class", "buttonClass")
     ///
     ///var zoomOut = buttonG.append("foreignObject");

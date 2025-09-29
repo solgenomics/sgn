@@ -63,7 +63,7 @@ has 'vector_length' => (isa => 'Int',
 			is => 'rw',
     );
 
-has 'metadata' => (isa => 'Maybe[HashRef]',
+has 'metadata' => (isa => 'Maybe[ArrayRef]',
 		   is => 'rw',
     );
 
@@ -91,29 +91,21 @@ sub parse_genbank {
     
     my $format = "genbank";
 
-
     my $stringfh = IO::String->new($string); 
     
     my $seqio = Bio::SeqIO -> new(
 	-fh     => $stringfh,
 	-format => $format, );
 
-    
     my $s = $seqio->next_seq();
 
     print STDERR "ID: ".$s->id();
     print STDERR "SEQUENCE : ".$s->seq();
-    
+
     my @commands = ();
     my @features = $s -> get_SeqFeatures();
 
-
-
-    
     foreach my $f (@features) {
-
-
-	
 	print STDERR "Processing primary tag: ".$f->primary_tag()." TAGS: ".join(",", $f->get_all_tags())."\n";
 	
 	my @all_tags = $f->get_all_tags();
@@ -190,7 +182,7 @@ sub parse_genbank {
     
     print STDERR "ADDING VECTOR NAME ".$s->id()." and length ".length($s->seq())."\n";
     
-    my $metadata = { 'name' => $s->id(), 'vector_length' => length($s->seq()) };
+    my $metadata = [ $s->id(), length($s->seq()) ];
 
     my @restriction_sites = $self->restriction_analysis("popular6bp", $s->seq());
 
