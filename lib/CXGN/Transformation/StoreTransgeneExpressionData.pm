@@ -114,20 +114,18 @@ sub store_qPCR_data {
 	my $normalization_method = $self->get_normalization_method();
 	my $notes = $self->get_notes();
 	my $operator_id = $self->get_operator_id();
-	my $relative_expression_data_derived_from;
-	if ($relative_expression_data) {
-        $relative_expression_data_derived_from = 'provided';
-	}
-    if ($CT_expression_data) {
-        if ($normalization_method eq "CASS") {
-            $relative_expression_data_derived_from = 'using CASS normalization method';
-            my $normalized_data = _CASS_normalized_values($CT_expression_data, $endogenous_control);
-            print STDERR "NORMALIZED DATA =".Dumper($normalized_data)."\n";
-        }
-    }
-	exit;
+	my $normalized_values_derived_from;
 
     my $coderef = sub {
+        if ($CT_expression_data && (!$relative_expression_data)) {
+            if ($normalization_method eq "CASS") {
+                $relative_expression_data = _CASS_normalized_values($CT_expression_data, $endogenous_control);
+                $normalized_values_derived_from = 'calculated using CASS normalization method';
+            }
+        } elsif ((!$CT_expression_data) && $relative_expression_data ) {
+            $normalized_values_derived_from = 'provided';
+        }
+
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
         my $vector_construct_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type');
         my $expression_data_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'transgene_expression_data', 'stock_property');
@@ -159,16 +157,32 @@ sub store_qPCR_data {
         my $expression_data_json;
         my $expression_data_hash = {};
         my $updated_expression_data_json;
+        my %CT_expression_data_details;
+        my %relative_expression_data_details;
+
+        if ($CT_expression_data) {
+            $CT_expression_data_details{'CT_values'} = $CT_expression_data;
+            $CT_expression_data_details{'endogenous_control'} = $endogenous_control;
+            $CT_expression_data_details{'notes'} = $notes;
+            $CT_expression_data_details{'uploaded_by'} = $operator_id;
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'} = \%CT_expression_data_details;
+        }
+
+        $relative_expression_data_details{'relative_expression_values'} = $relative_expression_data;
+        $relative_expression_data_details{'endogenous_control'} = $endogenous_control;
+        $relative_expression_data_details{'notes'} = $notes;
+        $relative_expression_data_details{'uploaded_by'} = $operator_id;
+        $relative_expression_data_details{'normalized_values_derived_from'} = $normalized_values_derived_from;
 
         my $previous_expression_data_stockprop_rs = $transformant_stock->stockprops({type_id=>$expression_data_cvterm->cvterm_id});
         if ($previous_expression_data_stockprop_rs->count == 1){
             $expression_data_json = $previous_expression_data_stockprop_rs->first->value();
             $expression_data_hash = decode_json $expression_data_json;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'relative_expression_values'} = $relative_expression_data;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'notes'} = $notes;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'relative_expression_data_derived_from'} = $relative_expression_data_derived_from;
+
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'} = \%relative_expression_data_details;
+            if ($CT_expression_data) {
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'} = \%CT_expression_data_details;
+            }
 
             $updated_expression_data_json = encode_json $expression_data_hash;
             $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_json});
@@ -176,18 +190,11 @@ sub store_qPCR_data {
             print STDERR "More than one expression data stockprop found!\n";
             return;
         } else {
+            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'} = \%relative_expression_data_details;
             if ($CT_expression_data) {
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'}->{'CT_values'} = $CT_expression_data;
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'}->{'endogenous_control'} = $endogenous_control;
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'}->{'notes'} = $notes;
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'}->{'uploaded_by'} = $operator_id;
-            } elsif ($relative_expression_data) {
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'normalized_values'} = $relative_expression_data;
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'endogenous_control'} = $endogenous_control;
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'notes'} = $notes;
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'uploaded_by'} = $operator_id;
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'}->{'normalized_values_derived_from'} = 'provided';
+                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'} = \%CT_expression_data_details;
             }
+
             $expression_data_json = encode_json $expression_data_hash;
             $transformant_stock->create_stockprops({$expression_data_cvterm->name() => $expression_data_json});
         }
