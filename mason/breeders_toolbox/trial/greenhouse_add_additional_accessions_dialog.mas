@@ -1,0 +1,147 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<style>
+@media (min-width: 768px) {
+    .modal-xl {
+        width: 90%;
+        max-width:1200px;
+    }
+}
+</style>
+
+<div class="modal fade" id="add_additional_accessions_using_list_dialog" name="add_additonal_accessions_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addAdditionalAccessionsUsingListDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAdditionalAccessionsUsingListDialog">Add Additional Accessions to Greenhouse Design</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <&| /page/explanation.mas, title=>'' &>
+                                <p>
+                                    <br>
+                                    <a id="additional_accessions_list_info">List Information   </a>
+                                    <br>
+                                </p>
+                            </&>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Accession List:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="additional_accession_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id ="additional_accessions_form_div">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </br>
+                    </br>
+                    <div id="additional_accessions_footer" style="display:none" >
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" id="add_additional_accessions_submit" name="add_additional_accessions_submit">Add Accessions</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_additional_accessions_message" name="add_additional_accessions_message" tabindex="-1" role="dialog" aria-labelledby="addAdditionalAccessionsMessage">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAdditionalAccessionsMessage">Add Additional Accessions to Greenhouse Design</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The accessions were added successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="add_additional_accessions_close_button" id="add_additional_accessions_close_button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_additional_accessions_info_dialog" name="add_additioanl_accessions_info_dialog" tabindex="-1" role="dialog" aria-labelledby="addAdditionalAccessionsInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAdditionalAccessionsInfoDialog">List Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <h4>
+                        xxxx:
+                    </h4>
+                    <p>xxxx.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#trial_detail_page_add_additional_accessions').click(function(){
+        jQuery('#add_additional_accessions_using_list_dialog').modal('show');
+    });
+
+    jQuery('#additional_accessions_list_info').click(function(){
+        jQuery("#add_additional_accessions_info_dialog").modal("show");
+    });
+
+    const trial_id = "<% $trial_id %>";
+    var lo = new CXGN.List();
+
+    jQuery('#additional_accession_list_select').html(lo.listSelect('additional_accession_list_select', ['accessions'], 'Select a list', undefined, undefined));
+
+    let accession_list_id = '';
+    jQuery("#additional_accession_list_select").change(function() {
+        accession_list_id = jQuery('#additional_accession_list_select').val();
+        alert(accession_list_id);
+        if (accession_list_id){
+            let accession_validation = 1;
+            accession_validation = lo.legacy_validate(accession_list_id, 'uniquenames', true);
+            if (accession_validation != 1) {
+                alert("The accession list did not pass validation. Names in the list must be uniquenames in the database");
+                return;
+            } else {
+                additional_accessions_form(accession_list_id);
+            }
+        }
+    })
+
+
+
+
+});
+
+</script>
