@@ -632,7 +632,7 @@ sub check {
 
     my $trait_value = $self->value();
 
-    if ($self->trait_format() eq 'numeric') {
+    if (defined($trait_value) && $trait_value ne '' && $self->trait_format() eq 'numeric') { # check only if the trait_value is defined
         if (! looks_like_number($trait_value)) {
             push @errors, "Trait format is numeric but value is not a number ($trait_value)\n";
         }
