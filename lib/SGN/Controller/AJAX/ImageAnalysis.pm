@@ -194,6 +194,7 @@ sub image_analysis_submit_POST : Args(0) {
             my $md5 = $image->calculate_md5sum($archive_temp_image);
             my $stock_id = $result->[$it]->{stock_id};
             my $project_id = $result->[$it]->{project_id};
+            #print STDERR "project id: $project_id";
 
             my $project_where = ' ';
             my $project_join = ' ';
@@ -255,7 +256,9 @@ sub image_analysis_group : Path('/ajax/image_analysis/group') : ActionClass('RES
 sub image_analysis_group_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $result = decode_json $c->req->param('result');
+    #my $image_id = decode_json $c->req->param('image_id');
     print STDERR "IMAGE ANALYSIS RESULTS: ".Dumper($result);
     my %grouped_results = ();
     my @table_data = ();
@@ -290,16 +293,105 @@ sub image_analysis_group_POST : Args(0) {
         }
         elsif (exists($results_ref->{result}->{subanalyses}) && ref($results_ref->{result}->{subanalyses}) eq "HASH")  { # multiple results are returned, for several sub-images
 	    print STDERR "MULTIPLE RESULTS DETECTED!\n";
+        my $project_id;
 	    foreach my $sample (keys %{$results_ref->{result}->{subanalyses}}) {
+
+        my $stock_id = $results_ref->{stock_id};
+        my $projects_rs = $schema->resultset('NaturalDiversity::NdExperimentStock')->search({ stock_id => $stock_id })->search_related('nd_experiment')->search_related('nd_experiment_projects')->search_related('project');
+        if (my $project = $projects_rs->next) {
+            $project_id = $project->project_id;
+        }
+
+        my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $stock_id });
+        my $accession_id;
+        my $stock_type;
+        my $stock_type_name;
+        if ($stock) {
+            $stock_type = $stock->type;
+            $stock_type_name = $stock_type->name;
+
+            if ($stock_type_name eq 'plant') {
+                my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+
+                my $plot_rel = $schema->resultset("Stock::StockRelationship")->find({ object_id => $stock_id, type_id => $plant_of_cvterm_id, });
+                my $plot_stock = $plot_rel ? $plot_rel->subject() : undef;
+                
+
+                my $plot_rel = $stock->search_related('stock_relationship_subjects', { 'type.name' => 'plant_of', }, {join => 'type' })->single;
+                my $plot = $plot_rel ? $plot_rel->object : undef;
+
+                if ($plot) {
+                    my $acc_rel = $plot_stock->search_related('stock_relationship_subjects', { 'type.name' => 'plot_of', }, { join => 'type', })->single;
+
+                    my $accession = $acc_rel ? $acc_rel->object : undef;
+                    $accession_id = $accession ? $accession->stock_id : undef;
+                }
+            } elsif ($stock_type_name eq 'plot') {
+                my $accession = $stock->search_related('stock_relationship_subjects', { 'type.name' => 'plot_of', }, { join => 'type', })->single;
+                if ($accession) {
+                    $accession_id = $accession->object->stock_id;
+                }
+            } else {
+                $accession_id = $stock->stock_id;
+            }
+        }
+        # print STDERR "stock type: $stock_type_name accession id: $accession_id";
+
+        my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+
+        my $rs = $schema->resultset("Stock::StockRelationship")->search(
+            {
+                'me.object_id' => $stock_id,
+                'me.type_id' => $tissue_sample_of_cvterm_id,
+            },
+            {
+                prefetch => 'subject',
+            }
+        );
+
+        my @samples;
+        while (my $rel = $rs->next) {
+            push @samples, $rel->subject->uniquename;
+        }
+        print STDERR "samples test: @samples";
+
+        my $trait_id = $results_ref->{'result'}->{'trait_id'};
+        my @trait_samples = grep { $_ =~ /$trait_id/ } @samples;
+        print STDERR "trait tissue samples: @trait_samples";
+
+        my $max_num = 0;
+        if (@trait_samples) {
+            for my $s (@trait_samples) {
+                if ($s =~ /_sample(\d+)$/) {
+                    $max_num = $1 if $1 > $max_num;
+                }
+            }
+        }
+
+        # here loop through samples and check if image id exists in any one of the names. if yes, 
+       
+
+        #print STDERR "sample num: $max_num";
+
+
+        #print STDERR "accession id: $accession_id";
+
+        my $related_accession;
+        #print STDERR "project id test: $project_id";
 		
 		push @{$grouped_results{$uniquename}{$trait}}, {
 		    stock_id => $results_ref->{stock_id},
 		    collector => $results_ref->{image_username},
+            trial_id => $project_id,
+            accession_id => $accession_id,
 		    original_link => $results_ref->{result}->{original_image},
 		    analyzed_link => $results_ref->{result}->{subanalyses}->{$sample}->{image_link},
 		    #image_name => dirname($results_ref->{image_original_filename}."_".$sample."_".$results_ref->{image_file_ext}),
 		    image_name => $sample,
 		    trait_name => $results_ref->{result}->{trait},
+            trait_id => $results_ref->{'result'}->{'trait_id'},
+            stock_type => $stock_type_name,
+            sample_num => $max_num,
 		    value => $results_ref->{result}->{subanalyses}->{$sample}->{trait_value}+0,
 		    status => 'create',
 		};
@@ -335,6 +427,7 @@ sub image_analysis_group_POST : Args(0) {
                 # print STDERR "\n\n\nVALUES ARE @values and length is ". scalar @values . "\n\n\n";
                 my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
                 print STDERR "Mean value is $mean_value\n";
+               # print STDERR "Trait Id: " . $uniquename_data->{$trait}[0]->{'trait_id'};
                 push @table_data, {
                     observationUnitDbId => $uniquename_data->{$trait}[0]->{'stock_id'},
                     observationUnitName => $uniquename,
@@ -342,6 +435,10 @@ sub image_analysis_group_POST : Args(0) {
                     observationTimeStamp => localtime()->datetime,
                     observationVariableDbId => $uniquename_data->{$trait}[0]->{'trait_id'},
                     observationVariableName => $trait,
+                    studyDbId => $uniquename_data->{$trait}[0]->{'trial_id'},
+                    germplasmDbId => $uniquename_data->{$trait}[0]->{'accession_id'},
+                    stock_type => $uniquename_data->{$trait}[0]->{'stock_type'},
+                    sample_num => $uniquename_data->{$trait}[0]->{'sample_num'},
                     value => $mean_value,
                     details => $details,
                     numberAnalyzed => scalar @values
@@ -352,6 +449,22 @@ sub image_analysis_group_POST : Args(0) {
     }
     # print STDERR "table data is ".Dumper(@table_data);
     $c->stash->{rest} = { success => 1, results => \@table_data };
+}
+
+sub get_image_file : Path('/get_image_file') Args(0) {
+    my ($self, $c) = @_;
+    my $url = $c->req->params->{url};
+
+    my $ua = LWP::UserAgent->new;
+    my $res = $ua->get($url);
+
+    if ($res->is_success) {
+        $c->res->content_type($res->header('Content-Type'));
+        $c->res->body($res->decoded_content(charset => 'none'));
+    } else {
+        $c->res->status(500);
+        $c->res->body("Failed to fetch image");
+    }
 }
 
 sub get_activity_data : Path('/ajax/image_analysis/activity') Args(0) {
