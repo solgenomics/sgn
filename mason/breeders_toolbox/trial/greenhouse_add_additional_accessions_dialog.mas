@@ -152,18 +152,21 @@ jQuery(document).ready(function(){
 
     jQuery('#add_additional_accessions_submit').click(function(e){
         e.preventDefault();
+        accession_list = [];
         number_of_plants = [];
 
         jQuery('input[name="accession_plant_number"]').each(function() {
             value = this.value;
             var accession_name = jQuery(this).attr('accession_name');
-            number_of_plants.push({ 'accession_name':accession_name, 'number_of_plants':value });
+            accession_list.push(accession_name);
+            number_of_plants.push(value);
         });
 
         jQuery.ajax({
             url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/add_additional_accessions_for_greenhouse/',
             method: 'POST',
             data: {
+                'accession_list': JSON.stringify(accession_list),
                 'number_of_plants': JSON.stringify(number_of_plants),
             },
             dataType:'json',

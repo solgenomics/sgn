@@ -36,6 +36,7 @@ use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
 use CXGN::BreedersToolbox::SoilData;
 use CXGN::Genotype::GenotypingProject;
+use List::Util qw(max);
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -6001,16 +6002,50 @@ sub add_additional_accessions_for_greenhouse_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $trial_id = $c->stash->{trial_id};
-    my $number_of_plants = $c->req->param('number_of_plants');
+    my $accession_list_json = $c->req->param('accession_list');
+    my $number_of_plants_json = $c->req->param('number_of_plants');
+    my $accession_array = decode_json $accession_list_json;
+    my $number_of_plants_array = decode_json $number_of_plants_json;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
     print STDERR "TRIAL ID =".Dumper($trial_id)."\n";
-    print STDERR "NUMBER OF PLANTS =".Dumper($number_of_plants)."\n";
+    print STDERR "ACCESSION ARRAY =".Dumper($accession_array)."\n";
+    print STDERR "NUMBER OF PLANTS ARRAY  =".Dumper($number_of_plants_array)."\n";
 
     if (!$c->user){
         $c->stash->{rest} = {error=>'You must be logged in to add additional accessions!'};
         return;
     }
+
+    my $original_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
+    my $original_design = $original_layout-> get_design();
+    print STDERR "ORIGINAL DESIGN =".Dumper($original_design)."\n";
+    my @all_plot_numbers = keys %{$original_design};
+    my $last_plot_number = max(@all_plot_numbers);
+    my $next_plot_number = $last_plot_number + 1;
+    print STDERR "LAST PLOT NUMBER =".Dumper($last_plot_number)."\n";
+
+    my $trial = $c->stash->{trial};
+    my $trial_name = $trial->get_name;
+    print STDERR "TRIAL NAME =".Dumper($trial_name)."\n";
+
+    for (my $i = 0; $i < scalar(@$accession_array); $i++) {
+        my %plot_info;
+        my @plant_names = ();
+        my $plot_number = $next_plot_number + $i;
+        $plot_info{'stock_name'} = $accession_array->[$i];
+        $plot_info{'block_number'} = 1;
+        $plot_info{'rep_number'} = 1;
+        my $plot_name = $trial_name."_".$accession_array->[$i]."_".$plot_number;
+        my $accession_number_of_plants = $number_of_plants_array->[$i];
+            for (my $j = 1; $j < $accession_number_of_plants+1; $j++) {
+                my $plant_name = $plot_name."_plant_$j";
+                push @plant_names, $plant_name;
+            }
+        print STDERR "PLOT NAME =".Dumper($plot_name)."\n";
+        print STDERR "PLANT NAMES =".Dumper(\@plant_names)."\n";
+    }
+
 
     $c->stash->{rest} = { success => 1 };
 }
