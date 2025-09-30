@@ -3,6 +3,8 @@
 %services
 </%args>
 
+% use JSON::Any;
+
 <& /util/import_javascript.mas,
   classes => ['jquery.dataTables-buttons-min',
       'jquery.iframe-post-form',
@@ -39,12 +41,6 @@ tr.shown td.details-control {
 
 <& /page/page_title.mas, title=>"Image Analysis" &>
 <hr>
-
-<div class="well well-sm">
-    <center>
-    <h4>The Necrosis Image Analysis is explained in the paper here: <a href="https://csce.ucmss.com/cr/books/2018/LFS/CSREA2018/IPC3638.pdf">Necrosis Image Analysis</a>.</h4>
-    </center>
-</div>
 
 <div class="well well-sm">
     <center>
@@ -292,11 +288,12 @@ jQuery(document).ready(function(){
 
     jQuery('#image_analysis_service_select').change(function() {
         var service = jQuery('#image_analysis_service_select').val();
+	var service_defs = JSON.parse('<% JSON::encode_json(\%services) %>');
         jQuery('#image_analysis_trait_select').html('<option value="">Select A Trait</option>');
         if (service) {
             jQuery('#working_modal').modal('show');
             // add crop and service specific trait options
-            var all_traits = service_traits[service];
+            var all_traits = service_defs[service].service_traits;
             var trait_names = Object.keys(all_traits);
             var options =  [];
 
@@ -305,15 +302,16 @@ jQuery(document).ready(function(){
                 method: 'GET',
                 success: function(response) {
                     // console.log("Retrieved crop names and they are: "+response.result.data);
-                    var supportedcrops = response.result.data;
-                    supportedcrops.forEach(function(crop) {
+//                    var supportedcrops = response.result.data;
+//                    supportedcrops.forEach(function(crop) {
+//		        alert("CROP = "+crop);
                         trait_names.forEach(function(name) {
-                            if (all_traits[name] == crop) {
+//                            if (all_traits[name] == crop) {
                                 // console.log("Id is "+id);
                                 options.push('<option value="'+ name +'">'+ name +'</option>');
-                            }
-                        });
-                    });
+//                            }
+//                        });
+			});
                     jQuery('#image_analysis_trait_select').append(options);
                     jQuery('#image_analysis_trait_group').show();
                     jQuery('#working_modal').modal('hide');
@@ -423,15 +421,23 @@ jQuery(document).ready(function(){
             // console.log("Results are:");
             // console.log(results);
             var first = results[0];
-            let metricsData = Object.entries(first.result.analysis_info).map(( [key, value] ) => ({ key : value }));
 
-            jQuery('#metrics_table').DataTable({
-                "data": metricsData,
-                "columns": [
-                    { "data": "metric" },
-                    { "data": "value" },
-                ]
-            });
+            let metricsData = Object.entries(first.result.analysis_info)
+                .filter(([key, value]) => key != null && value != null)
+                .map(([key, value]) => ({
+                    metric: key,
+                    value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+                }));
+
+            if (metricsData.length > 0) {
+                jQuery('#metrics_table').DataTable({
+                    "data": metricsData,
+                    "columns": [
+                        { "data": "metric" },
+                        { "data": "value" },
+                    ]
+                });
+            }
 
             if (results.length > 0) {
                 jQuery.ajax({
@@ -561,6 +567,7 @@ function _load_image_search_results() {
         'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url':  '/ajax/search/images',
+            'method': 'POST',
             'data': function(d) {
               d.html_select_box = "image_analysis_select";
               d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();

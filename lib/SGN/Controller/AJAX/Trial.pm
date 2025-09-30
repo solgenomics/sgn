@@ -54,6 +54,7 @@ use CXGN::Contact;
 use CXGN::File::Parse;
 use CXGN::People::Person;
 use CXGN::Tools::Run;
+use CXGN::Job;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -180,6 +181,8 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
 
+    
+
     my $row_in_design_number = $c->req->param('row_in_design_number');
     my $col_in_design_number = $c->req->param('col_in_design_number');
     my $no_of_rep_times = $c->req->param('no_of_rep_times');
@@ -187,6 +190,13 @@ sub generate_experimental_design_POST : Args(0) {
     my $unreplicated_stock_list = $c->req->param('unreplicated_stock_list');
     my $replicated_stock_list = $c->req->param('replicated_stock_list');
     my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
+
+    if ($design_type eq 'URDD'){
+        if (!$row_in_design_number || !$col_in_design_number){
+            $c->stash->{rest} = { error => "You need to provide number of rows and cols for a unreplicated diagonal design."};
+            return;
+        }
+    }
 
     my @replicated_stocks;
     if ($c->req->param('replicated_stock_list')) {
@@ -204,7 +214,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $use_same_layout = $c->req->param('use_same_layout');
     my $number_of_checks = scalar(@control_names_crbd);
 
-    if ($design_type eq "RCBD" || $design_type eq "RRC" || $design_type eq "DRRC" ||$design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
+    if ($design_type eq "RCBD" || $design_type eq "RRC" || $design_type eq "DRRC" || $design_type eq "URDD" ||$design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
         if (@control_names_crbd) {
             @stock_names = (@stock_names, @control_names_crbd);
         }
@@ -1208,15 +1218,26 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     $cmd .= " -iw" if $ignore_warnings;
 
     # Run asynchronously if email option is enabled
-    my $runner = CXGN::Tools::Run->new();
+    # my $runner = CXGN::Tools::Run->new();
+    my $job = CXGN::Job->new({
+        sp_person_id => $user_id,
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        cmd => $cmd,
+        name => "$upload_original_name multiple trial designs upload",
+        results_page => '/breeders/trials',
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log}
+    });
     if ( $email_option_enabled && $email_address ) {
-        $runner->run_async($cmd);
-        my $err = $runner->err();
-        my $out = $runner->out();
+        #$runner->run_async($cmd);
+        $job->submit();
+        #my $err = $runner->err();
+        #my $out = $runner->out();
 
-        print STDERR "Upload Trials Output (async):\n";
-        print STDERR "$err\n";
-        print STDERR "$out\n";
+        #print STDERR "Upload Trials Output (async):\n";
+        #print STDERR "$err\n";
+        #print STDERR "$out\n";
 
         $c->stash->{rest} = {background => 1};
         return;
@@ -1224,18 +1245,32 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
     # Otherwise run synchronously
     else {
-        $runner->run($cmd);
-        my $err = $runner->err();
-        my $out = $runner->out();
+        #$runner->run($cmd.$job->generate_finish_timestamp_cmd());
+        #$job->update_status("submitted");
+        #my $err = $runner->err();
+        #my $out = $runner->out();
+
+        $job->submit();
+
+        while($job->alive()) {
+            sleep(1);
+        }
+
+        my $err_file = $job->cxgn_tools_run_config->{err};
+        my $out_file = $job->cxgn_tools_run_config->{out};
 
         print STDERR "Upload Trials Output (sync):\n";
-        print STDERR "$err\n";
-        print STDERR "$out\n";
+        print STDERR "$err_file\n";
+        print STDERR "$out_file\n";
+
+        open my $err, "<", $err_file or die "No error file found!\n";
+        open my $out, "<", $out_file or die "No out file found!\n";
 
         # Collect errors and warnings from STDERR
         my @errors;
         my @warnings;
-        foreach (split(/\n/, $err)) {
+        while (<$err>) {
+            chomp;
             if ($_ =~ /^ERROR/) {
                 $_ =~ s/ERROR:? ?//;
                 push @errors, $_;
@@ -1245,13 +1280,25 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
                 push @warnings, $_;
             }
         }
+        # foreach (split(/\n/, $err)) {
+        #     if ($_ =~ /^ERROR/) {
+        #         $_ =~ s/ERROR:? ?//;
+        #         push @errors, $_;
+        #     }
+        #     elsif ($_ =~ /^WARNING/) {
+        #         $_ =~ s/WARNING:? ?//;
+        #         push @warnings, $_;
+        #     }
+        # }
 
         if ( scalar(@errors) > 0 ) {
             $c->stash->{rest} = {errors => \@errors};
+            $job->update_status("failed");
             return;
         }
         if ( scalar(@warnings) > 0 ) {
             $c->stash->{rest} = {warnings => \@warnings};
+            $job->update_status("failed");
             return;
         }
     }

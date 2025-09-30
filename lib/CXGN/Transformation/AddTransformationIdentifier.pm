@@ -68,6 +68,25 @@ has 'transformation_project_id' => (
     required => 1,
 );
 
+has 'is_a_control' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0,
+);
+
+
+sub existing_transformation_id {
+    my $self = shift;
+    my $schema = $self->get_chado_schema();
+    my $transformation_identifier = $self->get_transformation_identifier();
+
+    if ($schema->resultset('Stock::Stock')->find({ 'uniquename' => $transformation_identifier, 'is_obsolete' => { '!=' => 't' }})){
+        return 1;
+    } else {
+        return;
+    }
+}
+
 
 sub add_transformation_identifier {
     my $self = shift;
@@ -75,15 +94,19 @@ sub add_transformation_identifier {
     my $phenome_schema = $self->get_phenome_schema();
     my $transformation_identifier = $self->get_transformation_identifier();
     my $plant_material = $self->get_plant_material();
-	my $vector_construct = $self->get_vector_construct();
-	my $transformation_notes = $self->get_notes();
-	my $transformation_project_id = $self->get_transformation_project_id();
-	my $plant_material_stock_id;
-	my $vector_construct_stock_id;
+    my $vector_construct = $self->get_vector_construct();
+    my $transformation_notes = $self->get_notes();
+    my $transformation_project_id = $self->get_transformation_project_id();
+    my $is_a_control = $self->get_is_a_control();
+    my $plant_material_stock_id;
+    my $vector_construct_stock_id;
     my %return;
-	my $transformation_stock_id;
+    my $transformation_stock_id;
+    my $owner_id = $self->get_owner_id();
 
-    my $owner_id = $self->get_owner_id();;
+    if ($self->existing_transformation_id()){
+        return {error => "Error: Transformation identifier: $transformation_identifier already exists in the database."};
+    }
 
     my $coderef = sub {
 
@@ -93,11 +116,12 @@ sub add_transformation_identifier {
         my $plant_material_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'plant_material_of', 'stock_relationship')->cvterm_id();
         my $vector_construct_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'vector_construct_of', 'stock_relationship')->cvterm_id();
         my $transformation_notes_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property');
-		my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-		my $vector_construct_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+        my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+        my $vector_construct_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+        my $is_a_transformation_control_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a_transformation_control', 'stock_property');
 
-		my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
-		my $geolocation_rs = $schema->resultset("Project::Projectprop")->find({project_id => $transformation_project_id, type_id => $project_location_cvterm_id});
+        my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
+        my $geolocation_rs = $schema->resultset("Project::Projectprop")->find({project_id => $transformation_project_id, type_id => $project_location_cvterm_id});
 
 		my $plant_material_rs = $schema->resultset("Stock::Stock")->find({
 			uniquename => $plant_material,
@@ -152,6 +176,10 @@ sub add_transformation_identifier {
 
         if ($transformation_notes) {
             $transformation_identifier_stock->create_stockprops({$transformation_notes_cvterm->name() => $transformation_notes});
+        }
+
+        if ($is_a_control) {
+            $transformation_identifier_stock->create_stockprops({$is_a_transformation_control_cvterm->name() => $is_a_control});
         }
 
         $transformation_stock_id = $transformation_identifier_stock->stock_id();

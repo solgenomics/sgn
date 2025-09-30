@@ -18,6 +18,16 @@ my $dir = Cwd::cwd();
 # create tempfile 
 my ($fh, $tempfile) = tempfile( "mixedmodelsXXXXXX", DIR => $dir."/static/documents/tempfiles/", UNLINK => 0 );
 
+my $job_finish_log = $f->config->{job_finish_log} ? $f->config->{job_finish_log} : '/home/production/volume/logs/job_finish.log';
+
+my $job_config = {
+    schema => $f->bcs_schema(),
+    people_schema => $f->people_schema(),
+    name => 'unit_fixture mixed model test',
+    user => 41,
+    finish_logfile => $job_finish_log
+};
+
 print STDERR "Using tempfile $tempfile\n";
 close($fh);
 
@@ -73,7 +83,14 @@ foreach my $engine ("lme4", "sommer") {
 	print STDERR "MODEL STRING: $model_string\n";
     }
     
-    $mm->run_model("Slurm", "localhost", dirname($pheno_tempfile) );
+    print STDERR "RUNNING MODEL\n";
+    eval {
+    $mm->run_model($f->config->{backend}, $f->config->{cluster_host}, dirname($pheno_tempfile), $job_config );
+    };
+    if ($@) {
+        print STDERR "ERROR RUNNING MODEL: $@\n";
+    }
+
 
     print STDERR "Using tempfile base ".$mm->tempfile()."\n";
 
@@ -117,7 +134,7 @@ print STDERR "MODEL STRING = $model_string\n";
 
 is($model_string, "germplasmName + (1|replicate)", "model string test for BLUEs");
 
-$mm->run_model("Slurm", "localhost", dirname($pheno_tempfile));
+$mm->run_model($f->config->{backend}, $f->config->{cluster_host}, dirname($pheno_tempfile), $job_config);
 
 sleep(2);
 

@@ -387,14 +387,26 @@ sub remove_element {
 	return "An error occurred while attempting to delete item $element";
     }
 
-		eval {
+    eval {
     	my $q = "UPDATE sgn_people.list SET modified_date = now() WHERE list_id=?";
     	my $h1 = $self->dbh()->prepare($q);
     	$h1->execute($self->list_id());
-		};
+    };
 
     my $elements = $self->elements();
-    my @clean = grep(!/^$element$/, @$elements);
+
+    # the following loop was refactored from a grep statement, as lists sometimes contain
+    # json data and gets interpreted wrong using grep, leading to errors. For example,
+    # in some lists, usernames are stored, and when they contain dashes, an error occurs
+    # as it is not legal regexp. See issue: https://github.com/solgenomics/sgn/issues/5689
+    
+    my @clean;
+    foreach my $e (@$elements) {
+	if ($e ne $element) { 
+	    push @clean, $e;
+	}
+    }
+    
     $self->elements(\@clean);
     return 0;
 }
@@ -779,5 +791,7 @@ sub seedlot_list_details {
     return \@seedlot_details;
 
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;

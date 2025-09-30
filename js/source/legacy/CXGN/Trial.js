@@ -510,6 +510,7 @@ buttons: {
 
 });
 
+
 jQuery("#update_field_map_dialog_message").dialog({
 autoOpen: false,
 modal: true,
@@ -696,7 +697,12 @@ jQuery(document).ready(function ($) {
       open_subtitute_plot_accession_dialog();
     });
 
+    jQuery('#barcode_design_option_link').click(function () {
+        $('#barcode_design_option_dialog').modal("show");
+    });
+
     jQuery('#generate_trial_barcode_link').click(function () {
+        $('#barcode_design_option_dialog').modal("hide");
         $('#generate_trial_barcode_button_dialog').modal("show");
     });
 

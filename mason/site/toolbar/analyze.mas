@@ -1,6 +1,7 @@
 <li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Analyze</a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Genomes<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
+    <li><a href="/analyses">Stored Analyses</a></li>
     <li class="dropdown-header">Breeder Tools</li>
     <li><a href="/selection/index">Selection Index</a></li>
     <!-- li><a href="/analyze/phenotypes">Analyze Phenotypes</a><li -->
@@ -8,6 +9,7 @@
     <!--li><a href="/solgs/search">Genomic Selection</a></li -->
     <li><a href="/pca/analysis">Population Structure</a></li>
     <li><a href="/cluster/analysis">Clustering</a></li>
+    <li><a href="/correlation/analysis">Correlation</a></li>
     <li><a href="/kinship/analysis">Kinship & Inbreeding</a></li>
     <li><a href="/tools/stability">Stability AMMI/GGE</a></li>
     <li><a href="/tools/heritability">Heritability</a></li>

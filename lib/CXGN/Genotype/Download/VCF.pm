@@ -100,6 +100,11 @@ has 'genotype_data_project_list' => (
     is => 'ro',
 );
 
+has 'genotyping_plate_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
 has 'chromosome_list' => (
     isa => 'ArrayRef[Int]|ArrayRef[Str]|Undef',
     is => 'ro',
@@ -166,6 +171,14 @@ has 'offset' => (
     is => 'rw',
 );
 
+has 'sample_unit_level' => (
+    isa => 'Str',
+    is => 'rw',
+    default => 'accession',
+);
+
+
+
 sub download {
     my $self = shift;
     my $cluster_shared_tempdir_config = shift;
@@ -178,6 +191,7 @@ sub download {
     my $cache_root_dir = $self->cache_root_dir,
     my $trial_list = $self->trial_list;
     my $genotype_data_project_list = $self->genotype_data_project_list;
+    my $genotyping_plate_list = $self->genotyping_plate_list;
     my $protocol_id_list = $self->protocol_id_list;
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
@@ -194,6 +208,7 @@ sub download {
     my $end_position = $self->end_position;
     my $forbid_cache = $self->forbid_cache;
     my $compute_from_parents = $self->compute_from_parents;
+    my $sample_unit_level = $self->sample_unit_level;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
@@ -205,6 +220,8 @@ sub download {
         protocol_id_list=>$protocol_id_list,
         markerprofile_id_list=>$markerprofile_id_list,
         genotype_data_project_list=>$genotype_data_project_list,
+        genotyping_plate_list=>$genotyping_plate_list,
+        sample_unit_level=>$sample_unit_level,
         marker_name_list=>$marker_name_list,
         genotypeprop_hash_select=>$genotypeprop_hash_select,
         protocolprop_top_key_select=>$protocolprop_top_key_select,

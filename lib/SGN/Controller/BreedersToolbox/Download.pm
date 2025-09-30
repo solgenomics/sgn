@@ -47,6 +47,11 @@ use IO::Compress::Gzip qw(gzip $GzipError);
 use Catalyst::Utils;
 use SGN::Image;
 use Archive::Tar;
+use CXGN::Stock::ObsoletedStocks;
+use CXGN::People::Person;
+use CXGN::BreedersToolbox::Accessions;
+use CXGN::Cross;
+use Sort::Key::Natural qw(natkeysort);
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -58,6 +63,15 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 	    return;
     }
 
+    my $is_curator;
+    if ($c->user()) {
+        my @roles = $c->user->roles();
+        if (grep { /curator/ } @roles) {
+            $is_curator = 1;
+        }
+    }
+
+    $c->stash->{is_curator} = $is_curator;
     $c->stash->{seedlot_maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
@@ -191,7 +205,9 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 sub _parse_list_from_json {
     my $list_json = shift;
 #    print STDERR "LIST JSON: ". Dumper $list_json;
-    my $json = JSON->new;
+
+    my $json = JSON->new();
+
     if ($list_json) {
        # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
         my $decoded_list = decode_json($list_json);
@@ -228,6 +244,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $search_type = $c->req->param("speed") && $c->req->param("speed") ne 'null' ? $c->req->param("speed") : "Native";
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xlsx";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
+    my $repetitive_measurements = $c->req->param("repetitive_measurements") || "average";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
@@ -243,6 +260,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
+    my $phenotype_start_date = $c->req->param("phenotype_start_date");
+    my $phenotype_end_date = $c->req->param("phenotype_end_date");
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') {
@@ -425,9 +444,13 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
         has_header => $has_header,
-        search_type => $search_type
+        search_type => $search_type,
+	    repetitive_measurements => $repetitive_measurements,
+	    phenotype_start_date => $phenotype_start_date,
+	    phenotype_end_date => $phenotype_end_date,
     });
 
+    # print STDERR "Repetitive_measurements option recieved" .$repetitive_measurements  ."\n";
     my $error = $download->download();
 
     $c->res->content_type('Application/'.$format);
@@ -440,7 +463,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
 
 #Deprecated. Look to download_phenotypes_action
-#sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download') Args(1) {
+#sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/downoad') Args(1) {
 #    my $self = shift;
 #    my $c = shift;
 #    my $trial_id = shift;
@@ -594,7 +617,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-            dataset_exluded_outliers=>$outliers,
+            dataset_excluded_outliers=>$outliers,
     		data_level=>$datalevel,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
@@ -1105,6 +1128,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
+
     my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
     my $associated_protocol;
 
@@ -1193,6 +1219,11 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         push @genotyping_project_list, $genotyping_project_id;
     }
 
+    my @genotyping_plate_list;
+    if (defined $genotyping_plate_id) {
+        push @genotyping_plate_list, $genotyping_plate_id;
+    }
+
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
@@ -1212,6 +1243,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock,
             #markerprofile_id_list=>$markerprofile_id_list,
             genotype_data_project_list=>\@genotyping_project_list,
+            genotyping_plate_list=>\@genotyping_plate_list,
+            sample_unit_level=>$sample_unit_level,
             #limit=>$limit,
             #offset=>$offset
         }
@@ -1750,6 +1783,8 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $protocol_id = $c->req->param("protocol_id");
     my $genotyping_project_id = $c->req->param("genotyping_project_id");
+    my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
+    my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
 
     my @protocol_list;
     if (defined $protocol_id) {
@@ -1761,6 +1796,10 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
         push @genotyping_project_list, $genotyping_project_id;
     }
 
+    my @genotyping_plate_list;
+    if (defined $genotyping_plate_id) {
+        push @genotyping_plate_list, $genotyping_plate_id;
+    }
 
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = $protocol_id . "_" . "KASP_data" . "XXXX";
@@ -1778,7 +1817,9 @@ sub download_kasp_genotyping_data_csv : Path('/breeders/download_kasp_genotyping
             people_schema=>$people_schema,
             protocol_id_list=>\@protocol_list,
             genotype_data_project_list=>\@genotyping_project_list,
+            genotyping_plate_list=>\@genotyping_plate_list,
             filename => $tempfile,
+            sample_unit_level=>$sample_unit_level,
         }
     );
 
@@ -1803,9 +1844,9 @@ sub download_images_POST : Args(0) {
     my $trial_id = $c->req->param('trial_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $trial = CXGN::Trial->new({ 
-        bcs_schema => $schema, 
-        trial_id => $trial_id, 
+    my $trial = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
         }
     );
 
@@ -1855,6 +1896,278 @@ sub download_images_POST : Args(0) {
 
     return;
 }
+
+
+sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metadata_action') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+    my $file_format = $c->req->param("file_format") || ".xlsx";
+    my $obsoleted_stock_list_id = $c->req->param("obsoleted_stock_list_list_select");
+
+    my $obsoleted_stocks = SGN::Controller::AJAX::List->retrieve_list($c, $obsoleted_stock_list_id);
+    my @obsoleted_stock_names = map { $_->[1] } @$obsoleted_stocks;
+
+    my $transform = CXGN::List::Transform->new();
+    my $stock_transform = $transform->can_transform("stocks", "stock_ids");
+    my $stock_id_hash = $transform->transform($schema, $stock_transform, \@obsoleted_stock_names);
+    my @obsoleted_stock_ids = @{$stock_id_hash->{transform}};
+
+    my $dl_token = $c->req->param("download_obsolete_metadata_token'") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $obsoleted_stocks_obj = CXGN::Stock::ObsoletedStocks->new(bcs_schema => $schema, obsoleted_stock_ids => \@obsoleted_stock_ids);
+    my $obsolete_metadata = $obsoleted_stocks_obj->get_obsolete_metadata();
+
+    my @download_rows = ();
+    foreach my $obsolete_info (@$obsolete_metadata) {
+        my ($stock_id, $stock_name, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
+        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
+        my $full_name = $person->get_first_name()." ".$person->get_last_name();
+        if ($obsolete_date =~ /Obsolete/) {
+            push @download_rows, [$stock_name, $stock_type, $obsolete_note, $obsolete_date,$full_name];
+        }
+    }
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "obsoleted_stocks_download_XXXXX", UNLINK=> 0);
+
+    my $file_path = $tempfile . ".xlsx";
+    my $file_name = basename($file_path);
+
+    my $workbook = Excel::Writer::XLSX->new($file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+    my @header = ("Stock Name", "Stock Type", "Obsolete Note", "Obsolete Date", "Obsoleted by");
+    $worksheet->write_row(0, 0, \@header);
+
+    my $row_count = 1;
+    foreach my $row (@download_rows) {
+        $worksheet->write_row($row_count, 0, $row);
+        $row_count++;
+    }
+    $workbook->close();
+
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($file_path);
+
+    $c->res->body($output);
+
+}
+
+sub download_population_seedlots_action : Path('/breeders/download_population_seedlots_action') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+    my $population_stock_id = $c->req->param("population_stock_id");
+
+    my $dl_token = $c->req->param("population_seedlots_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $member_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_type', 'stock_property')->cvterm_id();
+    my $member_type;
+    my $member_type_row = $schema->resultset("Stock::Stockprop")->find({ stock_id => $population_stock_id, type_id => $member_type_cvterm_id });
+    if($member_type_row) {
+        $member_type = $member_type_row->value();
+    } else {
+        $member_type = 'accessions';
+    }
+
+    my $result;
+    my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
+    if (($member_type eq 'plots') || ($member_type eq 'plants')) {
+        $result = $ac->get_population_source_seedlots($population_stock_id);
+    } else {
+        $result = $ac->get_population_seedlots($population_stock_id);
+    }
+
+    my @download_rows = ();
+    foreach my $r (@$result) {
+        my ($member_id, $member_name, $member_type, $seedlot_id, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location) =@$r;
+        push @download_rows, [$member_name, $member_type, $seedlot_name, $current_count, $current_weight_gram, $box_name, $location];
+    }
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "population_seedlots_download_XXXXX", UNLINK=> 0);
+
+    my $file_path = $tempfile . ".xlsx";
+    my $file_name = basename($file_path);
+
+    my $workbook = Excel::Writer::XLSX->new($file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+    my @header = ("Member Name", "Member Type", "Seedlot Name", "Current Count", "Current Weight(g)", "Box Name", "Location");
+    $worksheet->write_row(0, 0, \@header);
+
+    my $row_count = 1;
+    foreach my $row (@download_rows) {
+        $worksheet->write_row($row_count, 0, $row);
+        $row_count++;
+    }
+    $workbook->close();
+
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($file_path);
+
+    $c->res->body($output);
+
+}
+
+sub download_summary_stock_entries : Path('/breeders/download_summary_stock_entries') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+    my $file_format = $c->req->param("file_format") || ".xlsx";
+    my $trial_id = $c->req->param("stock_entries_trial_id");
+
+    my $dl_token = $c->req->param("trial_stock_entries_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
+    my $stock_entries = $trial->get_stock_entry_summary();
+    my $trial_stock_type = $trial->get_trial_stock_type();
+
+    my @download_rows = ();
+    foreach my $row (@$stock_entries) {
+        my ($parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$row;
+        push @download_rows, [$parent_stock_name, $plot_name, $plant_name, $tissue_sample_name];
+    }
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "trial_stock_entries_XXXXX", UNLINK=> 0);
+
+    my $file_path = $tempfile . ".xlsx";
+    my $file_name = basename($file_path);
+
+    my $workbook = Excel::Writer::XLSX->new($file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+    my @header = ();
+    if ($trial_stock_type eq 'cross') {
+        @header = ("Cross Unique ID", "Plot Name", "Plant Name", "Tissue Sample");
+    } elsif ($trial_stock_type eq 'family_name') {
+        @header = ("Family Name", "Plot Name", "Plant Name", "Tissue Sample");
+    } else {
+        @header = ("Accession Name", "Plot Name", "Plant Name", "Tissue Sample");
+    }
+    $worksheet->write_row(0, 0, \@header);
+
+    my $row_count = 1;
+    foreach my $row (@download_rows) {
+        $worksheet->write_row($row_count, 0, $row);
+        $row_count++;
+    }
+    $workbook->close();
+
+    $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    my $output = read_file($file_path);
+
+    $c->res->body($output);
+
+}
+
+
+# Download cross and family that each accession belongs to
+
+sub download_cross_family_of_progenies : Path('/breeders/download_cross_family_of_progenies') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+
+    my $progeny_list_id = $c->req->param("progeny_list_list_select");
+    my $file_format = $c->req->param("file_format") || ".xlsx";
+    my $dl_token = $c->req->param("cross_family_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    if ( !$progeny_list_id ) {
+        print STDERR "ERROR: No progeny list id provided to download cross and family info";
+        return;
+    }
+
+    my $progeny_list = SGN::Controller::AJAX::List->retrieve_list($c, $progeny_list_id);
+    my @progeny_names = map { $_->[1] } @$progeny_list;
+    my @progeny_stock_ids = ();
+    foreach my $progeny(sort@progeny_names) {
+        my $progeny_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $progeny });
+        my $progeny_id = $progeny_rs->stock_id;
+        push @progeny_stock_ids, $progeny_id;
+    }
+
+    my @download_rows;
+    my $all_info = CXGN::Cross->get_progeny_cross_family_info($schema, \@progeny_stock_ids);
+    my @sorted_names = natkeysort {($_->[1])} @$all_info;
+
+    foreach my $info (@sorted_names) {
+        my $progeny_name = $info->[1];
+        my $female_parent_name = $info->[3];
+        my $male_parent_name = $info->[5];
+        my $cross_type = $info->[6];
+        my $cross_unique_id = $info->[8];
+        my $family_name = $info->[10];
+        my $family_type = $info->[11];
+        my $crossing_experiment = $info->[13];
+        push @download_rows, [$progeny_name, $female_parent_name, $male_parent_name, $cross_type, $cross_unique_id, $family_name, $family_type, $crossing_experiment];
+    }
+
+    # Create tempfile
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_cross_family_XXXXX", UNLINK => 0);
+    # Create and Return XLSX file
+    if ( $file_format eq ".xlsx" ) {
+        my $file_path = $tempfile . ".xlsx";
+        my $file_name = basename($file_path);
+
+        # Get Excel worksheet
+        my $workbook = Excel::Writer::XLSX->new($file_path);
+        my $worksheet = $workbook->add_worksheet();
+
+        # Write header
+        my @header = ("Accession Name", "Female Parent", "Male Parent", "Cross Type", "Cross Unique ID", "Family Name", "Family Type", "Crossing Experiment");
+        $worksheet->write_row(0, 0, \@header);
+
+        # Write each event
+        my $row_count = 1;
+        foreach my $row (@download_rows) {
+            $worksheet->write_row($row_count, 0, $row);
+            $row_count++;
+        }
+        $workbook->close();
+
+        # Return the xls file
+        $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+        my $output = read_file($file_path);
+
+        $c->res->body($output);
+    }
+
+}
+
 
 
 #=pod

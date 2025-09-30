@@ -3,6 +3,7 @@ use strict;
 use Test::More;
 use lib 't/lib';
 use SGN::Test::Fixture;
+use CXGN::Stock::Plot;
 use Data::Dumper;
 
 my $fix = SGN::Test::Fixture->new();
@@ -148,7 +149,13 @@ my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
   trial_id => $trial_id,
 
 });
-ok(!$replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($old_plot_id, $accession_id, $plot_of_type_id), "replace plot accession");
+
+my $plot = CXGN::Stock::Plot->new({
+    schema => $chado_schema,
+    stock_id => $old_plot_id
+});
+#need to find old accession ID for this to work
+ok(!$replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($old_plot_id, $plot->{accessions}->[0], $accession_id, $plot_of_type_id), "replace plot accession");
 # accessions substitution
 ok(my $plot_1_id = $data[0]->[0][0]);
 ok(my $plot_2_id = $data[0]->[1][0]);

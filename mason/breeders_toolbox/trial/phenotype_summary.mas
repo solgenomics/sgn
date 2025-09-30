@@ -22,6 +22,25 @@ $trial_stock_type => undef
   shape-rendering: crispEdges;
 }
 
+.form-group {
+  display: flex;
+  align-items: center;
+}
+
+.form-group label {
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+.form-group input,
+.form-group select {
+  flex-grow: 1;
+}
+
+input[type="text"] {
+  width: 100px;
+}
+
 </style>
 
 
@@ -30,9 +49,17 @@ $trial_stock_type => undef
     <br/>
 
     <form class="form-horizontal" role="form" >
-        <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Display: </label>
-            <div class="col-sm-9" >
+        <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+            <div>
+                <label for="summary_start_date">Start Date: </label>
+	            <input type="text" id="summary_start_date" title="summary_start_date" />
+            </div>
+            <div>
+                <label for="summary_end_date">End Date: </label>
+	            <input type="text" id="summary_end_date" title="summary_end_date" />
+            </div>
+            <div style="display: flex; align-items: center;">
+                <label for="display_trial_phenosummary" style="margin-right: 10px;">Display: </label>
                 <select class="form-control" id="display_trial_phenosummary">
 %  if ($trial_stock_type eq 'analysis_instance') {
                     <option value="analysis_instance">Values for Analysis</option>
@@ -49,6 +76,10 @@ $trial_stock_type => undef
             </div>
         </div>
     </form>
+    <div style="display:flex; align-items:center; white-space:nowrap; width:70%; margin-center: auto;">
+        <label for="summary_phenotype_slider_range" style="margin-right: 10px;">Choose DateRange slider:</label>
+        <div id="summary_phenotype_slider_range" style="width: 80%; margin: 10px auto;"></div>
+    </div>
     <hr>
 
     <div id="pheno_summary_table_div">
@@ -137,34 +168,102 @@ $trial_stock_type => undef
 <script>
 // wrap code in an immediately invoked function, so we can use d3v4 as d3;
 (function(){
-var d3 = d3v4;
-var draw_histogram = stackedObservationPhenotypeHistogram.draw;
-jQuery(document).ready(function () {
-    var type = "<% $trial_stock_type %>";
-    jQuery("#display_trial_phenosummary_hist").change(function(){
-      trait_summary_hist_display_change(this.value);
-    });
-    jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
+    var d3 = d3v4;
+    var draw_histogram = stackedObservationPhenotypeHistogram.draw;
 
-        datatables_display_phenosummary(type);
+    jQuery(document).ready(function () {
+        var type = "<% $trial_stock_type %>";
+        var trial_id = "<% $trial_id %>";
+    	jQuery.ajax( {
+            url: '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
+    	}).done( function(r) {
+            //alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
+            var raw_startDate = new Date(r.start_date).toISOString().split('T')[0];
+            var raw_endDate = new Date(r.end_date).toISOString().split('T')[0];
+            jQuery('#summary_start_date').val(raw_startDate);
+            jQuery('#summary_end_date').val(raw_endDate);
 
-        jQuery(document).on('change', '#display_trial_phenosummary', function() {
-            var html = '';
-            var display = jQuery('#display_trial_phenosummary').val();
-            if (display == 'plots' || display == 'plants' || display == 'subplots' || display == 'tissue_samples') {
-                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
-            }
-            if (display == 'plots_accession' || display == 'plants_accession' || display == 'tissue_samples_accession') {
-                if (type == 'family_name') {
-                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Family Name</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
-                } else if (type == 'cross') {
-                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Cross Unique ID</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
-                } else {
-                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+            jQuery('input[title="summary_start_date"]').on('focus', function () {
+                jQuery(this).daterangepicker({
+	                "singleDatePicker": true,
+	                "showDropdowns": true,
+	                "autoUpdateInput": true,
+	                "startDate": "1960-01-01",
+	                "yearSelect" : true,
+	                "minDate": jQuery('#summary_start_date').val(),
+	                "maxDate": jQuery('#summary_end_date').val(),
+	                locale: {
+	            	    format: 'YYYY-MM-DD'
+	                }
+	            },function(start) { 
+                    var summary_new_start_date = new Date(start).getTime();
+                    var summary_new_end_date = new Date(jQuery('#summary_end_date').val()).getTime();
+                    jQuery('#summary_phenotype_slider_range').slider('values', [summary_new_start_date, summary_new_end_date]);
+                });
+
+            });
+            jQuery('input[title="summary_end_date"]').on('focus', function () {
+                jQuery(this). daterangepicker({
+	                "singleDatePicker": true,
+                    "showDropdowns": true,
+	                "autoUpdateInput": true,
+                    "minDate": jQuery('#summary_start_date').val(),
+	                "maxDate": jQuery('#summary_end_date').val(),
+	                "yearSelect" : true,
+	                locale: { 
+	            	    format: 'YYYY-MM-DD'
+	                },
+	            },function (end) {
+                    var summary_new_start_date = new Date(jQuery('#summary_start_date').val()).getTime();
+                    var summary_new_end_date = new Date(end).getTime();
+                    jQuery('#summary_phenotype_slider_range').slider('values', [summary_new_start_date, summary_new_end_date]);
+                });
+            });
+
+            jQuery('#summary_phenotype_slider_range').slider({
+                range: true,
+                min: new Date(raw_startDate).getTime(),
+                max: new Date(raw_endDate).getTime(),
+                values: [new Date(raw_startDate).getTime(), new Date(raw_endDate).getTime()],
+                slide: function(event, ui) {
+                    //the start and end date of this measurement will be updated based on the slider moved from.
+                    var raw_phenotype_startDate = new Date(ui.values[0]).toISOString().split('T')[0];
+                    var raw_phenotype_endDate = new Date(ui.values[1]).toISOString().split('T')[0];
+                    jQuery('#summary_start_date').val(raw_phenotype_startDate);
+                    jQuery('#summary_end_date').val(raw_phenotype_endDate);
+                    //console.log("Slided moved Start_date in Pheno summ :", raw_phenotype_startDate);
+                    //console.log("Slided moved End Date in pheno Summ :", raw_phenotype_endDate);
+
+                    var html = setup_tables(type);
+                    jQuery('#pheno_summary_table_div').empty().html(html);
+                    datatables_display_phenosummary(type);
                 }
-            }
+            });
+	    }).fail( function(xhr, status, error) { 
+            alert('An error occurred!' + xhr.responseText);
+            console.error("the status:", xhr.status);
+            console.error("the error:", error);
+        });
+	    jQuery("#summary_start_date").change( function() {
+	        //datatables_display_phenosummary(type);
+            var html = setup_tables(type);
             jQuery('#pheno_summary_table_div').empty().html(html);
             datatables_display_phenosummary(type);
+        });
+    
+        jQuery('#summary_end_date').change( function() {
+	        //datatables_display_phenosummary(type);
+	        var html = setup_tables(type);
+            jQuery('#pheno_summary_table_div').empty().html(html);
+            datatables_display_phenosummary(type);
+        });
+
+        jQuery("#display_trial_phenosummary_hist").change(function(){
+            trait_summary_hist_display_change(this.value);
+        });
+
+        jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
+            init_summary_table(type);
         });
 
 %  if ($trial_stock_type eq 'analysis_instance') {
@@ -173,176 +272,218 @@ jQuery(document).ready(function () {
         trait_summary_hist_display_change('plot');
 %  }
 
-    });
+        jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
+            //console.log("scrolling histo into view");
+            var offset = jQuery(window).height() - jQuery('#raw_data_histogram_well').height() - 40;
+            var target = jQuery(this.getAttribute('href'));
+            if( target.length ) {
+                event.preventDefault();
+                jQuery('html, body').stop().animate({
+                    scrollTop: target.offset().top - offset
+                }, 1500);
+            }
+        });
 
-    jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
-        //console.log("scrolling histo into view");
-        var offset = jQuery(window).height() - jQuery('#raw_data_histogram_well').height() - 40;
-        var target = jQuery(this.getAttribute('href'));
-        if( target.length ) {
-            event.preventDefault();
-            jQuery('html, body').stop().animate({
-                scrollTop: target.offset().top - offset
-            }, 1500);
+        var plots_stock_text = '';
+        var plants_stock_text = '';
+        var tissue_samples_stock_text = '';
+
+        if (type == 'family_name') {
+            plots_stock_text = 'Trait Values for Plots in this Trial grouped by Family Name';
+            plants_stock_text = 'Trait Values for Plants in this Trial grouped by Family Name';
+            tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Family Name';
+        } else if (type == 'cross') {
+            plots_stock_text = 'Trait Values for Plots in this Trial grouped by Cross Unique ID';
+            plants_stock_text = 'Trait Values for Plants in this Trial grouped by Cross Unique ID';
+            tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Cross Unique ID';
+        } else {
+            plots_stock_text = 'Trait Values for Plots in this Trial grouped by Accession';
+            plants_stock_text = 'Trait Values for Plants in this Trial grouped by Accession';
+            tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Accession';
         }
+        jQuery('#plots_stock_option').text(plots_stock_text);
+        jQuery('#plants_stock_option').text(plants_stock_text);
+        jQuery('#tissue_samples_stock_option').text(tissue_samples_stock_text);
+
     });
 
-    var plots_stock_text = '';
-    var plants_stock_text = '';
-    var tissue_samples_stock_text = '';
+    function datatables_display_phenosummary(type) {
+        var start_date = jQuery('#summary_start_date').val();
+        var end_date = jQuery('#summary_end_date').val();
 
-    if (type == 'family_name') {
-        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Family Name';
-        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Family Name';
-        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Family Name';
-    } else if (type == 'cross') {
-        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Cross Unique ID';
-        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Cross Unique ID';
-        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Cross Unique ID';
-    } else {
-        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Accession';
-        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Accession';
-        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Accession';
+        //alert('datatables_display_phenosummary: START: '+start_date+' END: '+end_date);
+        var summary_table = jQuery('#phenotype_summary_data').DataTable( {
+            "lengthMenu": [ 10, 20, 50, 100, 500, 1000 ],
+            "retrieve": true,
+            "dom": 'Bfrtip',
+            'columnDefs': [ {
+                'orderable': false,
+                'className': 'select-checkbox',
+                'targets':   0
+            } ],
+            'select': {
+                'style':    'multi'
+            },
+            "buttons":  [
+                'pageLength','copy', 'excel', 'csv', 'pdf'
+            ],
+            "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+        });
+
+        summary_table.clear().draw();
+
+        var selection_changed = function () {
+            var selected_rows = summary_table.rows({'selected':true});
+            var table_type = jQuery('#display_trial_phenosummary').val();
+            var list_type = table_type.match('accession') ? 'accessions' : 'traits';
+            jQuery("#selected_row_count").text(selected_rows.count());
+            // console.log(selected_rows.data());
+
+            var selected_names = [];
+            selected_rows.data().map(function(row){
+                selected_names.push(row[0].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '\n');
+            });
+
+            jQuery('#selected_names').html(selected_names);
+            addToListMenu('names_to_list_menu', 'selected_names', {
+                listType: list_type
+            });
+        };
+
+        summary_table.on( 'draw', selection_changed);
+        summary_table.on( 'deselect', selection_changed);
+        summary_table.on( 'select', selection_changed);
+
+        jQuery('.selectAll-dt').click(function(){
+          summary_table.rows().select();
+          return false;
+        });
+        jQuery('.deselectAll-dt').click(function(){
+          summary_table.rows().deselect();
+          return false;
+        });
     }
-    jQuery('#plots_stock_option').text(plots_stock_text);
-    jQuery('#plants_stock_option').text(plants_stock_text);
-    jQuery('#tissue_samples_stock_option').text(tissue_samples_stock_text);
 
-});
+    function trait_summary_hist_display_change(value) {
+        var start_date = jQuery('#summary_start_date').val();
+        var end_date = jQuery('#summary_end_date').val();
 
-function datatables_display_phenosummary(type) {
-    var summary_table = jQuery('#phenotype_summary_data').DataTable( {
-        "lengthMenu": [ 10, 20, 50, 100, 500, 1000 ],
-        "retrieve": true,
-        "dom": 'Bfrtip',
-        'columnDefs': [ {
-            'orderable': false,
-            'className': 'select-checkbox',
-            'targets':   0
-        } ],
-        'select': {
-            'style':    'multi'
-        },
-        "buttons":  [
-            'pageLength','copy', 'excel', 'csv', 'pdf'
-        ],
-        "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type,
-    });
-
-    var selection_changed = function () {
-        var selected_rows = summary_table.rows({'selected':true});
-        var table_type = jQuery('#display_trial_phenosummary').val();
-        var list_type = table_type.match('accession') ? 'accessions' : 'traits';
-        jQuery("#selected_row_count").text(selected_rows.count());
-        // console.log(selected_rows.data());
-
-        var selected_names = [];
-        selected_rows.data().map(function(row){
-            selected_names.push(row[0].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '\n');
-        });
-
-        jQuery('#selected_names').html(selected_names);
-        addToListMenu('names_to_list_menu', 'selected_names', {
-            listType: list_type
-        });
-    };
-
-    summary_table.on( 'draw', selection_changed);
-    summary_table.on( 'deselect', selection_changed);
-    summary_table.on( 'select', selection_changed);
-
-    jQuery('.selectAll-dt').click(function(){
-      summary_table.rows().select();
-      return false;
-    });
-    jQuery('.deselectAll-dt').click(function(){
-      summary_table.rows().deselect();
-      return false;
-    });
-}
-
-function trait_summary_hist_display_change(value) {
-    jQuery.ajax ( {
-        url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function(response){
-            //console.log(response);
-            if (response.traits_assayed[0][0]) {
-                var traits_assayed_html = "<select class='form-control' id='trial_summary_hist_dropdown'>";
-                for (i=0; i<response.traits_assayed[0].length; i++) {
-                    traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
-                }
-                traits_assayed_html = traits_assayed_html +"</select>";
-                jQuery("#traits_assayed_dropdown").html(traits_assayed_html);
-                jQuery("#traits_assayed_dropdown>select").change(function(){
-                  trait_summary_hist_change(this.value);
-                });
-
-                jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
-
-                jQuery.ajax( {
-                    url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value,
-                    type: 'POST',
-                    success: function(response){
-                        jQuery("#working_modal").modal("hide");
-                        if (response.error) {
-                            alert(response.error);
-                        }
-                        else if (response.status!="success"){
-                            alert("Problem loading plant/plot data: "+response.status);
-                        }
-                        else {
-                            draw_histogram(response.data, d3.select("#trial_summary_hist").node());
-                        }
-                    },
-                    error: function(response) {
-                        jQuery("#working_modal").modal("hide");
-                        alert('An error occured retrieving trait histogram data.');
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+ trial_id + '/traits_assayed?stock_type='+value,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                if (response.traits_assayed[0][0]) {
+                    var traits_assayed_html = "<select class='form-control' id='trial_summary_hist_dropdown'>";
+                    for (i=0; i<response.traits_assayed[0].length; i++) {
+                        traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
                     }
-                });
+                    traits_assayed_html = traits_assayed_html +"</select>";
+                    jQuery("#traits_assayed_dropdown").html(traits_assayed_html);
+                    jQuery("#traits_assayed_dropdown>select").change(function(){
+                      trait_summary_hist_change(this.value);
+                    });
+
+                    jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
+
+                    jQuery.ajax( {
+                        url : '/ajax/breeders/trial/'+ trial_id +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+                        type: 'POST',
+                        success: function(response){
+                            jQuery("#working_modal").modal("hide");
+                            if (response.error) {
+                                alert(response.error);
+                            }
+                            else if (response.status!="success"){
+                                alert("Problem loading plant/plot data: "+response.status);
+                            }
+                            else {
+                                draw_histogram(response.data, d3.select("#trial_summary_hist").node());
+                            }
+                        },
+                        error: function(response) {
+                            jQuery("#working_modal").modal("hide");
+                            alert('An error occured retrieving trait histogram data.');
+                        }
+                    });
+                } else {
+                    jQuery("#working_modal").modal("hide");
+                    jQuery("#trial_summary_hist").html("<center><h4>There is no data to plot.</h4></center>");
+                }
+
+            },
+            error: function(response){
+                alert('Error retrieving traits assayed in this trial');
+            }
+
+        });
+    }
+
+    function init_summary_table(type) {
+
+        datatables_display_phenosummary(type);
+
+        // get the earliest and last measurement date in the trial
+    
+        jQuery(document).on('change', '#display_trial_phenosummary', function() {
+            var html = setup_tables(type);
+            jQuery('#pheno_summary_table_div').empty().html(html);
+            datatables_display_phenosummary(type);
+        });
+        //catch( function(r) { alert('An error occurred :-( '); )});
+    }
+
+    function setup_tables(type) {
+        var html = '';
+        var display = jQuery('#display_trial_phenosummary').val();
+        if (display == 'plots' || display == 'plants' || display == 'subplots' || display == 'tissue_samples') {
+            html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+        }
+        if (display == 'plots_accession' || display == 'plants_accession' || display == 'tissue_samples_accession') {
+            if (type == 'family_name') {
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Family Name</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+            } else if (type == 'cross') {
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Cross Unique ID</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             } else {
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+            }
+        }
+        return html;
+    }
+
+    function trait_summary_hist_change(value) {
+        jQuery("#trial_summary_hist_dropdown").val(value);
+        jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
+        var start_date = jQuery('#summary_start_date').val();
+        var end_date = jQuery('#summary_end_date').val();
+    
+        // console.log("value",value);
+        jQuery.ajax( {
+            url : '/ajax/breeders/trial/'+ trial_id +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val()+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+            type: 'POST',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
                 jQuery("#working_modal").modal("hide");
-                jQuery("#trial_summary_hist").html("<center><h4>There is no data to plot.</h4></center>");
+                if (response.error) {
+                    alert(response.error);
+                }
+                else if (response.status!="success"){
+                    alert("Problem loading plant/plot data: "+response.status);
+                }
+                else {
+                    draw_histogram(response.data, d3.select("#trial_summary_hist").node());
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occured retrieving trait histogram data.');
             }
-
-        },
-        error: function(response){
-            alert('Error retrieving traits assayed in this trial');
-        }
-
-    });
-}
-
-function trait_summary_hist_change(value) {
-    jQuery("#trial_summary_hist_dropdown").val(value);
-    jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
-    // console.log("value",value);
-    jQuery.ajax( {
-        url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val(),
-        type: 'POST',
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function(response){
-            jQuery("#working_modal").modal("hide");
-            if (response.error) {
-                alert(response.error);
-            }
-            else if (response.status!="success"){
-                alert("Problem loading plant/plot data: "+response.status);
-            }
-            else {
-                draw_histogram(response.data, d3.select("#trial_summary_hist").node());
-            }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            alert('An error occured retrieving trait histogram data.');
-        }
-    });
-}
+        });
+    }
 
 //end of immediately inoked function
 })();

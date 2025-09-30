@@ -112,6 +112,9 @@ for my $extension ("xls", "xlsx") {
     print STDERR "Locationprop: " . $post1_locationprop_diff . "\n";
     ok($post1_locationprop_diff == 4, "check locationprop table after upload excel location");
 
-    $f->clean_up_db();
+    $f->clean_up_db();		
 }
+
+$f->clean_up_db();
+
 done_testing();

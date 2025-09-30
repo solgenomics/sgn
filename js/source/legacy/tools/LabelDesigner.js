@@ -940,26 +940,51 @@ function doSnap(state, selection) {
 }
 
 function getDataSourceSelect() {
+    const sourceTypeFromUrl = getURLParameter("source_type");
+
     get_select_box('label_data_source_types', 'data_source_type', {
         name: 'source_type_select',
         id: 'source_type_select',
         default: 'Select a type of data source for the labels',
-        live_search: 0
+        live_search: 0,
+        after_load: function () {
+            if (sourceTypeFromUrl) {
+                jQuery('#source_type_select').val(sourceTypeFromUrl);
+            }
+        }
     });
+    console.log(sourceTypeFromUrl);
+    
     updateDataSourceSelect();
     jQuery(document).off("change").on("change", "#source_type_select", updateDataSourceSelect);
 }
 
 function updateDataSourceSelect() {
+    const sourceIdFromUrl = getURLParameter("source_id");
+
     get_select_box('label_data_sources', 'data_source',
         {
             name: 'source_select',
             id: 'source_select',
             default: 'Select a data source for the labels',
             live_search: 1,
-            type: jQuery("#source_type_select option:selected").val()
+            type: jQuery("#source_type_select option:selected").val(),
+            after_load: function () {
+                if (sourceIdFromUrl) {
+                    jQuery("#source_select").val(sourceIdFromUrl).trigger("change");
+                }
+            }
         }
     );
+}
+
+function getURLParameter(name) {
+    name = name.replace(/[\[\]]/g, "\\$&");
+    let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+    let results = regex.exec(window.location.href);
+    if (!results || !results[2]) return null;
+
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
 function switchPageDependentOptions(page) {

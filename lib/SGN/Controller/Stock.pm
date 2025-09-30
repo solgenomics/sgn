@@ -265,6 +265,21 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	$editable_stockprops .= ",PUI,organization";
     my $editable_vectorprops = $c->get_conf('editable_vector_props');
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $transgenic_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property')->cvterm_id;
+    my $transgenic_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $transgenic_type_id});
+    my $is_a_transgenic_line;
+    if ($transgenic_stockprop_rs) {
+        $is_a_transgenic_line = $transgenic_stockprop_rs->value();
+    }
+
+    my $is_in_trial;
+    my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
+    my @trial_list = $check_trial->get_trials();
+    if (scalar(@trial_list) > 0) {
+        $is_in_trial = 1;
+    }
+
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 	################
 	$c->stash(
@@ -302,6 +317,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 		editable_stock_props   => $editable_stockprops,
 		editable_vector_props   => $editable_vectorprops,
         is_obsolete   => $obsolete,
+        is_a_transgenic_line => $is_a_transgenic_line,
+        is_in_trial => $is_in_trial,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
