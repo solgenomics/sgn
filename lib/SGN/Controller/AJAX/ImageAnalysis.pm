@@ -194,7 +194,6 @@ sub image_analysis_submit_POST : Args(0) {
             my $md5 = $image->calculate_md5sum($archive_temp_image);
             my $stock_id = $result->[$it]->{stock_id};
             my $project_id = $result->[$it]->{project_id};
-            #print STDERR "project id: $project_id";
 
             my $project_where = ' ';
             my $project_join = ' ';
@@ -353,11 +352,9 @@ sub image_analysis_group_POST : Args(0) {
         while (my $rel = $rs->next) {
             push @samples, $rel->subject->uniquename;
         }
-        print STDERR "samples test: @samples";
 
         my $trait_id = $results_ref->{'result'}->{'trait_id'};
         my @trait_samples = grep { $_ =~ /$trait_id/ } @samples;
-        print STDERR "trait tissue samples: @trait_samples";
 
         my $max_num = 0;
         if (@trait_samples) {
@@ -368,17 +365,16 @@ sub image_analysis_group_POST : Args(0) {
             }
         }
 
-        # here loop through samples and check if image id exists in any one of the names. if yes, 
-       
-
-        #print STDERR "sample num: $max_num";
-
-
-        #print STDERR "accession id: $accession_id";
+        my $image_id = $results_ref->{'image_id'};
+        my @existingSamples = grep { $_ =~ /$image_id/ } @samples;
+        my $image_analyzed = 0;
+        if (@existingSamples) {
+            $image_analyzed = 1;
+            $max_num = 0;
+        }
 
         my $related_accession;
-        #print STDERR "project id test: $project_id";
-		
+        		
 		push @{$grouped_results{$uniquename}{$trait}}, {
 		    stock_id => $results_ref->{stock_id},
 		    collector => $results_ref->{image_username},
@@ -392,6 +388,7 @@ sub image_analysis_group_POST : Args(0) {
             trait_id => $results_ref->{'result'}->{'trait_id'},
             stock_type => $stock_type_name,
             sample_num => $max_num,
+            image_analyzed => $image_analyzed,
 		    value => $results_ref->{result}->{subanalyses}->{$sample}->{trait_value}+0,
 		    status => 'create',
 		};
@@ -439,6 +436,7 @@ sub image_analysis_group_POST : Args(0) {
                     germplasmDbId => $uniquename_data->{$trait}[0]->{'accession_id'},
                     stock_type => $uniquename_data->{$trait}[0]->{'stock_type'},
                     sample_num => $uniquename_data->{$trait}[0]->{'sample_num'},
+                    image_analyzed => $uniquename_data->{$trait}[0]->{'image_analyzed'},
                     value => $mean_value,
                     details => $details,
                     numberAnalyzed => scalar @values
