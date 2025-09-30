@@ -126,6 +126,9 @@ sub parse {
           $skip_row = 0;
         }
       }
+      else {
+        $row_info{$h} = $row_info{$h} || undef;
+      }
     }
     $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;
     last if $skips_in_a_row > 5;
