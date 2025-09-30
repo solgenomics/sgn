@@ -143,16 +143,50 @@ jQuery(document).ready(function(){
 
         var html = '<table class="table table-bordered" id="additional_accessions_table"><thead><tr><th>Accession Name</th><th>Number of Plants</th></tr></thead><tbody>';
         for(var i=0; i<accession_list.length; i++){
-            html = html + '<tr><td>' + accession_list[i] + '</td><td><input class="form-control" name ="accession_plant_number" id="accession_plant_number_'+ i +'" value="" placeholder=""/></td></tr>';
+            html = html + '<tr><td>' + accession_list[i] + '</td><td><input class="form-control" accession_name="' + accession_list[i] + '" name ="accession_plant_number" id="accession_plant_number_'+ i +'" value="" placeholder=""/></td></tr>';
         };
         html = html + '</tbody></table>';
 
         jQuery('#additional_accessions_form_div').html(html);
-
     };
 
+    jQuery('#add_additional_accessions_submit').click(function(e){
+        e.preventDefault();
+        number_of_plants = [];
 
+        jQuery('input[name="accession_plant_number"]').each(function() {
+            value = this.value;
+            var accession_name = jQuery(this).attr('accession_name');
+            number_of_plants.push({ 'accession_name':accession_name, 'number_of_plants':value });
+        });
 
+        jQuery.ajax({
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/add_additional_accessions_for_greenhouse/',
+            method: 'POST',
+            data: {
+                'number_of_plants': JSON.stringify(number_of_plants),
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery("#add_additional_accessions_message").modal("show");
+                    jQuery('#add_additional_accessions_using_list_dialog').modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred storing additional accessions for greenhouse trial.');
+                jQuery('#add_additional_accessions_using_list_dialog').modal("hide");
+            },
+        });
+
+    });
 
 });
 

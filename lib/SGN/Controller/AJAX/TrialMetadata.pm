@@ -461,7 +461,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 	if ($datelessq) {
 	    $date_params = " AND ( $datelessq OR ( collect_date::date >= ? and collect_date::date <= ?)) ";
 	}
-	else { 
+	else {
 	    $date_params = " AND ( collect_date::date >= ? and collect_date::date <= ?) ";
 	}
 	@date_placeholders = ($start_date, $end_date);
@@ -495,22 +495,22 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
     $order_by_additional ";
-        
+
     my $h1 = $dbh->prepare($q1);
-    
+
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    
+
     # print STDERR "TRIAL ID = ".$c->stash->{trial_id}." REGEX: $numeric_regex REL_TYPE_ID $rel_type_id STOCK TYPE ID $stock_type_id DATE PLACE HOLDERS: ".join(", ", @date_placeholders)."\n";
-    
+
     $h1->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     my @phenotype_data;
     my @numeric_trait_ids;
 
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h1->fetchrow_array()) {
-	
+
 	push @numeric_trait_ids, $trait_id;
-	
+
         my $cv = 0;
         if ($stddev && $average != 0) {
             $cv = ($stddev /  $average) * 100;
@@ -572,9 +572,9 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional ";
 
         # print STDERR "QUERY = $q\n";
-    
+
     my $h = $dbh->prepare($q);
-    
+
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
     while (my ($trait, $trait_id, $count, $stock_name, $stock_id) = $h->fetchrow_array()) {
@@ -582,7 +582,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 	push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
-    
+
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
@@ -1913,24 +1913,24 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
                     "properties"=> {
                         "format"=> "WGS84",
                     }
-                };    
+                };
             } elsif ($coord_type eq 'point') {
                 $geo_json = {
                     "type"=> "Feature",
                     "geometry"=> {
                         "type"=> "Point",
                         "coordinates"=> [
-                            
+
                             0.0 + $coords->{WGS84_x}, 0.0 + $coords->{WGS84_y},
-                            
+
                         ]
                     },
                     "properties"=> {
                         "format"=> "WGS84",
                     }
-                }; 
+                };
             }
-            
+
             my $geno_json_string = encode_json $geo_json;
             my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
             $previous_plot_gps_rs->delete_all();
@@ -5908,10 +5908,10 @@ sub trial_collect_date_range :Chained('trial') :PathPart('collect_date_range') A
 	    $cvterm_clause = " and cvterm_id = ?";
     }
 
-    my $q = "select min(collect_date), max(collect_date), project_id from nd_experiment_project join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) join cvterm on(cvalue_id=cvterm_id) where nd_experiment_project.project_id=?  $cvterm_clause group by nd_experiment_project.project_id"; 
+    my $q = "select min(collect_date), max(collect_date), project_id from nd_experiment_project join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) join cvterm on(cvalue_id=cvterm_id) where nd_experiment_project.project_id=?  $cvterm_clause group by nd_experiment_project.project_id";
     my $dbh =  $c->dbc->dbh;
     my $h = $dbh->prepare($q);
-    if ($cvterm_id) { 
+    if ($cvterm_id) {
 	    $h->execute($trial_id, $cvterm_id);
     }
     else {
@@ -5992,6 +5992,27 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
 
 
     $c->stash->{rest} = { data => \@summary };
+}
+
+
+sub add_additional_accessions_for_greenhouse : Chained('trial') PathPart('add_additional_accessions_for_greenhouse') : ActionClass('REST'){ }
+
+sub add_additional_accessions_for_greenhouse_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $number_of_plants = $c->req->param('number_of_plants');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
+    print STDERR "TRIAL ID =".Dumper($trial_id)."\n";
+    print STDERR "NUMBER OF PLANTS =".Dumper($number_of_plants)."\n";
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to add additional accessions!'};
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 
