@@ -7,6 +7,7 @@ const initialtypes = [
     "accessions",
     "accessions_ids",
     "organisms",
+    "tissue_samples",
     "breeding_programs",
     "genotyping_protocols",
     "genotyping_projects",
@@ -21,24 +22,24 @@ const initialtypes = [
 ];
 
 const types = {
-    "accessions": "Accessions",
-    "accessions_ids": "Accessions Ids",
-    "organisms": "Organisms",
-    "breeding_programs": "Breeding Programs",
-    "genotyping_protocols": "Genotyping Protocols",
-    "genotyping_projects": "Genotyping Projects",
-    "locations": "Locations",
-    "plots": "Plots",
-    "plants": "Plants",
-    "tissue_sample": "Tissue Samples",
-    "seedlots": "Seedlots",
-    "trait_components": "Trait Components",
-    "traits": "Traits",
-    "trials": "Trials",
-    "trial_designs": "Trial Designs",
-    "trial_types": "Trial Types",
-    "years": "Years"
-};
+  "accessions": "Accessions",
+  "accessions_ids": "Accessions Ids",
+  "organisms": "Organisms",
+  "breeding_programs": "Breeding Programs",
+  "genotyping_protocols": "Genotyping Protocols",
+  "genotyping_projects": "Genotyping Projects",
+  "locations": "Locations",
+  "plots": "Plots",
+  "subplots": "Subplots",
+  "plants": "Plants",
+  "tissue_sample": "Tissue Samples",
+  "seedlots": "Seedlots",
+  "trait_components": "Trait Components",
+  "traits": "Traits",
+  "trials": "Trials",
+  "trial_designs": "Trial Designs",
+  "trial_types": "Trial Types",
+  "years": "Years"
 
 function makeURL(target, id) {
     switch (target) {
@@ -46,36 +47,30 @@ function makeURL(target, id) {
         case "accessions_ids":
         case "plants":
         case "plots":
+        case "subplot":
         case "tissue_sample":
-            return document.location.origin + `/stock/${id}/view`;
-            break;
+        case "tissue_samples": // support both; URLs expect stock path
+          return document.location.origin + `/stock/${id}/view`;
         case "seedlots":
-            return document.location.origin + `/breeders/seedlot/${id}`;
-            break;
+          return document.location.origin + `/breeders/seedlot/${id}`;
         case "breeding_programs":
-            return document.location.origin + `/breeders/manage_programs`;
-            break;
+          return document.location.origin + `/breeders/manage_programs`;
         case "locations":
-            return document.location.origin + `/breeders/locations`;
-            break;
+          return document.location.origin + `/breeders/locations`;
         case "traits":
         case "trait_components":
-            return document.location.origin + `/cvterm/${id}/view`;
-            break;
+          return document.location.origin + `/cvterm/${id}/view`;
         case "trials":
-            return document.location.origin + `/breeders/trial/${id}`;
-            break;
+          return document.location.origin + `/breeders/trial/${id}`;
         case "genotyping_protocols":
-            return document.location.origin + `/breeders_toolbox/protocol/${id}`;
-            break;
+          return document.location.origin + `/breeders_toolbox/protocol/${id}`;
         case "genotyping_projects":
-            return document.location.origin + `/breeders/trial/${id}`;
-            break;
+          return document.location.origin + `/breeders/trial/${id}`;
         case "trial_designs":
         case "trial_types":
         case "years":
         default:
-            return null;
+          return null;
     }
 }
 

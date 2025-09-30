@@ -36,8 +36,9 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   print STDERR "Validating criteria_list\n";
   foreach my $select (@criteria_list) { #ensure criteria list arguments are one of the possible categories
     chomp($select);
-    if (! any { $select eq $_ } ('accessions', 'accessions_ids','organisms','breeding_programs', 'genotyping_protocols', 'genotyping_projects', 'locations', 'plants', 'plots', 'tissue_sample','seedlots', 'trait_components', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
-      $error = "Valid keys are accessions, accessions_ids, organisms, breeding_programs, genotyping_protocols, genotyping_projects, locations, plants, plots, tissue_sample, seedlots, trait_components, traits, trials, trial_designs, trial_types and years or undef";
+    if (! any { $select eq $_ } ('accessions', 'accessions_ids','organisms','breeding_programs', 'genotyping_protocols', 'genotyping_projects', 'locations', 'plants', 'plots', 'subplots','tissue_sample','seedlots', 'trait_components', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
+      $error = "Valid keys are accessions, organisms, breeding_programs, genotyping_protocols, genotyping_projects, locations, plants, plots, subplots,tissue_sample, seedlots, trait_components, traits, trials, trial_designs, trial_types and years or undef";
+
       $c->stash->{rest} = { error => $error };
       return;
     }
