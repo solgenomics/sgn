@@ -38,7 +38,6 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     chomp($select);
     if (! any { $select eq $_ } ('accessions', 'accessions_ids','organisms','breeding_programs', 'genotyping_protocols', 'genotyping_projects', 'locations', 'plants', 'plots', 'subplots','tissue_sample','seedlots', 'trait_components', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
       $error = "Valid keys are accessions, organisms, breeding_programs, genotyping_protocols, genotyping_projects, locations, plants, plots, subplots,tissue_sample, seedlots, trait_components, traits, trials, trial_designs, trial_types and years or undef";
-
       $c->stash->{rest} = { error => $error };
       return;
     }
