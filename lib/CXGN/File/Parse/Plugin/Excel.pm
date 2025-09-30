@@ -90,15 +90,6 @@ sub parse {
       my $v = $c ? $c->value() : undef;
       $v = $super->clean_value($v, $hv);
 
-      # Merge with existing data if column occurs more than once and allowed to be an array
-      if ( exists $row_info{$hv} && exists $column_arrays->{$hv} ) {
-        my @merged = uniq(@{$row_info{$hv}}, @$v);
-        $row_info{$hv} = \@merged;
-      }
-      else {
-        $row_info{$hv} = $v;
-      }
-
       if ( defined($v) && $v ne '' ) {
         if ( ref($v) eq 'ARRAY' ) {
           if ( scalar(@$v) > 0 ) {
@@ -114,9 +105,6 @@ sub parse {
           $values_map{$hv}->{$v} = 1;
           $skip_row = 0;
         }
-      }
-      else {
-        $row_info{$hv} = undef;
       }
     }
     $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;
