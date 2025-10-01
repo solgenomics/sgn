@@ -6008,9 +6008,6 @@ sub add_additional_accessions_for_greenhouse_POST : Args(0) {
     my $number_of_plants_array = decode_json $number_of_plants_json;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
-    print STDERR "TRIAL ID =".Dumper($trial_id)."\n";
-    print STDERR "ACCESSION ARRAY =".Dumper($accession_array)."\n";
-    print STDERR "NUMBER OF PLANTS ARRAY  =".Dumper($number_of_plants_array)."\n";
 
     if (!$c->user){
         $c->stash->{rest} = {error=>'You must be logged in to add additional accessions!'};
@@ -6027,25 +6024,58 @@ sub add_additional_accessions_for_greenhouse_POST : Args(0) {
 
     my $trial = $c->stash->{trial};
     my $trial_name = $trial->get_name;
-    print STDERR "TRIAL NAME =".Dumper($trial_name)."\n";
 
+    my %additional_greenhouse_design;
     for (my $i = 0; $i < scalar(@$accession_array); $i++) {
         my %plot_info;
         my @plant_names = ();
         my $plot_number = $next_plot_number + $i;
+        $plot_info{'plot_number'} = $plot_number;
         $plot_info{'stock_name'} = $accession_array->[$i];
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = 1;
+        $plot_info{'seedlot_name'} = undef;
+
         my $plot_name = $trial_name."_".$accession_array->[$i]."_".$plot_number;
         my $accession_number_of_plants = $number_of_plants_array->[$i];
             for (my $j = 1; $j < $accession_number_of_plants+1; $j++) {
                 my $plant_name = $plot_name."_plant_$j";
                 push @plant_names, $plant_name;
             }
-        print STDERR "PLOT NAME =".Dumper($plot_name)."\n";
-        print STDERR "PLANT NAMES =".Dumper(\@plant_names)."\n";
+        $plot_info{'plot_name'} = $plot_name;
+        $plot_info{'plant_names'} = \@plant_names;
+        $additional_greenhouse_design{$plot_number} = \%plot_info;
     }
 
+    my $project = $schema->resultset("Project::Project")->find({project_id => $trial_id});
+    my $nd_experiment_id = $project->find_related('nd_experiment_projects',{project_id => $trial_id})->nd_experiment_id();
+
+    print STDERR "GREENHOUSE DESIGN =".Dumper(\%additional_greenhouse_design)."\n";
+    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
+        trial_name => $trial_name,
+        nd_geolocation_id => $trial->get_location()->[0],
+        nd_experiment_id => $nd_experiment_id,
+        design_type => 'greenhouse',
+        design => \%additional_greenhouse_design,
+        operator => $sp_person_id,
+        trial_stock_type => 'accession',
+    });
+
+    my $error;
+    my $validate_design_error = $trial_design_store->validate_design();
+    if ($validate_design_error) {
+        print STDERR "ERROR: $validate_design_error\n";
+        return { error => "Error validating trial design: $validate_design_error." };
+    } else {
+        try {
+             $error = $trial_design_store->store();
+        } catch {
+            print STDERR "ERROR store: $_\n";
+            $error = $_;
+        };
+    };
 
     $c->stash->{rest} = { success => 1 };
 }
