@@ -3,11 +3,17 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch" ] &>
+<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.HTMLSelect" ] &>
 
 
 <div id="trial_plots_html">
 </div>
+
+<br>
+
+<button id="select_all_plots_btn" class="btn btn-primary">Select/Deselect All</button>
+
+
 
 <script>
 
@@ -15,66 +21,43 @@ jQuery(document).ready(function () {
 
     jQuery('#trial_plots_onswitch').one("click", function() {
 
-        jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plots',
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-
-                //console.log(response);
-                jQuery("#working_modal").modal("hide");
-
-                var html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="plot_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
-
-                html += '<tr><td><button class="btn btn-default btn-sm" id="plot_select_all" name="1">Select All</button><br><br>'
-                html += '<div class="well well-sm"><div id="plot_data_count" name="1">No Selection</div></div>'
-                html += '<div id="plot_to_list_menu"></div><td><tr></table>'
-
+        jQuery.ajax( {
+            url: '/ajax/html/select/plots_from_trial',
+            data: {trial_id: <% $trial_id %>},
+            beforeSend: function(){
+                var html = '<div class="well well-sm"><center><img src="/img/wheel.gif" /></center></div>';
                 jQuery('#trial_plots_html').html(html);
-
-                var plot = response.plots[0] || [];
-
-                plot_html = format_options_list(plot);
-                jQuery('#plot_data').html(plot_html);
- 
-                var data = jQuery('#plot_data').val() || [];
-                show_list_counts('plot_data_count', response.plots[0].length, data.length);
- 
-                if (jQuery('#plot_data').length) {
-                      addToListMenu('plot_to_list_menu', 'plot_data', {
-                      selectText: true,
-                      listType: 'plots'
-                    });
-                }
-
-                jQuery('#plot_select_all').click( function() { // select all plot
-                    var data_id = "plot_data";
-                    selectAllOptions(document.getElementById(data_id));
-
-                    var data = jQuery("#"+data_id).val() || [];
-                    var count_id = "plot_data_count";
-                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-                });
-
-                jQuery('#plot_data').change( function() { // update count when data selections change
-                    var data_id = jQuery(this).attr('id');
-                    var data = jQuery('#'+data_id).val() || [];
-                    var count_id = "plot_data_count";
-                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-                });
-
-                jQuery('select').dblclick( function() { // open plot detail page in new window or tab on double-click
-                    window.open("../../stock/"+this.value+"/view");
-                });
-
             },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert("Error retrieving plots.");
+            success: function(response) {
+            jQuery('#trial_plots_html').empty();
+                jQuery('#trial_plots_html').html(response.select);
+
+                jQuery('#plots_from_trial_select_table').DataTable({
+                    paging: false,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    scrollY: '250px',
+                    scrollCollapse: true
+                });
+            },
+            error: function(response) {
+                jQuery('#trial_plots_html').html("error");
+                alert("An error occurred");
             }
         });
     });
+
+    jQuery('#select_all_plots_btn').click(function() {
+        let anyChecked = jQuery('.exp_design_plot_select:checkbox:checked').length > 0;
+
+        if (anyChecked) {
+            jQuery('.exp_design_plot_select').prop("checked", false);
+        } else {
+            jQuery('.exp_design_plot_select').prop("checked", true);
+        }
+    });
+
 });
 
 </script>
