@@ -1,11 +1,12 @@
-package CXGN::File::Parse::Plugin::OpenDocument;
+package CXGN::File::Parse::Plugin::Spreadsheet;
 
 use strict;
+use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
 use Spreadsheet::ParseODS;
-use List::MoreUtils qw|uniq|;
 
 sub type {
-  return "opendocument";
+  return "excel";
 }
 
 sub parse {
@@ -24,11 +25,17 @@ sub parse {
   );
 
   my $parser;
-  if ( $type eq 'ods' ) {
+  if ( $type eq 'xlsx' ) {
+    $parser = Spreadsheet::ParseXLSX->new();
+  }
+  elsif ( $type eq 'xls' ) {
+    $parser = Spreadsheet::ParseExcel->new();
+  }
+  elsif ( $type eq 'ods' ) {
     $parser = Spreadsheet::ParseODS->new();
   }
   else {
-    push @{$rtn{errors}}, "Invalid type $type for open document parse plugin";
+    push @{$rtn{errors}}, "Invalid type $type for spreadsheet parse plugin";
     return \%rtn;
   }
 
@@ -103,7 +110,7 @@ sub parse {
         }
       }
       else {
-        $row_info{$hv} = $row_info{$hv} || undef;
+        $row_info{$hv} = undef;
       }
     }
     $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;
