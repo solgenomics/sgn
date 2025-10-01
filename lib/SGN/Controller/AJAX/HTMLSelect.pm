@@ -2248,7 +2248,7 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(1) 
         JOIN cvterm ON (cvterm.cvterm_id=stockprop.type_id)
         WHERE stockprop.stock_id in (SELECT unnest(string_to_array(?, ',')::int[]));"; 
 
-    my $h = $schema()->storage()->dbh()->prepare($stockprops_q);
+    my $h = $schema->storage()->dbh()->prepare($stockprops_q);
     $h->execute(join(",", @plots));
 
     while (my ($plot_id, $stockprop, $stockprop_id, $stockprop_value) = $h->fetchrow_array()) {
