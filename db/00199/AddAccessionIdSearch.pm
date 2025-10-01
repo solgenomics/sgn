@@ -742,7 +742,7 @@ CREATE VIEW public.accessions_ids AS
   FROM stock
   WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession') AND is_obsolete = 'f'
   GROUP BY stock.stock_id, stock.uniquename;
-ALTER VIEW accessions OWNER TO web_usr;
+ALTER VIEW accessions_ids OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.accessions_idsXseedlots CASCADE;
 CREATE VIEW public.accessions_idsXseedlots AS
