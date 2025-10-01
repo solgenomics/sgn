@@ -372,8 +372,6 @@ jQuery(document).ready(function(){
         var current_progress = 0;
         progress_modal.modal('show');
         jQuery('#progress_msg').text('Submitting images for analysis');
-        console.log("service select value:", jQuery('#image_analysis_service_select').val());
-        console.log("trait select value:", jQuery('#image_analysis_trait_select').val());
 
         var deferred_calls = selected_image_ids.map(function(image_id, index) {
             jQuery('#progress_msg').text('Submitting image '+index+' out of '+image_total+' images');
@@ -392,7 +390,6 @@ jQuery(document).ready(function(){
                 },
                 dataType:'json',
                 success: function(response) {
-                    console.log("analysis submit response:", response);
                     images_finished++;
                     // console.log(response);
                     jQuery('#progress_msg').text('Responses received for '+images_finished+' out of '+image_total+' images');
@@ -427,8 +424,8 @@ jQuery(document).ready(function(){
         jQuery('#progress_msg').text('All '+image_total+' images submitted, waiting for responses.');
 
         jQuery.when.apply(jQuery, deferred_calls).then(function() {
-            console.log("Results are:");
-            console.log(results);
+            // console.log("Results are:");
+            // console.log(results);
             var first = results[0];
             submit_results = first;
             // console.log("stock type:", first.stock_type_name);
@@ -455,14 +452,13 @@ jQuery(document).ready(function(){
             }
 
             if (results.length > 0) {
-                console.log("analysis group data JSON:", JSON.stringify(results));
                 jQuery.ajax({
                     url: '/ajax/image_analysis/group',
                     method: 'POST',
                     data: { 'result': JSON.stringify(results) },
                     success: function(response) {
-                        console.log("Grouped Results are:");
-                        console.log(response);
+                        // console.log("Grouped Results are:");
+                        // console.log(response);
                         current_progress = 100;
                         progress_bar.css("width", current_progress + "%")
                         .attr("aria-valuenow", current_progress)
@@ -544,7 +540,6 @@ jQuery(document).ready(function(){
     jQuery('#image_analysis_save_results').click(function(){
 
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
-        console.log("table data:", table_data);
         let dt = new DataTransfer();
 
         jQuery('#working_modal').modal('show');
@@ -723,8 +718,6 @@ jQuery(document).ready(function(){
                     headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
                     data: JSON.stringify(tissueSamplesData),
                     success: function(response) {
-                        console.log("tissue samples response", response);
-
                         const observationUnitDbIdsMap = {};
                         response.result.data.forEach(unit => {
                             observationUnitDbIdsMap[unit.observationUnitName] = unit.observationUnitDbId;
@@ -758,7 +751,6 @@ jQuery(document).ready(function(){
                             headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
                             data: JSON.stringify(observationData),
                             success: function(obsResponse) {    
-                                console.log("observations response:", obsResponse);                            
                                 loadAllImages(imageFiles, imageData).then(function(uploadStatus) {
                                     console.log("Upload completed!");
                                     jQuery('#working_modal').modal('hide');
