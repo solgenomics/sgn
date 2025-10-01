@@ -191,6 +191,11 @@ jQuery(document).ready(function(){
 
     });
 
+    jQuery("#add_additional_accessions_close_button").click(function(){
+        location.reload();
+    });
+
+
 });
 
 </script>

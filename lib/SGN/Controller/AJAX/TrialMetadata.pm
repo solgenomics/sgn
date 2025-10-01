@@ -37,6 +37,7 @@ use CXGN::TrialStatus;
 use CXGN::BreedersToolbox::SoilData;
 use CXGN::Genotype::GenotypingProject;
 use List::Util qw(max);
+use CXGN::Trial::TrialLayout;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -6016,11 +6017,9 @@ sub add_additional_accessions_for_greenhouse_POST : Args(0) {
 
     my $original_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
     my $original_design = $original_layout-> get_design();
-    print STDERR "ORIGINAL DESIGN =".Dumper($original_design)."\n";
     my @all_plot_numbers = keys %{$original_design};
     my $last_plot_number = max(@all_plot_numbers);
     my $next_plot_number = $last_plot_number + 1;
-    print STDERR "LAST PLOT NUMBER =".Dumper($last_plot_number)."\n";
 
     my $trial = $c->stash->{trial};
     my $trial_name = $trial->get_name;
@@ -6050,7 +6049,7 @@ sub add_additional_accessions_for_greenhouse_POST : Args(0) {
     my $project = $schema->resultset("Project::Project")->find({project_id => $trial_id});
     my $nd_experiment_id = $project->find_related('nd_experiment_projects',{project_id => $trial_id})->nd_experiment_id();
 
-    print STDERR "GREENHOUSE DESIGN =".Dumper(\%additional_greenhouse_design)."\n";
+    print STDERR "TRIAL STOCK TYPE =".Dumper($trial->get_trial_stock_type())."\n";
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
         bcs_schema => $schema,
         trial_id => $trial_id,
@@ -6060,7 +6059,7 @@ sub add_additional_accessions_for_greenhouse_POST : Args(0) {
         design_type => 'greenhouse',
         design => \%additional_greenhouse_design,
         operator => $sp_person_id,
-        trial_stock_type => 'accession',
+        trial_stock_type => $trial->get_trial_stock_type(),
     });
 
     my $error;
@@ -6076,6 +6075,13 @@ sub add_additional_accessions_for_greenhouse_POST : Args(0) {
             $error = $_;
         };
     };
+
+    my $new_layout = CXGN::Trial::TrialLayout->new({
+        schema => $schema,
+        trial_id => $trial_id,
+        experiment_type => 'field_layout',
+    });
+    $new_layout->generate_and_cache_layout();
 
     $c->stash->{rest} = { success => 1 };
 }
