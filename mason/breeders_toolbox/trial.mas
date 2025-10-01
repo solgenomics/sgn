@@ -239,7 +239,7 @@ $project_id => undef
 <& /breeders_toolbox/trial/change_plot_accessions_dialogs.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
 <& /breeders_toolbox/trial/update_experimental_design_type.mas, trial_id => $trial_id, trial_name => $trial_name, design_name => $design_name &>
-<& /breeders_toolbox/trial/greenhouse_add_additional_accessions_dialog.mas, trial_id => $trial_id &>
+<& /breeders_toolbox/trial/greenhouse_add_additional_accessions_dialog.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>

@@ -1,5 +1,6 @@
 <%args>
 $trial_id
+$trial_stock_type
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -120,7 +121,17 @@ jQuery(document).ready(function(){
     const trial_id = "<% $trial_id %>";
     var lo = new CXGN.List();
 
-    jQuery('#additional_accession_list_select').html(lo.listSelect('additional_accession_list_select', ['accessions'], 'Select a list', undefined, undefined));
+    const trial_stock_type = "<% $trial_stock_type %>";
+    let list_type = '';
+    if (trial_stock_type == 'cross') {
+        list_type = 'crosses';
+    } else if (trial_stock_type == 'family_name') {
+        list_type = 'family_names';
+    } else {
+        list_type = 'accessions';
+    }
+
+    jQuery('#additional_accession_list_select').html(lo.listSelect('additional_accession_list_select', [list_type], 'Select a list', undefined, undefined));
 
     var accession_list_id = '';
     jQuery("#additional_accession_list_select").change(function() {
