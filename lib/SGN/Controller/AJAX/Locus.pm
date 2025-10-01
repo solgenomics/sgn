@@ -89,7 +89,7 @@ sub autocomplete_GET : Args(0) {
         my $sth = $c->dbc->dbh->prepare($q);
         $sth->execute;
         while (my ($locus_symbol, $locus_name, $allele_symbol, $is_default) = $sth->fetchrow_array ) {
-            my $allele_data = "Allele: $allele_symbol"  if !$is_default  ;
+            my $allele_data = !$is_default ? "Allele: $allele_symbol" : undef;
             no warnings 'uninitialized';
             push @results , "$locus_name ($locus_symbol) $allele_data";
         }
@@ -195,7 +195,7 @@ sub display_ontologies_GET  {
             my $evidence_id = $href->{dbxref_ev_object}->get_object_dbxref_evidence_id;
             my $ontology_url = "/locus/$locus_id/ontologies/";
             if ( $href->{obsolete} eq 't' ) {
-                my $unobsolete =  qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$evidence_id\',  \'/ajax/locus/toggle_obsolete_annotation\', \'/locus/$locus_id/ontologies\')" value = "unobsolete" /> | if $privileged ;
+                my $unobsolete = $privileged ? qq | <input type = "button" onclick= "javascript:Tools.toggleObsoleteAnnotation('0', \'$evidence_id\',  \'/ajax/locus/toggle_obsolete_annotation\', \'/locus/$locus_id/ontologies\')" value = "unobsolete" /> | : undef;
                 push @obs_annot,
                 $href->{relationship} . " "
                     . $cvterm_link . " ("
@@ -205,7 +205,7 @@ sub display_ontologies_GET  {
             else {
                 my $ontology_details = $href->{relationship}
                 . qq| $cvterm_link ($db_name:<a href="$url$db_accession" target="blank"> $accession</a>)<br />|;
-                my $obsolete_link =  qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$evidence_id\',  \'/ajax/locus/toggle_obsolete_annotation\', \'/locus/$locus_id/ontologies\')" value ="delete" /> | if $privileged ;
+                my $obsolete_link = $privileged ? qq | <input type = "button" onclick="javascript:Tools.toggleObsoleteAnnotation('1', \'$evidence_id\',  \'/ajax/locus/toggle_obsolete_annotation\', \'/locus/$locus_id/ontologies\')" value ="delete" /> | : undef;
 
                 ##################
                 # add an empty row if there is more than 1 evidence code
@@ -289,11 +289,13 @@ sub associate_ontology_POST :Args(0) {
     my $evidence_code  = $c->req->param('evidence_code'); # a cvterm_id
     my ($evidence_code_id) = $cvterm_rs->find( {cvterm_id => $evidence_code })->dbxref_id;
     my $evidence_description = $c->req->param('evidence_description') || undef; # a cvterm_id
-    my ($evidence_description_id) = $cvterm_rs->find( {cvterm_id => $evidence_description })->dbxref_id if $evidence_description;
+    my $evidence_description_id;
+    ($evidence_description_id) = $cvterm_rs->find( {cvterm_id => $evidence_description })->dbxref_id if $evidence_description;
     my $evidence_with = $c->req->param('evidence_with') || undef; # a dbxref_id (type='evidence_with' value = 'dbxref_id'
-    my ($evidence_with_id) = $evidence_with if $evidence_with && $evidence_with ne 'null';
+    my $evidence_with_id;
+    ($evidence_with_id) = $evidence_with if $evidence_with && $evidence_with ne 'null';
     my $logged_user = $c->user;
-    my $logged_person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $logged_person_id = $logged_user ? $logged_user->get_object->get_sp_person_id : undef;
 
     my $reference = $c->req->param('reference');
     my $reference_id = $reference ? $reference :
@@ -544,7 +546,7 @@ sub associate_locus_POST :Args(0) {
     if ($c->user) {
         if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
     }
-    my $logged_person_id = $c->user->get_object->get_sp_person_id if $c->user;
+    my $logged_person_id = $c->user ? $c->user->get_object->get_sp_person_id : undef;
     my %params = map { $_ => $c->request->body_parameters->{$_} } qw/
        locus_info locus_reference_id locus_evidence_code_id
        locus_relationship_id locus_id locusgroup_id
@@ -803,7 +805,7 @@ sub associate_unigene_POST :Args(0) {
     if ($c->user) {
         if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
     }
-    my $logged_person_id = $c->user->get_object->get_sp_person_id if $c->user;
+    my $logged_person_id = $c->user ? $c->user->get_object->get_sp_person_id : undef;
     if ($privileged) {
         try {
             print STDERR "****ABOUT TO ADD UNIGENE $unigene_id to locus $locus_id\n\n\n";

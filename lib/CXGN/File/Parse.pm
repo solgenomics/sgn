@@ -403,7 +403,7 @@ sub parse {
     }
 
     # Add columns that are arrays, as defined in the CXGN::File::Parse constructor
-    my @array_columns = keys %$column_arrays if $column_arrays;
+    my @array_columns = $column_arrays ? keys %$column_arrays : [];
     $parsed->{'array_columns'} = \@array_columns || [];
 
     return $parsed;
