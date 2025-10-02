@@ -4,6 +4,7 @@ $trial_id
 </%args>
 
 <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.HTMLSelect" ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
 <div id="trial_plots_html">
@@ -13,7 +14,27 @@ $trial_id
 
 <button id="select_all_plots_btn" class="btn btn-primary">Select/Deselect All</button>
 
+<br>
 
+<div class="panel panel-default">
+    <div class="panel-body">
+        <&| /page/info_section.mas, title => 'Add plots to a list', collapsible=>1, collapsed=>0, subtitle=>'<i>Add plots in this trial to a new or exisiting list</i>'&>
+        <br>
+            <table style="width:100%">
+                <tr>
+                    <td>
+                        <input style="width:85%" class="form-control" type="text" id="plot_select_new_list_name" placeholder="New list..."/>
+                        <button class="btn btn-primary btn-sm" id="plot_select_add_to_new_list_btn" type="button">Add selection to new list</button>
+                    </td>
+                    <td>
+                        <div id="plot_select_existing_list_name" style="width:85%"></div>
+                        <button class="btn btn-primary btn-sm" id="plot_select_add_to_existing_list_btn" type="button">Add selection to existing list</button>
+                    </td>
+                </tr>
+            </table>
+        </&>
+    </div>
+</div>
 
 <script>
 
@@ -29,7 +50,7 @@ jQuery(document).ready(function () {
                 jQuery('#trial_plots_html').html(html);
             },
             success: function(response) {
-            jQuery('#trial_plots_html').empty();
+                jQuery('#trial_plots_html').empty();
                 jQuery('#trial_plots_html').html(response.select);
 
                 jQuery('#plots_from_trial_select_table').DataTable({
@@ -40,6 +61,9 @@ jQuery(document).ready(function () {
                     scrollY: '250px',
                     scrollCollapse: true
                 });
+
+                var lo = new CXGN.List();
+                jQuery('#plot_select_existing_list_name').html(lo.listSelect('plot_select_existing_list_name', ['plots'], undefined, undefined, undefined));
             },
             error: function(response) {
                 jQuery('#trial_plots_html').html("error");

@@ -2317,6 +2317,7 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
 
     if (!$trial->has_subplot_entries()) {
         $c->stash->{rest} = { error => "This trial has no subplots.\n" };
+        return;
     }
 
     my $stock_relationship_cv = $schema->resultset("Cv::Cv")->find({
@@ -2329,14 +2330,6 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
         name => 'subplot_of',
         cv_id => $stock_relationship_cv
     })->cvterm_id();
-    # my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
-    #     name => 'row_number',
-    #     cv_id => $stockprop_cv
-    # })->cvterm_id();
-    # my $col_num_id = $schema->resultset("Cv::Cvterm")->find({
-    #     name => 'col_number',
-    #     cv_id => $stockprop_cv
-    # })->cvterm_id();
 
     my @subplots = map {$_->[0]} @{$trial->get_subplots()};
 
@@ -2387,14 +2380,23 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         trial_id => $trial_id 
     });
 
+    if (!$trial->has_plant_entries()) {
+        $c->stash->{rest} = { error => "This trial has no plants.\n" };
+        return;
+    }
+
     my $stock_relationship_cv = $schema->resultset("Cv::Cv")->find({
         name => 'stock_relationship'
     })->cv_id();
     my $stockprop_cv = $schema->resultset("Cv::Cv")->find({
         name => 'stock_property'
     })->cv_id();
-    my $plot_of_id = $schema->resultset("Cv::Cvterm")->find({
-        name => 'plot_of',
+    my $plant_of_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'plant_of',
+        cv_id => $stock_relationship_cv
+    })->cvterm_id();
+    my $plant_of_subplot_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'plant_of_subplot',
         cv_id => $stock_relationship_cv
     })->cvterm_id();
     my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
@@ -2406,37 +2408,67 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         cv_id => $stockprop_cv
     })->cvterm_id();
 
+    my $subplot_q = "";
+    my $subplot_join = "";
+    my $subplot_header = "";
+    my $subplot_select = "";
+    
+    if ($trial->has_subplot_entries()) {
+        $subplot_q = ", subplot AS
+        (SELECT object_id AS subplot_id, mysubplot.name as subplot_name, subject_id as plant_id FROM stock_relationship
+        JOIN stock as mysubplot ON stock_relationship.object_id=mysubplot.stock_id 
+        WHERE stock_relationship.type_id=$plant_of_subplot_id)";
+        $subplot_join = "JOIN subplot ON subplot.plant_id=plant.plant_id";
+        $subplot_header = "<th>Parent Subplot</th>";
+        $subplot_select = ", subplot.subplot_id as subplot_id, subplot.subplot_name as subplot_name"
+    }
+
     my @plants = map {$_->[0]} @{$trial->get_plants()};
 
-    my $plots_q = "WITH plot AS 
-        (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
-            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id 
+    my $plants_q = "WITH plant AS 
+        (SELECT subject_id AS plant_id, myplant.name AS plant_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+            JOIN stock AS myplant ON stock_relationship.subject_id=myplant.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
         WHERE stock_relationship.type_id=?), 
+    plot AS 
+        (SELECT subject_id AS plot_id, myplot.name as plot_name, object_id as plant_id FROM stock_relationship
+            JOIN stock as myplot ON stock_relationship.subject_id=myplot.stock_id
+            WHERE stock_relationship.type_id=?),
     row_number AS 
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
+        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop 
         WHERE stockprop.type_id=?), 
     col_number AS 
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
+        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop 
         WHERE stockprop.type_id=?) 
-    SELECT plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, plot.accession_id, plot.accession_name 
-    FROM plot 
-    LEFT JOIN row_number ON plot.plot_id=row_number.plot_id 
-    LEFT JOIN col_number ON col_number.plot_id=plot.plot_id
-    WHERE plot.plot_id = ANY(?);"; 
+    $subplot_q
+    SELECT plant.plant_id, plant.plant_name, plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, plant.accession_id, plant.accession_name $subplot_select
+    FROM plant
+    LEFT JOIN row_number ON plant.plant_id=row_number.plant_id 
+    LEFT JOIN col_number ON col_number.plant_id=plant.plant_id
+    JOIN plot ON plot.plant_id=plant.plant_id
+    $subplot_join
+    WHERE plant.plant_id = ANY(?);"; 
 
-    my $h = $schema->storage()->dbh()->prepare($plots_q);
-    $h->execute($plot_of_id, $row_num_id, $col_num_id, \@plants);
+    my $h = $schema->storage()->dbh()->prepare($plants_q);
+    $h->execute($plant_of_id, $plant_of_id, $row_num_id, $col_num_id, \@plants);
 
-    my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates</th><th>Accession</th></tr></thead><tbody>";
+    my $html = "<table id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates</th><th>Accession</th></tr></thead><tbody>";
 
-    while (my ($plot_id, $plot_name, $row, $column, $accession_id, $accession_name) = $h->fetchrow_array()) {
-        $html .= "<tr><td><input id=\"select_plot_$plot_id\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>($row,$column)</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
+    while (my ($plant_id, $plant_name, $plot_id, $plot_name, $row, $column, $accession_id, $accession_name, $subplot_id, $subplot_name) = $h->fetchrow_array()) {
+        my $coordinates = "NA";
+        if ($row && $column){
+            $coordinates = "($row,$column)";
+        }
+        my $subplot_data = "";
+        if ($subplot_id && $subplot_name) {
+            $subplot_data = "<td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td>";
+        }
+        $html .= "<tr><td><input id=\"select_plant_$plant_id\" type=\"checkbox\" class=\"exp_design_plant_select\"></td><td><a href=\"/stock/$plant_id/view\">$plant_name</a></td>$subplot_data<td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
     }
 
     $html .= "</tbody></thead></table>";
 
-    $c->stash->{rest} = { select => $html };
+    $c->stash->{rest} = { select => $html};
 }
 
 sub get_plot_polygon_templates_partial : Path('/ajax/html/select/plot_polygon_templates_partial') Args(0) {
