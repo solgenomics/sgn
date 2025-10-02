@@ -1266,7 +1266,7 @@ sub store {
         $success_message = 'All values in your file have been successfully processed!<br><br>';
         $success_message .= "$new_count new values stored<br>";
         $success_message .= "$skip_count previously stored values skipped<br>";
-	$success_message .= "of which $previously_stored_skip_count were skipped because a value had previously been stored.";
+###	$success_message .= "of which $previously_stored_skip_count were skipped because a value had previously been stored.";
         $success_message .= "$overwrite_count previously stored values overwritten<br>";
 
         $success_message .= "$remove_count previously stored values removed<br><br>";
