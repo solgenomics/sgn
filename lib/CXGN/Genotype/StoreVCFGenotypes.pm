@@ -555,7 +555,7 @@ sub validate {
 
     #check if sample names are in the database.
     if (scalar(@$observation_unit_uniquenames) == 0){
-        push @warning_messages, "No observtaion_unit_names in file";
+        push @error_messages, "No observtaion_unit_names in file";
     }
 
     my $vcf_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $vcf_genotyping_type, 'genotype_property')->cvterm_id();
@@ -711,7 +711,7 @@ sub validate {
 
     while (my ($observation_unit_name, $marker_result) = each %$genotype_info){
         if (!$observation_unit_name || !$marker_result){
-            push @warning_messages, "No geno info in genotype_info";
+            push @error_messages, "No geno info in genotype_info";
         }
     }
 
