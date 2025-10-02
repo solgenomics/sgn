@@ -584,7 +584,7 @@ sub check_categories {
             }
         }
         foreach my $value (@check_values) {
-            if ($value ne '' && !exists($trait_categories_hash{$value})) {
+            if ($value ne '' && defined($value) && !exists($trait_categories_hash{$value})) {
                 my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
                 $error_message =  "<small> This trait value should be one of $valid_values: <br/>Value: ".$self->value()."</small><hr>";
             }
