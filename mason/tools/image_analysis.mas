@@ -594,12 +594,20 @@ jQuery(document).ready(function(){
                                 success: function(response) {
                                     if (response.result.data.length > 0) {
                                         plantId = response.result.data[0].observationUnitDbId;
-                                    }
-                                
+                                    }                                
+                                },
+                                error: function(response) {
+                                    jQuery('#working_modal').modal('hide');
+                                    jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while creating a new plant. Deets: '+response.responseText+'</li></ul>');
+                                    jQuery('#saveResultModal').modal('show');
                                 }
                             });
-                        }
-                        
+                        }                        
+                    },
+                    error: function(response) {
+                        jQuery('#working_modal').modal('hide');
+                        jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results. Deets: '+response.responseText+'</li></ul>');
+                        jQuery('#saveResultModal').modal('show');
                     }
                 })
             } 
@@ -653,7 +661,7 @@ jQuery(document).ready(function(){
                             observationUnitPosition: {
                                 observationLevel: {
                                     levelName: "tissue_sample",
-                                    levelCode: plantId,
+                                    levelCode: "tissue_sameple" + sampleNumber,
                                     levelOrder: 4
                                 },
                                 observationLevelRelationships: [
