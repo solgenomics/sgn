@@ -92,6 +92,11 @@ ok($tissue_resp->{result}{data}[0]{observationUnitDbId}, "Tissue sample created 
 # Get created tissue sample
 $mech->get_ok('http://localhost:3010/brapi/v2/observationunits?observationUnitName=FruitDiameter_"IITA-TMS-IBA980581_001"_sample1', 'get tissue sample');
 
+# Delete test image
+my $dbh = SGN::Test::Fixture->new()->dbh();
+my $i = CXGN::Image->new(dbh => $dbh, image_id => $image_id, image_dir => $m->context->config->{'image_dir'});
+$i->hard_delete();
+
 $f->clean_up_db();
 done_testing();
 
