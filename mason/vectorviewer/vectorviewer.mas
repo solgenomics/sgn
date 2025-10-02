@@ -95,6 +95,7 @@ $edit_privs
 <!-- button id="add_feature_button">Add feature</button><br / -->
 <table id="vector_table" width="100%" class="display table table-hover table-striped">
 <thead><tr><td>No.</td><td>Feature</td><td>Start</td><td>End</td><td>Color</td><td>Orientation</td><td>Actions</td></tr></thead></table>
+<tbody></tbody>
 <br />
 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_feature_dialog">Add Feature</button>
 <br />

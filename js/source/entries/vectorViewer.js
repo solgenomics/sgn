@@ -268,6 +268,22 @@ export function init(vector_id) {
 
 	re_site_datatable_add_row(row);
     });
+
+
+    jQuery('#vector_table tbody').on('click', '.delete_row_button', function() {
+	alert('hello!');
+//	var rowId = $(this).data('id'); // Get the ID from the clicked button's data-id attribute
+//	alert('Button clicked for row ID: ' + rowId);
+	// Perform desired actions here, e.g., open a modal, redirect, etc.	
+    });
+
+    jQuery('#vector_table tbody').on('click', '.edit_row_button', function() {
+	alert('hello edit!');
+//	var rowId = $(this).data('id'); // Get the ID from the clicked button's data-id attribute
+//	alert('Button clicked for row ID: ' + rowId);
+	// Perform desired actions here, e.g., open a modal, redirect, etc.	
+    });
+    
 }
 
 
@@ -292,8 +308,9 @@ export function updateFeatureDataTable(table_data) {
 	    { title: 'Orientation', data: 'orientation' },
 	    { data: null,
 	      render: function(data, type, row) {
-//		  alert('ROW: '+JSON.stringify(row));
-		  return '<button onclick="edit_feature_table_row('+row.no+');">Edit</button>&nbsp;<button onclick="delete_feature_table_row('+row.no+'); ">Delete</button>';
+		  var formatted = '<button class="edit_row_button" data-id="'+row.no+'">Edit</button>&nbsp;<button class="delete_row_button" data-id="'+row.no+'">Delete</button>';
+		  alert('Formatted: '+formatted);
+		  return formatted;
 	      },
 	      title: "Actions",
 	    }
