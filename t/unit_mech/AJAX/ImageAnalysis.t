@@ -83,7 +83,7 @@ ok(ref($group_result->{results}) eq 'ARRAY', "results array returned from group"
 my $table_data = $group_result->{results};
 
 # Create tissue sample
-$tissueSamplesData = '[{"additionalInfo":{"observationUnitParent":" ' . $plant_id . '"},"observationUnitName":"FruitDiameter_"' . $table_data->[0]{observationUnitName} .'_sample1","studyDbId":144,"germplasmDbId":38878,"observationUnitPosition":{"observationLevel":{"levelName":"tissue_sample","levelCode":"' . $plant_id . '","levelOrder":4},"observationLevelRelationships":[{"levelName":"plant","observationUnitDbId":"' . $plant_id . '","levelOrder":4}],"positionCoordinateX":null,"positionCoordinateY":null,"geoCoordinates":null}}]';
+my $tissueSamplesData = '[{"additionalInfo":{"observationUnitParent":" ' . $plant_id . '"},"observationUnitName":"FruitDiameter_"' . $table_data->[0]{observationUnitName} .'_sample1","studyDbId":144,"germplasmDbId":38878,"observationUnitPosition":{"observationLevel":{"levelName":"tissue_sample","levelCode":"' . $plant_id . '","levelOrder":4},"observationLevelRelationships":[{"levelName":"plant","observationUnitDbId":"' . $plant_id . '","levelOrder":4}],"positionCoordinateX":null,"positionCoordinateY":null,"geoCoordinates":null}}]';
 
 $mech->post_ok('http://localhost:3010/brapi/v2/observationunits', Content => $tissueSamplesData);
 my $tissue_resp = decode_json $mech->content;
