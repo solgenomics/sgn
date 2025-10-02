@@ -2284,6 +2284,153 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates</th><th>Accession</th></tr></thead><tbody>";
 
     while (my ($plot_id, $plot_name, $row, $column, $accession_id, $accession_name) = $h->fetchrow_array()) {
+        my $coordinates = "NA";
+        if ($row && $column){
+            $coordinates = "($row,$column)";
+        }
+        $html .= "<tr><td><input id=\"select_plot_$plot_id\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
+    }
+
+    $html .= "</tbody></thead></table>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param("trial_id");
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
+    my $trial = CXGN::Trial->new({ 
+        bcs_schema => $schema,
+        people_schema=>$people_schema, 
+        metadata_schema=>$metadata_schema, 
+        phenome_schema=>$phenome_schema,
+        trial_id => $trial_id 
+    });
+
+    if (!$trial->has_subplot_entries()) {
+        $c->stash->{rest} = { error => "This trial has no subplots.\n" };
+    }
+
+    my $stock_relationship_cv = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_relationship'
+    })->cv_id();
+    my $stockprop_cv = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_property'
+    })->cv_id();
+    my $subplot_of_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'subplot_of',
+        cv_id => $stock_relationship_cv
+    })->cvterm_id();
+    # my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
+    #     name => 'row_number',
+    #     cv_id => $stockprop_cv
+    # })->cvterm_id();
+    # my $col_num_id = $schema->resultset("Cv::Cvterm")->find({
+    #     name => 'col_number',
+    #     cv_id => $stockprop_cv
+    # })->cvterm_id();
+
+    my @subplots = map {$_->[0]} @{$trial->get_subplots()};
+
+    my $subplots_q = "WITH subplot AS 
+        (SELECT subject_id AS subplot_id, mysubplot.name AS subplot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+            JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id 
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
+        WHERE stock_relationship.type_id=?),
+    plot AS 
+        (SELECT subject_id AS plot_id, myplot.name AS plot_name, object_id AS subplot_id FROM stock_relationship
+            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
+        WHERE stock_relationship.type_id=?)
+    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name 
+    FROM subplot 
+    JOIN plot ON plot.subplot_id=subplot.subplot_id
+    WHERE subplot.subplot_id = ANY(?);"; 
+
+    my $h = $schema->storage()->dbh()->prepare($subplots_q);
+    $h->execute($subplot_of_id, $subplot_of_id, \@subplots);
+
+    my $html = "<table id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th></tr></thead><tbody>";
+
+    while (my ($subplot_id, $subplot_name, $plot_id, $plot_name, $accession_id, $accession_name) = $h->fetchrow_array()) {
+        $html .= "<tr><td><input id=\"select_plot_$subplot_id\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
+    }
+
+    $html .= "</tbody></thead></table>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param("trial_id");
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
+    my $trial = CXGN::Trial->new({ 
+        bcs_schema => $schema,
+        people_schema=>$people_schema, 
+        metadata_schema=>$metadata_schema, 
+        phenome_schema=>$phenome_schema,
+        trial_id => $trial_id 
+    });
+
+    my $stock_relationship_cv = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_relationship'
+    })->cv_id();
+    my $stockprop_cv = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_property'
+    })->cv_id();
+    my $plot_of_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'plot_of',
+        cv_id => $stock_relationship_cv
+    })->cvterm_id();
+    my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'row_number',
+        cv_id => $stockprop_cv
+    })->cvterm_id();
+    my $col_num_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'col_number',
+        cv_id => $stockprop_cv
+    })->cvterm_id();
+
+    my @plants = map {$_->[0]} @{$trial->get_plants()};
+
+    my $plots_q = "WITH plot AS 
+        (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id 
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
+        WHERE stock_relationship.type_id=?), 
+    row_number AS 
+        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
+        WHERE stockprop.type_id=?), 
+    col_number AS 
+        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
+        WHERE stockprop.type_id=?) 
+    SELECT plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, plot.accession_id, plot.accession_name 
+    FROM plot 
+    LEFT JOIN row_number ON plot.plot_id=row_number.plot_id 
+    LEFT JOIN col_number ON col_number.plot_id=plot.plot_id
+    WHERE plot.plot_id = ANY(?);"; 
+
+    my $h = $schema->storage()->dbh()->prepare($plots_q);
+    $h->execute($plot_of_id, $row_num_id, $col_num_id, \@plants);
+
+    my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates</th><th>Accession</th></tr></thead><tbody>";
+
+    while (my ($plot_id, $plot_name, $row, $column, $accession_id, $accession_name) = $h->fetchrow_array()) {
         $html .= "<tr><td><input id=\"select_plot_$plot_id\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>($row,$column)</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
     }
 
