@@ -36,11 +36,17 @@ $trial_stock_type
                             </&>
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="control-label col-sm-3">Accession List:</label>
+                                    <label class="control-label col-sm-4">Accession List:</label>
                                     <div class="col-sm-7" >
                                         <div class="input-group">
                                             <select class="form-control" id="additional_accession_list_select"></select>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">Default Number of Plants: </label>
+                                    <div class="col-sm-7" >
+                                        <input class="form-control" type="text" id="default_number_plants_per_accession" placeholder="1" value="1" />
                                     </div>
                                 </div>
                                 <div id ="additional_accessions_form_div">
@@ -133,8 +139,10 @@ jQuery(document).ready(function(){
 
     jQuery('#additional_accession_list_select').html(lo.listSelect('additional_accession_list_select', [list_type], 'Select a list', undefined, undefined));
 
-    var accession_list_id = '';
+    let accession_list_id = '';
+    let default_number_plants = '';
     jQuery("#additional_accession_list_select").change(function() {
+        default_number_plants = jQuery('#default_number_plants_per_accession').val();
         accession_list_id = jQuery('#additional_accession_list_select').val();
         if (accession_list_id){
             let accession_validation = 1;
@@ -143,18 +151,25 @@ jQuery(document).ready(function(){
                 alert("The accession list did not pass validation. Names in the list must be uniquenames in the database");
                 return;
             } else {
-                additional_accessions_form(accession_list_id);
+                additional_accessions_form(accession_list_id, default_number_plants);
                 jQuery('#additional_accessions_footer').show();
             }
         }
     })
 
-    function additional_accessions_form (accession_list_id) {
-        var accession_list = lo.getList(accession_list_id);
+    jQuery(document).on('keyup', '#default_number_plants_per_accession', function() {
+        if (accession_list_id) {
+            default_number_plants = jQuery('#default_number_plants_per_accession').val();
+            additional_accessions_form(accession_list_id, default_number_plants);
+            jQuery('#additional_accessions_footer').show();
+        }
+    });
 
+    function additional_accessions_form (accession_list_id, default_number_plants) {
+        var accession_list = lo.getList(accession_list_id);
         var html = '<table class="table table-bordered" id="additional_accessions_table"><thead><tr><th>Accession Name</th><th>Number of Plants</th></tr></thead><tbody>';
         for(var i=0; i<accession_list.length; i++){
-            html = html + '<tr><td>' + accession_list[i] + '</td><td><input class="form-control" accession_name="' + accession_list[i] + '" name ="accession_plant_number" id="accession_plant_number_'+ i +'" value="" placeholder=""/></td></tr>';
+            html = html + '<tr><td>' + accession_list[i] + '</td><td><input class="form-control" accession_name="' + accession_list[i] + '" name ="accession_plant_number" id="accession_plant_number_'+ i +'" placeholder="'+default_number_plants+'" value="'+default_number_plants+'"/></td></tr>';
         };
         html = html + '</tbody></table>';
 
