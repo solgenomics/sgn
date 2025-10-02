@@ -5,6 +5,9 @@ use Test::More;
 use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
+use CXGN::Image;
+use CXGN::Stock;
+use CXGN::Chado::Stock;
 use JSON;
 use Data::Dumper;
 use File::Basename;
@@ -94,7 +97,7 @@ $mech->get_ok('http://localhost:3010/brapi/v2/observationunits?observationUnitNa
 
 # Delete test image
 my $dbh = SGN::Test::Fixture->new()->dbh();
-my $i = CXGN::Image->new(dbh => $dbh, image_id => $image_id, image_dir => $m->context->config->{'image_dir'});
+my $i = CXGN::Image->new(dbh => $dbh, image_id => $image_id, image_dir => $mech->context->config->{'image_dir'});
 $i->hard_delete();
 
 $f->clean_up_db();
