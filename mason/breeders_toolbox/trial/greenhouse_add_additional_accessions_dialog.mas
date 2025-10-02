@@ -27,13 +27,6 @@ $trial_stock_type
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-sm-11">
-                            <&| /page/explanation.mas, title=>'' &>
-                                <p>
-                                    <br>
-                                    <a id="additional_accessions_list_info">List Information   </a>
-                                    <br>
-                                </p>
-                            </&>
                             <div class="form-horizontal">
                                 <div class="form-group">
                                     <label class="control-label col-sm-4">Accession List:</label>
@@ -55,11 +48,9 @@ $trial_stock_type
                         </div>
                     </div>
                     </br>
-                    <div id="additional_accessions_footer" style="display:none">
-                        <div class="modal-footer">
-                            <button class="btn btn-primary" id="add_additional_accessions_submit" name="add_additional_accessions_submit">Add Accessions</button>
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" id="add_additional_accessions_submit" name="add_additional_accessions_submit">Add Accessions</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -89,39 +80,12 @@ $trial_stock_type
     </div>
 </div>
 
-<div class="modal fade" id="add_additional_accessions_info_dialog" name="add_additioanl_accessions_info_dialog" tabindex="-1" role="dialog" aria-labelledby="addAdditionalAccessionsInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAdditionalAccessionsInfoDialog">List Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <h4>
-                        xxxx:
-                    </h4>
-                    <p>xxxx.</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
 <script>
 
 jQuery(document).ready(function(){
 
     jQuery('#trial_detail_page_add_additional_accessions').click(function(){
         jQuery('#add_additional_accessions_using_list_dialog').modal('show');
-    });
-
-    jQuery('#additional_accessions_list_info').click(function(){
-        jQuery("#add_additional_accessions_info_dialog").modal("show");
     });
 
     const trial_id = "<% $trial_id %>";
@@ -152,7 +116,6 @@ jQuery(document).ready(function(){
                 return;
             } else {
                 additional_accessions_form(accession_list_id, default_number_plants);
-                jQuery('#additional_accessions_footer').show();
             }
         }
     })
@@ -180,6 +143,11 @@ jQuery(document).ready(function(){
         e.preventDefault();
         accession_list = [];
         number_of_plants = [];
+
+        if (!accession_list_id) {
+            alert("Please select a list");
+            return;
+        }
 
         jQuery('input[name="accession_plant_number"]').each(function() {
             value = this.value;
