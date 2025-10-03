@@ -2258,6 +2258,14 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
         name => 'col_number',
         cv_id => $stockprop_cv
     })->cvterm_id();
+    my $rep_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'replicate',
+        cv_id => $stockprop_cv
+    })->cvterm_id();
+    my $block_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'block',
+        cv_id => $stockprop_cv
+    })->cvterm_id();
 
     my @plots = map {$_->[0]} @{$trial->get_plots()};
 
@@ -2271,24 +2279,32 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
         WHERE stockprop.type_id=?), 
     col_number AS 
         (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?) 
-    SELECT plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, plot.accession_id, plot.accession_name 
+        WHERE stockprop.type_id=?),
+    rep AS
+        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
+        WHERE stockprop.type_id=?),
+    block AS 
+        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
+        WHERE stockprop.type_id=?)
+    SELECT plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, rep.value AS replicate, block.value AS block, plot.accession_id, plot.accession_name 
     FROM plot 
     LEFT JOIN row_number ON plot.plot_id=row_number.plot_id 
     LEFT JOIN col_number ON col_number.plot_id=plot.plot_id
+    JOIN rep ON rep.plot_id=plot.plot_id
+    JOIN block ON block.plot_id=plot.plot_id
     WHERE plot.plot_id = ANY(?);"; 
 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
-    $h->execute($plot_of_id, $row_num_id, $col_num_id, \@plots);
+    $h->execute($plot_of_id, $row_num_id, $col_num_id, $rep_id, $block_id, \@plots);
 
-    my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates</th><th>Accession</th></tr></thead><tbody>";
+    my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates</th><th>Rep</th><th>Block</th><th>Accession</th></tr></thead><tbody>";
 
-    while (my ($plot_id, $plot_name, $row, $column, $accession_id, $accession_name) = $h->fetchrow_array()) {
+    while (my ($plot_id, $plot_name, $row, $column, $rep, $block, $accession_id, $accession_name) = $h->fetchrow_array()) {
         my $coordinates = "NA";
         if ($row && $column){
             $coordinates = "($row,$column)";
         }
-        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
+        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td>$rep</td><td>$block</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
     }
 
     $html .= "</tbody></thead></table>";
