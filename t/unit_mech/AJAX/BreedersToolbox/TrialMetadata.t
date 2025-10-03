@@ -15,6 +15,7 @@ use JSON::XS;
 use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Chado::Stock;
 use CXGN::Trial;
+use LWP::UserAgent;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
@@ -28,6 +29,7 @@ $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe",
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $sgn_session_id = $response->{access_token};
 
 my $trial_id = $schema->resultset('Project::Project')->find({name=>'Kasese solgs trial'})->project_id();
 
@@ -222,6 +224,10 @@ is($management_factor_date, '2019-July-01', "check management factors 4");
 
 #$treatment_project->delete_field_layout();
 #$treatment_project->delete_project_entry();
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_plot_accessions', ['old_accession' => 'test_accession3', 'new_accession' => 'test_accession1', 'old_plot_id' => '38866', 'old_plot_name' => 'test_trial210', 'new_plot_name' => "test_trial210_afterchange", 'override' => 'override']);
+$response = decode_json $mech->content;
+is_deeply($response, {success => 1});
 
 $f->clean_up_db();
 
