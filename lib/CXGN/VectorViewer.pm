@@ -174,7 +174,7 @@ sub parse_genbank {
     
     print STDERR "ADDING VECTOR NAME ".$s->id()." and length ".length($s->seq())."\n";
     
-    my $metadata = [ $s->id(), length($s->seq()) ];
+    my $metadata = [ [ $s->id(), length($s->seq()) ] ];
 
     my @restriction_sites = $self->restriction_analysis("popular6bp", $s->seq());
 
