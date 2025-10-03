@@ -5997,21 +5997,21 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
 }
 
 
-sub add_additional_accessions_for_greenhouse : Chained('trial') PathPart('add_additional_accessions_for_greenhouse') : ActionClass('REST'){ }
+sub add_additional_stocks_for_greenhouse : Chained('trial') PathPart('add_additional_stocks_for_greenhouse') : ActionClass('REST'){ }
 
-sub add_additional_accessions_for_greenhouse_POST : Args(0) {
+sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $trial_id = $c->stash->{trial_id};
-    my $accession_list_json = $c->req->param('accession_list');
+    my $stock_list_json = $c->req->param('new_stocks');
     my $number_of_plants_json = $c->req->param('number_of_plants');
-    my $new_accession_list = decode_json $accession_list_json;
+    my $new_stock_list = decode_json $stock_list_json;
     my $number_of_plants_array = decode_json $number_of_plants_json;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
     if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to add additional accessions!'};
+        $c->stash->{rest} = {error=>'You must be logged in to add additional accessions or crosses or families!'};
         return;
     }
 
@@ -6024,40 +6024,40 @@ sub add_additional_accessions_for_greenhouse_POST : Args(0) {
     my $trial = $c->stash->{trial};
     my $trial_name = $trial->get_name;
 
-    my $trial_accessions = $trial->get_accessions();
-    my @duplicated_accessions = ();
-    my %seen_accession_names;
-    foreach my $accession (@$trial_accessions) {
-        my $accession_name = $accession->{'accession_name'};
-        $seen_accession_names{$accession_name} = 1;
+    my $trial_stocks = $trial->get_accessions();
+    my @duplicated_stocks = ();
+    my %seen_stock_names;
+    foreach my $stock (@$trial_stocks) {
+        my $stock_name = $stock->{'accession_name'};
+        $seen_stock_names{$stock_name} = 1;
     }
 
-    foreach my $new_accession (@$new_accession_list) {
-        if ($seen_accession_names{$new_accession}) {
-            push @duplicated_accessions, $new_accession;
+    foreach my $new_stock (@$new_stock_list) {
+        if ($seen_stock_names{$new_stock}) {
+            push @duplicated_stocks, $new_stock;
         }
     }
 
-    if (scalar @duplicated_accessions > 0) {
-        my $duplicated_accessions_string = join(",", @duplicated_accessions);
-        $c->stash->{rest} = {error=>"Error: accession(s) alredy in this trial: $duplicated_accessions_string"};
+    if (scalar @duplicated_stocks > 0) {
+        my $duplicated_stocks_string = join(",", @duplicated_stocks);
+        $c->stash->{rest} = {error=>"Error: accessions or crosses or families alredy in this trial: $duplicated_stocks_string"};
         return;
     }
 
     my %additional_greenhouse_design;
-    for (my $i = 0; $i < scalar(@$new_accession_list); $i++) {
+    for (my $i = 0; $i < scalar(@$new_stock_list); $i++) {
         my %plot_info;
         my @plant_names = ();
         my $plot_number = $next_plot_number + $i;
         $plot_info{'plot_number'} = $plot_number;
-        $plot_info{'stock_name'} = $new_accession_list->[$i];
+        $plot_info{'stock_name'} = $new_stock_list->[$i];
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = 1;
         $plot_info{'seedlot_name'} = undef;
 
-        my $plot_name = $trial_name."_".$new_accession_list->[$i]."_".$plot_number;
-        my $accession_number_of_plants = $number_of_plants_array->[$i];
-            for (my $j = 1; $j <= $accession_number_of_plants; $j++) {
+        my $plot_name = $trial_name."_".$new_stock_list->[$i]."_".$plot_number;
+        my $stock_number_of_plants = $number_of_plants_array->[$i];
+            for (my $j = 1; $j <= $stock_number_of_plants; $j++) {
                 my $plant_name = $plot_name."_plant_$j";
                 push @plant_names, $plant_name;
             }
