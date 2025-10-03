@@ -42,7 +42,13 @@ export function init(vector_id) {
     console.log('cp 2');
     
     //attaching the function to a button
-    d3.select('#update_vector').on("click", function() { updateVector() });
+    d3.select('#update_vector').on("click", function() {
+	var feature_table = getFeatureDataFromDataTable();
+	var re_sites_table = getREsitesDataFromDataTable();
+	var metadata = getMetadataFromDataTable();
+	
+	updateVector(metadata, feature_table, re_sites_table)
+    });
     
 
     jQuery('#zoomIn').on('click', function() {
@@ -50,22 +56,22 @@ export function init(vector_id) {
 	svgWidth *= 1.2;
 	svgHeight *= 1.2;
 	
-	var table_data = getFeatureDataFromDataTable();
+	var feature_table = getFeatureDataFromDataTable();
 	var re_sites_table = getREsitesDataFromDataTable();
 	var metadata = getMetadataFromDataTable();
 	    
-	updateVector();  
+	updateVector(metadata, feature_table, re_sites_table);  
     });
     jQuery('#zoomOut').on('click', function() {
 	radius /= 1.2;
 	svgWidth /= 1.2;
 	svgHeight /= 1.2;
 	
-	var table_data = getFeatureDataFromDataTable();
+	var feature_table = getFeatureDataFromDataTable();
 	var re_sites_table = getREsitesDataFromDataTable();
 	var metadata = getMetadataFromDataTable();
 	
-	updateVector();  
+	updateVector(metadata, feature_table, re_sites_table);  
     });
     
     var columnDefs = [{
@@ -236,8 +242,8 @@ export function init(vector_id) {
 	metadata = r.metadata;
 	var feature_table = r.features;
 	re_sites_table = r.re_sites;
-//	alert("GOING TO UPDATE VECTOR!");
-	updateVector(); //metadata, feature_table, re_sites_table);
+	alert("GOING TO UPDATE VECTOR USING "+JSON.stringify(r));
+	updateVector(metadata, feature_table, re_sites_table);
     },
 	    function(r) {
 		alert('An error occurred! '+JSON.stringify(r));
@@ -270,8 +276,9 @@ export function init(vector_id) {
     });
 
 
+    alert('now activating the delete click');
     jQuery('#vector_table tbody').on('click', '.delete_row_button', function() {
-	alert('hello!');
+	delete_feature_table_row(jQuery(this).data('id'));
 //	var rowId = $(this).data('id'); // Get the ID from the clicked button's data-id attribute
 //	alert('Button clicked for row ID: ' + rowId);
 	// Perform desired actions here, e.g., open a modal, redirect, etc.	
@@ -283,6 +290,8 @@ export function init(vector_id) {
 //	alert('Button clicked for row ID: ' + rowId);
 	// Perform desired actions here, e.g., open a modal, redirect, etc.	
     });
+
+    alert('INIT completed.');
     
 }
 
@@ -309,7 +318,7 @@ export function updateFeatureDataTable(table_data) {
 	    { data: null,
 	      render: function(data, type, row) {
 		  var formatted = '<button class="edit_row_button" data-id="'+row.no+'">Edit</button>&nbsp;<button class="delete_row_button" data-id="'+row.no+'">Delete</button>';
-		  alert('Formatted: '+formatted);
+		  //alert('Formatted: '+formatted);
 		  return formatted;
 	      },
 	      title: "Actions",
@@ -341,10 +350,13 @@ export function delete_feature_table_row(row_no) {
     if (yes) {
 //	alert('Deleting it.');
 	var data = getFeatureDataFromDataTable();
-    
+
+	alert('BEfore delete: '+JSON.stringify(data));
 	data.splice(row_no, 1);
-    
+    	alert('After delete: '+JSON.stringify(data));
+	
 	updateFeatureDataTable(data);
+	alert('Done!');
     }
 }
 
@@ -393,7 +405,7 @@ export function getMetadataFromDataTable() {
 	table_data[i].splice(2, 1); // Remove 1 element starting from columnIndex
     }
 
-//    alert('getMetadataFromDataTable return data: '+JSON.stringify(table_data));
+    alert('getMetadataFromDataTable return data: '+JSON.stringify(table_data));
     return table_data;
 }
 
@@ -411,7 +423,7 @@ export function getSequenceDataFromDataTable() {
 export function updateREsitesDataTable(re_sites) {
 //    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
     for (var i=0; i < re_sites.length; i++) {
-	re_sites[i][2] = '<button>Edit</button>&nbsp;<button onclick="delete_feature_table_row('+i+')">Delete</button>';
+	re_sites[i][2] = '<button>Edit</button>&nbsp;<button "delete_re_table_row('+i+')">Delete</button>';
     }
     
     jQuery('#re_sites_table').DataTable({
@@ -469,7 +481,7 @@ export function updateVector(metadata, feature_table, re_sites_table) {
 //    alert('metadata: '+JSON.stringify(metadata));
 //    alert('feature_table: '+JSON.stringify(feature_table));
 //    alert('re_sites_table: '+JSON.stringify(re_sites_table));
-//    alert('vector length: '+vectorLength);
+
     d3.selectAll("svg").selectAll("*").remove();
     var data = [];
 
@@ -491,7 +503,7 @@ export function draw_vector(vector_div, metadata, radius, re_sites_table, featur
     var vectorLength = parseInt(metadata[0][1]); // in bp
     var vectorName = metadata[0][0];
 
-//    alert('vectorLength='+vectorLength+' vectorName='+vectorName);
+    alert('vectorLength='+vectorLength+' vectorName='+vectorName);
     var data = new Array();
     
     for (var i = 0; i < feature_table.length; i++) {	
