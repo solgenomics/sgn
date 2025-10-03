@@ -1,10 +1,11 @@
 use strict;
+use warnings;
 use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
 use Test::More;
-use Test::WWW::Mechanize;
+use SGN::Test::WWW::Mechanize;
 use CXGN::Image;
 use CXGN::Stock;
 use CXGN::Chado::Stock;
@@ -14,7 +15,7 @@ use File::Basename;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
-my $mech = Test::WWW::Mechanize->new();
+my $mech = SGN::Test::WWW::Mechanize->new();
 my $data;
 my $submit_result;
 
