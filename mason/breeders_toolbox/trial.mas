@@ -178,7 +178,7 @@ $project_id => undef
 
 % my $design_section_buttons = '';
 % if ($design_name eq 'greenhouse'){
-%     $design_section_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatment</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button><button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_additional_stocks">Add Additional Accessions</button>' ;
+%     $design_section_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatment</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button><button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_additional_stocks"></button>' ;
 % } else {
 %    $design_section_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatment</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>';
 % }
@@ -319,6 +319,18 @@ jQuery(document).ready(function () {
         window.open('/tools/fieldmap?trial_id=' + id ,'_blank');
     });
 
+    let button_lable = '';
+    const trial_stock_type = "<%$trial_stock_type%>";
+    if (trial_stock_type == 'cross') {
+        button_label = 'Add Additional Crosses';
+    } else if (trial_stock_type == 'family_name') {
+        button_label = 'Add Additional Families';
+    } else {
+        button_label = 'Add Additional Accessions';
+    }
+
+    document.getElementById('trial_detail_page_add_additional_stocks').innerHTML = button_label;
+    
 });
 
 

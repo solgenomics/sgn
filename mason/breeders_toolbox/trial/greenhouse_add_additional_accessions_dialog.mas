@@ -16,12 +16,29 @@ $trial_stock_type
 }
 </style>
 
+% my $title = '';
+% my $list_label = '';
+% my $table_header = '';
+% if ($trial_stock_type eq 'cross') {
+%    $title = 'Add Additional Crosses in This Greenhouse Trial';
+%    $list_label = 'Cross List:';
+%    $table_header = 'Cross Name';
+% } elsif ($trial_stock_type eq 'family_name') {
+%    $title = 'Add Additional Families in This Greenhouse Trial';
+%    $list_label = 'Family Name List:';
+%    $table_header = 'Family Name';
+% } else {
+%    $title = 'Add Additional Accessions in This Greenhouse Trial';
+%    $list_label = 'Accession List:';
+%    $table_header = 'Accession Name';
+% }
+
 <div class="modal fade" id="add_additional_stocks_using_list_dialog" name="add_additional_stocks_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addAdditionalStocksUsingListDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAdditionalStocksUsingListDialog">Add Additional Accessions to Greenhouse Design</h4>
+                <h4 class="modal-title" id="addAdditionalStocksUsingListDialog"><%$title%></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -29,7 +46,7 @@ $trial_stock_type
                         <div class="col-sm-11">
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="control-label col-sm-4">Accession List:</label>
+                                    <label class="control-label col-sm-4"><%$list_label%></label>
                                     <div class="col-sm-7" >
                                         <div class="input-group">
                                             <select class="form-control" id="additional_stock_list_select"></select>
@@ -49,7 +66,7 @@ $trial_stock_type
                     </div>
                     </br>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" id="add_additional_stocks_submit" name="add_additional_stocks_submit">Add Accessions</button>
+                        <button class="btn btn-primary" id="add_additional_stocks_submit" name="add_additional_stocks_submit">Add</button>
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     </div>
                 </div>
@@ -63,7 +80,7 @@ $trial_stock_type
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAdditionalStocksMessage">Add Additional Accessions to Greenhouse Design</h4>
+                <h4 class="modal-title" id="addAdditionalStocksMessage"><%$title%></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -134,7 +151,7 @@ jQuery(document).ready(function(){
 
     function additional_stocks_form (stock_list_id, default_number_plants) {
         var stock_list = lo.getList(stock_list_id);
-        var html = '<table class="table table-bordered" id="additional_stocks_table"><thead><tr><th>Accession Name</th><th>Number of Plants</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" id="additional_stocks_table"><thead><tr><th><%$table_header%></th><th>Number of Plants</th></tr></thead><tbody>';
         for(var i=0; i<stock_list.length; i++){
             html = html + '<tr><td>' + stock_list[i] + '</td><td><input class="form-control" stock_name="' + stock_list[i] + '" name ="stock_plant_number" id="stock_plant_number_'+ i +'" placeholder="'+default_number_plants+'" value="'+default_number_plants+'"/></td></tr>';
         };
