@@ -28,6 +28,7 @@
                     <div class="col-sm-9" >
                         <select class="form-control" id="upload_images_file_format" name="upload_images_file_format">
                             <option value="images">Images</option>
+                            <option value="images_with_barcodes">Images with Barcodes</option>
                             <option value="images_with_associated_phenotypes">Images with Associated Phenotypes</option>
                         </select>
                     </div>
@@ -88,6 +89,12 @@
                 <li>Select multiple images directly for upload.</li>
                 <li>If the images being uploaded were taken using Fieldbook, they have EXIF data that contains the observationUnitName, traitname, and timestamp. They can be uploaded without needing to change the file name.</li>
                 <li>If images were NOT taken using Fieldbook, image file names should consist of the observationUnitName, traitname, number, and timestamp, all joined by underscores (the default naming system used by Fieldbook App).</li>
+            </ul>
+            <br/>
+            <h4>Images with Barcodes:</h4>
+            <ul>
+                <li>Upload multiple selected images that contain a barcode with a stock ID.</li>
+                <li>There should only be one barcode in each image, and the associated stock must already exist in the database.</li>
             </ul>
             <br/>
             <h4>Images with Associated Phenotypes:</h4>
