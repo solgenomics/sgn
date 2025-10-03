@@ -37,7 +37,7 @@ $trial_stock_type
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="reset" class="close" id="add_additional_stocks_dismiss_button_1" name="add_additional_stocks_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addAdditionalStocksUsingListDialog"><%$title%></h4>
             </div>
             <div class="modal-body">
@@ -67,7 +67,7 @@ $trial_stock_type
                     </br>
                     <div class="modal-footer">
                         <button class="btn btn-primary" id="add_additional_stocks_submit" name="add_additional_stocks_submit">Add</button>
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button id="add_additional_stocks_dismiss_button_2" name="add_additional_stocks_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -86,7 +86,7 @@ $trial_stock_type
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The accessions were added successfully.
+                        The additional stocks were added successfully.
                     </p>
                 </div>
             </div>
@@ -206,10 +206,16 @@ jQuery(document).ready(function(){
 
     });
 
+    jQuery("[name='add_additional_stocks_dismiss_button']").click(function() {
+        jQuery('#add_additional_stocks_using_list_dialog').modal('hide');
+        jQuery('#additional_stock_list_select').val('');
+        jQuery('#default_number_plants_per_stock').val('1');
+        document.getElementById('additional_stocks_form_div').innerHTML = "";
+    });
+
     jQuery("#add_additional_stocks_close_button").click(function(){
         location.reload();
     });
-
 
 });
 
