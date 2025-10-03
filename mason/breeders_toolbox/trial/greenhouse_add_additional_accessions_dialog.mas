@@ -93,12 +93,16 @@ jQuery(document).ready(function(){
 
     const trial_stock_type = "<% $trial_stock_type %>";
     let list_type = '';
+    let validate_type = '';
     if (trial_stock_type == 'cross') {
         list_type = 'crosses';
+        validate_type = 'crosses';
     } else if (trial_stock_type == 'family_name') {
         list_type = 'family_names';
+        validate_type = 'family_names'
     } else {
         list_type = 'accessions';
+        validate_type = 'uniquenames';
     }
 
     jQuery('#additional_stock_list_select').html(lo.listSelect('additional_stock_list_select', [list_type], 'Select a list', undefined, undefined));
@@ -109,10 +113,10 @@ jQuery(document).ready(function(){
         default_number_plants = jQuery('#default_number_plants_per_stock').val();
         stock_list_id = jQuery('#additional_stock_list_select').val();
         if (stock_list_id){
-            let accession_validation = 1;
-            accession_validation = lo.legacy_validate(stock_list_id, 'uniquenames', true);
-            if (accession_validation != 1) {
-                alert("The accession list did not pass validation. Names in the list must be uniquenames in the database");
+            let stock_validation = 1;
+            stock_validation = lo.legacy_validate(stock_list_id, validate_type, true);
+            if (stock_validation != 1) {
+                alert("The list did not pass validation. Names in the list must be in the database");
                 return;
             } else {
                 additional_stocks_form(stock_list_id, default_number_plants);
