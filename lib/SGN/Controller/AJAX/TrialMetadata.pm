@@ -38,6 +38,7 @@ use CXGN::BreedersToolbox::SoilData;
 use CXGN::Genotype::GenotypingProject;
 use List::Util qw(max);
 use CXGN::Trial::TrialLayout;
+use CXGN::BreedersToolbox::Projects;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -6010,8 +6011,21 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
 
-    if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to add additional accessions or crosses or families!'};
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+
+    my $breeding_program = $program_object->get_breeding_programs_by_trial($trial_id);
+    my $program_name = $breeding_program->[0]->[1];
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add additional stocks in the greenhouse trial." };
         return;
     }
 
