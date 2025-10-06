@@ -218,7 +218,7 @@ export function init(vector_id) {
     });
 
     jQuery('#open_add_feature_dialog_button').click( function() {
-	jQuery('#feature_table_row_id').val("");
+	jQuery('#feature_table_row_id').val(undefined);
 	jQuery('#feature_name').val("");
 	jQuery('#feature_start_coord').val("");
 	jQuery('#feature_end_coord').val("");
@@ -296,7 +296,7 @@ export function init(vector_id) {
 //	alert('clicked add restriction site!');
 
 	var feature_name = jQuery('#re_site_name').val();
-	var start_coord = jQuery('#re_site_cut_coord').val();
+	var start_coord = parseInt(jQuery('#re_site_cut_coord').val());
 
 	var row = [ feature_name, start_coord ];
 
@@ -307,7 +307,7 @@ export function init(vector_id) {
     jQuery('#add_re_site_button').click( function() {
 	jQuery('#re_site_name').val("");
 	jQuery('#re_site_cut_coord').val("");
-	jQuery('#re_site_table_row_id').val("");
+	jQuery('#re_site_table_row_id').val(undefined);
 
 	jQuery('#add_re_dialog').modal('show');
 
@@ -425,8 +425,8 @@ export function re_site_datatable_add_row(row){
 
     var row_id = jQuery('#re_site_table_row_id').val();
 
-    if (row_id === undefined) { 
-//    alert('RE Sites data now: '+JSON.stringify(data));
+    if (row_id === undefined || row_id === '') { 
+	alert('RE Sites data now: '+JSON.stringify(data) +' adding row '+JSON.stringify(row));
 	data.push(row);
     }
     else {
