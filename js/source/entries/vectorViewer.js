@@ -45,12 +45,12 @@ export function init(vector_id) {
     d3.select('#update_vector').on("click", function() {
 	var feature_table = getFeatureDataFromDataTable();
 	var re_sites_table = getREsitesDataFromDataTable();
+//	alert('RE_SITES_TABLE = '+JSON.stringify(re_sites_table));
 	var metadata = getMetadataFromDataTable();
 	
 	updateVector(metadata, feature_table, re_sites_table)
     });
     
-
     jQuery('#zoomIn').on('click', function() {
 	radius *= 1.2;
 	svgWidth *= 1.2;
@@ -62,6 +62,7 @@ export function init(vector_id) {
 	    
 	updateVector(metadata, feature_table, re_sites_table);  
     });
+    
     jQuery('#zoomOut').on('click', function() {
 	radius /= 1.2;
 	svgWidth /= 1.2;
@@ -161,7 +162,14 @@ export function init(vector_id) {
 //     });
     
     //alert('done');
-      
+
+//    jQuery('#add_feature_dialog').dialog({
+//	autoOpen: false,
+	
+	
+  //  });
+	
+    
     //If this isn't here, the dialog appears when we dont want it to
     jQuery("#saveDialog").dialog({
 	autoOpen: false
@@ -182,7 +190,7 @@ export function init(vector_id) {
 	
 	//	var id = jQuery("#saveInput").val();
 
-	alert(JSON.stringify(metadata) + " AND " + JSON.stringify(table_data) + " AND "+ JSON.stringify(re_sites_table) + " AND "+ sequence);
+//	alert(JSON.stringify(metadata) + " AND " + JSON.stringify(table_data) + " AND "+ JSON.stringify(re_sites_table) + " AND "+ sequence);
 	
 	var data = { 
 	    'metadata' : metadata, 
@@ -191,7 +199,7 @@ export function init(vector_id) {
 	    'sequence' : ""
 	};
 
-	alert("NOW STRINGIFIED: "+ JSON.stringify(data) );
+//	alert("NOW STRINGIFIED: "+ JSON.stringify(data) );
 	
 	var string_data = JSON.stringify(data);
 	console.log(vector_id);
@@ -208,6 +216,21 @@ export function init(vector_id) {
 	);
 	
     });
+
+    jQuery('#open_add_feature_dialog_button').click( function() {
+	jQuery('#feature_table_row_id').val("");
+	jQuery('#feature_name').val("");
+	jQuery('#feature_start_coord').val("");
+	jQuery('#feature_end_coord').val("");
+	jQuery('#feature_color_select').val("");
+	jQuery('#feature_orientation_select').val("");
+
+	jQuery('#manage_feature_dialog_title').html('Add feature');
+
+
+	jQuery('#add_feature_dialog').modal('show');
+	jQuery('#feature_name').focus();
+    });
     
     //If this isn't here, the dialog appears when we dont want it to
     jQuery("#loadDialog").dialog({
@@ -219,20 +242,20 @@ export function init(vector_id) {
 	jQuery('#loadDialog').dialog('open');
     });
     
-    jQuery("#dialogLoadButton").click(function () {
-	console.log('HELLO!');
+//    jQuery("#dialogLoadButton").click(function () {
+//	console.log('HELLO!');
 	
-	var id = jQuery("#loadInput").val();
+//	var id = jQuery("#loadInput").val();
 	
-	console.log(id);
-	retrieveVector(id);
-    });
+//	console.log(id);
+//	retrieveVector(id);
+//    });
 
-    alert('Retrieving vector '+vector_id);
+//    alert('Retrieving vector '+vector_id);
     jQuery.ajax({
 	url: '/vectorviewer/' + vector_id + '/retrieve',
     }).then(function(r) {
-	alert("RETRIEVED DATA: "+JSON.stringify(r));
+//	alert("RETRIEVED DATA: "+JSON.stringify(r));
 	updateFeatureDataTable(r.features);
 	updateREsitesDataTable(r.re_sites);
 	updateMetadataDataTable(r.metadata);
@@ -241,17 +264,21 @@ export function init(vector_id) {
 //	alert("NOW HERE!");
 	metadata = r.metadata;
 	var feature_table = r.features;
-	re_sites_table = r.re_sites;
-	alert("GOING TO UPDATE VECTOR USING "+JSON.stringify(r));
+	//re_sites_table = r.re_sites;
+	//	alert("GOING TO UPDATE VECTOR USING "+JSON.stringify(r));
+
+
+	var re_sites_table = getREsitesDataFromDataTable();
+	
 	updateVector(metadata, feature_table, re_sites_table);
     },
 	    function(r) {
 		alert('An error occurred! '+JSON.stringify(r));
 	    } );
     
-    jQuery('#add_feature_data_button').click( function() {
-	//alert('clicked add feature data!');
-
+    jQuery('#add_feature_data_submit_button').click( function() {
+//	alert('clicked add feature data!');
+	
 	var feature_name = jQuery('#feature_name').val();
 	var start_coord = jQuery('#feature_start_coord').val();
 	var end_coord = jQuery('#feature_end_coord').val();
@@ -260,23 +287,34 @@ export function init(vector_id) {
 	var row = [ feature_name, start_coord, end_coord, feature_color, orientation ];
 
 	
-	//alert(JSON.stringify(row));
+//	alert(JSON.stringify(row));
 	featureDataTableAddRow(row);
+	jQuery('#add_feature_dialog').modal("hide");
     });
 
-    jQuery('#add_restriction_site_button').click( function() {
+    jQuery('#add_restriction_site_submit_button').click( function() {
 //	alert('clicked add restriction site!');
 
-	var feature_name = jQuery('#restriction_site_name').val();
-	var start_coord = jQuery('#restriction_site_coord').val();
+	var feature_name = jQuery('#re_site_name').val();
+	var start_coord = jQuery('#re_site_cut_coord').val();
 
 	var row = [ feature_name, start_coord ];
 
+//	alert('ADDING ROW '+JSON.stringify(row));
 	re_site_datatable_add_row(row);
     });
 
+    jQuery('#add_re_site_button').click( function() {
+	jQuery('#re_site_name').val("");
+	jQuery('#re_site_cut_coord').val("");
+	jQuery('#re_site_table_row_id').val("");
 
-    alert('now activating the delete click');
+	jQuery('#add_re_dialog').modal('show');
+
+	jQuery('#re_site_name').focus();
+    });
+
+//    alert('now activating the delete click');
     jQuery('#vector_table tbody').on('click', '.delete_row_button', function() {
 	delete_feature_table_row(jQuery(this).data('id'));
 //	var rowId = $(this).data('id'); // Get the ID from the clicked button's data-id attribute
@@ -285,13 +323,52 @@ export function init(vector_id) {
     });
 
     jQuery('#vector_table tbody').on('click', '.edit_row_button', function() {
-	alert('hello edit!');
-//	var rowId = $(this).data('id'); // Get the ID from the clicked button's data-id attribute
-//	alert('Button clicked for row ID: ' + rowId);
-	// Perform desired actions here, e.g., open a modal, redirect, etc.	
+	var rowId = jQuery(this).data('id'); // Get the ID from the clicked button's data-id attribute
+//	alert('Opening dialog edit for id '+rowId);
+
+	var data = getFeatureDataFromDataTable();
+
+	jQuery('#feature_table_row_id').val(rowId);
+	jQuery('#feature_name').val(data[rowId][0]);
+	jQuery('#feature_start_coord').val(data[rowId][1]);
+	jQuery('#feature_end_coord').val(data[rowId][2]);
+	jQuery('#feature_color_select').val(data[rowId][3]);
+	jQuery('#feature_orientation_select').val(data[rowId][4]);
+
+	jQuery('#manage_feature_dialog_title').html('Edit feature');
+
+	jQuery('#add_feature_dialog').modal("show");
+
+	jQuery('#feature_name').focus();
+	
     });
 
-    alert('INIT completed.');
+    jQuery('#re_sites_table tbody').on('click', '.delete_re_row_button', function() {
+
+	var data = jQuery(this).data();
+//	alert('RETRIEVED: '+JSON.stringify(data));
+	var yes = confirm('Are you sure that you would like to delete this row with id ? ');
+	if (yes) { 
+	    delete_re_table_row(jQuery(this).data('id'));
+	}
+	jQuery('#add_feature_dialog').modal("hide");
+    });
+
+    jQuery('#re_sites_table tbody').on('click', '.edit_re_row_button', function() {
+	var rowId = jQuery(this).data('id');
+	var data = getREsitesDataFromDataTable();
+	jQuery('#re_site_name').val(data[rowId][0]);
+	jQuery('#re_site_cut_coord').val(data[rowId][1]);
+	jQuery('#re_site_table_row_id').val(rowId);
+					 
+	jQuery('#add_re_dialog').modal("show");
+
+	jQuery('#re_site_name').focus();
+    });
+
+
+
+//    alert('INIT completed.');
     
 }
 
@@ -331,7 +408,13 @@ function featureDataTableAddRow(row) {
 
     var data = getFeatureDataFromDataTable();
 
-    data.push(row);
+    var row_id = jQuery('#feature_table_row_id').val(); 
+    if (row_id === undefined) {
+	data.push(row);
+    }
+    else {
+	data[row_id] = row;
+    }
 
     updateFeatureDataTable(data);
 }
@@ -339,9 +422,18 @@ function featureDataTableAddRow(row) {
 export function re_site_datatable_add_row(row){
 
     var data = getREsitesDataFromDataTable();
+
+    var row_id = jQuery('#re_site_table_row_id').val();
+
+    if (row_id === undefined) { 
 //    alert('RE Sites data now: '+JSON.stringify(data));
-    data.push(row);
+	data.push(row);
+    }
+    else {
+	data[row_id] = row;
+    }
     updateREsitesDataTable(data);
+    jQuery('#add_re_dialog').modal("hide");
 }
 
 export function delete_feature_table_row(row_no) {
@@ -351,12 +443,21 @@ export function delete_feature_table_row(row_no) {
 //	alert('Deleting it.');
 	var data = getFeatureDataFromDataTable();
 
-	alert('BEfore delete: '+JSON.stringify(data));
+//	alert('BEfore delete: '+JSON.stringify(data));
 	data.splice(row_no, 1);
-    	alert('After delete: '+JSON.stringify(data));
+//    	alert('After delete: '+JSON.stringify(data));
 	
 	updateFeatureDataTable(data);
-	alert('Done!');
+//	alert('Done!');
+    }
+}
+
+export function delete_re_table_row(row_no) {
+    var yes = confirm('Delete row '+row_no+'?');
+    if (yes) { 
+	var data = getREsitesDataFromDataTable();
+	data.splice(row_no, 1);
+	updateREsitesDataTable(data);
     }
 }
 
@@ -369,29 +470,25 @@ export function getFeatureDataFromDataTable() {
     for (var i=0; i<table_hash_rows.length; i++) {
 	table_data.push( [ table_hash_rows[i].feature, table_hash_rows[i].start, table_hash_rows[i].end, table_hash_rows[i].color, table_hash_rows[i].orientation ]);
     }
-//    delete(table_data.context);
-//    delete(table_data.selector);
-//    delete(table_data.ajax);
-//    delete(table_data.no);
-
-//    alert('TABLE DATA = '+JSON.stringify(table_data));
-
     return table_data;
 }
 
 export function getREsitesDataFromDataTable() {
-  //  alert('getREsitesDataFromDataTable');
+ 
     var table_data = jQuery('#re_sites_table').DataTable().rows().data().toArray();
-    delete(table_data.context);
-    delete(table_data.selector);
-    delete(table_data.ajax);
-//    alert('BEFORE: '+JSON.stringify(data));
-    //remove actions column
-    for (let i = 0; i < table_data.length; i++) {
-	table_data[i].splice(2, 1); // Remove 1 element starting from columnIndex
+    var table_data_array = structuredClone(table_data);
+//    alert('getREsitesDataFromDataTable '+JSON.stringify(table_data_array));
+    delete(table_data_array.context);
+    delete(table_data_array.selector);
+    delete(table_data_array.ajax);
+//    alert('BEFORE: '+JSON.stringify(table_data_array));
+    //remove actions and index columns
+    for (let i = 0; i < table_data_array.length; i++) {
+	table_data_array[i].splice(3, 1); // Remove 1 element starting from columnIndex
+	table_data_array[i].shift(); // remove index column
     }
-//    alert('AFTER: '+JSON.stringify(data));
-    return table_data;
+//    alert('AFTER: '+JSON.stringify(table_data_array));
+    return table_data_array;
 }
 
 export function getMetadataFromDataTable() {
@@ -405,7 +502,7 @@ export function getMetadataFromDataTable() {
 	table_data[i].splice(2, 1); // Remove 1 element starting from columnIndex
     }
 
-    alert('getMetadataFromDataTable return data: '+JSON.stringify(table_data));
+//    alert('getMetadataFromDataTable return data: '+JSON.stringify(table_data));
     return table_data;
 }
 
@@ -415,7 +512,7 @@ export function getSequenceDataFromDataTable() {
     delete(table_data.selector);
     delete(table_data.ajax);
 
-    alert('getSequenceDataFromDataTable '+JSON.stringify(table_data));
+//    alert('getSequenceDataFromDataTable '+JSON.stringify(table_data));
     
 
 }
@@ -423,9 +520,11 @@ export function getSequenceDataFromDataTable() {
 export function updateREsitesDataTable(re_sites) {
 //    alert('RESITES FOR TABLE: '+JSON.stringify(re_sites));
     for (var i=0; i < re_sites.length; i++) {
-	re_sites[i][2] = '<button>Edit</button>&nbsp;<button "delete_re_table_row('+i+')">Delete</button>';
+	re_sites[i][2] = '<button class="edit_re_row_button" data-id="'+i+'">Edit</button>&nbsp;<button class="delete_re_row_button" data-id="'+i+'">Delete</button>';
+	//alert(JSON.stringify(re_sites[i]));
+	re_sites[i].unshift(i);
     }
-    
+//    alert('RESITES FORMATTED: '+JSON.stringify(re_sites));
     jQuery('#re_sites_table').DataTable({
 	destroy: true,
 	data: re_sites
@@ -437,7 +536,7 @@ export function updateMetadataDataTable(metadata) {
     var row = new Array();
     row.push(metadata[0][0]);
     row.push(metadata[0][1]);
-    row.push('<button>Edit</button>');
+//    row.push('<button>Edit</button>');
 
     var data = new Array();
     data.push(row);
@@ -503,7 +602,7 @@ export function draw_vector(vector_div, metadata, radius, re_sites_table, featur
     var vectorLength = parseInt(metadata[0][1]); // in bp
     var vectorName = metadata[0][0];
 
-    alert('vectorLength='+vectorLength+' vectorName='+vectorName);
+//    alert('vectorLength='+vectorLength+' vectorName='+vectorName);
     var data = new Array();
     
     for (var i = 0; i < feature_table.length; i++) {	

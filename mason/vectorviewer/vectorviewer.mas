@@ -97,7 +97,7 @@ $edit_privs
 <thead><tr><td>No.</td><td>Feature</td><td>Start</td><td>End</td><td>Color</td><td>Orientation</td><td>Actions</td></tr></thead><tbody></tbody></table>
 
 <br />
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_feature_dialog">Add Feature</button>
+<button type="button" id="open_add_feature_dialog_button" class="btn btn-primary" data-toggle="modal" >Add new feature</button> <!-- data-target="#add_feature_dialog">Add Feature</button -->
 <br />
 <br />
 <br />
@@ -109,19 +109,19 @@ $edit_privs
 
 
 <table id="re_sites_table" width="100%" class="display table table-hover table-striped">
-<thead><tr><td>RE Site</td><td>Cut Coord</td><td>Actions</td></tr></thead></table>
+<thead><tr><td>#</td><td>RE Site</td><td>Cut Coord</td><td>Actions</td></tr></thead><tbody></tbody></table>
 
 <br /><br />
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_re_dialog">Add restriction enzyme site</button>
+<button type="button" id="add_re_site_button" class="btn btn-primary" data-toggle="modal" >Add restriction enzyme site</button>
 </td></tr></table>
 
 <table id="metadata_table" width="40%" class="display table table-hover table-striped">
-<thead><tr><td>Vector Name</td><td>Vector length</td><td>Actions</td></tr></thead>
+<thead><tr><td>Vector Name</td><td>Vector length</td></tr></thead><tbody></tbody>
 </table>
 
-<table id="sequence_table" width="80%" class="display table table-hover table-striped">
+<!-- table id="sequence_table" width="80%" class="display table table-hover table-striped">
 <thead><td>sequence</td></thead><tbody></tbody>
-</table>
+</table -->
 
 <br />
 <br />
@@ -150,7 +150,7 @@ To save edits, please click on the Save button.
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Add a feature</h5>
+        <h5 class="modal-title"><span id="manage_feature_dialog_title">Add a feature</span></h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -165,6 +165,7 @@ To save edits, please click on the Save button.
 	    <select id="feature_color_select" class="form-control">
               <option>red</option>
 	      <option>blue</option>
+	      <option>lightblue</option>
 	      <option>green</option>
 	      <option>grey</option>
 	    </select>
@@ -177,11 +178,12 @@ To save edits, please click on the Save button.
 	  </td>
 	</tr>
 	</table>
-	
+	<input type="hidden" id="feature_table_row_id" value="" /></input>
+
       </div>
       <div class="modal-footer">
-        <button id="add_feature_data_button" type="button" class="btn btn-primary">Add Feature</button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>	
+        <button id="add_feature_data_submit_button" type="button" class="btn btn-primary">Store</button>
       </div>
     </div>
   </div>
@@ -191,7 +193,7 @@ To save edits, please click on the Save button.
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Add a restriction enzyme site</h5>
+        <h5 class="modal-title">Add/Edit a restriction enzyme site</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -203,11 +205,11 @@ To save edits, please click on the Save button.
 	    <td width="200" ><input type="text" id="re_site_cut_coord" class="form-control" /></td>
 	  </tr>
 	</table>
-	
+	<input type="hidden" id="re_site_table_row_id" />
       </div>
       <div class="modal-footer">
-        <button id="add_restriction_site_button" type="button" class="btn btn-primary">Add</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="add_restriction_site_submit_button" type="button" class="btn btn-primary">Store</button>	
       </div>
     </div>
   </div>
