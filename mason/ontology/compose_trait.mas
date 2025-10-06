@@ -231,6 +231,16 @@ addToListMenu('existing_traits_to_list', 'existing_traits', {
   selectText: true,
   listType: 'traits'
 });
+jQuery(document).on('click', '#existing_traits_add_to_new_list, #new_trait_names_add_to_new_list', function () {
+  setTimeout(function () {
+    refreshListSelect('existing_traits_list_select', 'traits');
+  }, 500);
+});
+
+function updateComposeButtonState() {
+    const newTraitOptions = jQuery("#new_traits option");
+    jQuery("#compose_trait").prop("disabled", newTraitOptions.length === 0);
+}
 
 jQuery(document).on('change','#object_root_select, #attribute_root_select, #method_root_select, #unit_root_select, #trait_root_select, #meta_root_select', function() { // retrieve multi select once specific onto is picked
 var cv_id = jQuery(this).val();
@@ -274,25 +284,20 @@ jQuery('#existing_traits').dblclick(function() { // open trait detail page in ne
     window.open("../../cvterm/"+this.value+"/view");
 });
 
-jQuery("#new_traits").change(function() {
-var selected = jQuery("#new_traits").val();
-if (selected && selected.length > 0) {
-    jQuery('#compose_trait').prop('disabled', false);
-}
-else {
-    jQuery('#compose_trait').prop('disabled', true);
-}
-});
+jQuery("#new_traits").on("change", updateComposeButtonState);
+
 
 jQuery('#compose_trait').on('click', function () {
 
     //console.log("just disabled ui");
-    var new_traits = jQuery("#new_traits").val();
-    var new_trait_names = {};
-    jQuery("#new_traits option:selected").each(function () {
-        if (jQuery(this).length) {
-            new_trait_names[jQuery.trim(jQuery(this).text())] = jQuery(this).val();
-        }
+    const selectedOptions = jQuery("#new_traits option:selected");
+    if (selectedOptions.length === 0) {
+        alert("Please select at least one trait to compose.");
+        return;
+    }
+    const new_trait_names = {};
+    selectedOptions.each(function () {
+        new_trait_names[jQuery.trim(jQuery(this).text())] = jQuery(this).val();
     });
     //console.log(new_trait_names);
 
@@ -324,8 +329,9 @@ jQuery('#compose_trait').on('click', function () {
             addToListMenu('results_to_list_menu', 'new_trait_names', {
                 listType: 'traits'
             });
-
             jQuery('#traits_saved_dialog').modal("show");
+            jQuery("#new_traits").empty();
+            updateComposeButtonState();
             refresh_matviews('fullview');
 
         },
@@ -426,6 +432,7 @@ jQuery(document).ready(function() {
     var allowed_combo = allowed_combinations.split(',');
     var allowed_combo_first = allowed_combo[0].split('|');
     create_multi_selects(allowed_combo_first[1].split('+'));
+    updateComposeButtonState();
 });
 
 jQuery(document).ready(function () {

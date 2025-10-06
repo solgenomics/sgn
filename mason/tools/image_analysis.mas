@@ -44,12 +44,6 @@ tr.shown td.details-control {
 
 <div class="well well-sm">
     <center>
-    <h4>The Necrosis Image Analysis is explained in the paper here: <a href="https://csce.ucmss.com/cr/books/2018/LFS/CSREA2018/IPC3638.pdf">Necrosis Image Analysis</a>.</h4>
-    </center>
-</div>
-
-<div class="well well-sm">
-    <center>
     <button class="btn btn-primary" id="upload_images_link">Upload New Images</button>
     </center>
 </div>

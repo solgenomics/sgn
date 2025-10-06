@@ -592,7 +592,7 @@ sub _retrieve_stock_owner {
     my $owner_rs = $self->phenome_schema->resultset("StockOwner")->search({
         stock_id => $self->stock_id,
     });
-    my @owners;
+    my @owners = ();
     while (my $r = $owner_rs->next){
         push @owners, $r->sp_person_id;
     }
@@ -656,12 +656,13 @@ sub store {
         }
     }
 
-    ###Check first if the name  exists in te database
-    if ($self->check_name_exists){
-	print STDERR "Checking stock uniquename \n";
-        $exists= $self->exists_in_database();
-    }
-    print STDERR "Stock exists check: $exists\n";
+    # ###Check first if the name  exists in te database
+    # $exists = 0;
+    # if ($self->check_name_exists){
+    # 	print STDERR "Checking stock uniquename \n";
+    #     $exists= $self->exists_in_database();
+    # }
+    # print STDERR "Stock exists check: $exists\n";
     ####
     if (!$stock) { #Trying to create a new stock
         print STDERR "Storing Stock ".localtime."\n";
@@ -753,7 +754,9 @@ sub exists_in_database {
     # loading new stock - $stock_id is undef
     #
     if (defined($s) && !$stock ) {
-        return "Uniquename already exists in database with stock_id: ".$s->stock_id;
+
+	return "Uniquename already exists in database with stock_id: ".$s->stock_id;
+    #    return $s->stock_id;
     }
 
     # updating an existing stock
@@ -919,7 +922,7 @@ sub set_species {
 =head2 function get_image_ids()
 
   Synopsis:     my @images = $self->get_image_ids()
-  Arguments:    none
+  Arguments:    include_obselete
   Returns:      a list of image ids
   Side effects:	none
   Description:	a method for fetching all images associated with a stock
@@ -927,9 +930,15 @@ sub set_species {
 =cut
 
 sub get_image_ids {
-    my $self = shift;
+    my ($self, $include_obsolete) = @_;
     my @ids;
-    my $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
+
+    my $q;
+    if ($include_obsolete) {
+        $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
+    } else {
+        $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) JOIN metadata.md_image USING(image_id) WHERE stock_id = ? AND obsolete = 'f' ORDER BY stock_image.display_order ASC";
+    }
     my $h = $self->schema->storage->dbh()->prepare($q);
     $h->execute($self->stock_id);
     while (my ($image_id, $stock_type, $display_order) = $h->fetchrow_array()){
@@ -1040,7 +1049,42 @@ sub associate_owner {
     return $id;
 }
 
-=head2 associate_owner()
+=head2 remove_owner() 
+
+  Usage: $self->remove_owner($owner_sp_person_id)
+  Desc: removes entry in phenome.stock_owner
+  Ret:  an error message if unsuccessful, false otherwise
+  Args: $the owner id of this stock
+
+=cut
+
+sub remove_owner {
+    my $self = shift;
+    my $owner_id = shift;
+
+    my $q = "delete from phenome.stock_owner where stock_id=? and owner_id=?";
+
+    if (! $self->stock_id()) {
+	print STDERR "Cannot remove owner from stock that has no stock_id\n";
+	return;
+    }
+    
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+
+    eval { 
+	$h->execute($self->stock_id, $owner_id);
+    };
+
+    if ($@) {
+	return $@;
+    }
+    else {
+	return 0;
+    }
+}
+
+
+=head2 associate_uploaded_file()
 
  Usage: $self->associate_uploaded_file($owner_sp_person_id, $archived_filename_with_path, $md5checksum, $stock_id )
  Desc:  Associate files with metadata and stock
@@ -2186,7 +2230,7 @@ COUNTS
 	return;
 }
 
-=head2 delete
+=head2 hard_delete()
 
  Usage:
  Desc:
@@ -2200,6 +2244,7 @@ COUNTS
 sub hard_delete {
     my $self = shift;
 
+    # the linking tables should have cascading deletes now
     # delete sgn.stock_owner entry
     #
     my $q = "DELETE FROM phenome.stock_owner WHERE stock_id=?";
@@ -2214,12 +2259,12 @@ sub hard_delete {
 
     # delete stock entry
     #
-    $q = "DELETE FROM stock WHERE stock_id=?";
-    $h = $self->schema()->storage()->dbh()->prepare($q);
+    my $q = "DELETE FROM stock WHERE stock_id=?";
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
 }
 
-###__PACKAGE__->meta->make_immutable;
+__PACKAGE__->meta->make_immutable;
 
 ##########
 1;########

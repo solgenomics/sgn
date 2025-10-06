@@ -2262,15 +2262,15 @@ sub delete_field_layout {
     my $cxgn_project_type = $self->get_cxgn_project_type()->{cxgn_project_type};
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
-        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+        return 'This field trial has been linked to genotyping trials already, and cannot be deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
-        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+        return 'This genotyping trial has been linked to field trials already, and cannot be deleted.';
     }
 
     if ($cxgn_project_type ne 'analysis_project') {
         if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
-            return 'This field trial has been linked to crossing experiments already, and cannot be easily deleted.';
+            return 'This field trial has been linked to crossing experiments already, and cannot be deleted.';
         }
     }
 
@@ -2404,15 +2404,15 @@ sub delete_metadata {
     my $cxgn_project_type = $self->get_cxgn_project_type()->{cxgn_project_type};
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
-        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+        return 'This field trial has been linked to genotyping trials already, and cannot be deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
-        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+        return 'This genotyping trial has been linked to field trials already, and cannot be deleted.';
     }
 
     if ($cxgn_project_type ne 'analysis_project') {
         if (scalar(@{$self->get_crossing_experiments_from_field_trial}) >0) {
-            return 'This field trial has been linked to crossing experiments already, and cannot be easily deleted.';
+            return 'This field trial has been linked to crossing experiments already, and cannot be deleted.';
         }
     }
 
@@ -2592,10 +2592,10 @@ sub delete_project_entry {
     }
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
-        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+        return 'This field trial has been linked to genotyping trials already, and cannot be deleted.';
     }
     if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
-        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+        return 'This genotyping trial has been linked to field trials already, and cannot be deleted.';
     }
 
     my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {
@@ -2793,7 +2793,7 @@ sub obsolete_additional_uploaded_file {
 
 
 
-=head2 function get_phenotypes_for_trait($trait_id)
+=head2 function get_phenotypes_for_trait($trait_id, $stock_type, $start_date, $end_date)
 
  Usage:
  Desc:         returns the measurements for the given trait in this trial as an array of values, e.g. [2.1, 2, 50]
@@ -2810,6 +2810,14 @@ sub get_phenotypes_for_trait {
     my $stock_type = shift;
     my @data;
     my $dbh = $self->bcs_schema->storage()->dbh();
+    my $start_date = shift;
+    my $end_date = shift;
+    my $date_sql = '';
+    my @date_placeholders;
+    if ($start_date && $end_date) {
+        $date_sql = " AND (collect_date > ? and collect_date < ?)";
+        @date_placeholders = ($start_date, $end_date);
+    }
 	#my $schema = $self->bcs_schema();
 
 	my $h;
@@ -2820,11 +2828,11 @@ sub get_phenotypes_for_trait {
 		$join_string = 'JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id)';
 		$where_string = "stock.type_id=$stock_type_id and";
 	}
-	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? ORDER BY phenotype_id ASC;";
+	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? $date_sql ORDER BY phenotype_id ASC;";
 	$h = $dbh->prepare($q);
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
+    $h->execute($self->get_trial_id(), $trait_id, $numeric_regex, @date_placeholders );
     while (my ($value) = $h->fetchrow_array()) {
 	   push @data, $value + 0;
     }
@@ -2965,6 +2973,7 @@ sub get_traits_assayed {
 
     my $q;
     if ($stock_type) {
+        # print STDERR " the stock type here: = $stock_type\n";
         my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
         $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
             FROM cvterm

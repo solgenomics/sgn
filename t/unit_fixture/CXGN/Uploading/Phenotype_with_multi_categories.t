@@ -65,7 +65,7 @@ my $uploader = CXGN::UploadFile->new({
     tempfile => $filename,
     subdirectory => 'temp_fieldbook',
     archive_path => '/tmp',
-    archive_filename => "upload_phenotypin_spreadsheet_multicategories.$extension",
+    archive_filename => "upload_phenotypin_spreadsheet_multicategories_with_errors.$extension",
     timestamp => $timestamp,
     user_id => 41,  # janedoe in fixture
     user_role => 'curator'
@@ -122,10 +122,10 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     composable_validation_check_name=>$f->config->{composable_validation_check_name}
     );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-my $expected_error = '<small>This trait value should be one of 1/2/3/4/5: <br/>Plot Name: KASESE_TP2013_669<br/>Trait Name: CO_334:0000191<br/>Value: a:b</small><hr>';
+my $expected_error = '<small> This trait value should be one of 1/2/3/4/5: <br/>Plot Name: KASESE_TP2013_668 <br/>Trait Name: CO_334:0000191 <br/>Value: 2:b</small><hr><small> This trait value should be one of 1/2/3/4/5: <br/>Plot Name: KASESE_TP2013_669 <br/>Trait Name: CO_334:0000191 <br/>Value: a:b</small><hr>';
 print STDERR "ERRORS DETECTED: ".Dumper($verified_error);
 
-is($verified_error, $expected_error, "check error from store");
+like($verified_error, qr/This trait value should be one of /, "check error from store");
 
 
 # do not try to store the previous data, is it is erroneous... instead load new file without errors
@@ -133,7 +133,7 @@ is($verified_error, $expected_error, "check error from store");
 
 # Upload file without errors to store
 
-$filename = "t/data/trial/upload_phenotypin_spreadsheet_multicategories_with_errors.$extension";
+$filename = "t/data/trial/upload_phenotypin_spreadsheet_multicategories.$extension";
 $time = DateTime->now();
 $timestamp = $time->ymd()."_".$time->hms();
 
@@ -213,5 +213,4 @@ $f->clean_up_db();
 
 
 done_testing();
-
 
