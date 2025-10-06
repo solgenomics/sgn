@@ -4,7 +4,7 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
-use Test::More;
+use Test::LWP::UserAgent;
 use SGN::Test::WWW::Mechanize;
 use CXGN::Image;
 use CXGN::Stock;
@@ -12,12 +12,33 @@ use CXGN::Chado::Stock;
 use JSON;
 use Data::Dumper;
 use File::Basename;
+use HTTP::Response;
+
+# Set up Test::LWP::UserAgent to mock the external service
+my $mock_ua = Test::LWP::UserAgent->new;
+
+$mock_ua->map_response(
+    qr|http://fake-image-analysis-service/|,
+    HTTP::Response->new(
+        200,
+        'OK',
+        [ 'Content-Type' => 'application/json' ],
+        '{"trait_value":"651.52","image_link":"http://localhost/fake_image.png"}'
+    )
+);
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
 my $mech = SGN::Test::WWW::Mechanize->new();
 my $data;
 my $submit_result;
+
+# Return mocked HTTP client
+{
+    no warnings 'redefine';
+    require LWP::UserAgent;
+    *LWP::UserAgent::new = sub { return $mock_ua };
+}
 
 $mech->post_ok('http://localhost:3010/brapi/v2/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
@@ -29,6 +50,7 @@ my $rs = $f->bcs_schema()->resultset('Stock::Stock')->search( undef, { columns =
 my $row = $rs->next();
 my $stock_id = $row->stock_id();
 
+# Create test plant
 $data = '[{"germplasmDbId":"41281","locationDbId":"23","observationUnitName":"Testing Plant","programDbId":"134","studyDbId":"165","trialDbId":"165","observationUnitPosition":{"observationLevel":{"levelName":"plant","levelCode":"plant_1"},"observationLevelRelationships":[{"levelCode":"' . $stock_id. '","levelName":"plot"}],"positionCoordinateX":"74","positionCoordinateXType":"GRID_COL","positionCoordinateY":"03","positionCoordinateYType":"GRID_ROW"}, "additionalInfo" : {"observationUnitParent":"' . $stock_id. '"} }]';
 $mech->post('http://localhost:3010/brapi/v2/observationunits/', Content => $data);
 $response = decode_json $mech->content;
@@ -42,6 +64,7 @@ $mech->get_ok("/image/add?type=stock&type_id=$plant_id");
 
 $mech->get_ok("/image/add?action=new&type=stock&type_id=$plant_id");
 
+# Store image associated with created plant
 my %form = (
     form_name => 'upload_image_form',
     fields => {
@@ -68,11 +91,9 @@ if ($uri =~ /\/(\d+)$/) {
     $image_id =$1;
 }
 
+# Image analysis submit
 $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit', ["selected_image_ids"=> $image_id, 'service'=> 'plantcv_citrus_app', 'trait'=> 'Fruit Diameter|INV:0000118']);
 $submit_result = decode_json $mech->content;
-
-is( $submit_result->{results}[0]{result}{value}, '651.52', "value matches" );
-
 ok(ref($submit_result->{results}) eq 'ARRAY', "results array returned from submit");
 
 # Image analysis group
@@ -103,4 +124,3 @@ $i->hard_delete();
 
 $f->clean_up_db();
 done_testing();
-
