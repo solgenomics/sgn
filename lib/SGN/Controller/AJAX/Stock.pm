@@ -2774,6 +2774,24 @@ sub set_display_image_POST : Args(0) {
 
 }
 
+sub get_stocks_with_images : Path('/ajax/stock/get_stocks_with_images') : ActionClass('REST') { }
+
+sub get_stocks_with_images_GET : Args(0) {
+    my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+    my @stock_names;
+
+    my $q = "SELECT DISTINCT s.uniquename FROM project AS p JOIN nd_experiment_project AS nep ON nep.project_id = p.project_id JOIN nd_experiment AS ne ON ne.nd_experiment_id = nep.nd_experiment_id JOIN nd_experiment_stock AS nes ON nes.nd_experiment_id = ne.nd_experiment_id JOIN stock AS s ON s.stock_id = nes.stock_id JOIN phenome.stock_image AS si ON si.stock_id = s.stock_id JOIN metadata.md_image AS mi ON mi.image_id = si.image_id JOIN cvterm AS t ON s.type_id = t.cvterm_id WHERE p.project_id = ? AND mi.obsolete = 'f'";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($trial_id);
+    while (my ($stock_name) = $h->fetchrow_array()){
+        push @stock_names, $stock_name;
+    }
+
+    $c->stash->{rest}={data=>\@stock_names};
+    
+}
 
 sub stock_obsolete_in_bulk : Path('/stock/obsolete_in_bulk') : ActionClass('REST') { }
 

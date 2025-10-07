@@ -65,7 +65,7 @@ jQuery(document).ready( function() {
     });
 
     jQuery('#trial_images_section_onswitch').click(function() {
-        getObservationUnits();
+        getStocksWithImages();
     });
 
     jQuery('#plot_images_results').on( 'draw.dt', function () {
@@ -73,31 +73,28 @@ jQuery(document).ready( function() {
     });
 });
 
-function getObservationUnits() {
-    var trial_ids = [trial_id];
-
+function getStocksWithImages() {
     jQuery.ajax({
         method: 'GET',
-        url: '/brapi/v2/observationunits',
+        url: '/ajax/stock/get_stocks_with_images',
         data: {
-            studyDbIds: trial_ids,
-            pageSize: 10000
+            'trial_id': trial_id
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
         },
         success: function(response) {
-            var data = response.result.data;
-            data.forEach(function(unit) {
-                plotNames.push(unit.observationUnitName);
-            });
+            jQuery("#working_modal").modal("hide");
+            var data = response.data;
+            if (data.length > 0) {
+                plotNames.push(data);
+            } else {
+                plotNames.push("*");
+            }
             _load_stock_image_results();
         },
         error: function(response) {
-            alert('Error fetching observation units');
-        },
-        complete: function() {
-            jQuery("#working_modal").modal("hide");
+            alert('Error fetching stock names');
         }
     });
 }
