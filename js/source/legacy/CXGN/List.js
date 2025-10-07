@@ -264,6 +264,22 @@ CXGN.List.prototype = {
         return lists;
     },
 
+    compareLists: function(list_ids) {
+        return jQuery.ajax({
+            url: '/list/compare',
+            data: { 'list_ids': list_ids.join(',') },
+            method: 'GET',
+            success: function(response){
+                console.log("list1: ", response.only_in_list1);
+                console.log("list 2: ", response.only_in_list2);
+                if (response.error) {
+                    alert(response.error);
+                }
+            }
+        });
+    },
+    
+
     //return the newly created list_item_id or 0 if nothing was added
     //(due to duplicates)
     addItem: function(list_id, item) {
@@ -456,8 +472,9 @@ CXGN.List.prototype = {
                 list_group_select_action_html += '<div class="row">';
                 list_group_select_action_html += '<div class="col-sm-4"><p><strong>Modify Selected Lists:</strong></p></div>';
                 list_group_select_action_html += '<div class="col-sm-8">';
-                list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>';
-                list_group_select_action_html += '</div>';  // end column
+                var compare_disabled = (total === 2)? '' : 'disabled style="opacity:0.6;cursor:not-allowed;"';
+                list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>&nbsp<a id="compare_selected_list_group" class="btn btn-primary btn-sm" style="color:white" '+compare_disabled+' href="javascript:createThreeColumnDiff(['+selected+'])">Compare Selected Lists</a>';
+                list_group_select_action_html += '</div>';  // end column   
                 list_group_select_action_html += '</div>';  // end row
 
                 // Union / Intersection Icons
@@ -486,6 +503,12 @@ CXGN.List.prototype = {
         }
         jQuery('body').on("click", "input[name='list_select_checkbox']", render_selected_lists_container);
         render_selected_lists_container();
+
+        jQuery('#compare_selected_lists').off('click').on('click', function() {
+            if (selected.length === 2) {
+                createThreeColumnDiff(selected[0], selected[1]);
+            }
+        });
 
         jQuery(".render_lists_filter").on("change", function() {
             render_lists_page = 0;
@@ -1770,6 +1793,55 @@ function deleteSelectedListGroup(list_ids) {
         }
         lo.renderLists('list_dialog');
     }
+}
+
+function createThreeColumnDiff(list_ids) {
+    if (list_ids.length > 2) {
+        return;
+    }
+    var lo = new CXGN.List();
+    var list_name1 = lo.listNameById(list_ids[0]);
+    var list_name2 = lo.listNameById(list_ids[1]);
+    
+    lo.compareLists(list_ids).then(function(result) {
+        // Find max column length for balanced table
+        const maxRows = Math.max(
+            result.only_in_list1.length,
+            result.only_in_list2.length,
+            result.in_both.length
+        );
+        let rows = [];
+        for (let i = 0; i < maxRows; i++) {
+            let cell1 = result.only_in_list1[i] || "";
+            let cell2 = result.only_in_list2[i] || "";
+            let cell3 = result.in_both[i] || "";
+            rows.push(
+              `<tr>
+                <td>${cell1}</td>
+                <td>${cell2}</td>
+                <td style="background:#eeeeee">${cell3}</td>
+              </tr>`
+            );
+        }
+
+        let html = `
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th style="width: 40%">Only in ${list_name1}</th>
+                <th style="width: 40%">Only in ${list_name2}</th>
+                <th style="width: 40%; background:#eeeeee">In Both</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.join("\n")}
+            </tbody>
+          </table>
+        `;
+
+        jQuery('#list_comparison_modal_div').html(html);
+        jQuery('#list_comparison_modal').modal('show');
+    });
 }
 
 function pasteTraitList(div_name) {

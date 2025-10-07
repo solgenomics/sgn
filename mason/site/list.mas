@@ -212,3 +212,24 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="list_comparison_modal" name="list_comparison_modal" tabindex="-1" role="dialog" aria-labelledby="list_comparison_modal">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4>List Comparison</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div id="list_comparison_modal_div">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <form class="form-inline" style="float:right">
+          <button id="close_availible_seedlots_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
