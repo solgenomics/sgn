@@ -31,6 +31,7 @@ screeFile        <- grep("pca_scree_plot", outputFiles, value = TRUE)
 loadingsFile     <- grep("pca_loadings", outputFiles, value = TRUE)
 varianceFile     <- grep("pca_variance", outputFiles, value = TRUE)
 combinedDataFile <- grep("combined_pca_data_file", outputFiles, value = TRUE)
+reportFile       <- grep("report", outputFiles, value = TRUE)
 
 if (is.null(inputFiles)) {
   stop("Input files are missing.")
