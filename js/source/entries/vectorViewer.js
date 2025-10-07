@@ -546,7 +546,8 @@ export function updateMetadataDataTable(metadata) {
 	data: data,
 	"bLengthChange" : false,
 	"bFilter" : false,
-	"bInfo" : false
+	"bInfo" : false,
+	"paging" : false
     });
 }
 
