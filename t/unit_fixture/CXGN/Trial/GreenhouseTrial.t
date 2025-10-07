@@ -197,6 +197,7 @@ my @plot_nums_2;
 my @accessions_2;
 my @plot_names_2;
 my @plant_names_2;
+my @all_stock_ids;
 
 foreach my $plot_num_2 (keys %$greenhouse_trial_design_2) {
     push @plot_nums_2, $plot_num_2;
@@ -204,12 +205,18 @@ foreach my $plot_num_2 (keys %$greenhouse_trial_design_2) {
     push @plot_names_2, $greenhouse_trial_design_2->{$plot_num_2}->{'plot_name'};
     my $plant_name_2 = $greenhouse_trial_design_2->{$plot_num_2}->{'plant_names'};
     push @plant_names_2, @$plant_name_2;
+
+    push @all_stock_ids, $greenhouse_trial_design_2->{$plot_num_2}->{'accession_id'};
+    push @all_stock_ids, $greenhouse_trial_design_2->{$plot_num_2}->{'plot_id'};
+    my $plant_ids = $greenhouse_trial_design_2->{$plot_num_2}->{'plant_ids'};
+    push @all_stock_ids, @$plant_ids;
 }
 
 @plot_nums_2 = sort @plot_nums_2;
 @accessions_2 = sort @accessions_2;
 @plot_names_2 = sort @plot_names_2;
 @plant_names_2 = sort @plant_names_2;
+
 
 is_deeply(\@plot_nums_2, [
     '1',
@@ -254,6 +261,29 @@ is_deeply(\@plant_names_2, [
     'greenhouse_1_accession_for_greenhouse7_7_plant_1',
     'greenhouse_1_accession_for_greenhouse8_8_plant_1'
 ], "check plant names");
+
+#deleting trial and new stocks
+
+my $dbh = $schema->storage->dbh;
+my $q = "delete from phenome.stock_owner where stock_id=?";
+my $h = $dbh->prepare($q);
+
+foreach my $id (@all_stock_ids){
+    my $row  = $schema->resultset('Stock::Stock')->find({stock_id=>$id});
+    $h->execute($id);
+    $row->delete();
+}
+
+my $trial = CXGN::Trial->new({
+    bcs_schema => $schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    trial_id => $greenhouse_trial_id
+});
+
+$trial->delete_metadata();
+$trial->delete_field_layout();
+$trial->delete_project_entry();
 
 
 $fix->clean_up_db();
