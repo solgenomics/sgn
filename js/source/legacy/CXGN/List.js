@@ -270,8 +270,6 @@ CXGN.List.prototype = {
             data: { 'list_ids': list_ids.join(',') },
             method: 'GET',
             success: function(response){
-                console.log("list1: ", response.only_in_list1);
-                console.log("list 2: ", response.only_in_list2);
                 if (response.error) {
                     alert(response.error);
                 }
