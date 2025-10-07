@@ -602,7 +602,7 @@ CXGN.List.prototype = {
         html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" title="Validate list. Checks if elements exist with the selected type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
         html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea><p style="font-size:80%;text-align:right">After adding new items, you may want to consider re-validating your list.</p></td></tr></table>';
 
-        html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div></div></div>';
+        html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-4"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-4"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div><div class="col-sm-4"><center><button class="btn btn-default type="button" id="copy_items_button" value="Copy">Copy Item Names</button></center></div></div></div>';
         html += '<div class="well well-sm"><table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
         for(var n=0; n<items.length; n++) {
@@ -620,12 +620,24 @@ CXGN.List.prototype = {
 
         jQuery('#'+div+'_div').html(html);
 
-        jQuery('#list_item_dialog_datatable').DataTable({
+        var listTable = jQuery('#list_item_dialog_datatable').DataTable({
             destroy: true,
             ordering: false,
             scrollY:        '30vh',
             scrollCollapse: true,
             paging:         false,
+        });
+
+        jQuery('#copy_items_button').on('click', function () {
+            var columnData = listTable.column(0, { search: 'applied' }).data().toArray().map(function (cell) {return jQuery('<div>').html(cell).text().trim();});
+            console.log("column data", columnData);
+            var textToCopy = columnData.join('\n');
+
+            navigator.clipboard.writeText(textToCopy).then(function () {
+                alert('Item names copied');
+            }).catch(function (err) {
+                console.error('Copy failed', err);
+            });
         });
 
         }
@@ -1404,17 +1416,21 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 
     var list_id = 0;
 
-    jQuery('#'+dataDiv+'_add_to_new_list').click( function() {
+    jQuery('#' + dataDiv + '_add_to_new_list').click(function () {
         var lo = new CXGN.List();
-        var new_name = jQuery('#'+dataDiv+'_new_list_name').val();
-        var type = jQuery('#'+dataDiv+'_list_type').val();
-        var addition_type = jQuery('#'+dataDiv+'_addition_type').val();
+        var new_name = jQuery('#' + dataDiv + '_new_list_name').val();
+        var type = jQuery('#' + dataDiv + '_list_type').val();
+        var addition_type = jQuery('#' + dataDiv + '_addition_type').val();
+
+        if (dataDiv === 'trial_tissue_samples_data') {
+            type = 'tissue_sample';
+        }
 
         var data = getData(dataDiv, selectText);
-        list_id = lo.newList(new_name);
+        var list_id = lo.newList(new_name);
         if (list_id > 0) {
             var elementsAdded;
-            if (addition_type == 'cross_progeny') {
+            if (addition_type === 'cross_progeny') {
                 elementsAdded = lo.addCrossProgenyToList(list_id, data);
             } else {
                 elementsAdded = lo.addToList(list_id, data);
@@ -1422,9 +1438,10 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
             if (type) {
                 lo.setListType(list_id, type);
             }
-            alert("Added "+elementsAdded+" list elements to list "+new_name+" and set type to "+type);
+            alert("Added " + elementsAdded + " list elements to list " + new_name + " and set type to " + type);
         }
     });
+
 
     jQuery('#'+dataDiv+'_button').click( function() {
         var data = getData(dataDiv, selectText);
@@ -1748,7 +1765,7 @@ function validateList(list_id, list_type, html_select_id) {
         jQuery('#working_modal').modal('hide');
     }).catch(function(err) {
         jQuery('#working_modal').modal('hide');
-        let msg = "There was an error validating your list.";
+        let msg = "There was an error validating your list. ";
         if ( err && err.responseText ) msg += `\n\n${err.responseText}`;
         alert(msg);
     });
@@ -1969,14 +1986,14 @@ function validate_interactive(response, type, list_id) {
     valid = response.valid;
 
     //alert("validate_interactive: "+JSON.stringify(response));
-    if (type != 'accessions' && warning.length != 0) {
+    if (warning !== undefined && type != 'accessions' && warning.length != 0) {
 	alert(warning.join(", "));
     }
     if (type == 'accessions' && valid == 1) {
 	alert("This list passed validation.");
 	return;
     }
-    else if (type != 'accessions' && missing.length == 0) {
+    else if (missing !== undefined  && type != 'accessions' && missing.length == 0) {
         alert("This list passed validation.");
         return;
     } else {
@@ -2022,7 +2039,7 @@ function validate_interactive(response, type, list_id) {
 
     	    jQuery('#wrong_case_message_div').html('');
 
-    	    if (wrong_case.length > 0) {
+    	    if (wrong_case !== undefined && wrong_case.length > 0) {
     		//alert(JSON.stringify(wrong_case));
     		jQuery('#wrong_case_table').DataTable( {
     		    destroy: true,
@@ -2044,7 +2061,7 @@ function validate_interactive(response, type, list_id) {
     		jQuery('#wrong_case_message_div').html('No mismatched cases found.');
     	    }
 
-    	    if (multiple_wrong_case.length > 0) {
+    	    if (multiple_wrong_case !== undefined && multiple_wrong_case.length > 0) {
     		//alert(JSON.stringify(multiple_wrong_case));
     		jQuery('#multiple_wrong_case_table').DataTable( {
     		    destroy: true,

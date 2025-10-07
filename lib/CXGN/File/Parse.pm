@@ -430,6 +430,9 @@ sub clean_header {
     # Do usual value cleaning
     $header = $self->clean_value($header);
 
+    # Strip BOM bytes, if present
+    $header =~ s/^\N{BOM}//;
+
     # check for case-insensitive required column match
     if ( $required_columns ) {
       foreach my $col (@$required_columns ) {

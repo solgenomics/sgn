@@ -545,6 +545,32 @@ sub set_as_control {
 }
 
 
+sub get_transformant_details {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformant_of", "stock_relationship")->cvterm_id();
+    my $number_of_insertions_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
+        LEFT JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        where stock_relationship.object_id = ? AND stock.is_obsolete = 'F' ORDER BY stock.stock_id ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($transformant_of_type_id, $number_of_insertions_type_id, $transformation_stock_id);
+
+    my @transformant_details = ();
+    while (my ($stock_id,  $stock_name, $number_of_insertions) = $h->fetchrow_array()){
+        push @transformant_details, [$stock_id,  $stock_name, $number_of_insertions]
+    }
+
+    $self->transformants(\@transformant_details);
+}
 
 
 ###
