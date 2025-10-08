@@ -67,25 +67,19 @@ if (!$opt_U){
 getopts('H:D:U:P:e:t')
     or pod2usage();
 
-my $dbh = CXGN::DB::InsertDBH->new({
-	dbname => $opt_D,
-	dbhost => $opt_H,
-	dbuser => $opt_U,
-	dbpass => $opt_P,
-	dbargs => {
-		AutoCommit => 0,
-		RaiseError => 1
-	},
-});
-
-my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
+my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
+my $schema= Bio::Chado::Schema->connect( $dsn, $opt_U, $opt_P, {
+	AutoCommit => 0,
+ 	RaiseError => 1
+} );
+my $dbh = $schema->storage()->dbh();
 my $metadata_schema = CXGN::Metadata::Schema->connect( 
-        sub { $dbh->get_actual_dbh() }#, 
-        #{ on_connect_do => ['SET search_path TO public,metadata;'] }
+        sub { $dbh }, 
+        { on_connect_do => ['SET search_path TO public,metadata;'] }
     );
 my $phenome_schema = CXGN::Phenome::Schema->connect( 
-	sub { $dbh->get_actual_dbh() }#,
-	#{ on_connect_do => ['SET search_path TO public,phenome;'] }
+	sub { $dbh },
+	{ on_connect_do => ['SET search_path TO public,phenome;'] }
 );
 my $site_basedir = getcwd()."/..";
 my $temp_basedir_key = `cat $site_basedir/sgn.conf $site_basedir/sgn_local.conf | grep tempfiles_subdir`;
