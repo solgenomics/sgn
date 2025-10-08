@@ -222,7 +222,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-          <div id="list_comparison_modal_div">
+          <div id="list_comparison_modal_div"></div>
         </div>
       </div>
       <div class="modal-footer">
