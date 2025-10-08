@@ -8,10 +8,19 @@ $stock_uniquename
         <div class="modal-content">
             <div class="modal-header">
                 <button type="reset" class="close" id="upload_qPCR_data_dismiss_button_1" name="upload_qPCR_data_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadqPCRDataDialog">Upload qPCR Data</h4>
+                <h4 class="modal-title" id="uploadqPCRDataDialog">Upload qPCR Data (Cq values)</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
+                    <center>
+                        <&| /page/explanation.mas, title=>'Template Information' &>
+                            <p>
+                                <b>File format information</b>
+                                <br>
+                                <a id="Cq_values_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                            </p>
+                        </&>
+                    </center>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_qPCR_data_form" name="upload_qPCR_data_form">
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Tissue Type: </label>
@@ -32,61 +41,23 @@ $stock_uniquename
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-4 control-label">Normalization Method: </label>
+                            <div class="col-sm-8" >
+                                <div id="qPCR_normalization_methods_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-4 control-label">Notes:</label>
                             <div class="col-sm-8">
                                 <textarea class="form-control" id="qPCR_notes" name="qPCR_notes" ></textarea>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Data Type: </label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="qPCR_data_type_option">
-                                    <option value="">Please select a data type</option>
-                                    <option value="CT_values">CT values</option>
-                                    <option value="normalized_values">normalized values</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div id="normalized_values_section" style="display:none">
-                            <center>
-                                <&| /page/explanation.mas, title=>'Template Information' &>
-                                    <p>
-                                        <b>File format information</b>
-                                        <br>
-                                        <a id="normalized_values_upload_spreadsheet_format_info">Spreadsheet Format</a>
-                                    </p>
-                                </&>
-                            </center>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">Upload File (normalized): </label>
-                                <div class="col-sm-8" >
-                                    <input type="file" name="normalized_qPCR_data_file" id="normalized_qPCR_data_file" encoding="multipart/form-data" />
-                                    <input name="qPCR_data_vector_id" id="qPCR_data_vector_id" type="hidden" value="<% $stock_id %>">
-                                    <input name="qPCR_data_vector_name" id="qPCR_data_vector_name" type="hidden" value="<% $stock_uniquename %>">
-                                </div>
-                            </div>
-                        </div>
-                        <div id="CT_values_section" style="display:none">
-                            <center>
-                                <&| /page/explanation.mas, title=>'Template Information' &>
-                                    <p>
-                                        <b>File format information</b>
-                                        <br>
-                                        <a id="CT_values_upload_spreadsheet_format_info">Spreadsheet Format</a>
-                                    </p>
-                                </&>
-                            </center>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">Normalization Method: </label>
-                                <div class="col-sm-8" >
-                                    <div id="qPCR_normalization_methods_div"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-4 control-label">Upload File (CT): </label>
-                                <div class="col-sm-8" >
-                                    <input type="file" name="CT_qPCR_data_file" id="CT_qPCR_data_file" encoding="multipart/form-data" />
-                                </div>
+                            <label class="col-sm-4 control-label">Upload File (Cq values): </label>
+                            <div class="col-sm-8" >
+                                <input type="file" name="Cq_qPCR_data_file" id="Cq_qPCR_data_file" encoding="multipart/form-data" />
+                                <input name="qPCR_data_vector_id" id="qPCR_data_vector_id" type="hidden" value="<% $stock_id %>">
+                                <input name="qPCR_data_vector_name" id="qPCR_data_vector_name" type="hidden" value="<% $stock_uniquename %>">
                             </div>
                         </div>
                     </form>
@@ -143,12 +114,12 @@ $stock_uniquename
     </div>
 </div>
 
-<div class="modal fade" id="CT_qPCR_data_upload_spreadsheet_info_dialog" name="CT_qPCR_data_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCTqPCRDataInfoDialog">
+<div class="modal fade" id="Cq_qPCR_data_upload_spreadsheet_info_dialog" name="Cq_qPCR_data_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCQqPCRDataInfoDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCTqPCRDataInfoDialog">Upload Template Information For qPCR Data (CT values)</h4>
+                <h4 class="modal-title" id="uploadCQqPCRDataInfoDialog">Upload Template Information For qPCR Data (Cq values)</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -202,32 +173,15 @@ jQuery(document).ready(function(){
         jQuery("#upload_qPCR_data_dialog").modal("show");
     });
 
-    jQuery('#qPCR_data_type_option').change(function() {
-        const data_type = jQuery('#qPCR_data_type_option').val();
-        if (data_type == 'CT_values') {
-            jQuery("#CT_values_section").modal("show");
-            jQuery("#normalized_values_section").modal("hide");
-        } else if (data_type == 'normalized_values') {
-            jQuery("#normalized_values_section").modal("show");
-            jQuery("#CT_values_section").modal("hide");
-        } else {
-            jQuery("#normalized_values_section").modal("hide");
-            jQuery("#CT_values_section").modal("hide");
-        }
-    });
-
-    jQuery('#upload_CT_qPCT_data_spreadsheet_format_info').click(function(){
-        jQuery("#CT_qPCR_data_upload_spreadsheet_info_dialog").modal("show");
+    jQuery('#Cq_values_upload_spreadsheet_format_info').click(function(){
+        jQuery("#Cq_qPCR_data_upload_spreadsheet_info_dialog").modal("show");
     });
 
     jQuery("#upload_qPCR_data_submit").click(function(){
-        const CT_upload_file = jQuery("#CT_qPCR_data_file").val();
-        const normalized_upload_file = jQuery("#normalized_qPCR_data_file").val();
-
+        const Cq_upload_file = jQuery("#Cq_qPCR_data_file").val();
         const tissue_type = jQuery("#qPCR_tissue_type").val();
         const endogenous_control = jQuery("#qPCR_endogenous_control").val();
         const assay_date = jQuery("#assay_date").val();
-        const qPCR_data_type = jQuery("#qPCR_data_type_option").val();
         const normalization_method = jQuery("#qPCR_normalization_method").val();
 
         jQuery('#upload_qPCR_data_form').attr("action", "/ajax/transformation/upload_qPCR_data");
@@ -246,23 +200,13 @@ jQuery(document).ready(function(){
             return;
         }
 
-        if (qPCR_data_type === ''){
-            alert("Please select a data type");
-            return;
-        }
-
-        if ((qPCR_data_type == 'CT_values') && normalization_method === '') {
+        if (normalization_method === '') {
             alert("Please select a normalization method");
             return;
         }
 
-        if ((CT_upload_file === '') && (normalized_upload_file === '')){
+        if (Cq_upload_file === ''){
             alert("Please select a file");
-            return;
-        }
-
-        if (CT_upload_file && normalized_upload_file){
-            alert("Please select either a CT qPCR or normalized qPCR data file, not both");
             return;
         }
 
@@ -299,9 +243,6 @@ jQuery(document).ready(function(){
         jQuery('#qPCR_endogenous_control_div').val('');
         jQuery('#assay_date').val('');
         jQuery('#qPCR_notes').val('');
-        jQuery('#qPCR_data_type_option').val('');
-        jQuery('#normalized_values_section').modal('hide');
-        jQuery('#CT_values_section').modal('hide');
         jQuery('#qPCR_normalization_methods_div').val('');
 
     });
@@ -309,11 +250,6 @@ jQuery(document).ready(function(){
     jQuery("#dismiss_qPCR_data_saved_dialog").click(function(){
         location.reload();
     });
-
-    jQuery('#normalized_qPCR_data_upload_spreadsheet_format_info').click(function() {
-        jQuery("#normalized_qPCR_data_upload_spreadsheet_info_dialog").modal("show");
-    });
-
 
 });
 
