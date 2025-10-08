@@ -80,12 +80,12 @@ my $dbh = CXGN::DB::InsertDBH->new({
 
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 my $metadata_schema = CXGN::Metadata::Schema->connect( 
-        sub { $dbh->get_actual_dbh() }, 
-        { on_connect_do => ['SET search_path TO public,metadata;'] }
+        sub { $dbh->get_actual_dbh() }#, 
+        #{ on_connect_do => ['SET search_path TO public,metadata;'] }
     );
 my $phenome_schema = CXGN::Phenome::Schema->connect( 
-	sub { $dbh->get_actual_dbh() },
-	{ on_connect_do => ['SET search_path TO public,phenome;'] }
+	sub { $dbh->get_actual_dbh() }#,
+	#{ on_connect_do => ['SET search_path TO public,phenome;'] }
 );
 my $site_basedir = getcwd()."/..";
 my $temp_basedir_key = `cat $site_basedir/sgn.conf $site_basedir/sgn_local.conf | grep tempfiles_subdir`;
