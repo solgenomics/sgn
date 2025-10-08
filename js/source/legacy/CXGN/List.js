@@ -1810,6 +1810,30 @@ function deleteSelectedListGroup(list_ids) {
     }
 }
 
+function downloadSelectedListGroup(list_ids) {
+    jQuery.ajax({
+        url: '/list/download_multiple',
+        contentType: 'application/json',
+        data: { 'list_ids' : JSON.stringify(list_ids) },
+        success: function(data) {
+            const url = window.URL.createObjectURL(data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lists.zip';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        },
+        xhrFields: {
+            responseType: 'blob'
+        },
+        error: function(xhr, status, error) {
+            alert("An error occurred.");
+        }
+    })
+}
+
 function createThreeColumnDiff(list_ids) {
     if (list_ids.length > 2) {
         return;
