@@ -17,7 +17,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->get_ok('/tools/label_designer');
 
-    sleep(3);
+    sleep(5);
 
     $t->driver->find_element("//button[\@title='Select a data source for the labels']")->click();
 
