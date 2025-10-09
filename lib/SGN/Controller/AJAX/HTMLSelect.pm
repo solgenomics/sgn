@@ -31,6 +31,7 @@ use CXGN::List;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Stock::Search;
 use CXGN::Stock::Seedlot;
 use CXGN::Dataset;
@@ -2297,14 +2298,19 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
     $h->execute($plot_of_id, $row_num_id, $col_num_id, $rep_id, $block_id, \@plots);
 
-    my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates</th><th>Rep</th><th>Block</th><th>Accession</th></tr></thead><tbody>";
+    my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates (row,column)</th><th>Rep</th><th>Block</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
     while (my ($plot_id, $plot_name, $row, $column, $rep, $block, $accession_id, $accession_name) = $h->fetchrow_array()) {
         my $coordinates = "NA";
         if ($row && $column){
             $coordinates = "($row,$column)";
         }
-        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td>$rep</td><td>$block</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
+        my $accession_obj = CXGN::Stock->new({
+            stock_id => $accession_id,
+            schema => $schema
+        });
+        my $synonyms = $accession_obj->_retrieve_stockprop('stock_synonym');
+        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td>$rep</td><td>$block</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
     $html .= "</tbody></thead></table>";
@@ -2366,10 +2372,15 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
     my $h = $schema->storage()->dbh()->prepare($subplots_q);
     $h->execute($subplot_of_id, $subplot_of_id, \@subplots);
 
-    my $html = "<table id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th></tr></thead><tbody>";
+    my $html = "<table id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
     while (my ($subplot_id, $subplot_name, $plot_id, $plot_name, $accession_id, $accession_name) = $h->fetchrow_array()) {
-        $html .= "<tr><td><input id=\"select_plot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
+        my $accession_obj = CXGN::Stock->new({
+            stock_id => $accession_id,
+            schema => $schema
+        });
+        my $synonyms = $accession_obj->_retrieve_stockprop('stock_synonym');
+        $html .= "<tr><td><input id=\"select_plot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
     $html .= "</tbody></thead></table>";
@@ -2468,7 +2479,7 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     my $h = $schema->storage()->dbh()->prepare($plants_q);
     $h->execute($plant_of_id, $plant_of_id, $row_num_id, $col_num_id, \@plants);
 
-    my $html = "<table id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates</th><th>Accession</th></tr></thead><tbody>";
+    my $html = "<table id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates (row,column)</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
     while (my ($plant_id, $plant_name, $plot_id, $plot_name, $row, $column, $accession_id, $accession_name, $subplot_id, $subplot_name) = $h->fetchrow_array()) {
         my $coordinates = "NA";
@@ -2479,7 +2490,12 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         if ($subplot_id && $subplot_name) {
             $subplot_data = "<td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td>";
         }
-        $html .= "<tr><td><input id=\"select_plant_$plant_name\" type=\"checkbox\" class=\"exp_design_plant_select\"></td><td><a href=\"/stock/$plant_id/view\">$plant_name</a></td>$subplot_data<td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td></tr>";
+        my $accession_obj = CXGN::Stock->new({
+            stock_id => $accession_id,
+            schema => $schema
+        });
+        my $synonyms = $accession_obj->_retrieve_stockprop('stock_synonym');
+        $html .= "<tr><td><input id=\"select_plant_$plant_name\" type=\"checkbox\" class=\"exp_design_plant_select\"></td><td><a href=\"/stock/$plant_id/view\">$plant_name</a></td>$subplot_data<td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
     $html .= "</tbody></thead></table>";
