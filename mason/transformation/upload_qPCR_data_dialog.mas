@@ -129,31 +129,115 @@ $stock_uniquename
                     <br>
                     The first row (header) should contain the following:
                     <br />
-
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
                             <tr>
                                 <td>accession_name</td>
-                                <td>Gene A</td>
-                                <td>Gene B</td>
+                                <td>replicate_number</td>
+                                <td>gene</td>
+                                <td>Cq</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    <b>Required fields:</b>
+                    <ul>
+                        <li>accession_name (must exist in the database)</li>
+                        <li>replicate_number (if any sample has replicates, the normalized value will be an average of Cq values. If there is no replicate, please indicate 1)</li>
+                        <li>gene (gene names in the spreadsheet much be stored as genes in the vector construct or selected endogenous control)</li>
+                        <li>Cq (Cq values and the derived normalized values will be stored in the database)</li>
+                    </ul>
+                    <br>
+                    <b>For example:</b>
+                    Cq data of an endogenouse control (geneA) and two targets (geneB and geneB). Each sample has two replicates. Note: there is no need to group the same replicate together as in the sample spreadsheet.
+                    <br />
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>accession_name</td>
+                                <td>replicate_number</td>
+                                <td>gene</td>
+                                <td>Cq</td>
+                            </tr>
+                            <tr>
+                                <td>accession_1</td>
+                                <td>1</td>
+                                <td>geneA</td>
+                                <td>22.28</td>
+                            </tr>
+                            <tr>
+                                <td>accession_1</td>
+                                <td>1</td>
+                                <td>geneB</td>
+                                <td>24.26</td>
+                            </tr>
+                            <tr>
+                                <td>accession_1</td>
+                                <td>1</td>
+                                <td>geneC</td>
+                                <td>19.4</td>
+                            </tr>
+                            <tr>
+                                <td>accession_2</td>
+                                <td>1</td>
+                                <td>geneA</td>
+                                <td>20.18</td>
+                            </tr>
+                            <tr>
+                                <td>accession_2</td>
+                                <td>1</td>
+                                <td>geneB</td>
+                                <td>20.24</td>
+                            </tr>
+                            <tr>
+                                <td>accession_2</td>
+                                <td>1</td>
+                                <td>geneC</td>
+                                <td>18.29</td>
+                            </tr>
+                            <tr>
+                                <td>accession_1</td>
+                                <td>2</td>
+                                <td>geneA</td>
+                                <td>21.28</td>
+                            </tr>
+                            <tr>
+                                <td>accession_1</td>
+                                <td>2</td>
+                                <td>geneB</td>
+                                <td>23.16</td>
+                            </tr>
+                            <tr>
+                                <td>accession_1</td>
+                                <td>2</td>
+                                <td>geneC</td>
+                                <td>20.4</td>
+                            </tr>
+                            <tr>
+                                <td>accession_2</td>
+                                <td>2</td>
+                                <td>geneA</td>
+                                <td>20.25</td>
+                            </tr>
+                            <tr>
+                                <td>accession_2</td>
+                                <td>2</td>
+                                <td>geneB</td>
+                                <td>25.21</td>
+                            </tr>
+                            <tr>
+                                <td>accession_2</td>
+                                <td>2</td>
+                                <td>geneC</td>
+                                <td>20.6</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
-                    <ul>
-                        <li>accession_name (must exist in the database)</li>
-                        <li></li>
-                    </ul>
-
-                    <b>Optional fields:</b>
-                    <ul>
-                        <li></li>
-                        <li></li>
-                    </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "qPCR Data", optional_column => 1 &>
+                <& /help/file_upload_type.mas, type => "qPCR Data", optional_column => 0 &>
             </div>
             <div class="modal-footer">
                 <button id="close_relative_expression_data_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
