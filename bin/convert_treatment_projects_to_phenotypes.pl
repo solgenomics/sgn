@@ -156,6 +156,13 @@ my %new_treatment_cvterms = (); # name => cvterm_id
 my %new_treatment_full_names = (); # name => full name (with ontology)
 my $dbxref_id = $accession_start;
 
+my %trial_treatments = (); # holds the full names of all treatments
+my $treatment_values_hash = {};
+my %phenotype_store_stock_list = ();
+
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
 while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 
 	my $trial = CXGN::Trial->new({
@@ -168,12 +175,6 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 	next if !$treatment_trials; #skip if there are no treatment trials. Don't waste time getting plots or anything.
 
 	my $parent_observation_units = $trial->get_plots(); #get all plots
-	my @this_trial_treatments = (); # holds the full names of all treatments of this trial
-	my $treatment_values_hash = {};
-	my @phenotype_store_stock_list = ();
-
-	my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
 
 	my $has_treatments = 0;
 
@@ -194,10 +195,10 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		my $observation_units = $treatment_trial->get_plots();
 		my %observation_units_lookup = map {$_->[0] => 1} @{$observation_units};
 
-		my $treatment_name = $treatment_trial_name =~ s/$trial_name(_)//r;
-		$treatment_name =~ s/_/ /g;
-		$treatment_name =~ s/[^\p{Alpha} ]//g;
-		$treatment_name = lc($treatment_name); #enforce no underscores and all lowercase
+		my $treatment_name = $treatment_trial_name =~ s/^$trial_name\_//r;
+		# $treatment_name =~ s/_/ /g;
+		# $treatment_name =~ s/[^\p{Alpha} ]//g;
+		$treatment_name = lc($treatment_name); #enforce all lowercase
 
 		my $treatment_id;
 		my $treatment_full_name;
@@ -215,7 +216,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 				$new_treatment_cvterms{$treatment_name} = $treatment_id;
 				$treatment_full_name = "$treatment_name|EXPERIMENT_TREATMENT:$zeroes"."$dbxref_id";
 				$new_treatment_full_names{$treatment_name} = $treatment_full_name;
-				push @this_trial_treatments, $treatment_full_name;
+				$trial_treatments{$treatment_full_name} = 1;
 
 				$schema->resultset("Cv::CvtermRelationship")->find_or_create({
 					object_id => $legacy_experiment_treatment_root_id,
@@ -230,7 +231,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		} else { #if not new treatment, get the treatment cvterm_id and full names
 			$treatment_id = $new_treatment_cvterms{$treatment_name};
 			$treatment_full_name = $new_treatment_full_names{$treatment_name};
-			push @this_trial_treatments, $treatment_full_name;
+			$trial_treatments{$treatment_full_name} = 1;
 		}
 
 		foreach my $obs_unit (@{$parent_observation_units}){ #Construct the phenotype values hash
@@ -253,60 +254,58 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 
 			my $plot_contents = $plot->get_child_stocks_flat_list(); #treatment values are inherited by child stocks
 
-			push @phenotype_store_stock_list, $plot_name;
+			$phenotype_store_stock_list{$plot_name} = 1;
 
 			foreach my $child (@{$plot_contents}) {
 				next if ($child->{type} eq "accession"); #dont want to assign a phenotype to an accession, that would be bad
 				$treatment_values_hash->{$child->{name}}->{$treatment_full_name} = $treatment_values_hash->{$plot_name}->{$treatment_full_name};
-				push @phenotype_store_stock_list, $child->{name};
+				$phenotype_store_stock_list{$child->{name}} = 1;
 			}
 		}
 
 		# $trial->remove_treatment_project($treatment_trial_id); # delete the treatment trial;
 	}
+}
 
-	if ($has_treatments) {
-		my $phenotype_metadata = { #make phenotype metadata
-			archived_file => 'none',
-			archived_file_type => 'treatment project conversion patch',
-			operator => $opt_e,
-			date => $timestamp
-		};
+my $phenotype_metadata = { #make phenotype metadata
+	archived_file => 'none',
+	archived_file_type => 'treatment project conversion patch',
+	operator => $opt_e,
+	date => $timestamp
+};
 
-		my (undef, $tempfile) = tempfile("$temp_basedir/delete_nd_experiment_ids/fileXXXX"); #tempfile
+my (undef, $tempfile) = tempfile("$temp_basedir/delete_nd_experiment_ids/fileXXXX"); #tempfile
 
-		my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
-			basepath => $temp_basedir,
-			dbhost => $opt_H,
-			dbname => $opt_D,
-			dbuser => $opt_U,
-			dbpass => $opt_P,
-			temp_file_nd_experiment_id => $tempfile,
-			bcs_schema => $schema,
-			metadata_schema => $metadata_schema,
-			phenome_schema => $phenome_schema,
-			user_id => $signing_user_id,
-			stock_list => \@phenotype_store_stock_list,
-			trait_list => \@this_trial_treatments,
-			values_hash => $treatment_values_hash,
-			metadata_hash => $phenotype_metadata
-		});
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+	basepath => $temp_basedir,
+	dbhost => $opt_H,
+	dbname => $opt_D,
+	dbuser => $opt_U,
+	dbpass => $opt_P,
+	temp_file_nd_experiment_id => $tempfile,
+	bcs_schema => $schema,
+	metadata_schema => $metadata_schema,
+	phenome_schema => $phenome_schema,
+	user_id => $signing_user_id,
+	stock_list => [keys(%phenotype_store_stock_list)],
+	trait_list => [keys(%trial_treatments)],
+	values_hash => $treatment_values_hash,
+	metadata_hash => $phenotype_metadata
+});
 
-		my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 
-		if ($verified_warning) {
-			warn $verified_warning;
-		}
-		if ($verified_error) {
-			die $verified_error;
-		}
+if ($verified_warning) {
+	warn $verified_warning;
+}
+if ($verified_error) {
+	die $verified_error;
+}
 
-		my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
-		if ($stored_phenotype_error) {
-			die "An error occurred converting treatments: $stored_phenotype_error\n";
-		}
-	}
+if ($stored_phenotype_error) {
+	die "An error occurred converting treatments: $stored_phenotype_error\n";
 }
 
 $h = $schema->storage->dbh->prepare($update_new_treatment_sql);
