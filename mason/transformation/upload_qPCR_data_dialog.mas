@@ -46,6 +46,8 @@ $stock_uniquename
                                 <div id="qPCR_normalization_methods_div"></div>
                             </div>
                         </div>
+                        <div id="normalization_method_description_div">
+                        </div>
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Notes:</label>
                             <div class="col-sm-8">
@@ -171,6 +173,16 @@ jQuery(document).ready(function(){
         get_select_box('qPCR_normalization_methods', 'qPCR_normalization_methods_div', { 'name' : 'qPCR_normalization_method', 'id' : 'qPCR_normalization_method' , 'empty' : 1});
 
         jQuery("#upload_qPCR_data_dialog").modal("show");
+    });
+
+    jQuery(document).on('change', '#qPCR_normalization_methods_div', function () {
+        let normalization_method = ''
+        normalization_method = jQuery("#qPCR_normalization_method").val();
+        if (normalization_method == "CASS_Delta_Cq"){
+            jQuery('#normalization_method_description_div').html('<br/><div class="well" style="text-align: center"><p>Normalized values will be calculated using the formula:<br><b>2^Cq(Endogenouse Control) / 2^Cq(Target)</b>.</p></div>');
+        } else {
+            jQuery('#normalization_method_description_div').html('');
+        }
     });
 
     jQuery('#Cq_values_upload_spreadsheet_format_info').click(function(){

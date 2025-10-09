@@ -2641,7 +2641,7 @@ sub get_qPCR_normalization_methods_select : Path('/ajax/html/select/qPCR_normali
     if ($empty && !$default) {
         push @qPCR_normalization_methods, ['', 'Please select a method'];
     }
-    push @qPCR_normalization_methods, ['CASS', 'CASS Delta Cq'];
+    push @qPCR_normalization_methods, ['CASS_Delta_Cq', 'CASS Delta Cq'];
 
     my $html = simple_selectbox_html(
         name => $name,
