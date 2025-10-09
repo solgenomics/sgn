@@ -82,7 +82,7 @@ $edit_privs
 <button id="update_vector" style="btn">Update View</button>
 <button id="zoomIn" style="btn"> + </button>
 <button id="zoomOut" style="btn"> - </button>
-
+<button id="vectorviewer_instructions_button">Instructions</button>
 
 <br />
 <br />
@@ -215,6 +215,46 @@ To save edits, please click on the Save button.
   </div>
 </div>
 
+
+<div id="vectorviewer_instructions" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">VectorViewer Quick Instructions</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+      <h2>Quick Instructions for the VectorViewer</h2>
+
+      <ul>
+      <li>The VectorViewer appears in a section in the vector detail page and can be used to visualize the vector, as well as edit aspects of the vector annotation.</li>
+
+      <li><b>Add vector data:</b> If the VectorViewer is empty, such as on a newly created vector page, you can upload a file describing the vector structure. If you have a Genbank-formatted file (usually with a .gb extension), you can go to the "Upload Additional Files" section and upload it. Make sure it retains the .gb extension, as the vectorviewer will recognize the file by this extension. The parsed data from the file will be used to display the vector.</li>
+
+      <li><b>To edit the vector annotations</b> you can add, edit or remove features from the vector using the feature and restriction enzyme tables below the vector diagram. To remove an element, click on the "delete" button in the corresponding row. To edit an element, click on the "edit" button in the corresponding row. To add new feature elements, click on the "Add Feature" button below the table. To add a new restriction enzyme, click on the "Add Restriction Enzyme" button below the restriction enzyme table.</li>
+
+      <li><b>Saving your changes: </b> When you edit the vector, the changes are not saved. You can save the changes by clicking the "Save changes" button.</li>
+      
+      <li><b>zooming in and out</b>: you can zoom in and out of the vector using the "+" and "-" buttons.</li>
+
+      <li>More information is available in the Breedbase manual.</li>
+
+</u>
+      
+
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
 
 jQuery(document).ready(function () {
@@ -223,6 +263,12 @@ jQuery(document).ready(function () {
 // alert('There we go... with '+stock_id);
     window.jsMod['vectorViewer'].init(stock_id);
 //    alert('Done!');
+
+      jQuery('#vectorviewer_instructions_button').click( function() {
+         jQuery('#vectorviewer_instructions').modal('show');
+	 
+
+});   
 
 });
 
