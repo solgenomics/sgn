@@ -514,6 +514,8 @@ function jqueryStuff() {
     </table>
 </div>
 
+<& /transformation/obsolete_stock_dialog.mas &>
+
 <script>
     jQuery(document).ready(function() {
         stock_detail_page_init_dialogs();
