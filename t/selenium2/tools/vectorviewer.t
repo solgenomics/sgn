@@ -148,18 +148,23 @@ $t->driver->accept_alert();
 	$save_vector->click();
 
 	sleep(1);
-	
+
+	print STDERR "ACCEPT STORE SUCCESSFUL ALERT\n";
 	$t->driver->accept_alert();
 	
 	sleep(1);
 
+	print STDERR "RELOADING THE PAGE...\n";
 	$t->driver()->refresh();
 
+	sleep(3);
+	print STDERR "ACCEPTING ERROR ALERTS...\n";
 	$t->driver->accept_alert();
 	sleep(1);
 	$t->driver->accept_alert();
 	sleep(1);
-	
+
+	print STDERR "GET PAGE SOURCE AGAIN...\n";
 	my $page_source = $t->driver->get_page_source();
 
 	sleep(4);
@@ -167,19 +172,18 @@ $t->driver->accept_alert();
 	#print STDERR $page_source;
 
 	
-	#ok($page_source =~ /pffzt/, "check if pffzt is present");
+	# ok($page_source =~ /pffzt/, "check if pffzt is present"); # this does not pass although visually the string is present...?
 
-	sleep(5);
-	
-	
 	# ..etc
 	print STDERR "Done with tests.\n";
     }
     );
     
 
-#$t->driver->close();
 done_testing();
+
+$t->driver->close();
+
 
 
 
