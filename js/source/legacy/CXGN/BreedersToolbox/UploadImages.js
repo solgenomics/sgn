@@ -7,6 +7,7 @@ jQuery( document ).ready( function() {
         showImagePreview(this.files);
     });
 
+    let barcodeDataResult;
     let exifDataResult = null;
     let exifValid = null;
 
@@ -57,6 +58,32 @@ jQuery( document ).ready( function() {
                 jQuery('#working_modal').modal("hide");
             }).fail(function() {
                 reportVerifyResult({ "error": ["Error ocurred during EXIF verification."]});
+                jQuery('#working_modal').modal("hide");
+            });
+        } else if (type == 'images_with_barcodes') {
+            var imageFiles = document.getElementById('upload_images_file_input').files;
+            if (imageFiles.length < 1) {
+                jQuery('#working_modal').modal("hide");
+                alert("Please select image files");
+                return false;
+            }
+            var formData = new FormData();
+            for (var i = 0; i < imageFiles.length; i++) {
+                formData.append('images', imageFiles[i]);
+            }
+            jQuery.ajax({
+                url: "/ajax/image/scan_barcode",
+                method: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+            }).done(function(result) {
+                barcodeDataResult = result;
+                const validBarcodes = verifyBarcodeData(result);
+                jQuery('#working_modal').modal("hide");
+
+            }).fail(function() {
+                reportVerifyResult({ "error": ["Error ocurred during barcode scan"]});
                 jQuery('#working_modal').modal("hide");
             });
         } else { // verify associated phenotypes format
@@ -120,7 +147,7 @@ jQuery( document ).ready( function() {
                     );
 
                 });
-                
+              
             } else {
                 var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
                 var observationUnits = Object.values(fileData).map(function(value) {
@@ -159,7 +186,34 @@ jQuery( document ).ready( function() {
                         );
                     });
                 });
-            }       
+            }  
+        } else if (type == "images_with_barcodes") {
+            var imageFiles = document.getElementById('upload_images_file_input').files;
+            jQuery('#progress_msg').text('Preparing images for upload');
+            jQuery('#progress_bar').css("width", "0%")
+            .attr("aria-valuenow", 0)
+            .text("0%");
+            jQuery('#progress_modal').modal('show');
+
+            var fileData = parseBarcodeData(barcodeDataResult, imageFiles);
+
+            const observationUnits = Object.values(fileData).map(function(value) {
+                return value.observationUnit;
+            });
+            var observationUnitDbIds;
+            observationUnitDbIds = observationUnits;
+
+            console.log("observatioUnits: ", observationUnits);
+
+            const imageData = Object.values(fileData).map(function(value, i) {
+                value.observationUnitDbId = observationUnits[i];
+                return value;
+            });
+
+            loadAllImages(imageFiles, imageData).done(function(result) {
+                jQuery('#progress_modal').modal('hide');
+                reportStoreResult(result);
+            }); 
         } else { // store associated phenotypes format
             jQuery('#working_modal').modal("show");
             var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
@@ -400,6 +454,76 @@ function parseImageFilenames(imageFiles) {
     return [fileData, unitType, transformType, parseErrors];
 }
 
+function verifyBarcodeData(result) {
+    const successMessages = [];
+    const errorMessages = [];
+    const finalSuccessMessage = [];
+
+    result.images.forEach((img, index) => {
+        const imgName = img.filename || `Image ${index + 1}`;
+
+        if (result.images[index].multiple_codes === "true") {
+            errorMessages.push(`Multiple barcodes found in ${imgName}. Please make sure each image only contains one barcode`);
+        }
+        
+        if (result.images[index].valid_barcode === "false") {
+            errorMessages.push(`Barcode not found for ${imgName}`);
+            return;
+        }
+
+        const stockId = result.images[index].stock_id;
+
+        if (result.images[index].stock_exists === "false") {
+            errorMessages.push(`Stock ID ${stockId} found in ${imgName} does not exist in the database`);
+        }
+
+        if (errorMessages.length === 0) {
+            finalSuccessMessage.push(`${imgName} barcode scanned successfully. Associated stock ID: ${stockId}. Ready to store image`);
+        }
+    })
+
+    if (errorMessages.length === 0) {
+        jQuery('#upload_images_submit_store').attr('disabled', false);
+        jQuery('#upload_images_status').html(
+            formatMessage(finalSuccessMessage, "success")
+        );
+        return true;
+    } else {
+        jQuery('#upload_images_submit_store').attr('disabled', false);
+        jQuery('#upload_images_status').html(
+            formatMessage(errorMessages, "error")
+        );
+        return false;
+    }
+}
+
+function parseBarcodeData(barcodeData, imageFiles) {
+    const fileData = {};
+
+    for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        var timestamp = barcodeData.images[i].timestamp;
+        if (timestamp) {
+            const timestampWithoutExtension = timestamp.split(" ")[0];
+            const timestampWithDashes = timestampWithoutExtension.replace(/:/g, '-');
+            timestamp = timestampWithDashes;
+        }
+        
+        const obsUnitId = barcodeData.images[i].stock_id;
+        if (obsUnitId) {
+            fileData[file.name] = {
+                "imageName" : file.name,
+                "imageFileName" : file.name,
+                "imageFileSize" : file.size,
+                "imageTimeStamp" : timestamp,
+                "mimeType" : file.type,
+                "observationUnit" : obsUnitId
+
+            };
+        }
+    }
+    return fileData;
+}
 
 function formatMessage(messageDetails, messageType) {
     var formattedMessage = "<hr><ul class='list-group'>";
@@ -509,7 +633,6 @@ function loadImagesSequentially(imageFiles, imageData, uploadStatus){
     });
 
 }
-
 
 function loadSingleImage(imageFiles, imageData, uploadStatus){
 

@@ -8,8 +8,8 @@
   <div>
     <p>
       <% $type %> may be uploaded using any of the supported file types: MS Excel (<strong>.xls or .xlsx</strong>),
-      comma-separated file (<strong>.csv</strong>), tab-delimited file (<strong>.txt or .tsv</strong>),
-      or semicolon-separated file (<strong>.ssv</strong>).
+      comma-separated file (<strong>.csv</strong>), LibreOffice / OpenOffice OpenDocument spreadsheet (<strong>.ods</strong>), 
+      tab-delimited file (<strong>.txt or .tsv</strong>), or semicolon-separated file (<strong>.ssv</strong>).
     </p>
 % if ($optional_column) {
     <p>
