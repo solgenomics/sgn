@@ -177,7 +177,43 @@ export function init(vector_id) {
     
     //when someone clicks save the dialog is opened
     jQuery("#saveVector").click(function () {
-	jQuery('#saveDialog').dialog('open');
+	//jQuery('#saveDialog').dialog('open');
+	var yes = confirm('Save current changes?');
+	if (yes) {
+	    var table_data = getFeatureDataFromDataTable();
+	    var re_sites_table = getREsitesDataFromDataTable();
+	    var metadata = getMetadataFromDataTable();
+	    var sequence = getSequenceDataFromDataTable();
+	    
+	    //	var id = jQuery("#saveInput").val();
+	    
+	    //	alert(JSON.stringify(metadata) + " AND " + JSON.stringify(table_data) + " AND "+ JSON.stringify(re_sites_table) + " AND "+ sequence);
+	    
+	    var data = { 
+		'metadata' : metadata, 
+		'features' : table_data,
+		're_sites' : re_sites_table,
+		'sequence' : ""
+	    };
+	    
+	    //	alert("NOW STRINGIFIED: "+ JSON.stringify(data) );
+	    
+	    var string_data = JSON.stringify(data);
+	    console.log(vector_id);
+	    console.log('Data as string: '+string_data);
+
+	    string_data = encodeURIComponent(string_data);
+	    
+	    //This is the link where the data should be stored
+	    jQuery.ajax({
+		url: '/vectorviewer/' + vector_id + '/store?data='+string_data,
+		'method' : "POST"
+	    }).then(
+		function() {  alert('Sequence successfully saved!');},
+		function() { alert('An error occurred while trying to save the vector data.');
+			   }
+	    );   
+	}	
     });
     
     
@@ -277,8 +313,7 @@ export function init(vector_id) {
 	    } );
     
     jQuery('#add_feature_data_submit_button').click( function() {
-//	alert('clicked add feature data!');
-	
+	//alert('clicked add feature data!');	
 	var feature_name = jQuery('#feature_name').val();
 	var start_coord = jQuery('#feature_start_coord').val();
 	var end_coord = jQuery('#feature_end_coord').val();
@@ -286,8 +321,7 @@ export function init(vector_id) {
 	var orientation = jQuery('#feature_orientation_select option:selected').text();
 	var row = [ feature_name, start_coord, end_coord, feature_color, orientation ];
 
-	
-//	alert(JSON.stringify(row));
+	//alert(JSON.stringify(row));
 	featureDataTableAddRow(row);
 	jQuery('#add_feature_dialog').modal("hide");
     });
@@ -307,7 +341,7 @@ export function init(vector_id) {
     jQuery('#add_re_site_button').click( function() {
 	jQuery('#re_site_name').val("");
 	jQuery('#re_site_cut_coord').val("");
-	jQuery('#re_site_table_row_id').val(undefined);
+	jQuery('#re_site_table_row_id').val("");
 
 	jQuery('#add_re_dialog').modal('show');
 
@@ -409,10 +443,12 @@ function featureDataTableAddRow(row) {
     var data = getFeatureDataFromDataTable();
 
     var row_id = jQuery('#feature_table_row_id').val(); 
-    if (row_id === undefined) {
+    if (row_id === "") {
+//	alert('Adding row');
 	data.push(row);
     }
     else {
+//	alert('Replacing row');
 	data[row_id] = row;
     }
 
