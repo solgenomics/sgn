@@ -37,8 +37,8 @@ sub _validate_with_plugin {
     my $parsed_data = $parsed->{data};
     my @markers = @{$parsed->{values}->{'Locus'}};
     my @alleles = @{$parsed->{values}->{'Allele'}};
-    my @categories = @{$parsed->{values}->{'Category'}};
-    my @references = @{$parsed->{values}->{'Reference'}};
+    my @categories = @{$parsed->{values}->{'Category'} || []};
+    my @references = @{$parsed->{values}->{'Reference'} || []};
 
     # Return if parsing errors
     if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
@@ -171,15 +171,17 @@ sub _validate_with_plugin {
     }
 
     # Lookup the existing dbs
-    $phs = join ',', map { "?" } keys %db_names;
-    $q = "SELECT db_id, lower(name) FROM public.db WHERE lower(name) IN ($phs)";
-    $h = $dbh->prepare($q);
-    $h->execute(keys %db_names);
     my %existing_dbs;
-    while ( my ($db_id, $db_name) = $h->fetchrow_array()) {
-        $existing_dbs{$db_name} = $db_id;
+    if ( scalar(keys %db_names) > 0 ) {
+        $phs = join ',', map { "?" } keys %db_names;
+        $q = "SELECT db_id, lower(name) FROM public.db WHERE lower(name) IN ($phs)";
+        $h = $dbh->prepare($q);
+        $h->execute(keys %db_names);
+        while ( my ($db_id, $db_name) = $h->fetchrow_array()) {
+            $existing_dbs{$db_name} = $db_id;
+        }
+        $self->parsed_dbs(\%existing_dbs);
     }
-    $self->parsed_dbs(\%existing_dbs);
 
     # Find any missing dbs
     my @missing_dbs;
