@@ -1620,9 +1620,14 @@ sub upload_qPCR_data_POST : Args(0) {
 
     my @vector_construct_genes = ();
     if ($gene_info) {
-        @vector_construct_genes = split(',',$gene_info);
+        my @gene_names = ();
+        @gene_names = split(',',$gene_info);
+        foreach my $name (@gene_names) {
+            $name =~ s/^\s+|\s+$//g;
+            push @vector_construct_genes, $name;
+        }
     }
-#    print STDERR "VECTOR CONSTRUCT GENES =".Dumper(\@vector_construct_genes)."\n";
+
     $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes, endogenous_control => $endogenous_control);
 
     $parser->load_plugin($plugin_type);
