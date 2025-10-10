@@ -15,6 +15,7 @@ var margin, width, height, radius;
 var svg;
 //var data = [];
 var re_sites_table = new Array();
+var modified; // keep track if the data was changed
 
 export function init(vector_id) {
 
@@ -401,6 +402,18 @@ export function init(vector_id) {
     });
 
 
+    $(window).bind('beforeunload', function(){
+	
+	if (modified) {
+	    confirm('You have unsaved changes in VectorViewer. Are you sure you would like to leave the page?');
+
+	    if (yes) {
+		return 1;
+	    }
+	}
+	return undefined;
+    });
+});
 
 //    alert('INIT completed.');
     
