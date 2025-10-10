@@ -275,8 +275,6 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     }
 
     my $vector_related_genes;
-    my $vector_assay_tissue_types;
-    my $vector_assay_dates;
     my $vector_analyzed_tissue_types;
 
     if ($stock_type eq 'vector_construct') {

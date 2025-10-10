@@ -1,6 +1,7 @@
 
 <%args>
-$stock_id
+$vector_id
+$transformation_id => undef
 $stock_uniquename => undef
 $stock_type => undef
 $vector_related_genes => undef
@@ -47,7 +48,7 @@ $vector_analyzed_tissue_types => undef
     </table>
 </div>
 
-<& /transformation/upload_qPCR_data_dialog.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
+<& /transformation/upload_qPCR_data_dialog.mas, stock_id => $vector_id, stock_uniquename => $stock_uniquename &>
 
 <style>
     .table th {
@@ -60,38 +61,38 @@ $vector_analyzed_tissue_types => undef
 
 jQuery(document).ready(function(){
 
-    const stock_id = "<%$stock_id%>";
+    const vector_id = "<%$vector_id%>";
     const stock_type = "<%$stock_type%>";
     let tissue_type = '';
     let assay_date = '';
 
     jQuery('#vector_transgenic_line_details_section_onswitch').click( function() {
         tissue_type = jQuery('#analyzed_tissue_types_select').val();
-        get_select_box('assay_dates', 'assay_date_select_div', { 'name' : 'tissue_assay_date', 'id' : 'tissue_assay_date', 'vector_stock_id': stock_id, 'assay_tissue_type': tissue_type});
+        get_select_box('assay_dates', 'assay_date_select_div', { 'name' : 'tissue_assay_date', 'id' : 'tissue_assay_date', 'vector_stock_id': vector_id, 'assay_tissue_type': tissue_type});
 
-        display_vector_transgenic_line_details(stock_id, tissue_type);
+        display_vector_transgenic_line_details(vector_id, tissue_type);
     });
 
     jQuery('#analyzed_tissue_types_select').change( function() {
         tissue_type = jQuery('#analyzed_tissue_types_select').val();
-        get_select_box('assay_dates', 'assay_date_select_div', { 'name' : 'tissue_assay_date', 'id' : 'tissue_assay_date', 'vector_stock_id': stock_id, 'assay_tissue_type': tissue_type });
-        display_vector_transgenic_line_details(stock_id, tissue_type);
+        get_select_box('assay_dates', 'assay_date_select_div', { 'name' : 'tissue_assay_date', 'id' : 'tissue_assay_date', 'vector_stock_id': vector_id, 'assay_tissue_type': tissue_type });
+        display_vector_transgenic_line_details(vector_id, tissue_type);
     });
 
     jQuery('#assay_date_select_div').change( function() {
         assay_date = jQuery('#tissue_assay_date').val();
-        display_vector_transgenic_line_details(stock_id, tissue_type, assay_date);
+        display_vector_transgenic_line_details(vector_id, tissue_type, assay_date);
     });
 
 
-    function display_vector_transgenic_line_details(stock_id, tissue_type, assay_date) {
+    function display_vector_transgenic_line_details(vector_id, tissue_type, assay_date) {
         var transgenic_line_details_table = jQuery('#vector_transgenic_line_details_table').DataTable({
             'autoWidth': false,
             'ordering': false,
             'destroy': true,
             'ajax': { 'url':  '/ajax/transformation/vector_transgenic_line_details',
                 'data': function(d) {
-                    d.stock_id = stock_id;
+                    d.stock_id = vector_id;
                     d.selected_tissue_type = tissue_type;
                     d.selected_assay_date = assay_date;
                     d.stock_type = stock_type;
