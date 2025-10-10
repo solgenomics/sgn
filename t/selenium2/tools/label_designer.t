@@ -25,7 +25,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->find_element("//li[\@data-original-index='5']")->click();
 
-    sleep(5);
+    sleep(30);
 
     $t->find_element_ok(
         '//select[@id="label_designer_data_level"]',
