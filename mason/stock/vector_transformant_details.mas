@@ -60,7 +60,8 @@ $vector_analyzed_tissue_types => undef
 
 jQuery(document).ready(function(){
 
-    let stock_id = "<%$stock_id%>";
+    const stock_id = "<%$stock_id%>";
+    const stock_type = "<%$stock_type%>";
     let tissue_type = '';
     let assay_date = '';
 
@@ -93,6 +94,7 @@ jQuery(document).ready(function(){
                     d.stock_id = stock_id;
                     d.selected_tissue_type = tissue_type;
                     d.selected_assay_date = assay_date;
+                    d.stock_type = stock_type;
                 }
             }
         });
