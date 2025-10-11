@@ -226,8 +226,14 @@
         </div>
       </div>
       <div class="modal-footer">
+        <form class="form-inline" style="float:left">
+          <label>Download column:</label>
+          <select id="comparison_column_select" class="form-control input-sm">
+          </select>
+          <button id="download_comparison_column" type="button" class="btn btn-primary btn-sm">Download</button>
+        </form>
         <form class="form-inline" style="float:right">
-          <button id="close_availible_seedlots_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button id="close_list_comparison_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </form>
       </div>
     </div>

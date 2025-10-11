@@ -1843,6 +1843,8 @@ function createThreeColumnDiff(list_ids) {
     var list_name2 = lo.listNameById(list_ids[1]);
     
     lo.compareLists(list_ids).then(function(result) {
+        window._listComparisonResult = result;
+
         // Find max column length for balanced table
         const maxRows = Math.max(
             result.only_in_list1.length,
@@ -1864,7 +1866,7 @@ function createThreeColumnDiff(list_ids) {
         }
 
         let html = `
-          <table class="table table-bordered">
+          <table id="list_comparison_table" class="table table-bordered">
             <thead>
               <tr>
                 <th style="width: 40%">Only in ${list_name1}</th>
@@ -1879,9 +1881,58 @@ function createThreeColumnDiff(list_ids) {
         `;
 
         jQuery('#list_comparison_modal_div').html(html);
+
+        let columnNames = { [`Only in ${list_name1}`]: "only_in_list1", [`Only in ${list_name2}`] : "only_in_list2", "In Both" : "in_both"};
+        window._columnNames = columnNames;
+
+        const $dropdown = jQuery('#comparison_column_select');
+        $dropdown.empty();
+        jQuery('#list_comparison_modal_div table thead th').each(function(i) {
+            const title = jQuery(this).text().trim();
+            $dropdown.append(`<option value"${i}">${title}</option>`);
+
+        });
         jQuery('#list_comparison_modal').modal('show');
     });
+
 }
+
+jQuery(document).on('click', '#download_comparison_column', function() {
+    
+    let tableHeader = jQuery('#comparison_column_select').val();
+    let columnNames = window._columnNames;
+    const selected = columnNames[tableHeader];
+
+    const result = window._listComparisonResult;
+    const values = result[selected];
+    const headerKeys = Object.keys(columnNames);
+
+    if (values.length === 0) {
+        alert(`No data found in column: ${tableHeader}`);
+        return;
+    }
+
+    const textContent = values.join('\n');
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    let downloadName;
+    if (tableHeader === "In Both") {
+        const listName1 = headerKeys[0].replace("Only in", "");
+        const listName2 = headerKeys[1].replace("Only in", "");
+        downloadName = `In both ${listName1} and ${listName2}`;
+    } else {
+        downloadName = tableHeader;
+    }
+
+    a.download = `${downloadName}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
 
 function pasteTraitList(div_name) {
     var lo = new CXGN.List();
