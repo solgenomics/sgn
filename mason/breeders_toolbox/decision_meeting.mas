@@ -1,0 +1,25 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas,
+   classes => ['CXGN.BreederSearch','CXGN.Trial','jquery.iframe-post-form' ],
+   entries => ['decision_meeting'] &>
+
+<& /page/page_title.mas, title=>"Decision Meeting" &>
+
+<div>
+
+<%perl>
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' name='upload_meeting_spreadsheet_link'>Upload Meeting Setup</button><button class='btn btn-success' style='margin:3px' id='create_meeting_dialog'>Create Meeting</button>";
+</%perl>
+
+<& /breeders_toolbox/decision_meeting/add_meeting_dialog.mas &>
+
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Decision Meeting</h4>", info_section_subtitle => 'Upload or create meeting setup', buttons_html => $buttons_html, icon_class => "glyphicon glyphicon-list-alt", info_section_id => "decision_meeting_section" &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Accession Tracker</h4>", info_section_subtitle => 'Accession Tracker according to decisions',icon_class => "glyphicon glyphicon-signal", info_section_id => "accession_meeting_section" &>
+
+</div>
+
+

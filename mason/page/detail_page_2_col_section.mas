@@ -558,6 +558,13 @@ $field_headers => ()
                                 <& /breeders_toolbox/cross/all_cross_entries.mas &>
 %} #End all_cross_entries_section
 
+% if ($info_section_id eq 'decision_meeting_section'){
+                                <& /breeders_toolbox/decision_meeting/decision_meeting_section.mas &>
+% } #End decision_meeting_section
+% if ($info_section_id eq 'accession_meeting_section'){
+                                <& /breeders_toolbox/decision_meeting/accession_meeting_section.mas &>
+% } #End accession_meeting_section
+
 % if ($info_section_id eq 'manage_nirs_main'){
                                 <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities=>$sampling_facilities, sample_tissue_types=>$sample_tissue_types &>
 % } #End manage_nirs_main

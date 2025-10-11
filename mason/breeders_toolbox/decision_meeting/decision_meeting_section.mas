@@ -1,0 +1,57 @@
+<%doc>Decision Meeting</%doc>
+
+<div class="well">
+
+  <&| /page/info_section.mas,
+       title=>'Meeting Tracker',
+       is_subsection=>1, collapsible=>1, collapsed=>0,
+       subtitle=>'View Meetings Record'
+  &>
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div class="table-responsive">
+          <table id="meeting_table" class="table table-striped table-bordered" width="100%">
+            <thead>
+              <tr>
+                <th>Meeting Name</th>
+                <th>Breeding Program</th>
+                <th>Location</th>
+                <th>Year</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </&>
+
+  <&| /page/info_section.mas,
+       title=>'Approvers Tracker',
+       is_subsection=>1, collapsible=>1, collapsed=>0,
+       subtitle=>"View Approvers' Record"
+  &>
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div class="table-responsive">
+          <table id="approvers_table" class="table table-striped table-bordered" width="100%">
+            <thead>
+              <tr>
+                <th>Meeting Name</th>
+                <th>Attendee</th>
+                <th>Validation Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </&>
+
+</div>
+
+
+

@@ -1,0 +1,70 @@
+<%args>
+$high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabolomics
+</%args>
+
+<!-- Create Meeting Modal -->
+<!-- 1) The button that OPENS the modal -->
+<button id="create_meeting_dialog" class="btn btn-primary">Create Meeting</button>
+
+<!-- 2) The modal -->
+<div id="createMeetingModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <form id="create-meeting-form">
+        <div class="modal-header">
+          <h4 class="modal-title">New Decision Meeting</h4>
+        </div>
+
+        <div class="modal-body">
+          <div id="create-meeting-error" class="alert alert-danger" style="display:none"></div>
+
+          <!-- Fields expected by your JS -->
+          <div class="form-group">
+            <label for="mtg_name">Meeting Name</label>
+            <input id="mtg_name" class="form-control" type="text">
+          </div>
+
+          <div class="form-group">
+            <label for="mtg_program">Program</label>
+            <select id="mtg_program" class="form-control"></select>
+          </div>
+
+          <div class="form-group">
+            <label for="mtg_location">Location</label>
+            <input id="mtg_location" class="form-control" type="text">
+          </div>
+
+          <div class="form-group">
+            <label for="mtg_year">Year</label>
+            <input id="mtg_year" class="form-control" type="number">
+          </div>
+
+          <div class="form-group">
+            <label for="mtg_date">Date</label>
+            <input id="mtg_date" class="form-control" type="date">
+          </div>
+
+          <div class="form-group">
+            <label for="mtg_data">Data (optional)</label>
+            <textarea id="mtg_data" class="form-control" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="mtg_attendees">Attendees (comma or newline separated)</label>
+            <textarea id="mtg_attendees" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+
+          <!-- IMPORTANT: give this the id your JS listens for -->
+          <button id="create_meeting_save" type="submit" class="btn btn-success">Save Meeting</button>
+          <!-- (Alternatively you could name it create_meeting_submit; your JS supports either) -->
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
