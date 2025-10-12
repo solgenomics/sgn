@@ -36,7 +36,7 @@ my $dbh = $stockref->{dbh};
 </%perl>
 
 var trial_id = '<% $trial_id %>';
-var plotNames = [];
+var stockNames = [];
 
 jQuery(document).ready( function() {
 
@@ -87,9 +87,9 @@ function getStocksWithImages() {
             jQuery("#working_modal").modal("hide");
             var data = response.data;
             if (data.length > 0) {
-                plotNames.push(data);
+                stockNames.push(data);
             } else {
-                plotNames.push("*");
+                stockNames.push("*");
             }
             _load_stock_image_results();
         },
@@ -100,9 +100,9 @@ function getStocksWithImages() {
 }
 
 function _load_stock_image_results() {
-    var plotNamesString = plotNames.join(',');
+    var stockNamesString = stockNames.join(',');
 
-    plot_images_table = jQuery('#plot_images_results').DataTable({
+    stock_images_table = jQuery('#plot_images_results').DataTable({
         'destroy' : true,
         'searching' : true,
         'ordering' : true,
@@ -113,7 +113,7 @@ function _load_stock_image_results() {
         'ajax': { 'url': '/ajax/search/images',
             'type': 'POST',
             'data': function(d) {
-                d.image_stock_uniquename = plotNamesString;
+                d.image_stock_uniquename = stockNamesString;
             },
             'dataSrc': function(json) {
                 json.data.forEach(function(row) {
