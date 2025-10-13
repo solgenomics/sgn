@@ -247,7 +247,7 @@ export function init(vector_id) {
 	    url: '/vectorviewer/' + vector_id + '/store?data='+string_data,
 	    'method' : "POST"
 	}).then(
-	    function() {  alert('Sequence successfully saved!');},
+	    function() {  modified = false; alert('Sequence successfully saved!');},
 	    function() { alert('An error occurred while trying to save the vector data.');
 		       }
 	);
@@ -324,6 +324,7 @@ export function init(vector_id) {
 
 	//alert(JSON.stringify(row));
 	featureDataTableAddRow(row);
+	modified = true;
 	jQuery('#add_feature_dialog').modal("hide");
     });
 
@@ -335,6 +336,7 @@ export function init(vector_id) {
 
 	var row = [ feature_name, start_coord ];
 
+	modified = true;
 //	alert('ADDING ROW '+JSON.stringify(row));
 	re_site_datatable_add_row(row);
     });
@@ -403,7 +405,7 @@ export function init(vector_id) {
 
 
     jQuery(window).on('beforeunload', function(){
-	var modified = true;
+
 	alert('beforeunload');
 	if (modified) {
 	    return 'You have unsaved changes in VectorViewer. Are you sure you would like to leave the page?';
