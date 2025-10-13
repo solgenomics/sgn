@@ -402,20 +402,16 @@ export function init(vector_id) {
     });
 
 
-    $(window).bind('beforeunload', function(){
-	
+    jQuery(window).on('beforeunload', function(){
+	var modified = true;
+	alert('beforeunload');
 	if (modified) {
-	    confirm('You have unsaved changes in VectorViewer. Are you sure you would like to leave the page?');
+	    return 'You have unsaved changes in VectorViewer. Are you sure you would like to leave the page?';
 
-	    if (yes) {
-		return 1;
-	    }
 	}
-	return undefined;
     });
-});
 
-//    alert('INIT completed.');
+    alert('INIT completed.');
     
 }
 
