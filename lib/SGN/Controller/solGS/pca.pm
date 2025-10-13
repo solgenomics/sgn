@@ -433,7 +433,7 @@ sub pca_geno_input_files {
     my ( $self, $c ) = @_;
 
     my $data_type = $c->stash->{data_type};
-    my $files;
+    my $files = [];
 
     if ( $data_type =~ /genotype/i ) {
         if ( $c->req->referer =~

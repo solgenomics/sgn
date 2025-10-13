@@ -52,6 +52,7 @@ genoData         <- c()
 genoMetaData     <- c()
 filteredGenoFile <- c()
 phenoData        <- c()
+phenoDataNotes   <- c()
 
 set.seed(235)
 
@@ -114,7 +115,19 @@ if (dataType == 'genotype') {
         phenoData <- na.omit(phenoData)
     }
 
+    traits <- colnames(phenoData)
+    phenoDataNotes <- paste0("\nThis PCA is done on phenotype data. \n")
+    phenoDataNotes <- append(phenoDataNotes, 
+    paste0("\n\nTraits before removing zero variance traits: ", 
+    paste(traits, collapse = ", ")))
+    
     phenoData <- phenoData[, apply(phenoData, 2, var) != 0 ]
+    traits <- colnames(phenoData)
+    phenoDataNotes <- append(phenoDataNotes, 
+    paste0("\n\nTraits After removing zero variance traits: ", 
+    paste(traits, collapse = ", ")))
+    phenoDataNotes <- append(phenoDataNotes, 
+    paste0("\nTrait data is centered and scaled before PCA.\n"))
     phenoData <- scale(phenoData, center=TRUE, scale=TRUE)
     phenoData <- round(phenoData, 3)
 }
@@ -125,13 +138,24 @@ if (is.null(genoData) && is.null(phenoData)) {
   q("no", 1, FALSE)
 }
 
+notesHeader <- paste0("PCA Analysis Report")
+notesHeader <- append(notesHeader, paste0("\nDate: ",
+           format(Sys.time(), "%d %b %Y %H:%M"),
+           "\n\n\n"))
+
+
+# notesHeader<- format(notesHeader, width = 80, justify = "c")
+
+genoProcessingNotes <- c()
 genoDataMissing <- c()
 if (dataType == 'genotype') {
     genoData <- genoDataFilter::convertToNumeric(genoData)
-    genoData <- genoDataFilter::filterGenoData(genoData, maf=0.01)
+    filterGenoDataResult <- genoDataFilter::filterGenoData(genoData, maf=0.01, logReturn = TRUE)
+    genoProcessingNotes <- paste0("\nPreprocessing genotype data before PCA\n")
+    genoProcessingNotes <- append(genoProcessingNotes, filterGenoDataResult$log)
+    genoData <- filterGenoDataResult$data
     genoData <- genoDataFilter::roundAlleleDosage(genoData)
 
-    message("No. of geno missing values, ", sum(is.na(genoData)) )
     if (sum(is.na(genoData)) > 0) {
         genoDataMissing <- c('yes')
         # genoData <- na.roughfix(genoData)
@@ -153,6 +177,7 @@ if (sum(is.na(pcaData)) > 0) {
 }
 
 pcsCnt <- ifelse(ncol(pcaData) < 10, ncol(pcaData), 10)
+pcaNotes <- paste0("\n\nPCA is done using the prcomp function in R.\n")
 pca    <- prcomp(pcaData, retx=TRUE)
 pca    <- summary(pca)
 
@@ -225,16 +250,13 @@ if (!is.null(genoData)) {
     }
 }
 
-
-# ## if (!is.null(genoDataMissing)) {
-# ## fwrite(genoData,
-# ##        file      = genoDataFile,
-# ##        sep       = "\t",
-# ##        row.names = TRUE,
-# ##        quote     = FALSE,
-# ##        )
-#
-# ## }
-
+cat(notesHeader, 
+    genoProcessingNotes, 
+    phenoDataNotes,
+    pcaNotes,
+    fill=TRUE, 
+    file = reportFile,
+    append = FALSE
+)
 
 q(save = "no", runLast = FALSE)
