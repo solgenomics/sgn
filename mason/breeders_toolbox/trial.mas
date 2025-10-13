@@ -322,15 +322,15 @@ jQuery(document).ready(function () {
     let button_lable = '';
     const trial_stock_type = "<%$trial_stock_type%>";
     if (trial_stock_type == 'cross') {
-        button_label = 'Add Additional Crosses';
+        button_label = 'Add Additional Crosses or Plants';
     } else if (trial_stock_type == 'family_name') {
-        button_label = 'Add Additional Families';
+        button_label = 'Add Additional Families or Plants';
     } else {
-        button_label = 'Add Additional Accessions';
+        button_label = 'Add Additional Accessions or Plants';
     }
 
     document.getElementById('trial_detail_page_add_additional_stocks').innerHTML = button_label;
-    
+
 });
 
 

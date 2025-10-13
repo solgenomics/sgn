@@ -6006,6 +6006,7 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     my $trial_id = $c->stash->{trial_id};
     my $stock_list_json = $c->req->param('new_stocks');
     my $number_of_plants_json = $c->req->param('number_of_plants');
+    my $addition_type = $c->req->param('addition_type');
     my $new_stock_list = decode_json $stock_list_json;
     my $number_of_plants_array = decode_json $number_of_plants_json;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -6039,7 +6040,7 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     my $trial_name = $trial->get_name;
 
     my $trial_stocks = $trial->get_accessions();
-    my @duplicated_stocks = ();
+    my @invalid_stocks = ();
     my %seen_stock_names;
     foreach my $stock (@$trial_stocks) {
         my $stock_name = $stock->{'accession_name'};
@@ -6047,14 +6048,24 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     }
 
     foreach my $new_stock (@$new_stock_list) {
-        if ($seen_stock_names{$new_stock}) {
-            push @duplicated_stocks, $new_stock;
+        if ($addition_type eq 'new_accessions') {
+            if ($seen_stock_names{$new_stock}) {
+                push @invalid_stocks, $new_stock;
+            }
+        } elsif ($addition_type eq 'additional_plants') {
+            if (!$seen_stock_names{$new_stock}) {
+                push @invalid_stocks, $new_stock;
+            }
         }
     }
 
-    if (scalar @duplicated_stocks > 0) {
-        my $duplicated_stocks_string = join(",", @duplicated_stocks);
-        $c->stash->{rest} = {error=>"Error: accessions or crosses or families alredy in this trial: $duplicated_stocks_string"};
+    if (scalar @invalid_stocks > 0) {
+        my $invalid_stocks_string = join(",", @invalid_stocks);
+        if ($addition_type eq 'new_accessions') {
+            $c->stash->{rest} = {error=>"Error: accessions or crosses or families alredy in this trial: $invalid_stocks_string"};
+        } elsif ($addition_type eq 'additional_plants') {
+            $c->stash->{rest} = {error=>"Error: accessions or crosses or families are not in this trial: $invalid_stocks_string"};
+        }
         return;
     }
 

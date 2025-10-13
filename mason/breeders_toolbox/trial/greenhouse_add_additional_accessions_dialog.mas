@@ -46,6 +46,16 @@ $trial_stock_type
                         <div class="col-sm-11">
                             <div class="form-horizontal">
                                 <div class="form-group">
+                                    <label class="col-sm-4 control-label">Addition Type: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="addition_type">
+                                            <option value="">Select a type</option>
+                                            <option value="new_accessions">add additional accessions</option>
+                                            <option value="additional_plants">add additional plants for accessions already in the greenhouse</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="control-label col-sm-4"><%$list_label%></label>
                                     <div class="col-sm-7" >
                                         <div class="input-group">
@@ -165,6 +175,12 @@ jQuery(document).ready(function(){
         let new_stocks = [];
         let number_of_plants = [];
 
+        const addition_type = jQuery('#addition_type').val();
+        if (!addition_type) {
+            alert("Please select an addition type");
+            return;
+        }
+
         if (!stock_list_id) {
             alert("Please select a list");
             return;
@@ -183,6 +199,7 @@ jQuery(document).ready(function(){
             data: {
                 'new_stocks': JSON.stringify(new_stocks),
                 'number_of_plants': JSON.stringify(number_of_plants),
+                'addition_type': addition_type,
             },
             dataType:'json',
             beforeSend: function() {
@@ -209,6 +226,7 @@ jQuery(document).ready(function(){
     jQuery("[name='add_additional_stocks_dismiss_button']").click(function() {
         jQuery('#add_additional_stocks_using_list_dialog').modal('hide');
         jQuery('#additional_stock_list_select').val('');
+        jQuery('#addition_type').val('');
         jQuery('#default_number_plants_per_stock').val('1');
         document.getElementById('additional_stocks_form_div').innerHTML = "";
     });
