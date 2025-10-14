@@ -20,15 +20,15 @@ $trial_stock_type
 % my $list_label = '';
 % my $table_header = '';
 % if ($trial_stock_type eq 'cross') {
-%    $title = 'Add Additional Crosses in This Greenhouse Trial';
+%    $title = 'Add Additional Crosses or Plants in This Greenhouse Trial';
 %    $list_label = 'Cross List:';
 %    $table_header = 'Cross Name';
 % } elsif ($trial_stock_type eq 'family_name') {
-%    $title = 'Add Additional Families in This Greenhouse Trial';
+%    $title = 'Add Additional Families or Plants in This Greenhouse Trial';
 %    $list_label = 'Family Name List:';
 %    $table_header = 'Family Name';
 % } else {
-%    $title = 'Add Additional Accessions in This Greenhouse Trial';
+%    $title = 'Add Additional Accessions or Plants in This Greenhouse Trial';
 %    $list_label = 'Accession List:';
 %    $table_header = 'Accession Name';
 % }
