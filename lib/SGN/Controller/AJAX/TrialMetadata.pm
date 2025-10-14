@@ -6004,10 +6004,10 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $trial_id = $c->stash->{trial_id};
-    my $stock_list_json = $c->req->param('new_stocks');
+    my $stock_list_json = $c->req->param('stock_names');
     my $number_of_plants_json = $c->req->param('number_of_plants');
     my $addition_type = $c->req->param('addition_type');
-    my $new_stock_list = decode_json $stock_list_json;
+    my $stock_list = decode_json $stock_list_json;
     my $number_of_plants_array = decode_json $number_of_plants_json;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
@@ -6047,14 +6047,14 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         $seen_stock_names{$stock_name} = 1;
     }
 
-    foreach my $new_stock (@$new_stock_list) {
+    foreach my $stock_name (@$stock_list) {
         if ($addition_type eq 'new_accessions') {
-            if ($seen_stock_names{$new_stock}) {
-                push @invalid_stocks, $new_stock;
+            if ($seen_stock_names{$stock_name}) {
+                push @invalid_stocks, $stock_name;
             }
         } elsif ($addition_type eq 'additional_plants') {
-            if (!$seen_stock_names{$new_stock}) {
-                push @invalid_stocks, $new_stock;
+            if (!$seen_stock_names{$stock_name}) {
+                push @invalid_stocks, $stock_name;
             }
         }
     }
@@ -6070,56 +6070,61 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     }
 
     my %additional_greenhouse_design;
-    for (my $i = 0; $i < scalar(@$new_stock_list); $i++) {
-        my %plot_info;
-        my @plant_names = ();
-        my $plot_number = $next_plot_number + $i;
-        $plot_info{'plot_number'} = $plot_number;
-        $plot_info{'stock_name'} = $new_stock_list->[$i];
-        $plot_info{'block_number'} = 1;
-        $plot_info{'rep_number'} = 1;
-        $plot_info{'seedlot_name'} = undef;
+    if ($addition_type eq 'new_accessions') {
+        for (my $i = 0; $i < scalar(@$stock_list); $i++) {
+            my %plot_info;
+            my @plant_names = ();
+            my $plot_number = $next_plot_number + $i;
+            $plot_info{'plot_number'} = $plot_number;
+            $plot_info{'stock_name'} = $stock_list->[$i];
+            $plot_info{'block_number'} = 1;
+            $plot_info{'rep_number'} = 1;
+            $plot_info{'seedlot_name'} = undef;
 
-        my $plot_name = $trial_name."_".$new_stock_list->[$i]."_".$plot_number;
-        my $stock_number_of_plants = $number_of_plants_array->[$i];
-            for (my $j = 1; $j <= $stock_number_of_plants; $j++) {
-                my $plant_name = $plot_name."_plant_$j";
-                push @plant_names, $plant_name;
-            }
-        $plot_info{'plot_name'} = $plot_name;
-        $plot_info{'plant_names'} = \@plant_names;
-        $additional_greenhouse_design{$plot_number} = \%plot_info;
-    }
+            my $plot_name = $trial_name."_".$stock_list->[$i]."_".$plot_number;
+            my $stock_number_of_plants = $number_of_plants_array->[$i];
+                for (my $j = 1; $j <= $stock_number_of_plants; $j++) {
+                    my $plant_name = $plot_name."_plant_$j";
+                    push @plant_names, $plant_name;
+                }
+            $plot_info{'plot_name'} = $plot_name;
+            $plot_info{'plant_names'} = \@plant_names;
+            $additional_greenhouse_design{$plot_number} = \%plot_info;
+        }
 
-    my $project = $schema->resultset("Project::Project")->find({project_id => $trial_id});
-    my $nd_experiment_id = $project->find_related('nd_experiment_projects',{project_id => $trial_id})->nd_experiment_id();
+        my $project = $schema->resultset("Project::Project")->find({project_id => $trial_id});
+        my $nd_experiment_id = $project->find_related('nd_experiment_projects',{project_id => $trial_id})->nd_experiment_id();
 
-    print STDERR "TRIAL STOCK TYPE =".Dumper($trial->get_trial_stock_type())."\n";
-    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
-        bcs_schema => $schema,
-        trial_id => $trial_id,
-        trial_name => $trial_name,
-        nd_geolocation_id => $trial->get_location()->[0],
-        nd_experiment_id => $nd_experiment_id,
-        design_type => 'greenhouse',
-        design => \%additional_greenhouse_design,
-        operator => $sp_person_id,
-        trial_stock_type => $trial->get_trial_stock_type(),
-    });
+        print STDERR "TRIAL STOCK TYPE =".Dumper($trial->get_trial_stock_type())."\n";
+        my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+            bcs_schema => $schema,
+            trial_id => $trial_id,
+            trial_name => $trial_name,
+            nd_geolocation_id => $trial->get_location()->[0],
+            nd_experiment_id => $nd_experiment_id,
+            design_type => 'greenhouse',
+            design => \%additional_greenhouse_design,
+            operator => $sp_person_id,
+            trial_stock_type => $trial->get_trial_stock_type(),
+        });
 
-    my $error;
-    my $validate_design_error = $trial_design_store->validate_design();
-    if ($validate_design_error) {
-        print STDERR "ERROR: $validate_design_error\n";
-        return { error => "Error validating trial design: $validate_design_error." };
-    } else {
-        try {
-             $error = $trial_design_store->store();
-        } catch {
-            print STDERR "ERROR store: $_\n";
-            $error = $_;
+        my $error;
+        my $validate_design_error = $trial_design_store->validate_design();
+        if ($validate_design_error) {
+            print STDERR "ERROR: $validate_design_error\n";
+            return { error => "Error validating trial design: $validate_design_error." };
+        } else {
+            try {
+                 $error = $trial_design_store->store();
+            } catch {
+                print STDERR "ERROR store: $_\n";
+                $error = $_;
+            };
         };
-    };
+
+    } elsif ($addition_type eq 'additional_plants') {
+
+    }
 
     my $new_layout = CXGN::Trial::TrialLayout->new({
         schema => $schema,

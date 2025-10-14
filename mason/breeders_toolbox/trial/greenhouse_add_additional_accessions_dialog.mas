@@ -172,7 +172,7 @@ jQuery(document).ready(function(){
 
     jQuery('#add_additional_stocks_submit').click(function(e){
         e.preventDefault();
-        let new_stocks = [];
+        let stock_names = [];
         let number_of_plants = [];
 
         const addition_type = jQuery('#addition_type').val();
@@ -189,7 +189,7 @@ jQuery(document).ready(function(){
         jQuery('input[name="stock_plant_number"]').each(function() {
             value = this.value;
             var stock_name = jQuery(this).attr('stock_name');
-            new_stocks.push(stock_name);
+            stock_names.push(stock_name);
             number_of_plants.push(value);
         });
 
@@ -197,7 +197,7 @@ jQuery(document).ready(function(){
             url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/add_additional_stocks_for_greenhouse/',
             method: 'POST',
             data: {
-                'new_stocks': JSON.stringify(new_stocks),
+                'stock_names': JSON.stringify(stock_names),
                 'number_of_plants': JSON.stringify(number_of_plants),
                 'addition_type': addition_type,
             },
