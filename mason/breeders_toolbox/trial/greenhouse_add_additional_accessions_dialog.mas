@@ -225,8 +225,8 @@ jQuery(document).ready(function(){
 
     jQuery("[name='add_additional_stocks_dismiss_button']").click(function() {
         jQuery('#add_additional_stocks_using_list_dialog').modal('hide');
-        jQuery('#additional_stock_list_select').val('');
-        jQuery('#addition_type').val('');
+        jQuery('#additional_stock_list_select').val("");
+        jQuery('#addition_type').val("");
         jQuery('#default_number_plants_per_stock').val('1');
         document.getElementById('additional_stocks_form_div').innerHTML = "";
     });

@@ -6030,8 +6030,12 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         return;
     }
 
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $add_additional_plants = '1';
+
     my $original_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
     my $original_design = $original_layout-> get_design();
+    print STDERR "ORIGINAL DESIGN =".Dumper($original_design)."\n";
     my @all_plot_numbers = keys %{$original_design};
     my $last_plot_number = max(@all_plot_numbers);
     my $next_plot_number = $last_plot_number + 1;
@@ -6068,6 +6072,8 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         }
         return;
     }
+
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
 
     my %additional_greenhouse_design;
     if ($addition_type eq 'new_accessions') {
@@ -6123,7 +6129,37 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         };
 
     } elsif ($addition_type eq 'additional_plants') {
+        my $info = {};
+        for my $i (0 .. scalar @$stock_list) {
+            foreach my $plot_number (keys(%$original_design)) {
+                my $original_plant_names;
+                my $plot_name;
+                my $plot_id;
+                my $original_number_of_plants;
+                my @new_plant_names = ();
+                my $stock_name = $original_design->{$plot_number}->{'accession_name'};
 
+                if ($stock_name eq $stock_list->[$i]) {
+                    $plot_name =  $original_design->{$plot_number}->{'plot_name'};
+                    $plot_id =  $original_design->{$plot_number}->{'plot_id'};
+
+                    $original_plant_names =  $original_design->{$plot_number}->{'plant_names'};
+                    $original_number_of_plants = scalar @$original_plant_names;
+                    my $additional_number_of_plants = $number_of_plants_array->[$i];
+                    for (my $j = 1; $j <= $additional_number_of_plants; $j++) {
+                        my $next_plant_number = $original_number_of_plants + $j;
+                        my $plant_name = $plot_name."_plant_$next_plant_number";
+                        push @new_plant_names, $plant_name;
+                    }
+
+                    $info->{$plot_id}->{'plot_name'} = $plot_name;
+                    $info->{$plot_id}->{'plant_names'} = \@new_plant_names;
+                }
+            }
+        }
+        print STDERR "INFO =".Dumper($info)."\n";
+        my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        $greenhouse_trial->save_plant_entries($info,'' ,'' ,$user_id, $add_additional_plants);
     }
 
     my $new_layout = CXGN::Trial::TrialLayout->new({
