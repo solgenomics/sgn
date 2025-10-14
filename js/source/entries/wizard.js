@@ -4,24 +4,26 @@ import { WizardDatasets } from "../modules/wizard-datasets.js";
 import { WizardDownloads } from "../modules/wizard-downloads.js";
 
 const initialtypes = [
-  "accessions",
-  "organisms",
-  "tissue_samples",
-  "breeding_programs",
-  "genotyping_protocols",
-  "genotyping_projects",
-  "locations",
-  "seedlots",
-  "trait_components",
-  "traits",
-  "trials",
-  "trial_designs",
-  "trial_types",
-  "years"
+    "accessions",
+    "accessions_ids",
+    "organisms",
+    "tissue_samples",
+    "breeding_programs",
+    "genotyping_protocols",
+    "genotyping_projects",
+    "locations",
+    "seedlots",
+    "trait_components",
+    "traits",
+    "trials",
+    "trial_designs",
+    "trial_types",
+    "years"
 ];
 
 const types = {
   "accessions": "Accessions",
+  "accessions_ids": "Accessions Ids",
   "organisms": "Organisms",
   "breeding_programs": "Breeding Programs",
   "genotyping_protocols": "Genotyping Protocols",
@@ -49,35 +51,36 @@ const toLoadType = (t) => (t === "tissue_samples" ? "tissue_sample" : t);
 const fetchTypes = [...new Set([...initialtypes, "tissue_sample", "subplots", "plants", "plots"])];
 
 function makeURL(target, id) {
-  switch (target) {
-    case "accessions":
-    case "plants":
-    case "plots":
-    case "subplot":
-    case "tissue_sample":
-    case "tissue_samples": // support both; URLs expect stock path
-      return document.location.origin + `/stock/${id}/view`;
-    case "seedlots":
-      return document.location.origin + `/breeders/seedlot/${id}`;
-    case "breeding_programs":
-      return document.location.origin + `/breeders/manage_programs`;
-    case "locations":
-      return document.location.origin + `/breeders/locations`;
-    case "traits":
-    case "trait_components":
-      return document.location.origin + `/cvterm/${id}/view`;
-    case "trials":
-      return document.location.origin + `/breeders/trial/${id}`;
-    case "genotyping_protocols":
-      return document.location.origin + `/breeders_toolbox/protocol/${id}`;
-    case "genotyping_projects":
-      return document.location.origin + `/breeders/trial/${id}`;
-    case "trial_designs":
-    case "trial_types":
-    case "years":
-    default:
-      return null;
-  }
+    switch (target) {
+        case "accessions":
+        case "accessions_ids":
+        case "plants":
+        case "plots":
+        case "subplot":
+        case "tissue_sample":
+        case "tissue_samples": // support both; URLs expect stock path
+          return document.location.origin + `/stock/${id}/view`;
+        case "seedlots":
+          return document.location.origin + `/breeders/seedlot/${id}`;
+        case "breeding_programs":
+          return document.location.origin + `/breeders/manage_programs`;
+        case "locations":
+          return document.location.origin + `/breeders/locations`;
+        case "traits":
+        case "trait_components":
+          return document.location.origin + `/cvterm/${id}/view`;
+        case "trials":
+          return document.location.origin + `/breeders/trial/${id}`;
+        case "genotyping_protocols":
+          return document.location.origin + `/breeders_toolbox/protocol/${id}`;
+        case "genotyping_projects":
+          return document.location.origin + `/breeders/trial/${id}`;
+        case "trial_designs":
+        case "trial_types":
+        case "years":
+        default:
+          return null;
+    }
 }
 
 export function WizardSetup(main_id) {
