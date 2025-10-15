@@ -232,6 +232,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#add_additional_stocks_close_button").click(function(){
+        jQuery('#addition_type').val("");        
         location.reload();
     });
 
