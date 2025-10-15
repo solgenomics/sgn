@@ -310,6 +310,7 @@ function removeMarkerSet (markerset_id){
 
 
 function showMarkersetDetail (markerset_id){
+    jQuery('#markerset_detail_table').empty();
     jQuery.ajax({
         url: '/markerset/items',
         data: {'markerset_id': markerset_id},
