@@ -1,0 +1,38 @@
+
+<%args>
+$stock_id
+$stock_uniquename => undef
+$stock_type => undef
+</%args>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="vector_transgenic_line_details_table">
+    </table>
+</div>
+
+
+<style>
+    .table th {
+        white-space: nowrap;
+    }
+</style>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    const transgenic_line_details_table = jQuery('#vector_transgenic_line_details_table').DataTable({
+        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/vector_transgenic_line_details',
+        'autoWidth': false,
+        'ordering': false,
+        'columns': [
+            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
+            { title: "Number of Insertions", "data": "number_of_insertions" },
+         ],
+
+    });
+});
+
+
+</script>

@@ -1254,7 +1254,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         #my $err = $runner->err();
         #my $out = $runner->out();
 
-        print STDERR "Upload Trials Output (async):\n";
+        #print STDERR "Upload Trials Output (async):\n";
         #print STDERR "$err\n";
         #print STDERR "$out\n";
 
@@ -1275,17 +1275,21 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             sleep(1);
         }
 
-        # print STDERR "Upload Trials Output (sync):\n";
-        # print STDERR "$err\n";
-        # print STDERR "$out\n";
+        my $err_file = $job->cxgn_tools_run_config->{err};
+        my $out_file = $job->cxgn_tools_run_config->{out};
 
-        my $err = $job->cxgn_tools_run_config->{temp_base}."/job.err";
-        my $out = $job->cxgn_tools_run_config->{temp_base}."/job.out";
+        print STDERR "Upload Trials Output (sync):\n";
+        print STDERR "$err_file\n";
+        print STDERR "$out_file\n";
+
+        open my $err, "<", $err_file or die "No error file found!\n";
+        open my $out, "<", $out_file or die "No out file found!\n";
 
         # Collect errors and warnings from STDERR
         my @errors;
         my @warnings;
-        foreach (split(/\n/, $err)) {
+        while (<$err>) {
+            chomp;
             if ($_ =~ /^ERROR/) {
                 $_ =~ s/ERROR:? ?//;
                 push @errors, $_;
@@ -1295,6 +1299,16 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
                 push @warnings, $_;
             }
         }
+        # foreach (split(/\n/, $err)) {
+        #     if ($_ =~ /^ERROR/) {
+        #         $_ =~ s/ERROR:? ?//;
+        #         push @errors, $_;
+        #     }
+        #     elsif ($_ =~ /^WARNING/) {
+        #         $_ =~ s/WARNING:? ?//;
+        #         push @warnings, $_;
+        #     }
+        # }
 
         if ( scalar(@errors) > 0 ) {
             $c->stash->{rest} = {errors => \@errors};
@@ -1303,6 +1317,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         }
         if ( scalar(@warnings) > 0 ) {
             $c->stash->{rest} = {warnings => \@warnings};
+            $job->update_status("failed");
             return;
         }
     }

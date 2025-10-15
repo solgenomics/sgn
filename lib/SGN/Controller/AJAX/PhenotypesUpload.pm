@@ -94,6 +94,7 @@ sub upload_phenotype_verify_POST : Args(1) {
     }
     catch {
         $verified_error = $_;
+	print STDERR "ERROR DURING UPLOAD: $verified_error\n";
     };
 
     if ($verified_error) {

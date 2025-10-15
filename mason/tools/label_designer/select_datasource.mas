@@ -2,8 +2,8 @@
 <div class="text-center">
     <p><b>Welcome to the Label Designer</b></p>
     <br/>
-    <p>This workflow will guide you through each step of the design process. For detailed explanations of each step please refer to the <a href="http://solgenomics.github.io/sgn/03_managing_breeding_data/03_12.html">label designer section of the manual</a>.<p>
-    <p>To start, select a data source and a data level. The data source can be a list, crossing experiment, trial, or genotyping plate. When you are finished, click 'Next'<p>
+    <p>This workflow will guide you through each step of the design process. For detailed explanations of each step please refer to the <a href="https://solgenomics.github.io/sgn/using-the-label-designer.html">label designer section of the manual</a>.<p>
+    <p>To start, select a data source and a data level. The data source can be a list, crossing experiment, trial, or genotyping plate. When you are finished, click 'Next'.<p>
 </div>
 <br/><br/>
 <div class="container-fluid">
@@ -11,7 +11,7 @@
         <div class="col-md-6">
             <div class="row">
                 <div class="col-md-4 text-center">
-                    <label><strong>Data Type:</strong></label>
+                    <label><strong>Datatype:</strong></label>
                 </div>
                 <div class="col-md-8" id="data_source_type"></div>
             </div>

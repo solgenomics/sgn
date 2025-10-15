@@ -84,6 +84,7 @@ $pubs => undef
 $cvterm_add_uri => undef
 $referer => undef
 $is_obsolete => undef
+$is_in_trial => undef
 
 #Specific to genotyping protocol detail page
 $protocol_id => undef
@@ -217,6 +218,9 @@ $data_type => "" # for access_denied mason
    <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 % }
 
+% if ($info_section_id eq 'repetitive_measurements_data') {
+    <& /breeders_toolbox/trial/repetitive_measurements_data.mas, trial_id => $trial_id, trial_stock_type =>$trial_stock_type &>
+% }
 
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
@@ -233,7 +237,8 @@ $data_type => "" # for access_denied mason
 				&>
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/tools/correlation/analysis.mas,
-                                    corr_pop_id => $trial_id
+                                    corr_pop_id => $trial_id,
+                                    corr_pop_name => $trial_name
                                 &>
 
                                 <& /solgs/tools/anova/analysis.mas,
@@ -348,10 +353,14 @@ $data_type => "" # for access_denied mason
 % } #End vector_related_accessions_section
 % if ($info_section_id eq 'vector_obsoleted_accessions_section'){
                                 <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_related_accessions_section
+% } #End vector_obsoleted_accessions_section
+% if ($info_section_id eq 'vector_transgenic_line_details_section'){
+                                <& /stock/vector_transformant_details.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_transgenic_line_details_section
 % if ($info_section_id eq 'related_transformation_info_section'){
                                 <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
-% } #End vector_related_accessions_section
+% } #End related_transformation_info_section
+
 
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>
@@ -403,7 +412,7 @@ $data_type => "" # for access_denied mason
                                 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$referer &>
 % } #End stock_comments_section
 % if ($info_section_id eq 'stock_delete_section'){
-                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete &>
+                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete, is_in_trial=>$is_in_trial &>
 % } #End stock_delete_section
 % if ($info_section_id eq 'population_delete_section'){
                                 <& /stock/population_delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename &>

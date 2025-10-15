@@ -68,7 +68,16 @@ sub get_variables {
 
       my $schema = $self->schema();
 
-      my $variable_relationship = $schema->resultset("Cv::Cvterm")->search({ name => 'VARIABLE_OF' })->first();
+      my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+      my $rel_cv_id;
+      if ($relationship_cv) {
+          $rel_cv_id = $relationship_cv->cv_id ;
+      } else {
+          print STDERR "relationship ontology is not found in the database\n";
+      }
+
+      my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF'  , cv_id => $rel_cv_id });
+
       my $variable_id;
       if ($variable_relationship) {  $variable_id = $variable_relationship->cvterm_id(); }
 
@@ -130,8 +139,16 @@ sub store_composed_term {
     my $schema = $self->schema();
     my $dbh = $schema->storage->dbh;
 
-    my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains' });
-    my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF' });
+    my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+    my $rel_cv_id;
+    if ($relationship_cv) {
+        $rel_cv_id = $relationship_cv->cv_id ;
+    } else {
+        print STDERR "relationship ontology is not found in the database\n";
+    }
+
+    my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains' , cv_id => $rel_cv_id });
+    my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF'  , cv_id => $rel_cv_id });
 
     my @new_terms;
     foreach my $name (sort keys %$new_trait_names){
@@ -378,10 +395,16 @@ sub store_observation_variable_trait_method_scale {
             definition => $new_observation_variable_definition,
             dbxref_id => $new_term_observation_variable_dbxref->dbxref_id()
         });
-
-        my $is_a_relationship = $schema->resultset("Cv::Cvterm")->search({ name => 'is_a' })->first();
-        my $contains_relationship = $schema->resultset("Cv::Cvterm")->search({ name => 'contains' })->first();
-        my $variable_relationship = $schema->resultset("Cv::Cvterm")->search({ name => 'VARIABLE_OF' })->first();
+        my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+        my $rel_cv_id;
+        if ($relationship_cv) {
+            $rel_cv_id = $relationship_cv->cv_id ;
+        } else {
+            print STDERR "relationship ontology is not found in the database\n";
+        }
+        my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains' , cv_id => $rel_cv_id });
+        my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF'  , cv_id => $rel_cv_id });
+        my $is_a_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'is_a' , cv_id => $rel_cv_id });
 
         my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->create({
             subject_id => $new_observation_variable_cvterm->cvterm_id(),

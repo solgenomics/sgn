@@ -121,11 +121,18 @@ foreach (@{$response->{result}->{observations}}){
     delete $_->{observationDbId};
 }
 
+# the problem here is that the has is in random order, so to check
+# we need to sort the observations for something more stable
+#
+my @sorted_observations = sort { $a->{germplasmName} cmp $b->{germplasmName} } @{ $response->{result}->{observations} };
+
+$response->{result}->{observations} = \@sorted_observations;
+
 is_deeply($response, {
           'result' => {
-                        'observations' => [
-                                            {
-                                              'observationLevel' => 'plot',
+	      'observations' => [
+		                           {
+		                              'observationLevel' => 'plot',
                                               'observationTimeStamp' => '2015-06-16T00:53:26Z',
                                               'germplasmName' => 'test_accession3',
                                               'observationUnitName' => 'test_trial210',
@@ -140,6 +147,7 @@ is_deeply($response, {
                                               'externalReferences' => undef,
                                               'additionalInfo' => undef,
                                             },
+
                                             {
                                               'observationLevel' => 'plot',
                                               'observationTimeStamp' => '2015-06-16T00:53:26Z',
@@ -155,7 +163,8 @@ is_deeply($response, {
                                               'studyDbId' => 137,
                                               'externalReferences' => undef,
                                               'additionalInfo' => undef,
-                                            }
+                                            },
+					    
                                           ]
                       },
           'metadata' => {
