@@ -33,20 +33,24 @@
 <div class="col-md-12" id="d3-custom-dimensions-div" style="display:none;">
    <div class="col-md-6" id="d3-page-custom-dimensions-div" style="visibility:hidden">
        <div class="col-md-12">
-           <div class="col-md-6">
+            <div class="col-md-2">
+                <label class='radio'><input type="radio" name="dimoptradio" id="dim_inches" value="inch" checked>Imperial</label>
+                <label class='radio'><input type="radio" name="dimoptradio" id="dim_cm" value="cm">Metric</label>
+           </div>
+           <div class="col-md-5">
                <center>
                    <label>Page Width:</label><br>
-                   <input class="form-control" placeholder="In pixels" type="number" id="page_width" style="max-width: 100%;">
+                   <input class="form-control"  placeholder="In pixels" type="number" id="page_width" style="max-width: 100%;">
                </center>
            </div>
-           <div class="col-md-6">
+           <div class="col-md-5">
                <center>
                    <label>Page Height:</label><br>
                    <input class="form-control" placeholder="In pixels" type="number" id="page_height" style="max-width: 100%;">
                </center>
            </div>
        </div>
-       <center><i style="margin-top:10px;">(72 pixels/inch - approx. 28.35 pixels/cm)</i></center>
+       <!--<center><i style="margin-top:10px;">(72 pixels/inch - approx. 28.35 pixels/cm)</i></center>-->
    </div>
    <div class="col-md-6" id="d3-label-custom-dimensions-div" style="visibility:hidden">
        <div class="col-md-12">
@@ -67,7 +71,7 @@
                <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary">Apply</button>
            </div>
        </div>
-       <center><i style="margin-top:10px;">(72 pixels/inch - approx. 28.35 pixels/cm)</i></center>
+       <!--<center><i style="margin-top:10px;">(72 pixels/inch - approx. 28.35 pixels/cm)</i></center>-->
    </div>
 </div>
 
