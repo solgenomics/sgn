@@ -2241,31 +2241,31 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
         trial_id => $trial_id 
     });
 
-    my $stock_relationship_cv = $schema->resultset("Cv::Cv")->find({
+    my $stock_relationship_cv_id = $schema->resultset("Cv::Cv")->find({
         name => 'stock_relationship'
     })->cv_id();
-    my $stockprop_cv = $schema->resultset("Cv::Cv")->find({
+    my $stockprop_cv_id = $schema->resultset("Cv::Cv")->find({
         name => 'stock_property'
     })->cv_id();
     my $plot_of_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'plot_of',
-        cv_id => $stock_relationship_cv
+        cv_id => $stock_relationship_cv_id
     })->cvterm_id();
     my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'row_number',
-        cv_id => $stockprop_cv
+        cv_id => $stockprop_cv_id
     })->cvterm_id();
     my $col_num_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'col_number',
-        cv_id => $stockprop_cv
+        cv_id => $stockprop_cv_id
     })->cvterm_id();
     my $rep_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'replicate',
-        cv_id => $stockprop_cv
+        cv_id => $stockprop_cv_id
     })->cvterm_id();
     my $block_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'block',
-        cv_id => $stockprop_cv
+        cv_id => $stockprop_cv_id
     })->cvterm_id();
 
     my @plots = map {$_->[0]} @{$trial->get_plots()};
@@ -2342,15 +2342,15 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
         return;
     }
 
-    my $stock_relationship_cv = $schema->resultset("Cv::Cv")->find({
+    my $stock_relationship_cv_id = $schema->resultset("Cv::Cv")->find({
         name => 'stock_relationship'
     })->cv_id();
-    my $stockprop_cv = $schema->resultset("Cv::Cv")->find({
+    my $stockprop_cv_id = $schema->resultset("Cv::Cv")->find({
         name => 'stock_property'
     })->cv_id();
     my $subplot_of_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'subplot_of',
-        cv_id => $stock_relationship_cv
+        cv_id => $stock_relationship_cv_id
     })->cvterm_id();
 
     my @subplots = map {$_->[0]} @{$trial->get_subplots()};
@@ -2412,27 +2412,27 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         return;
     }
 
-    my $stock_relationship_cv = $schema->resultset("Cv::Cv")->find({
+    my $stock_relationship_cv_id = $schema->resultset("Cv::Cv")->find({
         name => 'stock_relationship'
     })->cv_id();
-    my $stockprop_cv = $schema->resultset("Cv::Cv")->find({
+    my $stockprop_cv_id = $schema->resultset("Cv::Cv")->find({
         name => 'stock_property'
     })->cv_id();
     my $plant_of_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'plant_of',
-        cv_id => $stock_relationship_cv
+        cv_id => $stock_relationship_cv_id
     })->cvterm_id();
     my $plant_of_subplot_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'plant_of_subplot',
-        cv_id => $stock_relationship_cv
+        cv_id => $stock_relationship_cv_id
     })->cvterm_id();
     my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'row_number',
-        cv_id => $stockprop_cv
+        cv_id => $stockprop_cv_id
     })->cvterm_id();
     my $col_num_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'col_number',
-        cv_id => $stockprop_cv
+        cv_id => $stockprop_cv_id
     })->cvterm_id();
 
     my $subplot_q = "";
