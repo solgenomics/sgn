@@ -18,7 +18,7 @@ Titima Tantikanjana <tt15@cornell.edu>
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Marker Alleles</h4>", info_section_subtitle => 'View your marker allele info', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_markerset_button">Create new List of Marker Alleles</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_marker_dosage_button">Add Marker Alleles to existing List</button><button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#markerset_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
 
-<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-search", title => "Use marker alleles to search for accessions with specific genotype.", button_id => "accession_search_link" &>
+<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-search", title => "Use marker alleles to search for accessions with specific genotype.", go_btn_id => "accession_search_link" &>
 
 
 <div class="modal fade" id="add_markerset_dialog" name="add_markerset_dialog" tabindex="-1" role="dialog" aria-labelledby="addMarkerSetDialog">
