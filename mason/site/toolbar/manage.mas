@@ -34,5 +34,9 @@
     <li><a href="/breeders/identifier_generation">Identifier Generation</a></li>
 <!--    <li><a href="/breeders/odk">ODK Data Collection</a></li>  -->
     <li><a href="/breeders/file_share_dump">File Share</a></li>
+
+    <li role="seperator" class="divider"></li>
+    <li><a href="/breeders/nirs">NIRS</a></li>
+    <li><a href="/breeders/transcriptomics">Transcriptomics</a></li>
   </ul>
 </li>
