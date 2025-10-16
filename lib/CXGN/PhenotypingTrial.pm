@@ -419,6 +419,92 @@ sub add_additional_stocks_for_greenhouse {
 }
 
 
+=head2 add_additional_plants_for_greenhouse
+
+ Usage:        my $trial->add_additional_plants_for_greenhouse($stock_list, $number_of_plants_list);
+ Desc:         add additional plants for accessions or crosses or families already in greenhouse trial
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub add_additional_plants_for_greenhouse {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $stock_list = shift;
+    my $number_of_plants_list = shift;
+    my $trial_id = $self->get_trial_id();
+    my $add_additional_plants = '1';
+
+    my $stock_info_hash = {};
+    for my $i (0 .. scalar @$stock_list) {
+        $stock_info_hash->{$stock_list->[$i]} = $number_of_plants_list->[$i];
+    }
+
+    my $original_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
+    my $original_design = $original_layout-> get_design();
+
+    my $trial_stocks = $self->get_accessions();
+    my @invalid_stocks = ();
+    my %seen_stock_names;
+    foreach my $stock (@$trial_stocks) {
+        my $stock_name = $stock->{'accession_name'};
+        $seen_stock_names{$stock_name} = 1;
+    }
+
+    foreach my $stock_name (@$stock_list) {
+        if (!$seen_stock_names{$stock_name}) {
+            push @invalid_stocks, $stock_name;
+        }
+    }
+
+    if (scalar @invalid_stocks > 0) {
+        my $invalid_stocks_string = join(",", @invalid_stocks);
+        return {error=>"Error: accessions or crosses or families are not in this trial: $invalid_stocks_string"};
+    }
+
+    my $info = {};
+    foreach my $plot_number (keys(%$original_design)) {
+        my $original_plant_names;
+        my $plot_name;
+        my $plot_id;
+        my $original_number_of_plants;
+        my @new_plant_names = ();
+        my $stock_name = $original_design->{$plot_number}->{'accession_name'};
+
+        if ($stock_name ~~ @$stock_list) {
+            $plot_name =  $original_design->{$plot_number}->{'plot_name'};
+            $plot_id =  $original_design->{$plot_number}->{'plot_id'};
+            $original_plant_names =  $original_design->{$plot_number}->{'plant_names'};
+            $original_number_of_plants = scalar @$original_plant_names;
+            my $additional_number_of_plants = $stock_info_hash->{$stock_name};
+            for (my $j = 1; $j <= $additional_number_of_plants; $j++) {
+                my $next_plant_number = $original_number_of_plants + $j;
+                my $plant_name = $plot_name."_plant_$next_plant_number";
+                push @new_plant_names, $plant_name;
+            }
+
+            $info->{$plot_id}->{'plot_name'} = $plot_name;
+            $info->{$plot_id}->{'plant_names'} = \@new_plant_names;
+        }
+    }
+
+    my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+    $greenhouse_trial->save_plant_entries($info,'' ,'' ,$user_id, $add_additional_plants);
+
+    my $new_layout = CXGN::Trial::TrialLayout->new({
+        schema => $schema,
+        trial_id => $trial_id,
+        experiment_type => 'field_layout',
+    });
+    $new_layout->generate_and_cache_layout();
+
+
+    return { success => 1 };
+}
+
 
 
 1;

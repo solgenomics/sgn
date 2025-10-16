@@ -6029,28 +6029,35 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add additional stocks in the greenhouse trial." };
         return;
     }
-    my $add_additional_plants = '1';
 
-    my $stock_info_hash = {};
-    for my $i (0 .. scalar @$stock_list) {
-        $stock_info_hash->{$stock_list->[$i]} = $number_of_plants_array->[$i];
-    }
-
-    my $result;
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
-    eval {
-        $result = $trial->add_additional_stocks_for_greenhouse($stock_list, $number_of_plants_array, $user_id);
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => "An error occurred while adding additional stocks: $@" };
-        return;
-    }
-    if ($result->{error}) {
-        $c->stash->{rest} = { error => $result->{error} };
-        return;
-    }
+    my $result;
+    if ($addition_type eq 'new_accessions') {
+        eval {
+            $result = $trial->add_additional_stocks_for_greenhouse($stock_list, $number_of_plants_array, $user_id);
+        };
+        if ($@) {
+            $c->stash->{rest} = { error => "An error occurred while adding additional stocks: $@" };
+            return;
+        }
+        if ($result->{error}) {
+            $c->stash->{rest} = { error => $result->{error} };
+            return;
+        }
+    } elsif ($addition_type eq 'additional_plants') {
+        eval {
+            $result = $trial->add_additional_plants_for_greenhouse($stock_list, $number_of_plants_array);
+        };
+        if ($@) {
+            $c->stash->{rest} = { error => "An error occurred while adding additional plants: $@" };
+            return;
+        }
+        if ($result->{error}) {
+            $c->stash->{rest} = { error => $result->{error} };
+            return;
+        }
 
-
+    }
 
 #    my $original_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
 #    my $original_design = $original_layout-> get_design();
