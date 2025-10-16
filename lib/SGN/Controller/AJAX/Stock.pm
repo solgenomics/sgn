@@ -2551,30 +2551,14 @@ sub get_accession_additional_file_uploaded :Chained('/stock/get_stock') PathPart
         $c->detach();
     }
 
+    print STDERR "AJAX/Stock: retrieve additional files...\n";
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $stock_id = $c->stash->{stock_row}->stock_id();
-    my @file_array;
-    my %file_info;
+    my $stock = CXGN::Stock->new({schema=>$schema,stock_id=>$stock_id});
+    print STDERR "Calling backend function...\n";
+    my $data = $stock->get_additional_uploaded_files();
 
-    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype
-    FROM phenome.stock_file
-    JOIN metadata.md_files using(file_id)
-    LEFT JOIN metadata.md_metadata as m using(metadata_id)
-    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
-    WHERE stock_id=? and m.obsolete = 0 and metadata.md_files.filetype='accession_additional_file_upload' ORDER BY file_id ASC";
-
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($stock_id);
-
-    while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
-        $file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
-    }
-    foreach (keys %file_info){
-        push @file_array, $file_info{$_};
-    }
-    print STDERR "files: " . Dumper \@file_array;
-
-    $c->stash->{rest} = {success=>1, files=>\@file_array};
-    return;
+    $c->stash->{rest} = $data;
 }
 
 sub obsolete_trial_additional_file_uploaded :Chained('/stock/get_stock') PathPart('obsolete_uploaded_additional_file') Args(1) {

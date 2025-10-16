@@ -1200,7 +1200,7 @@ sub obsolete_uploaded_file {
     join metadata.md_files using(metadata_id)
     where md_metadata.obsolete=0 and md_files.file_id=? and md_metadata.create_person_id=?";
 
-    my $dbh = $self->bcs_schema->storage()->dbh();
+    my $dbh = $self->schema->storage()->dbh();
     my $h = $dbh->prepare($q);
 
     $h->execute($file_id, $user_id);
@@ -1226,6 +1226,44 @@ sub obsolete_uploaded_file {
 
     return { success => 1 };
 }
+
+=head2 get_additional_uploaded_files()
+
+Returns a list of lists of the form: [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype]
+
+Obsoleted entries are not retrieved.
+
+=cut
+
+sub get_additional_uploaded_files {
+    my $self = shift;
+
+    my @file_array;
+    my %file_info;
+
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype
+    FROM phenome.stock_file
+    JOIN metadata.md_files using(file_id)
+    LEFT JOIN metadata.md_metadata as m using(metadata_id)
+    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
+    WHERE stock_id=? and m.obsolete = 0 and metadata.md_files.filetype='accession_additional_file_upload' ORDER BY file_id ASC";
+
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+
+    while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
+        $file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
+    }
+    
+    foreach (keys %file_info){
+        push @file_array, $file_info{$_};
+    }
+    
+    print STDERR "files: " . Dumper \@file_array;
+
+    return  {success=>1, files=>\@file_array};
+}
+
 
 =head2 get_trait_list()
 
