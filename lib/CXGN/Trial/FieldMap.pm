@@ -425,7 +425,7 @@ sub replace_plot_accession_fieldMap {
             $plant_accession_rs->update({
                 object_id => $new_accession_id
             });
-        } else {    
+        } else {
             $error = "Strange: plant with id $plant_id has either no accession or multiple accessions.\n";
         }
     }
