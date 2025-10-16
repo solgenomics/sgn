@@ -406,14 +406,14 @@ export function init(vector_id) {
 
     jQuery(window).on('beforeunload', function(){
 
-	alert('beforeunload');
+//	alert('beforeunload');
 	if (modified) {
 	    return 'You have unsaved changes in VectorViewer. Are you sure you would like to leave the page?';
 
 	}
     });
 
-    alert('INIT completed.');
+//    alert('INIT completed.');
     
 }
 
