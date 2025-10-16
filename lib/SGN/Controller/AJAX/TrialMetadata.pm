@@ -6009,8 +6009,8 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     my $addition_type = $c->req->param('addition_type');
     my $stock_list = decode_json $stock_list_json;
     my $number_of_plants_array = decode_json $number_of_plants_json;
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
+    my $user_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -6029,8 +6029,6 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to add additional stocks in the greenhouse trial." };
         return;
     }
-
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $add_additional_plants = '1';
 
     my $stock_info_hash = {};
@@ -6038,136 +6036,151 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         $stock_info_hash->{$stock_list->[$i]} = $number_of_plants_array->[$i];
     }
 
-    my $original_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
-    my $original_design = $original_layout-> get_design();
-    my @all_plot_numbers = keys %{$original_design};
-    my $last_plot_number = max(@all_plot_numbers);
-    my $next_plot_number = $last_plot_number + 1;
-
-    my $trial = $c->stash->{trial};
-    my $trial_name = $trial->get_name;
-
-    my $trial_stocks = $trial->get_accessions();
-    my @invalid_stocks = ();
-    my %seen_stock_names;
-    foreach my $stock (@$trial_stocks) {
-        my $stock_name = $stock->{'accession_name'};
-        $seen_stock_names{$stock_name} = 1;
+    my $result;
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
+    eval {
+        $result = $trial->add_additional_stocks_for_greenhouse($stock_list, $number_of_plants_array, $user_id);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred while adding additional stocks: $@" };
+        return;
     }
-
-    foreach my $stock_name (@$stock_list) {
-        if ($addition_type eq 'new_accessions') {
-            if ($seen_stock_names{$stock_name}) {
-                push @invalid_stocks, $stock_name;
-            }
-        } elsif ($addition_type eq 'additional_plants') {
-            if (!$seen_stock_names{$stock_name}) {
-                push @invalid_stocks, $stock_name;
-            }
-        }
-    }
-
-    if (scalar @invalid_stocks > 0) {
-        my $invalid_stocks_string = join(",", @invalid_stocks);
-        if ($addition_type eq 'new_accessions') {
-            $c->stash->{rest} = {error=>"Error: accessions or crosses or families alredy in this trial: $invalid_stocks_string"};
-        } elsif ($addition_type eq 'additional_plants') {
-            $c->stash->{rest} = {error=>"Error: accessions or crosses or families are not in this trial: $invalid_stocks_string"};
-        }
+    if ($result->{error}) {
+        $c->stash->{rest} = { error => $result->{error} };
         return;
     }
 
-    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
 
-    my %additional_greenhouse_design;
-    if ($addition_type eq 'new_accessions') {
-        for (my $i = 0; $i < scalar(@$stock_list); $i++) {
-            my %plot_info;
-            my @plant_names = ();
-            my $plot_number = $next_plot_number + $i;
-            $plot_info{'plot_number'} = $plot_number;
-            $plot_info{'stock_name'} = $stock_list->[$i];
-            $plot_info{'block_number'} = 1;
-            $plot_info{'rep_number'} = 1;
-            $plot_info{'seedlot_name'} = undef;
 
-            my $plot_name = $trial_name."_".$stock_list->[$i]."_".$plot_number;
-            my $stock_number_of_plants = $number_of_plants_array->[$i];
-                for (my $j = 1; $j <= $stock_number_of_plants; $j++) {
-                    my $plant_name = $plot_name."_plant_$j";
-                    push @plant_names, $plant_name;
-                }
-            $plot_info{'plot_name'} = $plot_name;
-            $plot_info{'plant_names'} = \@plant_names;
-            $additional_greenhouse_design{$plot_number} = \%plot_info;
-        }
+#    my $original_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
+#    my $original_design = $original_layout-> get_design();
+#    my @all_plot_numbers = keys %{$original_design};
+#    my $last_plot_number = max(@all_plot_numbers);
+#    my $next_plot_number = $last_plot_number + 1;
 
-        my $project = $schema->resultset("Project::Project")->find({project_id => $trial_id});
-        my $nd_experiment_id = $project->find_related('nd_experiment_projects',{project_id => $trial_id})->nd_experiment_id();
+#    my $trial = $c->stash->{trial};
+#    my $trial_name = $trial->get_name;
 
-        my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
-            bcs_schema => $schema,
-            trial_id => $trial_id,
-            trial_name => $trial_name,
-            nd_geolocation_id => $trial->get_location()->[0],
-            nd_experiment_id => $nd_experiment_id,
-            design_type => 'greenhouse',
-            design => \%additional_greenhouse_design,
-            operator => $sp_person_id,
-            trial_stock_type => $trial->get_trial_stock_type(),
-        });
+#    my $trial_stocks = $trial->get_accessions();
+#    my @invalid_stocks = ();
+#    my %seen_stock_names;
+#    foreach my $stock (@$trial_stocks) {
+#        my $stock_name = $stock->{'accession_name'};
+#        $seen_stock_names{$stock_name} = 1;
+#    }
 
-        my $error;
-        my $validate_design_error = $trial_design_store->validate_design();
-        if ($validate_design_error) {
-            print STDERR "ERROR: $validate_design_error\n";
-            return { error => "Error validating trial design: $validate_design_error." };
-        } else {
-            try {
-                 $error = $trial_design_store->store();
-            } catch {
-                print STDERR "ERROR store: $_\n";
-                $error = $_;
-            };
-        };
+#    foreach my $stock_name (@$stock_list) {
+#        if ($addition_type eq 'new_accessions') {
+#            if ($seen_stock_names{$stock_name}) {
+#                push @invalid_stocks, $stock_name;
+#            }
+#        } elsif ($addition_type eq 'additional_plants') {
+#            if (!$seen_stock_names{$stock_name}) {
+#                push @invalid_stocks, $stock_name;
+#            }
+#        }
+#    }
 
-    } elsif ($addition_type eq 'additional_plants') {
-        my $info = {};
-        foreach my $plot_number (keys(%$original_design)) {
-            my $original_plant_names;
-            my $plot_name;
-            my $plot_id;
-            my $original_number_of_plants;
-            my @new_plant_names = ();
-            my $stock_name = $original_design->{$plot_number}->{'accession_name'};
+#    if (scalar @invalid_stocks > 0) {
+#        my $invalid_stocks_string = join(",", @invalid_stocks);
+#        if ($addition_type eq 'new_accessions') {
+#            $c->stash->{rest} = {error=>"Error: accessions or crosses or families already in this trial: $invalid_stocks_string"};
+#        } elsif ($addition_type eq 'additional_plants') {
+#            $c->stash->{rest} = {error=>"Error: accessions or crosses or families are not in this trial: $invalid_stocks_string"};
+#        }
+#        return;
+#    }
 
-            if ($stock_name ~~ @$stock_list) {
-                $plot_name =  $original_design->{$plot_number}->{'plot_name'};
-                $plot_id =  $original_design->{$plot_number}->{'plot_id'};
+#    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
 
-                $original_plant_names =  $original_design->{$plot_number}->{'plant_names'};
-                $original_number_of_plants = scalar @$original_plant_names;
-                my $additional_number_of_plants = $stock_info_hash->{$stock_name};
-                for (my $j = 1; $j <= $additional_number_of_plants; $j++) {
-                    my $next_plant_number = $original_number_of_plants + $j;
-                    my $plant_name = $plot_name."_plant_$next_plant_number";
-                    push @new_plant_names, $plant_name;
-                }
+#    my %additional_greenhouse_design;
+#    if ($addition_type eq 'new_accessions') {
+#        for (my $i = 0; $i < scalar(@$stock_list); $i++) {
+#            my %plot_info;
+#            my @plant_names = ();
+#            my $plot_number = $next_plot_number + $i;
+#            $plot_info{'plot_number'} = $plot_number;
+#            $plot_info{'stock_name'} = $stock_list->[$i];
+#            $plot_info{'block_number'} = 1;
+#            $plot_info{'seedlot_name'} = undef;
 
-                $info->{$plot_id}->{'plot_name'} = $plot_name;
-                $info->{$plot_id}->{'plant_names'} = \@new_plant_names;
-            }
-        }
-        my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-        $greenhouse_trial->save_plant_entries($info,'' ,'' ,$user_id, $add_additional_plants);
-    }
+#            my $plot_name = $trial_name."_".$stock_list->[$i]."_".$plot_number;
+#            my $stock_number_of_plants = $number_of_plants_array->[$i];
+#                for (my $j = 1; $j <= $stock_number_of_plants; $j++) {
+#                    my $plant_name = $plot_name."_plant_$j";
+#                    push @plant_names, $plant_name;
+#                }
+#            $plot_info{'plot_name'} = $plot_name;
+#            $plot_info{'plant_names'} = \@plant_names;
+#            $additional_greenhouse_design{$plot_number} = \%plot_info;
+#        }
 
-    my $new_layout = CXGN::Trial::TrialLayout->new({
-        schema => $schema,
-        trial_id => $trial_id,
-        experiment_type => 'field_layout',
-    });
-    $new_layout->generate_and_cache_layout();
+#        my $project = $schema->resultset("Project::Project")->find({project_id => $trial_id});
+#        my $nd_experiment_id = $project->find_related('nd_experiment_projects',{project_id => $trial_id})->nd_experiment_id();
+
+#        my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+#            bcs_schema => $schema,
+#            trial_id => $trial_id,
+#            trial_name => $trial_name,
+#            nd_geolocation_id => $trial->get_location()->[0],
+#            nd_experiment_id => $nd_experiment_id,
+#            design_type => 'greenhouse',
+#            design => \%additional_greenhouse_design,
+#            operator => $sp_person_id,
+#            trial_stock_type => $trial->get_trial_stock_type(),
+#        });
+
+#        my $error;
+#        my $validate_design_error = $trial_design_store->validate_design();
+#        if ($validate_design_error) {
+#            print STDERR "ERROR: $validate_design_error\n";
+#            return { error => "Error validating trial design: $validate_design_error." };
+#        } else {
+#            try {
+#                 $error = $trial_design_store->store();
+#            } catch {
+#                print STDERR "ERROR store: $_\n";
+#                $error = $_;
+#            };
+#        };
+
+#    } elsif ($addition_type eq 'additional_plants') {
+#        my $info = {};
+#        foreach my $plot_number (keys(%$original_design)) {
+#            my $original_plant_names;
+#            my $plot_name;
+#            my $plot_id;
+#            my $original_number_of_plants;
+#            my @new_plant_names = ();
+#            my $stock_name = $original_design->{$plot_number}->{'accession_name'};
+
+#            if ($stock_name ~~ @$stock_list) {
+#                $plot_name =  $original_design->{$plot_number}->{'plot_name'};
+#                $plot_id =  $original_design->{$plot_number}->{'plot_id'};
+
+#                $original_plant_names =  $original_design->{$plot_number}->{'plant_names'};
+#                $original_number_of_plants = scalar @$original_plant_names;
+#                my $additional_number_of_plants = $stock_info_hash->{$stock_name};
+#                for (my $j = 1; $j <= $additional_number_of_plants; $j++) {
+#                    my $next_plant_number = $original_number_of_plants + $j;
+#                    my $plant_name = $plot_name."_plant_$next_plant_number";
+#                    push @new_plant_names, $plant_name;
+#                }
+
+#                $info->{$plot_id}->{'plot_name'} = $plot_name;
+#                $info->{$plot_id}->{'plant_names'} = \@new_plant_names;
+#            }
+#        }
+#        my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+#        $greenhouse_trial->save_plant_entries($info,'' ,'' ,$user_id, $add_additional_plants);
+#    }
+
+#    my $new_layout = CXGN::Trial::TrialLayout->new({
+#        schema => $schema,
+#        trial_id => $trial_id,
+#        experiment_type => 'field_layout',
+#    });
+#    $new_layout->generate_and_cache_layout();
 
     $c->stash->{rest} = { success => 1 };
 }

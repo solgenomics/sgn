@@ -7,6 +7,8 @@ extends 'CXGN::Project';
 
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use List::Util qw(max);
+use Try::Tiny;
 
 =head2 function set_field_trials_source_field_trials()
 
@@ -306,6 +308,117 @@ sub get_crossing_experiments_from_field_trial {
 
     return  \@crossing_experiments;
 }
+
+
+=head2 add_additional_stocks_for_greenhouse
+
+ Usage:        my $trial->add_additional_stocks_for_greenhouse($stock_list, $number_of_plants_list);
+ Desc:         add additional accessions or crosses or families for existing greenhouse trial
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub add_additional_stocks_for_greenhouse {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $stock_list = shift;
+    my $number_of_plants_list = shift;
+    my $user_id = shift;
+    my $trial_id = $self->get_trial_id();
+
+    my $original_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
+    my $original_design = $original_layout-> get_design();
+    my @all_plot_numbers = keys %{$original_design};
+    my $last_plot_number = max(@all_plot_numbers);
+    my $next_plot_number = $last_plot_number + 1;
+
+    my $trial_name = $self->get_name;
+
+    my $trial_stocks = $self->get_accessions();
+    my @invalid_stocks = ();
+    my %seen_stock_names;
+    foreach my $stock (@$trial_stocks) {
+        my $stock_name = $stock->{'accession_name'};
+        $seen_stock_names{$stock_name} = 1;
+    }
+
+    foreach my $stock_name (@$stock_list) {
+        if ($seen_stock_names{$stock_name}) {
+            push @invalid_stocks, $stock_name;
+        }
+    }
+
+    if (scalar @invalid_stocks > 0) {
+        my $invalid_stocks_string = join(",", @invalid_stocks);
+        return {error=>"Error: accessions or crosses or families already in this trial: $invalid_stocks_string"};
+    }
+
+    my %additional_greenhouse_design;
+    for (my $i = 0; $i < scalar(@$stock_list); $i++) {
+        my %plot_info;
+        my @plant_names = ();
+        my $plot_number = $next_plot_number + $i;
+        $plot_info{'plot_number'} = $plot_number;
+        $plot_info{'stock_name'} = $stock_list->[$i];
+        $plot_info{'block_number'} = 1;
+        $plot_info{'rep_number'} = 1;
+        $plot_info{'seedlot_name'} = undef;
+
+        my $plot_name = $trial_name."_".$stock_list->[$i]."_".$plot_number;
+        my $stock_number_of_plants = $number_of_plants_list->[$i];
+        for (my $j = 1; $j <= $stock_number_of_plants; $j++) {
+            my $plant_name = $plot_name."_plant_$j";
+            push @plant_names, $plant_name;
+        }
+        $plot_info{'plot_name'} = $plot_name;
+        $plot_info{'plant_names'} = \@plant_names;
+        $additional_greenhouse_design{$plot_number} = \%plot_info;
+    }
+
+    my $project = $schema->resultset("Project::Project")->find({project_id => $trial_id});
+    my $nd_experiment_id = $project->find_related('nd_experiment_projects',{project_id => $trial_id})->nd_experiment_id();
+
+    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
+        trial_name => $trial_name,
+        nd_geolocation_id => $self->get_location()->[0],
+        nd_experiment_id => $nd_experiment_id,
+        design_type => 'greenhouse',
+        design => \%additional_greenhouse_design,
+        operator => $user_id,
+        trial_stock_type => $self->get_trial_stock_type(),
+    });
+
+    my $error;
+    my $validate_design_error = $trial_design_store->validate_design();
+    if ($validate_design_error) {
+        print STDERR "ERROR: $validate_design_error\n";
+        return { error => "Error validating trial design: $validate_design_error." };
+    } else {
+        try {
+            $error = $trial_design_store->store();
+        } catch {
+            print STDERR "ERROR store: $_\n";
+            $error = $_;
+        };
+    };
+
+    my $new_layout = CXGN::Trial::TrialLayout->new({
+        schema => $schema,
+        trial_id => $trial_id,
+        experiment_type => 'field_layout',
+    });
+    $new_layout->generate_and_cache_layout();
+
+
+    return { success => 1 };
+}
+
+
 
 
 1;
