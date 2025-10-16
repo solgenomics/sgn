@@ -2380,7 +2380,7 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
             schema => $schema
         });
         my $synonyms = $accession_obj->_retrieve_stockprop('stock_synonym');
-        $html .= "<tr><td><input id=\"select_plot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
+        $html .= "<tr><td><input id=\"select_subplot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
     $html .= "</tbody></thead></table>";
