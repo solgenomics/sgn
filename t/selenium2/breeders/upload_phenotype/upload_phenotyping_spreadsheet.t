@@ -69,7 +69,7 @@ $t->while_logged_in_as("submitter", sub {
             "id", "verify the verification")->get_attribute('innerHTML');
 
         ok($verify_status =~ /Metadata saved for archived file/, "Verify the positive validation");
-        ok($verify_status =~ /Upload Successfull/, "Verify the positive validation");
+        ok($verify_status =~ /Upload Successful/, "Verify the positive validation");
 
         #TRY VERIFYING AND UPLOADING THE SAME FILE AGAIN.
 
@@ -133,7 +133,7 @@ $t->while_logged_in_as("submitter", sub {
         ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation 7");
         ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation 8");
         ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation 9");
-        ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation 10");
+        ok($verify_status =~ /Upload Successful!/, "Verify warnings after store validation 10");
 
         #TRY VERIFYING AND UPLOADING THE SAME FILE AGAIN FROM THE /BREEDERS/PHENOTYPING PAGE.
 
@@ -188,7 +188,7 @@ $t->while_logged_in_as("submitter", sub {
         ok($verify_status =~ /60 previously stored values skipped/, "Verify warnings after store validation 17");
         ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation 18");
         ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation 19");
-        ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation 20");
+        ok($verify_status =~ /Upload Successful!/, "Verify warnings after store validation 20");
 
         $f->clean_up_db();
     }

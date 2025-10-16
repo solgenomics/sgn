@@ -33,6 +33,7 @@ Naama Menda <nm249@cornell.edu>
   $div_name => ''
   $edit_privs => 0
   $cv_name  => 'trait_property'
+  $allow_edits => 0
 </%args>
 
 <%perl>
@@ -114,12 +115,13 @@ function <% $div_name %>_renderProps(props) {
    var html = '';
    var prop_string;
    var edit_privs = <% $edit_privs %>;
+   var allow_edits = <% $allow_edits %>;
    for (var n in filteredSet) {
       var lines = new Array();
       for(var i=0; i<props.length; i++) {
         if (n ===  props[i]['type_name']) { 
           var lineStr = props[i]['value'];
-          if (jQuery.cookie("sgn_session_id") && edit_privs === 1) { 
+          if (jQuery.cookie("sgn_session_id") && allow_edits === 1) { 
             lineStr = lineStr + '[<a href="javascript:<% $div_name %>_deleteProp(\''+props[i]['value']+'\', '+props[i]['cvtermprop_id']+')">X</a>]';		
           }
 	  lines.push(lineStr);

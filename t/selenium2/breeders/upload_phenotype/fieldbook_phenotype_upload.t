@@ -62,7 +62,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /File data successfully parsed./, "Verify the positive store validation");
     ok($verify_status =~ /All values in your file have been successfully processed!/, "Verify the positive store validation");
     ok($verify_status =~ /Metadata saved for archived file./, "Verify the positive store validation");
-    ok($verify_status =~ /Upload Successfull!/, "Verify the positive store validation");
+    ok($verify_status =~ /Upload Successful!/, "Verify the positive store validation");
 
     #back to the trial page and re-upload !!
     $t->get_ok('/breeders/trial/137');
@@ -117,7 +117,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /30 previously stored values skipped/, "Verify warnings: 30 previously stored values skipped");
     ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings: 0 previously stored values overwritten");
     ok($verify_status =~ /0 previously stored values removed/, "Verify warnings: 0 previously stored values removed");
-    ok($verify_status =~ /Upload Successfull!/, "Verify warnings: Upload successful");
+    ok($verify_status =~ /Upload Successful!/, "Verify warnings: Upload successful");
 
     $t->get_ok('/fieldbook');
     sleep(2);
@@ -161,7 +161,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /30 previously stored values skipped/, "Verify warnings after store validation");
     ok($verify_status =~ /0 previously stored values overwritten/, "Verify warnings after store validation");
     ok($verify_status =~ /0 previously stored values removed/, "Verify warnings after store validation");
-    ok($verify_status =~ /Upload Successfull!/, "Verify warnings after store validation");
+    ok($verify_status =~ /Upload Successful!/, "Verify warnings after store validation");
    
     }
 );
