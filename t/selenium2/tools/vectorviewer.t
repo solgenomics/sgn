@@ -36,14 +36,7 @@ $t->while_logged_in_as(
 	
 	$t->get_ok('/stock/'.$vector_stock_id.'/view');
 	
-	sleep(4);
-	$t->driver->accept_alert();
-
-	sleep(1);
-
-	$t->driver->accept_alert();
-
-	sleep(1);
+	sleep(2);
 
 	print STDERR "Scrolling to top of the section...\n";
 	my $element = $t->find_element_ok('stock_literature_annotation_section_onswitch', 'id', 'find element');
@@ -91,16 +84,7 @@ $t->while_logged_in_as(
 	print STDERR "Reloading page...\n";
 	$t->driver()->refresh(); # refersh /stock/'.$vector_stock_id.'/view
 
-	sleep(5);
-$t->driver->accept_alert();
-
-	sleep(1);
-
-	$t->driver->accept_alert();
-
-	sleep(1);
-	
-	
+	sleep(3);
 
 	print STDERR "GETTING THE PAGE SOURCE...\n";
 	my $page_source = $t->driver->get_page_source();
@@ -158,11 +142,6 @@ $t->driver->accept_alert();
 	$t->driver()->refresh();
 
 	sleep(3);
-	print STDERR "ACCEPTING ERROR ALERTS...\n";
-	$t->driver->accept_alert();
-	sleep(1);
-	$t->driver->accept_alert();
-	sleep(1);
 
 	print STDERR "GET PAGE SOURCE AGAIN...\n";
 	my $page_source = $t->driver->get_page_source();
