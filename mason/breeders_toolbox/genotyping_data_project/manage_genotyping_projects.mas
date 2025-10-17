@@ -39,7 +39,7 @@ $facilities
             </div>
         </div>
     </&>
-    <&| /page/info_section.mas, title=>'Genotyping Projects', collapsible=>1, collapsed=>0, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_project_link">Add Genotyping Project</button><button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_trial_link">Add/Upload Genotyping Plate</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_genotyping_data_link">Upload Genotyping Data</button>' &>
+    <&| /page/info_section.mas, title=>'Genotyping Projects', collapsible=>1, collapsed=>0, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_project_link">Add Genotyping Project</button><button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_trial_link">Add/Upload Genotyping Plate</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_genotyping_data_link">Upload Genotyping Data</button><button class="btn btn-sm btn-primary" style="margin:3px" name="upload_marker_metadata_link">Add Marker Metadata</button>' &>
         <& /breeders_toolbox/genotyping_data_project/genotyping_project_tree.mas, locations=>$locations, programs=>$programs, facilities =>$facilities &>
     </&>
 </div>
