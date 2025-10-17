@@ -356,68 +356,71 @@ sub add_additional_stocks_for_greenhouse {
         return {error=>"Error: accessions or crosses or families already in this trial: $invalid_stocks_string"};
     }
 
-    my %additional_greenhouse_design;
-    for (my $i = 0; $i < scalar(@$stock_list); $i++) {
-        my %plot_info;
-        my @plant_names = ();
-        my $plot_number = $next_plot_number + $i;
-        $plot_info{'plot_number'} = $plot_number;
-        $plot_info{'stock_name'} = $stock_list->[$i];
-        $plot_info{'block_number'} = 1;
-        $plot_info{'rep_number'} = 1;
-        $plot_info{'seedlot_name'} = undef;
+    my $coderef = sub {
+        my %additional_greenhouse_design;
+        for (my $i = 0; $i < scalar(@$stock_list); $i++) {
+            my %plot_info;
+            my @plant_names = ();
+            my $plot_number = $next_plot_number + $i;
+            $plot_info{'plot_number'} = $plot_number;
+            $plot_info{'stock_name'} = $stock_list->[$i];
+            $plot_info{'block_number'} = 1;
+            $plot_info{'rep_number'} = 1;
+            $plot_info{'seedlot_name'} = undef;
 
-        my $plot_name = $trial_name."_".$stock_list->[$i]."_".$plot_number;
-        my $stock_number_of_plants = $number_of_plants_list->[$i];
-        for (my $j = 1; $j <= $stock_number_of_plants; $j++) {
-            my $plant_name = $plot_name."_plant_$j";
-            push @plant_names, $plant_name;
+            my $plot_name = $trial_name."_".$stock_list->[$i]."_".$plot_number;
+            my $stock_number_of_plants = $number_of_plants_list->[$i];
+            for (my $j = 1; $j <= $stock_number_of_plants; $j++) {
+                my $plant_name = $plot_name."_plant_$j";
+                push @plant_names, $plant_name;
+            }
+            $plot_info{'plot_name'} = $plot_name;
+            $plot_info{'plant_names'} = \@plant_names;
+            $additional_greenhouse_design{$plot_number} = \%plot_info;
         }
-        $plot_info{'plot_name'} = $plot_name;
-        $plot_info{'plant_names'} = \@plant_names;
-        $additional_greenhouse_design{$plot_number} = \%plot_info;
-    }
 
-    my $project = $schema->resultset("Project::Project")->find({project_id => $trial_id});
-    my $nd_experiment_id = $project->find_related('nd_experiment_projects',{project_id => $trial_id})->nd_experiment_id();
+        my $project = $schema->resultset("Project::Project")->find({project_id => $trial_id});
+        my $nd_experiment_id = $project->find_related('nd_experiment_projects',{project_id => $trial_id})->nd_experiment_id();
 
-    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
-        bcs_schema => $schema,
-        trial_id => $trial_id,
-        trial_name => $trial_name,
-        nd_geolocation_id => $self->get_location()->[0],
-        nd_experiment_id => $nd_experiment_id,
-        design_type => 'greenhouse',
-        design => \%additional_greenhouse_design,
-        operator => $user_id,
-        trial_stock_type => $self->get_trial_stock_type(),
-    });
+        my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+            bcs_schema => $schema,
+            trial_id => $trial_id,
+            trial_name => $trial_name,
+            nd_geolocation_id => $self->get_location()->[0],
+            nd_experiment_id => $nd_experiment_id,
+            design_type => 'greenhouse',
+            design => \%additional_greenhouse_design,
+            operator => $user_id,
+            trial_stock_type => $self->get_trial_stock_type(),
+        });
+
+        my $error;
+        my $validate_design_error = $trial_design_store->validate_design();
+        if ($validate_design_error) {
+            print STDERR "ERROR: $validate_design_error\n";
+            return { error => "Error validating trial design: $validate_design_error." };
+        } else {
+            my $new_design = $trial_design_store->store();
+        }
+
+        my $new_layout = CXGN::Trial::TrialLayout->new({
+            schema => $schema,
+            trial_id => $trial_id,
+            experiment_type => 'field_layout',
+        });
+        $new_layout->generate_and_cache_layout();
+    };
 
     my $error;
-    my $validate_design_error = $trial_design_store->validate_design();
-    if ($validate_design_error) {
-        print STDERR "ERROR: $validate_design_error\n";
-        return { error => "Error validating trial design: $validate_design_error." };
-    } else {
-        try {
-            $error = $trial_design_store->store();
-        } catch {
-            print STDERR "ERROR store: $_\n";
-            $error = $_;
-        };
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        $error =  $_;
     };
 
     if ($error) {
         return { error => $error };
     }
-
-    my $new_layout = CXGN::Trial::TrialLayout->new({
-        schema => $schema,
-        trial_id => $trial_id,
-        experiment_type => 'field_layout',
-    });
-    $new_layout->generate_and_cache_layout();
-
 
     return { success => 1 };
 }
@@ -507,7 +510,6 @@ sub add_additional_plants_for_greenhouse {
             experiment_type => 'field_layout',
         });
         $new_layout->generate_and_cache_layout();
-
     };
 
     my $error;
