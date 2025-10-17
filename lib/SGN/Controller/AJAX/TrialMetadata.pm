@@ -39,6 +39,7 @@ use CXGN::Genotype::GenotypingProject;
 use List::Util qw(max);
 use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
+use Sort::Key::Natural qw(natkeysort);
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -2290,9 +2291,10 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
 
     my $trial = $c->stash->{trial};
 
-    my @data = $trial->get_plants();
+    my $data = $trial->get_plants();
+    my @sorted_data = natkeysort {($_->[1])} @$data;
 
-    $c->stash->{rest} = { plants => \@data };
+    $c->stash->{rest} = { plants => \@sorted_data };
 }
 
 sub trial_has_tissue_samples : Chained('trial') PathPart('has_tissue_samples') Args(0) {
