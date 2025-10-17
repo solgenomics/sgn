@@ -215,6 +215,7 @@ sub genotyping_protocol_accession_search_GET : Args(0) {
 
     # Results to return
     my $error;
+    my $acc_counts_total;   # total number of accessions in the list
     my %gen_by_acc;         # genotyping protocols found for each accession (key = accession id, value = array of genotyping protocol ids)
     my %acc_by_gen;         # accessions used in each genotyping protocol (key = genotyping protocol id, value = array of accession ids)
     my %gen_counts_by_acc;  # counts of genoyping protocols found for each accession (key = accession id, value = count of matching genotyping protocols)
@@ -238,6 +239,7 @@ sub genotyping_protocol_accession_search_GET : Args(0) {
             my $accession_t = $t->can_transform("accessions", "accession_ids");
             my $accession_id_hash = $t->transform($schema, $accession_t, $names);
             my @accession_ids = @{$accession_id_hash->{transform}};
+            $acc_counts_total = scalar @accession_ids;
 
             # Find Genotyping Protocols for the selected Accessions
             my $ph = join(',', ('?') x @accession_ids);
@@ -299,6 +301,7 @@ sub genotyping_protocol_accession_search_GET : Args(0) {
                 accessions_by_genotyping_protocol => \%acc_by_gen
             },
             counts => {
+                accessions_total => $acc_counts_total,
                 genotyping_protocols_by_accession => \%gen_counts_by_acc,
                 accessions_by_genotyping_protocol => \%acc_counts_by_gen,
                 ranked_genotyping_protocols => \@ranked_gen

@@ -1,0 +1,99 @@
+<& /util/import_javascript.mas, classes => ['CXGN.List'] &>
+
+<p style="padding: 12px">Starting with a list of Accessions, this tool will identify the genotyping protocols that contain the highest number of your accessions.</p>
+
+<div class="well well-sm" style="padding: 24px">
+    <p><strong>Filter Protocols by Accessions:</strong></p>
+    
+    <div style="display: flex; gap: 12px">
+        <select class="form-control" id="accession_list_select"></select>
+        <button class="btn btn-primary" id="genotyping_protocol_search">Search</button>
+    </div>
+
+
+    <div id="genotyping_protocol_filter_results_container" style="display: none;">
+
+        <p style="margin-top: 48px"><strong>Best Genotyping Protocols</strong></p>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div id="genotyping_protocol_filter_results"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function(){
+
+    var lo = new CXGN.List();
+    jQuery('#accession_list_select').html(lo.listSelect('accession_list_select', ['accessions'], 'Select a list of accessions', undefined, undefined));
+
+    jQuery("#genotyping_protocol_search").click(() => {
+        jQuery("#genotyping_protocol_search").attr("disabled", true);
+        jQuery.ajax({
+            url: '/ajax/genotyping_protocol/search/accession_list',
+            data: {
+                accession_list_id: jQuery("#accession_list_select").val()
+            },
+            success: (response) => {
+                if ( response?.error ) {
+                    alert(response.error);
+                }
+                else {
+                    displayResults(response?.results);
+                }
+            },
+            error: (err) => {
+                alert(err);
+            },
+            complete: () => {
+                jQuery("#genotyping_protocol_search").attr("disabled", false);
+            }
+        })
+    });
+
+});
+
+
+function displayResults(results) {
+    console.log(results);
+    let html = "";
+
+    // Display the top genotyping protocols
+    if ( results?.counts?.ranked_genotyping_protocols ) {
+        let ranked_gen_table = "<table class='table'>";
+        ranked_gen_table += `<thead><tr><th>Genotyping Protocol</th><th>Accession Count (total: ${results.counts.accessions_total})</th><th></th></tr></thead>`;
+        ranked_gen_table += "<tbody>";
+        const display = results.counts.ranked_genotyping_protocols.length < 3 ? results.counts.ranked_genotyping_protocols : 3;
+        for ( let i = 0; i < display; i++ ) {
+            const gen_id = results.counts.ranked_genotyping_protocols[i];
+            ranked_gen_table += "<tr>";
+            ranked_gen_table += `<td><a href="/breeders_toolbox/protocol/${gen_id}">${results.lookups.genotyping_protocols[gen_id]}</a></td>`;
+            ranked_gen_table += `<td>${results.counts.accessions_by_genotyping_protocol[gen_id]}</td>`;
+            ranked_gen_table += `<td><a href='#' class='create_accessions_list' data-gen-id=${gen_id} data-list-type='matching'>Create List of Matching Accessions</a><br />`;
+            ranked_gen_table += `<a href='#' class='create_accessions_list' data-gen-id=${gen_id} data-list-type='missing'>Create List of Missing Accessions</a></td>`;
+            ranked_gen_table += "</tr>";
+        }
+        ranked_gen_table += "</tbody>";
+        ranked_gen_table += "</table>";
+        html += ranked_gen_table;
+    }
+
+    jQuery("#genotyping_protocol_filter_results_container").show();
+    jQuery("#genotyping_protocol_filter_results").html(html);
+    jQuery(".create_accessions_list").off("click").on("click", createAccessionsList);
+}
+
+function createAccessionsList() {
+    let gen_id = jQuery(this).data("gen-id");
+    let list_type = jQuery(this).data("list-type");
+    let list_name = prompt("List Name");
+
+    // TODO: Create a list of the accessions with the specified type and genotyping protocol
+    console.log(gen_id);
+    console.log(list_type);
+    console.log(list_name);
+}
+</script>
