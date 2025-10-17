@@ -1,10 +1,10 @@
-package CXGN::File::Parse::Plugin::XLSX;
+package CXGN::File::Parse::Plugin::ODS;
 
 use Moose;
 use CXGN::File::Parse::Plugin::Spreadsheet;
 
 sub type {
-  return "xlsx";
+  return "ods";
 }
 
 sub parse {

@@ -1,8 +1,9 @@
-package CXGN::File::Parse::Plugin::Excel;
+package CXGN::File::Parse::Plugin::Spreadsheet;
 
 use strict;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
+use Spreadsheet::ParseODS;
 
 sub type {
   return "excel";
@@ -30,12 +31,15 @@ sub parse {
   elsif ( $type eq 'xls' ) {
     $parser = Spreadsheet::ParseExcel->new();
   }
+  elsif ( $type eq 'ods' ) {
+    $parser = Spreadsheet::ParseODS->new();
+  }
   else {
-    push @{$rtn{errors}}, "Invalid type $type for excel parse plugin";
+    push @{$rtn{errors}}, "Invalid type $type for spreadsheet parse plugin";
     return \%rtn;
   }
 
-  # read the first worksheet in the Excel
+  # read the first worksheet in the Spreadsheet
   my $workbook = $parser->parse($file);
   if ( !$workbook ) {
     push @{$rtn{errors}}, $parser->error();

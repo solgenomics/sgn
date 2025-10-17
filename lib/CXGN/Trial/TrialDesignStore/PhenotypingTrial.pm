@@ -23,6 +23,7 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
         'num_seed_per_plot',
         'weight_gram_seed_per_plot',
         'stock_name',
+        'tissue_sample_names',
         'plot_name',
         'plot_number',
         'block_number',
@@ -93,12 +94,18 @@ sub validate_design {
                 my $plot_name = $design{$stock}->{$property};
                 # Check that there are no plant names, if so, this could be a lookup value for an existing plot
                 # So, we don't validate that the plot name is unique
-                if ($design{$stock}->{plant_names} && scalar $design{$stock}->{plant_names} > 0) { next; }
+                if (($design{$stock}->{plant_names} && scalar $design{$stock}->{plant_names} > 0) || ($design{$stock}->{tissue_sample_names} && scalar $design{$stock}->{tissue_sample_names} > 0)) { next; }
                 $seen_stock_names{$plot_name}++;
             }
             if ($property eq 'plant_names') {
                 my $plant_names = $design{$stock}->{$property};
                 foreach (@$plant_names) {
+                    $seen_stock_names{$_}++;
+                }
+            }
+            if  ($property eq 'tissue_sample_names') {
+                my $tissue_sample_names = $design{$stock}->{$property};
+                foreach (@$tissue_sample_names) {
                     $seen_stock_names{$_}++;
                 }
             }
@@ -181,7 +188,7 @@ sub validate_design {
     while (my ($trial_layout_json) = $sth->fetchrow_array()) {
         my $trial_layout_json = decode_json($trial_layout_json);
         foreach my $key (keys %{$trial_layout_json}) {
-            if (defined %seen_plot_numbers{$key}) {
+            if (defined $seen_plot_numbers{$key}) {
                 $error .= "Plot number '$key' already exists in the database for that study. Plot number must be unique.";
             }
         }
