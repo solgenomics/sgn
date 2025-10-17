@@ -179,7 +179,8 @@ is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 print STDERR $sgn_session_id . "\n";
 
-$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$greenhouse_trial_id.'/add_additional_stocks_for_greenhouse', [ 'new_stocks'=>$json->encode(\@greenhouse_accessions_2), 'number_of_plants'=>$json->encode(\@greenhouse_num_plants_2) ]);
+my $addition_type = 'new_accessions';
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$greenhouse_trial_id.'/add_additional_stocks_for_greenhouse', [ 'stock_names'=>$json->encode(\@greenhouse_accessions_2), 'number_of_plants'=>$json->encode(\@greenhouse_num_plants_2), 'addition_type'=> $addition_type ]);
 my $response = decode_json $mech->content;
 
 is($response->{'success'}, '1');
@@ -205,11 +206,6 @@ foreach my $plot_num_2 (keys %$greenhouse_trial_design_2) {
     push @plot_names_2, $greenhouse_trial_design_2->{$plot_num_2}->{'plot_name'};
     my $plant_name_2 = $greenhouse_trial_design_2->{$plot_num_2}->{'plant_names'};
     push @plant_names_2, @$plant_name_2;
-
-    push @all_stock_ids, $greenhouse_trial_design_2->{$plot_num_2}->{'accession_id'};
-    push @all_stock_ids, $greenhouse_trial_design_2->{$plot_num_2}->{'plot_id'};
-    my $plant_ids = $greenhouse_trial_design_2->{$plot_num_2}->{'plant_ids'};
-    push @all_stock_ids, @$plant_ids;
 }
 
 @plot_nums_2 = sort @plot_nums_2;
@@ -260,6 +256,94 @@ is_deeply(\@plant_names_2, [
     'greenhouse_1_accession_for_greenhouse6_6_plant_1',
     'greenhouse_1_accession_for_greenhouse7_7_plant_1',
     'greenhouse_1_accession_for_greenhouse8_8_plant_1'
+], "check plant names");
+
+#add additional plants
+$addition_type = 'additional_plants';
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$greenhouse_trial_id.'/add_additional_stocks_for_greenhouse', [ 'stock_names'=>$json->encode(\@greenhouse_accessions_2), 'number_of_plants'=>$json->encode(\@greenhouse_num_plants_2), 'addition_type'=> $addition_type ]);
+my $response = decode_json $mech->content;
+
+is($response->{'success'}, '1');
+
+#checking greenhouse design after adding additional plants
+my $greenhouse_trial_layout_3;
+ok($greenhouse_trial_layout_3 = CXGN::Trial::TrialLayout->new({
+    schema          => $schema,
+    trial_id        => $greenhouse_trial_id,
+    experiment_type => 'field_layout'
+}));
+
+my $greenhouse_trial_design_3 = $greenhouse_trial_layout_3->get_design();
+my @plot_nums_3;
+my @accessions_3;
+my @plot_names_3;
+my @plant_names_3;
+my @all_stock_ids;
+
+foreach my $plot_num_3 (keys %$greenhouse_trial_design_3) {
+    push @plot_nums_3, $plot_num_3;
+    push @accessions_3, $greenhouse_trial_design_3->{$plot_num_3}->{'accession_name'};
+    push @plot_names_3, $greenhouse_trial_design_3->{$plot_num_3}->{'plot_name'};
+    my $plant_name_3 = $greenhouse_trial_design_3->{$plot_num_3}->{'plant_names'};
+    push @plant_names_3, @$plant_name_3;
+
+    push @all_stock_ids, $greenhouse_trial_design_3->{$plot_num_3}->{'accession_id'};
+    push @all_stock_ids, $greenhouse_trial_design_3->{$plot_num_3}->{'plot_id'};
+    my $plant_ids_3 = $greenhouse_trial_design_3->{$plot_num_3}->{'plant_ids'};
+    push @all_stock_ids, @$plant_ids_3;
+}
+
+@plot_nums_3 = sort @plot_nums_3;
+@accessions_3 = sort @accessions_3;
+@plot_names_3 = sort @plot_names_3;
+@plant_names_3 = sort @plant_names_3;
+
+
+is_deeply(\@plot_nums_3, [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8'
+], "check plot numbers");
+
+is_deeply(\@accessions_3, [
+    'accession_for_greenhouse1',
+    'accession_for_greenhouse2',
+    'accession_for_greenhouse3',
+    'accession_for_greenhouse4',
+    'accession_for_greenhouse5',
+    'accession_for_greenhouse6',
+    'accession_for_greenhouse7',
+    'accession_for_greenhouse8',
+], "check accessions");
+
+is_deeply(\@plot_names_3, [
+    'greenhouse_1_accession_for_greenhouse1_1',
+    'greenhouse_1_accession_for_greenhouse2_2',
+    'greenhouse_1_accession_for_greenhouse3_3',
+    'greenhouse_1_accession_for_greenhouse4_4',
+    'greenhouse_1_accession_for_greenhouse5_5',
+    'greenhouse_1_accession_for_greenhouse6_6',
+    'greenhouse_1_accession_for_greenhouse7_7',
+    'greenhouse_1_accession_for_greenhouse8_8'
+], "check plot names");
+
+is_deeply(\@plant_names_3, [
+    'greenhouse_1_accession_for_greenhouse1_1_plant_1',
+    'greenhouse_1_accession_for_greenhouse2_2_plant_1',
+    'greenhouse_1_accession_for_greenhouse3_3_plant_1',
+    'greenhouse_1_accession_for_greenhouse4_4_plant_1',
+    'greenhouse_1_accession_for_greenhouse5_5_plant_1',
+    'greenhouse_1_accession_for_greenhouse6_6_plant_1',
+    'greenhouse_1_accession_for_greenhouse7_7_plant_1',
+    'greenhouse_1_accession_for_greenhouse7_7_plant_2',
+    'greenhouse_1_accession_for_greenhouse8_8_plant_1',
+    'greenhouse_1_accession_for_greenhouse8_8_plant_2',
+    
 ], "check plant names");
 
 #deleting trial and new stocks
