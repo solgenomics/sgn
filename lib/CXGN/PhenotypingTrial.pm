@@ -407,6 +407,10 @@ sub add_additional_stocks_for_greenhouse {
         };
     };
 
+    if ($error) {
+        return { error => $error };
+    }
+
     my $new_layout = CXGN::Trial::TrialLayout->new({
         schema => $schema,
         trial_id => $trial_id,
@@ -435,6 +439,7 @@ sub add_additional_plants_for_greenhouse {
     my $schema = $self->bcs_schema;
     my $stock_list = shift;
     my $number_of_plants_list = shift;
+    my $user_id = shift;
     my $trial_id = $self->get_trial_id();
     my $add_additional_plants = '1';
 
@@ -465,42 +470,56 @@ sub add_additional_plants_for_greenhouse {
         return {error=>"Error: accessions or crosses or families are not in this trial: $invalid_stocks_string"};
     }
 
-    my $info = {};
-    foreach my $plot_number (keys(%$original_design)) {
-        my $original_plant_names;
-        my $plot_name;
-        my $plot_id;
-        my $original_number_of_plants;
-        my @new_plant_names = ();
-        my $stock_name = $original_design->{$plot_number}->{'accession_name'};
+    my $coderef = sub {
+        my $info = {};
+        foreach my $plot_number (keys(%$original_design)) {
+            my $original_plant_names;
+            my $plot_name;
+            my $plot_id;
+            my $original_number_of_plants;
+            my @new_plant_names = ();
+            my $stock_name = $original_design->{$plot_number}->{'accession_name'};
 
-        if ($stock_name ~~ @$stock_list) {
-            $plot_name =  $original_design->{$plot_number}->{'plot_name'};
-            $plot_id =  $original_design->{$plot_number}->{'plot_id'};
-            $original_plant_names =  $original_design->{$plot_number}->{'plant_names'};
-            $original_number_of_plants = scalar @$original_plant_names;
-            my $additional_number_of_plants = $stock_info_hash->{$stock_name};
-            for (my $j = 1; $j <= $additional_number_of_plants; $j++) {
-                my $next_plant_number = $original_number_of_plants + $j;
-                my $plant_name = $plot_name."_plant_$next_plant_number";
-                push @new_plant_names, $plant_name;
+            if ($stock_name ~~ @$stock_list) {
+                $plot_name =  $original_design->{$plot_number}->{'plot_name'};
+                $plot_id =  $original_design->{$plot_number}->{'plot_id'};
+                $original_plant_names =  $original_design->{$plot_number}->{'plant_names'};
+                $original_number_of_plants = scalar @$original_plant_names;
+                my $additional_number_of_plants = $stock_info_hash->{$stock_name};
+                for (my $j = 1; $j <= $additional_number_of_plants; $j++) {
+                    my $next_plant_number = $original_number_of_plants + $j;
+                    my $plant_name = $plot_name."_plant_$next_plant_number";
+                    push @new_plant_names, $plant_name;
+                }
+
+                $info->{$plot_id}->{'plot_name'} = $plot_name;
+                $info->{$plot_id}->{'plant_names'} = \@new_plant_names;
             }
-
-            $info->{$plot_id}->{'plot_name'} = $plot_name;
-            $info->{$plot_id}->{'plant_names'} = \@new_plant_names;
         }
+
+        my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+
+        $greenhouse_trial->save_plant_entries($info,'' ,'' ,$user_id, $add_additional_plants);
+
+        my $new_layout = CXGN::Trial::TrialLayout->new({
+            schema => $schema,
+            trial_id => $trial_id,
+            experiment_type => 'field_layout',
+        });
+        $new_layout->generate_and_cache_layout();
+
+    };
+
+    my $error;
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        $error =  $_;
+    };
+
+    if ($error) {
+        return { error => $error };
     }
-
-    my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-    $greenhouse_trial->save_plant_entries($info,'' ,'' ,$user_id, $add_additional_plants);
-
-    my $new_layout = CXGN::Trial::TrialLayout->new({
-        schema => $schema,
-        trial_id => $trial_id,
-        experiment_type => 'field_layout',
-    });
-    $new_layout->generate_and_cache_layout();
-
 
     return { success => 1 };
 }

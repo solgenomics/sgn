@@ -6046,7 +6046,7 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         }
     } elsif ($addition_type eq 'additional_plants') {
         eval {
-            $result = $trial->add_additional_plants_for_greenhouse($stock_list, $number_of_plants_array);
+            $result = $trial->add_additional_plants_for_greenhouse($stock_list, $number_of_plants_array, $user_id);
         };
         if ($@) {
             $c->stash->{rest} = { error => "An error occurred while adding additional plants: $@" };
