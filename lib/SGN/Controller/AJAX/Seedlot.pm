@@ -170,10 +170,16 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
         $c->stash->{rest} = { error => "You must be logged in to edit seedlot details" };
         $c->detach();
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot detail. Please contact us." };
-        $c->detach();
+    #if (!$c->user()->check_roles("curator")) {
+    #    $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot detail. Please contact us." };
+    #    $c->detach();
+    #}
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "seedlots" )) {
+	$c->stash->{rest} = { error => "You do not have the correct role to edit seedlot detail. Please contact us." };
+	$c->detach();
     }
+    
     my $seedlot = $c->stash->{seedlot};
 
     my $saved_seedlot_name = $seedlot->uniquename;
@@ -261,9 +267,15 @@ sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) {
         $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
         $c->detach();
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
-        $c->detach();
+
+    #if (!$c->user()->check_roles("curator")) {
+    #    $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+    #    $c->detach();
+    #}
+    
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "delete", "seedlots" )) {
+	$c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+	$c->detach();
     }
 
     my $error = $c->stash->{seedlot}->delete();
@@ -285,10 +297,18 @@ sub seedlot_verify_delete_by_list :Path('/ajax/seedlots/verify_delete_by_list') 
         $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
         $c->detach();
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
-        $c->detach();
+
+    #if (!$c->user()->check_roles("curator")) {
+    #    $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+    #    $c->detach();
+    #}
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "delete", "seedlots" )) {
+	$c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+	$c->detach();
     }
+
+    
+    
 
     print STDERR "DELETE VERIFY USING LIST!\n";
 
@@ -310,11 +330,18 @@ sub seedlot_confirm_delete_by_list :Path('/ajax/seedlots/confirm_delete_by_list'
         $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
         $c->detach();
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
-        $c->detach();
+
+    #if (!$c->user()->check_roles("curator")) {
+    #    $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+    #    $c->detach();
+    #}
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "delete", "seedlots" )) {
+	$c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+	$c->detach();
     }
 
+    
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($total_count, $delete_count, $errors) = CXGN::Stock::Seedlot->delete_using_list($schema, $phenome_schema, $list_id);
@@ -342,7 +369,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     #    $c->detach();
     #}
 
-    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "seedlots")) {
 	$c->stash->{rest} = { error => "You do not have the privileges to add seedlots." };
 	$c->detach();
     }
@@ -607,7 +634,7 @@ sub upload_seedlots_POST : Args(0) {
     my $user_id = $user_id || $c->stash->{user_id};
     
     #if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-    if ($c->stash->{access}->denied( $user_id, "write", "stocks")) { 
+    if ($c->stash->{access}->denied( $user_id, "write", "seedlots")) { 
         $c->stash->{rest} = {error=>'You do not have the privileges to upload seedlots'};
         $c->detach();
     }
@@ -873,7 +900,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
 
     $user_id = $user_id || $c->stash->{user_id};
     
-    if ($c->stash->{access}->denied( $user_id, "write", "stocks")) { 
+    if ($c->stash->{access}->denied( $user_id, "write", "seedlots")) { 
         $c->stash->{rest} = {error=>'You do not have the privileges to upload seedlots'};
         $c->detach();
     }
@@ -1034,10 +1061,17 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
         $c->stash->{rest} = { error => "You must be logged in to edit seedlot transactions" };
         $c->detach();
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot transactions. Please contact us." };
-        $c->detach();
+
+    #if (!$c->user()->check_roles("curator")) {
+    #    $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot transactions. Please contact us." };
+    #    $c->detach();
+    #}
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "seedlots" )) {
+	$c->stash->{rest} = { error => "You do not have the correct role (stocks) to edit seedlot detail. Please contact us." };
+	$c->detach();
     }
+
 
     my $t = $c->stash->{transaction_object};
     my $from_stock = $t->from_stock();
@@ -1164,7 +1198,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 #        $c->detach();
 #    }
 
-    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "seedlots")) { 
         $c->stash->{rest} = {error=>'You do not have the privileges to upload seedlots'};
         $c->detach();
     }
@@ -1350,9 +1384,15 @@ sub delete_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('de
         $c->stash->{rest} = { error => "You must be logged in to delete seedlot transactions" };
         $c->detach();
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlot transactions. Please contact us." };
-        $c->detach();
+    
+    #if (!$c->user()->check_roles("curator")) {
+    #    $c->stash->{rest} = { error => "You do not have the correct role to delete seedlot transactions. Please contact us." };
+    #    $c->detach();
+    #}
+
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stock" )) {
+	$c->stash->{rest} = { error => "You do not have the correct role (stocks) to edit seedlot detail. Please contact us." };
+	$c->detach();
     }
 
     my $t = $c->stash->{transaction_object};
@@ -1736,7 +1776,7 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
 #        $c->detach();
     #    }
 
-    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "seedlots")) { 
 	$c->stash->{rest} = {error => 'You do not have permission in the database to do this! Please contact us.'};
         $c->detach();
     }
@@ -1837,11 +1877,19 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
         $c->stash->{rest} = { error_string => "You must be logged in to discard seedlot" };
         return;
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error_string => "You do not have the correct role to discard seedlot. Please contact us." };
-        return;
+
+#    if (!$c->user()->check_roles("curator")) {
+#        $c->stash->{rest} = { error_string => "You do not have the correct role to discard seedlot. Please contact us." };
+#        return;
+#    }
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "delete", "seedlots")) { 
+	$c->stash->{rest} = { error => 'You do not have the correct role to discard seedlots. Please contact us.' };
+        $c->detach();
     }
 
+    
+    
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     if (defined $seedlot_list_id) {
@@ -1869,7 +1917,7 @@ sub discard_seedlots : Path('/ajax/breeders/seedlot/discard') :Args(0) {
         my $seedlot_id = $seedlot_rs->stock_id();
 
         my $current_count_rs = $seedlot_rs->stockprops({type_id=>$current_count_type_id});
-        if ($current_count_rs->count == 1){
+        if ($current_count_rs->count == 1) {
             $current_count_rs->first->update({value=>'DISCARDED'});
         }
 
@@ -1914,11 +1962,18 @@ sub undo_discarded_seedlots : Path('/ajax/breeders/seedlot/undo_discard') :Args(
         $c->stash->{rest} = { error_string => "You must be logged in to undo discading this seedlot" };
         return;
     }
-    if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error_string => "You do not have the correct role to undo discarding this seedlot. Please contact us." };
-        return;
+
+    #if (!$c->user()->check_roles("curator")) {
+    #    $c->stash->{rest} = { error_string => "You do not have the correct role to undo discarding this seedlot. Please contact us." };
+    #    return;
+    #}
+
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "delete", "seedlots")) {  # delete also cover undelete 
+	$c->stash->{rest} = { error => 'You do not have the correct role to undo discarding this seedlot. Please contact us.' };
+        $c->detach();
     }
 
+    
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     my $discarded_metadata_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'discarded_metadata', 'stock_property')->cvterm_id();
@@ -2226,7 +2281,7 @@ sub add_transactions_using_list_POST : Args(0) {
 #        $c->detach();
     #    }
 
-    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) { 
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "seedlots")) { 
 	$c->stash->{rest} = {error => 'You do not have privileges to add seedlot transactions.'};
         $c->detach();
     }
