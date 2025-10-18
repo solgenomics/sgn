@@ -74,6 +74,7 @@ insert into sgn_people.sp_resource (name) values ('user_roles');
 insert into sgn_people.sp_resource (name) values ('ontologies');
 insert into sgn_people.sp_resource (name) values ('publications');
 insert into sgn_people.sp_resource (name) values ('locations');
+insert into sgn_people.sp_resource (name) values ('seedlots');
 
 -- add access levels
 
@@ -166,6 +167,12 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (17, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (17, 1, 2);
 
+-- curator for seedlots
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (18, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (18, 1, 2);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (18, 1, 4);
+
 
 --SUBMITTER PRIVILEGES
 
@@ -238,7 +245,11 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (17, 3, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (17, 3, 2);
 
---
+-- submitter for seedlots
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (18, 3, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (18, 3, 2);
+
 
 
 -- USER PRIVILEGES
@@ -294,9 +305,11 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 
 -- user for locations
 
-insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (17, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (17, 4,  1);
 
+-- user for seedlots
 
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (18, 4, 1);
 
 -- VENDOR PRIVLEGES
 
