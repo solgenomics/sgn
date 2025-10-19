@@ -1427,7 +1427,8 @@ sub parents_GET : Path('/ajax/stock/parents') Args(0) {
 
     my $stock_id = $c->req->param("stock_id");
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    #my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $schema = $c->stash->{bcs_schema};
 
     my $female_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name=> "female_parent" } )->cvterm_id();
 
@@ -1492,7 +1493,8 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
 	return;
     }
 
-    my $q = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship")->find( { object_id => $stock_id, subject_id=> $parent_id });
+#    my $q = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship")->find( { object_id => $stock_id, subject_id=> $parent_id });
+    my $q = $c->stash->{bcs_schema}->resultset("Stock::StockRelationship")->find( { object_id => $stock_id, subject_id=> $parent_id });
 
     eval {
 	$q->delete();

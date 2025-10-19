@@ -66,6 +66,7 @@ use Moose;
 use List::Util qw| any |;
 use CXGN::Login;
 use Data::Dumper;
+use CXGN::People::Schema;
 
 has 'people_schema' => (isa => 'Ref', is => 'rw');
 has 'role' => (isa => 'Str', is => 'rw');
