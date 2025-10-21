@@ -751,6 +751,15 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $protocol_unit = $c->req->param('upload_transcriptomics_spreadsheet_protocol_unit');
     my $protocol_genome_version = $c->req->param('upload_transcriptomics_spreadsheet_protocol_genome');
     my $protocol_genome_annotation_version = $c->req->param('upload_transcriptomics_spreadsheet_protocol_annotation');
+    my $protocol_instrument_model = $c->req->param('upload_transcriptomics_spreadsheet_protocol_instrument_model');
+    my $protocol_layout = $c->req->param('upload_transcriptomics_spreadsheet_protocol_layout');
+    my $protocol_library_method = $c->req->param('upload_transcriptomics_spreadsheet_protocol_library_method');
+    my $protocol_library_comments = $c->req->param('upload_transcriptomics_spreadsheet_protocol_library_comments');
+    my $protocol_mapping_software = $c->req->param('upload_transcriptomics_spreadsheet_protocol_mapping_software');
+    my $protocol_sequencing_center = $c->req->param('upload_transcriptomics_spreadsheet_protocol_sequencing_center');
+    my $protocol_sequencing_platform = $c->req->param('upload_transcriptomics_spreadsheet_protocol_sequencing_platform');
+    my $protocol_read_length = $c->req->param('upload_transcriptomics_spreadsheet_protocol_read_length');
+    my $protocol_nucleic_acid_extraction_method = $c->req->param('upload_transcriptomics_spreadsheet_protocol_nucleic_acid_extraction_method');
 
     if ($protocol_id && $protocol_name) {
         $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
@@ -863,6 +872,15 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
             expression_unit => $protocol_unit,
             genome_version => $protocol_genome_version,
             annotation_version => $protocol_genome_annotation_version,
+            instrument_model => $protocol_instrument_model,
+            layout => $protocol_layout,
+            library_method => $protocol_library_method,
+            library_comments => $protocol_library_comments,
+            mapping_software => $protocol_mapping_software,
+            sequencing_center => $protocol_sequencing_center,
+            sequencing_platform => $protocol_sequencing_platform,
+            read_length => $protocol_read_length,
+            nucleic_acid_extraction_method => $protocol_nucleic_acid_extraction_method,
             header_column_names => \@transcripts,
             header_column_details => \%transcripts_details
         );

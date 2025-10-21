@@ -167,6 +167,70 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 </div>
                             </div>
 
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Instrument Model: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_instrument_model_select" type="text" placeholder="e.g. NextSeq 500">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Layout: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_layout_select" type = "text" placeholder="e.g. Paired end">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Library Method: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_library_method_select" type = "text" placeholder="e.g. 3'RNA-seq">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Library Comments: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_library_comments_select" type = "text" placeholder="e.g. Used the 3'RNA-seq method">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Mapping Software: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_mapping_software_select" type = "text" placeholder="e.g. HISAT2">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Sequencing Center: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_center_select" type = "text" placeholder="e.g. Cornell University Institute of Biotechnology">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Sequencing Platform: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_platform_select" type = "text" placeholder="e.g. Illumina">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Read Length: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_read_length_select" type = "text" placeholder="e.g. 5x depth with 150 bp reads">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Nucleic Acid Extraction Method: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_nucleic_acid_extraction_method_select" type = "text" placeholder="e.g. Hot borate">
+                                </div>
+                            </div>
+                            
+
                         </div>
                     </div>
 
@@ -445,6 +509,15 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_unit" name="upload_transcriptomics_spreadsheet_protocol_unit" type="text">
                             <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_genome" name="upload_transcriptomics_spreadsheet_protocol_genome" type="text">
                             <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_annotation" name="upload_transcriptomics_spreadsheet_protocol_annotation" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_instrument_model" name="upload_transcriptomics_spreadsheet_protocol_instrument_model" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_layout" name="upload_transcriptomics_spreadsheet_protocol_layout" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_library_method" name="upload_transcriptomics_spreadsheet_protocol_library_method" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_library_comments" name="upload_transcriptomics_spreadsheet_protocol_library_comments" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_mapping_software" name="upload_transcriptomics_spreadsheet_protocol_mapping_software" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_sequencing_center" name="upload_transcriptomics_spreadsheet_protocol_sequencing_center" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_sequencing_platform" name="upload_transcriptomics_spreadsheet_protocol_sequencing_platform" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_read_length" name="upload_transcriptomics_spreadsheet_protocol_read_length" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_nucleic_acid_extraction_method" name="upload_transcriptomics_spreadsheet_protocol_nucleic_acid_extraction_method" type="text">
                         </form>
 
                         <hr>
@@ -930,6 +1003,15 @@ jQuery(document).ready(function() {
             jQuery('#upload_transcriptomics_spreadsheet_protocol_unit').val(jQuery('#high_dim_data_upload_transcriptomics_unit_select').val());
             jQuery('#upload_transcriptomics_spreadsheet_protocol_genome').val(jQuery('#high_dim_data_upload_transcriptomics_genome_version_select').val());
             jQuery('#upload_transcriptomics_spreadsheet_protocol_annotation').val(jQuery('#high_dim_data_upload_transcriptomics_genome_annotation_version_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_instrument_model').val(jQuery('#high_dim_data_upload_transcriptomics_instrument_model_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_layout').val(jQuery('#high_dim_data_upload_transcriptomics_genome_layout_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_library_method').val(jQuery('#high_dim_data_upload_transcriptomics_library_method_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_library_comments').val(jQuery('#high_dim_data_upload_transcriptomics_library_comments_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_mapping_software').val(jQuery('#high_dim_data_upload_transcriptomics_mapping_software_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_sequencing_center').val(jQuery('#high_dim_data_upload_transcriptomics_sequencing_center_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_sequencing_platform').val(jQuery('#high_dim_data_upload_transcriptomics_sequencing_platform_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_read_length').val(jQuery('#high_dim_data_upload_transcriptomics_read_length_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_nucleic_acid_extraction_method').val(jQuery('#high_dim_data_upload_transcriptomics_nucleic_acid_extraction_method_select').val());
         }
         else if (high_dim_data_upload_type == 'Metabolomics') {
             var metabolomics_equipment_type = jQuery('#high_dim_data_upload_metabolomics_equipment_type').val();
