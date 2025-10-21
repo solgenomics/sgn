@@ -64,7 +64,7 @@ sub access_table :Path('/ajax/access/table') Args(0) {
     my @table;
     my %table;
     foreach my $line (@raw_table) {
-	push @{ $table{$line->{role_name}}->{$line->{access_level}} }, { name => $line->{resource}, id => $line->{privilege_id} };
+	push @{ $table{$line->{role_name}}->{$line->{access_level}} }, { name => $line->{resource}, id => $line->{privilege_id}, require_breeding_program => $line->{require_breeding_program}, require_ownership => $line->{require_ownership} };
     }
 
     my $html = "<table border=\"1\" ><tr><th style=\"padding: 10px\">Role</th><th style=\"padding: 10px\">Access level</th><th style=\"padding: 10px\">Resource</th></tr>";
@@ -80,7 +80,17 @@ sub access_table :Path('/ajax/access/table') Args(0) {
 	    $html .= "<td style=\"padding: 10px\">$level</td>";
 	    $html .= "<td style=\"padding: 10px\">";
 	    foreach my $resource (@{ $table{$role}->{$level} }) {
-		$html .= "<span class=\"chip\"><a href=\"javascript:delete_privilege(".$resource->{id}.")\">X</a> ".$resource->{name}."</span>  ";
+		my ($breeding_program, $ownership);
+		if ($resource->{require_breeding_program}) {
+		    $breeding_program = "[BP]";
+		}
+		if ($resource->{require_ownership}) {
+		    $ownership = "[OWN]";
+		}
+		
+		    
+		
+		$html .= "<span class=\"chip\"><a href=\"javascript:delete_privilege(".$resource->{id}.")\">X</a> ".$resource->{name}." $breeding_program $ownership</span>  ";
 	    }
 	    $html .= "";
 	    $html .= "</td></tr>";
@@ -107,8 +117,12 @@ sub add_privilege :Path('/ajax/access/add_privilege') Args(0) {
     my $resource = $c->req->param('resource');
     my $role = $c->req->param('role');
     my $level = $c->req->param('level');
+    my $require_breeding_program = $c->req->param('require_breeding_program');
+    my $require_ownership = $c->req->param('require_ownership');
 
-    my $r = $c->stash->{access}->add_privilege($resource, $role, $level);
+    print STDERR "REQUIRE BREEDING PROGRAM: $require_breeding_program. REQUIRE OWNERSHIP: $require_ownership\n";
+    
+    my $r = $c->stash->{access}->add_privilege($resource, $role, $level, $require_breeding_program, $require_ownership);
 
     $c->stash->{rest} = $r;
 }

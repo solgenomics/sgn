@@ -54,20 +54,21 @@
           </button>
 	</div>
 	<div class="modal-body" style="align: center">
-	  <table style="align:center"><tr><th>Role</th><th>Level</th><th>Resource</th></tr>
+	  <table style="align:center"><tr><th>Role</th><th></th><th>Level</th><th></th><th>Resource</th><th></th><th>Require</th></tr>
 	    <tr><td>
-		<select id="role_select">
+		<select id="role_select"  class="form-control">
 		  <option value="curator">curator</option>
 		  <option value="submitter">submitter</option>
 		  <option value="user">user</option>
 		</select>
-	      </td><td>
-		<select id="level_select" >
+	      </td><td width="20">&nbsp;</td><td>
+		<select id="level_select"  class="form-control">
 		  <option value="read">Read</option>
 		  <option value="write">Write</option>
+		  <option value="delete">Delete</option>
 		</select>
-	      </td><td>
-		<select id="resource_select">
+	      </td><td width="20">&nbsp;</td><td>
+		<select id="resource_select" class="form-control">
 		  <option value="trials">Trials</option>
 		  <option value="phenotyping">Phenotyping</option>
 		  <option value="genotyping">Genotyping</option>
@@ -78,9 +79,29 @@
 		  <option value="loci">Loci</option>
 		  <option value="wizard">Wizard</option>
 		  <option value="privileges">Privileges</option>
+		  <option value="loci">Loci</option>
 		  <option value="breeding_programs">Breeding Programs</option>
+		  <option value="stocks">Stocks</option>
+		  <option value="catalog">Catalog</option>
+		  <option value="user_roles">User Roles</option>
+		  <option value="ontologies">Ontologies</option>
+		  <option value="publications">Publications</option>
+		  <option value="locations">Locations</option>
+		  <option value="seedlots">Seedlots</option>
 		</select>
-	  </td></tr></table>
+	       
+	      </td><td width="20">&nbsp;</td>
+	      <td>
+		&nbsp;<input id="require_breeding_program" type="checkbox" class="projectCheckbox" >&nbsp;Breeding Program</input><br />
+		&nbsp;<input id="require_ownership" type="checkbox" class="projectCheckbox" >&nbsp;Ownership</input>
+	      </td>
+	      
+
+	  </tr>
+	  
+
+
+	  </table>
 	  
 	  
 	</div>
@@ -125,8 +146,9 @@ jQuery(document).ready( function() {
 	var resource=jQuery('#resource_select').val();
 	var level = jQuery('#level_select').val();
 	var role = jQuery('#role_select').val();
-
-	add_privilege(resource, level, role);
+	var require_breeding_program = jQuery('#require_breeding_program').val();
+	var require_ownership = jQuery('#require_ownership').val();
+	add_privilege(resource, level, role, require_breeding_program, require_ownership);
     });
 });
 
@@ -150,12 +172,12 @@ function delete_privilege(privilege_id) {
     });
 }
 
-function add_privilege(resource, level, role) {
+function add_privilege(resource, level, role, require_breeding_program, require_ownership) {
     var yes = confirm("Add resource "+resource+" with level "+level+" to role "+role+ "? ");
     if (yes !== true) { return; }
     jQuery.ajax( {
 	url: '/ajax/access/add_privilege',
-	data: { resource: resource, level: level, role: role },
+	data: { resource: resource, level: level, role: role, require_breeding_program : require_breeding_program, require_ownership : require_ownership },
         success: function(r) {
             alert(JSON.stringify(r));
 	    if (r.success) {

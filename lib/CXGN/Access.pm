@@ -351,11 +351,11 @@ sub denied {
 sub privileges_table {
     my $self = shift;
 
-    my $q = "SELECT sp_privilege.sp_privilege_id, sp_privilege.sp_resource_id, sp_resource.name, sp_access_level.sp_access_level_id, sp_access_level.name, sp_roles.sp_role_id, sp_roles.name FROM sgn_people.sp_privilege LEFT join sgn_people.sp_access_level using(sp_access_level_id) LEFT join sgn_people.sp_resource using(sp_resource_id) LEFT join  sgn_people.sp_roles using(sp_role_id) order by sp_resource.name";
+    my $q = "SELECT sp_privilege.sp_privilege_id, sp_privilege.sp_resource_id, sp_resource.name, sp_access_level.sp_access_level_id, sp_access_level.name, sp_roles.sp_role_id, sp_roles.name, sp_privilege.require_breeding_program, sp_privilege.require_ownership FROM sgn_people.sp_privilege LEFT join sgn_people.sp_access_level using(sp_access_level_id) LEFT join sgn_people.sp_resource using(sp_resource_id) LEFT join  sgn_people.sp_roles using(sp_role_id) order by sp_resource.name";
     my $h =  $self->people_schema()->storage()->dbh()->prepare($q);
     $h->execute();
     my @data;
-    while (my ($sp_privilege_id, $sp_resource_id, $resource, $access_level_id, $access_level, $role_id, $role_name) = $h->fetchrow_array()) {
+    while (my ($sp_privilege_id, $sp_resource_id, $resource, $access_level_id, $access_level, $role_id, $role_name, $require_breeding_program, $require_ownership) = $h->fetchrow_array()) {
 	push @data,
 	{
 	    privilege_id => $sp_privilege_id,
@@ -365,6 +365,8 @@ sub privileges_table {
 	    access_level => $access_level,
 	    role_id => $role_id,
 	    role_name => $role_name,
+	    require_breeding_program => $require_breeding_program,
+	    require_ownership => $require_ownership,
 	};
     }	      
     return @data;
@@ -387,6 +389,8 @@ sub add_privilege {
     my $resource = shift;
     my $role = shift;
     my $access_level = shift;
+    my $require_breeding_program = shift;
+    my $require_ownership = shift;
 
     my $error = "";
        
@@ -411,6 +415,8 @@ sub add_privilege {
 	    sp_role_id => $role_row->sp_role_id(),
 	    sp_access_level_id => $access_level_row->sp_access_level_id(),
 	    sp_resource_id => $resource_row->sp_resource_id(),
+	    require_breeding_program => $require_breeding_program,
+	    require_ownership => $require_ownership,
 	};
 	
 	$row = $self->people_schema->resultset("SpPrivilege")->find_or_create($row);
