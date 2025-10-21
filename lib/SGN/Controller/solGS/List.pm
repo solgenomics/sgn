@@ -210,7 +210,9 @@ sub get_list_breeding_program {
     my ($self, $c) = @_;
     my $trials_ids = [];
     
-    if ($c->stash->{list_type} == 'trials') {
+    my $list_id = $c->stash->{list_id};
+    $self->stash_list_metadata($c, $list_id);
+    if ($c->stash->{list_type} eq 'trials') {
         $self->get_list_trials_ids($c);
         $trials_ids = $c->stash->{trials_ids};
     } else {
