@@ -570,10 +570,10 @@ $(document).ready(function($) {
 
     $("#d3-edit-additional-settings").on("click", function() {
         saveAdditionalOptions(
-            document.getElementById("top_margin").value,
-            document.getElementById("left_margin").value,
-            document.getElementById("horizontal_gap").value,
-            document.getElementById("vertical_gap").value,
+            convertPageDimensions(document.getElementById("top_margin").value),
+            convertPageDimensions(document.getElementById("left_margin").value),
+            convertPageDimensions(document.getElementById("horizontal_gap").value),
+            convertPageDimensions(document.getElementById("vertical_gap").value),
             document.getElementById("number_of_columns").value,
             document.getElementById("number_of_rows").value,
             document.getElementById("plot_filter").value,
@@ -637,6 +637,76 @@ $(document).ready(function($) {
         d3.select(".label-element")
             .attr("text-anchor", text_alignment)
         d3.select(".selection-tools").remove()
+    });
+
+    jQuery('input[type="radio"][name="dimoptradio"], input[type="radio"][name="dimoptradio2"]').click(function() {
+
+        var format = "imperial";
+
+        if (jQuery(this).attr("class") == "radio-select-metric") {
+            format = "metric";
+        }
+
+        var page_width = jQuery('#page_width').val();
+        var page_height = jQuery('#page_height').val();
+        var label_width = jQuery('#label_width').val();
+        var label_height = jQuery('#label_height').val();
+
+        var top_margin = jQuery('#top_margin').val();
+        var left_margin = jQuery('#left_margin').val();
+        var horizontal_gap = jQuery('#horizontal_gap').val();
+        var vertical_gap = jQuery('#vertical_gap').val();
+
+        if (format == "metric") {
+            jQuery('#page_width').attr('placeholder', 'In centimeters');
+            jQuery('#page_height').attr('placeholder', 'In centimeters');
+            jQuery('#label_width').attr('placeholder', 'In centimeters');
+            jQuery('#label_height').attr('placeholder', 'In centimeters');
+            jQuery('#top_margin').attr('placeholder', 'In centimeters');
+            jQuery('#left_margin').attr('placeholder', 'In centimeters');
+            jQuery('#horizontal_gap').attr('placeholder', 'In centimeters');
+            jQuery('#vertical_gap').attr('placeholder', 'In centimeters');
+            jQuery('#page_width').val(page_width * 2.54);
+            jQuery('#page_height').val(page_height * 2.54);
+            jQuery('#label_width').val(label_width * 2.54);
+            jQuery('#label_height').val(label_height * 2.54);
+            jQuery('#top_margin').val(top_margin * 2.54);
+            jQuery('#left_margin').val(left_margin * 2.54);
+            jQuery('#horizontal_gap').val(horizontal_gap * 2.54);
+            jQuery('#vertical_gap').val(vertical_gap * 2.54);
+
+            jQuery(".radio-select-metric").each(function() {
+                jQuery(this).prop("checked", true)
+            });
+            jQuery(".radio-select-imperial").each(function() {
+                jQuery(this).prop("checked", false)
+            });
+        } else {
+            jQuery('#page_width').attr('placeholder', 'In inches');
+            jQuery('#page_height').attr('placeholder', 'In inches');
+            jQuery('#label_width').attr('placeholder', 'In inches');
+            jQuery('#label_height').attr('placeholder', 'In inches');
+            jQuery('#top_margin').attr('placeholder', 'In inches');
+            jQuery('#left_margin').attr('placeholder', 'In inches');
+            jQuery('#horizontal_gap').attr('placeholder', 'In inches');
+            jQuery('#vertical_gap').attr('placeholder', 'In inches');
+            jQuery('#page_width').val(page_width / 2.54);
+            jQuery('#page_height').val(page_height / 2.54);
+            jQuery('#label_width').val(label_width / 2.54);
+            jQuery('#label_height').val(label_height / 2.54);
+            jQuery('#top_margin').val(top_margin / 2.54);
+            jQuery('#left_margin').val(left_margin / 2.54);
+            jQuery('#horizontal_gap').val(horizontal_gap / 2.54);
+            jQuery('#vertical_gap').val(vertical_gap / 2.54);
+
+            jQuery(".radio-select-imperial").each(function() {
+                jQuery(this).prop("checked", true)
+            });
+            jQuery(".radio-select-metric").each(function() {
+                jQuery(this).prop("checked", false)
+            });
+        }
+        
     });
 
 });
@@ -1137,10 +1207,10 @@ function switchLabelDependentOptions(label) {
         enableDrawArea();
     }
     //set addtional options
-    document.getElementById("top_margin").value = label_sizes[label].top_margin;
-    document.getElementById("left_margin").value = label_sizes[label].left_margin;
-    document.getElementById("horizontal_gap").value = label_sizes[label].horizontal_gap;
-    document.getElementById("vertical_gap").value = label_sizes[label].vertical_gap;
+    document.getElementById("top_margin").value = convertPixelsToPageDimensions(label_sizes[label].top_margin);
+    document.getElementById("left_margin").value = convertPixelsToPageDimensions(label_sizes[label].left_margin);
+    document.getElementById("horizontal_gap").value = convertPixelsToPageDimensions(label_sizes[label].horizontal_gap);
+    document.getElementById("vertical_gap").value = convertPixelsToPageDimensions(label_sizes[label].vertical_gap);
     document.getElementById("number_of_columns").value = label_sizes[label].number_of_columns;
     document.getElementById("number_of_rows").value = label_sizes[label].number_of_rows;
 }
@@ -1306,10 +1376,10 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     page_formats[page].label_sizes[label].sort_order_2 = sort_order_2;
     page_formats[page].label_sizes[label].sort_order_3 = sort_order_3;
     page_formats[page].label_sizes[label].copies_per_plot = copies_per_plot;
-    document.getElementById("top_margin").value = top_margin;
-    document.getElementById("left_margin").value = left_margin;
-    document.getElementById("horizontal_gap").value = horizontal_gap;
-    document.getElementById("vertical_gap").value = vertical_gap;
+    document.getElementById("top_margin").value = convertPixelsToPageDimensions(top_margin);
+    document.getElementById("left_margin").value = convertPixelsToPageDimensions(left_margin);
+    document.getElementById("horizontal_gap").value = convertPixelsToPageDimensions(horizontal_gap);
+    document.getElementById("vertical_gap").value = convertPixelsToPageDimensions(vertical_gap);
     document.getElementById("number_of_columns").value = number_of_columns;
     document.getElementById("number_of_rows").value = number_of_rows;
     document.getElementById("plot_filter").value = plot_filter || 'all';
@@ -1505,10 +1575,10 @@ function retrievePageParams() {
         page_format: page,
         page_width: page_formats[page].page_width || convertPageDimensions("page_width"),
         page_height: page_formats[page].page_height || convertPageDimensions("page_height"),
-        left_margin: label_sizes[label].left_margin,
-        top_margin: label_sizes[label].top_margin,
-        horizontal_gap: label_sizes[label].horizontal_gap,
-        vertical_gap: label_sizes[label].vertical_gap,
+        left_margin: label_sizes[label].left_margin || convertPageDimensions("left_margin"),
+        top_margin: label_sizes[label].top_margin || convertPageDimensions("top_margin"),
+        horizontal_gap: label_sizes[label].horizontal_gap || convertPageDimensions("horizontal_gap"),
+        vertical_gap: label_sizes[label].vertical_gap || convertPageDimensions("vertical_gap"),
         number_of_columns: label_sizes[label].number_of_columns,
         number_of_rows: label_sizes[label].number_of_rows,
         plot_filter: document.getElementById("plot_filter").value,
@@ -1545,6 +1615,20 @@ function convertPageDimensions(elem_id) {
         return naive_dim * 72;
     } else if (format == 'metric') { // 28.35 pixels per cm
         return naive_dim * 28.35;
+    }
+}
+
+function convertPixelsToPageDimensions(value) {
+    var format = 'imperial';
+
+    if (jQuery('#dim_cm').prop('checked')) {
+        format = 'metric';
+    } 
+
+    if (format == 'imperial') { // 72 pixels per inch
+        return value / 72;
+    } else if (format == 'metric') { // 28.35 pixels per cm
+        return value / 28.35;
     }
 }
 

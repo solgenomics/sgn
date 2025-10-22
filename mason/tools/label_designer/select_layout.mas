@@ -63,8 +63,8 @@
                </center>
            </div>
            <div class="col-md-2">
-                <label class='radio'><input type="radio" name="dimoptradio" id="dim_inches" value="inch" checked>Imperial</label>
-                <label class='radio'><input type="radio" name="dimoptradio" id="dim_cm" value="cm">Metric</label>
+                <label class='radio'><input type="radio" name="dimoptradio" id="dim_inches" class="radio-select-imperial" value="inch" checked>Imperial</label>
+                <label class='radio'><input type="radio" name="dimoptradio" id="dim_cm" class="radio-select-metric" value="cm">Metric</label>
            </div>
            <div class="col-md-2">
                <br>
@@ -79,34 +79,5 @@
 <script>
 jQuery("#create_new_design").on( "click", function() {
   jQuery("#format_options").show()
-});
-
-jQuery('input[type="radio"][name="dimoptradio"]').click(function() {
-
-    var page_width = jQuery('#page_width').val();
-    var page_height = jQuery('#page_height').val();
-    var label_width = jQuery('#label_width').val();
-    var label_height = jQuery('#label_height').val();
-
-    if (jQuery('#dim_cm').prop('checked')) {
-        jQuery('#page_width').attr('placeholder', 'In centimeters');
-        jQuery('#page_height').attr('placeholder', 'In centimeters');
-        jQuery('#label_width').attr('placeholder', 'In centimeters');
-        jQuery('#label_height').attr('placeholder', 'In centimeters');
-        jQuery('#page_width').val(page_width * 2.54);
-        jQuery('#page_height').val(page_height * 2.54);
-        jQuery('#label_width').val(label_width * 2.54);
-        jQuery('#label_height').val(label_height * 2.54);
-    } else {
-        jQuery('#page_width').attr('placeholder', 'In inches');
-        jQuery('#page_height').attr('placeholder', 'In inches');
-        jQuery('#label_width').attr('placeholder', 'In inches');
-        jQuery('#label_height').attr('placeholder', 'In inches');
-        jQuery('#page_width').val(page_width / 2.54);
-        jQuery('#page_height').val(page_height / 2.54);
-        jQuery('#label_width').val(label_width / 2.54);
-        jQuery('#label_height').val(label_height / 2.54);
-    }
-    
 });
 </script>
