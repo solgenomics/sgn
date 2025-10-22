@@ -390,7 +390,7 @@ __PACKAGE__->config(
        my $source_name = $c->req->param("source_name");
        my $design_json = $c->req->param("design_json");
        # decode json
-       my $json = new JSON;
+       my $json = JSON->new();
        #my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
        my $design_params = decode_json($design_json);
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
@@ -851,7 +851,7 @@ sub get_data {
         my $match = substr($data_level, 6);
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
         my @list_data = @{$list_data};
-        my $json = new JSON;
+        my $json = JSON->new();
         #my $identifier_object = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_data[0][1]);
 	my $identifier_object = decode_json($list_data[0][1]);
         my $records = $identifier_object->{'records'};
