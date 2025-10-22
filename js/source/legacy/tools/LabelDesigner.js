@@ -148,6 +148,8 @@ page_formats["Zebra printer file"] = {
 };
 
 page_formats["Custom"] = {
+    page_width: 0,
+    page_height: 0,
     label_sizes: {
             'Select a label format' : {},
             'Custom' : {
@@ -510,6 +512,21 @@ $(document).ready(function($) {
         $("#d3-add-and-download-div").removeAttr('style');
         enableDrawArea();
         $('#d3-add-type-input').focus();
+
+        // If there is a custom page size, apply that too
+        if (page == "Custom") {
+            var naive_page_width = document.getElementById("page_width").value;
+            var naive_page_height = document.getElementById("page_height").value;
+
+            if (format == 'imperial') { // 72 pixels per inch
+                page_formats[page].page_width = naive_page_width * 72;
+                page_formats[page].page_height = naive_page_height * 72;
+            } else if (format == 'metric') { // 28.35 pixels per cm
+                page_formats[page].page_width = naive_page_width * 28.35;
+                page_formats[page].page_height = naive_page_height * 28.35;
+            }
+        }
+
     });
 
     $('#d3-add-field-input').change(function() {
@@ -1498,6 +1515,9 @@ function convertPageDimensions(elem_id) {
 
     if (jQuery('#dim_cm').prop('checked')) {
         format = 'metric';
+        alert("Metric!");
+    } else {
+        alert("Imperial!");
     }
 
     var naive_dim = document.getElementById(elem_id).value;

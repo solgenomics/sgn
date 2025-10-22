@@ -566,7 +566,6 @@ __PACKAGE__->config(
                                   my $barcode = $qrcode->plot( $filled_value );
                                   my $barcode_file = $barcode->write(file => $png_location);
                                   system("convert $png_location -depth 8 $png_location");
-                                  print STDERR "=======================\n$png_location\n=====================\n";
 
                                    my $image = $pdf->image_png($png_location);
                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
