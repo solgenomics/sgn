@@ -161,6 +161,9 @@ $default_plant_material_name => undef
 $transformation_id => undef
 $vector_id => undef
 
+#specific to transformation ID page
+$control_id => undef
+
 #Specific to activity page
 $vendor_id => undef
 $parent_project_id => undef
@@ -358,6 +361,9 @@ $field_headers => ()
 % if ($info_section_id eq 'related_transformation_info_section'){
                                 <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
 % } #End related_transformation_info_section
+% if ($info_section_id eq 'control_transgenic_lines_section'){
+                                <& /transformation/control_transformants_section.mas, control_id => $control_id &>
+% } #End control_transgenic_lines_section
 
 
 % if ($info_section_id eq 'stock_images_section'){

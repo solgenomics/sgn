@@ -81,12 +81,12 @@ $vector_id
 
 <& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Transgenic Line Details</h4>", info_section_subtitle => 'View number of transgene insertions and qPCR data.',buttons_html => '<button class="btn btn-primary btn-sm" id="upload_qPCR_data_link" style="margin:3px">Upload qPCR Data</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "vector_transgenic_line_details_section", vector_id => $vector_id, transformation_id => $transformation_id, stock_uniquename => $transformation_name, type_name => 'transformation', vector_related_genes => $vector_related_genes, vector_analyzed_tissue_types => $vector_analyzed_tissue_types &>
 
+%if ($control_id) {
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Control Transgenic Lines</h4>", info_section_subtitle => 'View control transgenic lines of this transformation ID.', icon_class => "glyphicon glyphicon-th-list", info_section_id => "control_transgenic_lines_section", control_id => $control_id &>
+%}
 
 <& /transformation/transgenic_line_details_section.mas, transformation_id => $transformation_id, program_name => $program_name, can_obsolete => $can_obsolete  &>
 <& /transformation/obsoleted_transformants_section.mas, transformation_id => $transformation_id &>
-%if ($control_id) {
-    <& /transformation/control_transformants_section.mas, control_id => $control_id &>
-%}
 
 <&| /page/info_section.mas, title=>"Update Status",  collapsible => 1, collapsed=>1 &>
 % if ($user_role eq "curator" ) {
