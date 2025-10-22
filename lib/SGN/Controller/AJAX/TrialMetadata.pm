@@ -2292,7 +2292,8 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
     my $trial = $c->stash->{trial};
 
     my $data = $trial->get_plants();
-    my @sorted_data = natkeysort {($_->[1])} @$data;
+    my @sorted_data = ();
+    push @sorted_data, [natkeysort {($_->[1])} @$data];
 
     $c->stash->{rest} = { plants => \@sorted_data };
 }
